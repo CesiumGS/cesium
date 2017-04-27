@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
@@ -16,6 +17,7 @@ define([
         Color,
         defined,
         Ellipsoid,
+        IndexDatatype,
         Matrix4,
         OrientedBoundingBox,
         Rectangle,
@@ -243,7 +245,7 @@ define([
             batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
         }
 
-        batchedIndices = new Uint32Array(batchedIndices);
+        batchedIndices = IndexDatatype.createTypedArray(batchedPositions.length / 3, batchedIndices);
 
         var batchedIndicesLength = batchedDrawCalls.length;
         for (var m = 0; m < batchedIndicesLength; ++m) {
@@ -261,6 +263,7 @@ define([
         return {
             positions : batchedPositions.buffer,
             indices : batchedIndices.buffer,
+            indexDatatype : (batchedIndices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT,
             indexOffsets : batchedIndexOffsets.buffer,
             indexCounts : batchedIndexCounts.buffer,
             batchIds : batchedIds.buffer,

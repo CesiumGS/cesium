@@ -219,7 +219,8 @@ define([
                 primitive._positions = undefined;
                 primitive._counts = undefined;
 
-                primitive._indices = new Uint32Array(result.indices);
+                var indexDatatype = result.indexDatatype;
+                primitive._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ?new Uint16Array(result.indices) : new Uint32Array(result.indices);
                 primitive._indexOffsets = new Uint32Array(result.indexOffsets);
                 primitive._indexCounts = new Uint32Array(result.indexCounts);
                 primitive._batchedIndices = result.batchedIndices;
@@ -258,7 +259,7 @@ define([
                 context : context,
                 typedArray : primitive._indices,
                 usage : BufferUsage.STATIC_DRAW,
-                indexDatatype : IndexDatatype.UNSIGNED_INT
+                indexDatatype : (primitive._indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT
             });
 
             var vertexAttributes = [{
