@@ -54,6 +54,9 @@ define([
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
 
+        this._useScissorTest = false;
+        this._scissorRectangle = undefined;
+
         var clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
             depth : 1.0,
@@ -81,7 +84,7 @@ define([
         }
     }
 
-    FXAA.prototype.update = function(context) {
+    FXAA.prototype.update = function(context, passState) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -150,9 +153,22 @@ define([
         this._viewport.width = width;
         this._viewport.height = height;
 
-        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport)) {
+        var useScissorTest = !BoundingRectangle.equals(this._viewport, passState.viewport);
+        var updateScissor = useScissorTest !== this._useScissorTest;
+        this._useScissorTest = useScissorTest;
+
+        if (!BoundingRectangle.equals(this._scissorRectangle, passState.viewport)) {
+            this._scissorRectangle = BoundingRectangle.clone(passState.viewport, this._scissorRectangle);
+            updateScissor = true;
+        }
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport) || updateScissor) {
             this._rs = RenderState.fromCache({
-                viewport : this._viewport
+                viewport : this._viewport,
+                scissorTest : {
+                    enabled : this._useScissorTest,
+                    rectangle : this._scissorRectangle
+                }
             });
         }
 
