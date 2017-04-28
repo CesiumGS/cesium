@@ -366,7 +366,6 @@ define([
         this.queue1 = new ManagedArray();
         this.queue2 = new ManagedArray();
         this.internalDFS = new InternalSkipTraversal(options.selectionHeuristic);
-        this.selectedTiles = options.selectedTiles;
     }
 
     SkipTraversal.prototype.execute = function(tileset, root, frameState, outOfCore) {

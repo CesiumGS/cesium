@@ -408,8 +408,6 @@ define([
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
         this._geometricErrorLabels = undefined;
 
-        this._labels = undefined;
-
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
          * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
@@ -565,8 +563,7 @@ define([
 
         this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
         this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic: selectionHeuristic,
-            selectedTiles: this._selectedTiles
+            selectionHeuristic: selectionHeuristic
         });
 
         this._backfaceCommands = new ManagedArray();
