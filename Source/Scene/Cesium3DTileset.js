@@ -1020,6 +1020,17 @@ define([
             set : function(value) {
                 this._skipLevels = value;
             }
+        },
+
+        /**
+         * Returns the total amount of memory used by the tileset.
+         *
+         * @type {Number}
+         */
+        totalMemoryUsage : {
+            get : function() {
+                return this._statistics.textureMemorySizeInBytes + this._statistics.vertexMemorySizeInBytes + this._statistics.batchTableMemorySizeInBytes;
+            }
         }
     });
 
@@ -2009,10 +2020,6 @@ define([
         }
     }
 
-    function computeTotalMemoryUsage(tileset) {
-        return tileset._statistics.textureMemorySizeInBytes + tileset._statistics.vertexMemorySizeInBytes + tileset._statistics.batchTableMemorySizeInBytes;
-    }
-
     function unloadTiles(tileset, frameState) {
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
@@ -2022,7 +2029,7 @@ define([
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
-        var totalMemoryUsage = computeTotalMemoryUsage();
+        var totalMemoryUsage = tileset.totalMemoryUsage;
         var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
@@ -2043,7 +2050,7 @@ define([
             replacementList.remove(currentNode);
 
             --stats.numberContentReady;
-            totalMemoryUsage = computeTotalMemoryUsage();
+            totalMemoryUsage = tileset.totalMemoryUsage;
         }
     }
 
