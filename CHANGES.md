@@ -11,6 +11,7 @@ Change Log
 * `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
 * Fix billboards not initially clustering. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5208)
 * Added support for dashed polylines.  Added `PolylineDashMaterialProperty` and CZML `polylineDash` properties - `color`, `gapColor`, `dashLength`, `dashPattern` - and similar properties to Cesium's `Material`. [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159)
+* Expose `wgs84ToWindowCoordinates` on the `Scene`. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5251)
 
 ### 1.32 - 2017-04-03
 
