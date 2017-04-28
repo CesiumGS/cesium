@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
         '../Core/clone',
         '../Core/defaultValue',
@@ -50,6 +51,7 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         Color,
         clone,
         defaultValue,
@@ -109,6 +111,8 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
+     * @param {Number} [options.maximumNumberOfLoadedTiles=256] The maximum number of tiles to load.
+     * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
@@ -264,7 +268,7 @@ define([
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
-        this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 256);
+        this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
@@ -857,9 +861,9 @@ define([
          * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
          * </p>
          * <p>
-         * If more tiles than <code>maximumMemoryUsage</code> are needed
+         * If tiles sized more than <code>maximumMemoryUsage</code> are needed
          * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-         * for the current view than the number of tiles loaded will exceed
+         * for the current view, then the memory usage of the tiles loaded will exceed
          * <code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but
          * 300 MB of tiles are needed to meet the screen-space error, then 300 MB of tiles may be loaded.  When
          * these tiles go out of view, they will be unloaded.
@@ -868,7 +872,7 @@ define([
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
-         * @default 256
+         * @default 512
          *
          * @exception {DeveloperError} <code>maximumMemoryUsage</code> must be greater than or equal to zero.
          */
@@ -878,9 +882,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
-                    throw new DeveloperError('maximumMemoryUsage must be greater than or equal to zero');
-                }
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0);
                 //>>includeEnd('debug');
 
                 this._maximumMemoryUsage = value;
@@ -2007,6 +2009,10 @@ define([
         }
     }
 
+    function computeTotalMemoryUsage(tileset) {
+        return tileset._statistics.textureMemorySizeInBytes + tileset._statistics.vertexMemorySizeInBytes + tileset._statistics.batchTableMemorySizeInBytes;
+    }
+
     function unloadTiles(tileset, frameState) {
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
@@ -2016,7 +2022,7 @@ define([
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
-        var totalMemoryUsage = stats.textureMemorySizeInBytes + stats.vertexMemorySizeInBytes + stats.batchTableMemorySizeInBytes;
+        var totalMemoryUsage = computeTotalMemoryUsage();
         var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
@@ -2025,7 +2031,7 @@ define([
         // The sub-list to the left of the sentinel is ordered from LRU to MRU.
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
-        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles || (totalMemoryUsage > maximumMemoryUsageInBytes))) {
+        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || (totalMemoryUsage > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
 
             decrementPointAndFeatureLoadCounts(tileset, tile.content);
@@ -2037,7 +2043,7 @@ define([
             replacementList.remove(currentNode);
 
             --stats.numberContentReady;
-            totalMemoryUsage = tileset._statistics.textureMemorySizeInBytes + tileset._statistics.vertexMemorySizeInBytes + tileset._statistics.batchTableMemorySizeInBytes;
+            totalMemoryUsage = computeTotalMemoryUsage();
         }
     }
 

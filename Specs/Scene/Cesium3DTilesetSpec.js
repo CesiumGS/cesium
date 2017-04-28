@@ -2164,7 +2164,7 @@ defineSuite([
             expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // the four children since the max number of loaded tiles is one.
+            // the four children since the maximum memory usage is zero.
             viewRootOnly();
             scene.renderForSpecs();
 
@@ -2196,7 +2196,7 @@ defineSuite([
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
             // two of the four children so three tiles are still loaded (the
-            // root and two children) since the max number of loaded tiles is three.
+            // root and two children) since the maximum memory usage is sufficient.
             viewRootOnly();
             scene.renderForSpecs();
 
