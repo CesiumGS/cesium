@@ -1122,4 +1122,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('converts to window coordinates',function(){
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates').and.callThrough();
+
+        expect(scene).toRenderAndCall(function() {
+            scene.wgs84ToWindow(new Cartesian3());
+            expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalled();
+        });
+    });
+
 }, 'WebGL');

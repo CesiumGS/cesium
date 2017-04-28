@@ -3311,5 +3311,27 @@ define([
         return destroyObject(this);
     };
 
+     /**
+     * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in WGS84 (world) coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.wgs84ToWindow(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.wgs84ToWindow = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+    };
+
     return Scene;
 });
