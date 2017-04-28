@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
    * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
+* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. `GoogleEarthEnterpriseMeta` was also added so providers can share metadata requests.
 * Added support for dashed polylines.  Added `PolylineDashMaterialProperty` and CZML `polylineDash` properties - `color`, `gapColor`, `dashLength`, `dashPattern` - and similar properties to Cesium's `Material`. [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159)
 * Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
 * Added a `depthFailMaterial` property to line entities, which is the material used to render the line when it fails the depth test. [#5160](https://github.com/AnalyticalGraphicsInc/cesium/pull/5160)
