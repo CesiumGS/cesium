@@ -123,7 +123,7 @@ define([
         this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
-        this._boundingVolumes = new Array(this._counts.length);
+        this._boundingVolumes = undefined;
 
         this._batchedIndices = undefined;
 
@@ -258,7 +258,7 @@ define([
             var indexBuffer = Buffer.createIndexBuffer({
                 context : context,
                 typedArray : primitive._indices,
-                usage : BufferUsage.STATIC_DRAW,
+                usage : BufferUsage.DYNAMIC_DRAW,
                 indexDatatype : (primitive._indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT
             });
 
@@ -279,6 +279,19 @@ define([
                 attributes : vertexAttributes,
                 indexBuffer : indexBuffer
             });
+
+            if (context.webgl2) {
+                primitive._vaSwap = new VertexArray({
+                    context : context,
+                    attributes : vertexAttributes,
+                    indexBuffer : Buffer.createIndexBuffer({
+                        context : context,
+                        sizeInBytes : indexBuffer.sizeInBytes,
+                        usage : BufferUsage.DYNAMIC_DRAW,
+                        indexDatatype : indexBuffer.indexDatatype
+                    })
+                });
+            }
 
             primitive._batchedPositions = undefined;
             primitive._batchIds = undefined;
@@ -478,7 +491,7 @@ define([
         };
     }
 
-    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchIds) {
+    function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds) {
         var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
         var batchedIdsLength = batchIds.length;
@@ -497,13 +510,100 @@ define([
         return currentOffset;
     }
 
+    function rebatchCPU(primitive, batchedIndices) {
+        var newIndices = new primitive._indices.constructor(primitive._indices.length);
+
+        var current = batchedIndices.pop();
+        var newBatchedIndices = [current];
+
+        var currentOffset = copyIndicesCPU(primitive._indices, newIndices, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
+
+        current.offset = 0;
+        current.count = currentOffset;
+
+        while (batchedIndices.length > 0) {
+            var next = batchedIndices.pop();
+            if (Color.equals(next.color, current.color)) {
+                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                current.batchIds = current.batchIds.concat(next.batchIds);
+                current.count = currentOffset - current.offset;
+            } else {
+                var offset = currentOffset;
+                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+
+                next.offset = offset;
+                next.count = currentOffset - offset;
+                newBatchedIndices.push(next);
+                current = next;
+            }
+        }
+
+        primitive._va.indexBuffer.copyFromArrayView(newIndices);
+
+        primitive._indices = newIndices;
+        primitive._batchedIndices = newBatchedIndices;
+    }
+
+    function copyIndicesGPU(readBuffer, writeBuffer, currentOffset, offsets, counts, batchIds) {
+        var sizeInBytes = readBuffer.bytesPerIndex;
+
+        var batchedIdsLength = batchIds.length;
+        for (var j = 0; j < batchedIdsLength; ++j) {
+            var batchedId = batchIds[j];
+            var offset = offsets[batchedId];
+            var count = counts[batchedId];
+
+            writeBuffer.copyFromBuffer(readBuffer, offset * sizeInBytes, currentOffset * sizeInBytes, count * sizeInBytes);
+
+            offsets[batchedId] = currentOffset;
+            currentOffset += count;
+        }
+
+        return currentOffset;
+    }
+
+    function rebatchGPU(primitive, batchedIndices) {
+        var current = batchedIndices.pop();
+        var newBatchedIndices = [current];
+
+        var readBuffer = primitive._va.indexBuffer;
+        var writeBuffer = primitive._vaSwap.indexBuffer;
+
+        var currentOffset = copyIndicesGPU(readBuffer, writeBuffer, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
+
+        current.offset = 0;
+        current.count = currentOffset;
+
+        while (batchedIndices.length > 0) {
+            var next = batchedIndices.pop();
+            if (Color.equals(next.color, current.color)) {
+                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                current.batchIds = current.batchIds.concat(next.batchIds);
+                current.count = currentOffset - current.offset;
+            } else {
+                var offset = currentOffset;
+                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                next.offset = offset;
+                next.count = currentOffset - offset;
+                newBatchedIndices.push(next);
+                current = next;
+            }
+        }
+
+        var temp = primitive._va;
+        primitive._va = primitive._vaSwap;
+        primitive._vaSwap = temp;
+
+        primitive._batchedIndices = newBatchedIndices;
+    }
+
     function compareColors(a, b) {
         return b.color.toRgba() - a.color.toRgba();
     }
 
     // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
     // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
-    function rebatchCommands(primitive) {
+    function rebatchCommands(primitive, context) {
         if (!primitive._batchDirty) {
             return false;
         }
@@ -532,65 +632,39 @@ define([
 
         batchedIndices.sort(compareColors);
 
-        var newIndices = new primitive._indices.constructor(primitive._indices.length);
-
-        var current = batchedIndices.pop();
-        var newBatchedIndices = [current];
-
-        var currentOffset = copyIndices(primitive._indices, newIndices, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
-
-        current.offset = 0;
-        current.count = currentOffset;
-
-        while (batchedIndices.length > 0) {
-            var next = batchedIndices.pop();
-            if (Color.equals(next.color, current.color)) {
-                currentOffset = copyIndices(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-                current.batchIds = current.batchIds.concat(next.batchIds);
-                current.count = currentOffset - current.offset;
-            } else {
-                var offset = currentOffset;
-                currentOffset = copyIndices(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-
-                next.offset = offset;
-                next.count = currentOffset - offset;
-                newBatchedIndices.push(next);
-                current = next;
-            }
+        if (context.webgl2) {
+            rebatchGPU(primitive, batchedIndices);
+        } else {
+            rebatchCPU(primitive, batchedIndices);
         }
-
-        primitive._va.indexBuffer.copyFromArrayView(newIndices);
-
-        primitive._indices = newIndices;
-        primitive._batchedIndices = newBatchedIndices;
 
         primitive._batchDirty = false;
         primitive._pickCommandsDirty = true;
         return true;
     }
 
-    function createColorCommands(primitive) {
-        if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
+    function createColorCommands(primitive, context) {
+        if (defined(primitive._commands) && !rebatchCommands(primitive, context) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
             return;
         }
 
         var batchedIndices = primitive._batchedIndices;
-        var length = batchedIndices.length * 3;
+        var length = batchedIndices.length;
 
         var commands = primitive._commands;
-        commands.length = length;
+        commands.length = length * 3;
 
         var vertexArray = primitive._va;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
-        for (var j = 0; j < length; j += 3) {
-            var offset = batchedIndices[j / 3].offset;
-            var count = batchedIndices[j / 3].count;
+        for (var j = 0; j < length; ++j) {
+            var offset = batchedIndices[j].offset;
+            var count = batchedIndices[j].count;
 
-            var stencilPreloadCommand = commands[j];
+            var stencilPreloadCommand = commands[j * 3];
             if (!defined(stencilPreloadCommand)) {
-                stencilPreloadCommand = commands[j] = new DrawCommand({
+                stencilPreloadCommand = commands[j * 3] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -604,9 +678,9 @@ define([
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
 
-            var stencilDepthCommand = commands[j + 1];
+            var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
-                stencilDepthCommand = commands[j + 1] = new DrawCommand({
+                stencilDepthCommand = commands[j * 3 + 1] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -620,9 +694,9 @@ define([
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
 
-            var colorCommand = commands[j + 2];
+            var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
-                colorCommand = commands[j + 2] = new DrawCommand({
+                colorCommand = commands[j * 3 + 2] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -643,21 +717,21 @@ define([
             return;
         }
 
-        var length = primitive._indexOffsets.length * 3;
+        var length = primitive._indexOffsets.length;
         var pickCommands = primitive._pickCommands;
-        pickCommands.length = length;
+        pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
-        for (var j = 0; j < length; j += 3) {
-            var offset = primitive._indexOffsets[j / 3];
-            var count = primitive._indexCounts[j / 3];
-            var bv = primitive._boundingVolumes[j / 3];
+        for (var j = 0; j < length; ++j) {
+            var offset = primitive._indexOffsets[j];
+            var count = primitive._indexCounts[j];
+            var bv = primitive._boundingVolumes[j];
 
-            var stencilPreloadCommand = pickCommands[j];
+            var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
-                stencilPreloadCommand = pickCommands[j] = new DrawCommand({
+                stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -671,9 +745,9 @@ define([
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
 
-            var stencilDepthCommand = pickCommands[j + 1];
+            var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
-                stencilDepthCommand = pickCommands[j + 1] = new DrawCommand({
+                stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -687,9 +761,9 @@ define([
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
 
-            var colorCommand = pickCommands[j + 2];
+            var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
-                colorCommand = pickCommands[j + 2] = new DrawCommand({
+                colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
                     owner : primitive
                 });
             }
@@ -805,7 +879,7 @@ define([
 
         var passes = frameState.passes;
         if (passes.render) {
-            createColorCommands(this);
+            createColorCommands(this, context);
             var commandLength = this._commands.length;
             for (var i = 0; i < commandLength; ++i) {
                 frameState.commandList.push(this._commands[i]);
