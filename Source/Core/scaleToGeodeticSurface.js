@@ -20,7 +20,6 @@ define([
      * at the center of the ellipsoid, this function returns undefined.
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
-     * @param {Cartesian3} oneOverRadii One over radii of the ellipsoid.
      * @param {Cartesian3} oneOverRadiiSquared One over radii squared of the ellipsoid.
      * @param {Number} centerToleranceSquared Tolerance for closeness to the center.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -30,13 +29,10 @@ define([
      *
      * @private
      */
-    function scaleToGeodeticSurface(cartesian, oneOverRadii, oneOverRadiiSquared, centerToleranceSquared, result) {
+    function scaleToGeodeticSurface(cartesian, oneOverRadiiSquared, centerToleranceSquared, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
-        }
-        if (!defined(oneOverRadii)) {
-            throw new DeveloperError('oneOverRadii is required.');
         }
         if (!defined(oneOverRadiiSquared)) {
             throw new DeveloperError('oneOverRadiiSquared is required.');
@@ -50,13 +46,13 @@ define([
         var positionY = cartesian.y;
         var positionZ = cartesian.z;
 
-        var oneOverRadiiX = oneOverRadii.x;
-        var oneOverRadiiY = oneOverRadii.y;
-        var oneOverRadiiZ = oneOverRadii.z;
+        var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
+        var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
+        var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
 
-        var x2 = positionX * positionX * oneOverRadiiX * oneOverRadiiX;
-        var y2 = positionY * positionY * oneOverRadiiY * oneOverRadiiY;
-        var z2 = positionZ * positionZ * oneOverRadiiZ * oneOverRadiiZ;
+        var x2 = positionX * positionX * oneOverRadiiSquaredX;
+        var y2 = positionY * positionY * oneOverRadiiSquaredY;
+        var z2 = positionZ * positionZ * oneOverRadiiSquaredZ;
 
         // Compute the squared ellipsoid norm.
         var squaredNorm = x2 + y2 + z2;
@@ -69,10 +65,6 @@ define([
         if (squaredNorm < centerToleranceSquared) {
             return !isFinite(ratio) ? undefined : Cartesian3.clone(intersection, result);
         }
-
-        var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
-        var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
-        var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
 
         // Use the gradient at the intersection point in place of the true unit normal.
         // The difference in magnitude will be absorbed in the multiplier.

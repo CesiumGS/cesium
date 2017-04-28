@@ -608,7 +608,7 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON6);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON6);
         expect(frustum.right - frustum.left).toEqualEpsilon(cart.height, CesiumMath.EPSILON6);
-        expect(frustum.top / frustum.right).toEqual(ratio);
+        expect(frustum.top / frustum.right).toEqualEpsilon(ratio, CesiumMath.EPSILON6);
     });
 
     it('setView with cartesian in Columbus View', function() {

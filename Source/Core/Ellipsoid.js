@@ -523,7 +523,7 @@ define([
      * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
-        return scaleToGeodeticSurface(cartesian, this._oneOverRadii, this._oneOverRadiiSquared, this._centerToleranceSquared, result);
+        return scaleToGeodeticSurface(cartesian, this._oneOverRadiiSquared, this._centerToleranceSquared, result);
     };
 
     /**
