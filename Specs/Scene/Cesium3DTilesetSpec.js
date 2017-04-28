@@ -2291,7 +2291,6 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
             scene.renderForSpecs();
             var stats = tileset._statistics;
-            var root = tileset._root;
 
             tileset._root.children[0].children[0].children[0].unloadContent();
             tileset._root.children[0].children[0].children[1].unloadContent();
@@ -2334,7 +2333,7 @@ defineSuite([
             tileset._root.children[0].children[0].children[1].unloadContent();
             tileset._root.children[0].children[0].children[2].unloadContent();
 
-            scene.renderForSpecs();;
+            scene.renderForSpecs();
 
             // 2 for root tile, 1 for child, 1 for stencil clear
             expect(stats.numberOfCommands).toEqual(4);
@@ -2361,7 +2360,7 @@ defineSuite([
             tileset._root.children[0].children[0].children[2].unloadContent();
             tileset._root.children[0].children[0].children[3].unloadContent();
 
-            scene.renderForSpecs();;
+            scene.renderForSpecs();
 
             // 2 for root tile, 1 for child, 1 for stencil clear
             expect(stats.numberOfCommands).toEqual(1);
@@ -2449,7 +2448,6 @@ defineSuite([
     it('selects children if no ancestors available', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             var stats = tileset._statistics;
-            var root = tileset._root;
             var parent = tileset._root.children[0];
             var child = parent.children[3].children[0];
             parent.refine = Cesium3DTileRefine.REPLACE;

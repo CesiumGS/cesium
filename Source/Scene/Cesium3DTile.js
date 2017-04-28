@@ -333,8 +333,8 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
-        this._sse = 0;
-        this._sseComputedFrame = -1;
+        this._screenSpaceError = 0;
+        this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
         this._requestHeap = undefined;
         this._depth = 0;
