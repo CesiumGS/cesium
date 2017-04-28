@@ -83,7 +83,6 @@ define([
 
         this._features = undefined;
         initialize(this, arrayBuffer, byteOffset);
-
     }
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {

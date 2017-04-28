@@ -131,8 +131,8 @@ define([
         var displayPanelContents = document.createElement('div');
         var updatePanelContents = document.createElement('div');
         var loggingPanelContents = document.createElement('div');
-        var stylePanelContents = document.createElement('div');
         var tileInfoPanelContents = document.createElement('div');
+        var stylePanelContents = document.createElement('div');
 
         var properties = document.createElement('div');
         properties.className = 'field-group';
@@ -197,12 +197,12 @@ define([
         stylePanelContents.appendChild(errorBox);
 
         tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
-        tileInfoPanelContents.appendChild(makeCheckbox('numberOfCommands', 'Number Of Commands'));
-        tileInfoPanelContents.appendChild(makeCheckbox('numberOfPoints', 'Number Of Points'));
-        tileInfoPanelContents.appendChild(makeCheckbox('numberOfTriangles', 'Number Of Triangles'));
-        tileInfoPanelContents.appendChild(makeCheckbox('numberOfFeatures', 'Number Of Features'));
-        tileInfoPanelContents.appendChild(makeCheckbox('textureMemory', 'Texture Memory Usage'));
-        tileInfoPanelContents.appendChild(makeCheckbox('vertexMemory', 'Vertex Memory Usage'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfCommands', 'Number of Commands'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfPoints', 'Number Of Points'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfTriangles', 'Number Of Triangles'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfFeatures', 'Number Of Features'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showTextureMemory', 'Texture Memory Usage'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showVertexMemory', 'Vertex Memory Usage'));
 
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);

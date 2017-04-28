@@ -1929,31 +1929,31 @@ define([
             var attributes = 0;
 
             if (tileset.debugShowGeometricError) {
-                labelString += "\nGeometric error: " + tile.geometricError;
+                labelString += '\nGeometric error: ' + tile.geometricError;
                 attributes++;
             }
             if (tileset.debugShowNumberOfCommands) {
-                labelString += "\nCommands: " + tile._commandsLength;
+                labelString += '\nCommands: ' + tile._commandsLength;
                 attributes++;
             }
             if (tileset.debugShowNumberOfPoints) {
-                labelString += "\nPoints: " + tile.content.pointsLength;
+                labelString += '\nPoints: ' + tile.content.pointsLength;
                 attributes++;
             }
             if (tileset.debugShowNumberOfTriangles) {
-                labelString += "\nTriangles: " + tile.content.trianglesLength;
+                labelString += '\nTriangles: ' + tile.content.trianglesLength;
                 attributes++;
             }
             if (tileset.debugShowNumberOfFeatures) {
-                labelString += "\nFeatures: " + tile.content.featuresLength;
+                labelString += '\nFeatures: ' + tile.content.featuresLength;
                 attributes++;
             }
             if (tileset.debugShowTextureMemoryUsage) {
-                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes;
+                labelString += '\nTexture Memory: ' + tile.content.textureMemorySizeInBytes;
                 attributes++;
             }
             if (tileset.debugShowVertexMemoryUsage) {
-                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes;
+                labelString += '\nVertex Memory: ' + tile.content.vertexMemorySizeInBytes;
                 attributes++;
             }
 
@@ -2221,7 +2221,7 @@ define([
     Cesium3DTileset.prototype.destroy = function() {
         // Destroy debug labels
         if (defined(this._tileInfoLabels)) {
-            this._tileInfoLabels.destroy();
+            this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
         }
 
         // Traverse the tree and destroy all tiles

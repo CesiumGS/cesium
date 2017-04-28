@@ -478,55 +478,13 @@ define([
          */
         this.showGeometricError = false;
 
-        var textureMemory = knockout.observable();
-        knockout.defineProperty(this, 'textureMemory', {
+        var showNumberOfCommands = knockout.observable();
+        knockout.defineProperty(this, 'showNumberOfCommands', {
             get : function() {
-                return textureMemory();
+                return showNumberOfCommands();
             },
             set : function(value) {
-                textureMemory(value);
-                if (that._tileset) {
-                    that._tileset.debugShowTextureMemoryUsage = value;
-                }
-            }
-        });
-        /**
-         * Displays the texture memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.textureMemory = false;
-
-        var vertexMemory = knockout.observable();
-        knockout.defineProperty(this, 'vertexMemory', {
-            get : function() {
-                return vertexMemory();
-            },
-            set : function(value) {
-                vertexMemory(value);
-                if (that._tileset) {
-                    that._tileset.debugShowVertexMemoryUsage = value;
-                }
-            }
-        });
-        /**
-         * Displays the vertex memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.vertexMemory = false;
-
-        var numberOfCommands = knockout.observable();
-        knockout.defineProperty(this, 'numberOfCommands', {
-            get : function() {
-                return numberOfCommands();
-            },
-            set : function(value) {
-                numberOfCommands(value);
+                showNumberOfCommands(value);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfCommands = value;
                 }
@@ -539,15 +497,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.numberOfCommands = false;
+        this.showNumberOfCommands = false;
 
-        var numberOfPoints = knockout.observable();
-        knockout.defineProperty(this, 'numberOfPoints', {
+        var showNumberOfPoints = knockout.observable();
+        knockout.defineProperty(this, 'showNumberOfPoints', {
             get : function() {
-                return numberOfPoints();
+                return showNumberOfPoints();
             },
             set : function(value) {
-                numberOfPoints(value);
+                showNumberOfPoints(value);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfPoints = value;
                 }
@@ -560,15 +518,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.numberOfPoints = false;
+        this.showNumberOfPoints = false;
 
-        var numberOfTriangles = knockout.observable();
-        knockout.defineProperty(this, 'numberOfTriangles', {
+        var showNumberOfTriangles = knockout.observable();
+        knockout.defineProperty(this, 'showNumberOfTriangles', {
             get : function() {
-                return numberOfTriangles();
+                return showNumberOfTriangles();
             },
             set : function(value) {
-                numberOfTriangles(value);
+                showNumberOfTriangles(value);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfTriangles = value;
                 }
@@ -581,15 +539,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.numberOfTriangles = false;
+        this.showNumberOfTriangles = false;
 
-        var numberOfFeatures = knockout.observable();
-        knockout.defineProperty(this, 'numberOfFeatures', {
+        var showNumberOfFeatures = knockout.observable();
+        knockout.defineProperty(this, 'showNumberOfFeatures', {
             get : function() {
-                return numberOfFeatures();
+                return showNumberOfFeatures();
             },
             set : function(value) {
-                numberOfFeatures(value);
+                showNumberOfFeatures(value);
                 if (that._tileset) {
                     that._tileset.debugShowNumberOfFeatures = value;
                 }
@@ -602,7 +560,49 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.numberOfFeatures = false;
+        this.showNumberOfFeatures = false;
+
+        var showTextureMemory = knockout.observable();
+        knockout.defineProperty(this, 'showTextureMemory', {
+            get : function() {
+                return showTextureMemory();
+            },
+            set : function(value) {
+                showTextureMemory(value);
+                if (that._tileset) {
+                    that._tileset.debugShowTextureMemoryUsage = value;
+                }
+            }
+        });
+        /**
+         * Displays the texture memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showTextureMemory = false;
+
+        var showVertexMemory = knockout.observable();
+        knockout.defineProperty(this, 'showVertexMemory', {
+            get : function() {
+                return showVertexMemory();
+            },
+            set : function(value) {
+                showVertexMemory(value);
+                if (that._tileset) {
+                    that._tileset.debugShowVertexMemoryUsage = value;
+                }
+            }
+        });
+        /**
+         * Displays the vertex memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showVertexMemory = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -708,9 +708,9 @@ define([
         this._style = undefined;
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
-                                   'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
-                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive',
-                                    'textureMemory', 'vertexMemory', 'numberOfPoints', 'numberOfTriangles', 'numberOfCommands', 'numberOfFeatures'];
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
+                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
+                                   'showTextureMemory', 'showVertexMemory', 'showNumberOfCommands', 'showNumberOfPoints', 'showNumberOfTriangles', 'showNumberOfFeatures'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -816,14 +816,14 @@ define([
                                     'showBoundingVolumes',
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
-                                    'showGeometricError',
                                     'freezeFrame',
-                                    'onlyPickedTileInfo',
-                                    'textureMemory',
-                                    'vertexMemory',
-                                    'numberOfPoints',
-                                    'numberOfTriangles',
-                                    'numberOfCommands'];
+                                    'showGeometricError',
+                                    'showNumberOfCommands',
+                                    'showNumberOfPoints',
+                                    'showNumberOfTriangles',
+                                    'showNumberOfFeatures',
+                                    'showTextureMemory',
+                                    'showVertexMemory'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
