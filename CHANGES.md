@@ -3,6 +3,8 @@ Change Log
 
 ### 1.33 - 2017-05-01
 
+* Breaking changes
+   * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
 * Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
 * Fixed issue with displaying `MapboxImageryProvider` default token error message [#5191](https://github.com/AnalyticalGraphicsInc/cesium/pull/5191)
 * Fixed bug in conversion formula in Matrix3.fromHeadingPitchRoll [5195](https://github.com/AnalyticalGraphicsInc/cesium/issues/5195)
