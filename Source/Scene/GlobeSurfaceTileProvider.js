@@ -570,8 +570,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
-        var tileBoundingBox = surfaceTile.tileBoundingBox;
-        return tileBoundingBox.distanceToCamera(frameState);
+        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+        return tileBoundingRegion.distanceToCamera(frameState);
     };
 
     /**

@@ -18,6 +18,7 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RequestScheduler',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -40,6 +41,7 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        RequestScheduler,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -602,19 +604,20 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
+    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level, distance) {
         //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, url, distance);
     };
 
     /**
@@ -661,17 +664,21 @@ define([
 
             ++formatIndex;
 
-            if (format.type === 'json') {
-                return loadJson(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'xml') {
-                return loadXML(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
+            function doXhrRequest(url) {
                 return loadWithXhr({
                     url: url,
                     responseType: format.format
                 }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            }
+
+            if (format.type === 'json') {
+                return RequestScheduler.request(url, loadJson).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'xml') {
+                return RequestScheduler.request(url, loadXML).then(format.callback).otherwise(doRequest);
+            } else if (format.type === 'text' || format.type === 'html') {
+                return RequestScheduler.request(url, loadText).then(format.callback).otherwise(doRequest);
+            } else {
+                return RequestScheduler.request(url, doXhrRequest);
             }
         }
 

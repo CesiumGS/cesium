@@ -630,7 +630,7 @@ it('can create a billboard using a URL', function() {
     return pollToPromise(function() {
         return b.ready;
     }).then(function() {
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 });
 ```

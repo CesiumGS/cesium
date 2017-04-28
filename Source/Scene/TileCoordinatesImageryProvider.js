@@ -240,12 +240,13 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    TileCoordinatesImageryProvider.prototype.requestImage = function(x, y, level) {
+    TileCoordinatesImageryProvider.prototype.requestImage = function(x, y, level, distance) {
         var canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 256;

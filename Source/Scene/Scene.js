@@ -29,6 +29,7 @@ define([
         '../Core/mergeSort',
         '../Core/Occluder',
         '../Core/PixelFormat',
+        '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
@@ -55,6 +56,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './JobScheduler',
         './MapMode2D',
         './OIT',
         './OrthographicFrustum',
@@ -103,6 +105,7 @@ define([
         mergeSort,
         Occluder,
         PixelFormat,
+        RequestScheduler,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -129,6 +132,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        JobScheduler,
         MapMode2D,
         OIT,
         OrthographicFrustum,
@@ -242,7 +246,8 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._jobScheduler = new JobScheduler();
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
@@ -1343,7 +1348,7 @@ define([
                 break;
             }
 
-            var pass = command instanceof ClearCommand ? Pass.OPAQUE : command.pass;
+            var pass = command.pass;
             var index = frustumCommands.indices[pass]++;
             frustumCommands.commands[pass][index] = command;
 
@@ -1673,7 +1678,7 @@ define([
                 scene._debugVolume = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : geometry,
-                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        modelMatrix : Matrix4.fromTranslation(center),
                         attributes : {
                             color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                         }
@@ -1920,6 +1925,13 @@ define([
                 }
             }
 
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GROUND + 1;
@@ -1993,7 +2005,7 @@ define([
             var command = commandList[i];
             updateDerivedCommands(scene, command);
 
-            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.CESIUM_3D_TILE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
@@ -2580,6 +2592,8 @@ define([
         }
 
         scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
+        RequestScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2794,6 +2808,8 @@ define([
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
+
+        this._jobScheduler.disableThisFrame();
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);

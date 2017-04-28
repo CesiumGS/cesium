@@ -58,6 +58,9 @@
 
         /*global jasmineRequire,jasmine,exports,specs*/
 
+        // Disable request prioritization since it interferes with tests that expect a request to go through immediately.
+        Cesium.RequestScheduler.prioritize = false;
+
         var when = Cesium.when;
 
         if (typeof paths !== 'undefined') {
@@ -136,6 +139,8 @@
 
         window.it = function(description, f, timeout, categories) {
             originalIt(description, function(done) {
+                // Clear the RequestScheduler before for each test in case requests are still active from previous tests
+                Cesium.RequestScheduler.clearForSpecs();
                 var result = f();
                 when(result, function() {
                     done();

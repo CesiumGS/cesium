@@ -209,7 +209,7 @@ define([
 
         // Only use the level 0 mipmap
         if (PixelFormat.isCompressedFormat(glInternalFormat) && numberOfMipmapLevels > 1) {
-            var levelSize = PixelFormat.compressedTextureSize(glInternalFormat, pixelWidth, pixelHeight);
+            var levelSize = PixelFormat.compressedTextureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight);
             texture = texture.slice(0, levelSize);
         }
 
