@@ -199,7 +199,7 @@ define([
         tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
         tileInfoPanelContents.appendChild(makeCheckbox('textureMemory', 'Texture Memory Usage'));
         tileInfoPanelContents.appendChild(makeCheckbox('vertexMemory', 'Vertex Memory Usage'));
-        tileInfoPanelContents.appendChild(makeCheckbox('numberOfCommands', 'Number of Commands'));
+        tileInfoPanelContents.appendChild(makeCheckbox('numberOfCommands', 'Number Of Commands'));
         tileInfoPanelContents.appendChild(makeCheckbox('numberOfPoints', 'Number Of Points'));
         tileInfoPanelContents.appendChild(makeCheckbox('numberOfTriangles', 'Number Of Triangles'));
 
@@ -207,16 +207,16 @@ define([
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
-        var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
         var tileInfoPanel = makeSection('Tile Info', 'tileInfoVisible', 'toggleTileInfo', tileInfoPanelContents);
+        var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
 
         // first add and bind all the toggleable panels
         element.appendChild(tilesetPanel);
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
-        element.appendChild(stylePanel);
         element.appendChild(tileInfoPanel);
+        element.appendChild(stylePanel);
 
         knockout.applyBindings(viewModel, element);
     }

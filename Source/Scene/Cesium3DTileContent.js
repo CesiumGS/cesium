@@ -97,20 +97,6 @@ define([
         },
 
         /**
-         * Gets the number of commands used by the tile.
-         *
-         * @memberof Cesium3DTileContent.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        commandsLength : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
-
-        /**
          * Gets the tile's vertex memory in bytes.
          *
          * @memberof Cesium3DTileContent.prototype

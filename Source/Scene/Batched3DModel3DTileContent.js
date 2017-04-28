@@ -61,8 +61,6 @@ define([
         this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
-        this._commandsLength = 0;
-
         this._features = undefined;
 
         initialize(this, arrayBuffer, byteOffset);
@@ -96,18 +94,6 @@ define([
         trianglesLength : {
             get : function() {
                 return this._model.trianglesLength;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
-        commandsLength : {
-            get : function() {
-                return this._commandsLength;
-            },
-            set : function(val) {
-                this._commandsLength = val;
             }
         },
 

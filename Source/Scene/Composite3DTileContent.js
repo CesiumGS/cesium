@@ -90,18 +90,6 @@ define([
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>pointsLength</code> for a tile in the composite.
          */
-        commandsLength : {
-            get : function() {
-                return 0;
-            },
-            set : function(val) {}
-        },
-
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-         * always returns <code>0</code>.  Instead call <code>pointsLength</code> for a tile in the composite.
-         */
         pointsLength : {
             get : function() {
                 return 0;

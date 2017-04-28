@@ -147,16 +147,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        commandsLength : {
-            get : function() {
-                return 1;
-            },
-            set : function(val) {}
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         pointsLength : {
             get : function() {
                 return this._pointsLength;

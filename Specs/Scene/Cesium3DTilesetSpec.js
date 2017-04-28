@@ -1324,11 +1324,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError);
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
@@ -1345,8 +1345,8 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(2);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
@@ -1363,12 +1363,12 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(6);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError.toString());
-            expect(tileset._tileInfoLabels._labels[5].text).toEqual('Geometric error: ' + root.children[4].geometricError.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError);
+            expect(tileset._tileInfoLabels._labels[5].text).toEqual('Geometric error: ' + root.children[4].geometricError);
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
@@ -1385,11 +1385,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Commands: ' + root.content.commandsLength.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Commands: ' + root.children[0].content.commandsLength.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Commands: ' + root.children[1].content.commandsLength.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Commands: ' + root.children[2].content.commandsLength.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Commands: ' + root.children[3].content.commandsLength.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Commands: ' + root._commandsLength);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Commands: ' + root.children[0]._commandsLength);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Commands: ' + root.children[1]._commandsLength);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Commands: ' + root.children[2]._commandsLength);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Commands: ' + root.children[3]._commandsLength);
 
             tileset.debugShowNumberOfCommands = false;
             scene.renderForSpecs();
@@ -1406,11 +1406,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Triangles: ' + root.content.trianglesLength.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Triangles: ' + root.children[0].content.trianglesLength.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Triangles: ' + root.children[1].content.trianglesLength.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Triangles: ' + root.children[2].content.trianglesLength.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Triangles: ' + root.children[3].content.trianglesLength.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Triangles: ' + root.content.trianglesLength);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Triangles: ' + root.children[0].content.trianglesLength);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Triangles: ' + root.children[1].content.trianglesLength);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Triangles: ' + root.children[2].content.trianglesLength);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Triangles: ' + root.children[3].content.trianglesLength);
 
             tileset.debugShowNumberOfTriangles = false;
             scene.renderForSpecs();
@@ -1427,11 +1427,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Points: ' + root.content.pointsLength.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Points: ' + root.children[0].content.pointsLength.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Points: ' + root.children[1].content.pointsLength.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Points: ' + root.children[2].content.pointsLength.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Points: ' + root.children[3].content.pointsLength.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Points: ' + root.content.pointsLength);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Points: ' + root.children[0].content.pointsLength);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Points: ' + root.children[1].content.pointsLength);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Points: ' + root.children[2].content.pointsLength);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Points: ' + root.children[3].content.pointsLength);
 
             tileset.debugShowNumberOfPoints = false;
             scene.renderForSpecs();
@@ -1448,11 +1448,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Texture Memory: ' + root.content.textureMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Texture Memory: ' + root.children[0].content.textureMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Texture Memory: ' + root.children[1].content.textureMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Texture Memory: ' + root.children[2].content.textureMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Texture Memory: ' + root.children[3].content.textureMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Texture Memory: ' + root.content.textureMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Texture Memory: ' + root.children[0].content.textureMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Texture Memory: ' + root.children[1].content.textureMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Texture Memory: ' + root.children[2].content.textureMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Texture Memory: ' + root.children[3].content.textureMemorySizeInBytes);
 
             tileset.debugShowTextureMemoryUsage = false;
             scene.renderForSpecs();
@@ -1469,11 +1469,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Vertex Memory: ' + root.content.vertexMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Vertex Memory: ' + root.children[0].content.vertexMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Vertex Memory: ' + root.children[1].content.vertexMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Vertex Memory: ' + root.children[2].content.vertexMemorySizeInBytes.toString());
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Vertex Memory: ' + root.children[3].content.vertexMemorySizeInBytes.toString());
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Vertex Memory: ' + root.content.vertexMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Vertex Memory: ' + root.children[0].content.vertexMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Vertex Memory: ' + root.children[1].content.vertexMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Vertex Memory: ' + root.children[2].content.vertexMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Vertex Memory: ' + root.children[3].content.vertexMemorySizeInBytes);
 
             tileset.debugShowVertexMemoryUsage = false;
             scene.renderForSpecs();
@@ -1495,12 +1495,13 @@ defineSuite([
             expect(tileset._tileInfoLabels).toBeDefined();
 
             var content = tileset._root.content;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + tileset._root.geometricError.toString() + '\n' +
-                                                                    'Commands: ' + content.commandsLength.toString() + '\n' +
-                                                                    'Points: ' + content.pointsLength.toString() + '\n' +
-                                                                    'Triangles: ' + content.trianglesLength.toString() + '\n' +
-                                                                    'Texture Memory: ' + content.textureMemorySizeInBytes.toString() + '\n' +
-                                                                    'Vertex Memory: ' + content.vertexMemorySizeInBytes.toString());
+            var expected = 'Geometric error: ' + tileset._root.geometricError + '\n' +
+                           'Commands: ' + tileset._root._commandsLength + '\n' +
+                           'Points: ' + content.pointsLength + '\n' +
+                           'Triangles: ' + content.trianglesLength + '\n' +
+                           'Texture Memory: ' + content.textureMemorySizeInBytes + '\n' +
+                           'Vertex Memory: ' + content.vertexMemorySizeInBytes;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowGeometricError = false;
             tileset.debugShowNumberOfCommands = false;

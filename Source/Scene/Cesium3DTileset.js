@@ -417,14 +417,13 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the number of triangles in each tile.
+         * When true, draws labels to indicate the number of points in each tile.
          * </p>
          *
          * @type {Boolean}
          * @default false
          */
         this.debugShowNumberOfPoints = defaultValue(options.debugShowNumberOfPoints, false);
-
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1915,39 +1914,39 @@ define([
                 position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
             }
 
-            var labelString = "";
-            var attribCounter = 0;
+            var labelString = '';
+            var attributes = 0;
 
             if (tileset.debugShowGeometricError) {
-                labelString += "\nGeometric error: " + tile.geometricError.toString();
-                attribCounter++;
+                labelString += "\nGeometric error: " + tile.geometricError;
+                attributes++;
             }
             if (tileset.debugShowNumberOfCommands) {
-                labelString += "\nCommands: " + tile.content.commandsLength.toString();
-                attribCounter++;
+                labelString += "\nCommands: " + tile._commandsLength;
+                attributes++;
             }
             if (tileset.debugShowNumberOfPoints) {
-                labelString += "\nPoints: " + tile.content.pointsLength.toString();
-                attribCounter++;
+                labelString += "\nPoints: " + tile.content.pointsLength;
+                attributes++;
             }
             if (tileset.debugShowNumberOfTriangles) {
-                labelString += "\nTriangles: " + tile.content.trianglesLength.toString();
-                attribCounter++;
+                labelString += "\nTriangles: " + tile.content.trianglesLength;
+                attributes++;
             }
             if (tileset.debugShowTextureMemoryUsage) {
-                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes.toString();
-                attribCounter++;
+                labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes;
+                attributes++;
             }
             if (tileset.debugShowVertexMemoryUsage) {
-                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes.toString();
-                attribCounter++;
+                labelString += "\nVertex Memory: " + tile.content.vertexMemorySizeInBytes;
+                attributes++;
             }
 
             tileset._tileInfoLabels.add({
-                text: labelString.substring(1),
-                position: position,
-                font : (18-attribCounter).toString() + 'px sans-serif',
-                showBackground: true,
+                text : labelString.substring(1),
+                position : position,
+                font : (18-attributes) + 'px sans-serif',
+                showBackground : true,
                 disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
         }
@@ -2204,6 +2203,11 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
+        // Destroy debug labels
+        if (defined(this._tileInfoLabels)) {
+            this._tileInfoLabels.destroy();
+        }
+
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {
             var stack = scratchStack;

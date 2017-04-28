@@ -230,7 +230,6 @@ define([
          */
         this.tileInfoVisible = false;
 
-
         /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
          *
@@ -326,7 +325,6 @@ define([
                 }
             }
         });
-
 
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
@@ -439,26 +437,6 @@ define([
          */
         this.showRequestVolumes = false;
 
-        var showGeometricError = knockout.observable();
-        knockout.defineProperty(this, 'showGeometricError', {
-            get : function() {
-                return showGeometricError();
-            },
-            set : function(value) {
-                showGeometricError(value);
-                if (that._tileset) {
-                    that._tileset.debugShowGeometricError = value;
-                }
-            }
-        });
-        /**
-         * Gets or sets the flag to show tile geometric error.  This property is observable.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showGeometricError = false;
-
         var freezeFrame = knockout.observable();
         knockout.defineProperty(this, 'freezeFrame', {
             get : function() {
@@ -480,36 +458,35 @@ define([
          */
         this.freezeFrame = false;
 
-        var onlyPickedTileInfo = knockout.observable();
-        knockout.defineProperty(this, 'onlyPickedTileInfo', {
+        var showGeometricError = knockout.observable();
+        knockout.defineProperty(this, 'showGeometricError', {
             get : function() {
-                return onlyPickedTileInfo();
+                return showGeometricError();
             },
-            set : function(val) {
-                onlyPickedTileInfo(val);
+            set : function(value) {
+                showGeometricError(value);
                 if (that._tileset) {
-                    that._tileset.debugShowOnlyPickedTile = val;
+                    that._tileset.debugShowGeometricError = value;
                 }
             }
         });
         /**
-         * Displays tile info for only picked tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * Gets or sets the flag to show tile geometric error.  This property is observable.
          *
          * @type {Boolean}
          * @default false
          */
-        this.onlyPickedTileInfo = false;
+        this.showGeometricError = false;
 
         var textureMemory = knockout.observable();
         knockout.defineProperty(this, 'textureMemory', {
             get : function() {
                 return textureMemory();
             },
-            set : function(val) {
-                textureMemory(val);
+            set : function(value) {
+                textureMemory(value);
                 if (that._tileset) {
-                    that._tileset.debugShowTextureMemoryUsage = val;
+                    that._tileset.debugShowTextureMemoryUsage = value;
                 }
             }
         });
@@ -522,57 +499,15 @@ define([
          */
         this.textureMemory = false;
 
-        var numberOfTriangles = knockout.observable();
-        knockout.defineProperty(this, 'numberOfTriangles', {
-            get : function() {
-                return numberOfTriangles();
-            },
-            set : function(val) {
-                numberOfTriangles(val);
-                if (that._tileset) {
-                    that._tileset.debugShowNumberOfTriangles = val;
-                }
-            }
-        });
-        /**
-         * Displays the number of triangles per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.numberOfTriangles = false;
-
-        var numberOfPoints = knockout.observable();
-        knockout.defineProperty(this, 'numberOfPoints', {
-            get : function() {
-                return numberOfPoints();
-            },
-            set : function(val) {
-                numberOfPoints(val);
-                if (that._tileset) {
-                    that._tileset.debugShowNumberOfPoints = val;
-                }
-            }
-        });
-        /**
-         * Displays the number of points per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.numberOfPoints = false;
-
         var vertexMemory = knockout.observable();
         knockout.defineProperty(this, 'vertexMemory', {
             get : function() {
                 return vertexMemory();
             },
-            set : function(val) {
-                vertexMemory(val);
+            set : function(value) {
+                vertexMemory(value);
                 if (that._tileset) {
-                    that._tileset.debugShowVertexMemoryUsage = val;
+                    that._tileset.debugShowVertexMemoryUsage = value;
                 }
             }
         });
@@ -590,10 +525,10 @@ define([
             get : function() {
                 return numberOfCommands();
             },
-            set : function(val) {
-                numberOfCommands(val);
+            set : function(value) {
+                numberOfCommands(value);
                 if (that._tileset) {
-                    that._tileset.debugShowNumberOfCommands = val;
+                    that._tileset.debugShowNumberOfCommands = value;
                 }
             }
         });
@@ -605,6 +540,48 @@ define([
          * @default false
          */
         this.numberOfCommands = false;
+
+        var numberOfPoints = knockout.observable();
+        knockout.defineProperty(this, 'numberOfPoints', {
+            get : function() {
+                return numberOfPoints();
+            },
+            set : function(value) {
+                numberOfPoints(value);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfPoints = value;
+                }
+            }
+        });
+        /**
+         * Displays the number of points per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfPoints = false;
+
+        var numberOfTriangles = knockout.observable();
+        knockout.defineProperty(this, 'numberOfTriangles', {
+            get : function() {
+                return numberOfTriangles();
+            },
+            set : function(value) {
+                numberOfTriangles(value);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfTriangles = value;
+                }
+            }
+        });
+        /**
+         * Displays the number of triangles per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfTriangles = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
