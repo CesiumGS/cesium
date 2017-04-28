@@ -99,6 +99,7 @@ define([
         this._materialProperty = undefined;
         this._shadowsProperty = undefined;
         this._distanceDisplayConditionProperty = undefined;
+        this._depthFailMaterialProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
@@ -172,6 +173,18 @@ define([
             }
         },
         /**
+         * Gets the material property used to fill the geometry when it fails the depth test.
+         * @memberof PolylineGeometryUpdater.prototype
+         *
+         * @type {MaterialProperty}
+         * @readonly
+         */
+        depthFailMaterialProperty : {
+            get : function() {
+                return this._depthFailMaterialProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof PolylineGeometryUpdater.prototype
          *
@@ -205,7 +218,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof PolylineGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -306,30 +319,32 @@ define([
         }
         //>>includeEnd('debug');
 
-        var color;
-        var attributes;
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time));
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
+        var attributes = {
+            show : show,
+            distanceDisplayCondition : distanceDisplayConditionAttribute
+        };
+
+        var currentColor;
         if (this._materialProperty instanceof ColorMaterialProperty) {
-            var currentColor = Color.WHITE;
+            currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
                 currentColor = this._materialProperty.color.getValue(time);
             }
-            color = ColorGeometryInstanceAttribute.fromColor(currentColor);
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute,
-                color : color
-            };
-        } else {
-            attributes = {
-                show : show,
-                distanceDisplayCondition : distanceDisplayConditionAttribute
-            };
+            attributes.color = ColorGeometryInstanceAttribute.fromColor(currentColor);
+        }
+
+        if (defined(this._depthFailMaterialProperty) && this._depthFailMaterialProperty instanceof ColorMaterialProperty) {
+            currentColor = Color.WHITE;
+            if (defined(this._depthFailMaterialProperty.color) && (this._depthFailMaterialProperty.color.isConstant || isAvailable)) {
+                currentColor = this._depthFailMaterialProperty.color.getValue(time);
+            }
+            attributes.depthFailColor = ColorGeometryInstanceAttribute.fromColor(currentColor);
         }
 
         return new GeometryInstance({
@@ -402,6 +417,7 @@ define([
         var material = defaultValue(polyline.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
+        this._depthFailMaterialProperty = polyline.depthFailMaterial;
         this._showProperty = defaultValue(show, defaultShow);
         this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(polyline.distanceDisplayCondition, defaultDistanceDisplayCondition);
@@ -431,7 +447,14 @@ define([
                 return;
             }
 
-            options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
+            var vertexFormat;
+            if (isColorMaterial && (!defined(this._depthFailMaterialProperty) || this._depthFailMaterialProperty instanceof ColorMaterialProperty)) {
+                vertexFormat = PolylineColorAppearance.VERTEX_FORMAT;
+            } else {
+                vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
+            }
+
+            options.vertexFormat = vertexFormat;
             options.positions = positions;
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;

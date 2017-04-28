@@ -81,6 +81,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
+                    'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
@@ -957,7 +958,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 // we still are using from the set, then delete any files remaining in the set.
     var leftOverJsFiles = {};
 
-    globby.sync(['Source/Shaders/**/*.js']).forEach(function(file) {
+    globby.sync(['Source/Shaders/**/*.js', 'Source/ThirdParty/Shaders/*.js']).forEach(function(file) {
         leftOverJsFiles[path.normalize(file)] = true;
     });
 
@@ -965,7 +966,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
     var builtinConstants = [];
     var builtinStructs = [];
 
-    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl']);
+    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl', 'Source/ThirdParty/Shaders/*.glsl']);
     glslFiles.forEach(function(glslFile) {
         glslFile = path.normalize(glslFile);
         var baseName = path.basename(glslFile, '.glsl');
