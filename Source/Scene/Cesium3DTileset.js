@@ -1164,13 +1164,6 @@ define([
             return diff;
         }
 
-        var ancestorA = a._ancestorWithLoadedContent;
-        var ancestorB = b._ancestorWithLoadedContent;
-
-        if (ancestorA === ancestorB) {
-            return diff;
-        }
-
         var screenSpaceErrorDiff = b._screenSpaceError - a._screenSpaceError;
         return screenSpaceErrorDiff === 0 ? diff : screenSpaceErrorDiff;
     }
