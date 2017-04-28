@@ -201,8 +201,8 @@ define([
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfPoints', 'Number Of Points'));
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfTriangles', 'Number Of Triangles'));
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfFeatures', 'Number Of Features'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showTextureMemory', 'Texture Memory Usage'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showVertexMemory', 'Vertex Memory Usage'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showTextureMemory', 'Texture Memory Usage (MB)'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showVertexMemory', 'Vertex Memory Usage (MB)'));
 
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);

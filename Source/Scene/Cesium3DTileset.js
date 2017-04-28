@@ -1949,11 +1949,11 @@ define([
                 attributes++;
             }
             if (tileset.debugShowTextureMemoryUsage) {
-                labelString += '\nTexture Memory: ' + tile.content.textureMemorySizeInBytes;
+                labelString += '\nTexture Memory: ' + (tile.content.textureMemorySizeInBytes / 1048576.0).toFixed(3);
                 attributes++;
             }
             if (tileset.debugShowVertexMemoryUsage) {
-                labelString += '\nVertex Memory: ' + tile.content.vertexMemorySizeInBytes;
+                labelString += '\nVertex Memory: ' + (tile.content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
                 attributes++;
             }
 

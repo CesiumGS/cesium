@@ -1469,11 +1469,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Texture Memory: ' + root.content.textureMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Texture Memory: ' + root.children[0].content.textureMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Texture Memory: ' + root.children[1].content.textureMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Texture Memory: ' + root.children[2].content.textureMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Texture Memory: ' + root.children[3].content.textureMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Texture Memory: ' + (root.content.textureMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Texture Memory: ' + (root.children[0].content.textureMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Texture Memory: ' + (root.children[1].content.textureMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Texture Memory: ' + (root.children[2].content.textureMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Texture Memory: ' + (root.children[3].content.textureMemorySizeInBytes / 1048576.0).toFixed(3));
 
             tileset.debugShowTextureMemoryUsage = false;
             scene.renderForSpecs();
@@ -1490,11 +1490,11 @@ defineSuite([
             expect(tileset._tileInfoLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Vertex Memory: ' + root.content.vertexMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Vertex Memory: ' + root.children[0].content.vertexMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Vertex Memory: ' + root.children[1].content.vertexMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Vertex Memory: ' + root.children[2].content.vertexMemorySizeInBytes);
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Vertex Memory: ' + root.children[3].content.vertexMemorySizeInBytes);
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Vertex Memory: ' + (root.content.vertexMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Vertex Memory: ' + (root.children[0].content.vertexMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Vertex Memory: ' + (root.children[1].content.vertexMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Vertex Memory: ' + (root.children[2].content.vertexMemorySizeInBytes / 1048576.0).toFixed(3));
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Vertex Memory: ' + (root.children[3].content.vertexMemorySizeInBytes / 1048576.0).toFixed(3));
 
             tileset.debugShowVertexMemoryUsage = false;
             scene.renderForSpecs();
@@ -1522,8 +1522,8 @@ defineSuite([
                            'Points: ' + content.pointsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
                            'Features: ' + content.featuresLength + '\n' +
-                           'Texture Memory: ' + content.textureMemorySizeInBytes + '\n' +
-                           'Vertex Memory: ' + content.vertexMemorySizeInBytes;
+                           'Texture Memory: ' + (content.textureMemorySizeInBytes / 1048576.0).toFixed(3) + '\n' +
+                           'Vertex Memory: ' + (content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
             expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowGeometricError = false;
