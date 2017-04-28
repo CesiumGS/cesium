@@ -583,6 +583,27 @@ define([
          */
         this.numberOfTriangles = false;
 
+        var numberOfFeatures = knockout.observable();
+        knockout.defineProperty(this, 'numberOfFeatures', {
+            get : function() {
+                return numberOfFeatures();
+            },
+            set : function(value) {
+                numberOfFeatures(value);
+                if (that._tileset) {
+                    that._tileset.debugShowNumberOfFeatures = value;
+                }
+            }
+        });
+        /**
+         * Displays the number of features per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.numberOfFeatures = false;
+
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
             get : function() {
@@ -689,7 +710,7 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
                                    'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive',
-                                    'onlyPickedTileInfo', 'textureMemory', 'vertexMemory', 'numberOfPoints', 'numberOfTriangles', 'numberOfCommands'];
+                                    'onlyPickedTileInfo', 'textureMemory', 'vertexMemory', 'numberOfPoints', 'numberOfTriangles', 'numberOfCommands', 'numberOfFeatures'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });

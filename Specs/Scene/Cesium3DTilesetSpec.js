@@ -1439,6 +1439,27 @@ defineSuite([
         });
     });
 
+    it('show tile info labels with number of features', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowNumberOfFeatures = true;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileInfoLabels.length).toEqual(5);
+
+            var root = tileset._root;
+            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Features: ' + root.content.featuresLength);
+            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Features: ' + root.children[0].content.featuresLength);
+            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Features: ' + root.children[1].content.featuresLength);
+            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Features: ' + root.children[2].content.featuresLength);
+            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Features: ' + root.children[3].content.featuresLength);
+
+            tileset.debugShowNumberOfFeatures = false;
+            scene.renderForSpecs();
+            expect(tileset._tileInfoLabels).not.toBeDefined();
+        });
+    });
+
     it('show tile info labels with texture memory usage', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
@@ -1488,6 +1509,7 @@ defineSuite([
             tileset.debugShowNumberOfCommands = true;
             tileset.debugShowNumberOfPoints = true;
             tileset.debugShowNumberOfTriangles = true;
+            tileset.debugShowNumberOfFeatures = true;
             tileset.debugShowTextureMemoryUsage = true;
             tileset.debugShowVertexMemoryUsage = true;
             viewRootOnly();
@@ -1499,6 +1521,7 @@ defineSuite([
                            'Commands: ' + tileset._root._commandsLength + '\n' +
                            'Points: ' + content.pointsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
+                           'Features: ' + content.featuresLength + '\n' +
                            'Texture Memory: ' + content.textureMemorySizeInBytes + '\n' +
                            'Vertex Memory: ' + content.vertexMemorySizeInBytes;
             expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
@@ -1507,6 +1530,7 @@ defineSuite([
             tileset.debugShowNumberOfCommands = false;
             tileset.debugShowNumberOfPoints = false;
             tileset.debugShowNumberOfTriangles = false;
+            tileset.debugShowNumberOfFeatures = false;
             tileset.debugShowTextureMemoryUsage = false;
             tileset.debugShowVertexMemoryUsage = false;
             scene.renderForSpecs();

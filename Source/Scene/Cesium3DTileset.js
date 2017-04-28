@@ -439,6 +439,17 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
+         * When true, draws labels to indicate the number of features in each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowNumberOfFeatures = defaultValue(options.debugShowNumberOfFeatures, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
          * When true, draws labels to indicate the texture memory usage.
          * </p>
          *
@@ -1933,6 +1944,10 @@ define([
                 labelString += "\nTriangles: " + tile.content.trianglesLength;
                 attributes++;
             }
+            if (tileset.debugShowNumberOfFeatures) {
+                labelString += "\nFeatures: " + tile.content.featuresLength;
+                attributes++;
+            }
             if (tileset.debugShowTextureMemoryUsage) {
                 labelString += "\nTexture Memory: " + tile.content.textureMemorySizeInBytes;
                 attributes++;
@@ -1945,7 +1960,7 @@ define([
             tileset._tileInfoLabels.add({
                 text : labelString.substring(1),
                 position : position,
-                font : (18-attributes) + 'px sans-serif',
+                font : (19-attributes) + 'px sans-serif',
                 showBackground : true,
                 disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
@@ -2036,7 +2051,8 @@ define([
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         if (tileset.debugShowGeometricError || tileset.debugShowNumberOfCommands || tileset.debugShowTextureMemoryUsage ||
-            tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles) {
+            tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles ||
+            tileset.debugShowNumberOfFeatures) {
             if (!defined(tileset._tileInfoLabels)) {
                 tileset._tileInfoLabels = new LabelCollection();
             }
