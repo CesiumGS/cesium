@@ -82,7 +82,10 @@ define([
         atan2 : Math.atan2,
         pow : Math.pow,
         min : Math.min,
-        max : Math.max
+        max : Math.max,
+        distance : distance,
+        dot: dot,
+        cross: cross
     };
 
     var unaryFunctions = {
@@ -123,6 +126,48 @@ define([
 
     function log2(number) {
         return CesiumMath.logBase(number, 2.0);
+    }
+
+    function distance(x, y) {
+        if (typeof x === 'number' && typeof y === 'number') {
+            return Math.abs(x - y);
+        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
+            return Cartesian2.distance(x, y);
+        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.distance(x, y);
+        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
+            return Cartesian4.distance(x, y);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function distance requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
+        }
+    }
+
+    function dot(x, y) {
+        if (typeof x === 'number' && typeof y === 'number') {
+            return x * y;
+        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
+            return Cartesian2.dot(x, y);
+        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.dot(x, y);
+        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
+            return Cartesian4.dot(x, y);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function dot requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
+        }
+    }
+
+    function cross(x, y) {
+        if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.cross(x, y, ScratchStorage.getCartesian3());
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Invalid argument type for cross() function, must be vec3');
+            //>>includeEnd('debug');
+        }
     }
 
     /**
@@ -247,9 +292,9 @@ define([
         }
 
         shaderExpression = returnType + ' ' + functionName + '() \n' +
-            '{ \n' +
-            '    return ' + shaderExpression + '; \n' +
-            '} \n';
+                           '{ \n' +
+                           '    return ' + shaderExpression + '; \n' +
+                           '} \n';
 
         return shaderExpression;
     };
@@ -400,7 +445,7 @@ define([
                 createRuntimeAst(expression, args[1]),
                 createRuntimeAst(expression, args[2])
             ];
-           return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
@@ -808,6 +853,12 @@ define([
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
         return function(feature) {
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+
+            if (call === 'distance' || call === 'dot' || call === 'cross') {
+                return evaluate(left, right);
+            }
             return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
         };
     }

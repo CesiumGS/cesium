@@ -119,7 +119,7 @@ define([
             }
 
             var loadedTile = original._ancestorWithLoadedContent;
-            if (original.hasContent && original.contentReady) {
+            if (original.hasRenderableContent && original.contentReady) {
                 loadedTile = original;
             }
 
@@ -202,7 +202,7 @@ define([
                 continue;
             }
 
-            var shouldSelect = tile.selected && tile._selectedFrame === frameState.frameNumber && tile.hasContent;
+            var shouldSelect = tile.selected && tile._selectedFrame === frameState.frameNumber && tile.hasRenderableContent;
 
             var children = tile.children;
             var childrenLength = children.length;
@@ -247,7 +247,7 @@ define([
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.contentReady && (
                 (tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
-                (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE)
+                (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
             )) {
             tileset._selectedTiles.push(tile);
 
@@ -441,7 +441,7 @@ define([
 
             // if we have reached the skipping threshold without any loaded ancestors, return empty so this tile is loaded
             if (
-                (tile.hasContent && tile.contentUnloaded) &&
+                (!tile.hasEmptyContent && tile.contentUnloaded) &&
                 defined(tile._ancestorWithLoadedContent) &&
                 this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
                 return emptyArray;
@@ -482,7 +482,7 @@ define([
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
         if (tile !== this.root) {
-            if (tile.hasContent || tile.hasTilesetContent) {
+            if (!tile.hasEmptyContent) {
                 if (this.tileset.loadSiblings) {
                     var parent = tile.parent;
                     var tiles = parent.children;
@@ -525,8 +525,8 @@ define([
             var parent = tile.parent;
             if (defined(parent)) {
                 var replace = parent.refine === Cesium3DTileRefine.REPLACE;
-                tile._ancestorWithContent = (replace && parent.hasContent) ? parent : parent._ancestorWithContent;
-                tile._ancestorWithLoadedContent = (replace && parent.hasContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
+                tile._ancestorWithContent = (replace && parent.hasRenderableContent) ? parent : parent._ancestorWithContent;
+                tile._ancestorWithLoadedContent = (replace && parent.hasRenderableContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
             }
         }
     }

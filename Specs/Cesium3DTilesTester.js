@@ -123,19 +123,16 @@ define([
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         expect(function() {
-            content.initialize(arrayBuffer);
+            var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, type);
             content.update(tileset, scene.frameState);
         }).toThrowDeveloperError();
-        return content;
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
         var tileset = {};
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.initialize(arrayBuffer);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
     };
@@ -148,30 +145,13 @@ define([
             baseUrl : counter++
         };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.initialize(arrayBuffer);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
         return content.readyPromise.then(function(content) {
             fail('should not resolve');
         }).otherwise(function(error) {
-            expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-        });
-    };
-
-    Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
-        var tileset = {
-            loadTileset : Cesium3DTileset.prototype.loadTileset
-        };
-        var url = 'invalid';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.request();
-
-        return content.readyPromise.then(function(content) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-            expect(error.statusCode).toEqual(404);
+            expect(error).toBeDefined();
         });
     };
 
@@ -179,7 +159,7 @@ define([
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
             return content.readyPromise.then(function(content) {
-                expect(content.state).toEqual(Cesium3DTileContentState.READY);
+                expect(content).toBeDefined();
             });
         });
     };
@@ -190,25 +170,6 @@ define([
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(content.isDestroyed()).toEqual(true);
-        });
-    };
-
-    Cesium3DTilesTester.tileDestroysBeforeLoad = function(scene, url) {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : url
-        }));
-        scene.renderForSpecs();
-        return tileset.readyPromise.then(function(tileset) {
-            var content = tileset._root.content;
-            scene.renderForSpecs(); // Request root
-            scene.primitives.remove(tileset);
-
-            return content.readyPromise.then(function(content) {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-                return content;
-            });
         });
     };
 
