@@ -126,6 +126,7 @@ define([
      * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
+     * @param {Number} [options.baseScreenSpaceError=1024] The screen-space error that must be reached before skipping LODs
      * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
      * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipSSEFactor to determine which tiles to load.
      * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
@@ -1339,27 +1340,51 @@ define([
 
     var descendantStack = [];
 
-    function markLoadedTilesForSelection(tileset, frameState) {
+    function markLoadedTilesForSelection(tileset, frameState, outOfCore) {
         var tiles = tileset._desiredTiles;
         var length = tiles.length;
         for (var i = 0; i < length; ++i) {
-            var tile = tiles.get(i);
+            var original = tiles.get(i);
 
-            if (tile.refine === Cesium3DTileRefine.ADD) {
-                tile.selected = true;
-                tile._selectedFrame = frameState.frameNumber;
+            if (original.refine === Cesium3DTileRefine.ADD && original.contentReady) {
+                original.selected = true;
+                original._selectedFrame = frameState.frameNumber;
                 continue;
             }
 
-            var loadedTile = tile._ancestorWithLoadedContent;
-            if (tile.hasContent && tile.contentReady) {
-                loadedTile = tile;
+            var loadedTile = original._ancestorWithLoadedContent;
+            if (original.hasContent && original.contentReady) {
+                loadedTile = original;
             }
 
             if (defined(loadedTile)) {
                 if (!loadedTile.selected) {
                     loadedTile.selected = true;
                     loadedTile._selectedFrame = frameState.frameNumber;
+                }
+            } else {
+                // if no ancestors are ready, traverse down and select ready tiles to minimize empty regions
+                descendantStack.push(original);
+                while (descendantStack.length > 0) {
+                    var tile = descendantStack.pop();
+                    var children = tile.children;
+                    var childrenLength = children.length;
+                    for (var j = 0; j < childrenLength; ++j) {
+                        var child = children[j];
+                        touch(tileset, child, outOfCore);
+                        if (child.contentReady) {
+                            if (!child.selected) {
+                                child.selected = true;
+                                child._finalResolution = true;
+                                child._selectedFrame = frameState.frameNumber;
+                            }
+                        }
+                        if (child._depth - original._depth < 2) { // prevent traversing too far
+                            if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
+                                descendantStack.push(child);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1503,25 +1528,31 @@ define([
             return;
         }
 
-        // leaves of the base traversal is where we start the skip traversal
-        tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
-
-        // load and select tiles without skipping up to tileset._baseScreenSpaceError
-        var baseScreenSpaceError = tileset.skipLODs ? tileset._baseScreenSpaceError : tileset._maximumScreenSpaceError;
-        tileset._baseTraversal.execute(tileset, root, baseScreenSpaceError, frameState, outOfCore);
-
-        if (tileset.skipLODs) {
-            // skip traversal starts from a prepopulated queue from the base traversal
-            tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
+        if (!tileset.skipLODs) {
+            // just execute base traversal and add tiles to _desiredTiles
+            tileset._baseTraversal.execute(tileset, root, tileset._maximumScreenSpaceError, frameState, outOfCore);
+            var leaves = tileset._baseTraversal.leaves;
+            var length = leaves.length;
+            for (var i = 0; i < length; ++i) {
+                tileset._desiredTiles.push(leaves.get(i));
+            }
         } else {
-            for (var i = 0; i < tileset._baseTraversal.leaves.length; ++i) {
-                var tile = tileset._baseTraversal.leaves.get(i);
-                tileset._desiredTiles.push(tile);
+            if (tileset.immediatelyLoadDesiredLOD) {
+                tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
+            } else {
+                // leaves of the base traversal is where we start the skip traversal
+                tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
+
+                // load and select tiles without skipping up to tileset._baseScreenSpaceError
+                tileset._baseTraversal.execute(tileset, root, tileset._baseScreenSpaceError, frameState, outOfCore);
+
+                // skip traversal starts from a prepopulated queue from the base traversal
+                tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
             }
         }
 
         // mark tiles for selection or their nearest loaded ancestor
-        markLoadedTilesForSelection(tileset, frameState);
+        markLoadedTilesForSelection(tileset, frameState, outOfCore);
 
         // sort selected tiles by distance to camera and call selectTile on each
         // set tile._selectionDepth on all tiles
@@ -1728,7 +1759,7 @@ define([
                 continue;
             }
 
-            var shouldSelect = tile.selected && tile._selectedFrame === frameState.frameNumber;
+            var shouldSelect = tile.selected && tile._selectedFrame === frameState.frameNumber && tile.hasContent;
 
             var children = tile.children;
             var childrenLength = children.length;
@@ -1748,6 +1779,7 @@ define([
 
                     if (childrenLength === 0) {
                         tile._finalResolution = true;
+                        lastAncestor = tile;
                         selectTile(tileset, tile, frameState);
                         continue;
                     }

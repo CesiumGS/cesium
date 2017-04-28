@@ -71,14 +71,12 @@ define([
         }
 
         if (tile.refine === Cesium3DTileRefine.ADD) {
-            if (tile.hasContent) {
-                tileset._desiredTiles.push(tile);
-            }
-        } else {
-            if (tile.hasContent && // continue traversal until some content exists at all branches of the tree
-                tile._sse <= baseScreenSpaceError) {  // stop traversal when we've attained the desired level of error
-                return emptyArray;
-            }
+            tileset._desiredTiles.push(tile);
+        }
+
+        // stop traversal when we've attained the desired level of error
+        if (tile._sse <= baseScreenSpaceError) {
+            return emptyArray;
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
@@ -147,7 +145,10 @@ define([
     };
 
     SkipTraversal.prototype.leafHandler = function(tile) {
-        this.tileset._desiredTiles.push(tile);
+        // additive tiles have already been pushed
+        if (tile.refine === Cesium3DTileRefine.REPLACE) {
+            this.tileset._desiredTiles.push(tile);
+        }
     };
 
     function InternalSkipTraversal(selectionHeuristic) {
@@ -181,27 +182,31 @@ define([
             }
         } else {
             if (tile.refine === Cesium3DTileRefine.ADD) {
-                if (tile.hasContent) {
-                    tileset._desiredTiles.push(tile);
-                }
-            } else if (tile.hasContent) {   // require the tile to have content before refining it
-                if (tile._sse <= maximumScreenSpaceError) {
-                    return emptyArray;
-                }
+                tileset._desiredTiles.push(tile);
+            }
 
-                // if we have reached the skipping threshold without any loaded ancestors, return empty so this tile is loaded
-                if (
-                    (tile.hasContent && tile.contentUnloaded) &&
-                    defined(tile._ancestorWithLoadedContent) &&
-                    this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
-                    return emptyArray;
-                }
+            // stop traversal when we've attained the desired level of error
+            if (tile._sse <= maximumScreenSpaceError) {
+                return emptyArray;
+            }
+
+            // if we have reached the skipping threshold without any loaded ancestors, return empty so this tile is loaded
+            if (
+                (tile.hasContent && tile.contentUnloaded) &&
+                defined(tile._ancestorWithLoadedContent) &&
+                this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
+                return emptyArray;
             }
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
         var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._sse > maximumScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
+
+        // at least one child is visible, but is not in request volume. the parent must be selected
+        if (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME && tile.refine === Cesium3DTileRefine.REPLACE) {
+            this.tileset._desiredTiles.push(tile);
+        }
 
         if (showAdditive || showReplacement || tile.hasTilesetContent) {
             var children = tile.children;
@@ -229,14 +234,21 @@ define([
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
         if (tile !== this.root) {
-
             if (tile.hasContent || tile.hasTilesetContent) {
-                loadTile(tile, this.frameState);
+                if (this.tileset.loadSiblings) {
+                    var parent = tile.parent;
+                    var tiles = parent.children;
+                    var length = tiles.length;
+                    for (var i = 0; i < length; ++i) {
+                        loadTile(tiles[i], this.frameState);
+                    }
+                } else {
+                    loadTile(tile, this.frameState);
+                }
             }
-
             this.queue.push(tile);
-
-        } else {
+        } else if (tile.refine === Cesium3DTileRefine.REPLACE) {
+            // additive tiles have already been pushed
             this.tileset._desiredTiles.push(tile);
         }
     };
