@@ -2162,6 +2162,7 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.numberOfCommands).toEqual(5);
             expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
+            expect(tileset.totalMemoryUsageInBytes).toEqual(44400); // Specific to this tileset
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
             // the four children since the maximum memory usage is zero.
@@ -2170,6 +2171,7 @@ defineSuite([
 
             expect(stats.numberOfCommands).toEqual(1);
             expect(stats.numberContentReady).toEqual(1);
+            expect(tileset.totalMemoryUsageInBytes).toEqual(8880); // Specific to this tileset
 
             // Zoom back in so all four children are re-requested.
             viewAllTiles();
@@ -2178,6 +2180,7 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toEqual(5);
                 expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
+                expect(tileset.totalMemoryUsageInBytes).toEqual(44400); // Specific to this tileset
             });
         });
     });

@@ -1023,13 +1023,14 @@ define([
         },
 
         /**
-         * Returns the total amount of memory used by the tileset.
+         * Returns the total amount of memory used in bytes by the tileset.
          *
          * @type {Number}
          */
-        totalMemoryUsage : {
+        totalMemoryUsageInBytes : {
             get : function() {
-                return this._statistics.textureMemorySizeInBytes + this._statistics.vertexMemorySizeInBytes + this._statistics.batchTableMemorySizeInBytes;
+                var stats = this._statistics;
+                return stats.textureMemorySizeInBytes + stats.vertexMemorySizeInBytes + stats.batchTableMemorySizeInBytes;
             }
         }
     });
@@ -2029,7 +2030,7 @@ define([
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
-        var totalMemoryUsage = tileset.totalMemoryUsage;
+        var totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
@@ -2038,7 +2039,7 @@ define([
         // The sub-list to the left of the sentinel is ordered from LRU to MRU.
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
-        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || (totalMemoryUsage > maximumMemoryUsageInBytes) || trimTiles)) {
+        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || (totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
 
             decrementPointAndFeatureLoadCounts(tileset, tile.content);
@@ -2050,7 +2051,7 @@ define([
             replacementList.remove(currentNode);
 
             --stats.numberContentReady;
-            totalMemoryUsage = tileset.totalMemoryUsage;
+            totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         }
     }
 
