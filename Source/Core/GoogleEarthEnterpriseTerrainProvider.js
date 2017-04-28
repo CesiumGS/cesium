@@ -406,28 +406,26 @@ define([
         var parentInfo;
         var q = quadKey;
         var terrainVersion = -1;
-        if (terrainState !== TerrainState.NONE) {
-            switch (terrainState) {
-                case TerrainState.SELF: // We have terrain and have retrieved it before
-                    terrainVersion = info.terrainVersion;
-                    break;
-                case TerrainState.PARENT: // We have terrain in our parent
+        switch (terrainState) {
+            case TerrainState.SELF: // We have terrain and have retrieved it before
+                terrainVersion = info.terrainVersion;
+                break;
+            case TerrainState.PARENT: // We have terrain in our parent
+                q = q.substring(0, q.length - 1);
+                parentInfo = metadata.getTileInformationFromQuadKey(q);
+                terrainVersion = parentInfo.terrainVersion;
+                break;
+            case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
+                if (info.hasTerrain()) {
+                    terrainVersion = info.terrainVersion; // We should have terrain
+                } else {
                     q = q.substring(0, q.length - 1);
                     parentInfo = metadata.getTileInformationFromQuadKey(q);
-                    terrainVersion = parentInfo.terrainVersion;
-                    break;
-                case TerrainState.UNKNOWN: // We haven't tried to retrieve terrain yet
-                    if (info.hasTerrain()) {
-                        terrainVersion = info.terrainVersion; // We should have terrain
-                    } else {
-                        q = q.substring(0, q.length - 1);
-                        parentInfo = metadata.getTileInformationFromQuadKey(q);
-                        if (defined(parentInfo) && parentInfo.hasTerrain()) {
-                            terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
-                        }
+                    if (defined(parentInfo) && parentInfo.hasTerrain()) {
+                        terrainVersion = parentInfo.terrainVersion; // Try checking in the parent
                     }
-                    break;
-            }
+                }
+                break;
         }
 
         // We can't figure out where to get the terrain
