@@ -197,7 +197,7 @@ define([
         stylePanelContents.appendChild(errorBox);
 
         tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfCommands', 'Number of Commands'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfCommands', 'Number Of Commands'));
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfPoints', 'Number Of Points'));
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfTriangles', 'Number Of Triangles'));
         tileInfoPanelContents.appendChild(makeCheckbox('showNumberOfFeatures', 'Number Of Features'));

@@ -121,7 +121,13 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
-     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
+     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
+     * @param {Boolean} [options.debugShowNumberOfCommands=false] For debugging only. When true, draws labels to indicate the number of commands used by each tile.
+     * @param {Boolean} [options.debugShowNumberOfPoints=false] For debugging only. When true, draws labels to indicate the number of points in each tile.
+     * @param {Boolean} [options.debugShowNumberOfTriangles=false] For debugging only. When true, draws labels to indicate the number of triangles in each tile.
+     * @param {Boolean} [options.debugShowNumberOfFeatures=false] For debugging only. When true, draws labels to indicate the number of features in each tile.
+     * @param {Boolean} [options.debugShowTextureMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture memory in megabytes used by each tile.
+     * @param {Boolean} [options.debugShowVertexMemoryUsage=false] For debugging only. When true, draws labels to indicate the vertex memory in megabytes used by each tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
@@ -2220,9 +2226,7 @@ define([
      */
     Cesium3DTileset.prototype.destroy = function() {
         // Destroy debug labels
-        if (defined(this._tileInfoLabels)) {
-            this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
-        }
+        this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {

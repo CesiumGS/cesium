@@ -710,7 +710,7 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
                                    'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
-                                   'showTextureMemory', 'showVertexMemory', 'showNumberOfCommands', 'showNumberOfPoints', 'showNumberOfTriangles', 'showNumberOfFeatures'];
+                                   'showNumberOfCommands', 'showNumberOfPoints', 'showNumberOfTriangles', 'showNumberOfFeatures', 'showTextureMemory', 'showVertexMemory'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
