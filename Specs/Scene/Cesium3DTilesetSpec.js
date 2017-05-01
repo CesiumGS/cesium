@@ -2569,7 +2569,7 @@ defineSuite([
             // Wait for the new tileset content to come in with one less leaf
             return pollToPromise(function() {
                 scene.renderForSpecs();
-                return subtreeRoot.contentReady;
+                return subtreeRoot.contentReady && tileset.tilesLoaded;
             }).then(function() {
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toBe(4);
