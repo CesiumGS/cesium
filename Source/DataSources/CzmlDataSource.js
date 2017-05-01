@@ -67,6 +67,7 @@ define([
         './PointGraphics',
         './PolygonGraphics',
         './PolylineArrowMaterialProperty',
+        './PolylineDashMaterialProperty',
         './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
@@ -152,6 +153,7 @@ define([
         PointGraphics,
         PolygonGraphics,
         PolylineArrowMaterialProperty,
+        PolylineDashMaterialProperty,
         PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
@@ -1009,6 +1011,15 @@ define([
             }
             materialData = packetData.polylineArrow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
+        } else if (defined(packetData.polylineDash)) {
+            if (!(existingMaterial instanceof PolylineDashMaterialProperty)) {
+                existingMaterial = new PolylineDashMaterialProperty();
+            }
+            materialData = packetData.polylineDash;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
+            processPacketData(Color, existingMaterial, 'gapColor', materialData.gapColor, undefined, undefined, entityCollection);
+            processPacketData(Number, existingMaterial, 'dashLength', materialData.dashLength, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'dashPattern', materialData.dashPattern, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {

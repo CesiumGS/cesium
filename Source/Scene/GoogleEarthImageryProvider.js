@@ -132,7 +132,6 @@ define([
 
         this._version = undefined;
 
-
         this._tileWidth = 256;
         this._tileHeight = 256;
         this._maximumLevel = options.maximumLevel;
@@ -154,56 +153,56 @@ define([
             try {
                 // First, try parsing it like normal in case a future version sends correctly formatted JSON
                 data = JSON.parse(text);
-            } catch(e) {
+            } catch (e) {
                 // Quote object strings manually, then try parsing again
                 data = JSON.parse(text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'));
             }
 
             var layer;
-            for(var i = 0; i < data.layers.length; i++) {
-              if(data.layers[i].id === that._channel) {
-                layer = data.layers[i];
-                break;
-              }
+            for (var i = 0; i < data.layers.length; i++) {
+                if (data.layers[i].id === that._channel) {
+                    layer = data.layers[i];
+                    break;
+                }
             }
 
             var message;
 
-            if(!defined(layer)) {
-              message = 'Could not find layer with channel (id) of ' + that._channel + '.';
-              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-              throw new RuntimeError(message);
+            if (!defined(layer)) {
+                message = 'Could not find layer with channel (id) of ' + that._channel + '.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                throw new RuntimeError(message);
             }
 
-            if(!defined(layer.version)) {
-              message = 'Could not find a version in channel (id) ' + that._channel + '.';
-              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-              throw new RuntimeError(message);
+            if (!defined(layer.version)) {
+                message = 'Could not find a version in channel (id) ' + that._channel + '.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                throw new RuntimeError(message);
             }
             that._version = layer.version;
 
-            if(defined(data.projection) && data.projection === 'flat') {
-              that._tilingScheme = new GeographicTilingScheme({
-                  numberOfLevelZeroTilesX : 2,
-                  numberOfLevelZeroTilesY : 2,
-                  rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
-                  ellipsoid : options.ellipsoid
-              });
-            // Default to mercator projection when projection is undefined
-            } else if(!defined(data.projection) || data.projection === 'mercator') {
-              that._tilingScheme = new WebMercatorTilingScheme({
-                  numberOfLevelZeroTilesX : 2,
-                  numberOfLevelZeroTilesY : 2,
-                  ellipsoid : options.ellipsoid
-              });
+            if (defined(data.projection) && data.projection === 'flat') {
+                that._tilingScheme = new GeographicTilingScheme({
+                    numberOfLevelZeroTilesX : 2,
+                    numberOfLevelZeroTilesY : 2,
+                    rectangle : new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI),
+                    ellipsoid : options.ellipsoid
+                });
+                // Default to mercator projection when projection is undefined
+            } else if (!defined(data.projection) || data.projection === 'mercator') {
+                that._tilingScheme = new WebMercatorTilingScheme({
+                    numberOfLevelZeroTilesX : 2,
+                    numberOfLevelZeroTilesY : 2,
+                    ellipsoid : options.ellipsoid
+                });
             } else {
-              message = 'Unsupported projection ' + data.projection + '.';
-              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-              throw new RuntimeError(message);
+                message = 'Unsupported projection ' + data.projection + '.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                throw new RuntimeError(message);
             }
 
             that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType)
-              .replace('{channel}', that._channel).replace('{version}', that._version);
+                .replace('{channel}', that._channel).replace('{version}', that._version);
 
             that._ready = true;
             that._readyPromise.resolve(true);
@@ -217,10 +216,10 @@ define([
         }
 
         function requestMetadata() {
-          var url = (!defined(that._proxy)) ? metadataUrl : that._proxy.getURL(metadataUrl);
+            var url = (!defined(that._proxy)) ? metadataUrl : that._proxy.getURL(metadataUrl);
 
-          var metadata = loadText(url);
-          when(metadata, metadataSuccess, metadataFailure);
+            var metadata = loadText(url);
+            when(metadata, metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -301,7 +300,7 @@ define([
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {

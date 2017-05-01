@@ -156,6 +156,8 @@ define([
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
+
+        this._minimumDisableDepthTestDistance = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -803,6 +805,20 @@ define([
             get : function() {
                 return this._imagerySplitPosition;
             }
+        },
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         *
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            }
         }
     });
 
@@ -978,6 +994,12 @@ define([
 
         this._geometricToleranceOverMeter = pixelSizePerMeter * frameState.maximumScreenSpaceError;
         Color.clone(frameState.backgroundColor, this._backgroundColor);
+
+        this._minimumDisableDepthTestDistance = frameState.minimumDisableDepthTestDistance;
+        this._minimumDisableDepthTestDistance *= this._minimumDisableDepthTestDistance;
+        if (this._minimumDisableDepthTestDistance === Number.POSITIVE_INFINITY) {
+            this._minimumDisableDepthTestDistance = -1.0;
+        }
     };
 
     function cleanViewport(uniformState) {
