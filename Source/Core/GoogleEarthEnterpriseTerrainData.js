@@ -64,6 +64,9 @@ define([
      *                 </table>
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
+     * @param {[Credit]} [options.credits] Array of credits for this tile.
+     * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
+     * @param {Number} options.negativeElevationThreshold Threshold for negative values
      *
      *
      * @example
@@ -82,9 +85,14 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options.buffer', options.buffer);
+        Check.typeOf.number('options.negativeAltitudeExponentBias', options.negativeAltitudeExponentBias);
+        Check.typeOf.number('options.negativeElevationThreshold', options.negativeElevationThreshold);
         //>>includeEnd('debug');
 
         this._buffer = options.buffer;
+        this._credits = options.credits;
+        this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias
+        this._negativeElevationThreshold = options.negativeElevationThreshold;
 
         // Convert from google layout to layout of other providers
         // 3 2 -> 2 3
@@ -109,6 +117,16 @@ define([
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
         /**
+         * An array of credits for this tile
+         * @memberof GoogleEarthEnterpriseTerrainData.prototype
+         * @type {[Credit]}
+         */
+        credits : {
+            get : function() {
+                return this._credits;
+            }
+        },
+        /**
          * The water mask included in this terrain data, if any.  A water mask is a rectangular
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
          * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
@@ -123,7 +141,7 @@ define([
     });
 
     var taskProcessor = new TaskProcessor('createVerticesFromGoogleEarthEnterpriseBuffer');
-    
+
     var nativeRectangleScratch = new Rectangle();
     var rectangleScratch = new Rectangle();
 
@@ -169,7 +187,9 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
             exaggeration : exaggeration,
-            includeWebMercatorT : true
+            includeWebMercatorT : true,
+            negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
+            negativeElevationThreshold: this._negativeElevationThreshold
         });
 
         if (!defined(verticesPromise)) {
@@ -314,7 +334,8 @@ define([
                     eastSkirtHeight : skirtHeight,
                     northSkirtHeight : skirtHeight,
                     childTileMask : 0,
-                    createdByUpsampling : true
+                    createdByUpsampling : true,
+                    credits : that._credits
                 });
             });
     };

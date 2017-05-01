@@ -460,8 +460,14 @@ define([
             .then(function(image) {
                 GoogleEarthEnterpriseMetadata.decode(metadata.key, image);
                 var a = new Uint8Array(image);
-                var type = getImageType(a);
-                if (!defined(type)) {
+                var type;
+
+                var protoImagery = metadata.protoImagery;
+                if (!defined(protoImagery) || !protoImagery) {
+                    type = getImageType(a);
+                }
+
+                if (!defined(type) && (!defined(protoImagery) || protoImagery)) {
                     var message = decodeEarthImageryPacket(a);
                     type = message.imageType;
                     a = message.imageData;
@@ -522,6 +528,8 @@ define([
         if (image[1] === png.charCodeAt(0) && image[2] === png.charCodeAt(1) && image[3] === png.charCodeAt(2)) {
             return 'image/png';
         }
+
+        return undefined;
     }
 
     // Decodes an Imagery protobuf into the message

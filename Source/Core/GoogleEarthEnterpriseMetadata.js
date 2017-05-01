@@ -246,7 +246,7 @@ define([
         var that = this;
         this._readyPromise = requestDbRoot(this)
             .then(function() {
-                return this.getQuadTreePacket('', that._quadPacketVersion, false);
+                return that.getQuadTreePacket('', that._quadPacketVersion, false);
             })
             .then(function() {
                 return true;
@@ -676,10 +676,17 @@ define([
 
         var promise = loadArrayBuffer(url)
             .then(function(buf) {
-                var encryptedDbRootProto = dbRootParser.EncryptedDbRootProto.decode(buf);
-                var key = that.key = stringToBuffer(encryptedDbRootProto.encryptionData);
+                var encryptedDbRootProto = dbRootParser.EncryptedDbRootProto.decode(new Uint8Array(buf));
 
-                var dbRootCompressed = stringToBuffer(encryptedDbRootProto.dbrootData);
+                var byteArray = encryptedDbRootProto.encryptionData;
+                var offset = byteArray.byteOffset;
+                var end = offset + byteArray.byteLength;
+                var key = that.key = byteArray.buffer.slice(offset, end);
+
+                byteArray = encryptedDbRootProto.dbrootData;
+                offset = byteArray.byteOffset;
+                end = offset + byteArray.byteLength;
+                var dbRootCompressed = byteArray.buffer.slice(offset, end);
                 return taskProcessor.scheduleTask({
                     buffer : dbRootCompressed,
                     type : 'DbRoot',
@@ -687,14 +694,14 @@ define([
                 }, [dbRootCompressed]);
             })
             .then(function(result) {
-                var dbRoot = dbRootParser.DbRootProto.decode(result.buffer);
+                var dbRoot = dbRootParser.DbRootProto.decode(new Uint8Array(result.buffer));
                 that.imageryPresent = defaultValue(dbRoot.imageryPresent, that.imageryPresent);
                 that.protoImagery = dbRoot.protoImagery;
                 that.terrainPresent = defaultValue(dbRoot.terrainPresent, that.terrainPresent);
                 if (defined(dbRoot.endSnippet) && defined(dbRoot.endSnippet.model)) {
                     var model = dbRoot.endSnippet.model;
                     that.negativeAltitudeExponentBias = defaultValue(model.negativeAltitudeExponentBias, that.negativeAltitudeExponentBias);
-                    that.negativeAltitudeThreshold = defaultValue(model.compressedNegativeAltitudeThreshold, that.compressedNegativeAltitudeThreshold);
+                    that.negativeAltitudeThreshold = defaultValue(model.compressedNegativeAltitudeThreshold, that.negativeAltitudeThreshold);
                 }
                 if (defined(dbRoot.databaseVersion)) {
                     that._quadPacketVersion = defaultValue(dbRoot.databaseVersion.quadtreeVersion, that._quadPacketVersion);
