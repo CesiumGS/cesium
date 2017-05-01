@@ -641,7 +641,7 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._pickInfo = options.pickInfo;
+        this._pickObject = options.pickObject;
 
         /**
          * @private
@@ -3469,10 +3469,6 @@ define([
                     mesh : runtimeMeshesByName[mesh.name]
                 };
 
-                if (defined(model._pickInfo)) {
-                    owner = combine(owner, model._pickInfo);
-                }
-
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
@@ -3510,6 +3506,9 @@ define([
                         }
                     } else {
                         var pickId = context.createPickId(owner);
+                        if (defined(model._pickObject)) {
+                            pickId = context.createPickId(model._pickObject);
+                        }
                         pickIds.push(pickId);
                         var pickUniforms = {
                             czm_pickColor : createPickColorFunction(pickId.color)

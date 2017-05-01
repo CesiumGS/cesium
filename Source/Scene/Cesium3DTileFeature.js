@@ -46,7 +46,6 @@ define([
         this._batchTable = content.batchTable;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-        this._tile = content._tile;
         /**
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
          *
@@ -55,6 +54,14 @@ define([
          * @private
          */
         this.primitive = tileset;
+        /**
+         * All objects returned by {@link Scene#pick} have a <code>tile</code> property.
+         *
+         * @type {Cesium3DTileset}
+         *
+         * @private
+         */
+        this.tile = content.tile;
     }
 
     defineProperties(Cesium3DTileFeature.prototype, {
