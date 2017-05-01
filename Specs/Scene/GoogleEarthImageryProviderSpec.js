@@ -42,6 +42,7 @@ defineSuite([
                 channel : 1234
             });
         }
+
         expect(constructWithoutServer).toThrowDeveloperError();
     });
 
@@ -51,6 +52,7 @@ defineSuite([
                 url : 'http://invalid.localhost'
             });
         }
+
         expect(constructWithoutChannel).toThrowDeveloperError();
     });
 
@@ -69,7 +71,7 @@ defineSuite([
             path : path
         });
 
-        return provider.readyPromise.then(function (result) {
+        return provider.readyPromise.then(function(result) {
             expect(result).toBe(true);
             expect(provider.ready).toBe(true);
         });
@@ -82,9 +84,9 @@ defineSuite([
             channel : 1234
         });
 
-        return provider.readyPromise.then(function () {
+        return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain(url);
         });
@@ -178,29 +180,29 @@ defineSuite([
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve('{\n' +
-                'isAuthenticated: true,\n' +
-                'layers: [\n' +
-                '   {\n' +
-                '        icon: "icons/773_l.png",\n' +
-                '        id: 1234,\n' +
-                '        initialState: true,\n' +
-                '        label: "Imagery",\n' +
-                '        lookAt: "none",\n' +
-                '        requestType: "ImageryMaps",\n' +
-                '        version: 1\n' +
-                '    },{\n' +
-                '        icon: "icons/773_l.png",\n' +
-                '        id: 1007,\n' +
-                '        initialState: true,\n' +
-                '        label: "Labels",\n' +
-                '        lookAt: "none",\n' +
-                '        requestType: "VectorMapsRaster",\n' +
-                '        version: 8\n' +
-                '    }\n' +
-                '],\n' +
-                'serverUrl: "https://example.invalid",\n' +
-                'useGoogleLayers: false\n' +
-            '}');
+                                    'isAuthenticated: true,\n' +
+                                    'layers: [\n' +
+                                    '   {\n' +
+                                    '        icon: "icons/773_l.png",\n' +
+                                    '        id: 1234,\n' +
+                                    '        initialState: true,\n' +
+                                    '        label: "Imagery",\n' +
+                                    '        lookAt: "none",\n' +
+                                    '        requestType: "ImageryMaps",\n' +
+                                    '        version: 1\n' +
+                                    '    },{\n' +
+                                    '        icon: "icons/773_l.png",\n' +
+                                    '        id: 1007,\n' +
+                                    '        initialState: true,\n' +
+                                    '        label: "Labels",\n' +
+                                    '        lookAt: "none",\n' +
+                                    '        requestType: "VectorMapsRaster",\n' +
+                                    '        version: 8\n' +
+                                    '    }\n' +
+                                    '],\n' +
+                                    'serverUrl: "https://example.invalid",\n' +
+                                    'useGoogleLayers: false\n' +
+                                    '}');
         };
 
         var provider = new GoogleEarthImageryProvider({
