@@ -311,7 +311,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'https://assets.agi.com/stk-terrain/world'
+     *         url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
