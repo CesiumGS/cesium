@@ -1123,12 +1123,20 @@ defineSuite([
     });
 
     it('converts to window coordinates',function(){
-        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates').and.callThrough();
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.wgs84ToWindow(mockPosition);
 
-        expect(scene).toRenderAndCall(function() {
-            scene.wgs84ToWindow(new Cartesian3());
-            expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalled();
-        });
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
+    });
+
+    it('converts to window coordinates and return it in a variable',function(){
+        var result = new Cartesian2();
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.wgs84ToWindow(mockPosition, result);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
     });
 
 }, 'WebGL');

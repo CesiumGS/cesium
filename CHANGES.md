@@ -5,7 +5,7 @@ Change Log
 
 * Breaking changes
    * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
-* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189). 
+* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189).
 * Support for dashed polylines [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159).
    * Added `PolylineDash` Material type.
    * Added `PolylineDashMaterialProperty` to the Entity API.
