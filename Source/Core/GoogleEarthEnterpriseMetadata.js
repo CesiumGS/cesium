@@ -9,9 +9,11 @@ define([
     './defineProperties',
     './DeveloperError',
     './loadArrayBuffer',
+    './Request',
+    './RequestScheduler',
+    './RequestType',
     './RuntimeError',
-    './TaskProcessor',
-    './throttleRequestByServer'
+    './TaskProcessor'
 ], function(
     pako,
     when,
@@ -22,9 +24,11 @@ define([
     defineProperties,
     DeveloperError,
     loadArrayBuffer,
+    Request,
+    RequestScheduler,
+    RequestType,
     RuntimeError,
-    TaskProcessor,
-    throttleRequestByServer) {
+    TaskProcessor) {
     'use strict';
 
     // Bitmask for checking tile properties
@@ -174,7 +178,7 @@ define([
         this._subtreePromises = {};
 
         var that = this;
-        this._readyPromise = this.getQuadTreePacket('', 1, false)
+        this._readyPromise = this.getQuadTreePacket('', 1, undefined, false)
             .then(function() {
                 return true;
             })
@@ -415,13 +419,14 @@ define([
      *
      * @param {String} [quadKey=''] The quadkey to retrieve the packet for.
      * @param {Number} [version=1] The cnode version to be used in the request.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @param {Boolean} [throttle=true] True if the number of simultaneous requests should be limited,
      *                  or false if the request should be initiated regardless of the number of requests
      *                  already in progress.
      *
      * @private
      */
-    GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version, throttle) {
+    GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version, distance, throttle) {
         version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
         throttle = defaultValue(throttle, true);
@@ -431,14 +436,16 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-        if (throttle) {
-            promise = throttleRequestByServer(url, loadArrayBuffer);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = loadArrayBuffer(url);
+        var promise = RequestScheduler.schedule(new Request({
+            defer : !throttle,
+            url : url,
+            requestFunction : loadArrayBuffer,
+            type : RequestType.TERRAIN,
+            distance : distance
+        }));
+
+        if (!defined(promise)) {
+            return undefined; //Throttled
         }
 
         var tileInfo = this._tileInfo;
@@ -499,6 +506,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
      * @param {Boolean} [throttle=true] True if the number of simultaneous requests should be limited,
      *                  or false if the request should be initiated regardless of the number of requests
      *                  already in progress.
@@ -507,13 +515,13 @@ define([
      *
      * @private
      */
-    GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level, throttle) {
+    GoogleEarthEnterpriseMetadata.prototype.populateSubtree = function(x, y, level, distance, throttle) {
         throttle = defaultValue(throttle, true);
         var quadkey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
-        return populateSubtree(this, quadkey, throttle);
+        return populateSubtree(this, quadkey, distance, throttle);
     };
 
-    function populateSubtree(that, quadKey, throttle) {
+    function populateSubtree(that, quadKey, distance, throttle) {
         var tileInfo = that._tileInfo;
         var q = quadKey;
         var t = tileInfo[q];
@@ -533,7 +541,7 @@ define([
             return promise
                 .then(function() {
                     // Recursively call this incase we need multiple subtree requests
-                    return populateSubtree(that, quadKey, throttle);
+                    return populateSubtree(that, quadKey, distance, throttle);
                 });
         }
 
@@ -548,7 +556,7 @@ define([
         // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
         //  is already resolved (like in the tests), so subtreePromises will never get cleared out.
         //  Only the initial request will also remove the promise from subtreePromises.
-        promise = that.getQuadTreePacket(q, t.cnodeVersion, throttle);
+        promise = that.getQuadTreePacket(q, t.cnodeVersion, distance, throttle);
         if (!defined(promise)) {
             return undefined;
         }
@@ -557,7 +565,7 @@ define([
         return promise
             .then(function() {
                 // Recursively call this incase we need multiple subtree requests
-                return populateSubtree(that, quadKey, throttle);
+                return populateSubtree(that, quadKey, distance, throttle);
             })
             .always(function() {
                 delete subtreePromises[q];
