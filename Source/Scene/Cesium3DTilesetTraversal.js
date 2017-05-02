@@ -301,11 +301,6 @@ define([
 
     BaseTraversal.prototype.getChildren = function(tile) {
         if (this.updateAndCheckChildren(tile)) {
-            if (!childrenAreVisible(tile)) {
-                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                return emptyArray;
-            }
-
             var children = tile.children;
             var childrenLength = children.length;
             var allReady = true;
@@ -341,12 +336,12 @@ define([
             }
         }
 
-        if (tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent) {
+        if (hasAdditiveContent(tile)) {
             tileset._desiredTiles.push(tile);
         }
 
         // stop traversal when we've attained the desired level of error
-        if (tile._screenSpaceError <= this.baseScreenSpaceError && tile.hasRenderableContent) {
+        if (tile._screenSpaceError <= this.baseScreenSpaceError) {
             return false;
         }
 
@@ -362,8 +357,12 @@ define([
     };
 
     BaseTraversal.prototype.leafHandler = function(tile) {
-        // additive tiles have already been pushed to tileset._desiredTiles
-        if (tile.refine === Cesium3DTileRefine.REPLACE) {
+        // if skipLODs is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
+        if (this.tileset.skipLODs || tile.refine === Cesium3DTileRefine.REPLACE) {
+            if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
+                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+                return;
+            }
             this.leaves.push(tile);
         }
     };
@@ -396,11 +395,6 @@ define([
 
     InternalBaseTraversal.prototype.getChildren = function(tile) {
         if (this.updateAndCheckChildren(tile, this.baseScreenSpaceError)) {
-            if (!childrenAreVisible(tile)) {
-                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                return emptyArray;
-            }
-
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
@@ -450,7 +444,7 @@ define([
 
     SkipTraversal.prototype.leafHandler = function(tile) {
         // additive tiles have already been pushed
-        if (tile.refine === Cesium3DTileRefine.REPLACE) {
+        if (!hasAdditiveContent(tile)) {
             this.tileset._desiredTiles.push(tile);
         }
     };
@@ -481,7 +475,7 @@ define([
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
          if (!tile.hasTilesetContent) {
-            if (tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent) {
+            if (hasAdditiveContent(tile)) {
                 tileset._desiredTiles.push(tile);
             }
 
@@ -500,7 +494,7 @@ define([
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > maximumScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
         // at least one child is visible, but is not in request volume. the parent must be selected
@@ -509,11 +503,6 @@ define([
         }
 
         if (showAdditive || showReplacement || tile.hasTilesetContent) {
-            if (!childrenAreVisible(tile)) {
-                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                return emptyArray;
-            }
-
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
@@ -538,6 +527,10 @@ define([
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
         if (tile !== this.root) {
+            if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
+                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+                return;
+            }
             if (!tile.hasEmptyContent) {
                 if (this.tileset.loadSiblings) {
                     var parent = tile.parent;
@@ -551,7 +544,7 @@ define([
                 }
             }
             this.queue.push(tile);
-        } else if (tile.refine === Cesium3DTileRefine.REPLACE) {
+        } else if (!hasAdditiveContent(tile)) {
             // additive tiles have already been pushed
             this.tileset._desiredTiles.push(tile);
         }
@@ -706,6 +699,10 @@ define([
     function childrenAreVisible(tile) {
         // optimization does not apply for additive refinement
         return tile.refine === Cesium3DTileRefine.ADD || tile.children.length === 0 || tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE !== 0;
+    }
+
+    function hasAdditiveContent(tile) {
+        return tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent;
     }
 
     function DFS(root, options) {
