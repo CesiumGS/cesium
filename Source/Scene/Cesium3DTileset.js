@@ -127,8 +127,8 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.baseScreenSpaceError=1024] The screen-space error that must be reached before skipping LODs
-     * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
-     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipSSEFactor to determine which tiles to load.
+     * @param {Number} [options.skipScreenSpaceErrorFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
+     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipScreenSpaceErrorFactor to determine which tiles to load.
      * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
      * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail. When true, the siblings of any visible and downloaded tile are downloaded as well.
      *
@@ -531,7 +531,7 @@ define([
          */
         this.skipLODs = defaultValue(options.skipLODs, true);
 
-        this._skipSSEFactor = defaultValue(options.skipSSEFactor, 10);
+        this.skipScreenSpaceErrorFactor = defaultValue(options.skipScreenSpaceErrorFactor, 10);
 
         this._skipLevels = defaultValue(options.skipLevels, 1);
 
@@ -958,13 +958,13 @@ define([
          * @type {Number}
          * @default 10
          */
-        skipSSEFactor : {
+        skipScreenSpaceErrorFactor : {
             get : function() {
-                return this._skipSSEFactor;
+                return this._skipScreenSpaceErrorFactor;
             },
 
             set : function(value) {
-                this._skipSSEFactor = value;
+                this._skipScreenSpaceErrorFactor = value;
             }
         },
 
@@ -1159,13 +1159,13 @@ define([
     }
 
     function sortForLoad(a, b) {
-        var diff = a.distanceToCamera - b.distanceToCamera;
+        var distanceDifference = a.distanceToCamera - b.distanceToCamera;
         if (a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
-            return diff;
+            return distanceDifference;
         }
 
-        var screenSpaceErrorDiff = b._screenSpaceError - a._screenSpaceError;
-        return screenSpaceErrorDiff === 0 ? diff : screenSpaceErrorDiff;
+        var screenSpaceErrorDifference = b._screenSpaceError - a._screenSpaceError;
+        return screenSpaceErrorDifference === 0 ? distanceDifference : screenSpaceErrorDifference;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1209,10 +1209,10 @@ define([
 
     function selectionHeuristic(tileset, ancestor, tile) {
         var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
-        var skipSSEFactor = tileset.skipLODs ? tileset.skipSSEFactor : 0.1;
+        var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
 
         return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
-               (tile._screenSpaceError < ancestor._screenSpaceError / skipSSEFactor) &&
+               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }
 
@@ -1388,7 +1388,7 @@ define([
 
         var tile, i;
 
-        var bivariateVisibilityTest = tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+        var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
         tileset._backfaceCommands.length = 0;
 

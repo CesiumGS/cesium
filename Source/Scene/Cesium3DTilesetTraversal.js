@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/freezeObject',
@@ -13,7 +12,6 @@ define([
         './OrthographicFrustum',
         './SceneMode'
     ], function(
-        Check,
         defined,
         defineProperties,
         freezeObject,
@@ -124,10 +122,8 @@ define([
             }
 
             if (defined(loadedTile)) {
-                if (!loadedTile.selected) {
-                    loadedTile.selected = true;
-                    loadedTile._selectedFrame = frameState.frameNumber;
-                }
+                loadedTile.selected = true;
+                loadedTile._selectedFrame = frameState.frameNumber;
             } else {
                 // if no ancestors are ready, traverse down and select ready tiles to minimize empty regions
                 descendantStack.push(original);
@@ -139,11 +135,9 @@ define([
                         var child = children[j];
                         touch(tileset, child, outOfCore);
                         if (child.contentReady) {
-                            if (!child.selected) {
-                                child.selected = true;
-                                child._finalResolution = true;
-                                child._selectedFrame = frameState.frameNumber;
-                            }
+                            child.selected = true;
+                            child._finalResolution = true;
+                            child._selectedFrame = frameState.frameNumber;
                         }
                         if (child._depth - original._depth < 2) { // prevent traversing too far
                             if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
@@ -285,6 +279,7 @@ define([
         this.stack = new ManagedArray();
         this.leaves = new ManagedArray();
         this.baseScreenSpaceError = undefined;
+        this.internalDFS = new InternalBaseTraversal();
     }
 
     BaseTraversal.prototype.execute = function(tileset, root, baseScreenSpaceError, frameState, outOfCore) {
@@ -292,12 +287,11 @@ define([
         this.frameState = frameState;
         this.outOfCore = outOfCore;
         this.leaves.length = 0;
-        this.baseScreenSpaceError = baseScreenSpaceError;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('baseScreenSpaceError', baseScreenSpaceError, this.tileset._maximumScreenSpaceError);
-        //>>includeEnd('debug');
-
+        this.baseScreenSpaceError = Math.max(baseScreenSpaceError, this.tileset._maximumScreenSpaceError);
+        this.internalDFS.tileset = this.tileset;
+        this.internalDFS.frameState = this.frameState;
+        this.internalDFS.outOfCore = this.outOfCore;
+        this.internalDFS.baseScreenSpaceError = this.baseScreenSpaceError;
         DFS(root, this);
     };
 
@@ -306,49 +300,56 @@ define([
     };
 
     BaseTraversal.prototype.getChildren = function(tile) {
-        var tileset = this.tileset;
-        var baseScreenSpaceError = this.baseScreenSpaceError;
-
-        if (tile.hasTilesetContent) {
-            // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
-            if (!defined(tile._ancestorWithContent)) {
-                loadTile(tile, this.frameState);
-            }
-            if (!tile.contentReady) {
-                return emptyArray;
-            }
-        }
-
-        if (tile.refine === Cesium3DTileRefine.ADD) {
-            tileset._desiredTiles.push(tile);
-        }
-
-        // stop traversal when we've attained the desired level of error
-        if (tile._screenSpaceError <= baseScreenSpaceError) {
-            return emptyArray;
-        }
-
-        var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > baseScreenSpaceError;
-        var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
-
-        if (showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent)) {
+        if (hasVisibleChildren(this, tile, this.baseScreenSpaceError)) {
             var children = tile.children;
             var childrenLength = children.length;
             var allReady = true;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
                 loadTile(child, this.frameState);
-                allReady = allReady && child.contentReady;
-                touch(tileset, child, this.outOfCore);
+                touch(this.tileset, child, this.outOfCore);
+
+                // this content cannot be replaced until all of the nearest descendants with content are all loaded
+                if (tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent) {
+                    if (!child.hasEmptyContent) {
+                        allReady = allReady && child.contentReady;
+                    } else {
+                        allReady = allReady && this.internalDFS.execute(child);
+                    }
+                }
             }
 
             if (allReady) {
                 return children;
             }
         }
-
         return emptyArray;
+    };
+
+    function hasVisibleChildren(traversal, tile, screenSpaceError) {
+        var tileset = traversal.tileset;
+
+        if (tile.hasTilesetContent) {
+            // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
+            if (!defined(tile._ancestorWithContent)) {
+                loadTile(tile, traversal.frameState);
+            }
+        }
+
+        if (tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent) {
+            tileset._desiredTiles.push(tile);
+        }
+
+        // stop traversal when we've attained the desired level of error
+        if (tile._screenSpaceError <= screenSpaceError && tile.hasRenderableContent) {
+            return false;
+        }
+
+        var childrenVisibility = updateChildren(tileset, tile, traversal.frameState);
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
+        var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
+
+        return showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent);
     };
 
     BaseTraversal.prototype.shouldVisit = function(tile) {
@@ -356,7 +357,50 @@ define([
     };
 
     BaseTraversal.prototype.leafHandler = function(tile) {
-        this.leaves.push(tile);
+        // additive tiles have already been pushed to tileset._desiredTiles
+        if (tile.refine === Cesium3DTileRefine.REPLACE) {
+            this.leaves.push(tile);
+        }
+    };
+
+    function InternalBaseTraversal(options) {
+        this.tileset = undefined;
+        this.frameState = undefined;
+        this.outOfCore = undefined;
+        this.baseScreenSpaceError = undefined;
+        this.stack = new ManagedArray();
+    }
+
+    InternalBaseTraversal.prototype.execute = function(root) {
+        this.allLoaded = true;
+        DFS(root, this);
+        return this.allLoaded;
+    };
+
+    InternalBaseTraversal.prototype.visit = function(tile) {
+        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+        if (!tile.contentReady) {
+            this.allLoaded = false;
+        }
+    };
+
+    // Continue traversing until we have renderable content. We want the first descendants with content of the root to load
+    InternalBaseTraversal.prototype.shouldVisit = function(tile) {
+         return !tile.hasRenderableContent && isVisible(tile.visibilityPlaneMask);
+    };
+
+    InternalBaseTraversal.prototype.getChildren = function(tile) {
+        if (hasVisibleChildren(this, tile, this.baseScreenSpaceError)) {
+            var children = tile.children;
+            var childrenLength = children.length;
+            for (var i = 0; i < childrenLength; ++i) {
+                var child = children[i];
+                loadTile(child, this.frameState);
+                touch(this.tileset, child, this.outOfCore);
+            }
+            return children;
+        }
+        return emptyArray;
     };
 
     function SkipTraversal(options) {
@@ -421,15 +465,11 @@ define([
     };
 
     InternalSkipTraversal.prototype.getChildren = function(tile) {
-        var tileset = tile._tileset;
+        var tileset = this.tileset;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
-        if (tile.hasTilesetContent) {
-            if (!tile.contentReady) {
-                return emptyArray;
-            }
-        } else {
-            if (tile.refine === Cesium3DTileRefine.ADD) {
+         if (!tile.hasTilesetContent) {
+            if (tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent) {
                 tileset._desiredTiles.push(tile);
             }
 
@@ -448,7 +488,7 @@ define([
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > maximumScreenSpaceError;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
         // at least one child is visible, but is not in request volume. the parent must be selected
