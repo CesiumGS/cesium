@@ -542,8 +542,7 @@ define([
          *
          * @private
          */
-        this.pickPrimitive = options.pickPrimitive;
-
+        this._pickObject = options.pickObject;
         this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._ready = false;
@@ -641,7 +640,6 @@ define([
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
-        this._pickObject = options.pickObject;
 
         /**
          * @private
@@ -3463,11 +3461,15 @@ define([
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
                 var isTranslucent = rs.blending.enabled;
                 var owner = {
-                    primitive : defaultValue(model.pickPrimitive, model),
+                    primitive : defaultValue(model._pickObject, model),
                     id : model.id,
                     node : runtimeNode.publicNode,
                     mesh : runtimeMeshesByName[mesh.name]
                 };
+
+                if (defined(model._pickObject)) {
+                    owner = model._pickObject;
+                }
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
@@ -3506,9 +3508,6 @@ define([
                         }
                     } else {
                         var pickId = context.createPickId(owner);
-                        if (defined(model._pickObject)) {
-                            pickId = context.createPickId(model._pickObject);
-                        }
                         pickIds.push(pickId);
                         var pickUniforms = {
                             czm_pickColor : createPickColorFunction(pickId.color)

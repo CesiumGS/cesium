@@ -201,6 +201,36 @@ defineSuite([
         });
     });
 
+    it('picks with batch table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            tileset.show = false;
+            expect(scene).toPickPrimitive(undefined);
+            tileset.show = true;
+            expect(scene).toPickAndCall(function(result) {
+                expect(result).toBeDefined();
+                expect(result.primitive).toBe(tileset);
+                expect(result.content).toBe(content);
+                expect(result.tile).toBe(content._tile);
+            });
+        });
+    });
+
+    it('picks without batch table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            tileset.show = false;
+            expect(scene).toPickPrimitive(undefined);
+            tileset.show = true;
+            expect(scene).toPickAndCall(function(result) {
+                expect(result).toBeDefined();
+                expect(result.primitive).toBe(tileset);
+                expect(result.content).toBe(content);
+                expect(result.tile).toBe(content._tile);
+            });
+        });
+    });
+
     it('can get features and properties', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
