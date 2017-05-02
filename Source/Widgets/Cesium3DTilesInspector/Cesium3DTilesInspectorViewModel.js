@@ -478,131 +478,47 @@ define([
          */
         this.showGeometricError = false;
 
-        var showNumberOfCommands = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfCommands', {
+        var showRenderingStatistics = knockout.observable();
+        knockout.defineProperty(this, 'showRenderingStatistics', {
             get : function() {
-                return showNumberOfCommands();
+                return showRenderingStatistics();
             },
             set : function(value) {
-                showNumberOfCommands(value);
+                showRenderingStatistics(value);
                 if (that._tileset) {
-                    that._tileset.debugShowNumberOfCommands = value;
+                    that._tileset.debugShowRenderingStatistics = value;
                 }
             }
         });
         /**
-         * Displays the number of commands used per tile.  This property is observable.
+         * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
          */
-        this.showNumberOfCommands = false;
+        this.showRenderingStatistics = false;
 
-        var showNumberOfPoints = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfPoints', {
+        var showMemoryUsage = knockout.observable();
+        knockout.defineProperty(this, 'showMemoryUsage', {
             get : function() {
-                return showNumberOfPoints();
+                return showMemoryUsage();
             },
             set : function(value) {
-                showNumberOfPoints(value);
+                showMemoryUsage(value);
                 if (that._tileset) {
-                    that._tileset.debugShowNumberOfPoints = value;
+                    that._tileset.debugShowMemoryUsage = value;
                 }
             }
         });
         /**
-         * Displays the number of points per tile.  This property is observable.
+         * Displays the memory used per tile.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
          */
-        this.showNumberOfPoints = false;
-
-        var showNumberOfTriangles = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfTriangles', {
-            get : function() {
-                return showNumberOfTriangles();
-            },
-            set : function(value) {
-                showNumberOfTriangles(value);
-                if (that._tileset) {
-                    that._tileset.debugShowNumberOfTriangles = value;
-                }
-            }
-        });
-        /**
-         * Displays the number of triangles per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showNumberOfTriangles = false;
-
-        var showNumberOfFeatures = knockout.observable();
-        knockout.defineProperty(this, 'showNumberOfFeatures', {
-            get : function() {
-                return showNumberOfFeatures();
-            },
-            set : function(value) {
-                showNumberOfFeatures(value);
-                if (that._tileset) {
-                    that._tileset.debugShowNumberOfFeatures = value;
-                }
-            }
-        });
-        /**
-         * Displays the number of features per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showNumberOfFeatures = false;
-
-        var showTextureMemory = knockout.observable();
-        knockout.defineProperty(this, 'showTextureMemory', {
-            get : function() {
-                return showTextureMemory();
-            },
-            set : function(value) {
-                showTextureMemory(value);
-                if (that._tileset) {
-                    that._tileset.debugShowTextureMemoryUsage = value;
-                }
-            }
-        });
-        /**
-         * Displays the texture memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showTextureMemory = false;
-
-        var showVertexMemory = knockout.observable();
-        knockout.defineProperty(this, 'showVertexMemory', {
-            get : function() {
-                return showVertexMemory();
-            },
-            set : function(value) {
-                showVertexMemory(value);
-                if (that._tileset) {
-                    that._tileset.debugShowVertexMemoryUsage = value;
-                }
-            }
-        });
-        /**
-         * Displays the vertex memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showVertexMemory = false;
+        this.showMemoryUsage = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -710,7 +626,7 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
                                    'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
-                                   'showNumberOfCommands', 'showNumberOfPoints', 'showNumberOfTriangles', 'showNumberOfFeatures', 'showTextureMemory', 'showVertexMemory'];
+                                   'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -818,12 +734,8 @@ define([
                                     'showRequestVolumes',
                                     'freezeFrame',
                                     'showGeometricError',
-                                    'showNumberOfCommands',
-                                    'showNumberOfPoints',
-                                    'showNumberOfTriangles',
-                                    'showNumberOfFeatures',
-                                    'showTextureMemory',
-                                    'showVertexMemory'];
+                                    'showRenderingStatistics',
+                                    'showMemoryUsage'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];

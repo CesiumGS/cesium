@@ -122,12 +122,8 @@ define([
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
      * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
-     * @param {Boolean} [options.debugShowNumberOfCommands=false] For debugging only. When true, draws labels to indicate the number of commands used by each tile.
-     * @param {Boolean} [options.debugShowNumberOfPoints=false] For debugging only. When true, draws labels to indicate the number of points in each tile.
-     * @param {Boolean} [options.debugShowNumberOfTriangles=false] For debugging only. When true, draws labels to indicate the number of triangles in each tile.
-     * @param {Boolean} [options.debugShowNumberOfFeatures=false] For debugging only. When true, draws labels to indicate the number of features in each tile.
-     * @param {Boolean} [options.debugShowTextureMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture memory in megabytes used by each tile.
-     * @param {Boolean} [options.debugShowVertexMemoryUsage=false] For debugging only. When true, draws labels to indicate the vertex memory in megabytes used by each tile.
+     * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
+     * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and vertex memory in megabytes used by each tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.skipSSEFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
@@ -412,68 +408,24 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the number of commands used.
+         * When true, draws labels to indicate the number of commands, points, triangles and features for this tile.
          * </p>
          *
          * @type {Boolean}
          * @default false
          */
-        this.debugShowNumberOfCommands = defaultValue(options.debugShowNumberOfCommands, false);
+        this.debugShowRenderingStatistics = defaultValue(options.debugShowRenderingStatistics, false);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the number of points in each tile.
+         * When true, draws labels to indicate the vertex and texture memory usage.
          * </p>
          *
          * @type {Boolean}
          * @default false
          */
-        this.debugShowNumberOfPoints = defaultValue(options.debugShowNumberOfPoints, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the number of triangles in each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowNumberOfTriangles = defaultValue(options.debugShowNumberOfTriangles, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the number of features in each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowNumberOfFeatures = defaultValue(options.debugShowNumberOfFeatures, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the texture memory usage.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowTextureMemoryUsage = defaultValue(options.debugShowTextureMemoryUsage, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the vertex memory usage.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowVertexMemoryUsage = defaultValue(options.debugShowVertexMemoryUsage, false);
+        this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1938,29 +1890,18 @@ define([
                 labelString += '\nGeometric error: ' + tile.geometricError;
                 attributes++;
             }
-            if (tileset.debugShowNumberOfCommands) {
+            if (tileset.debugShowRenderingStatistics) {
                 labelString += '\nCommands: ' + tile._commandsLength;
-                attributes++;
-            }
-            if (tileset.debugShowNumberOfPoints) {
                 labelString += '\nPoints: ' + tile.content.pointsLength;
-                attributes++;
-            }
-            if (tileset.debugShowNumberOfTriangles) {
                 labelString += '\nTriangles: ' + tile.content.trianglesLength;
-                attributes++;
-            }
-            if (tileset.debugShowNumberOfFeatures) {
                 labelString += '\nFeatures: ' + tile.content.featuresLength;
-                attributes++;
+                attributes += 4;
             }
-            if (tileset.debugShowTextureMemoryUsage) {
+
+            if (tileset.debugShowMemoryUsage) {
                 labelString += '\nTexture Memory: ' + (tile.content.textureMemorySizeInBytes / 1048576.0).toFixed(3);
-                attributes++;
-            }
-            if (tileset.debugShowVertexMemoryUsage) {
                 labelString += '\nVertex Memory: ' + (tile.content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
-                attributes++;
+                attributes += 2;
             }
 
             tileset._tileInfoLabels.add({
@@ -2056,9 +1997,7 @@ define([
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (tileset.debugShowGeometricError || tileset.debugShowNumberOfCommands || tileset.debugShowTextureMemoryUsage ||
-            tileset.debugShowVertexMemoryUsage || tileset.debugShowNumberOfPoints || tileset.debugShowNumberOfTriangles ||
-            tileset.debugShowNumberOfFeatures) {
+        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
             if (!defined(tileset._tileInfoLabels)) {
                 tileset._tileInfoLabels = new LabelCollection();
             }
