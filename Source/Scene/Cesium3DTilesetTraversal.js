@@ -300,7 +300,12 @@ define([
     };
 
     BaseTraversal.prototype.getChildren = function(tile) {
-        if (hasVisibleChildren(this, tile, this.baseScreenSpaceError)) {
+        if (this.updateAndCheckChildren(tile)) {
+            if (!childrenAreVisible(tile)) {
+                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+                return emptyArray;
+            }
+
             var children = tile.children;
             var childrenLength = children.length;
             var allReady = true;
@@ -326,13 +331,13 @@ define([
         return emptyArray;
     };
 
-    function hasVisibleChildren(traversal, tile, screenSpaceError) {
-        var tileset = traversal.tileset;
+    BaseTraversal.prototype.updateAndCheckChildren = function(tile) {
+        var tileset = this.tileset;
 
         if (tile.hasTilesetContent) {
             // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
             if (!defined(tile._ancestorWithContent)) {
-                loadTile(tile, traversal.frameState);
+                loadTile(tile, this.frameState);
             }
         }
 
@@ -341,11 +346,11 @@ define([
         }
 
         // stop traversal when we've attained the desired level of error
-        if (tile._screenSpaceError <= screenSpaceError && tile.hasRenderableContent) {
+        if (tile._screenSpaceError <= this.baseScreenSpaceError && tile.hasRenderableContent) {
             return false;
         }
 
-        var childrenVisibility = updateChildren(tileset, tile, traversal.frameState);
+        var childrenVisibility = updateChildren(tileset, tile, this.frameState);
         var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
@@ -386,11 +391,16 @@ define([
 
     // Continue traversing until we have renderable content. We want the first descendants with content of the root to load
     InternalBaseTraversal.prototype.shouldVisit = function(tile) {
-         return !tile.hasRenderableContent && isVisible(tile.visibilityPlaneMask);
+        return !tile.hasRenderableContent && isVisible(tile.visibilityPlaneMask);
     };
 
     InternalBaseTraversal.prototype.getChildren = function(tile) {
-        if (hasVisibleChildren(this, tile, this.baseScreenSpaceError)) {
+        if (this.updateAndCheckChildren(tile, this.baseScreenSpaceError)) {
+            if (!childrenAreVisible(tile)) {
+                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+                return emptyArray;
+            }
+
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
@@ -402,6 +412,8 @@ define([
         }
         return emptyArray;
     };
+
+    InternalBaseTraversal.prototype.updateAndCheckChildren = BaseTraversal.prototype.updateAndCheckChildren;
 
     function SkipTraversal(options) {
         this.tileset = undefined;
@@ -497,6 +509,11 @@ define([
         }
 
         if (showAdditive || showReplacement || tile.hasTilesetContent) {
+            if (!childrenAreVisible(tile)) {
+                ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+                return emptyArray;
+            }
+
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
@@ -546,7 +563,7 @@ define([
         updateTransforms(children, tile.computedTransform);
         computeDistanceToCamera(children, frameState);
 
-        return computeChildrenVisibility(tile, frameState, true);
+        return computeChildrenVisibility(tile, frameState);
     }
 
     function visitTile(tileset, tile, frameState, outOfCore) {
@@ -595,7 +612,7 @@ define([
         }
     }
 
-    function computeChildrenVisibility(tile, frameState, checkViewerRequestVolume) {
+    function computeChildrenVisibility(tile, frameState) {
         var flag = Cesium3DTileChildrenVisibility.NONE;
         var children = tile.children;
         var childrenLength = children.length;
@@ -609,17 +626,15 @@ define([
                 flag |= Cesium3DTileChildrenVisibility.VISIBLE;
             }
 
-            if (checkViewerRequestVolume) {
-                if (!child.insideViewerRequestVolume(frameState)) {
-                    if (isVisible(visibilityMask)) {
-                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME;
-                    }
-                    visibilityMask = CullingVolume.MASK_OUTSIDE;
-                } else {
-                    flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
-                    if (isVisible(visibilityMask)) {
-                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME;
-                    }
+            if (!child.insideViewerRequestVolume(frameState)) {
+                if (isVisible(visibilityMask)) {
+                    flag |= Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME;
+                }
+                visibilityMask = CullingVolume.MASK_OUTSIDE;
+            } else {
+                flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
+                if (isVisible(visibilityMask)) {
+                    flag |= Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME;
                 }
             }
 
@@ -686,6 +701,11 @@ define([
 
     function isVisible(visibilityPlaneMask) {
         return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+    }
+
+    function childrenAreVisible(tile) {
+        // optimization does not apply for additive refinement
+        return tile.refine === Cesium3DTileRefine.ADD || tile.children.length === 0 || tile.childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE !== 0;
     }
 
     function DFS(root, options) {
