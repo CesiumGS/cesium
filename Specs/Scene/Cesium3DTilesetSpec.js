@@ -1387,7 +1387,6 @@ defineSuite([
 
             var content = tileset._root.content;
             var expected = 'Commands: ' + tileset._root._commandsLength + '\n' +
-                           'Points: ' + content.pointsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
                            'Features: ' + content.featuresLength;
 
@@ -1433,7 +1432,6 @@ defineSuite([
             var content = tileset._root.content;
             var expected = 'Geometric error: ' + tileset._root.geometricError + '\n' +
                            'Commands: ' + tileset._root._commandsLength + '\n' +
-                           'Points: ' + content.pointsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
                            'Features: ' + content.featuresLength + '\n' +
                            'Texture Memory: ' + (content.textureMemorySizeInBytes / 1048576.0).toFixed(3) + '\n' +

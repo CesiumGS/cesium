@@ -1892,8 +1892,20 @@ define([
             }
             if (tileset.debugShowRenderingStatistics) {
                 labelString += '\nCommands: ' + tile._commandsLength;
-                labelString += '\nPoints: ' + tile.content.pointsLength;
-                labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                attributes++;
+
+                // Don't display number of points or triangles if 0.
+                var numberOfPoints = tile.content.pointsLength;
+                if (numberOfPoints > 0) {
+                    labelString += '\nPoints: ' + tile.content.pointsLength;
+                    attributes++;
+                }
+                var numberOfTriangles = tile.content.trianglesLength;
+                if (numberOfTriangles > 0) {
+                    labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                    attributes++;
+                }
+
                 labelString += '\nFeatures: ' + tile.content.featuresLength;
                 attributes += 4;
             }
