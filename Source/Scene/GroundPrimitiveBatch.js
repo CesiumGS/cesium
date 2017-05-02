@@ -106,14 +106,22 @@ define([
 
         this._batchTable = options.batchTable;
 
-        // These arrays are released after VAO creation
+        // These arrays are released after VAO creation.
         this._batchIds = options.batchIds;
         this._positions = options.positions;
         this._counts = options.counts;
 
-        // These arrays are kept for re-batching indices based on colors
-        this._indexCounts = options.indexCounts;
+        // These arrays are kept for re-batching indices based on colors.
+        // If WebGL 2 is supported, indices will be released and rebatching uses buffer-to-buffer copies.
         this._indices = options.indices;
+        this._indexCounts = options.indexCounts;
+        this._indexOffsets = undefined;
+
+        // Typed array transferred to web worker.
+        this._batchTableColors = undefined;
+
+        // Typed array transferred from web worker and released after vbo creation.
+        this._batchedPositions = undefined;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._minimumHeight = options.minimumHeight;
@@ -130,6 +138,10 @@ define([
         this._va = undefined;
         this._sp = undefined;
         this._spPick = undefined;
+        this._uniformMap = undefined;
+
+        // Only used with WebGL 2 to ping-pong ibos after copy.
+        this._vaSwap = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;
@@ -144,8 +156,12 @@ define([
 
         this._batchDirty = false;
         this._pickCommandsDirty = true;
+        this._framesSinceLastRebatch = 0;
 
+        this._ready = false;
         this._readyPromise = when.defer();
+
+        this._verticesPromise = undefined;
     }
 
     defineProperties(GroundPrimitiveBatch.prototype, {
@@ -179,10 +195,11 @@ define([
             var batchTableColors = primitive._batchTableColors;
 
             if (!defined(batchTableColors)) {
-                positions = primitive._positions.slice();
-                counts = primitive._counts.slice();
-                indexCounts = primitive._indexCounts.slice();
-                indices = primitive._indices.slice();
+                // Copy because they may be the views on the same buffer.
+                positions = primitive._positions = primitive._positions.slice();
+                counts = primitive._counts = primitive._counts.slice();
+                indexCounts = primitive._indexCounts= primitive._indexCounts.slice();
+                indices = primitive._indices = primitive._indices.slice();
 
                 batchTableColors = primitive._batchTableColors = new Uint32Array(batchIds.length);
                 batchIds = primitive._batchIds = new Uint32Array(primitive._batchIds);
@@ -630,6 +647,11 @@ define([
             return false;
         }
 
+        if (needToRebatch && primitive._framesSinceLastRebatch < 120) {
+            ++primitive._framesSinceLastRebatch;
+            return;
+        }
+
         batchedIndices.sort(compareColors);
 
         if (context.webgl2) {
@@ -638,6 +660,7 @@ define([
             rebatchCPU(primitive, batchedIndices);
         }
 
+        primitive._framesSinceLastRebatch = 0;
         primitive._batchDirty = false;
         primitive._pickCommandsDirty = true;
         return true;
@@ -925,6 +948,7 @@ define([
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
+        this._vaSwap = this._vaSwap && this._vaSwap.destroy();
         return destroyObject(this);
     };
 
