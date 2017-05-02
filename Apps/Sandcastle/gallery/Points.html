@@ -27,8 +27,11 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Add points to your scene with placement and styling options.
+// Tutorial: http://cesiumjs.org/tutorials/Visualizing-Spatial-Data/
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+// Add a basic point.
 function addPoint() {
     Sandcastle.declare(addPoint);
 
@@ -41,6 +44,7 @@ function addPoint() {
     });
 }
 
+// Add a point with some placement and styling options.
 function setPointProperties() {
     Sandcastle.declare(setPointProperties);
 
@@ -56,6 +60,7 @@ function setPointProperties() {
     });
 }
 
+// Modify the properties of an existing point.
 function changePointProperties() {
     Sandcastle.declare(changePointProperties);
 
@@ -71,6 +76,7 @@ function changePointProperties() {
     point.color = Cesium.Color.YELLOW.withAlpha(0.33);
 }
 
+// Add multiple points.
 function addMultiplePoints() {
     Sandcastle.declare(addMultiplePoints);
 
@@ -97,6 +103,7 @@ function addMultiplePoints() {
     });
 }
 
+// Set point size to scale up with distance from camera.
 function scaleByDistance() {
     Sandcastle.declare(scaleByDistance);
 
@@ -111,6 +118,7 @@ function scaleByDistance() {
     });
 }
 
+// set point to fade to trasnparent with distance from camera.
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
 
@@ -123,6 +131,7 @@ function fadeByDistance() {
     });
 }
 
+// Add widget buttons to display different examples.
 Sandcastle.addToolbarMenu([{
     text : 'Add point',
     onselect : function() {

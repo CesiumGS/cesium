@@ -27,10 +27,13 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Add some pins marking specific map locations.
+// Tutorial: http://cesiumjs.org/tutorials/Visualizing-Spatial-Data/
 var viewer = new Cesium.Viewer('cesiumContainer', {timeline : false, animation : false});
 
 var pinBuilder = new Cesium.PinBuilder();
 
+// Create a blue pin.
 var bluePin = viewer.entities.add({
     name : 'Blank blue pin',
     position : Cesium.Cartesian3.fromDegrees(-75.170726, 39.9208667),
@@ -40,6 +43,7 @@ var bluePin = viewer.entities.add({
     }
 });
 
+// Create a black pin representing a mystery location from the maki icon set.
 var questionPin = viewer.entities.add({
     name : 'Question mark',
     position : Cesium.Cartesian3.fromDegrees(-75.1698529, 39.9220071),
@@ -49,6 +53,7 @@ var questionPin = viewer.entities.add({
     }
 });
 
+// Create a green pin representing a hospital from the maki icon set.
 var url = Cesium.buildModuleUrl('Assets/Textures/maki/grocery.png');
 var groceryPin = Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), function(canvas) {
     return viewer.entities.add({
@@ -61,7 +66,7 @@ var groceryPin = Cesium.when(pinBuilder.fromUrl(url, Cesium.Color.GREEN, 48), fu
     });
 });
 
-//Create a red pin representing a hospital from the maki icon set.
+// Create a red pin representing a hospital from the maki icon set.
 var hospitalPin = Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color.RED, 48), function(canvas) {
     return viewer.entities.add({
         name : 'Hospital',

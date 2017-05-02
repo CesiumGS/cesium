@@ -27,8 +27,11 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Add billboard images (always facing the camera) to your scene with placement and styling options.
+// Tutorial: http://cesiumjs.org/tutorials/Visualizing-Spatial-Data/
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+// Add basic billboard to the scene.
 function addBillboard() {
     Sandcastle.declare(addBillboard);
 
@@ -40,6 +43,7 @@ function addBillboard() {
     });
 }
 
+// Set some basic placement and styling options.
 function setBillboardProperties() {
     Sandcastle.declare(setBillboardProperties);
 
@@ -62,6 +66,7 @@ function setBillboardProperties() {
     });
 }
 
+// Modify the properties of an existing billboard.
 function changeBillboardProperties() {
     Sandcastle.declare(changeBillboardProperties);
 
@@ -77,6 +82,7 @@ function changeBillboardProperties() {
     billboard.color = Cesium.Color.WHITE.withAlpha(0.25);
 }
 
+// Change billboard size units
 function sizeBillboardInMeters() {
     Sandcastle.declare(sizeBillboardInMeters);
 
@@ -91,6 +97,7 @@ function sizeBillboardInMeters() {
     viewer.zoomTo(entity);
 }
 
+// Add multiple billboards.
 function addMultipleBillboards() {
     Sandcastle.declare(addMultipleBillboards);
 
@@ -116,7 +123,7 @@ function addMultipleBillboards() {
         }
     });
 }
-
+// Set billboard size to scale up as distance to camera increases.
 function scaleByDistance() {
     Sandcastle.declare(scaleByDistance);
 
@@ -129,6 +136,7 @@ function scaleByDistance() {
     });
 }
 
+// Set billboard to fade to transparent as distance to camera increases.
 function fadeByDistance() {
     Sandcastle.declare(fadeByDistance);
 
@@ -141,6 +149,7 @@ function fadeByDistance() {
     });
 }
 
+// Set billboard pixelOffset to scale as distance to camera increases.
 function offsetByDistance() {
     Sandcastle.declare(offsetByDistance);
     Cesium.when.all([
@@ -175,10 +184,10 @@ function offsetByDistance() {
     });
 }
 
+// Add multiple billboards based on the above image in the atlas.
 function addMarkerBillboards() {
     Sandcastle.declare(addMarkerBillboards);
 
-    // Add several billboards based on the above image in the atlas.
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
         billboard : {
@@ -221,6 +230,7 @@ function addMarkerBillboards() {
     });
 }
 
+// Setup terrain.
 var terrainProvider;
 function disableDepthTest() {
     Sandcastle.declare(disableDepthTest);
@@ -244,6 +254,7 @@ function disableDepthTest() {
     viewer.zoomTo(viewer.entities);
 }
 
+// Add widget buttons to display different examples.
 Sandcastle.addToolbarMenu([{
     text : 'Add billboard',
     onselect : function() {
