@@ -129,6 +129,28 @@ defineSuite([
         });
     });
 
+    it('readyPromise rejects if there isn\'t imagery', function() {
+        installMockGetQuadTreePacket();
+
+        var metadata = new GoogleEarthEnterpriseMetadata({
+            url : 'made/up/url'
+        });
+
+        metadata.imageryPresent = false;
+
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
+            metadata : metadata
+        });
+
+        return imageryProvider.readyPromise
+            .then(function() {
+                fail('Server does not have imagery, so we shouldn\'t resolve.');
+            })
+            .otherwise(function() {
+                expect(imageryProvider.ready).toBe(false);
+            });
+    });
+
     it('returns false for hasAlphaChannel', function() {
         installMockGetQuadTreePacket();
         var url = 'http://fake.fake.invalid';

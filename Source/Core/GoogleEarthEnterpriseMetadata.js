@@ -416,8 +416,14 @@ define([
      * @private
      */
     GoogleEarthEnterpriseMetadata.decode = function(key, data) {
-        if (!defined(data)) {
-            throw new DeveloperError('data is required.');
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('key', key);
+        Check.typeOf.object('data', data);
+        //>>includeStart('debug', pragmas.debug);
+
+        var keyLength = key.byteLength;
+        if (keyLength === 0 || (keyLength % 4) !== 0) {
+            throw new RuntimeError('The length of key must be greater than 0 and a multiple of 4.');
         }
 
         var dataView = new DataView(data);
@@ -432,7 +438,7 @@ define([
         var dp = 0;
         var dpend = data.byteLength;
         var dpend64 = dpend - (dpend % 8);
-        var kpend = key.byteLength;
+        var kpend = keyLength;
         var kp;
         var off = 8;
 
