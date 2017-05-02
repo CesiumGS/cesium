@@ -1,12 +1,14 @@
 /*global define*/
 define([
+    '../Core/decodeGoogleEarthEnterpriseData',
     '../Core/RuntimeError',
-    '../Core/GoogleEarthEnterpriseMetadata',
+    '../Core/GoogleEarthEnterpriseTileInformation',
     './createTaskProcessorWorker',
     '../ThirdParty/pako_inflate'
 ], function(
+    decodeGoogleEarthEnterpriseData,
     RuntimeError,
-    GoogleEarthEnterpriseMetadata,
+    GoogleEarthEnterpriseTileInformation,
     createTaskProcessorWorker,
     pako) {
     'use strict';
@@ -32,7 +34,7 @@ define([
     function decodeGoogleEarthEnterpriseTerrainPacket(parameters, transferableObjects) {
         var type = Types.fromString(parameters.type);
         var buffer = parameters.buffer;
-        GoogleEarthEnterpriseMetadata.decode(buffer);
+        decodeGoogleEarthEnterpriseData(buffer);
 
         var uncompressedTerrain = uncompressPacket(buffer);
         buffer = uncompressedTerrain.buffer;
@@ -134,7 +136,7 @@ define([
             ++offset; // Terrain provider
             offset += sizeOfUint16; // 4 byte align
 
-            instances.push(new GoogleEarthEnterpriseMetadata.TileInformation(bitfield, cnodeVersion,
+            instances.push(new GoogleEarthEnterpriseTileInformation(bitfield, cnodeVersion,
                 imageVersion, terrainVersion));
         }
 

@@ -1,6 +1,8 @@
 /*global defineSuite*/
 defineSuite([
     'Core/GoogleEarthEnterpriseMetadata',
+    'Core/GoogleEarthEnterpriseTileInformation',
+    'Core/decodeGoogleEarthEnterpriseData',
     'Core/DefaultProxy',
     'Core/defaultValue',
     'Core/loadWithXhr',
@@ -8,6 +10,8 @@ defineSuite([
     'ThirdParty/when'
 ], function(
     GoogleEarthEnterpriseMetadata,
+    GoogleEarthEnterpriseTileInformation,
+    decodeGoogleEarthEnterpriseData,
     DefaultProxy,
     defaultValue,
     loadWithXhr,
@@ -54,11 +58,11 @@ defineSuite([
 
         var buffer = data.buffer.slice();
         var a = new Uint8Array(buffer);
-        GoogleEarthEnterpriseMetadata.decode(buffer);
+        decodeGoogleEarthEnterpriseData(buffer);
         expect(a).not.toEqual(data);
 
         // For the algorithm encode/decode are the same
-        GoogleEarthEnterpriseMetadata.decode(buffer);
+        decodeGoogleEarthEnterpriseData(buffer);
         expect(a).toEqual(data);
     });
 
@@ -67,7 +71,7 @@ defineSuite([
         var index = 0;
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '') + index.toString();
-            this._tileInfo[quadKey] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             index = (index + 1) % 4;
 
             return when();
