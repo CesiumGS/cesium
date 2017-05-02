@@ -25,18 +25,90 @@ define([
         createTaskProcessorWorker) {
     'use strict';
 
+    var scratchQuantizedOffset = new Cartesian3();
+    var scratchQuantizedScale = new Cartesian3();
+    var scratchCenter = new Cartesian3();
+    var scratchEllipsoid = new Ellipsoid();
+    var scratchHeights = {
+        min : undefined,
+        max : undefined
+    };
+
+    function unpackBuffer(buffer) {
+        var packedBuffer = new Float64Array(buffer);
+
+        var offset = 0;
+        scratchHeights.min = packedBuffer[offset++];
+        scratchHeights.max = packedBuffer[offset++];
+
+        Cartesian3.unpack(packedBuffer, offset, scratchQuantizedOffset);
+        offset += Cartesian3.packedLength;
+
+        Cartesian3.unpack(packedBuffer, offset, scratchQuantizedScale);
+        offset += Cartesian3.packedLength;
+
+        Cartesian3.unpack(packedBuffer, offset, scratchCenter);
+        offset += Cartesian3.packedLength;
+
+        Ellipsoid.unpack(packedBuffer, offset, scratchEllipsoid);
+    }
+
+    function packedBatchedIndicesLength(batchedIndices) {
+        var length = batchedIndices.length;
+        var count = 0;
+        for (var i = 0; i < length; ++i) {
+            count += Color.packedLength + 3 + batchedIndices[i].batchIds.length;
+        }
+        return count;
+    }
+
+    function packBuffer(indexDatatype, boundingVolumes, batchedIndices) {
+        var numBVs = boundingVolumes.length;
+        var length = 1 + 1 + numBVs * OrientedBoundingBox.packedLength + 1 + packedBatchedIndicesLength(batchedIndices);
+
+        var packedBuffer = new Float64Array(length);
+
+        var offset = 0;
+        packedBuffer[offset++] = indexDatatype;
+        packedBuffer[offset++] = numBVs;
+
+        for (var i = 0; i < numBVs; ++i) {
+            OrientedBoundingBox.pack(boundingVolumes[i], packedBuffer, offset);
+            offset += OrientedBoundingBox.packedLength;
+        }
+
+        var indicesLength = batchedIndices.length;
+        packedBuffer[offset++] = indicesLength;
+
+        for (var j = 0; j < indicesLength; ++j) {
+            var batchedIndex = batchedIndices[j];
+
+            Color.pack(batchedIndex.color, packedBuffer, offset);
+            offset += Color.packedLength;
+
+            packedBuffer[offset++] = batchedIndex.offset;
+            packedBuffer[offset++] = batchedIndex.count;
+
+            var batchIds = batchedIndex.batchIds;
+            var batchIdsLength = batchIds.length;
+            packedBuffer[offset++] = batchIdsLength;
+
+            for (var k = 0; k < batchIdsLength; ++k) {
+                packedBuffer[offset++] = batchIds[k];
+            }
+        }
+
+        return packedBuffer;
+    }
+
     var scratchDecodeMatrix = new Matrix4();
     var scratchEncodedPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScaledNormal = new Cartesian3();
     var scratchMinHeightPosition = new Cartesian3();
     var scratchMaxHeightPosition = new Cartesian3();
-    var scratchCenter = new Cartesian3();
-    var scratchQuantizedOffset = new Cartesian3();
-    var scratchQuantizedScale = new Cartesian3();
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
-    var scratchEllipsoid = new Ellipsoid();
 
     function createVerticesFromVectorTile(parameters, transferableObjects) {
         var positions = parameters.positions;
@@ -47,14 +119,15 @@ define([
         var batchTableColors = new Uint32Array(parameters.batchTableColors);
 
         var boundingVolumes = new Array(counts.length);
-        var center = Cartesian3.clone(parameters.center, scratchCenter);
-        var ellipsoid = Ellipsoid.clone(parameters.ellipsoid, scratchEllipsoid);
 
-        var minHeight = parameters.minimumHeight;
-        var maxHeight = parameters.maximumHeight;
+        unpackBuffer(parameters.packedBuffer);
 
-        var quantizedOffset = Cartesian3.clone(parameters.quantizedOffset, scratchQuantizedOffset);
-        var quantizedScale = Cartesian3.clone(parameters.quantizedScale, scratchQuantizedScale);
+        var quantizedOffset = scratchQuantizedOffset;
+        var quantizedScale = scratchQuantizedScale;
+        var center = scratchCenter;
+        var ellipsoid = scratchEllipsoid;
+        var minHeight = scratchHeights.min;
+        var maxHeight = scratchHeights.max;
 
         var decodeMatrix;
         if (defined(quantizedOffset) && defined(quantizedScale)) {
@@ -258,17 +331,18 @@ define([
             batchedDrawCalls[m].count = count;
         }
 
-        transferableObjects.push(batchedPositions.buffer, batchedIndices.buffer, batchedIndexOffsets.buffer, batchedIndexCounts.buffer, batchedIds.buffer);
+        var indexDatatype = (batchedIndices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
+        var packedBuffer = packBuffer(indexDatatype, boundingVolumes, batchedDrawCalls);
+
+        transferableObjects.push(batchedPositions.buffer, batchedIndices.buffer, batchedIndexOffsets.buffer, batchedIndexCounts.buffer, batchedIds.buffer, packedBuffer.buffer);
 
         return {
             positions : batchedPositions.buffer,
             indices : batchedIndices.buffer,
-            indexDatatype : (batchedIndices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT,
             indexOffsets : batchedIndexOffsets.buffer,
             indexCounts : batchedIndexCounts.buffer,
             batchIds : batchedIds.buffer,
-            batchedIndices : batchedDrawCalls,
-            boundingVolumes : boundingVolumes
+            packedBuffer : packedBuffer.buffer
         };
     }
 

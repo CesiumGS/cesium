@@ -117,8 +117,9 @@ define([
         this._indexCounts = options.indexCounts;
         this._indexOffsets = undefined;
 
-        // Typed array transferred to web worker.
+        // Typed arrays transferred to web worker.
         this._batchTableColors = undefined;
+        this._packedBuffer = undefined;
 
         // Typed array transferred from web worker and released after vbo creation.
         this._batchedPositions = undefined;
@@ -172,6 +173,64 @@ define([
         }
     });
 
+    function packBuffer(primitive) {
+        var packedBuffer = new Float64Array(2 + Cartesian3.packedLength * 3 + Ellipsoid.packedLength);
+
+        var offset = 0;
+        packedBuffer[offset++] = primitive._minimumHeight;
+        packedBuffer[offset++] = primitive._maximumHeight;
+
+        Cartesian3.pack(primitive._quantizedOffset, packedBuffer, offset);
+        offset += Cartesian3.packedLength;
+
+        Cartesian3.pack(primitive._quantizedScale, packedBuffer, offset);
+        offset += Cartesian3.packedLength;
+
+        Cartesian3.pack(primitive._center, packedBuffer, offset);
+        offset += Cartesian3.packedLength;
+
+        Ellipsoid.pack(primitive._ellipsoid, packedBuffer, offset);
+
+        return packedBuffer;
+    }
+
+    function unpackBuffer(primitive, packedBuffer) {
+        var offset = 1;
+
+        var numBVS = packedBuffer[offset++];
+        var bvs = primitive._boundingVolumes = new Array(numBVS);
+
+        for (var i = 0; i < numBVS; ++i) {
+            bvs[i] = OrientedBoundingBox.unpack(packedBuffer, offset);
+            offset += OrientedBoundingBox.packedLength;
+        }
+
+        var numBatchedIndices = packedBuffer[offset++];
+        var bis = primitive._batchedIndices = new Array(numBatchedIndices);
+
+        for (var j = 0; j < numBatchedIndices; ++j) {
+            var color = Color.unpack(packedBuffer, offset);
+            offset += Color.packedLength;
+
+            var indexOffset = packedBuffer[offset++];
+            var count = packedBuffer[offset++];
+
+            var length = packedBuffer[offset++];
+            var batchIds = new Array(length);
+
+            for (var k = 0; k < length; ++k) {
+                batchIds[k] = packedBuffer[offset++];
+            }
+
+            bis[j] = {
+                color : color,
+                offset : indexOffset,
+                count : count,
+                batchIds : batchIds
+            };
+        }
+    }
+
     var attributeLocations = {
         position : 0,
         a_batchId : 1
@@ -194,6 +253,8 @@ define([
             var batchIds = primitive._batchIds;
             var batchTableColors = primitive._batchTableColors;
 
+            var packedBuffer = primitive._packedBuffer;
+
             if (!defined(batchTableColors)) {
                 // Copy because they may be the views on the same buffer.
                 positions = primitive._positions = primitive._positions.slice();
@@ -210,22 +271,19 @@ define([
                     var color = batchTable.getColor(batchIds[i], scratchColor);
                     batchTableColors[i] = color.toRgba();
                 }
+
+                packedBuffer = primitive._packedBuffer = packBuffer(primitive);
             }
 
             var verticesPromise = primitive._verticesPromise = createVerticesTaskProcessor.scheduleTask({
-                minimumHeight : primitive._minimumHeight,
-                maximumHeight : primitive._maximumHeight,
-                quantizedOffset : primitive._quantizedOffset,
-                quantizedScale : primitive._quantizedScale,
-                center : primitive._center,
-                ellipsoid : primitive._ellipsoid,
+                packedBuffer : packedBuffer.buffer,
                 positions : positions.buffer,
                 counts : counts.buffer,
                 indexCounts : indexCounts.buffer,
                 indices : indices.buffer,
                 batchIds : batchIds.buffer,
                 batchTableColors : batchTableColors.buffer
-            }, [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer]);
+            }, [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer, packedBuffer.buffer]);
 
             if (!defined(verticesPromise)) {
                 // Postponed
@@ -236,22 +294,13 @@ define([
                 primitive._positions = undefined;
                 primitive._counts = undefined;
 
-                var indexDatatype = result.indexDatatype;
+                var packedBuffer = new Float64Array(result.packedBuffer);
+                var indexDatatype = packedBuffer[0];
+                unpackBuffer(primitive, packedBuffer);
+
                 primitive._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ?new Uint16Array(result.indices) : new Uint32Array(result.indices);
                 primitive._indexOffsets = new Uint32Array(result.indexOffsets);
                 primitive._indexCounts = new Uint32Array(result.indexCounts);
-                primitive._batchedIndices = result.batchedIndices;
-                primitive._boundingVolumes = result.boundingVolumes;
-
-                var length = primitive._boundingVolumes.length;
-                for (var i = 0; i < length; ++i) {
-                    primitive._boundingVolumes[i] = OrientedBoundingBox.clone(primitive._boundingVolumes[i]);
-                }
-
-                length = primitive._batchedIndices.length;
-                for (var j = 0; j < length; ++j) {
-                    primitive._batchedIndices[j].color = Color.clone(primitive._batchedIndices[j].color);
-                }
 
                 // will be released
                 primitive._batchedPositions = new Float32Array(result.positions);
