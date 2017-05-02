@@ -135,10 +135,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var metadata;
         if (defined(options.metadata)) {
-            this._metadata = options.metadata;
+            metadata = this._metadata = options.metadata;
         } else {
-            this._metadata = new GoogleEarthEnterpriseMetadata({
+            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
                 url : options.url,
                 proxy : options.proxy
             });
@@ -169,8 +170,14 @@ define([
         this._ready = false;
         var that = this;
         var metadataError;
-        this._readyPromise = this._metadata.readyPromise
+        this._readyPromise = metadata.readyPromise
             .then(function(result) {
+                if (!metadata.terrainPresent) {
+                    var e = new RuntimeError('Server doesn\'t have terrain');
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                    return when.reject(e);
+                }
+
                 TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
