@@ -4,8 +4,8 @@ define([
         '../ThirdParty/when',
         './defaultValue',
         './defined',
-        './defineProperties',
         './DeveloperError',
+        './isDataUri',
         './Queue',
         './Request',
         './RequestType'
@@ -14,8 +14,8 @@ define([
         when,
         defaultValue,
         defined,
-        defineProperties,
         DeveloperError,
+        isDataUri,
         Queue,
         Request,
         RequestType) {
@@ -307,7 +307,7 @@ define([
 
         ++stats.numberOfRequestsThisFrame;
 
-        if (!RequestScheduler.throttle) {
+        if (!RequestScheduler.throttle || isDataUri(request.url)) {
             return request.requestFunction(request.url, request.parameters);
         }
 
