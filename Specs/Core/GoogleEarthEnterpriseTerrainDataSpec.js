@@ -469,6 +469,7 @@ defineSuite([
 
     it('requires buffer', function() {
         expect(function() {
+            /* jshint unused:false */
             var data = new GoogleEarthEnterpriseTerrainData({
                 childTileMask : 8,
                 negativeAltitudeExponentBias : 32,
@@ -479,6 +480,7 @@ defineSuite([
 
     it('requires negativeAltitudeExponentBias', function() {
         expect(function() {
+            /* jshint unused:false */
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
                 childTileMask : 8,
@@ -489,6 +491,7 @@ defineSuite([
 
     it('requires negativeElevationThreshold', function() {
         expect(function() {
+            /* jshint unused:false */
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
                 childTileMask : 8,

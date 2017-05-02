@@ -91,7 +91,7 @@ define([
 
         this._buffer = options.buffer;
         this._credits = options.credits;
-        this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias
+        this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias;
         this._negativeElevationThreshold = options.negativeElevationThreshold;
 
         // Convert from google layout to layout of other providers
