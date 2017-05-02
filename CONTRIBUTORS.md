@@ -72,6 +72,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Camptocamp SA](https://www.camptocamp.com/)
    * [Frédéric Junod](https://github.com/fredj)
    * [Guillaume Beraudo](https://github.com/gberaudo)
+* [EndPoint](https://www.endpoint.com/)
+   * [Dmitry Kiselev](https://github.com/kiselev-dv)
+* [Bentley Systems, Inc.](https://www.bentley.com)
+   * [Paul Connelly](https://github.com/pmconne)
+* [Flightradar24 AB](https://www.flightradar24.com)
+   * [Aleksei Kalmykov](https://github.com/kalmykov)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -129,3 +135,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Prasanna Natarajan](https://github.com/PrasannaNatarajan)
 * [Joseph Klinger](https://github.com/klingerj)
 * [Grace Lee](https://github.com/glee2244)
+* [Heiko Thiel](https://github.com/SunBlack)
+* [Sravan Kumar Kilaru](https://github.com/kilarusravankumar)

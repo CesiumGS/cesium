@@ -33,7 +33,7 @@ defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
-    ], function(
+    ], 'Widgets/Viewer/Viewer', function(
         Cartesian3,
         ClockRange,
         ClockStep,
@@ -845,6 +845,30 @@ defineSuite([
         expect(myEntity).toBe(entity);
 
         viewer.selectedEntity = undefined;
+        expect(myEntity).toBeUndefined();
+
+        viewer.destroy();
+    });
+
+    it('raises an event when the tracked entity changes', function() {
+        var viewer = createViewer(container);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.entities.add(entity);
+
+        var myEntity;
+        viewer.trackedEntityChanged.addEventListener(function(newValue) {
+            myEntity = newValue;
+        });
+        viewer.trackedEntity = entity;
+        expect(myEntity).toBe(entity);
+
+        viewer.trackedEntity = undefined;
         expect(myEntity).toBeUndefined();
 
         viewer.destroy();

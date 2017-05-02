@@ -1,16 +1,22 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/VRButton/VRButtonViewModel',
-        'Core/Fullscreen'
+        'Core/Fullscreen',
+        'Specs/createScene'
     ], function(
         VRButtonViewModel,
-        Fullscreen) {
+        Fullscreen,
+        createScene) {
     'use strict';
 
     var scene;
 
     beforeEach(function() {
-        scene = {};
+        scene = createScene();
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
     });
 
     it('constructor sets default values', function() {
