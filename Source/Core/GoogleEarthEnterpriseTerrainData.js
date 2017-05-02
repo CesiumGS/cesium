@@ -51,6 +51,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
+     * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
+     * @param {Number} options.negativeElevationThreshold Threshold for negative values
      * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
@@ -65,8 +67,6 @@ define([
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      * @param {[Credit]} [options.credits] Array of credits for this tile.
-     * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
-     * @param {Number} options.negativeElevationThreshold Threshold for negative values
      *
      *
      * @example
