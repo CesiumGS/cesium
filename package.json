@@ -48,7 +48,7 @@
     "gulp-jshint": "^2.0.4",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
-    "gulp-tap": "^0.4.1",
+    "gulp-tap": "^1.0.1",
     "gulp-zip": "^4.0.0",
     "jasmine-core": "^2.5.2",
     "jsdoc": "^3.4.3",
