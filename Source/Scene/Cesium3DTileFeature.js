@@ -42,11 +42,9 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     function Cesium3DTileFeature(tileset, content, batchId) {
-        this._content = content;
         this._batchTable = content.batchTable;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-
         /**
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
          *
@@ -55,6 +53,24 @@ define([
          * @private
          */
         this.primitive = tileset;
+
+        /**
+         * The <code>tile</code> containing this feature.
+         *
+         * @type {Cesium3DTile}
+         *
+         * @private
+         */
+        this.tile = content._tile;
+
+        /**
+         * The tile <code>content</code> containing this feature.
+         *
+         * @type {Cesium3DTileContent}
+         *
+         * @private
+         */
+        this.content = content;
     }
 
     defineProperties(Cesium3DTileFeature.prototype, {
@@ -99,21 +115,6 @@ define([
             },
             set : function(value) {
                 this._batchTable.setColor(this._batchId, value);
-            }
-        },
-
-        /**
-         * Gets the feature content.
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Cesium3DTileContent}
-         *
-         * @readonly
-         */
-        content: {
-            get: function() {
-                return this._content;
             }
         }
     });
@@ -211,7 +212,7 @@ define([
         // PERFORMANCE_IDEA: Probably overkill, but maybe only mark the tile dirty if the
         // property is in one of the style's expressions or - if it can be done quickly -
         // if the new property value changed the result of an expression.
-        this._content.featurePropertiesDirty = true;
+        this.content.featurePropertiesDirty = true;
     };
 
     /**
