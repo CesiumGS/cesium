@@ -2265,6 +2265,14 @@ defineSuite([
         });
     });
 
+    it('Gets memory usage', function() {
+        return loadModel(texturedBoxUrl).then(function(model) {
+            expect(model.vertexMemoryInBytes).toBe(840);
+            // Model is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
+            expect(model.textureMemoryInBytes).toBe(Math.floor(256*256*4*(4/3)));
+        });
+    });
+
     describe('height referenced model', function() {
         function createMockGlobe() {
             var globe = {
