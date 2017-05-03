@@ -875,6 +875,7 @@ define([
          * @default 512
          *
          * @exception {DeveloperError} <code>maximumMemoryUsage</code> must be greater than or equal to zero.
+         * @see Cesium3DTileset#totalMemoryUsageInBytes
          */
         maximumMemoryUsage : {
             get : function() {
@@ -1024,8 +1025,11 @@ define([
 
         /**
          * Returns the total amount of memory used in bytes by the tileset.
+         * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
+         * of the loaded tiles in the tileset.
          *
          * @type {Number}
+         * @see Cesium3DTileset#maximumMemoryUsage
          */
         totalMemoryUsageInBytes : {
             get : function() {
