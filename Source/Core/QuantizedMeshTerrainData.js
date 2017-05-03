@@ -77,7 +77,7 @@ define([
      *                  otherwise, false.
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
-     * @param {[Credit]} [options.credits] Array of credits for this tile.
+     * @param {Credit[]} [options.credits] Array of credits for this tile.
      *
      *
      * @example
@@ -204,7 +204,7 @@ define([
         /**
          * An array of credits for this tile
          * @memberof QuantizedMeshTerrainData.prototype
-         * @type {[Credit]}
+         * @type {Credit[]}
          */
         credits : {
             get : function() {

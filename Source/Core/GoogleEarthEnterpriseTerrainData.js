@@ -66,7 +66,7 @@ define([
      *                 </table>
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
-     * @param {[Credit]} [options.credits] Array of credits for this tile.
+     * @param {Credit[]} [options.credits] Array of credits for this tile.
      *
      *
      * @example
@@ -119,7 +119,7 @@ define([
         /**
          * An array of credits for this tile
          * @memberof GoogleEarthEnterpriseTerrainData.prototype
-         * @type {[Credit]}
+         * @type {Credit[]}
          */
         credits : {
             get : function() {
