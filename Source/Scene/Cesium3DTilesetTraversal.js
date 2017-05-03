@@ -342,11 +342,15 @@ define([
 
         // stop traversal when we've attained the desired level of error
         if (tile._screenSpaceError <= this.baseScreenSpaceError) {
-            return false;
+            // When skipping LODs, require an existing base level of content first
+            if (!tileset.skipLODs || tile.hasRenderableContent || defined(tile._ancestorWithContent)) {
+                computeChildrenVisibility(tile, this.frameState, false);
+                return false;
+            }
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > this.baseScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
         return showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent);
@@ -481,6 +485,7 @@ define([
 
             // stop traversal when we've attained the desired level of error
             if (tile._screenSpaceError <= maximumScreenSpaceError) {
+                computeChildrenVisibility(tile, this.frameState, false);
                 return emptyArray;
             }
 
@@ -489,6 +494,7 @@ define([
                 (!tile.hasEmptyContent && tile.contentUnloaded) &&
                 defined(tile._ancestorWithLoadedContent) &&
                 this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
+                computeChildrenVisibility(tile, this.frameState, false);
                 return emptyArray;
             }
         }
@@ -556,7 +562,7 @@ define([
         updateTransforms(children, tile.computedTransform);
         computeDistanceToCamera(children, frameState);
 
-        return computeChildrenVisibility(tile, frameState);
+        return computeChildrenVisibility(tile, frameState, true);
     }
 
     function visitTile(tileset, tile, frameState, outOfCore) {
@@ -605,7 +611,7 @@ define([
         }
     }
 
-    function computeChildrenVisibility(tile, frameState) {
+    function computeChildrenVisibility(tile, frameState, checkViewerRequestVolume) {
         var flag = Cesium3DTileChildrenVisibility.NONE;
         var children = tile.children;
         var childrenLength = children.length;
@@ -619,15 +625,17 @@ define([
                 flag |= Cesium3DTileChildrenVisibility.VISIBLE;
             }
 
-            if (!child.insideViewerRequestVolume(frameState)) {
-                if (isVisible(visibilityMask)) {
-                    flag |= Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME;
-                }
-                visibilityMask = CullingVolume.MASK_OUTSIDE;
-            } else {
-                flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
-                if (isVisible(visibilityMask)) {
-                    flag |= Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME;
+            if (checkViewerRequestVolume) {
+                if (!child.insideViewerRequestVolume(frameState)) {
+                    if (isVisible(visibilityMask)) {
+                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_NOT_IN_REQUEST_VOLUME;
+                    }
+                    visibilityMask = CullingVolume.MASK_OUTSIDE;
+                } else {
+                    flag |= Cesium3DTileChildrenVisibility.IN_REQUEST_VOLUME;
+                    if (isVisible(visibilityMask)) {
+                        flag |= Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME;
+                    }
                 }
             }
 

@@ -1402,8 +1402,9 @@ defineSuite([
         viewRootOnly(); // Root tiles are loaded initially
 
         var promises = [
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl),
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl)
+            // skip LODs loads a base level of content first
+            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {skipLODs: false}),
+            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {skipLODs: false})
         ];
 
         return when.all(promises, function(tilesets) {
