@@ -55,18 +55,18 @@ define([
         this.primitive = tileset;
 
         /**
-         * All objects returned by {@link Scene#pick} have a <code>tile</code> property.
+         * The <code>tile</code> containing this feature.
          *
-         * @type {Cesium3DTileset}
+         * @type {Cesium3DTile}
          *
          * @private
          */
         this.tile = content._tile;
 
         /**
-         * All objects returned by {@link Scene#pick} have a <code>content</code> property.
+         * The tile <code>content</code> containing this feature.
          *
-         * @type {Cesium3DTileset}
+         * @type {Cesium3DTileContent}
          *
          * @private
          */
