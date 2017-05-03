@@ -1,6 +1,7 @@
 /*global define*/
 define([
     '../Core/Credit',
+    '../Core/decodeGoogleEarthEnterpriseData',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
@@ -19,6 +20,7 @@ define([
     '../ThirdParty/when'
 ], function(
     Credit,
+    decodeGoogleEarthEnterpriseData,
     defaultValue,
     defined,
     defineProperties,
@@ -465,7 +467,7 @@ define([
 
         return promise
             .then(function(image) {
-                GoogleEarthEnterpriseMetadata.decode(metadata.key, image);
+                decodeGoogleEarthEnterpriseData(metadata.key, image);
                 var a = new Uint8Array(image);
                 var type;
 

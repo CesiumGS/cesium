@@ -32,7 +32,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 scene.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestVertexNormals : true
 });
 
@@ -58,7 +58,7 @@ function createOverlappingPolygons(withAlpha) {
     if (withAlpha) {
         color = color.withAlpha(0.5);
     }
-    
+
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
@@ -79,7 +79,7 @@ function createOverlappingPolygons(withAlpha) {
     if (withAlpha) {
         color = color.withAlpha(0.5);
     }
-    
+
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
@@ -91,7 +91,7 @@ function createOverlappingPolygons(withAlpha) {
             id : 'polygon 2'
         })
     }));
-    
+
     // Same polygon slightly offset and overlapping.
     positionsOffset = offsetPositions(positions, -0.01);
     polygonHierarchy = { positions : positionsOffset };
@@ -100,7 +100,7 @@ function createOverlappingPolygons(withAlpha) {
     if (withAlpha) {
         color = color.withAlpha(0.5);
     }
-    
+
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
@@ -135,9 +135,9 @@ Sandcastle.addDefaultToolbarButton('Picking Example', function() {
             if (Cesium.defined(currentObject)) {
                 currentObject.primitive.getGeometryInstanceAttributes(currentObject.id).color = lastColor;
             }
-            
+
             currentObject = pickedObject;
-            
+
             var attributes = currentObject.primitive.getGeometryInstanceAttributes(currentObject.id);
             lastColor = attributes.color;
             attributes.color = [255, 255, 0, 128];
@@ -151,7 +151,7 @@ Sandcastle.addDefaultToolbarButton('Picking Example', function() {
 Sandcastle.addToolbarButton('Z-Order', function() {
     createOverlappingPolygons(false);
     viewOverlappingPolygons();
-    
+
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
         var pickedObject = scene.pick(movement.endPosition);
@@ -324,7 +324,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
 Sandcastle.reset = function() {
     scene.groundPrimitives.removeAll();
     handler = handler && handler.destroy();
-    
+
     //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
     viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
     'Scene/GoogleEarthEnterpriseImageryProvider',
+    'Core/decodeGoogleEarthEnterpriseData',
     'Core/DefaultProxy',
     'Core/defaultValue',
     'Core/defined',
     'Core/GeographicTilingScheme',
     'Core/GoogleEarthEnterpriseMetadata',
+    'Core/GoogleEarthEnterpriseTileInformation',
     'Core/loadImage',
     'Core/loadWithXhr',
     'Core/Rectangle',
@@ -18,11 +20,13 @@ defineSuite([
     'ThirdParty/when'
 ], function(
     GoogleEarthEnterpriseImageryProvider,
+    decodeGoogleEarthEnterpriseData,
     DefaultProxy,
     defaultValue,
     defined,
     GeographicTilingScheme,
     GoogleEarthEnterpriseMetadata,
+    GoogleEarthEnterpriseTileInformation,
     loadImage,
     loadWithXhr,
     Rectangle,
@@ -35,16 +39,12 @@ defineSuite([
     when) {
     'use strict';
 
-    var oldDecode;
     beforeAll(function() {
-        oldDecode = GoogleEarthEnterpriseMetadata.decode;
-        GoogleEarthEnterpriseMetadata.decode = function(data) {
-            return data;
-        };
+        decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
     });
 
     afterAll(function() {
-        GoogleEarthEnterpriseMetadata.decode = oldDecode;
+        decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;
     });
 
     var imageryProvider;
@@ -68,10 +68,10 @@ defineSuite([
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
 
             return when();
         });

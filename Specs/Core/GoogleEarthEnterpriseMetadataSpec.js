@@ -1,6 +1,8 @@
 /*global defineSuite*/
 defineSuite([
     'Core/GoogleEarthEnterpriseMetadata',
+    'Core/GoogleEarthEnterpriseTileInformation',
+    'Core/decodeGoogleEarthEnterpriseData',
     'Core/DefaultProxy',
     'Core/defaultValue',
     'Core/loadWithXhr',
@@ -8,6 +10,8 @@ defineSuite([
     'ThirdParty/when'
 ], function(
     GoogleEarthEnterpriseMetadata,
+    GoogleEarthEnterpriseTileInformation,
+    decodeGoogleEarthEnterpriseData,
     DefaultProxy,
     defaultValue,
     loadWithXhr,
@@ -57,11 +61,12 @@ defineSuite([
         var keyBuffer = key.buffer.slice(0, 1024); // Key length should be divisible by 4
         var dataBuffer = data.buffer.slice();
         var a = new Uint8Array(dataBuffer);
-        GoogleEarthEnterpriseMetadata.decode(keyBuffer, dataBuffer);
+        decodeGoogleEarthEnterpriseData(keyBuffer, dataBuffer);
         expect(a).not.toEqual(data);
 
         // For the algorithm encode/decode are the same
-        GoogleEarthEnterpriseMetadata.decode(keyBuffer, dataBuffer);
+        decodeGoogleEarthEnterpriseData(keyBuffer, dataBuffer);
+
         expect(a).toEqual(data);
     });
 
@@ -69,7 +74,7 @@ defineSuite([
         var data = new Uint8Array(3);
 
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(undefined, data.buffer);
+            decodeGoogleEarthEnterpriseData(undefined, data.buffer);
         }).toThrowDeveloperError();
     });
 
@@ -77,7 +82,7 @@ defineSuite([
         var key = new Uint8Array(4);
 
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(key.buffer);
+            decodeGoogleEarthEnterpriseData(key.buffer);
         }).toThrowDeveloperError();
     });
 
@@ -87,22 +92,22 @@ defineSuite([
 
         key = new Uint8Array(0);
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(key.buffer, data.buffer);
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
         }).toThrowRuntimeError();
 
         key = new Uint8Array(1);
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(key.buffer, data.buffer);
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
         }).toThrowRuntimeError();
 
         key = new Uint8Array(2);
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(key.buffer, data.buffer);
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
         }).toThrowRuntimeError();
 
         key = new Uint8Array(3);
         expect(function() {
-            GoogleEarthEnterpriseMetadata.decode(key.buffer, data.buffer);
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
         }).toThrowRuntimeError();
     });
 
@@ -111,7 +116,7 @@ defineSuite([
         var index = 0;
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '') + index.toString();
-            this._tileInfo[quadKey] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             index = (index + 1) % 4;
 
             return when();
@@ -147,7 +152,7 @@ defineSuite([
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(responseType).toEqual('arraybuffer');
             if (req === 0) {
-                expect(url).toEqual(baseurl + 'dbRoot.v5?hl=en&gl=us&output=proto');
+                expect(url).toEqual(baseurl + 'dbRoot.v5?output=proto');
                 deferred.reject(); // Reject dbRoot request and use defaults
             } else {
                 expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
@@ -202,7 +207,7 @@ defineSuite([
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             expect(responseType).toEqual('arraybuffer');
             if (req === 0) {
-                expect(url).toEqual(proxy.getURL(baseurl + 'dbRoot.v5?hl=en&gl=us&output=proto'));
+                expect(url).toEqual(proxy.getURL(baseurl + 'dbRoot.v5?output=proto'));
                 deferred.reject(); // Reject dbRoot request and use defaults
             } else {
                 expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));

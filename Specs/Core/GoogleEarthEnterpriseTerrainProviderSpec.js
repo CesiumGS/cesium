@@ -8,6 +8,7 @@ defineSuite([
     'Core/GeographicTilingScheme',
     'Core/GoogleEarthEnterpriseMetadata',
     'Core/GoogleEarthEnterpriseTerrainData',
+    'Core/GoogleEarthEnterpriseTileInformation',
     'Core/loadImage',
     'Core/loadWithXhr',
     'Core/Math',
@@ -23,6 +24,7 @@ defineSuite([
     GeographicTilingScheme,
     GoogleEarthEnterpriseMetadata,
     GoogleEarthEnterpriseTerrainData,
+    GoogleEarthEnterpriseTileInformation,
     loadImage,
     loadWithXhr,
     CesiumMath,
@@ -34,19 +36,19 @@ defineSuite([
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            var t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '0'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '1'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '2'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '3'] = t;
 
