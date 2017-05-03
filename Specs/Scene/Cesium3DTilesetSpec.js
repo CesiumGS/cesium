@@ -1958,199 +1958,6 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////////
     // Cache replacement tests
 
-    it('Unload all cached tiles not required to meet SSE', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 1;
-
-            // Render parent and four children (using additive refinement)
-            viewAllTiles();
-            scene.renderForSpecs();
-
-            var stats = tileset._statistics;
-            expect(stats.numberOfCommands).toEqual(5);
-            expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
-
-            // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // the four children since the max number of loaded tiles is one.
-            viewRootOnly();
-            scene.renderForSpecs();
-
-            expect(stats.numberOfCommands).toEqual(1);
-            expect(stats.numberContentReady).toEqual(1);
-
-            // Zoom back in so all four children are re-requested.
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(5);
-                expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
-            });
-        });
-    });
-
-    it('Unload some cached tiles not required to meet SSE', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 3;
-
-            // Render parent and four children (using additive refinement)
-            viewAllTiles();
-            scene.renderForSpecs();
-
-            var stats = tileset._statistics;
-            expect(stats.numberOfCommands).toEqual(5);
-            expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
-
-            // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // two of the four children so three tiles are still loaded (the
-            // root and two children) since the max number of loaded tiles is three.
-            viewRootOnly();
-            scene.renderForSpecs();
-
-            expect(stats.numberOfCommands).toEqual(1);
-            expect(stats.numberContentReady).toEqual(3);
-
-            // Zoom back in so the two children are re-requested.
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(5);
-                expect(stats.numberContentReady).toEqual(5); // Five loaded tiles
-            });
-        });
-    });
-
-    it('Unloads cached tiles outside of the view frustum', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 0;
-
-            scene.renderForSpecs();
-            var stats = tileset._statistics;
-            expect(stats.numberOfCommands).toEqual(5);
-            expect(stats.numberContentReady).toEqual(5);
-
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
-
-            // All tiles are unloaded
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(0);
-            expect(stats.numberContentReady).toEqual(0);
-
-            // Reset camera so all tiles are reloaded
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(5);
-                expect(stats.numberContentReady).toEqual(5);
-            });
-        });
-    });
-
-    it('Unloads cached tiles in a tileset with external tileset.json', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var stats = tileset._statistics;
-            var replacementList = tileset._replacementList;
-
-            tileset.maximumNumberOfLoadedTiles = 2;
-
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(5);
-            expect(stats.numberContentReady).toEqual(5);
-            expect(replacementList.length - 1).toEqual(5); // Only tiles with content are on the replacement list. -1 for sentinel.
-
-            // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // all tiles except the root and one of the b3dm children
-            viewRootOnly();
-            scene.renderForSpecs();
-
-            expect(stats.numberOfCommands).toEqual(1);
-            expect(stats.numberContentReady).toEqual(2);
-            expect(replacementList.length - 1).toEqual(2);
-
-            // Reset camera so all tiles are reloaded
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(5);
-                expect(stats.numberContentReady).toEqual(5);
-
-                expect(replacementList.length - 1).toEqual(5);
-            });
-        });
-    });
-
-    it('Unloads cached tiles in a tileset with empty tiles', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(function(tileset) {
-            var stats = tileset._statistics;
-
-            tileset.maximumNumberOfLoadedTiles = 2;
-
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(4);
-            expect(stats.numberContentReady).toEqual(4); // 4 children with b3dm content (does not include empty root)
-
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
-
-            // Unload tiles to meet cache size
-            scene.renderForSpecs();
-            expect(stats.numberOfCommands).toEqual(0);
-            expect(stats.numberContentReady).toEqual(2); // 2 children with b3dm content (does not include empty root)
-
-            // Reset camera so all tiles are reloaded
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(4);
-                expect(stats.numberContentReady).toEqual(4);
-            });
-        });
-    });
-
-    it('Unload cached tiles when a tileset uses replacement refinement', function() {
-        // No children have content, but all grandchildren have content
-        //
-        //          C
-        //      E       E
-        //    C   C   C   C
-        //
-        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement1Url).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 1;
-
-            // Render parent and four children (using additive refinement)
-            viewAllTiles();
-            scene.renderForSpecs();
-
-            var stats = tileset._statistics;
-            expect(stats.numberOfCommands).toEqual(4); // 4 grandchildren. Root is replaced.
-            expect(stats.numberContentReady).toEqual(5); // Root + four grandchildren (does not include empty children)
-
-            // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // all grandchildren since the max number of loaded tiles is one.
-            viewRootOnly();
-            scene.renderForSpecs();
-
-            expect(stats.numberOfCommands).toEqual(1);
-            expect(stats.numberContentReady).toEqual(1);
-
-            // Zoom back in so the four children are re-requested.
-            viewAllTiles();
-
-            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
-                scene.renderForSpecs();
-                expect(stats.numberOfCommands).toEqual(4);
-                expect(stats.numberContentReady).toEqual(5);
-            });
-        });
-    });
-
     it('Unload all cached tiles not required to meet SSE using maximumMemoryUsage', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.maximumMemoryUsage = 0;
@@ -2349,7 +2156,7 @@ defineSuite([
 
     it('Explicitly unloads cached tiles with trimLoadedTiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 5;
+            tileset.maximumMemoryUsage = 0.05;
 
             // Render parent and four children (using additive refinement)
             viewAllTiles();
@@ -2377,7 +2184,7 @@ defineSuite([
 
     it('tileUnload event is raised', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.maximumNumberOfLoadedTiles = 1;
+            tileset.maximumMemoryUsage = 0;
 
             // Render parent and four children (using additive refinement)
             viewAllTiles();
@@ -2401,15 +2208,6 @@ defineSuite([
             expect(spyUpdate.calls.argsFor(2)[0]).toBe(tileset._root.children[2]);
             expect(spyUpdate.calls.argsFor(3)[0]).toBe(tileset._root.children[3]);
         });
-    });
-
-    it('maximumNumberOfLoadedTiles throws when negative', function() {
-        var tileset = new Cesium3DTileset({
-            url : tilesetUrl
-        });
-        expect(function() {
-            tileset.maximumNumberOfLoadedTiles = -1;
-        }).toThrowDeveloperError();
     });
 
     it('maximumMemoryUsage throws when negative', function() {

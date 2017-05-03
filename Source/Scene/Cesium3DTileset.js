@@ -111,7 +111,6 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
-     * @param {Number} [options.maximumNumberOfLoadedTiles=256] The maximum number of tiles to load.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
@@ -267,7 +266,6 @@ define([
         this.show = defaultValue(options.show, true);
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-        this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
@@ -473,7 +471,6 @@ define([
          *     console.log('A tile was unloaded from the cache.');
          * });
          *
-         * @see Cesium3DTileset#maximumNumberOfLoadedTiles
          * @see Cesium3DTileset#maximumMemoryUsage
          * @see Cesium3DTileset#trimLoadedTiles
          */
@@ -815,42 +812,6 @@ define([
                 //>>includeEnd('debug');
 
                 this._maximumScreenSpaceError = value;
-            }
-        },
-
-        /**
-         * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
-         * <p>
-         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
-         * </p>
-         * <p>
-         * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
-         * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-         * for the current view than the number of tiles loaded will exceed
-         * <code>maximumNumberOfLoadedTiles</code>.  For example, if the maximum is 128 tiles, but
-         * 150 tiles are needed to meet the screen-space error, then 150 tiles may be loaded.  When
-         * these tiles go out of view, they will be unloaded.
-         * </p>
-         *
-         * @memberof Cesium3DTileset.prototype
-         *
-         * @type {Number}
-         * @default 256
-         *
-         * @exception {DeveloperError} <code>maximumNumberOfLoadedTiles</code> must be greater than or equal to zero.
-         */
-        maximumNumberOfLoadedTiles : {
-            get : function() {
-                return this._maximumNumberOfLoadedTiles;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
-                    throw new DeveloperError('maximumNumberOfLoadedTiles must be greater than or equal to zero');
-                }
-                //>>includeEnd('debug');
-
-                this._maximumNumberOfLoadedTiles = value;
             }
         },
 
@@ -2030,7 +1991,6 @@ define([
         tileset._trimTiles = false;
 
         var stats = tileset._statistics;
-        var maximumNumberOfLoadedTiles = tileset._maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
@@ -2043,7 +2003,7 @@ define([
         // The sub-list to the left of the sentinel is ordered from LRU to MRU.
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
-        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || (totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
+        while ((node !== sentinel) && ((totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
 
             decrementPointAndFeatureLoadCounts(tileset, tile.content);
@@ -2062,7 +2022,7 @@ define([
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
-     * {@link Cesium3DTileset#maximumNumberOfLoadedTiles}.
+     * {@link Cesium3DTileset#maximumMemoryUsage}.
      * <p>
      * Tile unloads occur at the next frame to keep all the WebGL delete calls
      * within the render loop.
