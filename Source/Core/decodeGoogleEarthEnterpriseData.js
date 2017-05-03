@@ -28,7 +28,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('key', key);
         Check.typeOf.object('data', data);
-        //>>includeStart('debug', pragmas.debug);
+        //>>includeEnd('debug');
 
         var keyLength = key.byteLength;
         if (keyLength === 0 || (keyLength % 4) !== 0) {
