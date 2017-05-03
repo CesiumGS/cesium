@@ -525,7 +525,7 @@ function createScene() {
     var frustumSize = 55.0;
     var frustumNear = 1.0;
     var frustumFar = 400.0;
-    var frustum = new Cesium.OrthographicFrustum();
+    var frustum = new Cesium.OrthographicOffCenterFrustum();
     frustum.left = -frustumSize;
     frustum.right = frustumSize;
     frustum.bottom = -frustumSize;

@@ -152,7 +152,6 @@ define([
         var entity = entityCollection.getOrCreateEntity(id);
         var properties = geoJson.properties;
         if (defined(properties)) {
-            entity.addProperty('properties');
             entity.properties = properties;
 
             var nameProperty;

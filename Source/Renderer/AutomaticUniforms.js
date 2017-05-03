@@ -531,17 +531,6 @@ define([
         }),
 
         /**
-         * @private
-         */
-        czm_inverseProjectionOIT : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT_MAT4,
-            getValue : function(uniformState) {
-                return uniformState.inverseProjectionOIT;
-            }
-        }),
-
-        /**
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
          * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
@@ -1420,6 +1409,35 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the current scene background color.
+         *
+         * @alias czm_backgroundColor
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec4 czm_backgroundColor;
+         *
+         * // Example: If the given color's RGB matches the background color, invert it.
+         * vec4 adjustColorForContrast(vec4 color)
+         * {
+         *     if (czm_backgroundColor.rgb == color.rgb)
+         *     {
+         *         color.rgb = vec3(1.0) - color.rgb;
+         *     }
+         *
+         *     return color;
+         * }
+         */
+        czm_backgroundColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.backgroundColor;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *
@@ -1480,7 +1498,7 @@ define([
 
          /**
          * An automatic GLSL uniform representing the splitter position to use when rendering imagery layers with a splitter.
-         * This will be in the range 0.0 to 1.0 with 0.0 being the far left of the viewport and 1.0 being the far right of the viewport.
+         * This will be in pixel coordinates relative to the canvas.
          *
          * @alias czm_imagerySplitPosition
          * @glslUniform
@@ -1505,10 +1523,26 @@ define([
          * @glslUniform
          */
         czm_geometricToleranceOverMeter : new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT,
-            getValue: function(uniformState) {
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
                 return uniformState.geometricToleranceOverMeter;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always be applied. When less than zero,
+         * the depth test should never be applied.
+         *
+         * @alias czm_minimumDisableDepthTestDistance
+         * @glslUniform
+         */
+        czm_minimumDisableDepthTestDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.minimumDisableDepthTestDistance;
             }
         })
     };

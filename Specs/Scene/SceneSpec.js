@@ -27,11 +27,13 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
+        'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
+        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
@@ -65,11 +67,13 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
+        PerspectiveFrustum,
         Primitive,
         PrimitiveCollection,
         Scene,
         ScreenSpaceCameraController,
         TweenCollection,
+        SceneTransforms,
         createCanvas,
         createScene,
         equals,
@@ -101,6 +105,11 @@ defineSuite([
         scene.fxaa = false;
         scene.primitives.removeAll();
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterAll(function() {
@@ -831,6 +840,41 @@ defineSuite([
         });
     });
 
+    it('pickPosition caches results per frame',function(){
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        spyOn(SceneTransforms, 'transformWindowToDrawingBuffer').and.callThrough();
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer).toHaveBeenCalled();
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(1);
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+        });
+    });
+
     it('pickPosition throws without windowPosition', function() {
         expect(function() {
             scene.pickPosition();
@@ -1071,4 +1115,11 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
+
+    it('throws when minimumDisableDepthTestDistance is set less than 0.0', function() {
+        expect(function() {
+            scene.minimumDisableDepthTestDistance = -1.0;
+        }).toThrowDeveloperError();
+    });
+
 }, 'WebGL');
