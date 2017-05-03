@@ -1907,7 +1907,7 @@ define([
                 }
 
                 labelString += '\nFeatures: ' + tile.content.featuresLength;
-                attributes += 4;
+                attributes ++;
             }
 
             if (tileset.debugShowMemoryUsage) {
