@@ -741,13 +741,13 @@ define([
     //
     function createDbRootParser() {
         /* jshint curly: false, sub: true, newcap: false, shadow: true*/
-        var $Reader = protobuf.Reader, $util = protobuf.util;
+        var Reader = protobuf.Reader, util = protobuf.util;
 
-        var $lazyTypes = [];
+        var lazyTypes = [];
 
-        var $root = protobuf.roots["default"] || (protobuf.roots["default"] = {});
+        var root = protobuf.roots["default"] || (protobuf.roots["default"] = {});
 
-        $root.keyhole = (function() {
+        root.keyhole = (function() {
 
             var keyhole = {};
 
@@ -771,9 +771,9 @@ define([
                     };
 
                     StringEntryProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.StringEntryProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.StringEntryProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -792,25 +792,25 @@ define([
                     };
 
                     StringEntryProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     StringEntryProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isInteger(message.stringId))
+                        if (!util.isInteger(message.stringId))
                             return "stringId: integer expected";
-                        if (!$util.isString(message.stringValue))
+                        if (!util.isString(message.stringValue))
                             return "stringValue: string expected";
                         return null;
                     };
 
                     StringEntryProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.StringEntryProto)
+                        if (object instanceof root.keyhole.dbroot.StringEntryProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.StringEntryProto();
+                        var message = new root.keyhole.dbroot.StringEntryProto();
                         if (object.stringId !== undefined && object.stringId !== null)
                             message.stringId = object.stringId >>> 0;
                         if (object.stringValue !== undefined && object.stringValue !== null)
@@ -862,9 +862,9 @@ define([
                     };
 
                     StringIdOrValueProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.StringIdOrValueProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.StringIdOrValueProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -883,8 +883,8 @@ define([
                     };
 
                     StringIdOrValueProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -892,18 +892,18 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.stringId !== undefined)
-                            if (!$util.isInteger(message.stringId))
+                            if (!util.isInteger(message.stringId))
                                 return "stringId: integer expected";
                         if (message.value !== undefined)
-                            if (!$util.isString(message.value))
+                            if (!util.isString(message.value))
                                 return "value: string expected";
                         return null;
                     };
 
                     StringIdOrValueProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.StringIdOrValueProto)
+                        if (object instanceof root.keyhole.dbroot.StringIdOrValueProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.StringIdOrValueProto();
+                        var message = new root.keyhole.dbroot.StringIdOrValueProto();
                         if (object.stringId !== undefined && object.stringId !== null)
                             message.stringId = object.stringId >>> 0;
                         if (object.value !== undefined && object.value !== null)
@@ -958,9 +958,9 @@ define([
                     };
 
                     PlanetModelProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.PlanetModelProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.PlanetModelProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -988,8 +988,8 @@ define([
                     };
 
                     PlanetModelProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -1006,7 +1006,7 @@ define([
                             if (typeof message.elevationBias !== "number")
                                 return "elevationBias: number expected";
                         if (message.negativeAltitudeExponentBias !== undefined)
-                            if (!$util.isInteger(message.negativeAltitudeExponentBias))
+                            if (!util.isInteger(message.negativeAltitudeExponentBias))
                                 return "negativeAltitudeExponentBias: integer expected";
                         if (message.compressedNegativeAltitudeThreshold !== undefined)
                             if (typeof message.compressedNegativeAltitudeThreshold !== "number")
@@ -1015,9 +1015,9 @@ define([
                     };
 
                     PlanetModelProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.PlanetModelProto)
+                        if (object instanceof root.keyhole.dbroot.PlanetModelProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.PlanetModelProto();
+                        var message = new root.keyhole.dbroot.PlanetModelProto();
                         if (object.radius !== undefined && object.radius !== null)
                             message.radius = Number(object.radius);
                         if (object.flattening !== undefined && object.flattening !== null)
@@ -1082,16 +1082,16 @@ define([
 
                     var $types = {
                         1: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     ProviderInfoProto.create = function create(properties) {
                         return new ProviderInfoProto(properties);
                     };
 
                     ProviderInfoProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ProviderInfoProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ProviderInfoProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1113,15 +1113,15 @@ define([
                     };
 
                     ProviderInfoProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     ProviderInfoProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isInteger(message.providerId))
+                        if (!util.isInteger(message.providerId))
                             return "providerId: integer expected";
                         if (message.copyrightString !== undefined && message.copyrightString !== null) {
                             var error = $types[1].verify(message.copyrightString);
@@ -1129,15 +1129,15 @@ define([
                                 return "copyrightString." + error;
                         }
                         if (message.verticalPixelOffset !== undefined)
-                            if (!$util.isInteger(message.verticalPixelOffset))
+                            if (!util.isInteger(message.verticalPixelOffset))
                                 return "verticalPixelOffset: integer expected";
                         return null;
                     };
 
                     ProviderInfoProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.ProviderInfoProto)
+                        if (object instanceof root.keyhole.dbroot.ProviderInfoProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.ProviderInfoProto();
+                        var message = new root.keyhole.dbroot.ProviderInfoProto();
                         if (object.providerId !== undefined && object.providerId !== null)
                             message.providerId = object.providerId | 0;
                         if (object.copyrightString !== undefined && object.copyrightString !== null) {
@@ -1196,16 +1196,16 @@ define([
 
                     var $types = {
                         1: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     PopUpProto.create = function create(properties) {
                         return new PopUpProto(properties);
                     };
 
                     PopUpProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.PopUpProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.PopUpProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1230,8 +1230,8 @@ define([
                     };
 
                     PopUpProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -1247,18 +1247,18 @@ define([
                                 return "text." + error;
                         }
                         if (message.backgroundColorAbgr !== undefined)
-                            if (!$util.isInteger(message.backgroundColorAbgr))
+                            if (!util.isInteger(message.backgroundColorAbgr))
                                 return "backgroundColorAbgr: integer expected";
                         if (message.textColorAbgr !== undefined)
-                            if (!$util.isInteger(message.textColorAbgr))
+                            if (!util.isInteger(message.textColorAbgr))
                                 return "textColorAbgr: integer expected";
                         return null;
                     };
 
                     PopUpProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.PopUpProto)
+                        if (object instanceof root.keyhole.dbroot.PopUpProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.PopUpProto();
+                        var message = new root.keyhole.dbroot.PopUpProto();
                         if (object.isBalloonStyle !== undefined && object.isBalloonStyle !== null)
                             message.isBalloonStyle = Boolean(object.isBalloonStyle);
                         if (object.text !== undefined && object.text !== null) {
@@ -1330,22 +1330,22 @@ define([
                     StyleAttributeProto.prototype.placemarkIconWidth = 32;
                     StyleAttributeProto.prototype.placemarkIconHeight = 32;
                     StyleAttributeProto.prototype.popUp = null;
-                    StyleAttributeProto.prototype.drawFlag = $util.emptyArray;
+                    StyleAttributeProto.prototype.drawFlag = util.emptyArray;
 
                     var $types = {
                         9: "keyhole.dbroot.StringIdOrValueProto",
                         14: "keyhole.dbroot.PopUpProto",
                         15: "keyhole.dbroot.DrawFlagProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     StyleAttributeProto.create = function create(properties) {
                         return new StyleAttributeProto(properties);
                     };
 
                     StyleAttributeProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.StyleAttributeProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.StyleAttributeProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1408,36 +1408,36 @@ define([
                     };
 
                     StyleAttributeProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     StyleAttributeProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isString(message.styleId))
+                        if (!util.isString(message.styleId))
                             return "styleId: string expected";
                         if (message.providerId !== undefined)
-                            if (!$util.isInteger(message.providerId))
+                            if (!util.isInteger(message.providerId))
                                 return "providerId: integer expected";
                         if (message.polyColorAbgr !== undefined)
-                            if (!$util.isInteger(message.polyColorAbgr))
+                            if (!util.isInteger(message.polyColorAbgr))
                                 return "polyColorAbgr: integer expected";
                         if (message.lineColorAbgr !== undefined)
-                            if (!$util.isInteger(message.lineColorAbgr))
+                            if (!util.isInteger(message.lineColorAbgr))
                                 return "lineColorAbgr: integer expected";
                         if (message.lineWidth !== undefined)
                             if (typeof message.lineWidth !== "number")
                                 return "lineWidth: number expected";
                         if (message.labelColorAbgr !== undefined)
-                            if (!$util.isInteger(message.labelColorAbgr))
+                            if (!util.isInteger(message.labelColorAbgr))
                                 return "labelColorAbgr: integer expected";
                         if (message.labelScale !== undefined)
                             if (typeof message.labelScale !== "number")
                                 return "labelScale: number expected";
                         if (message.placemarkIconColorAbgr !== undefined)
-                            if (!$util.isInteger(message.placemarkIconColorAbgr))
+                            if (!util.isInteger(message.placemarkIconColorAbgr))
                                 return "placemarkIconColorAbgr: integer expected";
                         if (message.placemarkIconScale !== undefined)
                             if (typeof message.placemarkIconScale !== "number")
@@ -1448,16 +1448,16 @@ define([
                                 return "placemarkIconPath." + error;
                         }
                         if (message.placemarkIconX !== undefined)
-                            if (!$util.isInteger(message.placemarkIconX))
+                            if (!util.isInteger(message.placemarkIconX))
                                 return "placemarkIconX: integer expected";
                         if (message.placemarkIconY !== undefined)
-                            if (!$util.isInteger(message.placemarkIconY))
+                            if (!util.isInteger(message.placemarkIconY))
                                 return "placemarkIconY: integer expected";
                         if (message.placemarkIconWidth !== undefined)
-                            if (!$util.isInteger(message.placemarkIconWidth))
+                            if (!util.isInteger(message.placemarkIconWidth))
                                 return "placemarkIconWidth: integer expected";
                         if (message.placemarkIconHeight !== undefined)
-                            if (!$util.isInteger(message.placemarkIconHeight))
+                            if (!util.isInteger(message.placemarkIconHeight))
                                 return "placemarkIconHeight: integer expected";
                         if (message.popUp !== undefined && message.popUp !== null) {
                             var error = $types[14].verify(message.popUp);
@@ -1477,9 +1477,9 @@ define([
                     };
 
                     StyleAttributeProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.StyleAttributeProto)
+                        if (object instanceof root.keyhole.dbroot.StyleAttributeProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.StyleAttributeProto();
+                        var message = new root.keyhole.dbroot.StyleAttributeProto();
                         if (object.styleId !== undefined && object.styleId !== null)
                             message.styleId = String(object.styleId);
                         if (object.providerId !== undefined && object.providerId !== null)
@@ -1612,7 +1612,7 @@ define([
                     }
 
                     StyleMapProto.prototype.styleMapId = 0;
-                    StyleMapProto.prototype.channelId = $util.emptyArray;
+                    StyleMapProto.prototype.channelId = util.emptyArray;
                     StyleMapProto.prototype.normalStyleAttribute = 0;
                     StyleMapProto.prototype.highlightStyleAttribute = 0;
 
@@ -1621,9 +1621,9 @@ define([
                     };
 
                     StyleMapProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.StyleMapProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.StyleMapProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1655,36 +1655,36 @@ define([
                     };
 
                     StyleMapProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     StyleMapProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isInteger(message.styleMapId))
+                        if (!util.isInteger(message.styleMapId))
                             return "styleMapId: integer expected";
                         if (message.channelId !== undefined) {
                             if (!Array.isArray(message.channelId))
                                 return "channelId: array expected";
                             for (var i = 0; i < message.channelId.length; ++i)
-                                if (!$util.isInteger(message.channelId[i]))
+                                if (!util.isInteger(message.channelId[i]))
                                     return "channelId: integer[] expected";
                         }
                         if (message.normalStyleAttribute !== undefined)
-                            if (!$util.isInteger(message.normalStyleAttribute))
+                            if (!util.isInteger(message.normalStyleAttribute))
                                 return "normalStyleAttribute: integer expected";
                         if (message.highlightStyleAttribute !== undefined)
-                            if (!$util.isInteger(message.highlightStyleAttribute))
+                            if (!util.isInteger(message.highlightStyleAttribute))
                                 return "highlightStyleAttribute: integer expected";
                         return null;
                     };
 
                     StyleMapProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.StyleMapProto)
+                        if (object instanceof root.keyhole.dbroot.StyleMapProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.StyleMapProto();
+                        var message = new root.keyhole.dbroot.StyleMapProto();
                         if (object.styleMapId !== undefined && object.styleMapId !== null)
                             message.styleMapId = object.styleMapId | 0;
                         if (object.channelId) {
@@ -1755,9 +1755,9 @@ define([
                     };
 
                     ZoomRangeProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ZoomRangeProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ZoomRangeProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1776,25 +1776,25 @@ define([
                     };
 
                     ZoomRangeProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     ZoomRangeProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isInteger(message.minZoom))
+                        if (!util.isInteger(message.minZoom))
                             return "minZoom: integer expected";
-                        if (!$util.isInteger(message.maxZoom))
+                        if (!util.isInteger(message.maxZoom))
                             return "maxZoom: integer expected";
                         return null;
                     };
 
                     ZoomRangeProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.ZoomRangeProto)
+                        if (object instanceof root.keyhole.dbroot.ZoomRangeProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.ZoomRangeProto();
+                        var message = new root.keyhole.dbroot.ZoomRangeProto();
                         if (object.minZoom !== undefined && object.minZoom !== null)
                             message.minZoom = object.minZoom | 0;
                         if (object.maxZoom !== undefined && object.maxZoom !== null)
@@ -1842,16 +1842,16 @@ define([
 
                     var $types = {
                         0: "keyhole.dbroot.DrawFlagProto.DrawFlagType"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     DrawFlagProto.create = function create(properties) {
                         return new DrawFlagProto(properties);
                     };
 
                     DrawFlagProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.DrawFlagProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.DrawFlagProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -1867,8 +1867,8 @@ define([
                     };
 
                     DrawFlagProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -1889,9 +1889,9 @@ define([
                     };
 
                     DrawFlagProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.DrawFlagProto)
+                        if (object instanceof root.keyhole.dbroot.DrawFlagProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.DrawFlagProto();
+                        var message = new root.keyhole.dbroot.DrawFlagProto();
                         switch (object.drawFlagType) {
                             case "TYPE_FILL_ONLY":
                             case 1:
@@ -1959,23 +1959,23 @@ define([
                                 this[keys[i]] = properties[keys[i]];
                     }
 
-                    LayerProto.prototype.zoomRange = $util.emptyArray;
+                    LayerProto.prototype.zoomRange = util.emptyArray;
                     LayerProto.prototype.preserveTextLevel = 30;
                     LayerProto.prototype.lodBeginTransition = false;
                     LayerProto.prototype.lodEndTransition = false;
 
                     var $types = {
                         0: "keyhole.dbroot.ZoomRangeProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     LayerProto.create = function create(properties) {
                         return new LayerProto(properties);
                     };
 
                     LayerProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.LayerProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.LayerProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2002,8 +2002,8 @@ define([
                     };
 
                     LayerProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -2020,7 +2020,7 @@ define([
                             }
                         }
                         if (message.preserveTextLevel !== undefined)
-                            if (!$util.isInteger(message.preserveTextLevel))
+                            if (!util.isInteger(message.preserveTextLevel))
                                 return "preserveTextLevel: integer expected";
                         if (message.lodBeginTransition !== undefined)
                             if (typeof message.lodBeginTransition !== "boolean")
@@ -2032,9 +2032,9 @@ define([
                     };
 
                     LayerProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.LayerProto)
+                        if (object instanceof root.keyhole.dbroot.LayerProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.LayerProto();
+                        var message = new root.keyhole.dbroot.LayerProto();
                         if (object.zoomRange) {
                             if (!Array.isArray(object.zoomRange))
                                 throw TypeError(".keyhole.dbroot.LayerProto.zoomRange: array expected");
@@ -2107,9 +2107,9 @@ define([
                     };
 
                     FolderProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.FolderProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.FolderProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2125,8 +2125,8 @@ define([
                     };
 
                     FolderProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -2140,9 +2140,9 @@ define([
                     };
 
                     FolderProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.FolderProto)
+                        if (object instanceof root.keyhole.dbroot.FolderProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.FolderProto();
+                        var message = new root.keyhole.dbroot.FolderProto();
                         if (object.isExpandable !== undefined && object.isExpandable !== null)
                             message.isExpandable = Boolean(object.isExpandable);
                         return message;
@@ -2191,9 +2191,9 @@ define([
                     };
 
                     RequirementProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.RequirementProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.RequirementProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2221,8 +2221,8 @@ define([
                     };
 
                     RequirementProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -2230,27 +2230,27 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.requiredVram !== undefined)
-                            if (!$util.isString(message.requiredVram))
+                            if (!util.isString(message.requiredVram))
                                 return "requiredVram: string expected";
                         if (message.requiredClientVer !== undefined)
-                            if (!$util.isString(message.requiredClientVer))
+                            if (!util.isString(message.requiredClientVer))
                                 return "requiredClientVer: string expected";
                         if (message.probability !== undefined)
-                            if (!$util.isString(message.probability))
+                            if (!util.isString(message.probability))
                                 return "probability: string expected";
                         if (message.requiredUserAgent !== undefined)
-                            if (!$util.isString(message.requiredUserAgent))
+                            if (!util.isString(message.requiredUserAgent))
                                 return "requiredUserAgent: string expected";
                         if (message.requiredClientCapabilities !== undefined)
-                            if (!$util.isString(message.requiredClientCapabilities))
+                            if (!util.isString(message.requiredClientCapabilities))
                                 return "requiredClientCapabilities: string expected";
                         return null;
                     };
 
                     RequirementProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.RequirementProto)
+                        if (object instanceof root.keyhole.dbroot.RequirementProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.RequirementProto();
+                        var message = new root.keyhole.dbroot.RequirementProto();
                         if (object.requiredVram !== undefined && object.requiredVram !== null)
                             message.requiredVram = String(object.requiredVram);
                         if (object.requiredClientVer !== undefined && object.requiredClientVer !== null)
@@ -2320,9 +2320,9 @@ define([
                     };
 
                     LookAtProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.LookAtProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.LookAtProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2350,8 +2350,8 @@ define([
                     };
 
                     LookAtProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -2375,9 +2375,9 @@ define([
                     };
 
                     LookAtProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.LookAtProto)
+                        if (object instanceof root.keyhole.dbroot.LookAtProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.LookAtProto();
+                        var message = new root.keyhole.dbroot.LookAtProto();
                         if (object.longitude !== undefined && object.longitude !== null)
                             message.longitude = Number(object.longitude);
                         if (object.latitude !== undefined && object.latitude !== null)
@@ -2452,7 +2452,7 @@ define([
                     NestedFeatureProto.prototype.lookAt = null;
                     NestedFeatureProto.prototype.assetUuid = "";
                     NestedFeatureProto.prototype.isSaveLocked = true;
-                    NestedFeatureProto.prototype.children = $util.emptyArray;
+                    NestedFeatureProto.prototype.children = util.emptyArray;
                     NestedFeatureProto.prototype.clientConfigScriptName = "";
                     NestedFeatureProto.prototype.dioramaDataChannelBase = -1;
                     NestedFeatureProto.prototype.replicaDataChannelBase = -1;
@@ -2467,16 +2467,16 @@ define([
                         12: "keyhole.dbroot.StringIdOrValueProto",
                         13: "keyhole.dbroot.LookAtProto",
                         16: "keyhole.dbroot.NestedFeatureProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     NestedFeatureProto.create = function create(properties) {
                         return new NestedFeatureProto(properties);
                     };
 
                     NestedFeatureProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.NestedFeatureProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.NestedFeatureProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2551,8 +2551,8 @@ define([
                     };
 
                     NestedFeatureProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -2575,7 +2575,7 @@ define([
                                 return "kmlUrl." + error;
                         }
                         if (message.databaseUrl !== undefined)
-                            if (!$util.isString(message.databaseUrl))
+                            if (!util.isString(message.databaseUrl))
                                 return "databaseUrl: string expected";
                         if (message.layer !== undefined && message.layer !== null) {
                             var error = $types[3].verify(message.layer);
@@ -2592,7 +2592,7 @@ define([
                             if (error)
                                 return "requirement." + error;
                         }
-                        if (!$util.isInteger(message.channelId))
+                        if (!util.isInteger(message.channelId))
                             return "channelId: integer expected";
                         if (message.displayName !== undefined && message.displayName !== null) {
                             var error = $types[7].verify(message.displayName);
@@ -2609,7 +2609,7 @@ define([
                             if (typeof message.isChecked !== "boolean")
                                 return "isChecked: boolean expected";
                         if (message.layerMenuIconPath !== undefined)
-                            if (!$util.isString(message.layerMenuIconPath))
+                            if (!util.isString(message.layerMenuIconPath))
                                 return "layerMenuIconPath: string expected";
                         if (message.description !== undefined && message.description !== null) {
                             var error = $types[12].verify(message.description);
@@ -2622,7 +2622,7 @@ define([
                                 return "lookAt." + error;
                         }
                         if (message.assetUuid !== undefined)
-                            if (!$util.isString(message.assetUuid))
+                            if (!util.isString(message.assetUuid))
                                 return "assetUuid: string expected";
                         if (message.isSaveLocked !== undefined)
                             if (typeof message.isSaveLocked !== "boolean")
@@ -2637,21 +2637,21 @@ define([
                             }
                         }
                         if (message.clientConfigScriptName !== undefined)
-                            if (!$util.isString(message.clientConfigScriptName))
+                            if (!util.isString(message.clientConfigScriptName))
                                 return "clientConfigScriptName: string expected";
                         if (message.dioramaDataChannelBase !== undefined)
-                            if (!$util.isInteger(message.dioramaDataChannelBase))
+                            if (!util.isInteger(message.dioramaDataChannelBase))
                                 return "dioramaDataChannelBase: integer expected";
                         if (message.replicaDataChannelBase !== undefined)
-                            if (!$util.isInteger(message.replicaDataChannelBase))
+                            if (!util.isInteger(message.replicaDataChannelBase))
                                 return "replicaDataChannelBase: integer expected";
                         return null;
                     };
 
                     NestedFeatureProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.NestedFeatureProto)
+                        if (object instanceof root.keyhole.dbroot.NestedFeatureProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.NestedFeatureProto();
+                        var message = new root.keyhole.dbroot.NestedFeatureProto();
                         switch (object.featureType) {
                             case "TYPE_POINT_Z":
                             case 1:
@@ -2845,20 +2845,20 @@ define([
 
                     MfeDomainFeaturesProto.prototype.countryCode = "";
                     MfeDomainFeaturesProto.prototype.domainName = "";
-                    MfeDomainFeaturesProto.prototype.supportedFeatures = $util.emptyArray;
+                    MfeDomainFeaturesProto.prototype.supportedFeatures = util.emptyArray;
 
                     var $types = {
                         2: "keyhole.dbroot.MfeDomainFeaturesProto.SupportedFeature"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     MfeDomainFeaturesProto.create = function create(properties) {
                         return new MfeDomainFeaturesProto(properties);
                     };
 
                     MfeDomainFeaturesProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.MfeDomainFeaturesProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.MfeDomainFeaturesProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -2887,17 +2887,17 @@ define([
                     };
 
                     MfeDomainFeaturesProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     MfeDomainFeaturesProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isString(message.countryCode))
+                        if (!util.isString(message.countryCode))
                             return "countryCode: string expected";
-                        if (!$util.isString(message.domainName))
+                        if (!util.isString(message.domainName))
                             return "domainName: string expected";
                         if (message.supportedFeatures !== undefined) {
                             if (!Array.isArray(message.supportedFeatures))
@@ -2916,9 +2916,9 @@ define([
                     };
 
                     MfeDomainFeaturesProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.MfeDomainFeaturesProto)
+                        if (object instanceof root.keyhole.dbroot.MfeDomainFeaturesProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.MfeDomainFeaturesProto();
+                        var message = new root.keyhole.dbroot.MfeDomainFeaturesProto();
                         if (object.countryCode !== undefined && object.countryCode !== null)
                             message.countryCode = String(object.countryCode);
                         if (object.domainName !== undefined && object.domainName !== null)
@@ -3019,16 +3019,16 @@ define([
                         7: "keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions",
                         8: "keyhole.dbroot.ClientOptionsProto.CaptureOptions",
                         15: "keyhole.dbroot.ClientOptionsProto.MapsOptions"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     ClientOptionsProto.create = function create(properties) {
                         return new ClientOptionsProto(properties);
                     };
 
                     ClientOptionsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ClientOptionsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ClientOptionsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -3089,8 +3089,8 @@ define([
                     };
 
                     ClientOptionsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -3110,7 +3110,7 @@ define([
                             if (typeof message.drawStars !== "boolean")
                                 return "drawStars: boolean expected";
                         if (message.shaderFilePrefix !== undefined)
-                            if (!$util.isString(message.shaderFilePrefix))
+                            if (!util.isString(message.shaderFilePrefix))
                                 return "shaderFilePrefix: string expected";
                         if (message.useProtobufQuadtreePackets !== undefined)
                             if (typeof message.useProtobufQuadtreePackets !== "boolean")
@@ -3135,16 +3135,16 @@ define([
                             if (typeof message.disableInternalBrowser !== "boolean")
                                 return "disableInternalBrowser: boolean expected";
                         if (message.internalBrowserBlacklist !== undefined)
-                            if (!$util.isString(message.internalBrowserBlacklist))
+                            if (!util.isString(message.internalBrowserBlacklist))
                                 return "internalBrowserBlacklist: string expected";
                         if (message.internalBrowserOriginWhitelist !== undefined)
-                            if (!$util.isString(message.internalBrowserOriginWhitelist))
+                            if (!util.isString(message.internalBrowserOriginWhitelist))
                                 return "internalBrowserOriginWhitelist: string expected";
                         if (message.polarTileMergingLevel !== undefined)
-                            if (!$util.isInteger(message.polarTileMergingLevel))
+                            if (!util.isInteger(message.polarTileMergingLevel))
                                 return "polarTileMergingLevel: integer expected";
                         if (message.jsBridgeRequestWhitelist !== undefined)
-                            if (!$util.isString(message.jsBridgeRequestWhitelist))
+                            if (!util.isString(message.jsBridgeRequestWhitelist))
                                 return "jsBridgeRequestWhitelist: string expected";
                         if (message.mapsOptions !== undefined && message.mapsOptions !== null) {
                             var error = $types[15].verify(message.mapsOptions);
@@ -3155,9 +3155,9 @@ define([
                     };
 
                     ClientOptionsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.ClientOptionsProto)
+                        if (object instanceof root.keyhole.dbroot.ClientOptionsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.ClientOptionsProto();
+                        var message = new root.keyhole.dbroot.ClientOptionsProto();
                         if (object.disableDiskCache !== undefined && object.disableDiskCache !== null)
                             message.disableDiskCache = Boolean(object.disableDiskCache);
                         if (object.disableEmbeddedBrowserVista !== undefined && object.disableEmbeddedBrowserVista !== null)
@@ -3281,22 +3281,22 @@ define([
                         PrecipitationsOptions.prototype.imageExpireTime = 900;
                         PrecipitationsOptions.prototype.maxColorDistance = 20;
                         PrecipitationsOptions.prototype.imageLevel = 5;
-                        PrecipitationsOptions.prototype.weatherMapping = $util.emptyArray;
+                        PrecipitationsOptions.prototype.weatherMapping = util.emptyArray;
                         PrecipitationsOptions.prototype.cloudsLayerUrl = "";
                         PrecipitationsOptions.prototype.animationDecelerationDelay = 20;
 
                         var $types = {
                             4: "keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         PrecipitationsOptions.create = function create(properties) {
                             return new PrecipitationsOptions(properties);
                         };
 
                         PrecipitationsOptions.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -3332,8 +3332,8 @@ define([
                         };
 
                         PrecipitationsOptions.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -3341,16 +3341,16 @@ define([
                             if (typeof message !== "object" || message === null)
                                 return "object expected";
                             if (message.imageUrl !== undefined)
-                                if (!$util.isString(message.imageUrl))
+                                if (!util.isString(message.imageUrl))
                                     return "imageUrl: string expected";
                             if (message.imageExpireTime !== undefined)
-                                if (!$util.isInteger(message.imageExpireTime))
+                                if (!util.isInteger(message.imageExpireTime))
                                     return "imageExpireTime: integer expected";
                             if (message.maxColorDistance !== undefined)
-                                if (!$util.isInteger(message.maxColorDistance))
+                                if (!util.isInteger(message.maxColorDistance))
                                     return "maxColorDistance: integer expected";
                             if (message.imageLevel !== undefined)
-                                if (!$util.isInteger(message.imageLevel))
+                                if (!util.isInteger(message.imageLevel))
                                     return "imageLevel: integer expected";
                             if (message.weatherMapping !== undefined) {
                                 if (!Array.isArray(message.weatherMapping))
@@ -3362,7 +3362,7 @@ define([
                                 }
                             }
                             if (message.cloudsLayerUrl !== undefined)
-                                if (!$util.isString(message.cloudsLayerUrl))
+                                if (!util.isString(message.cloudsLayerUrl))
                                     return "cloudsLayerUrl: string expected";
                             if (message.animationDecelerationDelay !== undefined)
                                 if (typeof message.animationDecelerationDelay !== "number")
@@ -3371,9 +3371,9 @@ define([
                         };
 
                         PrecipitationsOptions.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions)
+                            if (object instanceof root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions)
                                 return object;
-                            var message = new $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions();
+                            var message = new root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions();
                             if (object.imageUrl !== undefined && object.imageUrl !== null)
                                 message.imageUrl = String(object.imageUrl);
                             if (object.imageExpireTime !== undefined && object.imageExpireTime !== null)
@@ -3463,16 +3463,16 @@ define([
 
                             var $types = {
                                 1: "keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping.WeatherType"
-                            }; $lazyTypes.push($types);
+                            }; lazyTypes.push($types);
 
                             WeatherMapping.create = function create(properties) {
                                 return new WeatherMapping(properties);
                             };
 
                             WeatherMapping.decode = function decode(reader, length) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader.create(reader);
-                                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping();
+                                if (!(reader instanceof Reader))
+                                    reader = Reader.create(reader);
+                                var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping();
                                 while (reader.pos < end) {
                                     var tag = reader.uint32();
                                     switch (tag >>> 3) {
@@ -3512,15 +3512,15 @@ define([
                             };
 
                             WeatherMapping.decodeDelimited = function decodeDelimited(reader) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader(reader);
+                                if (!(reader instanceof Reader))
+                                    reader = Reader(reader);
                                 return this.decode(reader, reader.uint32());
                             };
 
                             WeatherMapping.verify = function verify(message) {
                                 if (typeof message !== "object" || message === null)
                                     return "object expected";
-                                if (!$util.isInteger(message.colorAbgr))
+                                if (!util.isInteger(message.colorAbgr))
                                     return "colorAbgr: integer expected";
                                 switch (message.weatherType) {
                                     default:
@@ -3555,9 +3555,9 @@ define([
                             };
 
                             WeatherMapping.fromObject = function fromObject(object) {
-                                if (object instanceof $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping)
+                                if (object instanceof root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping)
                                     return object;
-                                var message = new $root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping();
+                                var message = new root.keyhole.dbroot.ClientOptionsProto.PrecipitationsOptions.WeatherMapping();
                                 if (object.colorAbgr !== undefined && object.colorAbgr !== null)
                                     message.colorAbgr = object.colorAbgr >>> 0;
                                 switch (object.weatherType) {
@@ -3668,9 +3668,9 @@ define([
                         };
 
                         CaptureOptions.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ClientOptionsProto.CaptureOptions();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ClientOptionsProto.CaptureOptions();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -3692,8 +3692,8 @@ define([
                         };
 
                         CaptureOptions.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -3704,18 +3704,18 @@ define([
                                 if (typeof message.allowSaveAsImage !== "boolean")
                                     return "allowSaveAsImage: boolean expected";
                             if (message.maxFreeCaptureRes !== undefined)
-                                if (!$util.isInteger(message.maxFreeCaptureRes))
+                                if (!util.isInteger(message.maxFreeCaptureRes))
                                     return "maxFreeCaptureRes: integer expected";
                             if (message.maxPremiumCaptureRes !== undefined)
-                                if (!$util.isInteger(message.maxPremiumCaptureRes))
+                                if (!util.isInteger(message.maxPremiumCaptureRes))
                                     return "maxPremiumCaptureRes: integer expected";
                             return null;
                         };
 
                         CaptureOptions.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.ClientOptionsProto.CaptureOptions)
+                            if (object instanceof root.keyhole.dbroot.ClientOptionsProto.CaptureOptions)
                                 return object;
-                            var message = new $root.keyhole.dbroot.ClientOptionsProto.CaptureOptions();
+                            var message = new root.keyhole.dbroot.ClientOptionsProto.CaptureOptions();
                             if (object.allowSaveAsImage !== undefined && object.allowSaveAsImage !== null)
                                 message.allowSaveAsImage = Boolean(object.allowSaveAsImage);
                             if (object.maxFreeCaptureRes !== undefined && object.maxFreeCaptureRes !== null)
@@ -3775,9 +3775,9 @@ define([
                         };
 
                         MapsOptions.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ClientOptionsProto.MapsOptions();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ClientOptionsProto.MapsOptions();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -3805,8 +3805,8 @@ define([
                         };
 
                         MapsOptions.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -3820,21 +3820,21 @@ define([
                                 if (typeof message.docsAutoDownloadEnabled !== "boolean")
                                     return "docsAutoDownloadEnabled: boolean expected";
                             if (message.docsAutoDownloadInterval !== undefined)
-                                if (!$util.isInteger(message.docsAutoDownloadInterval))
+                                if (!util.isInteger(message.docsAutoDownloadInterval))
                                     return "docsAutoDownloadInterval: integer expected";
                             if (message.docsAutoUploadEnabled !== undefined)
                                 if (typeof message.docsAutoUploadEnabled !== "boolean")
                                     return "docsAutoUploadEnabled: boolean expected";
                             if (message.docsAutoUploadDelay !== undefined)
-                                if (!$util.isInteger(message.docsAutoUploadDelay))
+                                if (!util.isInteger(message.docsAutoUploadDelay))
                                     return "docsAutoUploadDelay: integer expected";
                             return null;
                         };
 
                         MapsOptions.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.ClientOptionsProto.MapsOptions)
+                            if (object instanceof root.keyhole.dbroot.ClientOptionsProto.MapsOptions)
                                 return object;
-                            var message = new $root.keyhole.dbroot.ClientOptionsProto.MapsOptions();
+                            var message = new root.keyhole.dbroot.ClientOptionsProto.MapsOptions();
                             if (object.enableMaps !== undefined && object.enableMaps !== null)
                                 message.enableMaps = Boolean(object.enableMaps);
                             if (object.docsAutoDownloadEnabled !== undefined && object.docsAutoDownloadEnabled !== null)
@@ -3917,9 +3917,9 @@ define([
                     };
 
                     FetchingOptionsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.FetchingOptionsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.FetchingOptionsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -3977,8 +3977,8 @@ define([
                     };
 
                     FetchingOptionsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -3986,7 +3986,7 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.maxRequestsPerQuery !== undefined)
-                            if (!$util.isInteger(message.maxRequestsPerQuery))
+                            if (!util.isInteger(message.maxRequestsPerQuery))
                                 return "maxRequestsPerQuery: integer expected";
                         if (message.forceMaxRequestsPerQuery !== undefined)
                             if (typeof message.forceMaxRequestsPerQuery !== "boolean")
@@ -3995,22 +3995,22 @@ define([
                             if (typeof message.sortBatches !== "boolean")
                                 return "sortBatches: boolean expected";
                         if (message.maxDrawable !== undefined)
-                            if (!$util.isInteger(message.maxDrawable))
+                            if (!util.isInteger(message.maxDrawable))
                                 return "maxDrawable: integer expected";
                         if (message.maxImagery !== undefined)
-                            if (!$util.isInteger(message.maxImagery))
+                            if (!util.isInteger(message.maxImagery))
                                 return "maxImagery: integer expected";
                         if (message.maxTerrain !== undefined)
-                            if (!$util.isInteger(message.maxTerrain))
+                            if (!util.isInteger(message.maxTerrain))
                                 return "maxTerrain: integer expected";
                         if (message.maxQuadtree !== undefined)
-                            if (!$util.isInteger(message.maxQuadtree))
+                            if (!util.isInteger(message.maxQuadtree))
                                 return "maxQuadtree: integer expected";
                         if (message.maxDioramaMetadata !== undefined)
-                            if (!$util.isInteger(message.maxDioramaMetadata))
+                            if (!util.isInteger(message.maxDioramaMetadata))
                                 return "maxDioramaMetadata: integer expected";
                         if (message.maxDioramaData !== undefined)
-                            if (!$util.isInteger(message.maxDioramaData))
+                            if (!util.isInteger(message.maxDioramaData))
                                 return "maxDioramaData: integer expected";
                         if (message.maxConsumerFetchRatio !== undefined)
                             if (typeof message.maxConsumerFetchRatio !== "number")
@@ -4025,18 +4025,18 @@ define([
                             if (typeof message.safeImageryQps !== "number")
                                 return "safeImageryQps: number expected";
                         if (message.domainsForHttps !== undefined)
-                            if (!$util.isString(message.domainsForHttps))
+                            if (!util.isString(message.domainsForHttps))
                                 return "domainsForHttps: string expected";
                         if (message.hostsForHttp !== undefined)
-                            if (!$util.isString(message.hostsForHttp))
+                            if (!util.isString(message.hostsForHttp))
                                 return "hostsForHttp: string expected";
                         return null;
                     };
 
                     FetchingOptionsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.FetchingOptionsProto)
+                        if (object instanceof root.keyhole.dbroot.FetchingOptionsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.FetchingOptionsProto();
+                        var message = new root.keyhole.dbroot.FetchingOptionsProto();
                         if (object.maxRequestsPerQuery !== undefined && object.maxRequestsPerQuery !== null)
                             message.maxRequestsPerQuery = object.maxRequestsPerQuery | 0;
                         if (object.forceMaxRequestsPerQuery !== undefined && object.forceMaxRequestsPerQuery !== null)
@@ -4155,9 +4155,9 @@ define([
                     };
 
                     TimeMachineOptionsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.TimeMachineOptionsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.TimeMachineOptionsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -4182,8 +4182,8 @@ define([
                     };
 
                     TimeMachineOptionsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -4191,24 +4191,24 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.serverUrl !== undefined)
-                            if (!$util.isString(message.serverUrl))
+                            if (!util.isString(message.serverUrl))
                                 return "serverUrl: string expected";
                         if (message.isTimemachine !== undefined)
                             if (typeof message.isTimemachine !== "boolean")
                                 return "isTimemachine: boolean expected";
                         if (message.dwellTimeMs !== undefined)
-                            if (!$util.isInteger(message.dwellTimeMs))
+                            if (!util.isInteger(message.dwellTimeMs))
                                 return "dwellTimeMs: integer expected";
                         if (message.discoverabilityAltitudeMeters !== undefined)
-                            if (!$util.isInteger(message.discoverabilityAltitudeMeters))
+                            if (!util.isInteger(message.discoverabilityAltitudeMeters))
                                 return "discoverabilityAltitudeMeters: integer expected";
                         return null;
                     };
 
                     TimeMachineOptionsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.TimeMachineOptionsProto)
+                        if (object instanceof root.keyhole.dbroot.TimeMachineOptionsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.TimeMachineOptionsProto();
+                        var message = new root.keyhole.dbroot.TimeMachineOptionsProto();
                         if (object.serverUrl !== undefined && object.serverUrl !== null)
                             message.serverUrl = String(object.serverUrl);
                         if (object.isTimemachine !== undefined && object.isTimemachine !== null)
@@ -4273,9 +4273,9 @@ define([
                     };
 
                     AutopiaOptionsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.AutopiaOptionsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.AutopiaOptionsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -4303,8 +4303,8 @@ define([
                     };
 
                     AutopiaOptionsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -4312,13 +4312,13 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.metadataServerUrl !== undefined)
-                            if (!$util.isString(message.metadataServerUrl))
+                            if (!util.isString(message.metadataServerUrl))
                                 return "metadataServerUrl: string expected";
                         if (message.depthmapServerUrl !== undefined)
-                            if (!$util.isString(message.depthmapServerUrl))
+                            if (!util.isString(message.depthmapServerUrl))
                                 return "depthmapServerUrl: string expected";
                         if (message.coverageOverlayUrl !== undefined)
-                            if (!$util.isString(message.coverageOverlayUrl))
+                            if (!util.isString(message.coverageOverlayUrl))
                                 return "coverageOverlayUrl: string expected";
                         if (message.maxImageryQps !== undefined)
                             if (typeof message.maxImageryQps !== "number")
@@ -4330,9 +4330,9 @@ define([
                     };
 
                     AutopiaOptionsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.AutopiaOptionsProto)
+                        if (object instanceof root.keyhole.dbroot.AutopiaOptionsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.AutopiaOptionsProto();
+                        var message = new root.keyhole.dbroot.AutopiaOptionsProto();
                         if (object.metadataServerUrl !== undefined && object.metadataServerUrl !== null)
                             message.metadataServerUrl = String(object.metadataServerUrl);
                         if (object.depthmapServerUrl !== undefined && object.depthmapServerUrl !== null)
@@ -4399,9 +4399,9 @@ define([
                     };
 
                     CSIOptionsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.CSIOptionsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.CSIOptionsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -4420,8 +4420,8 @@ define([
                     };
 
                     CSIOptionsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -4429,18 +4429,18 @@ define([
                         if (typeof message !== "object" || message === null)
                             return "object expected";
                         if (message.samplingPercentage !== undefined)
-                            if (!$util.isInteger(message.samplingPercentage))
+                            if (!util.isInteger(message.samplingPercentage))
                                 return "samplingPercentage: integer expected";
                         if (message.experimentId !== undefined)
-                            if (!$util.isString(message.experimentId))
+                            if (!util.isString(message.experimentId))
                                 return "experimentId: string expected";
                         return null;
                     };
 
                     CSIOptionsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.CSIOptionsProto)
+                        if (object instanceof root.keyhole.dbroot.CSIOptionsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.CSIOptionsProto();
+                        var message = new root.keyhole.dbroot.CSIOptionsProto();
                         if (object.samplingPercentage !== undefined && object.samplingPercentage !== null)
                             message.samplingPercentage = object.samplingPercentage | 0;
                         if (object.experimentId !== undefined && object.experimentId !== null)
@@ -4488,23 +4488,23 @@ define([
                     SearchTabProto.prototype.tabLabel = null;
                     SearchTabProto.prototype.baseUrl = "";
                     SearchTabProto.prototype.viewportPrefix = "";
-                    SearchTabProto.prototype.inputBox = $util.emptyArray;
+                    SearchTabProto.prototype.inputBox = util.emptyArray;
                     SearchTabProto.prototype.requirement = null;
 
                     var $types = {
                         1: "keyhole.dbroot.StringIdOrValueProto",
                         4: "keyhole.dbroot.SearchTabProto.InputBoxInfo",
                         5: "keyhole.dbroot.RequirementProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     SearchTabProto.create = function create(properties) {
                         return new SearchTabProto(properties);
                     };
 
                     SearchTabProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.SearchTabProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.SearchTabProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -4537,8 +4537,8 @@ define([
                     };
 
                     SearchTabProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -4553,10 +4553,10 @@ define([
                                 return "tabLabel." + error;
                         }
                         if (message.baseUrl !== undefined)
-                            if (!$util.isString(message.baseUrl))
+                            if (!util.isString(message.baseUrl))
                                 return "baseUrl: string expected";
                         if (message.viewportPrefix !== undefined)
-                            if (!$util.isString(message.viewportPrefix))
+                            if (!util.isString(message.viewportPrefix))
                                 return "viewportPrefix: string expected";
                         if (message.inputBox !== undefined) {
                             if (!Array.isArray(message.inputBox))
@@ -4576,9 +4576,9 @@ define([
                     };
 
                     SearchTabProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.SearchTabProto)
+                        if (object instanceof root.keyhole.dbroot.SearchTabProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.SearchTabProto();
+                        var message = new root.keyhole.dbroot.SearchTabProto();
                         if (object.isVisible !== undefined && object.isVisible !== null)
                             message.isVisible = Boolean(object.isVisible);
                         if (object.tabLabel !== undefined && object.tabLabel !== null) {
@@ -4663,16 +4663,16 @@ define([
 
                         var $types = {
                             0: "keyhole.dbroot.StringIdOrValueProto"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         InputBoxInfo.create = function create(properties) {
                             return new InputBoxInfo(properties);
                         };
 
                         InputBoxInfo.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.SearchTabProto.InputBoxInfo();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.SearchTabProto.InputBoxInfo();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -4694,8 +4694,8 @@ define([
                         };
 
                         InputBoxInfo.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -4705,18 +4705,18 @@ define([
                             var error = $types[0].verify(message.label);
                             if (error)
                                 return "label." + error;
-                            if (!$util.isString(message.queryVerb))
+                            if (!util.isString(message.queryVerb))
                                 return "queryVerb: string expected";
                             if (message.queryPrepend !== undefined)
-                                if (!$util.isString(message.queryPrepend))
+                                if (!util.isString(message.queryPrepend))
                                     return "queryPrepend: string expected";
                             return null;
                         };
 
                         InputBoxInfo.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.SearchTabProto.InputBoxInfo)
+                            if (object instanceof root.keyhole.dbroot.SearchTabProto.InputBoxInfo)
                                 return object;
-                            var message = new $root.keyhole.dbroot.SearchTabProto.InputBoxInfo();
+                            var message = new root.keyhole.dbroot.SearchTabProto.InputBoxInfo();
                             if (object.label !== undefined && object.label !== null) {
                                 if (typeof object.label !== "object")
                                     throw TypeError(".keyhole.dbroot.SearchTabProto.InputBoxInfo.label: object expected");
@@ -4781,16 +4781,16 @@ define([
                         1: "keyhole.dbroot.CobrandProto.Coord",
                         2: "keyhole.dbroot.CobrandProto.Coord",
                         3: "keyhole.dbroot.CobrandProto.TiePoint"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     CobrandProto.create = function create(properties) {
                         return new CobrandProto(properties);
                     };
 
                     CobrandProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.CobrandProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.CobrandProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -4818,15 +4818,15 @@ define([
                     };
 
                     CobrandProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     CobrandProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isString(message.logoUrl))
+                        if (!util.isString(message.logoUrl))
                             return "logoUrl: string expected";
                         if (message.xCoord !== undefined && message.xCoord !== null) {
                             var error = $types[1].verify(message.xCoord);
@@ -4860,9 +4860,9 @@ define([
                     };
 
                     CobrandProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.CobrandProto)
+                        if (object instanceof root.keyhole.dbroot.CobrandProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.CobrandProto();
+                        var message = new root.keyhole.dbroot.CobrandProto();
                         if (object.logoUrl !== undefined && object.logoUrl !== null)
                             message.logoUrl = String(object.logoUrl);
                         if (object.xCoord !== undefined && object.xCoord !== null) {
@@ -4968,9 +4968,9 @@ define([
                         };
 
                         Coord.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.CobrandProto.Coord();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.CobrandProto.Coord();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -4989,8 +4989,8 @@ define([
                         };
 
                         Coord.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -5006,9 +5006,9 @@ define([
                         };
 
                         Coord.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.CobrandProto.Coord)
+                            if (object instanceof root.keyhole.dbroot.CobrandProto.Coord)
                                 return object;
-                            var message = new $root.keyhole.dbroot.CobrandProto.Coord();
+                            var message = new root.keyhole.dbroot.CobrandProto.Coord();
                             if (object.value !== undefined && object.value !== null)
                                 message.value = Number(object.value);
                             if (object.isRelative !== undefined && object.isRelative !== null)
@@ -5074,16 +5074,16 @@ define([
 
                     var $types = {
                         0: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     DatabaseDescriptionProto.create = function create(properties) {
                         return new DatabaseDescriptionProto(properties);
                     };
 
                     DatabaseDescriptionProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.DatabaseDescriptionProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.DatabaseDescriptionProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5102,8 +5102,8 @@ define([
                     };
 
                     DatabaseDescriptionProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -5115,15 +5115,15 @@ define([
                             if (error)
                                 return "databaseName." + error;
                         }
-                        if (!$util.isString(message.databaseUrl))
+                        if (!util.isString(message.databaseUrl))
                             return "databaseUrl: string expected";
                         return null;
                     };
 
                     DatabaseDescriptionProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.DatabaseDescriptionProto)
+                        if (object instanceof root.keyhole.dbroot.DatabaseDescriptionProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.DatabaseDescriptionProto();
+                        var message = new root.keyhole.dbroot.DatabaseDescriptionProto();
                         if (object.databaseName !== undefined && object.databaseName !== null) {
                             if (typeof object.databaseName !== "object")
                                 throw TypeError(".keyhole.dbroot.DatabaseDescriptionProto.databaseName: object expected");
@@ -5178,9 +5178,9 @@ define([
                     };
 
                     ConfigScriptProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.ConfigScriptProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.ConfigScriptProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5199,25 +5199,25 @@ define([
                     };
 
                     ConfigScriptProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     ConfigScriptProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isString(message.scriptName))
+                        if (!util.isString(message.scriptName))
                             return "scriptName: string expected";
-                        if (!$util.isString(message.scriptData))
+                        if (!util.isString(message.scriptData))
                             return "scriptData: string expected";
                         return null;
                     };
 
                     ConfigScriptProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.ConfigScriptProto)
+                        if (object instanceof root.keyhole.dbroot.ConfigScriptProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.ConfigScriptProto();
+                        var message = new root.keyhole.dbroot.ConfigScriptProto();
                         if (object.scriptName !== undefined && object.scriptName !== null)
                             message.scriptName = String(object.scriptName);
                         if (object.scriptData !== undefined && object.scriptData !== null)
@@ -5268,9 +5268,9 @@ define([
                     };
 
                     SwoopParamsProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.SwoopParamsProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.SwoopParamsProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5286,8 +5286,8 @@ define([
                     };
 
                     SwoopParamsProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -5301,9 +5301,9 @@ define([
                     };
 
                     SwoopParamsProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.SwoopParamsProto)
+                        if (object instanceof root.keyhole.dbroot.SwoopParamsProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.SwoopParamsProto();
+                        var message = new root.keyhole.dbroot.SwoopParamsProto();
                         if (object.startDistInMeters !== undefined && object.startDistInMeters !== null)
                             message.startDistInMeters = Number(object.startDistInMeters);
                         return message;
@@ -5351,16 +5351,16 @@ define([
                         1: "keyhole.dbroot.StringIdOrValueProto",
                         2: "keyhole.dbroot.StringIdOrValueProto",
                         3: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     PostingServerProto.create = function create(properties) {
                         return new PostingServerProto(properties);
                     };
 
                     PostingServerProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.PostingServerProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.PostingServerProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5385,8 +5385,8 @@ define([
                     };
 
                     PostingServerProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -5417,9 +5417,9 @@ define([
                     };
 
                     PostingServerProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.PostingServerProto)
+                        if (object instanceof root.keyhole.dbroot.PostingServerProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.PostingServerProto();
+                        var message = new root.keyhole.dbroot.PostingServerProto();
                         if (object.name !== undefined && object.name !== null) {
                             if (typeof object.name !== "object")
                                 throw TypeError(".keyhole.dbroot.PostingServerProto.name: object expected");
@@ -5491,16 +5491,16 @@ define([
                     var $types = {
                         0: "keyhole.dbroot.StringIdOrValueProto",
                         1: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     PlanetaryDatabaseProto.create = function create(properties) {
                         return new PlanetaryDatabaseProto(properties);
                     };
 
                     PlanetaryDatabaseProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.PlanetaryDatabaseProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.PlanetaryDatabaseProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5519,8 +5519,8 @@ define([
                     };
 
                     PlanetaryDatabaseProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -5537,9 +5537,9 @@ define([
                     };
 
                     PlanetaryDatabaseProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.PlanetaryDatabaseProto)
+                        if (object instanceof root.keyhole.dbroot.PlanetaryDatabaseProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.PlanetaryDatabaseProto();
+                        var message = new root.keyhole.dbroot.PlanetaryDatabaseProto();
                         if (object.url !== undefined && object.url !== null) {
                             if (typeof object.url !== "object")
                                 throw TypeError(".keyhole.dbroot.PlanetaryDatabaseProto.url: object expected");
@@ -5595,16 +5595,16 @@ define([
 
                     var $types = {
                         0: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     LogServerProto.create = function create(properties) {
                         return new LogServerProto(properties);
                     };
 
                     LogServerProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.LogServerProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.LogServerProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -5626,8 +5626,8 @@ define([
                     };
 
                     LogServerProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -5643,15 +5643,15 @@ define([
                             if (typeof message.enable !== "boolean")
                                 return "enable: boolean expected";
                         if (message.throttlingFactor !== undefined)
-                            if (!$util.isInteger(message.throttlingFactor))
+                            if (!util.isInteger(message.throttlingFactor))
                                 return "throttlingFactor: integer expected";
                         return null;
                     };
 
                     LogServerProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.LogServerProto)
+                        if (object instanceof root.keyhole.dbroot.LogServerProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.LogServerProto();
+                        var message = new root.keyhole.dbroot.LogServerProto();
                         if (object.url !== undefined && object.url !== null) {
                             if (typeof object.url !== "object")
                                 throw TypeError(".keyhole.dbroot.LogServerProto.url: object expected");
@@ -5706,7 +5706,7 @@ define([
                     EndSnippetProto.prototype.model = null;
                     EndSnippetProto.prototype.authServerUrl = null;
                     EndSnippetProto.prototype.disableAuthentication = false;
-                    EndSnippetProto.prototype.mfeDomains = $util.emptyArray;
+                    EndSnippetProto.prototype.mfeDomains = util.emptyArray;
                     EndSnippetProto.prototype.mfeLangParam = "hl=$5Bhl5D";
                     EndSnippetProto.prototype.adsUrlPatterns = "";
                     EndSnippetProto.prototype.reverseGeocoderUrl = null;
@@ -5743,15 +5743,15 @@ define([
                     EndSnippetProto.prototype.fetchingOptions = null;
                     EndSnippetProto.prototype.timeMachineOptions = null;
                     EndSnippetProto.prototype.csiOptions = null;
-                    EndSnippetProto.prototype.searchTab = $util.emptyArray;
-                    EndSnippetProto.prototype.cobrandInfo = $util.emptyArray;
-                    EndSnippetProto.prototype.validDatabase = $util.emptyArray;
-                    EndSnippetProto.prototype.configScript = $util.emptyArray;
+                    EndSnippetProto.prototype.searchTab = util.emptyArray;
+                    EndSnippetProto.prototype.cobrandInfo = util.emptyArray;
+                    EndSnippetProto.prototype.validDatabase = util.emptyArray;
+                    EndSnippetProto.prototype.configScript = util.emptyArray;
                     EndSnippetProto.prototype.deauthServerUrl = null;
                     EndSnippetProto.prototype.swoopParameters = null;
                     EndSnippetProto.prototype.bbsServerInfo = null;
                     EndSnippetProto.prototype.dataErrorServerInfo = null;
-                    EndSnippetProto.prototype.planetaryDatabase = $util.emptyArray;
+                    EndSnippetProto.prototype.planetaryDatabase = util.emptyArray;
                     EndSnippetProto.prototype.logServer = null;
                     EndSnippetProto.prototype.autopiaOptions = null;
                     EndSnippetProto.prototype.searchConfig = null;
@@ -5765,7 +5765,7 @@ define([
                     EndSnippetProto.prototype.privacyPolicyUrl = null;
                     EndSnippetProto.prototype.doGplusUserCheck = false;
                     EndSnippetProto.prototype.rocktreeDataProto = null;
-                    EndSnippetProto.prototype.filmstripConfig = $util.emptyArray;
+                    EndSnippetProto.prototype.filmstripConfig = util.emptyArray;
                     EndSnippetProto.prototype.showSigninButton = false;
                     EndSnippetProto.prototype.proMeasureUpsellUrl = null;
                     EndSnippetProto.prototype.proPrintUpsellUrl = null;
@@ -5829,16 +5829,16 @@ define([
                         66: "keyhole.dbroot.EndSnippetProto.StarDataProto",
                         67: "keyhole.dbroot.StringIdOrValueProto",
                         68: "keyhole.dbroot.StringIdOrValueProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     EndSnippetProto.create = function create(properties) {
                         return new EndSnippetProto(properties);
                     };
 
                     EndSnippetProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -6072,8 +6072,8 @@ define([
                     };
 
                     EndSnippetProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -6103,10 +6103,10 @@ define([
                             }
                         }
                         if (message.mfeLangParam !== undefined)
-                            if (!$util.isString(message.mfeLangParam))
+                            if (!util.isString(message.mfeLangParam))
                                 return "mfeLangParam: string expected";
                         if (message.adsUrlPatterns !== undefined)
-                            if (!$util.isString(message.adsUrlPatterns))
+                            if (!util.isString(message.adsUrlPatterns))
                                 return "adsUrlPatterns: string expected";
                         if (message.reverseGeocoderUrl !== undefined && message.reverseGeocoderUrl !== null) {
                             var error = $types[6].verify(message.reverseGeocoderUrl);
@@ -6114,7 +6114,7 @@ define([
                                 return "reverseGeocoderUrl." + error;
                         }
                         if (message.reverseGeocoderProtocolVersion !== undefined)
-                            if (!$util.isInteger(message.reverseGeocoderProtocolVersion))
+                            if (!util.isInteger(message.reverseGeocoderProtocolVersion))
                                 return "reverseGeocoderProtocolVersion: integer expected";
                         if (message.skyDatabaseIsAvailable !== undefined)
                             if (typeof message.skyDatabaseIsAvailable !== "boolean")
@@ -6130,7 +6130,7 @@ define([
                                 return "defaultWebPageIntlUrl." + error;
                         }
                         if (message.numStartUpTips !== undefined)
-                            if (!$util.isInteger(message.numStartUpTips))
+                            if (!util.isInteger(message.numStartUpTips))
                                 return "numStartUpTips: integer expected";
                         if (message.startUpTipsUrl !== undefined && message.startUpTipsUrl !== null) {
                             var error = $types[12].verify(message.startUpTipsUrl);
@@ -6138,7 +6138,7 @@ define([
                                 return "startUpTipsUrl." + error;
                         }
                         if (message.numProStartUpTips !== undefined)
-                            if (!$util.isInteger(message.numProStartUpTips))
+                            if (!util.isInteger(message.numProStartUpTips))
                                 return "numProStartUpTips: integer expected";
                         if (message.proStartUpTipsUrl !== undefined && message.proStartUpTipsUrl !== null) {
                             var error = $types[14].verify(message.proStartUpTipsUrl);
@@ -6237,7 +6237,7 @@ define([
                                 return "dioramaDescriptionUrlBase." + error;
                         }
                         if (message.dioramaDefaultColor !== undefined)
-                            if (!$util.isInteger(message.dioramaDefaultColor))
+                            if (!util.isInteger(message.dioramaDefaultColor))
                                 return "dioramaDefaultColor: integer expected";
                         if (message.dioramaBlacklistUrl !== undefined && message.dioramaBlacklistUrl !== null) {
                             var error = $types[35].verify(message.dioramaBlacklistUrl);
@@ -6350,10 +6350,10 @@ define([
                                 return "searchInfo." + error;
                         }
                         if (message.elevationServiceBaseUrl !== undefined)
-                            if (!$util.isString(message.elevationServiceBaseUrl))
+                            if (!util.isString(message.elevationServiceBaseUrl))
                                 return "elevationServiceBaseUrl: string expected";
                         if (message.elevationProfileQueryDelay !== undefined)
-                            if (!$util.isInteger(message.elevationProfileQueryDelay))
+                            if (!util.isInteger(message.elevationProfileQueryDelay))
                                 return "elevationProfileQueryDelay: integer expected";
                         if (message.proUpgradeUrl !== undefined && message.proUpgradeUrl !== null) {
                             var error = $types[55].verify(message.proUpgradeUrl);
@@ -6429,9 +6429,9 @@ define([
                     };
 
                     EndSnippetProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.EndSnippetProto)
+                        if (object instanceof root.keyhole.dbroot.EndSnippetProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.EndSnippetProto();
+                        var message = new root.keyhole.dbroot.EndSnippetProto();
                         if (object.model !== undefined && object.model !== null) {
                             if (typeof object.model !== "object")
                                 throw TypeError(".keyhole.dbroot.EndSnippetProto.model: object expected");
@@ -7030,8 +7030,8 @@ define([
                                     this[keys[i]] = properties[keys[i]];
                         }
 
-                        SearchConfigProto.prototype.searchServer = $util.emptyArray;
-                        SearchConfigProto.prototype.oneboxService = $util.emptyArray;
+                        SearchConfigProto.prototype.searchServer = util.emptyArray;
+                        SearchConfigProto.prototype.oneboxService = util.emptyArray;
                         SearchConfigProto.prototype.kmlSearchUrl = null;
                         SearchConfigProto.prototype.kmlRenderUrl = null;
                         SearchConfigProto.prototype.searchHistoryUrl = null;
@@ -7044,16 +7044,16 @@ define([
                             3: "keyhole.dbroot.StringIdOrValueProto",
                             4: "keyhole.dbroot.StringIdOrValueProto",
                             5: "keyhole.dbroot.StringIdOrValueProto"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         SearchConfigProto.create = function create(properties) {
                             return new SearchConfigProto(properties);
                         };
 
                         SearchConfigProto.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -7088,8 +7088,8 @@ define([
                         };
 
                         SearchConfigProto.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -7138,9 +7138,9 @@ define([
                         };
 
                         SearchConfigProto.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto)
+                            if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchConfigProto)
                                 return object;
-                            var message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto();
+                            var message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto();
                             if (object.searchServer) {
                                 if (!Array.isArray(object.searchServer))
                                     throw TypeError(".keyhole.dbroot.EndSnippetProto.SearchConfigProto.searchServer: array expected");
@@ -7243,8 +7243,8 @@ define([
                             SearchServer.prototype.htmlTransformUrl = null;
                             SearchServer.prototype.kmlTransformUrl = null;
                             SearchServer.prototype.supplementalUi = null;
-                            SearchServer.prototype.suggestion = $util.emptyArray;
-                            SearchServer.prototype.searchlet = $util.emptyArray;
+                            SearchServer.prototype.suggestion = util.emptyArray;
+                            SearchServer.prototype.searchlet = util.emptyArray;
                             SearchServer.prototype.requirements = null;
                             SearchServer.prototype.suggestServer = null;
 
@@ -7259,16 +7259,16 @@ define([
                                 7: "keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto",
                                 8: "keyhole.dbroot.RequirementProto",
                                 9: "keyhole.dbroot.StringIdOrValueProto"
-                            }; $lazyTypes.push($types);
+                            }; lazyTypes.push($types);
 
                             SearchServer.create = function create(properties) {
                                 return new SearchServer(properties);
                             };
 
                             SearchServer.decode = function decode(reader, length) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader.create(reader);
-                                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer();
+                                if (!(reader instanceof Reader))
+                                    reader = Reader.create(reader);
+                                var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer();
                                 while (reader.pos < end) {
                                     var tag = reader.uint32();
                                     switch (tag >>> 3) {
@@ -7315,8 +7315,8 @@ define([
                             };
 
                             SearchServer.decodeDelimited = function decodeDelimited(reader) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader(reader);
+                                if (!(reader instanceof Reader))
+                                    reader = Reader(reader);
                                 return this.decode(reader, reader.uint32());
                             };
 
@@ -7388,9 +7388,9 @@ define([
                             };
 
                             SearchServer.fromObject = function fromObject(object) {
-                                if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer)
+                                if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer)
                                     return object;
-                                var message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer();
+                                var message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer();
                                 if (object.name !== undefined && object.name !== null) {
                                     if (typeof object.name !== "object")
                                         throw TypeError(".keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.name: object expected");
@@ -7538,16 +7538,16 @@ define([
                                 var $types = {
                                     0: "keyhole.dbroot.StringIdOrValueProto",
                                     1: "keyhole.dbroot.StringIdOrValueProto"
-                                }; $lazyTypes.push($types);
+                                }; lazyTypes.push($types);
 
                                 SupplementalUi.create = function create(properties) {
                                     return new SupplementalUi(properties);
                                 };
 
                                 SupplementalUi.decode = function decode(reader, length) {
-                                    if (!(reader instanceof $Reader))
-                                        reader = $Reader.create(reader);
-                                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi();
+                                    if (!(reader instanceof Reader))
+                                        reader = Reader.create(reader);
+                                    var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi();
                                     while (reader.pos < end) {
                                         var tag = reader.uint32();
                                         switch (tag >>> 3) {
@@ -7569,8 +7569,8 @@ define([
                                 };
 
                                 SupplementalUi.decodeDelimited = function decodeDelimited(reader) {
-                                    if (!(reader instanceof $Reader))
-                                        reader = $Reader(reader);
+                                    if (!(reader instanceof Reader))
+                                        reader = Reader(reader);
                                     return this.decode(reader, reader.uint32());
                                 };
 
@@ -7588,15 +7588,15 @@ define([
                                             return "label." + error;
                                     }
                                     if (message.height !== undefined)
-                                        if (!$util.isInteger(message.height))
+                                        if (!util.isInteger(message.height))
                                             return "height: integer expected";
                                     return null;
                                 };
 
                                 SupplementalUi.fromObject = function fromObject(object) {
-                                    if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi)
+                                    if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi)
                                         return object;
-                                    var message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi();
+                                    var message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi();
                                     if (object.url !== undefined && object.url !== null) {
                                         if (typeof object.url !== "object")
                                             throw TypeError(".keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SupplementalUi.url: object expected");
@@ -7659,16 +7659,16 @@ define([
                                     0: "keyhole.dbroot.StringIdOrValueProto",
                                     1: "keyhole.dbroot.StringIdOrValueProto",
                                     2: "keyhole.dbroot.RequirementProto"
-                                }; $lazyTypes.push($types);
+                                }; lazyTypes.push($types);
 
                                 SearchletProto.create = function create(properties) {
                                     return new SearchletProto(properties);
                                 };
 
                                 SearchletProto.decode = function decode(reader, length) {
-                                    if (!(reader instanceof $Reader))
-                                        reader = $Reader.create(reader);
-                                    var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto();
+                                    if (!(reader instanceof Reader))
+                                        reader = Reader.create(reader);
+                                    var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto();
                                     while (reader.pos < end) {
                                         var tag = reader.uint32();
                                         switch (tag >>> 3) {
@@ -7690,8 +7690,8 @@ define([
                                 };
 
                                 SearchletProto.decodeDelimited = function decodeDelimited(reader) {
-                                    if (!(reader instanceof $Reader))
-                                        reader = $Reader(reader);
+                                    if (!(reader instanceof Reader))
+                                        reader = Reader(reader);
                                     return this.decode(reader, reader.uint32());
                                 };
 
@@ -7717,9 +7717,9 @@ define([
                                 };
 
                                 SearchletProto.fromObject = function fromObject(object) {
-                                    if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto)
+                                    if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto)
                                         return object;
-                                    var message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto();
+                                    var message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto();
                                     if (object.url !== undefined && object.url !== null) {
                                         if (typeof object.url !== "object")
                                             throw TypeError(".keyhole.dbroot.EndSnippetProto.SearchConfigProto.SearchServer.SearchletProto.url: object expected");
@@ -7786,16 +7786,16 @@ define([
                             var $types = {
                                 0: "keyhole.dbroot.StringIdOrValueProto",
                                 1: "keyhole.dbroot.RequirementProto"
-                            }; $lazyTypes.push($types);
+                            }; lazyTypes.push($types);
 
                             OneboxServiceProto.create = function create(properties) {
                                 return new OneboxServiceProto(properties);
                             };
 
                             OneboxServiceProto.decode = function decode(reader, length) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader.create(reader);
-                                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto();
+                                if (!(reader instanceof Reader))
+                                    reader = Reader.create(reader);
+                                var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto();
                                 while (reader.pos < end) {
                                     var tag = reader.uint32();
                                     switch (tag >>> 3) {
@@ -7814,8 +7814,8 @@ define([
                             };
 
                             OneboxServiceProto.decodeDelimited = function decodeDelimited(reader) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader(reader);
+                                if (!(reader instanceof Reader))
+                                    reader = Reader(reader);
                                 return this.decode(reader, reader.uint32());
                             };
 
@@ -7836,9 +7836,9 @@ define([
                             };
 
                             OneboxServiceProto.fromObject = function fromObject(object) {
-                                if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto)
+                                if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto)
                                     return object;
-                                var message = new $root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto();
+                                var message = new root.keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto();
                                 if (object.serviceUrl !== undefined && object.serviceUrl !== null) {
                                     if (typeof object.serviceUrl !== "object")
                                         throw TypeError(".keyhole.dbroot.EndSnippetProto.SearchConfigProto.OneboxServiceProto.serviceUrl: object expected");
@@ -7899,9 +7899,9 @@ define([
                         };
 
                         SearchInfoProto.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.SearchInfoProto();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.SearchInfoProto();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -7920,8 +7920,8 @@ define([
                         };
 
                         SearchInfoProto.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -7929,18 +7929,18 @@ define([
                             if (typeof message !== "object" || message === null)
                                 return "object expected";
                             if (message.defaultUrl !== undefined)
-                                if (!$util.isString(message.defaultUrl))
+                                if (!util.isString(message.defaultUrl))
                                     return "defaultUrl: string expected";
                             if (message.geocodeParam !== undefined)
-                                if (!$util.isString(message.geocodeParam))
+                                if (!util.isString(message.geocodeParam))
                                     return "geocodeParam: string expected";
                             return null;
                         };
 
                         SearchInfoProto.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.EndSnippetProto.SearchInfoProto)
+                            if (object instanceof root.keyhole.dbroot.EndSnippetProto.SearchInfoProto)
                                 return object;
-                            var message = new $root.keyhole.dbroot.EndSnippetProto.SearchInfoProto();
+                            var message = new root.keyhole.dbroot.EndSnippetProto.SearchInfoProto();
                             if (object.defaultUrl !== undefined && object.defaultUrl !== null)
                                 message.defaultUrl = String(object.defaultUrl);
                             if (object.geocodeParam !== undefined && object.geocodeParam !== null)
@@ -7988,16 +7988,16 @@ define([
 
                         var $types = {
                             0: "keyhole.dbroot.StringIdOrValueProto"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         RockTreeDataProto.create = function create(properties) {
                             return new RockTreeDataProto(properties);
                         };
 
                         RockTreeDataProto.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -8013,8 +8013,8 @@ define([
                         };
 
                         RockTreeDataProto.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -8030,9 +8030,9 @@ define([
                         };
 
                         RockTreeDataProto.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto)
+                            if (object instanceof root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto)
                                 return object;
-                            var message = new $root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto();
+                            var message = new root.keyhole.dbroot.EndSnippetProto.RockTreeDataProto();
                             if (object.url !== undefined && object.url !== null) {
                                 if (typeof object.url !== "object")
                                     throw TypeError(".keyhole.dbroot.EndSnippetProto.RockTreeDataProto.url: object expected");
@@ -8082,7 +8082,7 @@ define([
                         FilmstripConfigProto.prototype.featuredToursUrl = null;
                         FilmstripConfigProto.prototype.enableViewportFallback = false;
                         FilmstripConfigProto.prototype.viewportFallbackDistance = 0;
-                        FilmstripConfigProto.prototype.imageryType = $util.emptyArray;
+                        FilmstripConfigProto.prototype.imageryType = util.emptyArray;
 
                         var $types = {
                             0: "keyhole.dbroot.RequirementProto",
@@ -8093,16 +8093,16 @@ define([
                             5: "keyhole.dbroot.StringIdOrValueProto",
                             6: "keyhole.dbroot.StringIdOrValueProto",
                             9: "keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         FilmstripConfigProto.create = function create(properties) {
                             return new FilmstripConfigProto(properties);
                         };
 
                         FilmstripConfigProto.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -8147,8 +8147,8 @@ define([
                         };
 
                         FilmstripConfigProto.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -8194,7 +8194,7 @@ define([
                                 if (typeof message.enableViewportFallback !== "boolean")
                                     return "enableViewportFallback: boolean expected";
                             if (message.viewportFallbackDistance !== undefined)
-                                if (!$util.isInteger(message.viewportFallbackDistance))
+                                if (!util.isInteger(message.viewportFallbackDistance))
                                     return "viewportFallbackDistance: integer expected";
                             if (message.imageryType !== undefined) {
                                 if (!Array.isArray(message.imageryType))
@@ -8209,9 +8209,9 @@ define([
                         };
 
                         FilmstripConfigProto.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto)
+                            if (object instanceof root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto)
                                 return object;
-                            var message = new $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto();
+                            var message = new root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto();
                             if (object.requirements !== undefined && object.requirements !== null) {
                                 if (typeof object.requirements !== "object")
                                     throw TypeError(".keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.requirements: object expected");
@@ -8335,16 +8335,16 @@ define([
                                 2: "keyhole.dbroot.StringIdOrValueProto",
                                 3: "keyhole.dbroot.StringIdOrValueProto",
                                 4: "keyhole.dbroot.StringIdOrValueProto"
-                            }; $lazyTypes.push($types);
+                            }; lazyTypes.push($types);
 
                             AlleycatImageryTypeProto.create = function create(properties) {
                                 return new AlleycatImageryTypeProto(properties);
                             };
 
                             AlleycatImageryTypeProto.decode = function decode(reader, length) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader.create(reader);
-                                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto();
+                                if (!(reader instanceof Reader))
+                                    reader = Reader.create(reader);
+                                var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto();
                                 while (reader.pos < end) {
                                     var tag = reader.uint32();
                                     switch (tag >>> 3) {
@@ -8372,8 +8372,8 @@ define([
                             };
 
                             AlleycatImageryTypeProto.decodeDelimited = function decodeDelimited(reader) {
-                                if (!(reader instanceof $Reader))
-                                    reader = $Reader(reader);
+                                if (!(reader instanceof Reader))
+                                    reader = Reader(reader);
                                 return this.decode(reader, reader.uint32());
                             };
 
@@ -8381,10 +8381,10 @@ define([
                                 if (typeof message !== "object" || message === null)
                                     return "object expected";
                                 if (message.imageryTypeId !== undefined)
-                                    if (!$util.isInteger(message.imageryTypeId))
+                                    if (!util.isInteger(message.imageryTypeId))
                                         return "imageryTypeId: integer expected";
                                 if (message.imageryTypeLabel !== undefined)
-                                    if (!$util.isString(message.imageryTypeLabel))
+                                    if (!util.isString(message.imageryTypeLabel))
                                         return "imageryTypeLabel: string expected";
                                 if (message.metadataUrlTemplate !== undefined && message.metadataUrlTemplate !== null) {
                                     var error = $types[2].verify(message.metadataUrlTemplate);
@@ -8405,9 +8405,9 @@ define([
                             };
 
                             AlleycatImageryTypeProto.fromObject = function fromObject(object) {
-                                if (object instanceof $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto)
+                                if (object instanceof root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto)
                                     return object;
-                                var message = new $root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto();
+                                var message = new root.keyhole.dbroot.EndSnippetProto.FilmstripConfigProto.AlleycatImageryTypeProto();
                                 if (object.imageryTypeId !== undefined && object.imageryTypeId !== null)
                                     message.imageryTypeId = object.imageryTypeId | 0;
                                 if (object.imageryTypeLabel !== undefined && object.imageryTypeLabel !== null)
@@ -8482,16 +8482,16 @@ define([
 
                         var $types = {
                             0: "keyhole.dbroot.StringIdOrValueProto"
-                        }; $lazyTypes.push($types);
+                        }; lazyTypes.push($types);
 
                         StarDataProto.create = function create(properties) {
                             return new StarDataProto(properties);
                         };
 
                         StarDataProto.decode = function decode(reader, length) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader.create(reader);
-                            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EndSnippetProto.StarDataProto();
+                            if (!(reader instanceof Reader))
+                                reader = Reader.create(reader);
+                            var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EndSnippetProto.StarDataProto();
                             while (reader.pos < end) {
                                 var tag = reader.uint32();
                                 switch (tag >>> 3) {
@@ -8507,8 +8507,8 @@ define([
                         };
 
                         StarDataProto.decodeDelimited = function decodeDelimited(reader) {
-                            if (!(reader instanceof $Reader))
-                                reader = $Reader(reader);
+                            if (!(reader instanceof Reader))
+                                reader = Reader(reader);
                             return this.decode(reader, reader.uint32());
                         };
 
@@ -8524,9 +8524,9 @@ define([
                         };
 
                         StarDataProto.fromObject = function fromObject(object) {
-                            if (object instanceof $root.keyhole.dbroot.EndSnippetProto.StarDataProto)
+                            if (object instanceof root.keyhole.dbroot.EndSnippetProto.StarDataProto)
                                 return object;
-                            var message = new $root.keyhole.dbroot.EndSnippetProto.StarDataProto();
+                            var message = new root.keyhole.dbroot.EndSnippetProto.StarDataProto();
                             if (object.url !== undefined && object.url !== null) {
                                 if (typeof object.url !== "object")
                                     throw TypeError(".keyhole.dbroot.EndSnippetProto.StarDataProto.url: object expected");
@@ -8576,16 +8576,16 @@ define([
 
                     var $types = {
                         2: "keyhole.dbroot.RequirementProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     DbRootRefProto.create = function create(properties) {
                         return new DbRootRefProto(properties);
                     };
 
                     DbRootRefProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.DbRootRefProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.DbRootRefProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -8607,15 +8607,15 @@ define([
                     };
 
                     DbRootRefProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     DbRootRefProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isString(message.url))
+                        if (!util.isString(message.url))
                             return "url: string expected";
                         if (message.isCritical !== undefined)
                             if (typeof message.isCritical !== "boolean")
@@ -8629,9 +8629,9 @@ define([
                     };
 
                     DbRootRefProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.DbRootRefProto)
+                        if (object instanceof root.keyhole.dbroot.DbRootRefProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.DbRootRefProto();
+                        var message = new root.keyhole.dbroot.DbRootRefProto();
                         if (object.url !== undefined && object.url !== null)
                             message.url = String(object.url);
                         if (object.isCritical !== undefined && object.isCritical !== null)
@@ -8690,9 +8690,9 @@ define([
                     };
 
                     DatabaseVersionProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.DatabaseVersionProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.DatabaseVersionProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -8708,23 +8708,23 @@ define([
                     };
 
                     DatabaseVersionProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
                     DatabaseVersionProto.verify = function verify(message) {
                         if (typeof message !== "object" || message === null)
                             return "object expected";
-                        if (!$util.isInteger(message.quadtreeVersion))
+                        if (!util.isInteger(message.quadtreeVersion))
                             return "quadtreeVersion: integer expected";
                         return null;
                     };
 
                     DatabaseVersionProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.DatabaseVersionProto)
+                        if (object instanceof root.keyhole.dbroot.DatabaseVersionProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.DatabaseVersionProto();
+                        var message = new root.keyhole.dbroot.DatabaseVersionProto();
                         if (object.quadtreeVersion !== undefined && object.quadtreeVersion !== null)
                             message.quadtreeVersion = object.quadtreeVersion >>> 0;
                         return message;
@@ -8766,15 +8766,15 @@ define([
                     DbRootProto.prototype.imageryPresent = true;
                     DbRootProto.prototype.protoImagery = false;
                     DbRootProto.prototype.terrainPresent = false;
-                    DbRootProto.prototype.providerInfo = $util.emptyArray;
-                    DbRootProto.prototype.nestedFeature = $util.emptyArray;
-                    DbRootProto.prototype.styleAttribute = $util.emptyArray;
-                    DbRootProto.prototype.styleMap = $util.emptyArray;
+                    DbRootProto.prototype.providerInfo = util.emptyArray;
+                    DbRootProto.prototype.nestedFeature = util.emptyArray;
+                    DbRootProto.prototype.styleAttribute = util.emptyArray;
+                    DbRootProto.prototype.styleMap = util.emptyArray;
                     DbRootProto.prototype.endSnippet = null;
-                    DbRootProto.prototype.translationEntry = $util.emptyArray;
+                    DbRootProto.prototype.translationEntry = util.emptyArray;
                     DbRootProto.prototype.language = "en";
                     DbRootProto.prototype.version = 5;
-                    DbRootProto.prototype.dbrootReference = $util.emptyArray;
+                    DbRootProto.prototype.dbrootReference = util.emptyArray;
                     DbRootProto.prototype.databaseVersion = null;
                     DbRootProto.prototype.refreshTimeout = 0;
 
@@ -8788,16 +8788,16 @@ define([
                         9: "keyhole.dbroot.StringEntryProto",
                         12: "keyhole.dbroot.DbRootRefProto",
                         13: "keyhole.dbroot.DatabaseVersionProto"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     DbRootProto.create = function create(properties) {
                         return new DbRootProto(properties);
                     };
 
                     DbRootProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.DbRootProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.DbRootProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -8867,8 +8867,8 @@ define([
                     };
 
                     DbRootProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -8940,10 +8940,10 @@ define([
                             }
                         }
                         if (message.language !== undefined)
-                            if (!$util.isString(message.language))
+                            if (!util.isString(message.language))
                                 return "language: string expected";
                         if (message.version !== undefined)
-                            if (!$util.isInteger(message.version))
+                            if (!util.isInteger(message.version))
                                 return "version: integer expected";
                         if (message.dbrootReference !== undefined) {
                             if (!Array.isArray(message.dbrootReference))
@@ -8960,15 +8960,15 @@ define([
                                 return "databaseVersion." + error;
                         }
                         if (message.refreshTimeout !== undefined)
-                            if (!$util.isInteger(message.refreshTimeout))
+                            if (!util.isInteger(message.refreshTimeout))
                                 return "refreshTimeout: integer expected";
                         return null;
                     };
 
                     DbRootProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.DbRootProto)
+                        if (object instanceof root.keyhole.dbroot.DbRootProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.DbRootProto();
+                        var message = new root.keyhole.dbroot.DbRootProto();
                         if (object.databaseName !== undefined && object.databaseName !== null) {
                             if (typeof object.databaseName !== "object")
                                 throw TypeError(".keyhole.dbroot.DbRootProto.databaseName: object expected");
@@ -9155,21 +9155,21 @@ define([
                     }
 
                     EncryptedDbRootProto.prototype.encryptionType = 0;
-                    EncryptedDbRootProto.prototype.encryptionData = $util.newBuffer([]);
-                    EncryptedDbRootProto.prototype.dbrootData = $util.newBuffer([]);
+                    EncryptedDbRootProto.prototype.encryptionData = util.newBuffer([]);
+                    EncryptedDbRootProto.prototype.dbrootData = util.newBuffer([]);
 
                     var $types = {
                         0: "keyhole.dbroot.EncryptedDbRootProto.EncryptionType"
-                    }; $lazyTypes.push($types);
+                    }; lazyTypes.push($types);
 
                     EncryptedDbRootProto.create = function create(properties) {
                         return new EncryptedDbRootProto(properties);
                     };
 
                     EncryptedDbRootProto.decode = function decode(reader, length) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader.create(reader);
-                        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.keyhole.dbroot.EncryptedDbRootProto();
+                        if (!(reader instanceof Reader))
+                            reader = Reader.create(reader);
+                        var end = length === undefined ? reader.len : reader.pos + length, message = new root.keyhole.dbroot.EncryptedDbRootProto();
                         while (reader.pos < end) {
                             var tag = reader.uint32();
                             switch (tag >>> 3) {
@@ -9191,8 +9191,8 @@ define([
                     };
 
                     EncryptedDbRootProto.decodeDelimited = function decodeDelimited(reader) {
-                        if (!(reader instanceof $Reader))
-                            reader = $Reader(reader);
+                        if (!(reader instanceof Reader))
+                            reader = Reader(reader);
                         return this.decode(reader, reader.uint32());
                     };
 
@@ -9207,18 +9207,18 @@ define([
                                     break;
                             }
                         if (message.encryptionData !== undefined)
-                            if (!(message.encryptionData && typeof message.encryptionData.length === "number" || $util.isString(message.encryptionData)))
+                            if (!(message.encryptionData && typeof message.encryptionData.length === "number" || util.isString(message.encryptionData)))
                                 return "encryptionData: buffer expected";
                         if (message.dbrootData !== undefined)
-                            if (!(message.dbrootData && typeof message.dbrootData.length === "number" || $util.isString(message.dbrootData)))
+                            if (!(message.dbrootData && typeof message.dbrootData.length === "number" || util.isString(message.dbrootData)))
                                 return "dbrootData: buffer expected";
                         return null;
                     };
 
                     EncryptedDbRootProto.fromObject = function fromObject(object) {
-                        if (object instanceof $root.keyhole.dbroot.EncryptedDbRootProto)
+                        if (object instanceof root.keyhole.dbroot.EncryptedDbRootProto)
                             return object;
-                        var message = new $root.keyhole.dbroot.EncryptedDbRootProto();
+                        var message = new root.keyhole.dbroot.EncryptedDbRootProto();
                         switch (object.encryptionType) {
                             case "ENCRYPTION_XOR":
                             case 0:
@@ -9227,12 +9227,12 @@ define([
                         }
                         if (object.encryptionData !== undefined && object.encryptionData !== null)
                             if (typeof object.encryptionData === "string")
-                                $util.base64.decode(object.encryptionData, message.encryptionData = $util.newBuffer($util.base64.length(object.encryptionData)), 0);
+                                util.base64.decode(object.encryptionData, message.encryptionData = util.newBuffer(util.base64.length(object.encryptionData)), 0);
                             else if (object.encryptionData.length)
                                 message.encryptionData = object.encryptionData;
                         if (object.dbrootData !== undefined && object.dbrootData !== null)
                             if (typeof object.dbrootData === "string")
-                                $util.base64.decode(object.dbrootData, message.dbrootData = $util.newBuffer($util.base64.length(object.dbrootData)), 0);
+                                util.base64.decode(object.dbrootData, message.dbrootData = util.newBuffer(util.base64.length(object.dbrootData)), 0);
                             else if (object.dbrootData.length)
                                 message.dbrootData = object.dbrootData;
                         return message;
@@ -9252,9 +9252,9 @@ define([
                         if (message.encryptionType !== undefined && message.encryptionType !== null && message.hasOwnProperty("encryptionType"))
                             object.encryptionType = options.enums === String ? $types[0][message.encryptionType] : message.encryptionType;
                         if (message.encryptionData !== undefined && message.encryptionData !== null && message.hasOwnProperty("encryptionData"))
-                            object.encryptionData = options.bytes === String ? $util.base64.encode(message.encryptionData, 0, message.encryptionData.length) : options.bytes === Array ? Array.prototype.slice.call(message.encryptionData) : message.encryptionData;
+                            object.encryptionData = options.bytes === String ? util.base64.encode(message.encryptionData, 0, message.encryptionData.length) : options.bytes === Array ? Array.prototype.slice.call(message.encryptionData) : message.encryptionData;
                         if (message.dbrootData !== undefined && message.dbrootData !== null && message.hasOwnProperty("dbrootData"))
-                            object.dbrootData = options.bytes === String ? $util.base64.encode(message.dbrootData, 0, message.dbrootData.length) : options.bytes === Array ? Array.prototype.slice.call(message.dbrootData) : message.dbrootData;
+                            object.dbrootData = options.bytes === String ? util.base64.encode(message.dbrootData, 0, message.dbrootData.length) : options.bytes === Array ? Array.prototype.slice.call(message.dbrootData) : message.dbrootData;
                         return object;
                     };
 
@@ -9281,9 +9281,9 @@ define([
             return keyhole;
         })();
 
-        $util.lazyResolve($root, $lazyTypes);
+        util.lazyResolve(root, lazyTypes);
 
-        return $root.keyhole.dbroot;
+        return root.keyhole.dbroot;
     }
 
     return GoogleEarthEnterpriseMetadata;
