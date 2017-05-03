@@ -142,6 +142,8 @@ define([
         }
         this._viewerRequestVolume = viewerRequestVolume;
 
+        this._commandsLength = 0;
+
         /**
          * The error, in meters, introduced if this tile is rendered and its children are not.
          * This is used to compute Screen-Space Error (SSE), i.e., the error measured in pixels.
@@ -851,9 +853,11 @@ define([
      * @private
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
+        var initCommandLength = frameState.commandList.length;
         applyDebugSettings(this, tileset, frameState);
         this._content.update(tileset, frameState);
         this._transformDirty = false;
+        this._commandsLength = frameState.commandList.length - initCommandLength;
     };
 
     var scratchCommandList = [];

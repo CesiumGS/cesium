@@ -3356,11 +3356,6 @@ define([
 
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
-            case PrimitiveType.POINTS:
-            case PrimitiveType.LINES:
-            case PrimitiveType.LINE_LOOP:
-            case PrimitiveType.LINE_STRIP:
-                return 0;
             case PrimitiveType.TRIANGLES:
                 return (indicesCount / 3);
             case PrimitiveType.TRIANGLE_STRIP:
