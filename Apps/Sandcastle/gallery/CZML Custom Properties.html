@@ -87,7 +87,7 @@ var czml = [{
 }];
 
 // custom properties can be queried directly:
-Sandcastle.addToolbarButton('Print Values', function() {
+Sandcastle.addToolbarButton('Print values', function() {
     var entity = dataSource.entities.getById('custom_property_object');
     // get the values of all properties at the current time.
     var propertyValues = entity.properties.getValue(viewer.clock.currentTime);
