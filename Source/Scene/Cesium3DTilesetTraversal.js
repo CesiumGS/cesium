@@ -299,11 +299,9 @@ define([
         }
     };
 
-    function visitEnd(tile) {
+    BaseTraversal.prototype.visitEnd = function(tile) {
         tile._lastVisitedFrame = this.frameState.frameNumber;
-    }
-
-    BaseTraversal.prototype.visitEnd = visitEnd;
+    };
 
     BaseTraversal.prototype.getChildren = function(tile) {
         if (this.updateAndCheckChildren(tile)) {
@@ -403,7 +401,7 @@ define([
         }
     };
 
-    InternalBaseTraversal.prototype.visitEnd = visitEnd;
+    InternalBaseTraversal.prototype.visitEnd = BaseTraversal.prototype.visitEnd;
 
     // Continue traversing until we have renderable content. We want the first descendants with content of the root to load
     InternalBaseTraversal.prototype.shouldVisit = function(tile) {
@@ -453,7 +451,7 @@ define([
         }
     };
 
-    SkipTraversal.prototype.visitEnd = visitEnd;
+    SkipTraversal.prototype.visitEnd = BaseTraversal.prototype.visitEnd;
 
     var scratchQueue = [];
 
@@ -493,7 +491,7 @@ define([
         }
     };
 
-    InternalSkipTraversal.prototype.visitEnd = visitEnd;
+    InternalSkipTraversal.prototype.visitEnd = BaseTraversal.prototype.visitEnd;
 
     InternalSkipTraversal.prototype.getChildren = function(tile) {
         var tileset = this.tileset;
