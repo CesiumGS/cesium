@@ -350,10 +350,8 @@ define([
         // stop traversal when we've attained the desired level of error
         if (tile._screenSpaceError <= this.baseScreenSpaceError) {
             // When skipping LODs, require an existing base level of content first
-            // if (!tileset.skipLODs || tile.hasRenderableContent || defined(tile._ancestorWithContent)) {
-                updateChildren(tileset, tile, this.frameState);
-                return false;
-            // }
+            updateChildren(tileset, tile, this.frameState);
+            return false;
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
@@ -431,6 +429,8 @@ define([
         this.queue1 = new ManagedArray();
         this.queue2 = new ManagedArray();
         this.internalDFS = new InternalSkipTraversal(options.selectionHeuristic);
+        this.maxChildrenLength = 0;
+        this.scratchQueue = new ManagedArray();
     }
 
     SkipTraversal.prototype.execute = function(tileset, root, frameState, outOfCore) {
@@ -440,9 +440,12 @@ define([
         this.internalDFS.frameState = frameState;
         this.internalDFS.outOfCore = outOfCore;
 
+        this.maxChildrenLength = 0;
         BFS(root, this);
         this.queue1.length = 0;
         this.queue2.length = 0;
+        this.scratchQueue.length = 0;
+        this.scratchQueue.trim(this.maxChildrenLength);
     };
 
     SkipTraversal.prototype.visitStart = function(tile) {
@@ -453,12 +456,11 @@ define([
 
     SkipTraversal.prototype.visitEnd = BaseTraversal.prototype.visitEnd;
 
-    var scratchQueue = [];
-
     SkipTraversal.prototype.getChildren = function(tile) {
-        scratchQueue.length = 0;
-        this.internalDFS.execute(tile, scratchQueue);
-        return scratchQueue;
+        this.scratchQueue.length = 0;
+        this.internalDFS.execute(tile, this.scratchQueue);
+        this.maxChildrenLength = Math.max(this.maxChildrenLength, this.scratchQueue.length);
+        return this.scratchQueue;
     };
 
     SkipTraversal.prototype.leafHandler = function(tile) {
@@ -744,9 +746,10 @@ define([
             var node = stack.pop();
             options.visitStart(node);
             var children = options.getChildren(node);
+            var isNativeArray = !defined(children.get);
             var length = children.length;
             for (var i = 0; i < length; ++i) {
-                var child = children[i];
+                var child = isNativeArray ? children[i] : children.get(i);
 
                 if (!defined(options.shouldVisit) || options.shouldVisit(child)) {
                     stack.push(child);
@@ -759,9 +762,7 @@ define([
             options.visitEnd(node);
         }
 
-        if (defined(stack.trim)) {
-            stack.trim(maxLength);
-        }
+        stack.trim(maxLength);
     }
 
     function BFS(root, options) {
@@ -781,9 +782,10 @@ define([
                 var node = queue1.get(i);
                 options.visitStart(node);
                 var children = options.getChildren(node);
+                var isNativeArray = !defined(children.get);
                 var childrenLength = children.length;
                 for (var j = 0; j < childrenLength; ++j) {
-                    var child = children[j];
+                    var child = isNativeArray ? children[j] : children.get(j);
 
                     if (!defined(options.shouldVisit) || options.shouldVisit(child)) {
                         queue2.push(child);
@@ -807,12 +809,8 @@ define([
         queue1.length = 0;
         queue2.length = 0;
 
-        if (defined(queue1.trim)) {
-            queue1.trim(maxLength);
-        }
-        if (defined(queue2.trim)) {
-            queue2.trim(maxLength);
-        }
+        queue1.trim(maxLength);
+        queue2.trim(maxLength);
     }
 
     Cesium3DTilesetTraversal.selectTiles = selectTiles;
