@@ -1261,14 +1261,16 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            var bivariateVisibilityTest = tileset._hasMixedContent && this.context.stencilBuffer;
+            var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && this.context.stencilBuffer;
 
             if (bivariateVisibilityTest) {
                 if (!tile._finalResolution) {
                     if (!defined(derivedCommands.zback)) {
                         derivedCommands.zback = deriveZBackfaceCommand(command);
                     }
-                    tileset._backfaceCommands.push(derivedCommands.zback);
+                    if (command.pass !== Pass.TRANSLUCENT) {
+                        tileset._backfaceCommands.push(derivedCommands.zback);
+                    }
                 }
 
                 if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {

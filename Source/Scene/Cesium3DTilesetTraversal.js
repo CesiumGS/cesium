@@ -65,7 +65,7 @@ define([
         }
 
         if (root.contentUnloaded) {
-            root._requestHeap.insert(root);
+            loadTile(root, frameState);
             return;
         }
 
@@ -110,7 +110,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var original = tiles.get(i);
 
-            if (original.refine === Cesium3DTileRefine.ADD && original.contentReady) {
+            if (hasAdditiveContent(original)) {
                 original.selected = true;
                 original._selectedFrame = frameState.frameNumber;
                 continue;
@@ -214,24 +214,22 @@ define([
                         tileset._hasMixedContent = true;
                     }
 
+                    lastAncestor = tile;
+
                     if (childrenLength === 0) {
                         tile._finalResolution = true;
-                        lastAncestor = tile;
                         selectTile(tileset, tile, frameState);
                         continue;
                     }
 
                     ancestorStack.push(tile);
-                    lastAncestor = tile;
                     tile._stackLength = stack.length;
                 }
             }
 
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (isVisible(child.visibilityPlaneMask)) {
-                    stack.push(child);
-                }
+                stack.push(child);
             }
         }
     }
@@ -295,22 +293,31 @@ define([
         DFS(root, this);
     };
 
-    BaseTraversal.prototype.visit = function(tile) {
-        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+    BaseTraversal.prototype.visitStart = function(tile) {
+        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+            visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+        }
     };
+
+    function visitEnd(tile) {
+        tile._lastVisitedFrame = this.frameState.frameNumber;
+    }
+
+    BaseTraversal.prototype.visitEnd = visitEnd;
 
     BaseTraversal.prototype.getChildren = function(tile) {
         if (this.updateAndCheckChildren(tile)) {
             var children = tile.children;
             var childrenLength = children.length;
             var allReady = true;
+            var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
                 loadTile(child, this.frameState);
                 touch(this.tileset, child, this.outOfCore);
 
-                // this content cannot be replaced until all of the nearest descendants with content are all loaded
-                if (tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent) {
+                // content cannot be replaced until all of the nearest descendants with content are all loaded
+                if (replacementWithContent) {
                     if (!child.hasEmptyContent) {
                         allReady = allReady && child.contentReady;
                     } else {
@@ -331,9 +338,11 @@ define([
 
         if (tile.hasTilesetContent) {
             // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
-            if (!defined(tile._ancestorWithContent)) {
-                loadTile(tile, this.frameState);
+            loadTile(tile, this.frameState);
+            if (tile.contentReady) {
+                updateChildren(tileset, tile, this.frameState);
             }
+            return true;
         }
 
         if (hasAdditiveContent(tile)) {
@@ -343,14 +352,14 @@ define([
         // stop traversal when we've attained the desired level of error
         if (tile._screenSpaceError <= this.baseScreenSpaceError) {
             // When skipping LODs, require an existing base level of content first
-            if (!tileset.skipLODs || tile.hasRenderableContent || defined(tile._ancestorWithContent)) {
-                computeChildrenVisibility(tile, this.frameState, false);
+            // if (!tileset.skipLODs || tile.hasRenderableContent || defined(tile._ancestorWithContent)) {
+                updateChildren(tileset, tile, this.frameState);
                 return false;
-            }
+            // }
         }
 
         var childrenVisibility = updateChildren(tileset, tile, this.frameState);
-        var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > this.baseScreenSpaceError;
+        var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
         return showAdditive || showReplacement || tile.hasTilesetContent || !defined(tile._ancestorWithContent);
@@ -362,7 +371,7 @@ define([
 
     BaseTraversal.prototype.leafHandler = function(tile) {
         // if skipLODs is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
-        if (this.tileset.skipLODs || tile.refine === Cesium3DTileRefine.REPLACE) {
+        if (this.tileset.skipLODs || !hasAdditiveContent(tile)) {
             if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
                 ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
                 return;
@@ -385,12 +394,16 @@ define([
         return this.allLoaded;
     };
 
-    InternalBaseTraversal.prototype.visit = function(tile) {
-        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+    InternalBaseTraversal.prototype.visitStart = function(tile) {
+        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+            visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+        }
         if (!tile.contentReady) {
             this.allLoaded = false;
         }
     };
+
+    InternalBaseTraversal.prototype.visitEnd = visitEnd;
 
     // Continue traversing until we have renderable content. We want the first descendants with content of the root to load
     InternalBaseTraversal.prototype.shouldVisit = function(tile) {
@@ -434,9 +447,13 @@ define([
         this.queue2.length = 0;
     };
 
-    SkipTraversal.prototype.visit = function(tile) {
-        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+    SkipTraversal.prototype.visitStart = function(tile) {
+        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+            visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+        }
     };
+
+    SkipTraversal.prototype.visitEnd = visitEnd;
 
     var scratchQueue = [];
 
@@ -448,7 +465,7 @@ define([
 
     SkipTraversal.prototype.leafHandler = function(tile) {
         // additive tiles have already been pushed
-        if (!hasAdditiveContent(tile)) {
+        if (!hasAdditiveContent(tile) && tile._lastVisitedFrame !== this.frameState.frameNumber) {
             this.tileset._desiredTiles.push(tile);
         }
     };
@@ -470,22 +487,26 @@ define([
         DFS(root, this);
     };
 
-    InternalSkipTraversal.prototype.visit = function(tile) {
-        visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+    InternalSkipTraversal.prototype.visitStart = function(tile) {
+        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+            visitTile(this.tileset, tile, this.frameState, this.outOfCore);
+        }
     };
+
+    InternalSkipTraversal.prototype.visitEnd = visitEnd;
 
     InternalSkipTraversal.prototype.getChildren = function(tile) {
         var tileset = this.tileset;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
-         if (!tile.hasTilesetContent) {
+        if (!tile.hasTilesetContent) {
             if (hasAdditiveContent(tile)) {
                 tileset._desiredTiles.push(tile);
             }
 
             // stop traversal when we've attained the desired level of error
             if (tile._screenSpaceError <= maximumScreenSpaceError) {
-                computeChildrenVisibility(tile, this.frameState, false);
+                updateChildren(this.tileset, tile, this.frameState);
                 return emptyArray;
             }
 
@@ -494,7 +515,7 @@ define([
                 (!tile.hasEmptyContent && tile.contentUnloaded) &&
                 defined(tile._ancestorWithLoadedContent) &&
                 this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
-                computeChildrenVisibility(tile, this.frameState, false);
+                updateChildren(this.tileset, tile, this.frameState);
                 return emptyArray;
             }
         }
@@ -524,7 +545,7 @@ define([
         var maximumScreenSpaceError = this.tileset._maximumScreenSpaceError;
         var parent = tile.parent;
         if (!defined(parent)) {
-            return true;
+            return isVisible(tile.visibilityPlaneMask);
         }
         var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._screenSpaceError > maximumScreenSpaceError;
 
@@ -544,9 +565,11 @@ define([
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
                         loadTile(tiles[i], this.frameState);
+                        touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
                     loadTile(tile, this.frameState);
+                    touch(this.tileset, tile, this.outOfCore);
                 }
             }
             this.queue.push(tile);
@@ -567,22 +590,18 @@ define([
 
     function visitTile(tileset, tile, frameState, outOfCore) {
         // because the leaves of one tree traversal are the root of the subsequent traversal, avoid double visitation
-        if (tile._lastVisitedFrame !== frameState.frameNumber) {
-            tile._lastVisitedFrame = frameState.frameNumber;
-
-            ++tileset._statistics.visited;
-            tile.selected = false;
-            tile._finalResolution = false;
-            computeSSE(tile, frameState);
-            touch(tileset, tile, outOfCore);
-            tile._ancestorWithContent = undefined;
-            tile._ancestorWithLoadedContent = undefined;
-            var parent = tile.parent;
-            if (defined(parent)) {
-                var replace = parent.refine === Cesium3DTileRefine.REPLACE;
-                tile._ancestorWithContent = (replace && parent.hasRenderableContent) ? parent : parent._ancestorWithContent;
-                tile._ancestorWithLoadedContent = (replace && parent.hasRenderableContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
-            }
+        ++tileset._statistics.visited;
+        tile.selected = false;
+        tile._finalResolution = false;
+        computeSSE(tile, frameState);
+        touch(tileset, tile, outOfCore);
+        tile._ancestorWithContent = undefined;
+        tile._ancestorWithLoadedContent = undefined;
+        var parent = tile.parent;
+        if (defined(parent)) {
+            var replace = parent.refine === Cesium3DTileRefine.REPLACE;
+            tile._ancestorWithContent = (replace && parent.hasRenderableContent) ? parent : parent._ancestorWithContent;
+            tile._ancestorWithLoadedContent = (replace && parent.hasRenderableContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
         }
     }
 
@@ -725,7 +744,7 @@ define([
             maxLength = Math.max(maxLength, stack.length);
 
             var node = stack.pop();
-            options.visit(node);
+            options.visitStart(node);
             var children = options.getChildren(node);
             var length = children.length;
             for (var i = 0; i < length; ++i) {
@@ -739,6 +758,7 @@ define([
             if (length === 0 && defined(options.leafHandler)) {
                 options.leafHandler(node);
             }
+            options.visitEnd(node);
         }
 
         if (defined(stack.trim)) {
@@ -761,7 +781,7 @@ define([
 
             for (var i = 0; i < length; ++i) {
                 var node = queue1.get(i);
-                options.visit(node);
+                options.visitStart(node);
                 var children = options.getChildren(node);
                 var childrenLength = children.length;
                 for (var j = 0; j < childrenLength; ++j) {
@@ -775,6 +795,7 @@ define([
                 if (childrenLength === 0 && defined(options.leafHandler)) {
                     options.leafHandler(node);
                 }
+                options.visitEnd(node);
             }
 
             queue1.length = 0;
