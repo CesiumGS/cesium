@@ -30,12 +30,10 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var redRectangle = viewer.entities.add({
-    name : 'Red translucent rectangle with outline',
+    name : 'Red translucent rectangle',
     rectangle : {
         coordinates : Cesium.Rectangle.fromDegrees(-110.0, 20.0, -80.0, 25.0),
-        material : Cesium.Color.RED.withAlpha(0.5),
-        outline : true,
-        outlineColor : Cesium.Color.RED
+        material : Cesium.Color.RED.withAlpha(0.5)
     }
 });
 
@@ -48,7 +46,7 @@ var greenRectangle = viewer.entities.add({
         extrudedHeight : 300000.0,
         height : 100000.0,
         outline : true,
-        outlineColor : Cesium.Color.GREEN
+        outlineColor : Cesium.Color.BLACK
     }
 });
 

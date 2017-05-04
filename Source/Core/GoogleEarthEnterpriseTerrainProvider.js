@@ -1,16 +1,11 @@
 /*global define*/
 define([
     '../ThirdParty/when',
-    './Cartesian2',
-    './Cartesian3',
-    './Cartographic',
     './Credit',
     './defaultValue',
     './defined',
     './defineProperties',
-    './destroyObject',
     './DeveloperError',
-    './Ellipsoid',
     './Event',
     './GeographicTilingScheme',
     './GoogleEarthEnterpriseMetadata',
@@ -22,21 +17,15 @@ define([
     './Rectangle',
     './RuntimeError',
     './TaskProcessor',
-    './TerrainProvider',
     './throttleRequestByServer',
     './TileProviderError'
 ], function(
     when,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
     Credit,
     defaultValue,
     defined,
     defineProperties,
-    destroyObject,
     DeveloperError,
-    Ellipsoid,
     Event,
     GeographicTilingScheme,
     GoogleEarthEnterpriseMetadata,
@@ -48,7 +37,6 @@ define([
     Rectangle,
     RuntimeError,
     TaskProcessor,
-    TerrainProvider,
     throttleRequestByServer,
     TileProviderError) {
     'use strict';

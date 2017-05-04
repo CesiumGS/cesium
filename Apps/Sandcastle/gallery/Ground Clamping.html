@@ -64,7 +64,8 @@ Sandcastle.addDefaultToolbarMenu([{
                 fillColor : Cesium.Color.BLACK,
                 showBackground : true,
                 backgroundColor : new Cesium.Color(1, 1, 1, 0.7),
-                backgroundPadding : new Cesium.Cartesian2(8, 4)
+                backgroundPadding : new Cesium.Cartesian2(8, 4),
+                disableDepthTestDistance : Number.POSITIVE_INFINITY // draws the label in front of terrain
             }
         });
 
