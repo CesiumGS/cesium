@@ -1,13 +1,11 @@
 /*global define*/
 define([
-    '../ThirdParty/pako_inflate',
     '../ThirdParty/when',
     './appendForwardSlash',
     './Check',
     './defaultValue',
     './defined',
     './defineProperties',
-    './DeveloperError',
     './GoogleEarthEnterpriseTileInformation',
     './isBitSet',
     './loadArrayBuffer',
@@ -15,14 +13,12 @@ define([
     './TaskProcessor',
     './throttleRequestByServer'
 ], function(
-    pako,
     when,
     appendForwardSlash,
     Check,
     defaultValue,
     defined,
     defineProperties,
-    DeveloperError,
     GoogleEarthEnterpriseTileInformation,
     isBitSet,
     loadArrayBuffer,

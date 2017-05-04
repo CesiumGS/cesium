@@ -1,7 +1,7 @@
 /*global define*/
 define([
     './defined',
-    './isBitSet',
+    './isBitSet'
 ], function(
     defined,
     isBitSet) {
