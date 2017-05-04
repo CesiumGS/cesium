@@ -266,6 +266,38 @@ define([
                     label.scaleByDistance = value;
                 }
             }
+        },
+
+        translucencyByDistance : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.translucencyByDistance;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.translucencyByDistance = value;
+                }
+            }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.distanceDisplayCondition;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.distanceDisplayCondition = value;
+                }
+            }
         }
     });
 

@@ -3,12 +3,14 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './LabelStyle'
     ], function(
         Color,
         defined,
         defineProperties,
+        DistanceDisplayCondition,
         NearFarScalar,
         LabelStyle) {
     'use strict';
@@ -150,6 +152,33 @@ define([
             } else {
                 feature.scaleByDistance = undefined;
             }
+
+            var translucencyByDistanceNearRange = style.translucencyByDistanceNearRange;
+            var translucencyByDistanceNearValue = style.translucencyByDistanceNearValue;
+            var translucencyByDistanceFarRange = style.translucencyByDistanceFarRange;
+            var translucencyByDistanceFarValue = style.translucencyByDistanceFarValue;
+
+            if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
+                defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
+                var tNearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
+                var tNearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
+                var tFarRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
+                var tFarValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.translucencyByDistance = new NearFarScalar(tNearRange, tNearValue, tFarRange, tFarValue);
+            } else {
+                feature.translucencyByDistance = undefined;
+            }
+
+            var distanceDisplayConditionNear = style.distanceDisplayConditionNear;
+            var distanceDisplayConditionFar = style.distanceDisplayConditionFar;
+
+            if (defined(distanceDisplayConditionNear) && defined(distanceDisplayConditionFar)) {
+                var near = distanceDisplayConditionNear.evaluate(frameState, feature);
+                var far = distanceDisplayConditionFar.evaluate(frameState, feature);
+
+                feature.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+            }
         }
     }
 
@@ -168,6 +197,7 @@ define([
             feature.backgroundYPadding = 5.0;
             feature.backgroundEnabled = false;
             feature.scaleByDistance = undefined;
+            feature.translucencyByDistance = undefined;
         }
     }
 
