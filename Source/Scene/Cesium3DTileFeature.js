@@ -47,6 +47,7 @@ define([
         this._content = content;
         this._batchTable = content.batchTable;
         this._labelCollection = content._labelCollection;
+        this._polylineCollection = content._polylineCollection;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
@@ -82,6 +83,8 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.show = value;
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.show = value;
                 } else {
                     this._batchTable.setShow(this._batchId, value);
                 }
@@ -118,6 +121,8 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.fillColor = value;
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.show = value.alpha > 0.0;
                 } else {
                     this._batchTable.setColor(this._batchId, value);
                 }
@@ -296,6 +301,8 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.distanceDisplayCondition = value;
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.distanceDisplayCondition = value;
                 }
             }
         }
