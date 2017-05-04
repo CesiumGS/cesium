@@ -82,7 +82,6 @@ define([
         this.featurePropertiesDirty = false;
 
         this._features = undefined;
-
         initialize(this, arrayBuffer, byteOffset);
     }
 

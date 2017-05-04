@@ -123,7 +123,9 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
-     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile
+     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
+     * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
+     * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and vertex memory in megabytes used by each tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
      * @param {Number} [options.baseScreenSpaceError=1024] The screen-space error that must be reached before skipping LODs
@@ -406,7 +408,29 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
-        this._geometricErrorLabels = undefined;
+        this._tileInfoLabels = undefined;
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of commands, points, triangles and features for this tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowRenderingStatistics = defaultValue(options.debugShowRenderingStatistics, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the vertex and texture memory usage.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -1344,10 +1368,10 @@ define([
 
     var scratchCartesian2 = new Cartesian3();
 
-    function updateGeometricErrorLabels(tileset, frameState) {
+    function updateTileInfoLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
-        tileset._geometricErrorLabels.removeAll();
+        tileset._tileInfoLabels.removeAll();
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             var boundingVolume = tile._boundingVolume.boundingVolume;
@@ -1364,12 +1388,49 @@ define([
                 normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
                 position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
             }
-            tileset._geometricErrorLabels.add({
-                text: tile.geometricError.toString(),
-                position: position
+
+            var labelString = '';
+            var attributes = 0;
+
+            if (tileset.debugShowGeometricError) {
+                labelString += '\nGeometric error: ' + tile.geometricError;
+                attributes++;
+            }
+            if (tileset.debugShowRenderingStatistics) {
+                labelString += '\nCommands: ' + tile._commandsLength;
+                attributes++;
+
+                // Don't display number of points or triangles if 0.
+                var numberOfPoints = tile.content.pointsLength;
+                if (numberOfPoints > 0) {
+                    labelString += '\nPoints: ' + tile.content.pointsLength;
+                    attributes++;
+                }
+                var numberOfTriangles = tile.content.trianglesLength;
+                if (numberOfTriangles > 0) {
+                    labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                    attributes++;
+                }
+
+                labelString += '\nFeatures: ' + tile.content.featuresLength;
+                attributes ++;
+            }
+
+            if (tileset.debugShowMemoryUsage) {
+                labelString += '\nTexture Memory: ' + (tile.content.textureMemorySizeInBytes / 1048576.0).toFixed(3);
+                labelString += '\nVertex Memory: ' + (tile.content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
+                attributes += 2;
+            }
+
+            tileset._tileInfoLabels.add({
+                text : labelString.substring(1),
+                position : position,
+                font : (19-attributes) + 'px sans-serif',
+                showBackground : true,
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
         }
-        tileset._geometricErrorLabels.update(frameState);
+        tileset._tileInfoLabels.update(frameState);
     }
 
     var stencilClearCommand = new ClearCommand({
@@ -1457,13 +1518,13 @@ define([
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (tileset.debugShowGeometricError) {
-            if (!defined(tileset._geometricErrorLabels)) {
-                tileset._geometricErrorLabels = new LabelCollection();
+        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
+            if (!defined(tileset._tileInfoLabels)) {
+                tileset._tileInfoLabels = new LabelCollection();
             }
-            updateGeometricErrorLabels(tileset, frameState);
+            updateTileInfoLabels(tileset, frameState);
         } else {
-            tileset._geometricErrorLabels = tileset._geometricErrorLabels && tileset._geometricErrorLabels.destroy();
+            tileset._tileInfoLabels = tileset._tileInfoLabels && tileset._tileInfoLabels.destroy();
         }
     }
 
@@ -1627,6 +1688,9 @@ define([
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
+        // Destroy debug labels
+        this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
+
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {
             var stack = scratchStack;

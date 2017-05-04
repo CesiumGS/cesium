@@ -223,6 +223,14 @@ define([
         this.styleVisible = false;
 
         /**
+         * Gets or sets the flag to show the tile info section.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.tileInfoVisible = false;
+
+        /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
          *
          * @type {String}
@@ -234,7 +242,7 @@ define([
         this._feature = undefined;
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'styleString', '_feature']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileInfoVisible', 'styleString', '_feature']);
 
         this._properties = knockout.observable({});
         /**
@@ -317,6 +325,7 @@ define([
                 }
             }
         });
+
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
          *
@@ -428,26 +437,6 @@ define([
          */
         this.showRequestVolumes = false;
 
-        var showGeometricError = knockout.observable();
-        knockout.defineProperty(this, 'showGeometricError', {
-            get : function() {
-                return showGeometricError();
-            },
-            set : function(value) {
-                showGeometricError(value);
-                if (that._tileset) {
-                    that._tileset.debugShowGeometricError = value;
-                }
-            }
-        });
-        /**
-         * Gets or sets the flag to show tile geometric error.  This property is observable.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showGeometricError = false;
-
         var freezeFrame = knockout.observable();
         knockout.defineProperty(this, 'freezeFrame', {
             get : function() {
@@ -468,6 +457,68 @@ define([
          * @default false
          */
         this.freezeFrame = false;
+
+        var showGeometricError = knockout.observable();
+        knockout.defineProperty(this, 'showGeometricError', {
+            get : function() {
+                return showGeometricError();
+            },
+            set : function(value) {
+                showGeometricError(value);
+                if (that._tileset) {
+                    that._tileset.debugShowGeometricError = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show tile geometric error.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showGeometricError = false;
+
+        var showRenderingStatistics = knockout.observable();
+        knockout.defineProperty(this, 'showRenderingStatistics', {
+            get : function() {
+                return showRenderingStatistics();
+            },
+            set : function(value) {
+                showRenderingStatistics(value);
+                if (that._tileset) {
+                    that._tileset.debugShowRenderingStatistics = value;
+                }
+            }
+        });
+        /**
+         * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showRenderingStatistics = false;
+
+        var showMemoryUsage = knockout.observable();
+        knockout.defineProperty(this, 'showMemoryUsage', {
+            get : function() {
+                return showMemoryUsage();
+            },
+            set : function(value) {
+                showMemoryUsage(value);
+                if (that._tileset) {
+                    that._tileset.debugShowMemoryUsage = value;
+                }
+            }
+        });
+        /**
+         * Displays the memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showMemoryUsage = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -573,8 +624,9 @@ define([
         this._style = undefined;
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
-                                   'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
-                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive'];
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
+                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
+                                   'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -680,8 +732,10 @@ define([
                                     'showBoundingVolumes',
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
+                                    'freezeFrame',
                                     'showGeometricError',
-                                    'freezeFrame'];
+                                    'showRenderingStatistics',
+                                    'showMemoryUsage'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -783,6 +837,13 @@ define([
      */
     Cesium3DTilesInspectorViewModel.prototype.toggleStyle = function() {
         this.styleVisible = !this.styleVisible;
+    };
+
+    /**
+     * Toggles the visibility of the tile info section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleTileInfo = function() {
+        this.tileInfoVisible = !this.tileInfoVisible;
     };
 
     /**

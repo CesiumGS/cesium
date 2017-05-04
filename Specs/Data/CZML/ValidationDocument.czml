@@ -1677,6 +1677,27 @@
     }
   },
   {
+    "id":"material_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgba":[
+              190,189,9,7
+            ]
+          },
+          "gapColor":{
+            "rgba":[
+              170,88,12,24
+            ]
+          },
+          "dashLength":45848,
+          "dashPattern":13519
+        }
+      }
+    }
+  },
+  {
     "id":"material_path_material_polylineGlow",
     "path":{
       "material":{
@@ -1800,6 +1821,34 @@
           "color":{
             "rgbaf":[
               0.6274509803921569,0.2784313725490196,0.9725490196078431,0.9215686274509803
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_path_material_polylineDash_color",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgbaf":[
+              0.11372549019607843,0.3686274509803922,0.4117647058823529,0.7450980392156863
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_path_material_polylineDash_gapColor",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "rgbaf":[
+              0.8313725490196079,0.3137254901960784,0.3411764705882353,0.7490196078431373
             ]
           }
         }
@@ -2138,6 +2187,27 @@
     }
   },
   {
+    "id":"material_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgba":[
+              22,214,57,141
+            ]
+          },
+          "gapColor":{
+            "rgba":[
+              150,91,109,117
+            ]
+          },
+          "dashLength":60297,
+          "dashPattern":40430
+        }
+      }
+    }
+  },
+  {
     "id":"material_polyline_material_polylineGlow",
     "polyline":{
       "material":{
@@ -2261,6 +2331,34 @@
           "color":{
             "rgbaf":[
               0.8313725490196079,0.8235294117647058,0.6313725490196078,0.44313725490196076
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_material_polylineDash_color",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgbaf":[
+              0.4627450980392157,0.1843137254901961,0.32941176470588235,0
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_material_polylineDash_gapColor",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "rgbaf":[
+              0.050980392156862744,0.03137254901960784,0.23921568627450981,0.4
             ]
           }
         }
@@ -6579,6 +6677,27 @@
     }
   },
   {
+    "id":"reference_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "reference":"material_path_material_polylineDash#path.material.color"
+          },
+          "gapColor":{
+            "reference":"material_path_material_polylineDash#path.material.gapColor"
+          },
+          "dashLength":{
+            "reference":"material_path_material_polylineDash#path.material.dashLength"
+          },
+          "dashPattern":{
+            "reference":"material_path_material_polylineDash#path.material.dashPattern"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_path_material_polylineGlow",
     "path":{
       "material":{
@@ -6756,6 +6875,27 @@
         "polylineArrow":{
           "color":{
             "reference":"material_polyline_material_polylineArrow#polyline.material.color"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.color"
+          },
+          "gapColor":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.gapColor"
+          },
+          "dashLength":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.dashLength"
+          },
+          "dashPattern":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.dashPattern"
           }
         }
       }
@@ -10443,6 +10583,43 @@
     }
   },
   {
+    "id":"sampled_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,140,167,151,119,
+              3600,65,100,228,104
+            ]
+          },
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,154,198,168,151,
+              3600,16,23,0,42
+            ]
+          },
+          "dashLength":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,38294,
+              3600,33057
+            ]
+          },
+          "dashPattern":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,58660,
+              3600,3340
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_path_material_polylineGlow",
     "path":{
       "material":{
@@ -10611,6 +10788,38 @@
             "rgbaf":[
               0,0.06666666666666667,0.9725490196078431,0.6862745098039216,0.3254901960784314,
               3600,0.2,0.4823529411764706,0.4980392156862745,0.2196078431372549
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_polylineDash_color",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.803921568627451,0.6784313725490196,0.17647058823529413,0.7098039215686275,
+              3600,0.6745098039215687,0.09803921568627451,0.4470588235294118,0.803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_polylineDash_gapColor",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.23137254901960785,0.7450980392156863,0.7725490196078432,0.9019607843137255,
+              3600,0.7137254901960784,0.1803921568627451,0.3176470588235294,0.30980392156862746
             ]
           }
         }
@@ -10980,6 +11189,43 @@
     }
   },
   {
+    "id":"sampled_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,77,159,238,158,
+              3600,206,194,234,158
+            ]
+          },
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,232,145,15,164,
+              3600,173,151,118,138
+            ]
+          },
+          "dashLength":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,41757,
+              3600,10126
+            ]
+          },
+          "dashPattern":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,33948,
+              3600,16892
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_polyline_material_polylineGlow",
     "polyline":{
       "material":{
@@ -11148,6 +11394,38 @@
             "rgbaf":[
               0,0.5215686274509804,0.7254901960784313,0.8784313725490196,0.8235294117647058,
               3600,0.7725490196078432,0.8627450980392157,0.3254901960784314,0
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_polylineDash_color",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.5254901960784314,0.9921568627450981,0.9647058823529412,0.36470588235294116,
+              3600,0.2784313725490196,0.13333333333333333,0.4470588235294118,0.19215686274509805
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_polylineDash_gapColor",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.4980392156862745,0.7764705882352941,0.803921568627451,0.6901960784313725,
+              3600,0.3764705882352941,0.8980392156862745,0.16862745098039217,0.8980392156862745
             ]
           }
         }
