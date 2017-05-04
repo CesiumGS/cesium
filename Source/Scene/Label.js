@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
+        '../Core/freezeObject',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -24,6 +25,7 @@ define([
         defineProperties,
         DeveloperError,
         DistanceDisplayCondition,
+        freezeObject,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -133,6 +135,7 @@ define([
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = distanceDisplayCondition;
         this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+        this._rtl = defaultValue(options.rtl, false);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -278,6 +281,10 @@ define([
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
+
+                if (this.rtl) {
+                    value = this.reverseRtl(value);
+                }
 
                 if (this._text !== value) {
                     this._text = value;
@@ -1030,6 +1037,23 @@ define([
                     }
                 }
             }
+        },
+
+        /**
+         * Determines whether or not run the reverseRtl algorithm on the text of the label
+         * @memberof Label.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        rtl : {
+            get : function() {
+                return this._rtl;
+            },
+            set : function(value) {
+                if (this._rtl !== value) {
+                    this._rtl = value;
+                }
+            }
         }
     });
 
@@ -1194,6 +1218,169 @@ define([
      */
     Label.prototype.isDestroyed = function() {
         return false;
+    };
+
+    function declareTypes() {
+        var TextTypes = {
+            LTR : 0,
+            RTL : 1,
+            WEAK : 2,
+            BRACKETS : 3
+        };
+        return freezeObject(TextTypes);
+    }
+
+    function convertTextToTypes(text, rtlDir, rtlChars) {
+        var ltrChars = /[a-zA-Z0-9]/;
+        var bracketsChars = /[()[\]{}<>]/;
+        var parsedText = [];
+        var word = '';
+        var types = declareTypes();
+        var lastType = rtlDir ? types.RTL : types.LTR;
+        var currentType = '';
+        var textLength = text.length;
+        for (var textIndex = 0; textIndex < textLength; ++textIndex) {
+            var character = text.charAt(textIndex);
+            if (rtlChars.test(character)) {
+                currentType = types.RTL;
+            }
+            else if (ltrChars.test(character)) {
+                currentType = types.LTR;
+            }
+            else if (bracketsChars.test(character)) {
+                currentType = types.BRACKETS;
+            }
+            else {
+                currentType = types.WEAK;
+            }
+
+            if (lastType === currentType && currentType !== types.BRACKETS) {
+                word += character;
+            }
+            else {
+                parsedText.push({Type : lastType, Word : word});
+                lastType = currentType;
+                word = character;
+            }
+        }
+        parsedText.push({Type : currentType, Word : word});
+        return parsedText;
+    }
+
+    function reverseWord(word) {
+        return word.split('').reverse().join('');
+    }
+
+    function spliceWord(result, pointer, word) {
+        return result.slice(0, pointer) + word + result.slice(pointer);
+    }
+
+    function reverseBrackets(bracket) {
+        switch(bracket) {
+            case '(':
+                return ')';
+            case ')':
+                return '(';
+            case '[':
+                return ']';
+            case ']':
+                return '[';
+            case '{':
+                return '}';
+            case '}':
+                return '{';
+            case '<':
+                return '>';
+            case '>':
+                return '<';
+        }
+    }
+
+    /**
+     *
+     * @param {String} text the text to parse and reorder
+     * @returns {String} the text as rtl direction
+     */
+    Label.prototype.reverseRtl = function(text) {
+        var rtlChars = /[א-ת]/;
+        var rtlDir = rtlChars.test(text.charAt(0));
+        var parsedText = convertTextToTypes(text, rtlDir, rtlChars);
+
+        var types = declareTypes();
+        var result = '';
+        var splicePointer = 0;
+        for(var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
+            var subText = parsedText[wordIndex];
+            var reverse = subText.Type === types.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+            if(rtlDir) {
+                if (subText.Type === types.RTL) {
+                    result = reverseWord(subText.Word) + result;
+                    splicePointer = 0;
+                }
+                else if (subText.Type === types.LTR) {
+                    result = spliceWord(result,splicePointer, subText.Word);
+                    splicePointer += subText.Word.length;
+                }
+                else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
+                    if (parsedText[wordIndex -1].Type === types.RTL) {
+                        result = reverse + result;
+                        splicePointer = 0;
+                    }
+                    else {
+                        if (parsedText.length > wordIndex +1) {
+                            if (parsedText[wordIndex +1].Type === types.RTL) {
+                                result = reverse + result;
+                                splicePointer = 0;
+                            }
+                            else {
+                                result = spliceWord(result,splicePointer, subText.Word);
+                                splicePointer += subText.Word.length;
+                            }
+                        }
+                        else {
+                            result = spliceWord(result,splicePointer, subText.Word);
+                        }
+                    }
+                }
+            }
+            else {
+                if (subText.Type === types.RTL) {
+                    result = spliceWord(result, splicePointer, reverseWord(subText.Word));
+                }
+                else if (subText.Type === types.LTR) {
+                    result += subText.Word;
+                    splicePointer = result.length;
+                }
+                else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
+                    if (wordIndex > 0) {
+                        if (parsedText[wordIndex -1].Type === types.RTL) {
+                            if (parsedText.length > wordIndex +1) {
+                                if (parsedText[wordIndex +1].Type === types.LTR) {
+                                    result += subText.Word;
+                                    splicePointer = result.length;
+                                }
+                                else if (parsedText[wordIndex +1].Type === types.RTL) {
+                                    result = spliceWord(result, splicePointer, reverse);
+                                }
+                            }
+                            else {
+                                result += subText.Word;
+                            }
+                        }
+                        else {
+                            result += subText.Word;
+                            splicePointer = result.length;
+                        }
+                    }
+                    else {
+                        result += subText.Word;
+                        splicePointer = result.length;
+                    }
+                }
+            }
+        }
+
+        return result;
     };
 
     return Label;
