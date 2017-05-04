@@ -50,6 +50,7 @@ define([
     var defaultHorizontalOrigin = HorizontalOrigin.CENTER;
     var defaultVerticalOrigin = VerticalOrigin.CENTER;
     var defaultDisableDepthTestDistance = 0.0;
+    var defaultRtl = false;
 
     var position = new Cartesian3();
     var fillColor = new Color();
@@ -166,6 +167,7 @@ define([
             label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistance);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
             label.disableDepthTestDistance = Property.getValueOrDefault(labelGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
+            label.rtl = Property.getValueOrDefault(labelGraphics._rtl, time, defaultRtl);
         }
         return true;
     };
