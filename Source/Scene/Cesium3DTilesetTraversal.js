@@ -192,7 +192,7 @@ define([
             }
 
             var tile = stack.pop();
-            if (!defined(tile) || tile._lastVisitedFrame !== frameState.frameNumber) {
+            if (!defined(tile) || !isVisited(tile, frameState)) {
                 continue;
             }
 
@@ -294,7 +294,7 @@ define([
     };
 
     BaseTraversal.prototype.visitStart = function(tile) {
-        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+        if (!isVisited(tile, this.frameState)) {
             visitTile(this.tileset, tile, this.frameState, this.outOfCore);
         }
     };
@@ -332,22 +332,13 @@ define([
     };
 
     function baseUpdateAndCheckChildren(tileset, tile, baseScreenSpaceError, frameState) {
-        if (tile.hasTilesetContent) {
-            // load any tilesets of tilesets now because at this point we still have not achieved a base level of content
-            loadTile(tile, frameState);
-            if (tile.contentReady) {
-                updateChildren(tileset, tile, frameState);
-            }
-            return true;
-        }
-
         if (hasAdditiveContent(tile)) {
             tileset._desiredTiles.push(tile);
         }
 
         // stop traversal when we've attained the desired level of error
-        if (tile._screenSpaceError <= baseScreenSpaceError) {
-            // When skipping LODs, require an existing base level of content first
+        if (tile._screenSpaceError <= baseScreenSpaceError && !tile.hasTilesetContent) {
+            // update children so the leaf handler can check if any are visible for the children union bound optimization
             updateChildren(tileset, tile, frameState);
             return false;
         }
@@ -380,6 +371,7 @@ define([
         this.outOfCore = undefined;
         this.baseScreenSpaceError = undefined;
         this.stack = new ManagedArray();
+        this.allLoaded = undefined;
     }
 
     InternalBaseTraversal.prototype.execute = function(root) {
@@ -389,11 +381,8 @@ define([
     };
 
     InternalBaseTraversal.prototype.visitStart = function(tile) {
-        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+        if (!isVisited(tile, this.frameState)) {
             visitTile(this.tileset, tile, this.frameState, this.outOfCore);
-        }
-        if (!tile.contentReady) {
-            this.allLoaded = false;
         }
     };
 
@@ -412,6 +401,9 @@ define([
                 var child = children[i];
                 loadTile(child, this.frameState);
                 touch(this.tileset, child, this.outOfCore);
+                if (!tile.contentReady) {
+                    this.allLoaded = false;
+                }
             }
             return children;
         }
@@ -447,7 +439,7 @@ define([
     };
 
     SkipTraversal.prototype.visitStart = function(tile) {
-        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+        if (!isVisited(tile, this.frameState)) {
             visitTile(this.tileset, tile, this.frameState, this.outOfCore);
         }
     };
@@ -463,7 +455,7 @@ define([
 
     SkipTraversal.prototype.leafHandler = function(tile) {
         // additive tiles have already been pushed
-        if (!hasAdditiveContent(tile) && tile._lastVisitedFrame !== this.frameState.frameNumber) {
+        if (!hasAdditiveContent(tile) && !isVisited(tile, this.frameState)) {
             this.tileset._desiredTiles.push(tile);
         }
     };
@@ -486,7 +478,7 @@ define([
     };
 
     InternalSkipTraversal.prototype.visitStart = function(tile) {
-        if (tile._lastVisitedFrame !== this.frameState.frameNumber) {
+        if (!isVisited(tile, this.frameState)) {
             visitTile(this.tileset, tile, this.frameState, this.outOfCore);
         }
     };
@@ -578,7 +570,7 @@ define([
     };
 
     function updateChildren(tileset, tile, frameState) {
-        if (tile._lastVisitedFrame === frameState.frameNumber) {
+        if (isVisited(tile, frameState)) {
             return tile.childrenVisibility;
         }
 
@@ -590,8 +582,12 @@ define([
         return computeChildrenVisibility(tile, frameState);
     }
 
-    function visitTile(tileset, tile, frameState, outOfCore) {
+    function isVisited(tile, frameState) {
         // because the leaves of one tree traversal are the root of the subsequent traversal, avoid double visitation
+        return tile._lastVisitedFrame === frameState.frameNumber;
+    }
+
+    function visitTile(tileset, tile, frameState, outOfCore) {
         ++tileset._statistics.visited;
         tile.selected = false;
         tile._finalResolution = false;
