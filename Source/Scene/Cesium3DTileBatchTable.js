@@ -1264,13 +1264,11 @@ define([
             var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && this.context.stencilBuffer;
 
             if (bivariateVisibilityTest) {
-                if (!tile._finalResolution) {
-                    if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(command);
-                    }
-                    if (command.pass !== Pass.TRANSLUCENT) {
-                        tileset._backfaceCommands.push(derivedCommands.zback);
-                    }
+                if (!defined(derivedCommands.zback)) {
+                    derivedCommands.zback = deriveZBackfaceCommand(command);
+                }
+                if (command.pass !== Pass.TRANSLUCENT) {
+                    tileset._backfaceCommands.push(derivedCommands.zback);
                 }
 
                 if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {

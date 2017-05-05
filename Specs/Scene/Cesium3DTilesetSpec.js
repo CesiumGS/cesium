@@ -2380,8 +2380,8 @@ defineSuite([
 
             scene.renderForSpecs();
 
-            // 2 for root tile, 1 for child, 1 for stencil clear
-            expect(stats.numberOfCommands).toEqual(4);
+            // 2 for root tile, 2 for child, 1 for stencil clear
+            expect(stats.numberOfCommands).toEqual(5);
             expect(root.selected).toBe(true);
             expect(root._finalResolution).toBe(false);
             expect(root.children[0].children[0].children[3].selected).toBe(true);
