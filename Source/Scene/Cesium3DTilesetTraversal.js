@@ -64,10 +64,7 @@ define([
             return;
         }
 
-        if (root.contentUnloaded) {
-            loadTile(root, frameState);
-            return;
-        }
+        loadTile(root, frameState);
 
         if (!tileset.skipLODs) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -336,14 +333,15 @@ define([
             tileset._desiredTiles.push(tile);
         }
 
+        // Stop traversal on the subtree since it will be destroyed
+        if (tile.hasTilesetContent && tile.contentExpired) {
+            return false;
+        }
+
         // stop traversal when we've attained the desired level of error
         if (tile._screenSpaceError <= baseScreenSpaceError && !tile.hasTilesetContent) {
             // update children so the leaf handler can check if any are visible for the children union bound optimization
             updateChildren(tileset, tile, frameState);
-            return false;
-        }
-
-        if (tile.hasTilesetContent && tile.contentExpired) {
             return false;
         }
 
@@ -493,6 +491,7 @@ define([
         var tileset = this.tileset;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
 
+        // Stop traversal on the subtree since it will be destroyed
         if (tile.hasTilesetContent && tile.contentExpired) {
             return emptyArray;
         }

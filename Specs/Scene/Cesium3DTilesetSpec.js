@@ -416,15 +416,7 @@ defineSuite([
         expect(stats.numberProcessing).toEqual(0);
 
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function() {
-            // Check that root tile is requested
-            expect(stats.visited).toEqual(0);
-            expect(stats.numberOfCommands).toEqual(0);
-            expect(stats.numberOfPendingRequests).toEqual(1);
-            expect(stats.numberProcessing).toEqual(0);
-
-            // Update and check that child tiles are now requested
-            scene.renderForSpecs();
-
+            // Check that root and children are requested
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(0);
             expect(stats.numberOfPendingRequests).toEqual(5);
@@ -1613,6 +1605,7 @@ defineSuite([
     });
 
     it('destroys before tile finishes loading', function() {
+        viewRootOnly();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
@@ -2547,7 +2540,7 @@ defineSuite([
             RequestScheduler.maximumRequests = originalMaxmimumRequests;
             expiredContent = tile._expiredContent;
             expect(tile.contentExpired).toBe(true);
-            expect(tile.contentAvailable).toBe(true); // Expire content now exists
+            expect(tile.contentAvailable).toBe(true); // Expired content now exists
             expect(expiredContent).toBeDefined();
 
             // Expired content renders while new content loads in
@@ -2607,10 +2600,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetSubtreeExpirationUrl).then(function(tileset) {
             // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
             // real use cases instead of immediately returning a pre-created array buffer.
-            var originalLoad = loadWithXhr.load;
             spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 var newDeferred = when.defer();
-                originalLoad(tilesetSubtreeUrl, responseType, method, data, headers, newDeferred, overrideMimeType);
+                loadWithXhr.defaultLoad(tilesetSubtreeUrl, responseType, method, data, headers, newDeferred, overrideMimeType);
                 newDeferred.promise.then(function(arrayBuffer) {
                     deferred.resolve(modifySubtreeBuffer(arrayBuffer));
                 });
@@ -2634,7 +2626,8 @@ defineSuite([
             tileset.tileUnload.addEventListener(spyUpdate);
 
             // Tiles in the subtree are removed from the cache and destroyed.
-            scene.renderForSpecs();
+            scene.renderForSpecs(); // Becomes expired
+            scene.renderForSpecs(); // Makes request
             expect(subtreeRoot.children).toEqual([]);
             for (var i = 0; i < childrenLength; ++i) {
                 expect(subtreeChildren[0].isDestroyed()).toBe(true);
@@ -2642,7 +2635,7 @@ defineSuite([
             expect(spyUpdate.calls.count()).toEqual(4);
 
             // Remove the spy so new tiles load in normally
-            loadWithXhr.load = originalLoad;
+            loadWithXhr.load = loadWithXhr.defaultLoad;
 
             // Wait for the new tileset content to come in with one less leaf
             return pollToPromise(function() {
@@ -2668,12 +2661,14 @@ defineSuite([
             // Trigger expiration to happen next frame
             tile.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
 
+            // After update the tile is expired
+            scene.renderForSpecs();
+
             // Make request (it will fail)
             scene.renderForSpecs();
 
             // Render scene
             scene.renderForSpecs();
-
             expect(tile._contentState).toBe(Cesium3DTileContentState.FAILED);
             expect(stats.numberOfCommands).toBe(0);
             expect(stats.numberTotal).toBe(1);

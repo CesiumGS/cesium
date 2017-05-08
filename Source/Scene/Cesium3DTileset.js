@@ -1617,6 +1617,7 @@ define([
             node = node.next;
             unloadTileFromCache(tileset, tile);
             tile.unloadContent();
+            totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         }
     }
 
