@@ -1261,13 +1261,13 @@ define([
                 derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            var bivariateVisibilityTest = tileset._hasMixedContent && this.context.stencilBuffer;
+            var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && this.context.stencilBuffer;
 
             if (bivariateVisibilityTest) {
-                if (!tile._finalResolution) {
-                    if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(command);
-                    }
+                if (!defined(derivedCommands.zback)) {
+                    derivedCommands.zback = deriveZBackfaceCommand(command);
+                }
+                if (command.pass !== Pass.TRANSLUCENT) {
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
 
@@ -1340,12 +1340,15 @@ define([
 
     function deriveCommand(command) {
         var derivedCommand = DrawCommand.shallowClone(command);
-        derivedCommand.pass = Pass.CESIUM_3D_TILE;
 
         // Add a uniform to indicate if the original command was translucent so
         // the shader knows not to cull vertices that were originally transparent
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
+
+        if (!translucentCommand) {
+            derivedCommand.pass = Pass.CESIUM_3D_TILE;
+        }
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {

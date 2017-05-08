@@ -330,7 +330,8 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
-        this._sse = 0;
+        this._screenSpaceError = 0;
+        this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
         this._requestHeap = undefined;
         this._depth = 0;
@@ -338,8 +339,11 @@ define([
         this._stackLength = 0;
         this._selectedFrame = -1;
         this._selectionDepth = 0;
-        this._lastFinalResolution = undefined;
         this._lastSelectionDepth = undefined;
+        this._requestedFrame = undefined;
+        this._lastVisitedFrame = undefined;
+        this._ancestorWithContent = undefined;
+        this._ancestorWithLoadedContent = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {
