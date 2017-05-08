@@ -2086,25 +2086,7 @@
             ],
             "name": "Cesium_Man",
             "skeletons": [
-                "locator047Node",
-                "locator051Node",
-                "locator055Node",
-                "locator059Node",
-                "locator063Node",
-                "locator071Node",
-                "locator074Node",
-                "locator079Node",
-                "locator082Node",
-                "locator087Node",
-                "locator090Node",
-                "locator103Node",
-                "locator106Node",
-                "locator111Node",
-                "locator114Node",
-                "locator119Node",
-                "locator122Node",
-                "locator135Node",
-                "locator138Node"
+                "locator047Node"
             ],
             "skin": "Controller-mesh019"
         },

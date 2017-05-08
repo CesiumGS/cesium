@@ -96,7 +96,6 @@ defineSuite([
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
     var riggedSimpleUrl = './Data/Models/rigged-simple/rigged-simple.gltf';
-
     var boxConstantUrl = './Data/Models/MaterialsCommon/BoxConstant.gltf';
     var boxLambertUrl = './Data/Models/MaterialsCommon/BoxLambert.gltf';
     var boxBlinnUrl = './Data/Models/MaterialsCommon/BoxBlinn.gltf';
@@ -108,6 +107,7 @@ defineSuite([
     var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
     var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
     var boxColorUrl = './Data/Models/Box-Color/Box-Color.gltf';
+    var boxUint32Indices = './Data/Models/Box-Uint32Indices/Box-Uint32Indices.gltf';
     var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
     var boxColorQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Color-Quantized.gltf';
     var boxScalarQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Scalar-Quantized.gltf';
@@ -384,7 +384,7 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+        invalidGltf.shaders[0].uri = 'invalid.glsl';
 
         var model = primitives.add(new Model({
             gltf : invalidGltf
@@ -424,15 +424,6 @@ defineSuite([
                     enabled : false,
                     factor : 0.0,
                     units : 0.0
-                },
-                scissorTest : {
-                    enabled : false,
-                    rectangle : {
-                        x : 0.0,
-                        y : 0.0,
-                        width : 0.0,
-                        height : 0.0
-                    }
                 },
                 depthRange : {
                     near : 0.0,
@@ -558,7 +549,7 @@ defineSuite([
         var node = texturedBoxModel.getNode('Mesh');
         expect(node).toBeDefined();
         expect(node.name).toEqual('Mesh');
-        expect(node.id).toEqual('Geometry-mesh002Node');
+        expect(node.id).toEqual(0);
         expect(node.show).toEqual(true);
 
         // Change node transform and render
@@ -594,7 +585,7 @@ defineSuite([
         var mesh = texturedBoxModel.getMesh('Mesh');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('Mesh');
-        expect(mesh.id).toEqual('Geometry-mesh002');
+        expect(mesh.id).toEqual(0);
         expect(mesh.materials[0].name).toEqual('Texture');
     });
 
@@ -619,7 +610,7 @@ defineSuite([
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material).toBeDefined();
         expect(material.name).toEqual('Texture');
-        expect(material.id).toEqual('Effect-Texture');
+        expect(material.id).toEqual(0);
     });
 
     it('ModelMaterial.setValue throws when name is not provided', function() {
@@ -715,7 +706,7 @@ defineSuite([
 
     it('Throws because of invalid extension', function() {
         return loadJson(boxUrl).then(function(gltf) {
-            gltf.extensionsUsed = ['NOT_supported_extension'];
+            gltf.extensionsRequired = ['NOT_supported_extension'];
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
@@ -729,7 +720,7 @@ defineSuite([
 
     it('Throws because of invalid extension', function() {
         return loadJson(boxUrl).then(function(gltf) {
-            gltf.extensionsUsed = ['CESIUM_binary_glTF'];
+            gltf.extensionsRequired = ['CESIUM_binary_glTF'];
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
@@ -745,12 +736,12 @@ defineSuite([
         return loadModel(cesiumAir_0_8Url, {
             minimumPixelSize : 1
         }).then(function(m) {
-            // 0.8 models had a number version. Verify it is converted to a string.
-            expect(m.gltf.asset.version).toEqual('0.8');
+            // Verify that the version has been updated
+            expect(m.gltf.asset.version).toEqual('2.0');
 
             // Verify that rotation is converted from
             // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
-            var rotation = m.gltf.nodes['Geometry-mesh005Node'].rotation;
+            var rotation = m.gltf.nodes[3].rotation;
             expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
 
             verifyRender(m);
@@ -805,7 +796,7 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - magic', function() {
-        var arrayBuffer = new ArrayBuffer(16);
+        var arrayBuffer = new ArrayBuffer(20);
         expect(function() {
             return new Model({
                 gltf : arrayBuffer
@@ -814,7 +805,7 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
-        var arrayBuffer = new ArrayBuffer(16);
+        var arrayBuffer = new ArrayBuffer(20);
         var bytes = new Uint8Array(arrayBuffer);
         bytes[0] = 'g'.charCodeAt(0);
         bytes[1] = 'l'.charCodeAt(0);
@@ -1080,10 +1071,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 'animation_1'
+            name : 1
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual('animation_1');
+        expect(a.name).toEqual(1);
         expect(a.startTime).not.toBeDefined();
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -1152,7 +1143,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             removeOnStop : true
         });
@@ -1198,7 +1189,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             delay : 1.0
         });
@@ -1222,7 +1213,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             stopTime : stopTime
         });
@@ -1246,7 +1237,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             speedup : 1.5
         });
@@ -1271,7 +1262,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             reverse : true
         });
@@ -1298,7 +1289,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             loop : ModelAnimationLoop.REPEAT
         });
@@ -1328,7 +1319,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 'animation_1',
+            name : 1,
             startTime : time,
             loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
@@ -1362,7 +1353,7 @@ defineSuite([
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
             var animations = m.activeAnimations;
             var a = animations.add({
-                name : 'animation_1',
+                name : 1,
                 startTime : time
             });
 
@@ -1838,6 +1829,32 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with WEB3D_quantized_attributes and accessor.normalized', function() {
+        return loadModel(boxQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            var gltf = m.gltf;
+            var accessors = gltf.accessors;
+            var normalAccessor = accessors[2];
+            var positionAccessor = accessors[1];
+            normalAccessor.normalized = true;
+            positionAccessor.normalized = true;
+            var decodeMatrixArray = normalAccessor.extensions.WEB3D_quantized_attributes.decodeMatrix;
+            var decodeMatrix = new Matrix4();
+            Matrix4.unpack(decodeMatrixArray, 0, decodeMatrix);
+            Matrix4.multiplyByUniformScale(decodeMatrix, 65535.0, decodeMatrix);
+            Matrix4.pack(decodeMatrix, decodeMatrixArray);
+            decodeMatrixArray = positionAccessor.extensions.WEB3D_quantized_attributes.decodeMatrix;
+            Matrix4.unpack(decodeMatrixArray, 0, decodeMatrix);
+            Matrix4.multiplyByUniformScale(decodeMatrix, 65535.0, decodeMatrix);
+            Matrix4.pack(decodeMatrix, decodeMatrixArray);
+            primitives.remove(m);
+            return loadModelJson(gltf, {}).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
+
     it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where primitives with different accessors use the same shader', function() {
         return loadModel(milkTruckQuantizedUrl).then(function(m) {
             verifyRender(m);
@@ -1898,7 +1915,7 @@ defineSuite([
         }
     }
 
-    it('loads a gltf with color attributes', function() {
+    it('loads a gltf with normalized color attributes', function() {
          return loadModel(boxColorUrl).then(function(m) {
              expect(m.ready).toBe(true);
              expect(scene).toRender([0, 0, 0, 255]);
@@ -1907,6 +1924,26 @@ defineSuite([
              testBoxSideColors(m);
              primitives.remove(m);
          });
+    });
+
+    it('loads a gltf with uint32 indices', function() {
+        var context = scene.context;
+        if (context._elementIndexUint) {
+            return loadModel(boxUint32Indices).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        }
+    });
+
+    it('throws runtime error when loading a gltf with uint32 indices if OES_element_index_uint is disabled', function() {
+        var context = scene.context;
+        var uint32Supported = context._elementIndexUint;
+        context._elementIndexUint = false;
+        return loadModel(boxUint32Indices).otherwise(function(e) {
+            expect(e).toBeDefined();
+            context._elementIndexUint = uint32Supported;
+        });
     });
 
     it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {

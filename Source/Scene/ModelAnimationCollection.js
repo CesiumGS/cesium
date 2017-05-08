@@ -213,7 +213,6 @@ define([
             options.name = animationIds[i];
             scheduledAnimations.push(this.add(options));
         }
-
         return scheduledAnimations;
     };
 
