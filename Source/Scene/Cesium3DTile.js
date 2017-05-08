@@ -142,6 +142,8 @@ define([
         }
         this._viewerRequestVolume = viewerRequestVolume;
 
+        this._commandsLength = 0;
+
         /**
          * The error, in meters, introduced if this tile is rendered and its children are not.
          * This is used to compute Screen-Space Error (SSE), i.e., the error measured in pixels.
@@ -220,8 +222,6 @@ define([
          * @type {Boolean}
          * @readonly
          *
-         * @see Empty3DTileContent
-         *
          * @private
          */
         this.hasEmptyContent = hasEmptyContent;
@@ -235,11 +235,6 @@ define([
          * @type {Boolean}
          * @readonly
          *
-         * @see Batched3DModel3DTileContent
-         * @see Instanced3DModel3DTileContent
-         * @see PointCloud3DTileContent
-         * @see Composite3DTileContent
-         *
          * @private
          */
         this.hasRenderableContent = false;
@@ -252,8 +247,6 @@ define([
          *
          * @type {Boolean}
          * @readonly
-         *
-         * @see Tileset3DTileContent
          *
          * @private
          */
@@ -362,7 +355,8 @@ define([
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
-        this._sse = 0;
+        this._screenSpaceError = 0;
+        this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
         this._requestHeap = undefined;
         this._depth = 0;
@@ -370,8 +364,11 @@ define([
         this._stackLength = 0;
         this._selectedFrame = -1;
         this._selectionDepth = 0;
-        this._lastFinalResolution = undefined;
         this._lastSelectionDepth = undefined;
+        this._requestedFrame = undefined;
+        this._lastVisitedFrame = undefined;
+        this._ancestorWithContent = undefined;
+        this._ancestorWithLoadedContent = undefined;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -961,8 +958,10 @@ define([
      * @private
      */
     Cesium3DTile.prototype.update = function(tileset, frameState) {
+        var initCommandLength = frameState.commandList.length;
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
+        this._commandsLength = frameState.commandList.length - initCommandLength;
     };
 
     var scratchCommandList = [];

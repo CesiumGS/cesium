@@ -63,8 +63,8 @@ define([
             // multiple frustums.
             '<li><strong>Commands: </strong>' + stats.numberOfCommands.toLocaleString() + '</li>';
         s += '</ul>';
-        s += '<ul class="cesium-cesiumInspector-stats">';
         if (!isPick) {
+            s += '<ul class="cesium-cesiumInspector-stats">';
             s +=
                 // --- Cache/loading stats
                 '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests.toLocaleString() + '</li>' +
@@ -139,6 +139,7 @@ define([
         var canvas = scene.canvas;
         this._eventHandler = new ScreenSpaceEventHandler(canvas);
         this._scene = scene;
+        this._performanceContainer = performanceContainer;
         this._canvas = canvas;
 
         this._performanceDisplay = new PerformanceDisplay({
@@ -222,6 +223,14 @@ define([
         this.styleVisible = false;
 
         /**
+         * Gets or sets the flag to show the tile info section.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.tileInfoVisible = false;
+
+        /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
          *
          * @type {String}
@@ -229,17 +238,20 @@ define([
          */
         this.styleString = '{}';
 
+        this._tileset = undefined;
+        this._feature = undefined;
+
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'styleString']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileInfoVisible', 'styleString', '_feature']);
 
         this._properties = knockout.observable({});
         /**
          * Gets the names of the properties in the tileset.  This property is observable.
-         * @type {String}
+         * @type {String[]}
          * @readonly
          */
-        this.propertiesText = '';
-        knockout.defineProperty(this, 'propertiesText', function() {
+        this.properties = [];
+        knockout.defineProperty(this, 'properties', function() {
             var names = [];
             var properties = that._properties();
             for (var prop in properties) {
@@ -247,7 +259,7 @@ define([
                     names.push(prop);
                 }
             }
-            return names.join(', ');
+            return names;
         });
 
         var dynamicScreenSpaceError = knockout.observable();
@@ -313,6 +325,7 @@ define([
                 }
             }
         });
+
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
          *
@@ -424,26 +437,6 @@ define([
          */
         this.showRequestVolumes = false;
 
-        var showGeometricError = knockout.observable();
-        knockout.defineProperty(this, 'showGeometricError', {
-            get : function() {
-                return showGeometricError();
-            },
-            set : function(value) {
-                showGeometricError(value);
-                if (that._tileset) {
-                    that._tileset.debugShowGeometricError = value;
-                }
-            }
-        });
-        /**
-         * Gets or sets the flag to show tile geometric error.  This property is observable.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.showGeometricError = false;
-
         var freezeFrame = knockout.observable();
         knockout.defineProperty(this, 'freezeFrame', {
             get : function() {
@@ -464,6 +457,68 @@ define([
          * @default false
          */
         this.freezeFrame = false;
+
+        var showGeometricError = knockout.observable();
+        knockout.defineProperty(this, 'showGeometricError', {
+            get : function() {
+                return showGeometricError();
+            },
+            set : function(value) {
+                showGeometricError(value);
+                if (that._tileset) {
+                    that._tileset.debugShowGeometricError = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show tile geometric error.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showGeometricError = false;
+
+        var showRenderingStatistics = knockout.observable();
+        knockout.defineProperty(this, 'showRenderingStatistics', {
+            get : function() {
+                return showRenderingStatistics();
+            },
+            set : function(value) {
+                showRenderingStatistics(value);
+                if (that._tileset) {
+                    that._tileset.debugShowRenderingStatistics = value;
+                }
+            }
+        });
+        /**
+         * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showRenderingStatistics = false;
+
+        var showMemoryUsage = knockout.observable();
+        knockout.defineProperty(this, 'showMemoryUsage', {
+            get : function() {
+                return showMemoryUsage();
+            },
+            set : function(value) {
+                showMemoryUsage(value);
+                if (that._tileset) {
+                    that._tileset.debugShowMemoryUsage = value;
+                }
+            }
+        });
+        /**
+         * Displays the memory used per tile.  This property is observable.
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showMemoryUsage = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -568,17 +623,39 @@ define([
 
         this._style = undefined;
         this._shouldStyle = false;
-        this._tileset = undefined;
-        this._feature = undefined;
-        this._definedProperties = ['propertiesText', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
-                                   'showContentBoundingVolumes', 'showRequestVolumes', 'showGeometricError', 'freezeFrame', 'maximumScreenSpaceError',
-                                   'dynamicScreenSpaceErrorDensity', 'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive'];
+        this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
+                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
+                                   'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
     }
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
+        /**
+         * Gets the scene
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {Scene}
+         * @readonly
+         */
+        scene: {
+            get: function() {
+                return this._scene;
+            }
+        },
+        /**
+         * Gets the performance container
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {HTMLElement}
+         * @readonly
+         */
+        performanceContainer: {
+            get: function() {
+                return this._performanceContainer;
+            }
+        },
+
         /**
          * Gets the stats text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
@@ -638,6 +715,7 @@ define([
             set : function(tileset) {
                 this._tileset = tileset;
                 this._style = undefined;
+                this.styleString = '{}';
                 this.feature = undefined;
 
                 if (defined(tileset)) {
@@ -654,8 +732,10 @@ define([
                                     'showBoundingVolumes',
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
+                                    'freezeFrame',
                                     'showGeometricError',
-                                    'freezeFrame'];
+                                    'showRenderingStatistics',
+                                    'showMemoryUsage'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -760,6 +840,13 @@ define([
     };
 
     /**
+     * Toggles the visibility of the tile info section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleTileInfo = function() {
+        this.tileInfoVisible = !this.tileInfoVisible;
+    };
+
+    /**
      * Trims tile cache
      */
     Cesium3DTilesInspectorViewModel.prototype.trimTilesCache = function() {
@@ -772,22 +859,17 @@ define([
      * Compiles the style in the style editor
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
-        if (!defined(this._tileset) || !defined(this._style) || this.styleString === JSON.stringify(this._style.style)) {
+        var tileset = this._tileset;
+        if (!defined(tileset) || this.styleString === JSON.stringify(tileset.style)) {
             return;
         }
-        var old = this._tileset.style;
         this._editorError = '';
         try {
             if (this.styleString.length === 0) {
                 this.styleString = '{}';
             }
-            var style = new Cesium3DTileStyle(JSON.parse(this.styleString));
-            this._tileset.style = style;
-            this._style = style;
-            this._tileset.update(this._scene.frameState);
+            this._style = new Cesium3DTileStyle(JSON.parse(this.styleString));
         } catch (err) {
-            this._tileset.style = old;
-            this._style = old;
             this._editorError = err.toString();
         }
 
@@ -849,14 +931,12 @@ define([
         }
 
         if (defined(tileset)) {
-            if (!defined(this._style) || this._style !== tileset.style) {
-                this._style = tileset.style;
-                if (defined(this._style)) {
-                    this.styleString = JSON.stringify(this._style.style, null, '  ');
-                    this.compileStyle();
-                } else {
-                    this.styleString = '{}';
-                }
+            var style = tileset.style;
+            if (defined(style) && !defined(this._style)) {
+                this._style = style;
+                this.styleString = JSON.stringify(style.style, null, '  ');
+            } else if (this._style !== tileset.style) {
+                tileset.style = this._style;
             }
             if (this._shouldStyle) {
                 tileset._styleEngine.makeDirty();

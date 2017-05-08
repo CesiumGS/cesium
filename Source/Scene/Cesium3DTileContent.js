@@ -165,6 +165,18 @@ define([
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
+        },
+
+        /**
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         * @type {String}
+         * @readonly
+         */
+        url: {
+            get: function() {
+                DeveloperError.throwInstantiationError();
+            }
         }
     });
 

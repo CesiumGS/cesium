@@ -149,6 +149,18 @@ define([
             get : function() {
                 return this._readyPromise.promise;
             }
+        },
+
+        /**
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         * @type {String}
+         * @readonly
+         */
+        url: {
+            get: function() {
+                return this._url;
+            }
         }
     });
 
