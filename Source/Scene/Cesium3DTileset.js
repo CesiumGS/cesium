@@ -177,7 +177,7 @@ define([
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._gltfUpAxis = undefined;
-        this._processingQueue = [];
+        this._processingHeap = new Heap(sortForProcessing);
         this._selectedTiles = [];
         this._desiredTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
@@ -1211,6 +1211,23 @@ define([
         return screenSpaceErrorDifference === 0 ? distanceDifference : screenSpaceErrorDifference;
     }
 
+    function sortForProcessing(a, b) {
+        var aVisible = isVisible(a.visibilityPlaneMask);
+        var bVisible = isVisible(b.visibilityPlaneMask);
+        if (aVisible !== bVisible) {
+            if (aVisible) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+        return sortForLoad(a, b);
+    }
+
+    function isVisible(visibilityPlaneMask) {
+        return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile, outOfCore) {
@@ -1263,7 +1280,7 @@ define([
 
     function addToProcessingQueue(tileset, tile) {
         return function() {
-            tileset._processingQueue.push(tile);
+            tileset._processingHeap.insert(tile);
 
             --tileset._statistics.numberOfPendingRequests;
             ++tileset._statistics.numberProcessing;
@@ -1272,10 +1289,13 @@ define([
 
     function removeFromProcessingQueue(tileset, tile) {
         return function() {
-            var index = tileset._processingQueue.indexOf(tile);
+            var index = tileset._processingHeap.data.indexOf(tile);
             if (index >= 0) {
-                // Remove from processing queue
-                tileset._processingQueue.splice(index, 1);
+                // Remove from processing queue. processTiles may have already removed the tile.
+                if (index < tileset._processingHeap.length) {
+                    tileset._processingHeap.pop(index);
+                }
+
                 --tileset._statistics.numberProcessing;
                 if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
@@ -1293,13 +1313,43 @@ define([
     }
 
     function processTiles(tileset, frameState) {
-        var tiles = tileset._processingQueue;
+        var tiles = tileset._processingHeap;
         var length = tiles.length;
 
-        // Process tiles in the PROCESSING state so they will eventually move to the READY state.
-        // Traverse backwards in case a tile is removed as a result of calling process()
-        for (var i = length - 1; i >= 0; --i) {
-            tiles[i].process(tileset, frameState);
+        var i, tile;
+
+        var start = Date.now();
+        var timeSlice = 15;
+
+        // recompute visibility in case these are old tiles
+        for (i = 0; i < length; ++i) {
+            tile = tiles.data[i];
+            if (tile._lastVisitedFrame !== frameState.frameNumber - 1) {
+                tile.visibilityPlaneMask = tile.visibility(frameState, CullingVolume.MASK_INDETERMINATE);
+            }
+        }
+
+        // resize and resort
+        tiles.reserve();
+        tiles.buildHeap(tiles.data);
+
+        var internalLength = tiles.data.length;
+        var popCount = 0;
+
+        while(tiles.length > 0 && Date.now() - start <= timeSlice) {
+            // pop tiles and move them to the back of the array
+            tile = tiles.pop();
+            tiles.data[internalLength - ++popCount] = tile;
+            tile.process(tileset, frameState);
+        }
+
+        // insert any tiles still processing back into the processing heap
+        for (i = internalLength - popCount; i < internalLength; ++i) {
+            var tile = tiles.data[i];
+            tiles.data[i] = undefined;
+            if (tile.contentProcessing) {
+                tiles.insert(tile);
+            }
         }
     }
 

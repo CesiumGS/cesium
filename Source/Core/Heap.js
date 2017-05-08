@@ -195,18 +195,24 @@ define([
     };
 
     /**
-     * Remove the top element from the heap and return it.
+     * Remove the element specified by index from the heap and return it.
      *
-     * @returns {*} The top element of the heap.
+     * @param {Number} [index=0] The index to remove.
+     * @returns {*} The specified element of the heap.
      */
-    Heap.prototype.pop = function() {
-        if (this._length === 0) {
+    Heap.prototype.pop = function(index) {
+        index = defaultValue(index, 0);
+        if (this._length == 0) {
             return undefined;
         }
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.lessThan('index', index, this._length);
+        //>>includeEnd('debug');
+
         var data = this._data;
-        var root = data[0];
-        swap(data, 0, --this._length);
-        this.heapify(0);
+        var root = data[index];
+        swap(data, index, --this._length);
+        this.heapify(index);
         return root;
     };
 

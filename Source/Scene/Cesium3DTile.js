@@ -432,6 +432,21 @@ define([
         },
 
         /**
+         * Determines if the tile is processing. <code>true</code> if the tile
+         * is processing; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        contentProcessing : {
+            get : function() {
+                return this._contentState === Cesium3DTileContentState.PROCESSING;
+            }
+        },
+
+        /**
          * Determines if the tile's content has not be requested. <code>true</code> if tile's
          * content has not be requested; otherwise, <code>false</code>.
          *
