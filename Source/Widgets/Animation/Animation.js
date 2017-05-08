@@ -713,16 +713,12 @@ define([
                 return;
             }
             var that = this;
-            that._observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    for (var i = 0; i < mutation.addedNodes.length; i++) {
-                        if (mutation.addedNodes[i].contains(that._container)) {
-                            that._observer.disconnect();
-                            that._observer = undefined;
-                            that.applyThemeChanges();
-                        }
-                    }
-                });
+            that._observer = new MutationObserver(function() {
+                if (document.body.contains(that._container)) {
+                    that._observer.disconnect();
+                    that._observer = undefined;
+                    that.applyThemeChanges();
+                }
             });
             that._observer.observe(document, {childList : true, subtree : true});
             return;
