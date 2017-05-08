@@ -4,6 +4,7 @@ Change Log
 ### 1.34 - 2017-06-01
 
 * Fix issue where polylines in a `PolylineCollection` would ignore the far distance when updating the distance display condition. [#5283](https://github.com/AnalyticalGraphicsInc/cesium/pull/5283)
+* Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
 
 ### 1.33 - 2017-05-01
 
