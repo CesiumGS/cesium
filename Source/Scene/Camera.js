@@ -2395,6 +2395,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var canvas = this._scene.canvas;
+        if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+            return undefined;
+        }
+
         if (!defined(result)) {
             result = new Cartesian3();
         }

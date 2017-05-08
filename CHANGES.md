@@ -12,6 +12,11 @@ Change Log
    * `Cesium3DTilesInspector`
    * `Cesium3DTilesInspectorViewModel`
 
+### 1.34 - 2017-06-01
+
+* Fix issue where polylines in a `PolylineCollection` would ignore the far distance when updating the distance display condition. [#5283](https://github.com/AnalyticalGraphicsInc/cesium/pull/5283)
+* Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
+
 ### 1.33 - 2017-05-01
 
 * Breaking changes
@@ -21,7 +26,7 @@ Change Log
    * Added `PolylineDash` Material type.
    * Added `PolylineDashMaterialProperty` to the Entity API.
    * Added CZML `polylineDash` property .
-* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
+* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will always enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
 * Added a `depthFailMaterial` property to line entities, which is the material used to render the line when it fails the depth test. [#5160](https://github.com/AnalyticalGraphicsInc/cesium/pull/5160)
 * Fixed billboards not initially clustering. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5208)
 * Fixed issue with displaying `MapboxImageryProvider` default token error message. [#5191](https://github.com/AnalyticalGraphicsInc/cesium/pull/5191)

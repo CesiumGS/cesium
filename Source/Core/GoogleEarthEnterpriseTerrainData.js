@@ -1,6 +1,5 @@
 /*global define*/
 define([
-    '../ThirdParty/when',
     './BoundingSphere',
     './Cartesian2',
     './Cartesian3',
@@ -9,8 +8,6 @@ define([
     './defined',
     './defineProperties',
     './DeveloperError',
-    './GeographicTilingScheme',
-    './HeightmapTessellator',
     './IndexDatatype',
     './Intersections2D',
     './Math',
@@ -21,7 +18,6 @@ define([
     './TerrainEncoding',
     './TerrainMesh'
 ], function(
-    when,
     BoundingSphere,
     Cartesian2,
     Cartesian3,
@@ -30,8 +26,6 @@ define([
     defined,
     defineProperties,
     DeveloperError,
-    GeographicTilingScheme,
-    HeightmapTessellator,
     IndexDatatype,
     Intersections2D,
     CesiumMath,
@@ -123,7 +117,7 @@ define([
     });
 
     var taskProcessor = new TaskProcessor('createVerticesFromGoogleEarthEnterpriseBuffer');
-    
+
     var nativeRectangleScratch = new Rectangle();
     var rectangleScratch = new Rectangle();
 
