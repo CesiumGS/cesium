@@ -38,6 +38,7 @@ define([
         './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -88,6 +89,7 @@ define([
         Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
+        Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -114,7 +116,6 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
-     * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
@@ -150,9 +151,7 @@ define([
         var url = options.url;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.typeOf.string('options.url', url);
         //>>includeEnd('debug');
 
         var tilesetUrl;
@@ -191,8 +190,6 @@ define([
         this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
         this._replacementSentinel  = replacementList.add();
         this._trimTiles = false;
-
-        this._refineToVisible = defaultValue(options.refineToVisible, false);
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
@@ -273,7 +270,6 @@ define([
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
-        this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
@@ -298,35 +294,9 @@ define([
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
-        this._statistics = {
-            // Rendering stats
-            visited : 0,
-            numberOfCommands : 0,
-            // Loading stats
-            numberOfAttemptedRequests : 0,
-            numberOfPendingRequests : 0,
-            numberProcessing : 0,
-            numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
-            numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
-            // Features stats
-            numberOfFeaturesSelected : 0, // number of features rendered
-            numberOfFeaturesLoaded : 0,  // number of features in memory
-            numberOfPointsSelected: 0,
-            numberOfPointsLoaded: 0,
-            numberOfTrianglesSelected: 0,
-            // Styling stats
-            numberOfTilesStyled : 0,
-            numberOfFeaturesStyled : 0,
-            // Optimization stats
-            numberOfTilesCulledWithChildrenUnion : 0,
-            // Memory stats
-            vertexMemorySizeInBytes : 0,
-            textureMemorySizeInBytes : 0,
-            batchTableMemorySizeInBytes : 0,
-
-            lastColor : new Cesium3DTilesetStatistics(),
-            lastPick : new Cesium3DTilesetStatistics()
-        };
+        this._statistics = new Cesium3DTilesetStatistics();
+        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastPick = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
 
@@ -595,28 +565,6 @@ define([
         });
 
         this._backfaceCommands = new ManagedArray();
-    }
-
-    function Cesium3DTilesetStatistics() {
-        this.selected = 0;
-        this.visited = 0;
-        this.numberOfCommands = 0;
-        this.numberOfAttemptedRequests = 0;
-        this.numberOfPendingRequests = 0;
-        this.numberProcessing = 0;
-        this.numberContentReady = 0;
-        this.numberTotal = 0;
-        this.numberOfFeaturesSelected = 0;
-        this.numberOfFeaturesLoaded = 0;
-        this.numberOfPointsSelected = 0;
-        this.numberOfPointsLoaded = 0;
-        this.numberOfTrianglesSelected = 0;
-        this.numberOfTilesStyled = 0;
-        this.numberOfFeaturesStyled = 0;
-        this.numberOfTilesCulledWithChildrenUnion = 0;
-        this.vertexMemorySizeInBytes = 0;
-        this.textureMemorySizeInBytes = 0;
-        this.batchTableMemorySizeInBytes = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -1026,8 +974,8 @@ define([
          */
         totalMemoryUsageInBytes : {
             get : function() {
-                var stats = this._statistics;
-                return stats.textureMemorySizeInBytes + stats.vertexMemorySizeInBytes + stats.batchTableMemorySizeInBytes;
+                var statistics = this._statistics;
+                return statistics.textureMemorySizeInBytes + statistics.vertexMemorySizeInBytes + statistics.batchTableMemorySizeInBytes;
             }
         }
     });
@@ -1051,7 +999,7 @@ define([
             throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
         }
 
-        var stats = this._statistics;
+        var statistics = this._statistics;
 
         // Append the version to the baseUrl
         var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
@@ -1073,7 +1021,7 @@ define([
             rootTile._depth = parentTile._depth + 1;
         }
 
-        ++stats.numberTotal;
+        ++statistics.numberTotal;
 
         var stack = [];
         stack.push({
@@ -1092,14 +1040,17 @@ define([
                     var childTile = new Cesium3DTile(this, baseUrl, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
-                    ++stats.numberTotal;
+                    ++statistics.numberTotal;
                     stack.push({
                         header : childHeader,
                         cesium3DTile : childTile
                     });
                 }
             }
-            Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
+
+            if (this._cullWithChildrenBounds) {
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
+            }
 
             // Create a load heap, one for each unique server. We can only make limited requests to a given
             // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
@@ -1222,16 +1173,16 @@ define([
             return;
         }
 
-        var stats = tileset._statistics;
+        var statistics = tileset._statistics;
 
         var requested = tile.requestContent();
 
         if (!requested) {
-            ++stats.numberOfAttemptedRequests;
+            ++statistics.numberOfAttemptedRequests;
             return;
         }
 
-        ++stats.numberOfPendingRequests;
+        ++statistics.numberOfPendingRequests;
 
         var removeFunction = removeFromProcessingQueue(tileset, tile);
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
@@ -1281,7 +1232,7 @@ define([
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
                     ++tileset._statistics.numberContentReady;
-                    incrementPointAndFeatureLoadCounts(tileset, tile.content);
+                    tileset._statistics.incrementLoadCounts(tile.content);
                     tile.replacementNode = tileset._replacementList.add(tile);
                 }
             } else {
@@ -1304,86 +1255,6 @@ define([
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
-    function clearStats(tileset) {
-        var stats = tileset._statistics;
-        stats.visited = 0;
-        stats.numberOfCommands = 0;
-        stats.numberOfAttemptedRequests = 0;
-        stats.numberOfTilesStyled = 0;
-        stats.numberOfFeaturesStyled = 0;
-        stats.numberOfTilesCulledWithChildrenUnion = 0;
-        stats.numberOfFeaturesSelected = 0;
-        stats.numberOfPointsSelected = 0;
-        stats.numberOfTrianglesSelected = 0;
-    }
-
-    function updateLastStats(tileset, isPick) {
-        var stats = tileset._statistics;
-        var last = isPick ? stats.lastPick : stats.lastColor;
-
-        last.visited = stats.visited;
-        last.numberOfCommands = stats.numberOfCommands;
-        last.selected = tileset._selectedTiles.length;
-        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-        last.numberOfPendingRequests = stats.numberOfPendingRequests;
-        last.numberProcessing = stats.numberProcessing;
-        last.numberContentReady = stats.numberContentReady;
-        last.numberTotal = stats.numberTotal;
-        last.numberOfFeaturesSelected = stats.numberOfFeaturesSelected;
-        last.numberOfFeaturesLoaded = stats.numberOfFeaturesLoaded;
-        last.numberOfPointsSelected = stats.numberOfPointsSelected;
-        last.numberOfPointsLoaded = stats.numberOfPointsLoaded;
-        last.numberOfTrianglesSelected = stats.numberOfTrianglesSelected;
-        last.numberOfTilesStyled = stats.numberOfTilesStyled;
-        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
-        last.numberOfTilesCulledWithChildrenUnion = stats.numberOfTilesCulledWithChildrenUnion;
-        last.vertexMemorySizeInBytes = stats.vertexMemorySizeInBytes;
-        last.textureMemorySizeInBytes = stats.textureMemorySizeInBytes;
-        last.batchTableMemorySizeInBytes = stats.batchTableMemorySizeInBytes;
-    }
-
-    function updatePointAndFeatureCounts(tileset, content, decrement, load) {
-        var stats = tileset._statistics;
-        var contents = content.innerContents;
-        var pointsLength = content.pointsLength;
-        var trianglesLength = content.trianglesLength;
-        var featuresLength = content.featuresLength;
-        var vertexMemorySizeInBytes = content.vertexMemorySizeInBytes;
-        var textureMemorySizeInBytes = content.textureMemorySizeInBytes;
-        var batchTableMemorySizeInBytes = content.batchTableMemorySizeInBytes;
-
-        if (load) {
-            stats.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
-            stats.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
-            stats.vertexMemorySizeInBytes += decrement ? -vertexMemorySizeInBytes : vertexMemorySizeInBytes;
-            stats.textureMemorySizeInBytes += decrement ? -textureMemorySizeInBytes : textureMemorySizeInBytes;
-            stats.batchTableMemorySizeInBytes += decrement ? -batchTableMemorySizeInBytes : batchTableMemorySizeInBytes;
-        } else {
-            stats.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
-            stats.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
-            stats.numberOfTrianglesSelected += decrement ? -trianglesLength : trianglesLength;
-        }
-
-        if (defined(contents)) {
-            var length = contents.length;
-            for (var i = 0; i < length; ++i) {
-                updatePointAndFeatureCounts(tileset, contents[i], decrement, load);
-            }
-        }
-    }
-
-    function incrementPointAndFeatureSelectionCounts(tileset, content) {
-        updatePointAndFeatureCounts(tileset, content, false, false);
-    }
-
-    function incrementPointAndFeatureLoadCounts(tileset, content) {
-        updatePointAndFeatureCounts(tileset, content, false, true);
-    }
-
-    function decrementPointAndFeatureLoadCounts(tileset, content) {
-        updatePointAndFeatureCounts(tileset, content, true, true);
-    }
 
     var scratchCartesian2 = new Cartesian3();
 
@@ -1460,6 +1331,7 @@ define([
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1485,7 +1357,8 @@ define([
                 // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
-                incrementPointAndFeatureSelectionCounts(tileset, tile.content);
+                statistics.incrementSelectionCounts(tile.content);
+                ++statistics.selected;
             }
         }
         var lengthAfterUpdate = commandList.length;
@@ -1535,7 +1408,7 @@ define([
         }
 
         // Number of commands added by each update above
-        tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
             if (!defined(tileset._tileInfoLabels)) {
@@ -1551,7 +1424,7 @@ define([
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
 
-        var stats = tileset._statistics;
+        var statistics = tileset._statistics;
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
@@ -1567,7 +1440,7 @@ define([
         while ((node !== sentinel) && ((totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
 
-            decrementPointAndFeatureLoadCounts(tileset, tile.content);
+            statistics.decrementLoadCounts(tile.content);
             tileUnload.raiseEvent(tile);
             tile.unloadContent();
 
@@ -1575,7 +1448,7 @@ define([
             node = node.next;
             replacementList.remove(currentNode);
 
-            --stats.numberContentReady;
+            --statistics.numberContentReady;
             totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         }
     }
@@ -1597,11 +1470,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function raiseLoadProgressEvent(tileset, frameState) {
-        var stats = tileset._statistics;
-        var numberOfPendingRequests = stats.numberOfPendingRequests;
-        var numberProcessing = stats.numberProcessing;
-        var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
-        var lastNumberProcessing = stats.lastColor.numberProcessing;
+        var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLastColor;
+        var numberOfPendingRequests = statistics.numberOfPendingRequests;
+        var numberProcessing = statistics.numberProcessing;
+        var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
+        var lastNumberProcessing = statisticsLast.numberProcessing;
 
         var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing);
 
@@ -1611,7 +1485,7 @@ define([
             });
         }
 
-        tileset._tilesLoaded = (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
+        tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
@@ -1649,7 +1523,8 @@ define([
         var isPick = (passes.pick && !passes.render);
         var outOfCore = !isPick;
 
-        clearStats(this);
+        var statistics = this._statistics;
+        statistics.clear();
 
         if (outOfCore) {
             processTiles(this, frameState);
@@ -1672,7 +1547,9 @@ define([
         // model's readyPromise.
         raiseLoadProgressEvent(this, frameState);
 
-        updateLastStats(this, isPick);
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
     };
 
     /**
