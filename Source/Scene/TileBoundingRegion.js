@@ -3,11 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
         '../Core/IntersectionTests',
@@ -24,11 +24,11 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Check,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         GeometryInstance,
         IntersectionTests,
@@ -44,19 +44,22 @@ define([
     'use strict';
 
     /**
+     * A tile bounding volume specified as a longitude/latitude/height region.
+     * @alias TileBoundingRegion
+     * @constructor
+     *
      * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.rectangle
-     * @param {Number} [options.minimumHeight=0.0]
-     * @param {Number} [options.maximumHeight=0.0]
-     * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84]
+     * @param {Rectangle} options.rectangle The rectangle specifying the longitude and latitude range of the region.
+     * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
+     * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
+     * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
      *
      * @private
      */
     function TileBoundingRegion(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.rectangle)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.object('options.rectangle', options.rectangle);
         //>>includeEnd('debug');
 
         this.rectangle = Rectangle.clone(options.rectangle);
@@ -248,9 +251,7 @@ define([
      */
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
-        }
+        Check.defined('frameState', frameState);
         //>>includeEnd('debug');
         var camera = frameState.camera;
         var cameraCartesianPosition = camera.positionWC;
@@ -328,9 +329,7 @@ define([
      */
     TileBoundingRegion.prototype.intersectPlane = function(plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
         return this._orientedBoundingBox.intersectPlane(plane);
     };
@@ -343,9 +342,7 @@ define([
      */
     TileBoundingRegion.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        Check.defined('color', color);
         //>>includeEnd('debug');
 
         var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);

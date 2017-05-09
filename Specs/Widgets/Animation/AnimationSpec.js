@@ -3,12 +3,14 @@ defineSuite([
         'Widgets/Animation/Animation',
         'Core/defined',
         'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel'
+        'Widgets/ClockViewModel',
+        'Specs/pollToPromise'
     ], function(
         Animation,
         defined,
         AnimationViewModel,
-        ClockViewModel) {
+        ClockViewModel,
+        pollToPromise) {
     'use strict';
 
     var container;
@@ -28,7 +30,7 @@ defineSuite([
         animation = new Animation(document.body, animationViewModel);
     });
 
-    it('Can create with container not in the DOM', function(done) {
+    it('Can create with container not in the DOM', function() {
         container = document.createElement('div');
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
@@ -38,12 +40,11 @@ defineSuite([
         spyOn(animation, 'applyThemeChanges').and.callThrough();
         document.body.appendChild(container);
 
-        // setTimeout is needed because the MutationObserver used by Animation
-        // will not be called before next tick.
-        setTimeout(function() {
-            expect(animation.applyThemeChanges).toHaveBeenCalled();
-            done();
-        }, 0);
+        //This is done via polling because we can't control when the DOM decides to
+        //fire the Mutation event.
+        return pollToPromise(function() {
+            return animation.applyThemeChanges.calls.count() === 1;
+        });
     });
 
     it('Can destroy without container ever being in the DOM', function() {
