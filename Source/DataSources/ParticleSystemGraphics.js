@@ -248,7 +248,7 @@ define([
         maximumLife: createPropertyDescriptor("maximumLife"),
 
         /**
-         * An array of callbacks that apply a force to a given particle over time.
+         * An array of callbacks that apply a force to each particle over time.
          * Callbacks can either be functions with the signature (particle, time delta) or
          * objects with an apply function with same signature.
          */

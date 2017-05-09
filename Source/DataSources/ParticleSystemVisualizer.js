@@ -48,8 +48,8 @@ define([
     var modelMatrixScratch = new Matrix4();
 
     /**
-     * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
-     * @alias ModelVisualizer
+     * A {@link Visualizer} which maps {@link Entity#particleSystem} to a {@link ParticleSystem}.
+     * @alias ParticleSystemVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
@@ -76,7 +76,7 @@ define([
     }
 
     /**
-     * Updates models created this visualizer to match their
+     * Updates particle systems created by this visualizer to match their
      * Entity counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
