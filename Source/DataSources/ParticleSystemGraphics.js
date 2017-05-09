@@ -108,7 +108,7 @@ define([
         image : createPropertyDescriptor('image'),
 
         /**
-         * The scale of a particle at the beginning of it's lifetime.
+         * The scale of a particle at the beginning of its lifetime.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 1.0
