@@ -1122,19 +1122,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('converts to window coordinates',function(){
+    it('converts to canvas coordinates',function(){
         var mockPosition = new Cartesian3();
         spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
-        scene.wgs84ToWindow(mockPosition);
+        scene.cartesianToCanvasCoordinates(mockPosition);
 
         expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
     });
 
-    it('converts to window coordinates and return it in a variable',function(){
+    it('converts to canvas coordinates and return it in a variable',function(){
         var result = new Cartesian2();
         var mockPosition = new Cartesian3();
         spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
-        scene.wgs84ToWindow(mockPosition, result);
+        scene.cartesianToCanvasCoordinates(mockPosition, result);
 
         expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
     });
