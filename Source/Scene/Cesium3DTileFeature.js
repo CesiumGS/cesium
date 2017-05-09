@@ -2,11 +2,13 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        '../Scene/Material'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        Material) {
     'use strict';
 
     /**
@@ -125,6 +127,31 @@ define([
                     polyline.show = value.alpha > 0.0;
                 } else {
                     this._batchTable.setColor(this._batchId, value);
+                }
+            }
+        },
+
+        /**
+         * Gets and sets the color for the anchor line.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         */
+        anchorLineColor : {
+            get : function() {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    return polyline.material.uniforms.color;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.material.uniforms.color = value;
                 }
             }
         },
