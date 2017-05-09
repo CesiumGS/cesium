@@ -2593,7 +2593,6 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
         scene._jobScheduler.resetBudgets();
-        RequestScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2659,6 +2658,7 @@ define([
             scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
         }
 
+        RequestScheduler.update();
         context.endFrame();
         callAfterRenderFunctions(frameState);
 

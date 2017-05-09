@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Heap',
         './isDataUri',
         './Queue',
         './Request',
@@ -15,6 +16,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Heap,
         isDataUri,
         Queue,
         Request,
@@ -69,6 +71,7 @@ define([
 
     var activeRequestsByServer = {};
     var activeRequests = 0;
+    var deferableRequests = 0;
     var budgets = [];
     var leftoverRequests = [];
     var deferredRequests = new Queue();
@@ -95,55 +98,55 @@ define([
         return a.distance - b.distance;
     }
 
-    function getBudget(request) {
-        var budget;
-        var length = budgets.length;
-        for (var i = 0; i < length; ++i) {
-            budget = budgets[i];
-            if ((budget.server === request.server) && (budget.type === request.type)) {
-                return budget;
-            }
-        }
-        // Not found, create a new budget
-        budget = new RequestBudget(request);
-        budgets.push(budget);
-        return budget;
-    }
+    // function getBudget(request) {
+    //     var budget;
+    //     var length = budgets.length;
+    //     for (var i = 0; i < length; ++i) {
+    //         budget = budgets[i];
+    //         if ((budget.server === request.server) && (budget.type === request.type)) {
+    //             return budget;
+    //         }
+    //     }
+    //     // Not found, create a new budget
+    //     budget = new RequestBudget(request);
+    //     budgets.push(budget);
+    //     return budget;
+    // }
 
-    RequestScheduler.resetBudgets = function() {
-        showStats();
-        clearStats();
+    // RequestScheduler.resetBudgets = function() {
+    //     showStats();
+    //     clearStats();
 
-        if (!RequestScheduler.prioritize || !RequestScheduler.throttle) {
-            return;
-        }
+    //     if (!RequestScheduler.prioritize || !RequestScheduler.throttle) {
+    //         return;
+    //     }
 
-        // Reset budget totals
-        var length = budgets.length;
-        for (var i = 0; i < length; ++i) {
-            budgets[i].total = 0;
-            budgets[i].used = 0;
-        }
+    //     // Reset budget totals
+    //     var length = budgets.length;
+    //     for (var i = 0; i < length; ++i) {
+    //         budgets[i].total = 0;
+    //         budgets[i].used = 0;
+    //     }
 
-        // Sort all leftover requests by distance
-        var requests = leftoverRequests;
-        requests.sort(distanceSortFunction);
+    //     // Sort all leftover requests by distance
+    //     var requests = leftoverRequests;
+    //     requests.sort(distanceSortFunction);
 
-        // Allocate new budgets based on the distances of leftover requests
-        var availableRequests = RequestScheduler.getNumberOfAvailableRequests();
-        var requestsLength = requests.length;
-        for (var j = 0; (j < requestsLength) && (availableRequests > 0); ++j) {
-            var request = requests[j];
-            var budget = getBudget(request);
-            var budgetAvailable = budget.server.getNumberOfAvailableRequests();
-            if (budget.total < budgetAvailable) {
-                ++budget.total;
-                --availableRequests;
-            }
-        }
+    //     // Allocate new budgets based on the distances of leftover requests
+    //     var availableRequests = RequestScheduler.getNumberOfAvailableRequests();
+    //     var requestsLength = requests.length;
+    //     for (var j = 0; (j < requestsLength) && (availableRequests > 0); ++j) {
+    //         var request = requests[j];
+    //         var budget = getBudget(request);
+    //         var budgetAvailable = budget.server.getNumberOfAvailableRequests();
+    //         if (budget.total < budgetAvailable) {
+    //             ++budget.total;
+    //             --availableRequests;
+    //         }
+    //     }
 
-        requests.length = 0;
-    };
+    //     requests.length = 0;
+    // };
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
 
@@ -153,21 +156,21 @@ define([
      * @param {String} url The url.
      * @returns {String} The server name.
      */
-    RequestScheduler.getServerName = function(url) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-        //>>includeEnd('debug');
+    // RequestScheduler.getServerName = function(url) {
+    //     //>>includeStart('debug', pragmas.debug);
+    //     if (!defined(url)) {
+    //         throw new DeveloperError('url is required.');
+    //     }
+    //     //>>includeEnd('debug');
 
-        var uri = new Uri(url).resolve(pageUri);
-        uri.normalize();
-        var serverName = uri.authority;
-        if (!/:/.test(serverName)) {
-            serverName = serverName + ':' + (uri.scheme === 'https' ? '443' : '80');
-        }
-        return serverName;
-    };
+    //     var uri = new Uri(url).resolve(pageUri);
+    //     uri.normalize();
+    //     var serverName = uri.authority;
+    //     if (!/:/.test(serverName)) {
+    //         serverName = serverName + ':' + (uri.scheme === 'https' ? '443' : '80');
+    //     }
+    //     return serverName;
+    // };
 
     /**
      * Get the request server from a given url.
@@ -175,15 +178,15 @@ define([
      * @param {String} url The url.
      * @returns {RequestServer} The request server.
      */
-    RequestScheduler.getRequestServer = function(url) {
-        var serverName = RequestScheduler.getServerName(url);
-        var server = activeRequestsByServer[serverName];
-        if (!defined(server)) {
-            server = new RequestServer(serverName);
-            activeRequestsByServer[serverName] = server;
-        }
-        return server;
-    };
+    // RequestScheduler.getRequestServer = function(url) {
+    //     var serverName = RequestScheduler.getServerName(url);
+    //     var server = activeRequestsByServer[serverName];
+    //     if (!defined(server)) {
+    //         server = new RequestServer(serverName);
+    //         activeRequestsByServer[serverName] = server;
+    //     }
+    //     return server;
+    // };
 
     /**
      * Get the number of available slots at the server pointed to by the url.
@@ -191,18 +194,18 @@ define([
      * @param {String} url The url to check.
      * @returns {Number} The number of available slots.
      */
-    RequestScheduler.getNumberOfAvailableRequestsByServer = function(url) {
-        return RequestScheduler.getRequestServer(url).getNumberOfAvailableRequests();
-    };
+    // RequestScheduler.getNumberOfAvailableRequestsByServer = function(url) {
+    //     return RequestScheduler.getRequestServer(url).getNumberOfAvailableRequests();
+    // };
 
     /**
      * Get the number of available slots across all servers.
      *
      * @returns {Number} The number of available slots.
      */
-    RequestScheduler.getNumberOfAvailableRequests = function() {
-        return RequestScheduler.maximumRequests - activeRequests;
-    };
+    // RequestScheduler.getNumberOfAvailableRequests = function() {
+    //     return RequestScheduler.maximumRequests - activeRequests;
+    // };
 
     /**
      * Checks if there are available slots to make a request at the server pointed to by the url.
@@ -226,23 +229,38 @@ define([
 
     function requestComplete(request) {
         --activeRequests;
-        --request.server.activeRequests;
+        if (request.defer) {
+            --deferableRequests;
+        }
+        request.active = false;
+        request.done = true;
+        // --request.server.activeRequests;
 
         // Start a deferred request immediately now that a slot is open
-        var deferredRequest = deferredRequests.dequeue();
-        if (defined(deferredRequest)) {
-            deferredRequest.startPromise.resolve(deferredRequest);
-        }
+        // var deferredRequest = deferredRequests.dequeue();
+        // if (defined(deferredRequest)) {
+        //     deferredRequest.startPromise.resolve(deferredRequest);
+        // }
+        // var nextRequest = requestHeap.pop();
+        // startRequest(nextRequest);
+        // activeList.push(nextRequest);
     }
 
     function startRequest(request) {
         ++activeRequests;
-        ++request.server.activeRequests;
+        if (request.defer) {
+            ++deferableRequests;
+        }
+        request.active = true;
+        request.done = false;
+        // ++request.server.activeRequests;
 
         return when(request.requestFunction(request.url, request.parameters), function(result) {
+            request.finished.resolve(result);
             requestComplete(request);
             return result;
         }).otherwise(function(error) {
+            request.finished.reject(error);
             requestComplete(request);
             return when.reject(error);
         });
@@ -389,6 +407,7 @@ define([
     RequestScheduler.clearForSpecs = function() {
         activeRequestsByServer = {};
         activeRequests = 0;
+        deferableRequests = 0;
         budgets = [];
         leftoverRequests = [];
         deferredRequests = new Queue();
@@ -436,5 +455,115 @@ define([
      */
     RequestScheduler.debugShowStatistics = false;
 
-    return RequestScheduler;
+    // return RequestScheduler;
+
+    var requestHeap = new Heap(sortRequests);
+    var activeList = [];
+
+    function sortRequests(a, b) {
+        if (defined(a.screenSpaceError) && defined(b._screenSpaceError)) {
+            return b.screenSpaceError - a.screenSpaceError;
+        }
+        return a.distance - b.distance;
+    }
+
+    function Scheduler() {
+    }
+
+    Scheduler.maximumRequests = 50;
+
+    Scheduler.hasAvailableRequests = function() {
+        return Scheduler.maximumRequests - activeRequests + deferableRequests > 0;
+    };
+
+    Scheduler.schedule = function(request) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(request)) {
+            throw new DeveloperError('request is required.');
+        }
+        if (!defined(request.url)) {
+            throw new DeveloperError('request.url is required.');
+        }
+        if (!defined(request.requestFunction)) {
+            throw new DeveloperError('request.requestFunction is required.');
+        }
+        //>>includeEnd('debug');
+
+        ++stats.numberOfRequestsThisFrame;
+
+        if (!Scheduler.hasAvailableRequests() && ! request.defer) {
+            return undefined;
+        }
+
+        requestHeap.insert(request);
+        return request.finished.promise;
+    };
+
+    Scheduler.request = function(url, requestFunction, parameters, requestType) {
+        return Scheduler.schedule(new Request({
+            url : url,
+            parameters : parameters,
+            requestFunction : requestFunction,
+            defer : true,
+            type : defaultValue(requestType, RequestType.OTHER)
+        }));
+    };
+
+    /**
+     * Issuers of a request should update properties of requests. At the end of the frame,
+     * Scheduler.update is called to issue / reschedule / defer / cancel requests
+     */
+    Scheduler.update = function() {
+
+        var activeLength = activeList.length;
+        var i, request;
+        for (i = 0; i < activeLength; ++i) {
+            request = activeList[i];
+            if (request.done) {
+                activeList.splice(i--, 1);
+                --activeLength;
+            } else if (request.defer) {
+                // if request is deferable, move it back into the heap to be reshuffled
+                requestHeap.insert(request);
+                activeList.splice(i--, 1);
+                --activeLength;
+            }
+        }
+
+        // resize and resort requests
+        requestHeap.reserve();
+        requestHeap.buildHeap(requestHeap.data);
+
+        var internalLength = requestHeap.data.length;
+        var count = 0;
+        var maximumRequests = Scheduler.maximumRequests - activeRequests + deferableRequests;
+        while(count < maximumRequests && requestHeap.length > 0) {
+            request = requestHeap.pop();
+            requestHeap.data[internalLength - ++count] = request;
+            if (!request.done) {
+                if (!request.active) {
+                    startRequest(request);
+                }
+                activeList.push(request);
+            }
+        }
+
+        var length = requestHeap.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            request = requestHeap.data[i];
+            if (request.active && request.defer) {
+                request.stop();
+            }
+        }
+
+        // for (i = internalLength - count; i < internalLength; ++i) {
+            // request = requestHeap.data[i];
+            // if (request.active && request.defer) {
+            //     request.stop();
+            // }
+        // }
+    };
+
+    return Scheduler;
 });

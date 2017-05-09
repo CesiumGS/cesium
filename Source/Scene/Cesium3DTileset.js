@@ -1081,6 +1081,9 @@ define([
             cesium3DTile : rootTile
         });
 
+        var requestHeap = new Heap(sortForLoad);
+        this._requestHeaps['heap'] = requestHeap;
+
         while (stack.length > 0) {
             var tile = stack.pop();
             var tile3D = tile.cesium3DTile;
@@ -1107,16 +1110,17 @@ define([
             // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
             // not matter much as we will try to load them all.
             // The heap approach is a O(n log k) to find the best tiles for loading.
-            var requestServer = tile3D.requestServer;
-            if (defined(requestServer)) {
-                if (!defined(this._requestHeaps[requestServer])) {
-                    var heap = new Heap(sortForLoad);
-                    this._requestHeaps[requestServer] = heap;
-                    heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
-                    heap.reserve(heap.maximumSize);
-                }
-                tile3D._requestHeap = this._requestHeaps[requestServer];
-            }
+            // var requestServer = tile3D.requestServer;
+            // if (defined(requestServer)) {
+            //     if (!defined(this._requestHeaps[requestServer])) {
+            //         var heap = new Heap(sortForLoad);
+            //         this._requestHeaps[requestServer] = heap;
+            //         heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
+            //         heap.reserve(heap.maximumSize);
+            //     }
+            //     tile3D._requestHeap = this._requestHeaps[requestServer];
+            // }
+            tile3D._requestHeap = requestHeap;
         }
 
         return rootTile;

@@ -194,13 +194,13 @@ define([
         var hasEmptyContent;
         var contentState;
         var contentUrl;
-        var requestServer;
+        // var requestServer;
 
         if (defined(contentHeader)) {
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentUrl = joinUrls(baseUrl, contentHeader.url);
-            requestServer = RequestScheduler.getRequestServer(contentUrl);
+            // requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
             content = new Empty3DTileContent();
             hasEmptyContent = true;
@@ -213,7 +213,7 @@ define([
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
 
-        this._requestServer = requestServer;
+        // this._requestServer = requestServer;
 
         /**
          * When <code>true</code>, the tile has no content.
@@ -410,11 +410,11 @@ define([
          * @readonly
          * @private
          */
-        requestServer : {
-            get : function() {
-                return this._requestServer;
-            }
-        },
+        // requestServer : {
+        //     get : function() {
+        //         return this._requestServer;
+        //     }
+        // },
 
         /**
          * Determines if the tile is ready to render. <code>true</code> if the tile
@@ -524,10 +524,11 @@ define([
         var distance = this.distanceToCamera;
         var promise = RequestScheduler.schedule(new Request({
             url : this._contentUrl,
-            server : this._requestServer,
+            // server : this._requestServer,
             requestFunction : loadArrayBuffer,
             type : RequestType.TILES3D,
-            distance : distance
+            distance : distance,
+            screenSpaceError: this._screenSpaceError,
         }));
 
         if (!defined(promise)) {
@@ -585,11 +586,12 @@ define([
      * @private
      */
     Cesium3DTile.prototype.canRequestContent = function() {
-        if (!defined(this._requestServer)) {
-            // If tile does not have a request server, then it does not have content to load.
-            return true;
-        }
-        return this._requestServer.hasAvailableRequests();
+        return RequestScheduler.hasAvailableRequests();
+        // if (!defined(this._requestServer)) {
+        //     // If tile does not have a request server, then it does not have content to load.
+        //     return true;
+        // }
+        // return this._requestServer.hasAvailableRequests();
     };
 
     /**

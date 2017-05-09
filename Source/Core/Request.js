@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './defaultValue'
+        './defaultValue',
+        '../ThirdParty/when'
     ], function(
-        defaultValue) {
+        defaultValue,
+        when) {
     'use strict';
 
     /**
@@ -47,6 +49,8 @@ define([
          */
         this.distance = defaultValue(options.distance, 0.0);
 
+        this.screenSpaceError = options.screenSpaceError;
+
         // Helper members for RequestScheduler
 
         /**
@@ -62,7 +66,23 @@ define([
          * @private
          */
         this.server = options.server;
+
+        this.active = false;
+        this.done = false;
+        this.xhr = undefined;
+        this.finished = when.defer();
     }
+
+    Request.prototype.stop = function() {
+        this.active = false;
+        this.xhr = this.xhr && this.xhr.abort();
+    };
+
+    Request.prototype.cancel = function() {
+        this.active = false;
+        this.done = true;
+        this.xhr = this.xhr && this.xhr.abort();
+    };
 
     return Request;
 });
