@@ -134,14 +134,14 @@ define([
         billboard.position = particle.position;
 
         // Update the color
-        var r = particle.startColor.red + particle.normalizedAge * (particle.endColor.red - particle.startColor.red);
-        var g = particle.startColor.green + particle.normalizedAge * (particle.endColor.green - particle.startColor.green);
-        var b = particle.startColor.blue + particle.normalizedAge * (particle.endColor.blue - particle.startColor.blue);
-        var a = particle.startColor.alpha + particle.normalizedAge * (particle.endColor.alpha - particle.startColor.alpha);
+        var r = CesiumMath.lerp(particle.startColor.red, particle.endColor.red, particle.normalizedAge);
+        var g = CesiumMath.lerp(particle.startColor.green, particle.endColor.green, particle.normalizedAge);
+        var b = CesiumMath.lerp(particle.startColor.blue, particle.endColor.blue, particle.normalizedAge);
+        var a = CesiumMath.lerp(particle.startColor.alpha, particle.endColor.alpha, particle.normalizedAge);
         billboard.color = new Color(r,g,b,a);
 
         // Update the scale
-        var scale = particle.startScale + particle.normalizedAge * (particle.endScale - particle.startScale);
+        var scale = CesiumMath.lerp(particle.startScale, particle.endScale, particle.normalizedAge);
         billboard.scale = scale;
     }
 
