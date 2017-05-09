@@ -8,6 +8,7 @@ define([
         '../Core/Math',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetProcessor',
         './CullingVolume',
         './OrthographicFrustum',
         './SceneMode'
@@ -20,6 +21,7 @@ define([
         CesiumMath,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileRefine,
+        Cesium3DTilesetProcessor,
         CullingVolume,
         OrthographicFrustum,
         SceneMode) {
@@ -65,7 +67,7 @@ define([
         }
 
         if (root.contentUnloaded) {
-            loadTile(root, frameState);
+            loadTile(root, frameState, outOfCore);
             return;
         }
 
@@ -311,7 +313,7 @@ define([
             var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                loadTile(child, this.frameState);
+                loadTile(child, this.frameState, this.outOfCore);
                 touch(this.tileset, child, this.outOfCore);
 
                 // content cannot be replaced until all of the nearest descendants with content are all loaded
@@ -399,7 +401,7 @@ define([
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                loadTile(child, this.frameState);
+                loadTile(child, this.frameState, this.outOfCore);
                 touch(this.tileset, child, this.outOfCore);
                 if (!tile.contentReady) {
                     this.allLoaded = false;
@@ -554,11 +556,11 @@ define([
                     var tiles = parent.children;
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
-                        loadTile(tiles[i], this.frameState);
+                        loadTile(tiles[i], this.frameState, this.outOfCore);
                         touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
-                    loadTile(tile, this.frameState);
+                    loadTile(tile, this.frameState, this.outOfCore);
                     touch(this.tileset, tile, this.outOfCore);
                 }
             }
@@ -620,11 +622,11 @@ define([
         }
     }
 
-    function loadTile(tile, frameState) {
+    function loadTile(tile, frameState, outOfCore) {
         if (tile.contentUnloaded && tile._requestedFrame !== frameState.frameNumber) {
             tile._requestedFrame = frameState.frameNumber;
             computeSSE(tile, frameState);
-            tile._requestHeap.insert(tile);
+            Cesium3DTilesetProcessor.requestContent(tile._tileset, tile, outOfCore);
         }
     }
 

@@ -194,13 +194,11 @@ define([
         var hasEmptyContent;
         var contentState;
         var contentUrl;
-        // var requestServer;
 
         if (defined(contentHeader)) {
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentUrl = joinUrls(baseUrl, contentHeader.url);
-            // requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
             content = new Empty3DTileContent();
             hasEmptyContent = true;
@@ -333,7 +331,7 @@ define([
         this._screenSpaceError = 0;
         this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
-        this._requestHeap = undefined;
+        this._request = undefined;
         this._depth = 0;
         this._centerZDepth = 0;
         this._stackLength = 0;
@@ -405,16 +403,6 @@ define([
                 return this._transformDirty;
             }
         },
-
-        /**
-         * @readonly
-         * @private
-         */
-        // requestServer : {
-        //     get : function() {
-        //         return this._requestServer;
-        //     }
-        // },
 
         /**
          * Determines if the tile is ready to render. <code>true</code> if the tile
@@ -522,15 +510,17 @@ define([
         }
 
         var distance = this.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
+        this._request = this._request && this._request.cancel();
+        this._request = new Request({
             url : this._contentUrl,
-            // server : this._requestServer,
             requestFunction : loadArrayBuffer,
             type : RequestType.TILES3D,
             distance : distance,
             screenSpaceError: this._screenSpaceError,
             defer: true
-        }));
+        });
+
+        var promise = RequestScheduler.schedule(this._request);
 
         if (!defined(promise)) {
             return false;

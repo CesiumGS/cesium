@@ -38,6 +38,7 @@ define([
         './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetProcessor',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
@@ -88,6 +89,7 @@ define([
         Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
+        Cesium3DTilesetProcessor,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         CullingVolume,
@@ -180,6 +182,7 @@ define([
         this._processingHeap = new Heap(sortForProcessing);
         this._selectedTiles = [];
         this._desiredTiles = new ManagedArray();
+        this._requestingTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
@@ -586,7 +589,6 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        this._requestHeaps = {};
         this._hasMixedContent = false;
 
         this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
@@ -1081,9 +1083,6 @@ define([
             cesium3DTile : rootTile
         });
 
-        var requestHeap = new Heap(sortForLoad);
-        this._requestHeaps['heap'] = requestHeap;
-
         while (stack.length > 0) {
             var tile = stack.pop();
             var tile3D = tile.cesium3DTile;
@@ -1103,24 +1102,6 @@ define([
                 }
             }
             Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
-
-            // Create a load heap, one for each unique server. We can only make limited requests to a given
-            // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
-            // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
-            // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
-            // not matter much as we will try to load them all.
-            // The heap approach is a O(n log k) to find the best tiles for loading.
-            // var requestServer = tile3D.requestServer;
-            // if (defined(requestServer)) {
-            //     if (!defined(this._requestHeaps[requestServer])) {
-            //         var heap = new Heap(sortForLoad);
-            //         this._requestHeaps[requestServer] = heap;
-            //         heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
-            //         heap.reserve(heap.maximumSize);
-            //     }
-            //     tile3D._requestHeap = this._requestHeaps[requestServer];
-            // }
-            tile3D._requestHeap = requestHeap;
         }
 
         return rootTile;
@@ -1232,45 +1213,6 @@ define([
         return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    function requestContent(tileset, tile, outOfCore) {
-        if (!outOfCore) {
-            return;
-        }
-
-        if (tile.hasEmptyContent) {
-            return;
-        }
-
-        var stats = tileset._statistics;
-
-        var requested = tile.requestContent();
-
-        if (!requested) {
-            ++stats.numberOfAttemptedRequests;
-            return;
-        }
-
-        ++stats.numberOfPendingRequests;
-
-        var removeFunction = removeFromProcessingQueue(tileset, tile);
-        tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(removeFunction).otherwise(removeFunction);
-    }
-
-    function requestTiles(tileset, requestHeaps, outOfCore) {
-        for (var name in requestHeaps) {
-            if (requestHeaps.hasOwnProperty(name)) {
-                var heap = requestHeaps[name];
-                var tile;
-                while (defined(tile = heap.pop())) {
-                    requestContent(tileset, tile, outOfCore);
-                }
-            }
-        }
-    }
-
     function selectionHeuristic(tileset, ancestor, tile) {
         var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
         var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
@@ -1279,85 +1221,6 @@ define([
                (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function addToProcessingQueue(tileset, tile) {
-        return function() {
-            tileset._processingHeap.insert(tile);
-
-            --tileset._statistics.numberOfPendingRequests;
-            ++tileset._statistics.numberProcessing;
-        };
-    }
-
-    function removeFromProcessingQueue(tileset, tile) {
-        return function() {
-            var index = tileset._processingHeap.data.indexOf(tile);
-            if (index >= 0) {
-                // Remove from processing queue. processTiles may have already removed the tile.
-                if (index < tileset._processingHeap.length) {
-                    tileset._processingHeap.pop(index);
-                }
-
-                --tileset._statistics.numberProcessing;
-                if (tile.hasRenderableContent) {
-                    // RESEARCH_IDEA: ability to unload tiles (without content) for an
-                    // external tileset when all the tiles are unloaded.
-                    ++tileset._statistics.numberContentReady;
-                    incrementPointAndFeatureLoadCounts(tileset, tile.content);
-                    tile.replacementNode = tileset._replacementList.add(tile);
-                }
-            } else {
-                // Not in processing queue
-                // For example, when a url request fails and the ready promise is rejected
-                --tileset._statistics.numberOfPendingRequests;
-            }
-        };
-    }
-
-    function processTiles(tileset, frameState) {
-        var tiles = tileset._processingHeap;
-        var length = tiles.length;
-
-        var i, tile;
-
-        var start = Date.now();
-        var timeSlice = 15;
-
-        // recompute visibility in case these are old tiles
-        for (i = 0; i < length; ++i) {
-            tile = tiles.data[i];
-            if (tile._lastVisitedFrame !== frameState.frameNumber - 1) {
-                tile.visibilityPlaneMask = tile.visibility(frameState, CullingVolume.MASK_INDETERMINATE);
-            }
-        }
-
-        // resize and resort
-        tiles.reserve();
-        tiles.buildHeap(tiles.data);
-
-        var internalLength = tiles.data.length;
-        var popCount = 0;
-
-        while(tiles.length > 0 && Date.now() - start <= timeSlice) {
-            // pop tiles and move them to the back of the array
-            tile = tiles.pop();
-            tiles.data[internalLength - ++popCount] = tile;
-            tile.process(tileset, frameState);
-        }
-
-        // insert any tiles still processing back into the processing heap
-        for (i = internalLength - popCount; i < internalLength; ++i) {
-            var tile = tiles.data[i];
-            tiles.data[i] = undefined;
-            if (tile.contentProcessing) {
-                tiles.insert(tile);
-            }
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
 
     function clearStats(tileset) {
         var stats = tileset._statistics;
@@ -1706,7 +1569,7 @@ define([
         clearStats(this);
 
         if (outOfCore) {
-            processTiles(this, frameState);
+            Cesium3DTilesetProcessor.processTiles(this, frameState);
         }
 
         if (this.dynamicScreenSpaceError) {
@@ -1714,7 +1577,7 @@ define([
         }
 
         Cesium3DTilesetTraversal.selectTiles(this, frameState, outOfCore);
-        requestTiles(this, this._requestHeaps, outOfCore);
+        Cesium3DTilesetProcessor.updateRequestingTiles(this, frameState);
         updateTiles(this, frameState);
 
         if (outOfCore) {
