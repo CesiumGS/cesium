@@ -74,3 +74,7 @@ you save them.
 
 Keep in mind that `build-watch` will quietly terminate when
 you quit VSCode, so should be restarted manually on next launch.
+
+## glTF Extension for Visual Studio Code
+
+This extension adds features for previewing and editing 3D models in glTF files [glTF Tools](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode).
