@@ -602,6 +602,8 @@ define([
         this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
 
+        this._debugColorizeTiles = false;
+
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
