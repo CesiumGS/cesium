@@ -27,10 +27,46 @@ define([
         CircleEmitter) {
     "use strict";
 
+    /**
+     * A ParticleSystem manages the updating and display of a collection of particles.
+     * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {ParticleEmitter} [options.emitter=new CircleEmitter({radius: 0.5})] The particle emitter for this system.
+     * @param {Array} [options.forces=[]] An array of force callbacks.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
+     * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
+     * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
+     * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
+     * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
+     * @param {Number} [options.rate=5] The number of particles to emit per second.
+     * @param {Array} [options.bursts=undefined] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
+     * @param {Boolean} [options.loop=true] Whether the particle system should loop it's bursts when it is complete.
+     * @param {Number} [options.speed=undefined] Sets the minimum and maximum speed in meters per second
+     * @param {Number} [options.minimumSpeed=1.0] Sets the minimum speed in meters per second.
+     * @param {Number} [options.maximumSpeed=1.0] Sets the maximum speed in meters per second.
+     * @param {Number} [options.life=undefined] Sets the minimum and maximum life of particles in seconds.
+     * @param {Number} [options.minimumLife=1.0] Sets the minimum life of particles in seconds.
+     * @param {Number} [options.maximumLife=1.0] Sets the maximum life of particles in seconds.
+     * @param {Number} [options.mass=undefined] Sets the minimum and maximum mass of particles in kilograms.
+     * @param {Number} [options.minimumMass=1.0] Sets the minimum mass of particles in kilograms.
+     * @param {Number} [options.maximumMass=1.0] Sets the maximum mass of particles in kilograms.
+     * @param {Property} [options.image=undefined] A Property specifying the Image, URI, or Canvas to use for the billboard.
+     * @param {Number} [options.width=undefined] Sets the minimum and maximum width of particles in pixels.
+     * @param {Number} [options.minimumWidth=1.0] Sets the minimum width of particles in pixels.
+     * @param {Number} [options.maximumWidth=1.0] Sets the maximum width of particles in pixels.
+     * @param {Number} [options.height=undefined] Sets the minimum and maximum height of particles in pixels.
+     * @param {Number} [options.minimumHeight=1.0] Sets the minimum height of particles in pixels.
+     * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
+     * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
+     * @param {Boolean} [options.show=true] Whether to display the particle system.
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
+     */
     var ParticleSystem = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this.particles = defaultValue(options.particles, []);
+        this.particles = [];
         this.forces = defaultValue(options.forces, []);
 
         this.emitter = defaultValue(options.emitter, new CircleEmitter({radius: 0.5}));
@@ -79,7 +115,7 @@ define([
             this.maximumMass = defaultValue(options.maximumMass, 1.0);
         }
 
-        this.image = defaultValue(options.image, null);
+        this.image = defaultValue(options.image, undefined);
 
         var width = options.width;
         if (width !== undefined) {
@@ -111,7 +147,7 @@ define([
         this.carryOver = 0.0;
         this.currentTime = 0.0;
         this._billboardCollection = undefined;
-        this._previousTime = null;
+        this._previousTime = undefined;
     };
 
     function removeBillboard(system, particle) {
@@ -145,47 +181,47 @@ define([
         billboard.scale = scale;
     }
 
-    ParticleSystem.prototype.add = function(particle) {
-        particle.startColor = Color.clone(this.startColor);
-        particle.endColor = Color.clone(this.endColor);
-        particle.startScale = this.startScale;
-        particle.endScale = this.endScale;
-        particle.image = this.image;
-        particle.life = random(this.minimumLife, this.maximumLife);
-        particle.mass = random(this.minimumMass, this.maximumMass);
+    function addParticle(system, particle) {
+        particle.startColor = Color.clone(system.startColor);
+        particle.endColor = Color.clone(system.endColor);
+        particle.startScale = system.startScale;
+        particle.endScale = system.endScale;
+        particle.image = system.image;
+        particle.life = random(system.minimumLife, system.maximumLife);
+        particle.mass = random(system.minimumMass, system.maximumMass);
 
-        particle.size = new Cartesian2(random(this.minimumWidth, this.maximumWidth), random(this.minimumHeight, this.maximumHeight));
+        particle.size = new Cartesian2(random(system.minimumWidth, system.maximumWidth), random(system.minimumHeight, system.maximumHeight));
 
-        var speed = random(this.minimumSpeed, this.maximumSpeed);
+        var speed = random(system.minimumSpeed, system.maximumSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
-        this.particles.push(particle);
-    };
+        system.particles.push(particle);
+    }
 
-    ParticleSystem.prototype.calcNumberToEmit = function(dt) {
+    function calculateNumberToEmit(system, dt) {
         // This emitter is finished if it exceeds it's lifetime.
-        if (this.isComplete) {
+        if (system.isComplete) {
             return 0;
         }
 
         // Compute the number of particles to emit based on the rate.
-        var v = dt * this.rate;
+        var v = dt * system.rate;
         var numToEmit = Math.floor(v);
-        this.carryOver += (v-numToEmit);
-        if (this.carryOver>1.0)
+        system.carryOver += (v-numToEmit);
+        if (system.carryOver>1.0)
         {
             numToEmit++;
-            this.carryOver -= 1.0;
+            system.carryOver -= 1.0;
         }
 
 
         var i = 0;
 
         // Apply any bursts
-        if (this.bursts) {
-            for (i = 0; i < this.bursts.length; i++) {
-                var burst = this.bursts[i];
-                if ((!defined(burst, "complete") || !burst.complete) && this.currentTime > burst.time) {
+        if (system.bursts) {
+            for (i = 0; i < system.bursts.length; i++) {
+                var burst = system.bursts[i];
+                if ((!defined(burst, "complete") || !burst.complete) && system.currentTime > burst.time) {
                     var count = burst.min + random(0.0, 1.0) * burst.max;
                     numToEmit += count;
                     burst.complete = true;
@@ -235,7 +271,7 @@ define([
         particles.length = length;
 
 
-        var numToEmit = this.calcNumberToEmit(dt);
+        var numToEmit = calculateNumberToEmit(this, dt);
 
         if (numToEmit > 0 && emitter) {
 
@@ -263,7 +299,7 @@ define([
                     particle.velocity = worldVelocity;
 
                     // Add the particle to the system.
-                    this.add(particle);
+                    addParticle(this, particle);
                 }
             }
         }
