@@ -219,7 +219,8 @@ define([
 
         // Apply any bursts
         if (system.bursts) {
-            for (i = 0; i < system.bursts.length; i++) {
+            var length = system.bursts.length;
+            for (i = 0; i < length; i++) {
                 var burst = system.bursts[i];
                 if ((!defined(burst, "complete") || !burst.complete) && system.currentTime > burst.time) {
                     var count = burst.min + random(0.0, 1.0) * burst.max;
