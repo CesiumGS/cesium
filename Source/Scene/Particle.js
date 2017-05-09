@@ -72,10 +72,7 @@ define([
         }
 
         // If this particle is older than it's lifespan then die.
-        if (this.age > this.life) {
-            return false;
-        }
-        return true;
+        return this.age <= this.life;
     };
 
     return Particle;
