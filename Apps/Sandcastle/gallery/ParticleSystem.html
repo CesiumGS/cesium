@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Particle systems.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
@@ -11,10 +12,10 @@
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
 
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        require.config({
+            baseUrl : '../../../Source',
+            waitSeconds : 60
+        });
     </script>
 
 </head>
@@ -27,117 +28,115 @@
         padding: 4px;
         border-radius: 4px;
     }
+
     #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
     }
+
     #toolbar .header {
         font-weight: bold;
     }
-
 </style>
+
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>
-    <tr>
-        <td>Rate</td>
-        <td>
-            <input type="range" min="0.0" max="100.0" step="1" data-bind="value: rate, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: rate">
-        </td>
-    </tr>
+    <table>
+        <tbody>
+        <tr>
+            <td>Rate</td>
+            <td>
+                <input type="range" min="0.0" max="100.0" step="1" data-bind="value: rate, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: rate">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Size</td>
-        <td>
-            <input type="range" min="2" max="60.0" step="1" data-bind="value: particleSize, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: particleSize">
-        </td>
-    </tr>
+        <tr>
+            <td>Size</td>
+            <td>
+                <input type="range" min="2" max="60.0" step="1" data-bind="value: particleSize, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: particleSize">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Min Life</td>
-        <td>
-            <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minLife, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: minLife">
-        </td>
-    </tr>
+        <tr>
+            <td>Min Life</td>
+            <td>
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: minLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: minLife">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Max Life</td>
-        <td>
-            <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maxLife, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: maxLife">
-        </td>
-    </tr>
+        <tr>
+            <td>Max Life</td>
+            <td>
+                <input type="range" min="0.1" max="30.0" step="1" data-bind="value: maxLife, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: maxLife">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Min Speed</td>
-        <td>
-            <input type="range" min="0.0" max="30.0" step="1" data-bind="value: minSpeed, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: minSpeed">
-        </td>
-    </tr>
+        <tr>
+            <td>Min Speed</td>
+            <td>
+                <input type="range" min="0.0" max="30.0" step="1" data-bind="value: minSpeed, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: minSpeed">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Max Speed</td>
-        <td>
-            <input type="range" min="0.0" max="30.0" step="1" data-bind="value: maxSpeed, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: maxSpeed">
-        </td>
-    </tr>
+        <tr>
+            <td>Max Speed</td>
+            <td>
+                <input type="range" min="0.0" max="30.0" step="1" data-bind="value: maxSpeed, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: maxSpeed">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Start Scale</td>
-        <td>
-            <input type="range" min="0.0" max="10.0" step="1" data-bind="value: startScale, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: startScale">
-        </td>
-    </tr>
+        <tr>
+            <td>Start Scale</td>
+            <td>
+                <input type="range" min="0.0" max="10.0" step="1" data-bind="value: startScale, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: startScale">
+            </td>
+        </tr>
 
-    <tr>
-        <td>End Scale</td>
-        <td>
-            <input type="range" min="0.0" max="10.0" step="1" data-bind="value: endScale, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: endScale">
-        </td>
-    </tr>
+        <tr>
+            <td>End Scale</td>
+            <td>
+                <input type="range" min="0.0" max="10.0" step="1" data-bind="value: endScale, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: endScale">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Gravity</td>
-        <td>
-            <input type="range" min="-20.0" max="20.0" step="1" data-bind="value: gravity, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: gravity">
-        </td>
-    </tr>
+        <tr>
+            <td>Gravity</td>
+            <td>
+                <input type="range" min="-20.0" max="20.0" step="1" data-bind="value: gravity, valueUpdate: 'input'">
+                <input type="text" size="5" data-bind="value: gravity">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Translation </td>
-        <td>
-            X <input type="text" size="5" data-bind="value: transX">
-            Y <input type="text" size="5" data-bind="value: transY">
-            Z <input type="text" size="5" data-bind="value: transZ">
-        </td>
-    </tr>
+        <tr>
+            <td>Translation</td>
+            <td>
+                X <input type="text" size="5" data-bind="value: transX">
+                Y <input type="text" size="5" data-bind="value: transY">
+                Z <input type="text" size="5" data-bind="value: transZ">
+            </td>
+        </tr>
 
-    <tr>
-        <td>Rotation </td>
-        <td>
-            H <input type="text" size="5" data-bind="value: heading">
-            P <input type="text" size="5" data-bind="value: pitch">
-            R <input type="text" size="5" data-bind="value: roll">
-        </td>
-    </tr>
+        <tr>
+            <td>Rotation</td>
+            <td>
+                H <input type="text" size="5" data-bind="value: heading">
+                P <input type="text" size="5" data-bind="value: pitch">
+                R <input type="text" size="5" data-bind="value: roll">
+            </td>
+        </tr>
 
-
-
-
-
-
-
-    </tbody></table>
+        </tbody>
+    </table>
 </div>
 
 <script id="cesium_sandcastle_script">
@@ -163,32 +162,25 @@ viewer.clock.multiplier = 1;
 //Set timeline to simulation bounds
 viewer.timeline.zoomTo(start, stop);
 
-
 var viewModel = {
-    rate: 5.0,
-    gravity: 0.0,
-    minLife: 1.0,
-    maxLife: 1.0,
-    minSpeed: 5,
-    maxSpeed: 5,
-    startScale: 1.0,
-    endScale: 4.0,
-
-    particleSize: 40.0,
-
-    transX: 2.5,
-    transY: 4.0,
-    transZ: 1.0,
-
-    heading: 0.0,
-    pitch: 0.0,
-    roll: 0.0,
-
-    fly: false,
-
-    spin: false,
-
-    show: true
+    rate : 5.0,
+    gravity : 0.0,
+    minLife : 1.0,
+    maxLife : 1.0,
+    minSpeed : 5,
+    maxSpeed : 5,
+    startScale : 1.0,
+    endScale : 4.0,
+    particleSize : 40.0,
+    transX : 2.5,
+    transY : 4.0,
+    transZ : 1.0,
+    heading : 0.0,
+    pitch : 0.0,
+    roll : 0.0,
+    fly : false,
+    spin : false,
+    show : true
 };
 
 Cesium.knockout.track(viewModel);
@@ -227,43 +219,43 @@ var entity = viewer.entities.add({
         minimumPixelSize : 64
     },
 
-    particleSystem: {
-        image: '../../SampleData/fire.png',
+    particleSystem : {
+        image : '../../SampleData/fire.png',
 
-        startColor: Cesium.Color.RED.withAlpha(0.7),
-        endColor: Cesium.Color.YELLOW.withAlpha(0.3),
+        startColor : Cesium.Color.RED.withAlpha(0.7),
+        endColor : Cesium.Color.YELLOW.withAlpha(0.3),
 
-        startScale: viewModel.startScale,
-        endScale: viewModel.endScale,
+        startScale : viewModel.startScale,
+        endScale : viewModel.endScale,
 
-        minLife: viewModel.minLife,
-        maxLife: viewModel.maxLife,
+        minLife : viewModel.minLife,
+        maxLife : viewModel.maxLife,
 
-        minSpeed: viewModel.minSpeed,
-        maxSpeed: viewModel.maxSpeed,
+        minSpeed : viewModel.minSpeed,
+        maxSpeed : viewModel.maxSpeed,
 
-        minWidth: viewModel.particleSize,
-        minHeight: viewModel.particleSize,
+        minWidth : viewModel.particleSize,
+        minHeight : viewModel.particleSize,
 
-        maxWidth: viewModel.particleSize,
-        maxHeight: viewModel.particleSize,
+        maxWidth : viewModel.particleSize,
+        maxHeight : viewModel.particleSize,
 
         // Particles per second.
-        rate: viewModel.rate,
+        rate : viewModel.rate,
 
-        bursts: [
-            {time: 5.0, min: 300, max: 500},
-            {time: 10.0, min: 50, max: 100},
-            {time: 15.0, min: 200, max: 300}
+        bursts : [
+            {time : 5.0, min : 300, max : 500},
+            {time : 10.0, min : 50, max : 100},
+            {time : 15.0, min : 200, max : 300}
         ],
 
-        lifeTime: 16.0,
+        lifeTime : 16.0,
 
-        emitter: new Cesium.CircleEmitter({
-            radius: 0.5
+        emitter : new Cesium.CircleEmitter({
+            radius : 0.5
         }),
 
-        emitterModelMatrix: Cesium.Matrix4.fromTranslationRotationScale(
+        emitterModelMatrix : Cesium.Matrix4.fromTranslationRotationScale(
             new Cesium.TranslationRotationScale(
                 new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
                 Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
@@ -271,13 +263,12 @@ var entity = viewer.entities.add({
             emitterModelMatrix
         ),
 
-        forces: [applyGravity]
+        forces : [applyGravity]
     },
 
     position : staticPosition
 });
 viewer.trackedEntity = entity;
-
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
@@ -293,8 +284,6 @@ function applyGravity(p, dt) {
 
     p.velocity = Cesium.Cartesian3.add(p.velocity, gravityScratch, p.velocity);
 }
-
-
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
     // Account for any changes to the emitter model matrix.
@@ -313,7 +302,6 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
         viewModel.roll += 1;
     }
 });
-
 
 Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
     function(newValue) {
@@ -381,7 +369,6 @@ Cesium.knockout.getObservable(viewModel, 'fly').subscribe(
     }
 );
 
-
 Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
     viewModel.spin = checked;
 });
@@ -394,45 +381,43 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
     entity.show = checked;
 });
 
-
 var options = [{
     text : 'Circle',
     onselect : function() {
         entity.particleSystem.emitter = new Cesium.CircleEmitter({
-            radius: 0.5
+            radius : 0.5
         });
     }
 }, {
     text : 'Cone',
     onselect : function() {
         entity.particleSystem.emitter = new Cesium.ConeEmitter({
-            height: 10.0,
-            angle: Cesium.Math.toRadians(45.0)
+            height : 10.0,
+            angle : Cesium.Math.toRadians(45.0)
         });
     }
 }, {
     text : 'Box',
     onselect : function() {
         entity.particleSystem.emitter = new Cesium.BoxEmitter({
-            width: 10.0,
-            height: 10.0,
-            depth: 10.0
+            width : 10.0,
+            height : 10.0,
+            depth : 10.0
         });
     }
 }, {
     text : 'Sphere',
     onselect : function() {
         entity.particleSystem.emitter = new Cesium.SphereEmitter({
-            radius: 5.0
+            radius : 5.0
         });
     }
 }];
 
 Sandcastle.addToolbarMenu(options);
 
-
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
