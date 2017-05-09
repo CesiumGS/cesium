@@ -45,12 +45,12 @@ define([
         this.endScale = defaultValue(options.endScale, 1.0);
 
         this.rate = defaultValue(options.rate, 5);
-        this.bursts = defaultValue(options.bursts, null);
+        this.bursts = options.bursts;
 
         this.loop = defaultValue(options.loop, true);
 
-        var speed = defaultValue(options.speed, undefined);
-        if (speed) {
+        var speed = options.speed;
+        if (speed !== undefined) {
             this.minimumSpeed = speed;
             this.maximumSpeed = speed;
         }
@@ -59,8 +59,8 @@ define([
             this.maximumSpeed = defaultValue(options.maximumSpeed, 1.0);
         }
 
-        var life = defaultValue(options.life, undefined);
-        if (life) {
+        var life = options.life;
+        if (life !== undefined) {
             this.minimumLife = life;
             this.maximumLife = life;
         }
@@ -69,8 +69,8 @@ define([
             this.maximumLife = defaultValue(options.maximumLife, 5.0);
         }
 
-        var mass = defaultValue(options.mass, undefined);
-        if (mass) {
+        var mass = options.mass;
+        if (mass !== undefined) {
             this.minimumMass = mass;
             this.maximumMass = mass;
         }
@@ -81,8 +81,8 @@ define([
 
         this.image = defaultValue(options.image, null);
 
-        var width = defaultValue(options.width, undefined);
-        if (width) {
+        var width = options.width;
+        if (width !== undefined) {
             this.minimumWidth = width;
             this.maximumWidth = width;
         }
@@ -91,8 +91,8 @@ define([
             this.maximumWidth = defaultValue(options.maximumWidth, 1.0);
         }
 
-        var height = defaultValue(options.height, undefined);
-        if (height) {
+        var height = options.height;
+        if (height !== undefined) {
             this.minimumHeight = height;
             this.maximumHeight = height;
         }
