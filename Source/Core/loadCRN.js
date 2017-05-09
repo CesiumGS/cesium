@@ -28,6 +28,7 @@ define([
      *
      * @param {String|Promise.<String>|ArrayBuffer} urlOrBuffer The URL of the binary data, a promise for the URL, or an ArrayBuffer.
      * @param {Object} [headers] HTTP headers to send with the requests.
+     * @param {Function} [xhrHandler] Function called with the XMLHttpRequest after it is created.
      * @returns {Promise.<CompressedTextureBuffer>} A promise that will resolve to the requested data when loaded.
      *
      * @exception {RuntimeError} Unsupported compressed format.
@@ -48,7 +49,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadCRN(urlOrBuffer, headers) {
+    function loadCRN(urlOrBuffer, headers, xhrHandler) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(urlOrBuffer)) {
             throw new DeveloperError('urlOrBuffer is required.');
@@ -59,7 +60,7 @@ define([
         if (urlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(urlOrBuffer)) {
             loadPromise = when.resolve(urlOrBuffer);
         } else {
-            loadPromise = loadArrayBuffer(urlOrBuffer, headers);
+            loadPromise = loadArrayBuffer(urlOrBuffer, headers, xhrHandler);
         }
 
         return loadPromise.then(function(data) {

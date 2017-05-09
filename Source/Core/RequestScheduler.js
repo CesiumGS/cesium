@@ -255,7 +255,9 @@ define([
         request.done = false;
         // ++request.server.activeRequests;
 
-        return when(request.requestFunction(request.url, request.parameters), function(result) {
+        return when(request.requestFunction(request.url, request.parameters, function(xhr) {
+            request.xhr = xhr;
+        }), function(result) {
             request.finished.resolve(result);
             requestComplete(request);
             return result;
@@ -461,7 +463,7 @@ define([
     var activeList = [];
 
     function sortRequests(a, b) {
-        if (defined(a.screenSpaceError) && defined(b._screenSpaceError)) {
+        if (defined(a.screenSpaceError) && defined(b.screenSpaceError)) {
             return b.screenSpaceError - a.screenSpaceError;
         }
         return a.distance - b.distance;
@@ -556,13 +558,6 @@ define([
                 request.stop();
             }
         }
-
-        // for (i = internalLength - count; i < internalLength; ++i) {
-            // request = requestHeap.data[i];
-            // if (request.active && request.defer) {
-            //     request.stop();
-            // }
-        // }
     };
 
     return Scheduler;

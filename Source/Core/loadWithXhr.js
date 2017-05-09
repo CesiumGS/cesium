@@ -32,6 +32,7 @@ define([
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Function} [xhrHandler] Function called with the XMLHttpRequest after it is created.
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
      *
@@ -53,7 +54,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadWithXhr(options) {
+    function loadWithXhr(options, xhrHandler) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -71,7 +72,10 @@ define([
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            if (defined(xhrHandler)) {
+                xhrHandler(xhr, url);
+            }
 
             return deferred.promise;
         });
@@ -192,6 +196,8 @@ define([
         };
 
         xhr.send(data);
+
+        return xhr;
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;

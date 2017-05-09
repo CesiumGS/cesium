@@ -529,6 +529,7 @@ define([
             type : RequestType.TILES3D,
             distance : distance,
             screenSpaceError: this._screenSpaceError,
+            defer: true
         }));
 
         if (!defined(promise)) {

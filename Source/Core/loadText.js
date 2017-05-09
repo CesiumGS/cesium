@@ -15,6 +15,7 @@ define([
      *
      * @param {String|Promise.<String>} url The URL to request, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the request.
+     * @param {Function} [xhrHandler] Function called with the XMLHttpRequest after it is created.
      * @returns {Promise.<String>} a promise that will resolve to the requested data when loaded.
      *
      *
@@ -27,16 +28,16 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
-     * 
+     *
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadText(url, headers) {
+    function loadText(url, headers, xhrHandler) {
         return loadWithXhr({
             url : url,
             headers : headers
-        });
+        }, xhrHandler);
     }
 
     return loadText;

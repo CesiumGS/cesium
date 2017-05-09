@@ -15,6 +15,7 @@ define([
      *
      * @param {String|Promise.<String>} url The URL of the data, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the requests.
+     * @param {Function} [xhrHandler] Function called with the XMLHttpRequest after it is created.
      * @returns {Promise.<Blob>} a promise that will resolve to the requested data when loaded.
      *
      *
@@ -25,16 +26,16 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
-     * 
+     *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadBlob(url, headers) {
+    function loadBlob(url, headers, xhrHandler) {
         return loadWithXhr({
             url : url,
             responseType : 'blob',
             headers : headers
-        });
+        }, xhrHandler);
     }
 
     return loadBlob;
