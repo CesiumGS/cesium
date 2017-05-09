@@ -148,7 +148,7 @@ define([
         rate: createPropertyDescriptor('rate'),
 
         /**
-         * The minimum width of a particle billboard.
+         * The minimum width of a particle billboard in pixels.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 16.0
@@ -156,7 +156,7 @@ define([
         minimumWidth: createPropertyDescriptor('minimumWidth'),
 
         /**
-         * The maximum width of a particle billboard.
+         * The maximum width of a particle billboard in pixels.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 16.0
@@ -164,7 +164,7 @@ define([
         maximumWidth: createPropertyDescriptor('maximumWidth'),
 
         /**
-         * The minimum height of a particle billboard.
+         * The minimum height of a particle billboard in pixels.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 16.0
@@ -172,7 +172,7 @@ define([
         minimumHeight: createPropertyDescriptor('minimumHeight'),
 
         /**
-         * The maximum height of a particle billboard.
+         * The maximum height of a particle billboard in pixels.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 16.0
@@ -180,7 +180,7 @@ define([
         maximumHeight: createPropertyDescriptor('maximumHeight'),
 
         /**
-         * The minimum speed of a particle.
+         * The minimum speed of a particle in meters/second.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 5.0
@@ -188,7 +188,7 @@ define([
         minimumSpeed: createPropertyDescriptor('minimumSpeed'),
 
         /**
-         * The maximum speed of a particle.
+         * The maximum speed of a particle in meters/second.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default 5.0
