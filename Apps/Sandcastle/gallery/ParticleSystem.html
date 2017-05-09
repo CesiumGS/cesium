@@ -167,8 +167,8 @@ var viewModel = {
     gravity : 0.0,
     minimumLife : 1.0,
     maximumLife : 1.0,
-    minimumSpeed : 5,
-    maximumSpeed : 5,
+    minimumSpeed : 5.0,
+    maximumSpeed : 5.0,
     startScale : 1.0,
     endScale : 4.0,
     particleSize : 40.0,
@@ -297,9 +297,9 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
 
     // Spin the emitter if enabled.
     if (viewModel.spin) {
-        viewModel.heading += 1;
-        viewModel.pitch += 1;
-        viewModel.roll += 1;
+        viewModel.heading += 1.0;
+        viewModel.pitch += 1.0;
+        viewModel.roll += 1.0;
     }
 });
 
