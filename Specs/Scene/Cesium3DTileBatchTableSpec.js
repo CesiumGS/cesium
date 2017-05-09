@@ -581,28 +581,6 @@ defineSuite([
         });
     });
 
-    it('renders with debug color', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            // Get initial color
-            var color;
-            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
-                color = rgba;
-            });
-
-            // Check for debug color
-            tileset.debugColorizeTiles = true;
-            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
-                expect(rgba).not.toEqual(color);
-            });
-
-            // Check for original color
-            tileset.debugColorizeTiles = false;
-            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
-                expect(rgba).toEqual(color);
-            });
-        });
-    });
-
     function expectRenderTranslucent(tileset) {
         var batchTable = tileset._root.content.batchTable;
 
