@@ -231,7 +231,7 @@ define([
         }
 
         return numToEmit;
-    };
+    }
 
     ParticleSystem.prototype.update = function(frameState) {
         if (!defined(this._billboardCollection)) {
