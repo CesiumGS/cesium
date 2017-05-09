@@ -484,6 +484,21 @@ define([
                     return this._contentReadyPromise.promise;
                 }
             }
+        },
+
+        /**
+         * Returns the number of draw commands used by this tile.
+         *
+         * @readonly
+         *
+         * @private
+         */
+        commandsLength : {
+            get : function() {
+                if (defined(this._commandsLength)) {
+                    return this._commandsLength;
+                }
+            }
         }
     });
 
