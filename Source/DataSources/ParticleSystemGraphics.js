@@ -204,7 +204,7 @@ define([
         loop: createPropertyDescriptor('loop'),
 
         /**
-         * The lifetime of the particle system.
+         * The lifetime of the particle system in seconds.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default Number.MAX_VALUE
