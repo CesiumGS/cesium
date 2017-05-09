@@ -495,9 +495,7 @@ define([
          */
         commandsLength : {
             get : function() {
-                if (defined(this._commandsLength)) {
-                    return this._commandsLength;
-                }
+                return this._commandsLength;
             }
         }
     });
