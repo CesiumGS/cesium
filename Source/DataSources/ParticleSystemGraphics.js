@@ -38,22 +38,22 @@ define([
         this._endColorSubscription = undefined;
         this._rate = undefined;
         this._rateSubscription = undefined;
-        this._minWidth = undefined;
-        this._minWidthSubscription = undefined;
-        this._maxWidth = undefined;
-        this._maxWidthSubscription = undefined;
-        this._minHeight = undefined;
-        this._minHeightSubscription = undefined;
-        this._maxHeight = undefined;
-        this._maxHeightSubscription = undefined;
-        this._minSpeed = undefined;
-        this._minSpeedSubscription = undefined;
-        this._maxSpeed = undefined;
-        this._maxSpeedSubscription = undefined;
-        this._minLife = undefined;
-        this._minLifeSubscription = undefined;
-        this._maxLife = undefined;
-        this._maxLifeSubscription = undefined;
+        this._minimumWidth = undefined;
+        this._minimumWidthSubscription = undefined;
+        this._maximumWidth = undefined;
+        this._maximumWidthSubscription = undefined;
+        this._minimumHeight = undefined;
+        this._minimumHeightSubscription = undefined;
+        this._maximumHeight = undefined;
+        this._maximumHeightSubscription = undefined;
+        this._minimumSpeed = undefined;
+        this._minimumSpeedSubscription = undefined;
+        this._maximumSpeed = undefined;
+        this._maximumSpeedSubscription = undefined;
+        this._minimumLife = undefined;
+        this._minimumLifeSubscription = undefined;
+        this._maximumLife = undefined;
+        this._maximumLifeSubscription = undefined;
         this._loop = undefined;
         this._loopSubscription = undefined;
         this._lifeTime = undefined;
@@ -153,7 +153,7 @@ define([
          * @type {Property}
          * @default 16.0
          */
-        minWidth: createPropertyDescriptor('minWidth'),
+        minimumWidth: createPropertyDescriptor('minimumWidth'),
 
         /**
          * The maximum width of a particle billboard.
@@ -161,7 +161,7 @@ define([
          * @type {Property}
          * @default 16.0
          */
-        maxWidth: createPropertyDescriptor('maxWidth'),
+        maximumWidth: createPropertyDescriptor('maximumWidth'),
 
         /**
          * The minimum height of a particle billboard.
@@ -169,7 +169,7 @@ define([
          * @type {Property}
          * @default 16.0
          */
-        minHeight: createPropertyDescriptor('minHeight'),
+        minimumHeight: createPropertyDescriptor('minimumHeight'),
 
         /**
          * The maximum height of a particle billboard.
@@ -177,7 +177,7 @@ define([
          * @type {Property}
          * @default 16.0
          */
-        maxHeight: createPropertyDescriptor('maxHeight'),
+        maximumHeight: createPropertyDescriptor('maximumHeight'),
 
         /**
          * The minimum speed of a particle.
@@ -185,7 +185,7 @@ define([
          * @type {Property}
          * @default 5.0
          */
-        minSpeed: createPropertyDescriptor('minSpeed'),
+        minimumSpeed: createPropertyDescriptor('minimumSpeed'),
 
         /**
          * The maximum speed of a particle.
@@ -193,7 +193,7 @@ define([
          * @type {Property}
          * @default 5.0
          */
-        maxSpeed: createPropertyDescriptor('maxSpeed'),
+        maximumSpeed: createPropertyDescriptor('maximumSpeed'),
 
         /**
          * Whether the particle system should loop when it's complete.
@@ -237,7 +237,7 @@ define([
          * @type {Property}
          * @default 5.0
          */
-        minLife: createPropertyDescriptor("minLife"),
+        minimumLife: createPropertyDescriptor("minimumLife"),
 
         /**
          * The maximum life in seconds of a particle
@@ -245,7 +245,7 @@ define([
          * @type {Property}
          * @default 5.0
          */
-        maxLife: createPropertyDescriptor("maxLife"),
+        maximumLife: createPropertyDescriptor("maximumLife"),
 
         /**
          * An array of callbacks that apply a force to a given particle over time.
@@ -274,14 +274,14 @@ define([
         result.startColor = this.startColor;
         result.endColor = this.endColor;
         result.rate = this.rate;
-        result.minWidth = this.minWidth;
-        result.maxWidth = this.maxWidth;
-        result.minHeight = this.minHeight;
-        result.maxHeight = this.maxHeight;
-        result.minSpeed = this.minSpeed;
-        result.maxSpeed = this.maxSpeed;
-        result.minLife = this.minLife;
-        result.maxLife = this.maxLife;
+        result.minimumWidth = this.minimumWidth;
+        result.maximumWidth = this.maximumWidth;
+        result.minimumHeight = this.minimumHeight;
+        result.maximumHeight = this.maximumHeight;
+        result.minimumSpeed = this.minimumSpeed;
+        result.maximumSpeed = this.maximumSpeed;
+        result.minimumLife = this.minimumLife;
+        result.maximumLife = this.maximumLife;
         result.loop = this.loop;
         result.lifeTime = this.lifeTime;
         result.emitterModelMatrix = this.emitterModelMatrix;
@@ -312,14 +312,14 @@ define([
         this.startColor = defaultValue(this.startColor, source.startColor);
         this.endColor = defaultValue(this.endColor, source.endColor);
         this.rate = defaultValue(this.rate, source.rate);
-        this.minWidth = defaultValue(this.minWidth, source.minWidth);
-        this.maxWidth = defaultValue(this.maxWidth, source.maxWidth);
-        this.minHeight = defaultValue(this.minHeight, source.minHeight);
-        this.maxHeight = defaultValue(this.maxHeight, source.maxHeight);
-        this.minSpeed = defaultValue(this.minSpeed, source.minSpeed);
-        this.maxSpeed = defaultValue(this.maxSpeed, source.maxSpeed);
-        this.minLife = defaultValue(this.minLife, source.minLife);
-        this.maxLife = defaultValue(this.maxLife, source.maxLife);
+        this.minimumWidth = defaultValue(this.minimumWidth, source.minimumWidth);
+        this.maximumWidth = defaultValue(this.maximumWidth, source.maximumWidth);
+        this.minimumHeight = defaultValue(this.minimumHeight, source.minimumHeight);
+        this.maximumHeight = defaultValue(this.maximumHeight, source.maximumHeight);
+        this.minimumSpeed = defaultValue(this.minimumSpeed, source.minimumSpeed);
+        this.maximumSpeed = defaultValue(this.maximumSpeed, source.maximumSpeed);
+        this.minimumLife = defaultValue(this.minimumLife, source.minimumLife);
+        this.maximumLife = defaultValue(this.maximumLife, source.maximumLife);
         this.loop = defaultValue(this.loop, source.loop);
         this.lifeTime = defaultValue(this.lifeTime, source.lifeTime);
         this.emitterModelMatrix = defaultValue(this.emitterModelMatrix, source.emitterModelMatrix);

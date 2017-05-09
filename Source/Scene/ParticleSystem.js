@@ -51,54 +51,54 @@ define([
 
         var speed = defaultValue(options.speed, undefined);
         if (speed) {
-            this.minSpeed = speed;
-            this.maxSpeed = speed;
+            this.minimumSpeed = speed;
+            this.maximumSpeed = speed;
         }
         else {
-            this.minSpeed = defaultValue(options.minSpeed, 1.0);
-            this.maxSpeed = defaultValue(options.maxSpeed, 1.0);
+            this.minimumSpeed = defaultValue(options.minimumSpeed, 1.0);
+            this.maximumSpeed = defaultValue(options.maximumSpeed, 1.0);
         }
 
         var life = defaultValue(options.life, undefined);
         if (life) {
-            this.minLife = life;
-            this.maxLife = life;
+            this.minimumLife = life;
+            this.maximumLife = life;
         }
         else {
-            this.minLife = defaultValue(options.minLife, 5.0);
-            this.maxLife = defaultValue(options.maxLife, 5.0);
+            this.minimumLife = defaultValue(options.minimumLife, 5.0);
+            this.maximumLife = defaultValue(options.maximumLife, 5.0);
         }
 
         var mass = defaultValue(options.mass, undefined);
         if (mass) {
-            this.minMass = mass;
-            this.maxMass = mass;
+            this.minimumMass = mass;
+            this.maximumMass = mass;
         }
         else {
-            this.minMass = defaultValue(options.minMass, 1.0);
-            this.maxMass = defaultValue(options.maxMass, 1.0);
+            this.minimumMass = defaultValue(options.minimumMass, 1.0);
+            this.maximumMass = defaultValue(options.maximumMass, 1.0);
         }
 
         this.image = defaultValue(options.image, null);
 
         var width = defaultValue(options.width, undefined);
         if (width) {
-            this.minWidth = width;
-            this.maxWidth = width;
+            this.minimumWidth = width;
+            this.maximumWidth = width;
         }
         else {
-            this.minWidth = defaultValue(options.minWidth, 1.0);
-            this.maxWidth = defaultValue(options.maxWidth, 1.0);
+            this.minimumWidth = defaultValue(options.minimumWidth, 1.0);
+            this.maximumWidth = defaultValue(options.maximumWidth, 1.0);
         }
 
         var height = defaultValue(options.height, undefined);
         if (height) {
-            this.minHeight = height;
-            this.maxHeight = height;
+            this.minimumHeight = height;
+            this.maximumHeight = height;
         }
         else {
-            this.minHeight = defaultValue(options.minHeight, 1.0);
-            this.maxHeight = defaultValue(options.maxHeight, 1.0);
+            this.minimumHeight = defaultValue(options.minimumHeight, 1.0);
+            this.maximumHeight = defaultValue(options.maximumHeight, 1.0);
         }
 
         this.lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
@@ -151,12 +151,12 @@ define([
         particle.startScale = this.startScale;
         particle.endScale = this.endScale;
         particle.image = this.image;
-        particle.life = random(this.minLife, this.maxLife);
-        particle.mass = random(this.minMass, this.maxMass);
+        particle.life = random(this.minimumLife, this.maximumLife);
+        particle.mass = random(this.minimumMass, this.maximumMass);
 
-        particle.size = new Cartesian2(random(this.minWidth, this.maxWidth), random(this.minHeight, this.maxHeight));
+        particle.size = new Cartesian2(random(this.minimumWidth, this.maximumWidth), random(this.minimumHeight, this.maximumHeight));
 
-        var speed = random(this.minSpeed, this.maxSpeed);
+        var speed = random(this.minimumSpeed, this.maximumSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
         this.particles.push(particle);
