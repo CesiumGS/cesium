@@ -51,7 +51,7 @@ syntax highlighting for Cesium's shader code.
 
 * **Prettify JSON** by Mohsen Azimi -- This seems generally useful.
 
-* **glTF Extension for VS Code** by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files. [glTF Tools](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode).
+* **glTF Extension for VS Code** by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files [glTF Tools](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode).
 
 ## VSCode Tasks and Files
 
