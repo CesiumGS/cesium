@@ -211,7 +211,6 @@ defineSuite([
                 expect(result).toBeDefined();
                 expect(result.primitive).toBe(tileset);
                 expect(result.content).toBe(content);
-                expect(result.tile).toBe(content._tile);
             });
         });
     });
@@ -226,7 +225,6 @@ defineSuite([
                 expect(result).toBeDefined();
                 expect(result.primitive).toBe(tileset);
                 expect(result.content).toBe(content);
-                expect(result.tile).toBe(content._tile);
             });
         });
     });
