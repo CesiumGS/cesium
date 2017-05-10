@@ -1248,19 +1248,17 @@ define([
 
             updateDerivedCommand(derivedCommands.originalCommand, command);
 
-            var translucent = (command.pass === Pass.TRANSLUCENT) || (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE);
-
-            if (translucent) {
+            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
                 if (!defined(derivedCommands.translucent)) {
-                    derivedCommands.translucent = deriveTranslucentCommand(command);
+                    derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
                 }
                 updateDerivedCommand(derivedCommands.translucent, command);
             }
 
             if (bivariateVisibilityTest) {
-                if (!translucent) {
+                if (command.pass !== Pass.TRANSLUCENT) {
                     if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(command);
+                        derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
@@ -1343,7 +1341,7 @@ define([
     }
 
     function deriveTranslucentCommand(command) {
-        var derivedCommand = deriveCommand(command);
+        var derivedCommand = DrawCommand.shallowClone(command);
         derivedCommand.pass = Pass.TRANSLUCENT;
         derivedCommand.renderState = getTranslucentRenderState(command.renderState);
         return derivedCommand;
