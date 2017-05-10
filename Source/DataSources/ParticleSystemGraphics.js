@@ -84,7 +84,7 @@ define([
         },
 
         /**
-         * Gets or sets the boolean Property specifying the visibility of the model.
+         * Gets or sets the boolean Property specifying the visibility of the particle system.
          * @memberof ParticleSystemGraphics.prototype
          * @type {Property}
          * @default true
