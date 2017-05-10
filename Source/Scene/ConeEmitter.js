@@ -16,7 +16,7 @@ define([
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
     }
 
-    ConeEmitter.prototype.emit = function() {
+    ConeEmitter.prototype.emit = function(particle) {
         var radius = this.height * Math.tan(this.angle);
 
         // Compute a random point on the cone's base
@@ -36,10 +36,9 @@ define([
         // Also set the velocity vector.
         var velocity = new Cartesian3();
         Cartesian3.normalize(circlePosition, velocity);
-        return new Particle({
-            position: position,
-            velocity: velocity
-        });
+
+        particle.position = position;
+        particle.velocity = velocity;
     };
 
     return ConeEmitter;

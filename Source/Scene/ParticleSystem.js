@@ -279,24 +279,26 @@ define([
 
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
-                particle = this.emitter.emit( particle );
-                if (particle) {
-                    //For the velocity we need to add it to the original position and then multiply by point.
-                    Cartesian3.add(particle.position, particle.velocity, rotatedVelocityScratch);
-                    Matrix4.multiplyByPoint(combinedMatrixScratch, rotatedVelocityScratch, rotatedVelocityScratch);
+                particle = new Particle();
 
-                    // Change the position to be in world coordinates
-                    particle.position = Matrix4.multiplyByPoint(combinedMatrixScratch, particle.position, particle.position);
+                // Let the emitter initialize the particle.
+                this.emitter.emit(particle);
 
-                    // Orient the velocity in world space as well.
-                    var worldVelocity = new Cartesian3();
-                    Cartesian3.subtract(rotatedVelocityScratch, particle.position, worldVelocity);
-                    Cartesian3.normalize(worldVelocity, worldVelocity);
-                    particle.velocity = worldVelocity;
+                //For the velocity we need to add it to the original position and then multiply by point.
+                Cartesian3.add(particle.position, particle.velocity, rotatedVelocityScratch);
+                Matrix4.multiplyByPoint(combinedMatrixScratch, rotatedVelocityScratch, rotatedVelocityScratch);
 
-                    // Add the particle to the system.
-                    addParticle(this, particle);
-                }
+                // Change the position to be in world coordinates
+                particle.position = Matrix4.multiplyByPoint(combinedMatrixScratch, particle.position, particle.position);
+
+                // Orient the velocity in world space as well.
+                var worldVelocity = new Cartesian3();
+                Cartesian3.subtract(rotatedVelocityScratch, particle.position, worldVelocity);
+                Cartesian3.normalize(worldVelocity, worldVelocity);
+                particle.velocity = worldVelocity;
+
+                // Add the particle to the system.
+                addParticle(this, particle);
             }
         }
 

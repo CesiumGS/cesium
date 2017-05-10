@@ -15,7 +15,7 @@ define([
         this.radius = defaultValue(options.radius, 1.0);
     }
 
-    CircleEmitter.prototype.emit = function() {
+    CircleEmitter.prototype.emit = function(particle) {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
         var rad = CesiumMath.randomBetween(0.0, this.radius);
 
@@ -27,10 +27,8 @@ define([
 
         // Set the velocity to shoot up
         var velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
-        return new Particle({
-            position: position,
-            velocity: velocity
-        });
+        particle.position = position;
+        particle.velocity = velocity;
     };
 
     return CircleEmitter;

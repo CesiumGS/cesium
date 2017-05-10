@@ -21,7 +21,7 @@ define([
         this._halfDepth = this.depth / 2.0;
     }
 
-    BoxEmitter.prototype.emit = function() {
+    BoxEmitter.prototype.emit = function(particle) {
         var x = CesiumMath.randomBetween(-this._halfWidth, this._halfWidth);
         var y = CesiumMath.randomBetween(-this._halfDepth, this._halfDepth);
         var z = CesiumMath.randomBetween(-this._halfHeight, this._halfHeight);
@@ -31,10 +31,8 @@ define([
         var velocity = new Cartesian3();
         Cartesian3.normalize(position, velocity);
 
-        return new Particle({
-            position: position,
-            velocity: velocity
-        });
+        particle.position = position;
+        particle.velocity = velocity;
     };
 
     return BoxEmitter;
