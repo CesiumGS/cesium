@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Renderer/PixelDatatype',
         './freezeObject',
         './WebGLConstants'
     ], function(
+        PixelDatatype,
         freezeObject,
         WebGLConstants) {
     'use strict';
@@ -144,6 +146,26 @@ define([
         /**
          * @private
          */
+        componentsLength : function(pixelFormat) {
+            switch (pixelFormat) {
+                // Many GPUs store RGB as RGBA internally
+                // https://devtalk.nvidia.com/default/topic/699479/general-graphics-programming/rgb-auto-converted-to-rgba/post/4142379/#4142379
+                case PixelFormat.RGB:
+                case PixelFormat.RGBA:
+                    return 4;
+                case PixelFormat.LUMINANCE_ALPHA:
+                    return 2;
+                case PixelFormat.ALPHA:
+                case PixelFormat.LUMINANCE:
+                    return 1;
+                default:
+                    return 1;
+            }
+        },
+
+        /**
+         * @private
+         */
         validate : function(pixelFormat) {
             return pixelFormat === PixelFormat.DEPTH_COMPONENT ||
                    pixelFormat === PixelFormat.DEPTH_STENCIL ||
@@ -227,7 +249,7 @@ define([
         /**
          * @private
          */
-        compressedTextureSize : function(pixelFormat, width, height) {
+        compressedTextureSizeInBytes  : function(pixelFormat, width, height) {
             switch (pixelFormat) {
                 case PixelFormat.RGB_DXT1:
                 case PixelFormat.RGBA_DXT1:
@@ -249,6 +271,17 @@ define([
                 default:
                     return 0;
             }
+        },
+
+        /**
+         * @private
+         */
+        textureSizeInBytes : function(pixelFormat, pixelDatatype, width, height) {
+            var componentsLength = PixelFormat.componentsLength(pixelFormat);
+            if (PixelDatatype.isPacked(pixelDatatype)) {
+                componentsLength = 1;
+            }
+            return componentsLength * PixelDatatype.sizeInBytes(pixelDatatype) * width * height;
         }
     };
 
