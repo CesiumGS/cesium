@@ -1258,6 +1258,19 @@ define([
 
     var scratchCartesian2 = new Cartesian3();
 
+    var stringOptions = {
+        maximumFractionDigits : 3
+    };
+
+    function formatMemoryString(memorySizeInBytes) {
+        var memoryInMegabytes = memorySizeInBytes / 1048576;
+        if (memoryInMegabytes < 1.0) {
+            return memoryInMegabytes.toLocaleString(undefined, stringOptions);
+        } else {
+            return Math.round(memoryInMegabytes).toLocaleString();
+        }
+    }
+
     function updateTileInfoLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
@@ -1307,8 +1320,8 @@ define([
             }
 
             if (tileset.debugShowMemoryUsage) {
-                labelString += '\nTexture Memory: ' + (tile.content.textureMemorySizeInBytes / 1048576.0).toFixed(3);
-                labelString += '\nVertex Memory: ' + (tile.content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
+                labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
+                labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
                 attributes += 2;
             }
 
