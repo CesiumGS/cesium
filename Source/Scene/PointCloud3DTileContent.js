@@ -1217,12 +1217,14 @@ define([
             this.batchTable.update(tileset, frameState);
         }
 
+        var commandList = frameState.commandList;
+
         var passes = frameState.passes;
         if (passes.render) {
-            frameState.addCommand(this._drawCommand);
+            commandList.push(this._drawCommand);
         }
         if (passes.pick) {
-            frameState.addCommand(this._pickCommand);
+            commandList.push(this._pickCommand);
         }
     };
 

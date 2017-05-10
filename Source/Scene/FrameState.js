@@ -287,10 +287,6 @@ define([
         this.minimumDisableDepthTestDistance = undefined;
     }
 
-    FrameState.prototype.addCommand = function(command) {
-        this.commandList.push(command);
-    };
-
     /**
      * A function that will be called at the end of the frame.
      *
