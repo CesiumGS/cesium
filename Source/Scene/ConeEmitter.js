@@ -16,17 +16,12 @@ define([
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
     };
 
-    function random(a, b) {
-        return CesiumMath.nextRandomNumber() * (b - a) + a;
-    }
-
     ConeEmitter.prototype.emit = function() {
-
         var radius = this.height * Math.tan(this.angle);
 
         // Compute a random point on the cone's base
-        var theta = random(0.0, CesiumMath.TWO_PI);
-        var rad = random(0.0, radius);
+        var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
+        var rad = CesiumMath.randomBetween(0.0, radius);
 
         var x = rad * Math.cos(theta);
         var y = rad * Math.sin(theta);

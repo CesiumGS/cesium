@@ -21,14 +21,10 @@ define([
         this._halfDepth = this.depth / 2.0;
     };
 
-    function random(a, b) {
-        return CesiumMath.nextRandomNumber() * (b - a) + a;
-    }
-
     BoxEmitter.prototype.emit = function() {
-        var x = random(-this._halfWidth, this._halfWidth);
-        var y = random(-this._halfDepth, this._halfDepth);
-        var z = random(-this._halfHeight, this._halfHeight);
+        var x = CesiumMath.randomBetween(-this._halfWidth, this._halfWidth);
+        var y = CesiumMath.randomBetween(-this._halfDepth, this._halfDepth);
+        var z = CesiumMath.randomBetween(-this._halfHeight, this._halfHeight);
         var position = new Cartesian3(x, y, z);
 
         // Modify the velocity to shoot out from the center

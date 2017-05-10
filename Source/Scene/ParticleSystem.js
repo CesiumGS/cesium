@@ -154,10 +154,6 @@ define([
         system._billboardCollection.remove(particle._billboard);
     }
 
-    function random(a, b) {
-        return CesiumMath.nextRandomNumber() * (b - a) + a;
-    }
-
     function updateBillboard(system, particle) {
         var billboard = particle._billboard;
         if (!defined(billboard)) {
@@ -187,12 +183,12 @@ define([
         particle.startScale = system.startScale;
         particle.endScale = system.endScale;
         particle.image = system.image;
-        particle.life = random(system.minimumLife, system.maximumLife);
-        particle.mass = random(system.minimumMass, system.maximumMass);
+        particle.life = CesiumMath.randomBetween(system.minimumLife, system.maximumLife);
+        particle.mass = CesiumMath.randomBetween(system.minimumMass, system.maximumMass);
 
-        particle.size = new Cartesian2(random(system.minimumWidth, system.maximumWidth), random(system.minimumHeight, system.maximumHeight));
+        particle.size = new Cartesian2(CesiumMath.randomBetween(system.minimumWidth, system.maximumWidth), CesiumMath.randomBetween(system.minimumHeight, system.maximumHeight));
 
-        var speed = random(system.minimumSpeed, system.maximumSpeed);
+        var speed = CesiumMath.randomBetween(system.minimumSpeed, system.maximumSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
 
         system.particles.push(particle);
@@ -223,7 +219,7 @@ define([
             for (i = 0; i < length; i++) {
                 var burst = system.bursts[i];
                 if ((!defined(burst, "complete") || !burst.complete) && system.currentTime > burst.time) {
-                    var count = burst.min + random(0.0, 1.0) * burst.max;
+                    var count = burst.min + CesiumMath.nextRandomNumber() * burst.max;
                     numToEmit += count;
                     burst.complete = true;
                 }

@@ -15,14 +15,9 @@ define([
         this.radius = defaultValue(options.radius, 1.0);
     };
 
-    function random(a, b) {
-        return CesiumMath.nextRandomNumber() * (b - a) + a;
-    }
-
     CircleEmitter.prototype.emit = function() {
-
-        var theta = random(0.0, CesiumMath.TWO_PI);
-        var rad = random(0.0, this.radius);
+        var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
+        var rad = CesiumMath.randomBetween(0.0, this.radius);
 
         var x = rad * Math.cos(theta);
         var y = rad * Math.sin(theta);
