@@ -11,11 +11,28 @@ define([
         Particle) {
     "use strict";
 
+    /**
+     * A ParticleEmitter that emits particles within a cone.
+     * Particles will be positioned at the tip of the cone and have initial velocities going towards the base.
+     *
+     * @alias ConeEmitter
+     * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Number} [options.height=5.0] The height of the cone in meters.
+     * @param {Number} [options.angle=CesiumMath.toRadians(30.0)] The angle of the cone in radians.
+     */
     function ConeEmitter(options) {
         this.height = defaultValue(options.height, 5.0);
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
     }
 
+    /**
+     * Initializes the given {Particle} by setting it's position and velocity.
+     *
+     * @private
+     * @param {Particle} The particle to initialize
+     */
     ConeEmitter.prototype.emit = function(particle) {
         var radius = this.height * Math.tan(this.angle);
 
@@ -29,8 +46,7 @@ define([
 
         var circlePosition = new Cartesian3(x, y, z);
 
-        //particle.position = circlePosition;
-        // Position the point at the tip.
+        // Position the particle at the tip.
         var position = new Cartesian3();
 
         // Also set the velocity vector.

@@ -11,6 +11,18 @@ define([
         Particle) {
     "use strict";
 
+    /**
+     * A ParticleEmitter that emits particles within a box.
+     * Particles will be positioned randomly within the box and have initial velocities emanating from the center of the box.
+     *
+     * @alias BoxEmitter
+     * @constructor
+     *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Number} [options.width=1.0] The width of the box in meters.
+     * @param {Number} [options.height=1.0] The height of the box in meters.
+     * @param {Number} [options.depth=1.0] The depth of the box in meters.
+     */
     function BoxEmitter(options) {
         this.width = defaultValue(options.width, 1.0);
         this.height = defaultValue(options.height, 1.0);
@@ -21,6 +33,12 @@ define([
         this._halfDepth = this.depth / 2.0;
     }
 
+    /**
+     * Initializes the given {Particle} by setting it's position and velocity.
+     *
+     * @private
+     * @param {Particle} The particle to initialize
+     */
     BoxEmitter.prototype.emit = function(particle) {
         var x = CesiumMath.randomBetween(-this._halfWidth, this._halfWidth);
         var y = CesiumMath.randomBetween(-this._halfDepth, this._halfDepth);
