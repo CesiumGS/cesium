@@ -1230,22 +1230,14 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
-        if (!frameState.passes.render) {
-            return;
-        }
-
         var commandList = frameState.commandList;
-        var commandLength = commandList.length;
-        if (commandStart === commandLength) {
-            return;
-        }
-
+        var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
         var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
-        for (var i = commandStart; i < commandLength; ++i) {
+        for (var i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
             if (!defined(derivedCommands)) {

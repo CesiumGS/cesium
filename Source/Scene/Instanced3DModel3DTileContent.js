@@ -491,7 +491,11 @@ define([
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
-        this.batchTable.addDerivedCommands(frameState, commandStart);
+        // If any commands were pushed, add derived commands
+        var commandEnd = frameState.commandList.length;
+        if ((commandStart < commandEnd) && frameState.passes.render) {
+            this.batchTable.addDerivedCommands(frameState, commandStart);
+        }
     };
 
     /**
