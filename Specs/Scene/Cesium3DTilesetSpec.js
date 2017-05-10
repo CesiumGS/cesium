@@ -87,6 +87,7 @@ defineSuite([
     var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+    var instancedUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
     var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
 
     // 1 tile where each feature is a different source color
@@ -165,6 +166,25 @@ defineSuite([
 
     function viewNothing() {
         setZoom(200.0);
+    }
+
+    function viewSky() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+    }
+
+    function viewBottomLeft() {
+        viewAllTiles();
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+    }
+
+    function viewInstances() {
+        setZoom(30.0);
+    }
+
+    function viewPointCloud() {
+        setZoom(5.0);
     }
 
     it('throws with undefined url', function() {
@@ -513,7 +533,7 @@ defineSuite([
     });
 
     it('verify points statistics', function() {
-        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+        viewPointCloud();
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudUrl
@@ -531,7 +551,7 @@ defineSuite([
     });
 
     it('verify batched points statistics', function() {
-        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+        viewPointCloud();
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudBatchedUrl
@@ -647,9 +667,7 @@ defineSuite([
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(5);
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             scene.renderForSpecs();
             expect(stats.visited).toEqual(0);
@@ -666,9 +684,7 @@ defineSuite([
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(5);
 
-            // Look at bottom-left corner of tileset
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
+            viewBottomLeft();
             scene.renderForSpecs();
             expect(stats.visited).toEqual(2); // Visits root, but does not render it
             expect(stats.numberOfCommands).toEqual(1);
@@ -998,14 +1014,8 @@ defineSuite([
     describe('children bound union optimization', function() {
         it('does not select visible tiles with invisible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
-                    orientation : {
-                        heading : 0,
-                        pitch : 1.57,
-                        roll : 0
-                    }
-                });
+                var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 22.0);
+                scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 1.0));
 
                 var root = tileset._root;
                 var childRoot = root.children[0];
@@ -1030,15 +1040,6 @@ defineSuite([
                 var childRoot = root.children[0];
                 childRoot.geometricError = 240;
 
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1057,15 +1058,6 @@ defineSuite([
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 childRoot.geometricError = 0; // child root should meet SSE and children should not be drawn
                 scene.renderForSpecs();
                 // wait for load because geometric error has changed
@@ -1083,15 +1075,7 @@ defineSuite([
         });
 
         it('does select visibile tiles with visible children failing request volumes', function() {
-            scene.camera.setView({
-                destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
-                orientation : {
-                    heading : 0,
-                    pitch : -1.57,
-                    roll : 0
-                }
-            });
-
+            viewRootOnly();
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
@@ -1110,15 +1094,6 @@ defineSuite([
 
         it('does select visibile tiles with visible children passing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 var root = tileset._root;
                 var childRoot = root.children[0];
                 childRoot.geometricError = 0;
@@ -1239,16 +1214,53 @@ defineSuite([
         });
     });
 
-    it('debugColorizeTiles', function() {
-        // More precise test is in Cesium3DTileBatchTableSpec
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            viewRootOnly();
+    function checkDebugColorizeTiles(url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            // Get initial color
+            var color;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                color = rgba;
+            });
+
+            // Check for debug color
             tileset.debugColorizeTiles = true;
-            scene.renderForSpecs();
-            var stats = tileset._statistics;
-            expect(stats.visited).toEqual(1);
-            expect(stats.numberOfCommands).toEqual(1);
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).not.toEqual(color);
+            });
+
+            // Check for original color
+            tileset.debugColorizeTiles = false;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).toEqual(color);
+            });
         });
+    }
+
+    it('debugColorizeTiles for b3dm with batch table', function() {
+        return checkDebugColorizeTiles(withBatchTableUrl);
+    });
+
+    it('debugColorizeTiles for b3dm without batch table', function() {
+        return checkDebugColorizeTiles(noBatchIdsUrl);
+    });
+
+    it('debugColorizeTiles for i3dm', function() {
+        viewInstances();
+        return checkDebugColorizeTiles(instancedUrl);
+    });
+
+    it('debugColorizeTiles for cmpt', function() {
+        return checkDebugColorizeTiles(compositeUrl);
+    });
+
+    it('debugColorizeTiles for pnts with batch table', function() {
+        viewPointCloud();
+        return checkDebugColorizeTiles(pointCloudBatchedUrl);
+    });
+
+    it('debugColorizeTiles for pnts without batch table', function() {
+        viewPointCloud();
+        return checkDebugColorizeTiles(pointCloudUrl);
     });
 
     it('debugWireframe', function() {
@@ -1655,9 +1667,6 @@ defineSuite([
     });
 
     it('applies show style to a tileset with a composite tile', function() {
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({show : 'false'});
             expect(scene).toRender([0, 0, 0, 255]);
@@ -2001,8 +2010,7 @@ defineSuite([
     });
 
     it('sets colorBlendMode for instanced tileset', function() {
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
+        viewInstances();
         return testColorBlendMode(instancedRedMaterialUrl);
     });
 
@@ -2082,9 +2090,7 @@ defineSuite([
             expect(stats.numberOfCommands).toEqual(5);
             expect(stats.numberContentReady).toEqual(5);
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             // All tiles are unloaded
             scene.renderForSpecs();
@@ -2144,9 +2150,7 @@ defineSuite([
             expect(stats.numberOfCommands).toEqual(4);
             expect(stats.numberContentReady).toEqual(4); // 4 children with b3dm content (does not include empty root)
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             // Unload tiles to meet cache size
             scene.renderForSpecs();
@@ -2449,10 +2453,7 @@ defineSuite([
     });
 
     it('loadSiblings', function() {
-        // Look at bottom-left corner of tileset
-        scene.camera.moveLeft(200.0);
-        scene.camera.moveDown(200.0);
-
+        viewBottomLeft();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {
             loadSiblings : false,
             baseScreenSpaceError: 1000000000
@@ -2468,10 +2469,7 @@ defineSuite([
     });
 
     it('immediatelyLoadDesiredLOD', function() {
-        // Look at bottom-left corner of tileset
-        scene.camera.moveLeft(200.0);
-        scene.camera.moveDown(200.0);
-
+        viewBottomLeft();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
             immediatelyLoadDesiredLOD : true
@@ -2497,8 +2495,7 @@ defineSuite([
             parent.refine = Cesium3DTileRefine.REPLACE;
             parent.unloadContent();
 
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
+            viewBottomLeft();
             scene.renderForSpecs();
 
             expect(child.contentReady).toBe(true);
