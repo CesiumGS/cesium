@@ -13,7 +13,7 @@ define([
 
     function SphereEmitter(options) {
         this.radius = defaultValue(options.radius, 1.0);
-    };
+    }
 
     SphereEmitter.prototype.emit = function() {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);

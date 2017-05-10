@@ -13,7 +13,7 @@ define([
 
     function CircleEmitter(options) {
         this.radius = defaultValue(options.radius, 1.0);
-    };
+    }
 
     CircleEmitter.prototype.emit = function() {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);

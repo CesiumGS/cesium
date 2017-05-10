@@ -19,7 +19,7 @@ define([
         this._halfWidth = this.width / 2.0;
         this._halfHeight = this.height / 2.0;
         this._halfDepth = this.depth / 2.0;
-    };
+    }
 
     BoxEmitter.prototype.emit = function() {
         var x = CesiumMath.randomBetween(-this._halfWidth, this._halfWidth);

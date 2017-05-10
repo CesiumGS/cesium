@@ -14,7 +14,7 @@ define([
     function ConeEmitter(options) {
         this.height = defaultValue(options.height, 5.0);
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
-    };
+    }
 
     ConeEmitter.prototype.emit = function() {
         var radius = this.height * Math.tan(this.angle);
