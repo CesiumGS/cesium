@@ -11,7 +11,7 @@ define([
         Particle) {
     "use strict";
 
-    var ConeEmitter = function(options) {
+    function ConeEmitter(options) {
         this.height = defaultValue(options.height, 5.0);
         this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
     };

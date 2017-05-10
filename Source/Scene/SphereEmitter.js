@@ -11,7 +11,7 @@ define([
         Particle) {
     "use strict";
 
-    var SphereEmitter = function(options) {
+    function SphereEmitter(options) {
         this.radius = defaultValue(options.radius, 1.0);
     };
 

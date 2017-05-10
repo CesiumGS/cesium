@@ -11,7 +11,7 @@ define([
         Particle) {
     "use strict";
 
-    var BoxEmitter = function(options) {
+    function BoxEmitter(options) {
         this.width = defaultValue(options.width, 1.0);
         this.height = defaultValue(options.height, 1.0);
         this.depth = defaultValue(options.depth, 1.0);
