@@ -42,6 +42,16 @@ define([
             second = new Uri(second);
         }
 
+        // Don't try to join a data uri
+        if (first.scheme === 'data') {
+            return first.toString();
+        }
+
+        // Don't try to join a data uri
+        if (second.scheme === 'data') {
+            return second.toString();
+        }
+
         // Uri.isAbsolute returns false for a URL like '//foo.com'.  So if we have an authority but
         // not a scheme, add a scheme matching the page's scheme.
         if (defined(second.authority) && !defined(second.scheme)) {

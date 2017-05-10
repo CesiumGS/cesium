@@ -2143,6 +2143,105 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates the distance function', function() {
+        var expression = new Expression('distance(0, 1)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('distance(vec2(1.0, 0.0), vec2(0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(1.0);
+
+        expression = new Expression('distance(vec3(3.0, 2.0, 1.0), vec3(1.0, 0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
+
+        expression = new Expression('distance(vec4(5.0, 5.0, 5.0, 5.0), vec4(0.0, 0.0, 0.0, 0.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(10.0);
+    });
+
+    it('throws if distance function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('distance(0.0)');
+        }) .toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('distance(1, 3, 0)');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if distance function takes mismatching types of arguments', function() {
+        expect(function() {
+            return new Expression('distance(1, vec2(3.0, 2.0)').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('distance(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates the dot function', function() {
+        var expression = new Expression('dot(1, 2)');
+        expect(expression.evaluate(frameState, undefined)).toEqual(2.0);
+
+        expression = new Expression('dot(vec2(1.0, 1.0), vec2(2.0, 2.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(4.0);
+
+        expression = new Expression('dot(vec3(1.0, 2.0, 3.0), vec3(2.0, 2.0, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(9.0);
+
+        expression = new Expression('dot(vec4(5.0, 5.0, 2.0, 3.0), vec4(1.0, 2.0, 1.0, 1.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(20.0);
+    });
+
+    it('throws if dot function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('dot(0.0)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('dot(1, 3, 0)');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if dot function takes mismatching types of arguments', function() {
+        expect(function() {
+            return new Expression('dot(1, vec2(3.0, 2.0)').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('dot(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates the cross function', function() {
+        var expression = new Expression('cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+
+        expression = new Expression('cross(vec3(-1.0, -1.0, -1.0), vec3(0.0, -2.0, -5.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(3.0, -5.0, 2.0));
+
+        expression = new Expression('cross(vec3(5.0, -2.0, 1.0), vec3(-2.0, -6.0, -8.0))');
+        expect(expression.evaluate(frameState, undefined)).toEqual(new Cartesian3(22.0, 38.0, -34.0));
+    });
+
+    it('throws if cross function takes an invalid number of arguments', function() {
+        expect(function() {
+            return new Expression('cross(vec3(0.0, 0.0, 0.0))');
+        }) .toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('cross(vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if cross function does not take vec3 arguments', function() {
+        expect(function() {
+            return new Expression('cross(vec2(1.0, 2.0), vec2(3.0, 2.0)').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression('cross(vec4(5.0, 2.0, 3.0, 1.0), vec3(4.0, 4.0, 4.0))').evaluate(frameState, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates length function', function() {
         var expression = new Expression('length(-3.0)');
         expect(expression.evaluate(frameState, undefined)).toEqual(3.0);
@@ -2587,7 +2686,7 @@ defineSuite([
         feature.addProperty('complicatedArray', [{
             'subproperty' : Cartesian4.UNIT_X,
             'anotherproperty' : Cartesian4.UNIT_Y
-         }, {
+        }, {
             'subproperty' : Cartesian4.UNIT_Z,
             'anotherproperty' : Cartesian4.UNIT_W
         }]);
@@ -3016,7 +3115,7 @@ defineSuite([
         expect(shaderExpression).toEqual(expected);
     });
 
-     it('gets shader expression for sin', function() {
+    it('gets shader expression for sin', function() {
         var expression = new Expression('sin(0.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'sin(0.0)';
@@ -3160,6 +3259,27 @@ defineSuite([
         var expression = new Expression('max(3.0,5.0)');
         var shaderExpression = expression.getShaderExpression('', {});
         var expected = 'max(3.0, 5.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for distance', function() {
+        var expression = new Expression('distance(0.0, 1.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'distance(0.0, 1.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for dot', function() {
+        var expression = new Expression('dot(1.0, 2.0)');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'dot(1.0, 2.0)';
+        expect(shaderExpression).toEqual(expected);
+    });
+
+    it('gets shader expression for cross', function() {
+        var expression = new Expression('cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))');
+        var shaderExpression = expression.getShaderExpression('', {});
+        var expected = 'cross(vec3(1.0, 1.0, 1.0), vec3(2.0, 2.0, 2.0))';
         expect(shaderExpression).toEqual(expected);
     });
 

@@ -70,7 +70,7 @@ var orangePolygon = viewer.entities.add({
 });
 
 var bluePolygon = viewer.entities.add({
-    name : 'Blue polygon with holes and outline',
+    name : 'Blue polygon with holes',
     polygon : {
         hierarchy : {
             positions : Cesium.Cartesian3.fromDegreesArray([-99.0, 30.0,
@@ -102,9 +102,7 @@ var bluePolygon = viewer.entities.add({
                 }]
             }]
         },
-        material : Cesium.Color.BLUE.withAlpha(0.5),
-        outline : true,
-        outlineColor : Cesium.Color.BLACK
+        material : Cesium.Color.BLUE.withAlpha(0.5)
     }
 });
 

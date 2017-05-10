@@ -900,8 +900,6 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n';                          // Per-feature show/hide
-// TODO: Translucent should still write depth for picking?  For example, we want to grab highlighted building that became translucent
-// TODO: Same TODOs below in getFragmentShaderCallback
                 if (handleTranslucent) {
                     newMain +=
                         '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
@@ -1237,56 +1235,48 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    function updateDerivedCommands(derivedCommands, command) {
-        for (var name in derivedCommands) {
-            if (derivedCommands.hasOwnProperty(name)) {
-                var derivedCommand = derivedCommands[name];
-                derivedCommand.castShadows = command.castShadows;
-                derivedCommand.receiveShadows = command.receiveShadows;
-                derivedCommand.primitiveType = command.primitiveType;
-            }
-        }
-    }
-
-    Cesium3DTileBatchTable.prototype.getAddCommand = function() {
-        var styleCommandsNeeded = getStyleCommandsNeeded(this);
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
+        var commandList = frameState.commandList;
+        var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
+        var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
-// TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
-        return function(command) {
-            var commandList = this.commandList;
-
+        for (var i = commandStart; i < commandEnd; ++i) {
+            var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
             if (!defined(derivedCommands)) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
-
                 derivedCommands.originalCommand = deriveCommand(command);
-                derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
-                derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            var bivariateVisibilityTest = tileset._hasMixedContent && this.context.stencilBuffer;
+            updateDerivedCommand(derivedCommands.originalCommand, command);
+
+            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+                if (!defined(derivedCommands.translucent)) {
+                    derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
+                }
+                updateDerivedCommand(derivedCommands.translucent, command);
+            }
 
             if (bivariateVisibilityTest) {
-                if (!tile._finalResolution) {
+                if (command.pass !== Pass.TRANSLUCENT) {
                     if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(command);
+                        derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
                     }
                     tileset._backfaceCommands.push(derivedCommands.zback);
                 }
-
                 if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
                     derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
                     tile._lastSelectionDepth = tile._selectionDepth;
                 }
+                updateDerivedCommand(derivedCommands.stencil, command);
             }
 
-            updateDerivedCommands(derivedCommands, command);
-
-            // replace original commands with stenciled commands
             var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
+            var translucentCommand = derivedCommands.translucent;
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command
@@ -1295,35 +1285,34 @@ define([
             //      and back faces) with a translucent render state.
             //    * If the styling causes both opaque and translucent features in this tile,
             //      then use both sets of commands.
-// TODO: if the tile has multiple commands, we do not know what features are in what
-// commands so the third-case may be overkill.  Change this to a PERFORMANCE_IDEA?
             if (command.pass !== Pass.TRANSLUCENT) {
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
-                    commandList.push(opaqueCommand);
+                    commandList[i] = opaqueCommand;
                 }
-
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
-// TODO: vector tiles, for example, will not always want two passes for translucency.  Some primitives,
-// for example, those created from Cesium geometries, will also already return commands for two
-// passes if the command is originally translucent.  Same TODO below.
-                    commandList.push(derivedCommands.back);
-                    commandList.push(derivedCommands.front);
+                    commandList[i] = translucentCommand;
                 }
-
                 if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
-                    commandList.push(opaqueCommand);
-                    commandList.push(derivedCommands.back);
-                    commandList.push(derivedCommands.front);
+                    // PERFORMANCE_IDEA: if the tile has multiple commands, we do not know what features are in what
+                    // commands so this case may be overkill.
+                    commandList[i] = opaqueCommand;
+                    commandList.push(translucentCommand);
                 }
             } else {
                 // Command was originally translucent so no need to derive new commands;
                 // as of now, a style can't change an originally translucent feature to
                 // opaque since the style's alpha is modulated, not a replacement.  When
                 // this changes, we need to derive new opaque commands here.
-                commandList.push(opaqueCommand);
+                commandList[i] = opaqueCommand;
             }
-        };
+        }
     };
+
+    function updateDerivedCommand(derivedCommand, command) {
+        derivedCommand.castShadows = command.castShadows;
+        derivedCommand.receiveShadows = command.receiveShadows;
+        derivedCommand.primitiveType = command.primitiveType;
+    }
 
     function getStyleCommandsNeeded(batchTable) {
         var translucentFeaturesLength = batchTable._translucentFeaturesLength;
@@ -1337,21 +1326,17 @@ define([
         return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
     }
 
-    function deriveTranslucentCommand(command, cullFace) {
-        var derivedCommand = deriveCommand(command);
-        derivedCommand.pass = Pass.TRANSLUCENT;
-        derivedCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
-        return derivedCommand;
-    }
-
     function deriveCommand(command) {
         var derivedCommand = DrawCommand.shallowClone(command);
-        derivedCommand.pass = Pass.CESIUM_3D_TILE;
 
         // Add a uniform to indicate if the original command was translucent so
         // the shader knows not to cull vertices that were originally transparent
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
+
+        if (!translucentCommand) {
+            derivedCommand.pass = Pass.CESIUM_3D_TILE;
+        }
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {
@@ -1361,13 +1346,22 @@ define([
         return derivedCommand;
     }
 
-    // write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
+    function deriveTranslucentCommand(command) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+        derivedCommand.pass = Pass.TRANSLUCENT;
+        derivedCommand.renderState = getTranslucentRenderState(command.renderState);
+        return derivedCommand;
+    }
+
     function deriveZBackfaceCommand(command) {
+        // Write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
         var derivedCommand = DrawCommand.shallowClone(command);
         var rs = clone(derivedCommand.renderState, true);
         rs.cull.enabled = true;
         rs.cull.face = CullFace.FRONT;
         derivedCommand.renderState = RenderState.fromCache(rs);
+        derivedCommand.castShadows = false;
+        derivedCommand.receiveShadows = false;
         return derivedCommand;
     }
 
@@ -1387,10 +1381,9 @@ define([
         return derivedCommand;
     }
 
-    function getTranslucentRenderState(renderState, cullFace) {
+    function getTranslucentRenderState(renderState) {
         var rs = clone(renderState, true);
-        rs.cull.enabled = true;
-        rs.cull.face = cullFace;
+        rs.cull.enabled = false;
         rs.depthTest.enabled = true;
         rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;

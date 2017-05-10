@@ -244,7 +244,7 @@ define([
            Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
      *   width : 1
      * });
-     * 
+     *
      * @see PolylineCollection#remove
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
@@ -276,7 +276,7 @@ define([
      * @example
      * var p = polylines.add(...);
      * polylines.remove(p);  // Returns true
-     * 
+     *
      * @see PolylineCollection#add
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
@@ -313,7 +313,7 @@ define([
      * polylines.add(...);
      * polylines.add(...);
      * polylines.removeAll();
-     * 
+     *
      * @see PolylineCollection#add
      * @see PolylineCollection#remove
      * @see PolylineCollection#update
@@ -502,7 +502,7 @@ define([
                             var distanceDisplayCondition = polyline.distanceDisplayCondition;
                             if (defined(distanceDisplayCondition)) {
                                 nearFarCartesian.x = distanceDisplayCondition.near;
-                                nearFarCartesian.x = distanceDisplayCondition.far;
+                                nearFarCartesian.y = distanceDisplayCondition.far;
                             }
 
                             this._batchTable.setBatchedAttribute(polyline._index, 4, nearFarCartesian);
@@ -735,7 +735,7 @@ define([
      *
      * @example
      * polylines = polylines && polylines.destroy();
-     * 
+     *
      * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {

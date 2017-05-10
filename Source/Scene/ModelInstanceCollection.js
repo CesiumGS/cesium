@@ -975,11 +975,12 @@ define([
         updateShowBoundingVolume(this);
 
         var passes = frameState.passes;
+        var commandList = frameState.commandList;
         var commands = passes.render ? this._drawCommands : this._pickCommands;
         var commandsLength = commands.length;
 
         for (var i = 0; i < commandsLength; ++i) {
-            frameState.addCommand(commands[i]);
+            commandList.push(commands[i]);
         }
     };
 

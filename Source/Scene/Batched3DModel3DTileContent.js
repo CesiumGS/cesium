@@ -342,6 +342,12 @@ define([
         var gltfByteLength = byteStart + byteLength - byteOffset;
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
 
+        var pickObject = {
+            tile : content._tile,
+            content : content,
+            primitive : tileset
+        };
+
         // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
         // The pick shader still needs to be patched.
         content._model = new Model({
@@ -355,14 +361,14 @@ define([
             shadows: tileset.shadows,
             debugWireframe: tileset.debugWireframe,
             incrementallyLoadTextures : false,
-            pickPrimitive : tileset,
             vertexShaderLoaded : getVertexShaderCallback(content),
             fragmentShaderLoaded : getFragmentShaderCallback(content),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : getPickVertexShaderCallback(content),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-            addBatchIdToGeneratedShaders : (batchLength > 0) // If the batch table has values in it, generated shaders will need a batchId attribute
+            addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
+            pickObject : pickObject
         });
     }
 
@@ -371,7 +377,11 @@ define([
      */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
-        this.batchTable.setAllColor(color);
+        if (this.featuresLength === 0) {
+            this._model.color = color;
+        } else {
+            this.batchTable.setAllColor(color);
+        }
     };
 
     /**
@@ -385,10 +395,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
-        var oldAddCommand = frameState.addCommand;
-        if (frameState.passes.render) {
-            frameState.addCommand = this.batchTable.getAddCommand();
-        }
+        var commandStart = frameState.commandList.length;
 
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
@@ -398,7 +405,12 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.update(frameState);
-        frameState.addCommand = oldAddCommand;
+
+        // If any commands were pushed, add derived commands
+        var commandEnd = frameState.commandList.length;
+        if ((commandStart < commandEnd) && frameState.passes.render) {
+            this.batchTable.addDerivedCommands(frameState, commandStart);
+        }
    };
 
     /**

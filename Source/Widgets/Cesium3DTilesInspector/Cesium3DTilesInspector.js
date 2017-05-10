@@ -131,6 +131,7 @@ define([
         var displayPanelContents = document.createElement('div');
         var updatePanelContents = document.createElement('div');
         var loggingPanelContents = document.createElement('div');
+        var tileInfoPanelContents = document.createElement('div');
         var stylePanelContents = document.createElement('div');
 
         var properties = document.createElement('div');
@@ -152,7 +153,6 @@ define([
         displayPanelContents.appendChild(makeCheckbox('showBoundingVolumes', 'Bounding Volumes'));
         displayPanelContents.appendChild(makeCheckbox('showContentBoundingVolumes', 'Content Volumes'));
         displayPanelContents.appendChild(makeCheckbox('showRequestVolumes', 'Request Volumes'));
-        displayPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
 
         updatePanelContents.appendChild(makeCheckbox('freezeFrame', 'Freeze Frame'));
         updatePanelContents.appendChild(makeCheckbox('dynamicScreenSpaceError', 'Dynamic Screen Space Error'));
@@ -196,10 +196,15 @@ define([
         errorBox.setAttribute('data-bind', 'text: editorError');
         stylePanelContents.appendChild(errorBox);
 
+        tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
+        tileInfoPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
+
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
+        var tileInfoPanel = makeSection('Tile Info', 'tileInfoVisible', 'toggleTileInfo', tileInfoPanelContents);
         var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
 
         // first add and bind all the toggleable panels
@@ -207,6 +212,7 @@ define([
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
+        element.appendChild(tileInfoPanel);
         element.appendChild(stylePanel);
 
         knockout.applyBindings(viewModel, element);
