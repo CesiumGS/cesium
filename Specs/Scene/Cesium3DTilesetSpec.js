@@ -1406,9 +1406,8 @@ defineSuite([
             expect(tileset._tileInfoLabels).toBeDefined();
             expect(tileset._tileInfoLabels.length).toEqual(1);
 
-            var content = tileset._root.content;
-            var expected = 'Texture Memory: ' + (content.textureMemorySizeInBytes / 1048576.0).toFixed(3) + '\n' +
-                           'Vertex Memory: ' + (content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
+            var expected = 'Texture Memory: 0\n' +
+                           'Vertex Memory: 0.008';
 
             expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
 
@@ -1428,13 +1427,12 @@ defineSuite([
             scene.renderForSpecs();
             expect(tileset._tileInfoLabels).toBeDefined();
 
-            var content = tileset._root.content;
-            var expected = 'Geometric error: ' + tileset._root.geometricError + '\n' +
-                           'Commands: ' + tileset._root._commandsLength + '\n' +
-                           'Triangles: ' + content.trianglesLength + '\n' +
-                           'Features: ' + content.featuresLength + '\n' +
-                           'Texture Memory: ' + (content.textureMemorySizeInBytes / 1048576.0).toFixed(3) + '\n' +
-                           'Vertex Memory: ' + (content.vertexMemorySizeInBytes / 1048576.0).toFixed(3);
+            var expected = 'Geometric error: 70\n' +
+                           'Commands: 1\n' +
+                           'Triangles: 120\n' +
+                           'Features: 10\n' +
+                           'Texture Memory: 0\n' +
+                           'Vertex Memory: 0.008';
             expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowGeometricError = false;
