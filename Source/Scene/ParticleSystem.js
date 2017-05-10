@@ -311,8 +311,9 @@ define([
         if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
             if (this.loop) {
                 this.currentTime = this.currentTime - this.lifeTime;
+                var burstLength = this.bursts.length;
                 // Reset any bursts
-                for (i = 0; i < this.bursts.length; i++) {
+                for (i = 0; i < burstLength; i++) {
                     this.bursts[i].complete = false;
                 }
             } else {
