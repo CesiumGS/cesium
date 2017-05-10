@@ -20,7 +20,7 @@ define([
         this.position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this.velocity = Cartesian3.clone(defaultValue(options.velocity, Cartesian3.ZERO));
         this.life = defaultValue(options.life, Number.MAX_VALUE);
-        this.image = defaultValue(options.image, null);
+        this.image = options.image;
         this.age = 0.0;
         this.normalizedAge = 0.0;
 
