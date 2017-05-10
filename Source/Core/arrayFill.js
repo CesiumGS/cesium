@@ -1,19 +1,19 @@
 /*global define*/
 define([
+        './Check',
         './defaultValue',
-        './defined',
-        './DeveloperError'
+        './defined'
     ], function(
+        Check,
         defaultValue,
-        defined,
-        DeveloperError) {
+        defined) {
     'use strict';
 
     /**
      * Fill an array or a portion of an array with a given value.
      *
      * @param {Array} array The array to fill.
-     * @param {Object} value The value to fill the array with.
+     * @param {*} value The value to fill the array with.
      * @param {Number} [start=0] The index to start filling at.
      * @param {Number} [end=array.length] The index to end stop at.
      *
@@ -22,17 +22,13 @@ define([
      */
     function arrayFill(array, value, start, end) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array) || typeof array !== 'object') {
-            throw new DeveloperError('array is required.');
+        Check.defined('array', array);
+        Check.defined('value', value);
+        if (defined(start)) {
+            Check.typeOf.number('start', start);
         }
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
-        if (defined(start) && typeof start !== 'number') {
-            throw new DeveloperError('start must be a valid index.');
-        }
-        if (defined(end) && typeof end !== 'number') {
-            throw new DeveloperError('end must be a valid index.');
+        if (defined(end)) {
+            Check.typeOf.number('end', end);
         }
         //>>includeEnd('debug');
 
@@ -55,6 +51,6 @@ define([
         }
         return array;
     }
-    
+
     return arrayFill;
 });

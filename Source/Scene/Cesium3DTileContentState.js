@@ -13,7 +13,8 @@ define([
         LOADING : 1,    // Is waiting on a pending request
         PROCESSING : 2, // Request received.  Contents are being processed for rendering.  Depending on the content, it might make its own requests for external data.
         READY : 3,      // Ready to render.
-        FAILED : 4      // Request failed.
+        EXPIRED : 4,    // Is expired and will be unloaded once new content is loaded.
+        FAILED : 5      // Request failed.
     };
 
     return freezeObject(Cesium3DTileContentState);

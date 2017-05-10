@@ -169,7 +169,7 @@ define([
     var fromRectangleLowerLeft = new Cartographic();
     var fromRectangleUpperRight = new Cartographic();
     /**
-     * Computes a bounding rectangle from an rectangle.
+     * Computes a bounding rectangle from a rectangle.
      *
      * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.

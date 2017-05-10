@@ -64,10 +64,7 @@ define([
             return;
         }
 
-        if (root.contentUnloaded) {
-            loadTile(root, frameState);
-            return;
-        }
+        loadTile(root, frameState);
 
         if (!tileset.skipLODs) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -117,7 +114,7 @@ define([
             }
 
             var loadedTile = original._ancestorWithLoadedContent;
-            if (original.hasRenderableContent && original.contentReady) {
+            if (original.hasRenderableContent && original.contentAvailable) {
                 loadedTile = original;
             }
 
@@ -134,13 +131,13 @@ define([
                     for (var j = 0; j < childrenLength; ++j) {
                         var child = children[j];
                         touch(tileset, child, outOfCore);
-                        if (child.contentReady) {
+                        if (child.contentAvailable) {
                             child.selected = true;
                             child._finalResolution = true;
                             child._selectedFrame = frameState.frameNumber;
                         }
                         if (child._depth - original._depth < 2) { // prevent traversing too far
-                            if (!child.contentReady || child.refine === Cesium3DTileRefine.ADD) {
+                            if (!child.contentAvailable || child.refine === Cesium3DTileRefine.ADD) {
                                 descendantStack.push(child);
                             }
                         }
@@ -237,7 +234,7 @@ define([
     function selectTile(tileset, tile, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.contentReady && (
+        if (tile.contentAvailable && (
                 (tile.visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
                 (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
             )) {
@@ -317,7 +314,7 @@ define([
                 // content cannot be replaced until all of the nearest descendants with content are all loaded
                 if (replacementWithContent) {
                     if (!child.hasEmptyContent) {
-                        allReady = allReady && child.contentReady;
+                        allReady = allReady && child.contentAvailable;
                     } else {
                         allReady = allReady && this.internalDFS.execute(child);
                     }
@@ -334,6 +331,11 @@ define([
     function baseUpdateAndCheckChildren(tileset, tile, baseScreenSpaceError, frameState) {
         if (hasAdditiveContent(tile)) {
             tileset._desiredTiles.push(tile);
+        }
+
+        // Stop traversal on the subtree since it will be destroyed
+        if (tile.hasTilesetContent && tile.contentExpired) {
+            return false;
         }
 
         // stop traversal when we've attained the desired level of error
@@ -401,7 +403,7 @@ define([
                 var child = children[i];
                 loadTile(child, this.frameState);
                 touch(this.tileset, child, this.outOfCore);
-                if (!tile.contentReady) {
+                if (!tile.contentAvailable) {
                     this.allLoaded = false;
                 }
             }
@@ -488,6 +490,11 @@ define([
     InternalSkipTraversal.prototype.getChildren = function(tile) {
         var tileset = this.tileset;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+
+        // Stop traversal on the subtree since it will be destroyed
+        if (tile.hasTilesetContent && tile.contentExpired) {
+            return emptyArray;
+        }
 
         if (!tile.hasTilesetContent) {
             if (hasAdditiveContent(tile)) {
@@ -593,13 +600,14 @@ define([
         tile._finalResolution = false;
         computeSSE(tile, frameState);
         touch(tileset, tile, outOfCore);
+        tile.updateExpiration();
         tile._ancestorWithContent = undefined;
         tile._ancestorWithLoadedContent = undefined;
         var parent = tile.parent;
         if (defined(parent)) {
             var replace = parent.refine === Cesium3DTileRefine.REPLACE;
             tile._ancestorWithContent = (replace && parent.hasRenderableContent) ? parent : parent._ancestorWithContent;
-            tile._ancestorWithLoadedContent = (replace && parent.hasRenderableContent && parent.contentReady) ? parent : parent._ancestorWithLoadedContent;
+            tile._ancestorWithLoadedContent = (replace && parent.hasRenderableContent && parent.contentAvailable) ? parent : parent._ancestorWithLoadedContent;
         }
     }
 
@@ -621,7 +629,7 @@ define([
     }
 
     function loadTile(tile, frameState) {
-        if (tile.contentUnloaded && tile._requestedFrame !== frameState.frameNumber) {
+        if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
             tile._requestedFrame = frameState.frameNumber;
             computeSSE(tile, frameState);
             tile._requestHeap.insert(tile);

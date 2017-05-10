@@ -2657,15 +2657,11 @@ define([
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
 
-                                var componentType = a.componentType;
-                                // XXX: if uint32, pretend it's really uint16.
-                                componentType = componentType === 5125 ? 5123 : componentType;
-
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : componentType,
+                                    componentDatatype      : a.componentType,
                                     normalize              : false,
                                     offsetInBytes          : a.byteOffset,
                                     strideInBytes          : a.byteStride
@@ -3360,8 +3356,9 @@ define([
             case PrimitiveType.TRIANGLE_STRIP:
             case PrimitiveType.TRIANGLE_FAN:
                 return Math.max(indicesCount - 2, 0);
+            default:
+                return 0;
         }
-        return 0;
     }
 
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
