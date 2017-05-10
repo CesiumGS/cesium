@@ -320,8 +320,7 @@ define([
                 for (i = 0; i < this.bursts.length; i++) {
                     this.bursts[i].complete = false;
                 }
-            }
-            else {
+            } else {
                 this.isComplete = true;
                 this.complete.raiseEvent(this);
             }

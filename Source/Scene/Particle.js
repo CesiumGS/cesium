@@ -53,8 +53,7 @@ define([
             if (typeof force === 'function') {
                 // Force is just a simle callback function.
                 force(this, dt);
-            }
-            else {
+            } else {
                 // Call the apply function of the force.
                 force.apply(this, dt);
             }
@@ -66,8 +65,7 @@ define([
         // Compute the normalized age.
         if (this.life === Number.MAX_VALUE) {
             this.normalizedAge = 0.0;
-        }
-        else {
+        } else {
             this.normalizedAge = this.age / this.life;
         }
 
