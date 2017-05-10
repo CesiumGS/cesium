@@ -229,6 +229,9 @@ define([
         return numToEmit;
     }
 
+    var combinedMatrixScratch = new Matrix4();
+    var rotatedVelocityScratch = new Cartesian3();
+
     ParticleSystem.prototype.update = function(frameState) {
         if (!defined(this._billboardCollection)) {
             this._billboardCollection = new BillboardCollection();
@@ -267,31 +270,27 @@ define([
         }
         particles.length = length;
 
-
         var numToEmit = calculateNumberToEmit(this, dt);
 
         if (numToEmit > 0 && emitter) {
 
             // Compute the final model matrix by combining the particle systems model matrix and the emitter matrix.
-            var combinedMatrix = new Matrix4();
-            Matrix4.multiply(this.modelMatrix, this.emitterModelMatrix, combinedMatrix);
+            Matrix4.multiply(this.modelMatrix, this.emitterModelMatrix, combinedMatrixScratch);
 
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
                 particle = this.emitter.emit( particle );
                 if (particle) {
-
                     //For the velocity we need to add it to the original position and then multiply by point.
-                    var tmp = new Cartesian3();
-                    Cartesian3.add(particle.position, particle.velocity, tmp);
-                    Matrix4.multiplyByPoint(combinedMatrix, tmp, tmp);
+                    Cartesian3.add(particle.position, particle.velocity, rotatedVelocityScratch);
+                    Matrix4.multiplyByPoint(combinedMatrixScratch, rotatedVelocityScratch, rotatedVelocityScratch);
 
                     // Change the position to be in world coordinates
-                    particle.position = Matrix4.multiplyByPoint(combinedMatrix, particle.position, particle.position);
+                    particle.position = Matrix4.multiplyByPoint(combinedMatrixScratch, particle.position, particle.position);
 
                     // Orient the velocity in world space as well.
                     var worldVelocity = new Cartesian3();
-                    Cartesian3.subtract(tmp, particle.position, worldVelocity);
+                    Cartesian3.subtract(rotatedVelocityScratch, particle.position, worldVelocity);
                     Cartesian3.normalize(worldVelocity, worldVelocity);
                     particle.velocity = worldVelocity;
 
