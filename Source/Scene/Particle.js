@@ -24,8 +24,8 @@ define([
         this.age = 0.0;
         this.normalizedAge = 0.0;
 
-        this.startColor = defaultValue(options.startColor, Color.clone(Color.WHITE));
-        this.endColor = defaultValue(options.endColor, Color.clone(Color.WHITE));
+        this.startColor = defaultValue(options.startColor, Color.WHITE);
+        this.endColor = defaultValue(options.endColor, Color.WHITE);
 
         this.startScale = defaultValue(options.startScale);
         this.endScale = defaultValue(options.endScale);
