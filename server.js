@@ -6,6 +6,10 @@
     var compression = require('compression');
     var url = require('url');
     var request = require('request');
+    var http = require('http');
+    var spdy = require('spdy');
+    var fs = require('fs');
+    var path = require('path');
 
     var yargs = require('yargs').options({
         'port' : {
@@ -21,6 +25,10 @@
         },
         'bypass-upstream-proxy-hosts' : {
             'description' : 'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"'
+        },
+        'http2' : {
+            'type': 'boolean',
+            'description' : 'Run server using HTTP/2'
         },
         'help' : {
             'alias' : 'h',
@@ -135,11 +143,21 @@
         });
     });
 
-    var server = app.listen(argv.port, argv.public ? undefined : 'localhost', function() {
+    var server;
+    var protocol = argv.http2 ? 'https' : 'http';
+    if (argv.http2) {
+        server = spdy.createServer({
+            key: fs.readFileSync(path.join(__dirname, 'server.key')),
+            cert: fs.readFileSync(path.join(__dirname, 'server.crt'))
+        }, app);
+    } else {
+        server = http.createServer(app);
+    }
+    server.listen(argv.port, argv.public ? undefined : 'localhost', function() {
         if (argv.public) {
-            console.log('Cesium development server running publicly.  Connect to http://localhost:%d/', server.address().port);
+            console.log('Cesium development server running publicly.  Connect to %s://localhost:%d/', protocol, server.address().port);
         } else {
-            console.log('Cesium development server running locally.  Connect to http://localhost:%d/', server.address().port);
+            console.log('Cesium development server running locally.  Connect to %s://localhost:%d/', protocol, server.address().port);
         }
     });
 
