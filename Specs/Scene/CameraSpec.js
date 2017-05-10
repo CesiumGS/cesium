@@ -2638,7 +2638,7 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
-        var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
+        var correctResult = new Rectangle(-0.05789100547374969, -0.0436586999845781, 0.05789100547374969, 0.0436586999845781);
 
         var rect = camera.computeViewRectangle();
         expect(rect).toEqual(correctResult);
@@ -2670,7 +2670,7 @@ defineSuite([
         camera.direction = Cartesian3.clone(Cartesian3.UNIT_X, new Cartesian3());
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
-        var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
+        var correctResult = new Rectangle(3.0837016481160435, -0.0436586999845781, -3.0837016481160435, 0.0436586999845781);
 
         var rect = camera.computeViewRectangle();
         expect(rect).toEqual(correctResult);

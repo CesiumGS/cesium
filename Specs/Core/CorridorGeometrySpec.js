@@ -272,7 +272,7 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(20.0, CesiumMath.EPSILON13);
         expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(0.0, CesiumMath.EPSILON20);
         expect(CesiumMath.toDegrees(r.east)).toEqual(-67.65499522658291);
-        expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-67.65500477341709 );
     });
 
     var positions = Cartesian3.fromDegreesArray([

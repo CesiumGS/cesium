@@ -178,10 +178,10 @@ defineSuite([
 
         var rectangle = Rectangle.fromCartesianArray(
             wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84);
-        expect(rectangle.east).toEqual(minLon.longitude);
-        expect(rectangle.south).toEqual(minLat.latitude);
-        expect(rectangle.west).toEqual(maxLon.longitude);
-        expect(rectangle.north).toEqual(maxLat.latitude);
+        expect(rectangle.east).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON15);
+        expect(rectangle.west).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
     });
 
     it('fromCartesianArray works with a result parameter.', function() {

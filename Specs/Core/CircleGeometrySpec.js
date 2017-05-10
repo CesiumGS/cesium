@@ -161,8 +161,8 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.6989665987920752);
-        expect(r.south).toEqual(0.6986522252554146);
+        expect(r.north).toEqual(0.6989665987920756);
+        expect(r.south).toEqual(0.6986522252554148);
         expect(r.east).toEqual(-1.3192254919769824);
         expect(r.west).toEqual(-1.319634495353805);
     });

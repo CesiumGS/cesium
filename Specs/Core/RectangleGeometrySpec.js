@@ -308,8 +308,8 @@ defineSuite([
         });
 
         var r = geometry.rectangle;
-        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364013);
-        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364013);
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364017);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364017);
         expect(CesiumMath.toDegrees(r.east)).toEqual(1.4094456877799821);
         expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
     });
