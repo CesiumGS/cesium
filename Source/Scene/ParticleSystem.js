@@ -27,6 +27,30 @@ define([
         CircleEmitter) {
     "use strict";
 
+
+    // An array of available particles that we can reuse instead of allocating new.
+    var particlePool = [];
+
+    /**
+     * Gets a Particle to add to the particle system, reusing Particles from the pool if possible.
+     */
+    function getOrCreateParticle() {
+        // Try to reuse an existing particle from the pool.
+        var particle = particlePool.pop();
+        if (particle === undefined) {
+            // Create a new one
+            particle = new Particle();
+        }
+        return particle;
+    }
+
+    /**
+     * Adds the particle to pool so it can be reused.
+     */
+    function addParticleToPool(particle) {
+        particlePool.push(particle);
+    }
+
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
      * @constructor
@@ -152,6 +176,8 @@ define([
 
     function removeBillboard(system, particle) {
         system._billboardCollection.remove(particle._billboard);
+        // Remove the billboard from the particle so it's initialized correctly if it's reused.
+        particle._billboard = undefined;
     }
 
     function updateBillboard(system, particle) {
@@ -185,8 +211,10 @@ define([
         particle.image = system.image;
         particle.life = CesiumMath.randomBetween(system.minimumLife, system.maximumLife);
         particle.mass = CesiumMath.randomBetween(system.minimumMass, system.maximumMass);
-
         particle.size = new Cartesian2(CesiumMath.randomBetween(system.minimumWidth, system.maximumWidth), CesiumMath.randomBetween(system.minimumHeight, system.maximumHeight));
+        // Reset the normalizedAge and age in case the particle was reused.
+        particle.normalizedAge = 0.0;
+        particle.age = 0.0;
 
         var speed = CesiumMath.randomBetween(system.minimumSpeed, system.maximumSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
@@ -261,6 +289,8 @@ define([
             particle = particles[i];
             if (!particle.update(this.forces, dt)) {
                 removeBillboard(this, particle);
+                // Add the particle back to the pool so it can be reused.
+                addParticleToPool(particle);
                 particles[i] = particles[length - 1];
                 --i;
                 --length;
@@ -279,7 +309,7 @@ define([
 
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
-                particle = new Particle();
+                particle = getOrCreateParticle();
 
                 // Let the emitter initialize the particle.
                 this.emitter.emit(particle);
