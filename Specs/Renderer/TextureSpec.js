@@ -38,6 +38,7 @@ defineSuite([
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
+    var red16x16Image;
 
     var greenDXTImage;
     var greenPVRImage;
@@ -68,6 +69,9 @@ defineSuite([
         }));
         promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
+        }));
+        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(image) {
+            red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
             greenDXTImage = image;
@@ -109,8 +113,12 @@ defineSuite([
         texture = Texture.fromFramebuffer({
             context : context
         });
-        expect(texture.width).toEqual(context.canvas.clientWidth);
-        expect(texture.height).toEqual(context.canvas.clientHeight);
+
+        var expectedWidth = context.canvas.clientWidth;
+        var expectedHeight = context.canvas.clientHeight;
+        expect(texture.width).toEqual(expectedWidth);
+        expect(texture.height).toEqual(expectedHeight);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -145,6 +153,12 @@ defineSuite([
         expect(context).toReadPixels(Color.RED.toBytes());
 
         texture.copyFromFramebuffer();
+
+        var expectedWidth = context.canvas.clientWidth;
+        var expectedHeight = context.canvas.clientHeight;
+        expect(texture.width).toEqual(expectedWidth);
+        expect(texture.height).toEqual(expectedHeight);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
 
         // Clear to white
         command.color = Color.WHITE;
@@ -189,6 +203,8 @@ defineSuite([
                 }
             });
 
+            expect(texture.sizeInBytes).toEqual(16);
+
             expect({
                 context : context,
                 fragmentShader : fs,
@@ -212,6 +228,8 @@ defineSuite([
             }
         });
 
+        expect(texture.sizeInBytes).toBe(8);
+
         expect({
             context : context,
             fragmentShader : fs,
@@ -234,6 +252,8 @@ defineSuite([
             }
         });
 
+        expect(texture.sizeInBytes).toBe(32);
+
         expect({
             context : context,
             fragmentShader : fs,
@@ -255,6 +275,8 @@ defineSuite([
                 arrayBufferView : greenETC1Image.bufferView
             }
         });
+
+        expect(texture.sizeInBytes).toBe(8);
 
         expect({
             context : context,
@@ -346,6 +368,10 @@ defineSuite([
             }
         });
 
+        expect(texture.width).toEqual(1);
+        expect(texture.height).toEqual(1);
+        expect(texture.sizeInBytes).toEqual(4);
+
         expect({
             context : context,
             fragmentShader : fs,
@@ -368,6 +394,10 @@ defineSuite([
             height : 1,
             arrayBufferView : bytes
         });
+
+        expect(texture.width).toEqual(1);
+        expect(texture.height).toEqual(1);
+        expect(texture.sizeInBytes).toEqual(4);
 
         expect({
             context : context,
@@ -437,19 +467,20 @@ defineSuite([
     it('can generate mipmaps', function() {
         texture = new Texture({
             context : context,
-            source : blueImage,
+            source : red16x16Image,
             pixelFormat : PixelFormat.RGBA,
             sampler : new Sampler({
                 minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
             })
         });
         texture.generateMipmap();
+        expect(texture.sizeInBytes).toEqualEpsilon((16*16 + 8*8 + 4*4 + 2*2 + 1) * 4, 1);
 
         expect({
             context : context,
             fragmentShader : fs,
             uniformMap : uniformMap
-        }).contextToRender([0, 0, 255, 255]);
+        }).contextToRender([255, 0, 0, 255]);
     });
 
     it('can set a sampler property', function() {
@@ -528,6 +559,34 @@ defineSuite([
         });
 
         expect(texture.dimensions).toEqual(new Cartesian2(64, 16));
+    });
+
+    function expectTextureByteSize(width, height, pixelFormat, pixelDatatype, expectedSize) {
+        texture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : pixelFormat,
+            pixelDatatype : pixelDatatype
+        });
+        expect(texture.sizeInBytes).toBe(expectedSize);
+        texture = texture && texture.destroy();
+    }
+
+    it('can get the size in bytes of a texture', function() {
+        // Depth textures
+        if (context.depthTexture) {
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_SHORT, 256 * 2);
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_COMPONENT, PixelDatatype.UNSIGNED_INT, 256 * 4);
+            expectTextureByteSize(16, 16, PixelFormat.DEPTH_STENCIL, PixelDatatype.UNSIGNED_INT_24_8, 256 * 4);
+        }
+
+        // Uncompressed formats
+        expectTextureByteSize(16, 16, PixelFormat.ALPHA, PixelDatatype.UNSIGNED_BYTE, 256);
+        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
+        expectTextureByteSize(16, 16, PixelFormat.RGBA, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
+        expectTextureByteSize(16, 16, PixelFormat.LUMINANCE, PixelDatatype.UNSIGNED_BYTE, 256);
+        expectTextureByteSize(16, 16, PixelFormat.LUMINANCE_ALPHA, PixelDatatype.UNSIGNED_BYTE, 256 * 2);
     });
 
     it('can be destroyed', function() {

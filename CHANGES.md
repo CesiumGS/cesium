@@ -1,16 +1,29 @@
 Change Log
 ==========
 
+### 1.34 - 2017-06-01
+
+* Breaking changes
+   * Passing `options.clock` when creating a new `Viewer` instance has been deprecated and will be removed in Cesium 1.37, pass `options.clockViewModel` instead.
+* Fix issue where polylines in a `PolylineCollection` would ignore the far distance when updating the distance display condition. [#5283](https://github.com/AnalyticalGraphicsInc/cesium/pull/5283)
+* Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
+
 ### 1.33 - 2017-05-01
 
-* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will alwasy enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
-* Fixed issue with displaying `MapboxImageryProvider` default token error message [#5191](https://github.com/AnalyticalGraphicsInc/cesium/pull/5191)
-* Fixed bug in conversion formula in Matrix3.fromHeadingPitchRoll [5195](https://github.com/AnalyticalGraphicsInc/cesium/issues/5195)
+* Breaking changes
+   * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
+* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189). 
+* Support for dashed polylines [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159).
+   * Added `PolylineDash` Material type.
+   * Added `PolylineDashMaterialProperty` to the Entity API.
+   * Added CZML `polylineDash` property .
+* Added `disableDepthTestDistance` to billboards, points and labels. This sets the distance to the camera where the depth test will be disabled. Setting it to zero (the default) will always enable the depth test. Setting it to `Number.POSITVE_INFINITY` will never enabled the depth test. Also added `scene.minimumDisableDepthTestDistance` to change the default value from zero. [#5166](https://github.com/AnalyticalGraphicsInc/cesium/pull/5166)
 * Added a `depthFailMaterial` property to line entities, which is the material used to render the line when it fails the depth test. [#5160](https://github.com/AnalyticalGraphicsInc/cesium/pull/5160)
+* Fixed billboards not initially clustering. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5208)
+* Fixed issue with displaying `MapboxImageryProvider` default token error message. [#5191](https://github.com/AnalyticalGraphicsInc/cesium/pull/5191)
+* Fixed bug in conversion formula in `Matrix3.fromHeadingPitchRoll`. [#5195](https://github.com/AnalyticalGraphicsInc/cesium/issues/5195)
 * Upgrade FXAA to version 3.11. [#5200](https://github.com/AnalyticalGraphicsInc/cesium/pull/5200)
-* `Scene.pickPosition` now caches results per frame to increase performance [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
-* Fix billboards not initially clustering. [#5208](https://github.com/AnalyticalGraphicsInc/cesium/pull/5208)
-* Added support for dashed polylines.  Added `PolylineDashMaterialProperty` and CZML `polylineDash` properties - `color`, `gapColor`, `dashLength`, `dashPattern` - and similar properties to Cesium's `Material`. [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159)
+* `Scene.pickPosition` now caches results per frame to increase performance. [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
 
 ### 1.32 - 2017-04-03
 

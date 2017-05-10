@@ -1890,10 +1890,20 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-    it('pick ellipsoid thows without a position', function() {
+    it('pick ellipsoid throws without a position', function() {
         expect(function() {
             camera.pickEllipsoid();
         }).toThrowDeveloperError();
+    });
+
+    it('pick ellipsoid returns undefined if height is 0', function() {
+        scene.canvas.clientHeight = 0;
+        expect(camera.pickEllipsoid(Cartesian2.ZERO)).toBeUndefined();
+    });
+
+    it('pick ellipsoid returns undefined if width is 0', function() {
+        scene.canvas.clientWidth = 0;
+        expect(camera.pickEllipsoid(Cartesian2.ZERO)).toBeUndefined();
     });
 
     it('pick ellipsoid', function() {
