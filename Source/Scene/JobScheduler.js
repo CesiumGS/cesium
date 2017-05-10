@@ -70,9 +70,11 @@ define([
      * @private
      */
     function JobScheduler(budgets) {
+        //>>includeStart('debug', pragmas.debug);
         if (defined(budgets) && (budgets.length !== JobType.NUMBER_OF_JOB_TYPES)) {
             throw new DeveloperError('A budget must be specified for each job type; budgets.length should equal JobType.NUMBER_OF_JOB_TYPES.');
         }
+        //>>includeEnd('debug');
 
         // Total for defaults is half of of one frame at 10 fps
         var jobBudgets = new Array(JobType.NUMBER_OF_JOB_TYPES);

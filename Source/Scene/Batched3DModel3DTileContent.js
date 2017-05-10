@@ -377,7 +377,11 @@ define([
      */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
-        this.batchTable.setAllColor(color);
+        if (this.featuresLength === 0) {
+            this._model.color = color;
+        } else {
+            this.batchTable.setAllColor(color);
+        }
     };
 
     /**

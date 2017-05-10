@@ -2293,12 +2293,12 @@ defineSuite([
         });
     });
 
-    it('Gets triangle count', function() {
+    it('gets triangle count', function() {
         expect(texturedBoxModel.trianglesLength).toBe(12);
         expect(cesiumAirModel.trianglesLength).toBe(5984);
     });
 
-    it('Gets memory usage', function() {
+    it('gets memory usage', function() {
         // Texture is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
         var expectedTextureMemory = Math.floor(256*256*4*(4/3));
         var expectedVertexMemory = 840;

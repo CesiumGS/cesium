@@ -483,7 +483,7 @@ define([
         this.allTilesLoaded = new Event();
 
         /**
-         * The event fired to indicate that a tile's content was unloaded from the cache.
+         * The event fired to indicate that a tile's content was unloaded.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
          * </p>
@@ -1213,6 +1213,27 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function destroySubtree(tileset, tile) {
+        var root = tile;
+        var stats = tileset._statistics;
+        var stack = scratchStack;
+        stack.push(tile);
+        while (stack.length > 0) {
+            tile = stack.pop();
+            var children = tile.children;
+            var length = children.length;
+            for (var i = 0; i < length; ++i) {
+                stack.push(children[i]);
+            }
+            if (tile !== root) {
+                unloadTileFromCache(tileset, tile);
+                tile.destroy();
+                --stats.numberTotal;
+            }
+        }
+        root.children = [];
+    }
+
     function requestContent(tileset, tile, outOfCore) {
         if (!outOfCore) {
             return;
@@ -1223,12 +1244,21 @@ define([
         }
 
         var stats = tileset._statistics;
-
+        var expired = tile.contentExpired;
         var requested = tile.requestContent();
 
         if (!requested) {
             ++stats.numberOfAttemptedRequests;
             return;
+        }
+
+        if (expired) {
+            if (tile.hasRenderableContent) {
+                decrementPointAndFeatureLoadCounts(tileset, tile.content);
+                --tileset._statistics.numberContentReady;
+            } else if (tile.hasTilesetContent) {
+                destroySubtree(tileset, tile);
+            }
         }
 
         ++stats.numberOfPendingRequests;
@@ -1277,12 +1307,17 @@ define([
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
+
                 if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
-                    ++tileset._statistics.numberContentReady;
                     incrementPointAndFeatureLoadCounts(tileset, tile.content);
-                    tile.replacementNode = tileset._replacementList.add(tile);
+                    ++tileset._statistics.numberContentReady;
+
+                    // Add to the tile cache. Previously expired tiles are already in the cache.
+                    if (!defined(tile.replacementNode)) {
+                        tile.replacementNode = tileset._replacementList.add(tile);
+                    }
                 }
             } else {
                 // Not in processing queue
@@ -1465,7 +1500,6 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-
         var tile, i;
 
         var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
@@ -1547,13 +1581,27 @@ define([
         }
     }
 
-    function unloadTiles(tileset, frameState) {
-        var trimTiles = tileset._trimTiles;
-        tileset._trimTiles = false;
+    function unloadTileFromCache(tileset, tile) {
+        var node = tile.replacementNode;
+        if (!defined(node)) {
+            return;
+        }
 
         var stats = tileset._statistics;
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
+
+        tileUnload.raiseEvent(tile);
+        replacementList.remove(node);
+        decrementPointAndFeatureLoadCounts(tileset, tile.content);
+        --stats.numberContentReady;
+    }
+
+    function unloadTiles(tileset) {
+        var trimTiles = tileset._trimTiles;
+        tileset._trimTiles = false;
+
+        var replacementList = tileset._replacementList;
 
         var totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
@@ -1566,16 +1614,9 @@ define([
         var node = replacementList.head;
         while ((node !== sentinel) && ((totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
-
-            decrementPointAndFeatureLoadCounts(tileset, tile.content);
-            tileUnload.raiseEvent(tile);
-            tile.unloadContent();
-
-            var currentNode = node;
             node = node.next;
-            replacementList.remove(currentNode);
-
-            --stats.numberContentReady;
+            unloadTileFromCache(tileset, tile);
+            tile.unloadContent();
             totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         }
     }
@@ -1664,7 +1705,7 @@ define([
         updateTiles(this, frameState);
 
         if (outOfCore) {
-            unloadTiles(this, frameState);
+            unloadTiles(this);
         }
 
         // Events are raised (added to the afterRender queue) here since promises

@@ -201,11 +201,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        *
-        * @type {Number}
-        * @default 1.0
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {

@@ -5,7 +5,9 @@ defineSuite([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
+        'Core/JulianDate',
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix4',
@@ -32,7 +34,9 @@ defineSuite([
         Color,
         defaultValue,
         defined,
+        getStringFromTypedArray,
         HeadingPitchRange,
+        JulianDate,
         loadWithXhr,
         CesiumMath,
         Matrix4,
@@ -87,6 +91,7 @@ defineSuite([
     var withBoundingSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithBoundingSphere/';
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+    var instancedUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
     var instancedRedMaterialUrl = './Data/Cesium3DTiles/Instanced/InstancedRedMaterial';
 
     // 1 tile where each feature is a different source color
@@ -111,13 +116,15 @@ defineSuite([
     var tilesetReplacementWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetReplacementWithViewerRequestVolume';
 
     var tilesetWithExternalResourcesUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithExternalResources';
+    var tilesetSubtreeExpirationUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration';
+    var tilesetSubtreeUrl = './Data/Cesium3DTiles/Tilesets/TilesetSubtreeExpiration/subtree.json';
+    var batchedExpirationUrl = './Data/Cesium3DTiles/Batched/BatchedExpiration';
+    var batchedColorsB3dmUrl = './Data/Cesium3DTiles/Batched/BatchedColors/batchedColors.b3dm';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
     var pointCloudUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
-
-    var originalMaximumRequests;
 
     beforeAll(function() {
         scene = createScene();
@@ -135,12 +142,10 @@ defineSuite([
         camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         camera.frustum.fov = CesiumMath.toRadians(60.0);
 
-        originalMaximumRequests = RequestScheduler.maximumRequests;
         viewAllTiles();
     });
 
     afterEach(function() {
-        RequestScheduler.maximumRequests = originalMaximumRequests;
         scene.primitives.removeAll();
 
         // Wait for any pending requests to complete before ending each test
@@ -165,6 +170,25 @@ defineSuite([
 
     function viewNothing() {
         setZoom(200.0);
+    }
+
+    function viewSky() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+    }
+
+    function viewBottomLeft() {
+        viewAllTiles();
+        scene.camera.moveLeft(200.0);
+        scene.camera.moveDown(200.0);
+    }
+
+    function viewInstances() {
+        setZoom(30.0);
+    }
+
+    function viewPointCloud() {
+        setZoom(5.0);
     }
 
     it('throws with undefined url', function() {
@@ -412,15 +436,7 @@ defineSuite([
         expect(stats.numberProcessing).toEqual(0);
 
         return Cesium3DTilesTester.waitForReady(scene, tileset).then(function() {
-            // Check that root tile is requested
-            expect(stats.visited).toEqual(0);
-            expect(stats.numberOfCommands).toEqual(0);
-            expect(stats.numberOfPendingRequests).toEqual(1);
-            expect(stats.numberProcessing).toEqual(0);
-
-            // Update and check that child tiles are now requested
-            scene.renderForSpecs();
-
+            // Check that root and children are requested
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(0);
             expect(stats.numberOfPendingRequests).toEqual(5);
@@ -513,7 +529,7 @@ defineSuite([
     });
 
     it('verify points statistics', function() {
-        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+        viewPointCloud();
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudUrl
@@ -531,7 +547,7 @@ defineSuite([
     });
 
     it('verify batched points statistics', function() {
-        scene.camera.lookAt(Cartesian3.fromRadians(-1.31968, 0.698874, 5.0), new HeadingPitchRange(0.0, -1.57, 5.0));
+        viewPointCloud();
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : pointCloudBatchedUrl
@@ -647,9 +663,7 @@ defineSuite([
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(5);
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             scene.renderForSpecs();
             expect(stats.visited).toEqual(0);
@@ -666,9 +680,7 @@ defineSuite([
             expect(stats.visited).toEqual(5);
             expect(stats.numberOfCommands).toEqual(5);
 
-            // Look at bottom-left corner of tileset
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
+            viewBottomLeft();
             scene.renderForSpecs();
             expect(stats.visited).toEqual(2); // Visits root, but does not render it
             expect(stats.numberOfCommands).toEqual(1);
@@ -998,14 +1010,8 @@ defineSuite([
     describe('children bound union optimization', function() {
         it('does not select visible tiles with invisible children', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 22),
-                    orientation : {
-                        heading : 0,
-                        pitch : 1.57,
-                        roll : 0
-                    }
-                });
+                var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 22.0);
+                scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 1.0));
 
                 var root = tileset._root;
                 var childRoot = root.children[0];
@@ -1030,15 +1036,6 @@ defineSuite([
                 var childRoot = root.children[0];
                 childRoot.geometricError = 240;
 
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 scene.renderForSpecs();
 
                 expect(childRoot.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
@@ -1057,15 +1054,6 @@ defineSuite([
                 var root = tileset._root;
                 var childRoot = root.children[0];
 
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 49),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 childRoot.geometricError = 0; // child root should meet SSE and children should not be drawn
                 scene.renderForSpecs();
                 // wait for load because geometric error has changed
@@ -1083,15 +1071,7 @@ defineSuite([
         });
 
         it('does select visibile tiles with visible children failing request volumes', function() {
-            scene.camera.setView({
-                destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 100),
-                orientation : {
-                    heading : 0,
-                    pitch : -1.57,
-                    roll : 0
-                }
-            });
-
+            viewRootOnly();
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
                 var root = tileset._root;
                 var childRoot = root.children[0];
@@ -1110,15 +1090,6 @@ defineSuite([
 
         it('does select visibile tiles with visible children passing request volumes', function() {
             return Cesium3DTilesTester.loadTileset(scene, tilesetReplacementWithViewerRequestVolumeUrl).then(function(tileset) {
-                scene.camera.setView({
-                    destination : Cartesian3.fromRadians(centerLongitude, centerLatitude, 40),
-                    orientation : {
-                        heading : 0,
-                        pitch : -1.57,
-                        roll : 0
-                    }
-                });
-
                 var root = tileset._root;
                 var childRoot = root.children[0];
                 childRoot.geometricError = 0;
@@ -1239,16 +1210,53 @@ defineSuite([
         });
     });
 
-    it('debugColorizeTiles', function() {
-        // More precise test is in Cesium3DTileBatchTableSpec
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            viewRootOnly();
+    function checkDebugColorizeTiles(url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            // Get initial color
+            var color;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                color = rgba;
+            });
+
+            // Check for debug color
             tileset.debugColorizeTiles = true;
-            scene.renderForSpecs();
-            var stats = tileset._statistics;
-            expect(stats.visited).toEqual(1);
-            expect(stats.numberOfCommands).toEqual(1);
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).not.toEqual(color);
+            });
+
+            // Check for original color
+            tileset.debugColorizeTiles = false;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).toEqual(color);
+            });
         });
+    }
+
+    it('debugColorizeTiles for b3dm with batch table', function() {
+        return checkDebugColorizeTiles(withBatchTableUrl);
+    });
+
+    it('debugColorizeTiles for b3dm without batch table', function() {
+        return checkDebugColorizeTiles(noBatchIdsUrl);
+    });
+
+    it('debugColorizeTiles for i3dm', function() {
+        viewInstances();
+        return checkDebugColorizeTiles(instancedUrl);
+    });
+
+    it('debugColorizeTiles for cmpt', function() {
+        return checkDebugColorizeTiles(compositeUrl);
+    });
+
+    it('debugColorizeTiles for pnts with batch table', function() {
+        viewPointCloud();
+        return checkDebugColorizeTiles(pointCloudBatchedUrl);
+    });
+
+    it('debugColorizeTiles for pnts without batch table', function() {
+        viewPointCloud();
+        return checkDebugColorizeTiles(pointCloudUrl);
     });
 
     it('debugWireframe', function() {
@@ -1609,6 +1617,7 @@ defineSuite([
     });
 
     it('destroys before tile finishes loading', function() {
+        viewRootOnly();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
@@ -1655,9 +1664,6 @@ defineSuite([
     });
 
     it('applies show style to a tileset with a composite tile', function() {
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({show : 'false'});
             expect(scene).toRender([0, 0, 0, 255]);
@@ -2001,8 +2007,7 @@ defineSuite([
     });
 
     it('sets colorBlendMode for instanced tileset', function() {
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
+        viewInstances();
         return testColorBlendMode(instancedRedMaterialUrl);
     });
 
@@ -2082,9 +2087,7 @@ defineSuite([
             expect(stats.numberOfCommands).toEqual(5);
             expect(stats.numberContentReady).toEqual(5);
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             // All tiles are unloaded
             scene.renderForSpecs();
@@ -2144,9 +2147,7 @@ defineSuite([
             expect(stats.numberOfCommands).toEqual(4);
             expect(stats.numberContentReady).toEqual(4); // 4 children with b3dm content (does not include empty root)
 
-            // Orient camera to face the sky
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
-            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+            viewSky();
 
             // Unload tiles to meet cache size
             scene.renderForSpecs();
@@ -2449,10 +2450,7 @@ defineSuite([
     });
 
     it('loadSiblings', function() {
-        // Look at bottom-left corner of tileset
-        scene.camera.moveLeft(200.0);
-        scene.camera.moveDown(200.0);
-
+        viewBottomLeft();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {
             loadSiblings : false,
             baseScreenSpaceError: 1000000000
@@ -2468,10 +2466,7 @@ defineSuite([
     });
 
     it('immediatelyLoadDesiredLOD', function() {
-        // Look at bottom-left corner of tileset
-        scene.camera.moveLeft(200.0);
-        scene.camera.moveDown(200.0);
-
+        viewBottomLeft();
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetOfTilesetsUrl,
             immediatelyLoadDesiredLOD : true
@@ -2497,8 +2492,7 @@ defineSuite([
             parent.refine = Cesium3DTileRefine.REPLACE;
             parent.unloadContent();
 
-            scene.camera.moveLeft(200.0);
-            scene.camera.moveDown(200.0);
+            viewBottomLeft();
             scene.renderForSpecs();
 
             expect(child.contentReady).toBe(true);
@@ -2506,6 +2500,175 @@ defineSuite([
             expect(child.selected).toBe(true);
             expect(parent.selected).toBe(false);
             expect(stats.numberOfCommands).toEqual(1);
+        });
+    });
+
+    it('tile expires', function() {
+        return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(function(tileset) {
+            // Intercept the request and load content that produces more draw commands, to simulate fetching new content after the original expires
+            var originalLoad = loadWithXhr.load;
+            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                originalLoad(batchedColorsB3dmUrl, responseType, method, data, headers, deferred, overrideMimeType);
+            });
+            var tile = tileset._root;
+            var stats = tileset._statistics;
+            var expiredContent;
+
+            // Check that expireDuration and expireDate are correctly set
+            var expireDate = JulianDate.addSeconds(JulianDate.now(), 5.0, new JulianDate());
+            expect(JulianDate.secondsDifference(tile.expireDate, expireDate)).toEqualEpsilon(0.0, CesiumMath.EPSILON1);
+            expect(tile.expireDuration).toBe(5.0);
+            expect(tile.contentExpired).toBe(false);
+            expect(tile.contentReady).toBe(true);
+            expect(tile.contentAvailable).toBe(true);
+            expect(tile._expiredContent).toBeUndefined();
+
+            // Check stats
+            expect(stats.numberOfCommands).toBe(1);
+            expect(stats.numberTotal).toBe(1);
+
+            // Trigger expiration to happen next frame
+            tile.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
+
+            // Stays in the expired state until the request goes through
+            var originalMaxmimumRequests = RequestScheduler.maximumRequests;
+            RequestScheduler.maximumRequests = 0; // Artificially limit Request Scheduler so the request won't go through
+            scene.renderForSpecs();
+            RequestScheduler.maximumRequests = originalMaxmimumRequests;
+            expiredContent = tile._expiredContent;
+            expect(tile.contentExpired).toBe(true);
+            expect(tile.contentAvailable).toBe(true); // Expired content now exists
+            expect(expiredContent).toBeDefined();
+
+            // Expired content renders while new content loads in
+            expect(stats.numberOfCommands).toBe(1);
+            expect(stats.numberTotal).toBe(1);
+
+            // Request goes through, now in the LOADING state
+            scene.renderForSpecs();
+            expect(tile.contentExpired).toBe(false);
+            expect(tile.contentReady).toBe(false);
+            expect(tile.contentAvailable).toBe(true);
+            expect(tile._contentState).toBe(Cesium3DTileContentState.LOADING);
+            expect(tile._expiredContent).toBeDefined(); // Still holds onto expired content until the content state is READY
+
+            // Check that url contains a query param with the timestamp
+            var url = loadWithXhr.load.calls.first().args[0];
+            expect(url.indexOf('expired=') >= 0).toBe(true);
+
+            // Stats are still the same
+            expect(stats.numberOfCommands).toBe(1);
+            expect(stats.numberTotal).toBe(1);
+
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                expect(stats.numberOfCommands).toBe(1); // Still renders expired content
+                return tile.contentReady;
+            }).then(function() {
+                scene.renderForSpecs();
+
+                // Expired content is destroyed
+                expect(tile._expiredContent).toBeUndefined();
+                expect(expiredContent.isDestroyed()).toBe(true);
+
+                // Stats for new content
+                expect(stats.numberOfCommands).toBe(10);
+                expect(stats.numberTotal).toBe(1);
+            });
+        });
+    });
+
+    function modifySubtreeBuffer(arrayBuffer) {
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var jsonString = getStringFromTypedArray(uint8Array);
+        var json = JSON.parse(jsonString);
+        json.root.children.splice(0, 1);
+
+        jsonString = JSON.stringify(json);
+        var length = jsonString.length;
+        uint8Array = new Uint8Array(length);
+        for (var i = 0; i < length; i++) {
+            uint8Array[i] = jsonString.charCodeAt(i);
+        }
+        return uint8Array.buffer;
+    }
+
+    it('tile with tileset content expires', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetSubtreeExpirationUrl).then(function(tileset) {
+            // Intercept the request and load a subtree with one less child. Still want to make an actual request to simulate
+            // real use cases instead of immediately returning a pre-created array buffer.
+            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                var newDeferred = when.defer();
+                loadWithXhr.defaultLoad(tilesetSubtreeUrl, responseType, method, data, headers, newDeferred, overrideMimeType);
+                newDeferred.promise.then(function(arrayBuffer) {
+                    deferred.resolve(modifySubtreeBuffer(arrayBuffer));
+                });
+            });
+
+            var subtreeRoot = tileset._root.children[0];
+            var subtreeChildren = subtreeRoot.children[0].children;
+            var childrenLength = subtreeChildren.length;
+            var stats = tileset._statistics;
+
+            // Check stats
+            expect(stats.numberOfCommands).toBe(5);
+            expect(stats.numberTotal).toBe(7);
+            expect(stats.numberContentReady).toBe(5);
+
+            // Trigger expiration to happen next frame
+            subtreeRoot.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
+
+            // Listen to tile unload events
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.tileUnload.addEventListener(spyUpdate);
+
+            // Tiles in the subtree are removed from the cache and destroyed.
+            scene.renderForSpecs(); // Becomes expired
+            scene.renderForSpecs(); // Makes request
+            expect(subtreeRoot.children).toEqual([]);
+            for (var i = 0; i < childrenLength; ++i) {
+                expect(subtreeChildren[0].isDestroyed()).toBe(true);
+            }
+            expect(spyUpdate.calls.count()).toEqual(4);
+
+            // Remove the spy so new tiles load in normally
+            loadWithXhr.load = loadWithXhr.defaultLoad;
+
+            // Wait for the new tileset content to come in with one less leaf
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return subtreeRoot.contentReady && tileset.tilesLoaded;
+            }).then(function() {
+                scene.renderForSpecs();
+                expect(stats.numberOfCommands).toBe(4);
+                expect(stats.numberTotal).toBe(6);
+                expect(stats.numberContentReady).toBe(4);
+            });
+        });
+    });
+
+    it('tile expires and request fails', function() {
+        return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(function(tileset) {
+            spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                deferred.reject();
+            });
+            var tile = tileset._root;
+            var stats = tileset._statistics;
+
+            // Trigger expiration to happen next frame
+            tile.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
+
+            // After update the tile is expired
+            scene.renderForSpecs();
+
+            // Make request (it will fail)
+            scene.renderForSpecs();
+
+            // Render scene
+            scene.renderForSpecs();
+            expect(tile._contentState).toBe(Cesium3DTileContentState.FAILED);
+            expect(stats.numberOfCommands).toBe(0);
+            expect(stats.numberTotal).toBe(1);
         });
     });
 
