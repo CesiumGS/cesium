@@ -114,7 +114,7 @@ define([
     var westernMidpointScratch = new Cartesian3();
     var easternMidpointScratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
-    var planeScratch = new Plane(Cartesian3.ZERO, 0.0);
+    var planeScratch = new Plane(Cartesian3.UNIT_X, 0.0);
     var rayScratch = new Ray();
 
     function computeBox(tileBB, rectangle, ellipsoid) {

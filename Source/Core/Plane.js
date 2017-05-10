@@ -3,11 +3,13 @@ define([
         './Cartesian3',
         './defined',
         './DeveloperError',
+        './Math',
         './freezeObject'
     ], function(
         Cartesian3,
         defined,
         DeveloperError,
+        CesiumMath,
         freezeObject) {
     'use strict';
 
@@ -38,6 +40,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(normal))  {
             throw new DeveloperError('normal is required.');
+        }
+        if (!CesiumMath.equalsEpsilon(Cartesian3.magnitude(normal), 1.0, CesiumMath.EPSILON6)) {
+            throw new DeveloperError('normal must be normalized.');
         }
         if (!defined(distance)) {
             throw new DeveloperError('distance is required.');
