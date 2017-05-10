@@ -38,12 +38,13 @@ define([
         this.size = size;
     };
 
+    var deltaScratch = new Cartesian3();
+
     Particle.prototype.update = function(forces, dt) {
 
         // Apply the velocity
-        var delta = new Cartesian3();
-        Cartesian3.multiplyByScalar(this.velocity, dt, delta);
-        Cartesian3.add(this.position, delta, this.position);
+        Cartesian3.multiplyByScalar(this.velocity, dt, deltaScratch);
+        Cartesian3.add(this.position, deltaScratch, this.position);
 
         // Update any forces.
         var length = forces.length;
