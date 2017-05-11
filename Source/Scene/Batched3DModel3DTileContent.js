@@ -343,7 +343,6 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
 
         var pickObject = {
-            tile : content._tile,
             content : content,
             primitive : tileset
         };
