@@ -89,6 +89,9 @@ define([
         if (!defined(normal)) {
             throw new DeveloperError('normal is required.');
         }
+        if (!CesiumMath.equalsEpsilon(Cartesian3.magnitude(normal), 1.0, CesiumMath.EPSILON6)) {
+            throw new DeveloperError('normal must be normalized.');
+        }
         //>>includeEnd('debug');
 
         var distance = -Cartesian3.dot(normal, point);
@@ -119,6 +122,12 @@ define([
 
         var normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
         var distance = coefficients.w;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!CesiumMath.equalsEpsilon(Cartesian3.magnitude(normal), 1.0, CesiumMath.EPSILON6)) {
+            throw new DeveloperError('normal must be normalized.');
+        }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Plane(normal, distance);

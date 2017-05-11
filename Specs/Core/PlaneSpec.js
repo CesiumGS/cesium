@@ -83,9 +83,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromPointNormal throws if normal is not normalized', function() {
+        expect(function() {
+            return Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.ZERO);
+        }).toThrowDeveloperError();
+    });
+
     it('fromCartesian4 throws without coefficients', function() {
         expect(function() {
             return Plane.fromCartesian4(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromCartesian4 throws if normal is not normalized', function() {
+        expect(function() {
+            return Plane.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0));
         }).toThrowDeveloperError();
     });
 
