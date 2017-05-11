@@ -356,9 +356,6 @@ define([
                 colorize(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugColorizeTiles = value;
-                    if (!value) {
-                        that._shouldStyle = true;
-                    }
                 }
             }
         });
@@ -882,6 +879,7 @@ define([
                 this.styleString = '{}';
             }
             this._style = new Cesium3DTileStyle(JSON.parse(this.styleString));
+            this._shouldStyle = true;
         } catch (err) {
             this._editorError = err.toString();
         }
@@ -945,15 +943,14 @@ define([
 
         if (defined(tileset)) {
             var style = tileset.style;
-            if (defined(style) && !defined(this._style)) {
-                this._style = style;
-                this.styleString = JSON.stringify(style.style, null, '  ');
-            } else if (this._style !== tileset.style) {
-                tileset.style = this._style;
-            }
-            if (this._shouldStyle) {
-                tileset._styleEngine.makeDirty();
-                this._shouldStyle = false;
+            if (this._style !== tileset.style) {
+                if (this._shouldStyle) {
+                    tileset.style = this._style;
+                    this._shouldStyle = false;
+                } else {
+                    this._style = style;
+                    this.styleString = JSON.stringify(style.style, null, '  ');
+                }
             }
         }
         if (this.showStats) {

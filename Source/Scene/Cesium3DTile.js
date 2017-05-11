@@ -937,6 +937,7 @@ define([
         } else if (!tileset.debugColorizeTiles && tile._debugColorizeTiles) {
             tile._debugColorizeTiles = false;
             tile._content.applyDebugSettings(false, tile._debugColor);
+            tileset.makeStyleDirty();
         }
     }
 
