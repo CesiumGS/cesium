@@ -73,7 +73,7 @@ define([
      * @param {Number} options.width The width of the heightmap, in height samples.
      * @param {Number} options.height The height of the heightmap, in height samples.
      * @param {Number} options.skirtHeight The height of skirts to drape at the edges of the heightmap.
-     * @param {Rectangle} options.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
+     * @param {Rectangle} options.nativeRectangle A rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
      * @param {Number} [options.exaggeration=1.0] The scale used to exaggerate the terrain.

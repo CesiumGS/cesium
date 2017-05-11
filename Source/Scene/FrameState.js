@@ -201,11 +201,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        *
-        * @type {Number}
-        * @default 1.0
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
@@ -287,10 +286,6 @@ define([
          */
         this.minimumDisableDepthTestDistance = undefined;
     }
-
-    FrameState.prototype.addCommand = function(command) {
-        this.commandList.push(command);
-    };
 
     /**
      * A function that will be called at the end of the frame.

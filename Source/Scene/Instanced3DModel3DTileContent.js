@@ -480,10 +480,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
-        var oldAddCommand = frameState.addCommand;
-        if (frameState.passes.render) {
-            frameState.addCommand = this.batchTable.getAddCommand();
-        }
+        var commandStart = frameState.commandList.length;
 
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
@@ -494,7 +491,11 @@ define([
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
 
-        frameState.addCommand = oldAddCommand;
+        // If any commands were pushed, add derived commands
+        var commandEnd = frameState.commandList.length;
+        if ((commandStart < commandEnd) && frameState.passes.render) {
+            this.batchTable.addDerivedCommands(frameState, commandStart);
+        }
     };
 
     /**

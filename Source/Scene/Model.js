@@ -2657,15 +2657,11 @@ define([
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
 
-                                var componentType = a.componentType;
-                                // XXX: if uint32, pretend it's really uint16.
-                                componentType = componentType === 5125 ? 5123 : componentType;
-
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : componentType,
+                                    componentDatatype      : a.componentType,
                                     normalize              : false,
                                     offsetInBytes          : a.byteOffset,
                                     strideInBytes          : a.byteStride
@@ -3360,8 +3356,9 @@ define([
             case PrimitiveType.TRIANGLE_STRIP:
             case PrimitiveType.TRIANGLE_FAN:
                 return Math.max(indicesCount - 2, 0);
+            default:
+                return 0;
         }
-        return 0;
     }
 
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
@@ -4665,6 +4662,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
             // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
@@ -4680,13 +4678,13 @@ define([
                     if (nc.show) {
                         var command = translucent ? nc.translucentCommand : nc.command;
                         command = silhouette ? nc.silhouetteModelCommand : command;
-                        frameState.addCommand(command);
+                        commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
                             var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
                             command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
-                            frameState.addCommand(command2D);
+                            commandList.push(command2D);
                         }
                     }
                 }
@@ -4696,11 +4694,11 @@ define([
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
                         if (nc.show) {
-                            frameState.addCommand(nc.silhouetteColorCommand);
+                            commandList.push(nc.silhouetteColorCommand);
                             boundingVolume = nc.command.boundingVolume;
                             if (frameState.mode === SceneMode.SCENE2D &&
                                 (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                frameState.addCommand(nc.silhouetteColorCommand2D);
+                                commandList.push(nc.silhouetteColorCommand2D);
                             }
                         }
                     }
@@ -4712,12 +4710,12 @@ define([
                     nc = nodeCommands[i];
                     if (nc.show) {
                         var pickCommand = nc.pickCommand;
-                        frameState.addCommand(pickCommand);
+                        commandList.push(pickCommand);
 
                         boundingVolume = pickCommand.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            frameState.addCommand(nc.pickCommand2D);
+                            commandList.push(nc.pickCommand2D);
                         }
                     }
                 }

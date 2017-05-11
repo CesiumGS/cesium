@@ -1,36 +1,36 @@
 /*global define*/
 define([
-    '../../Core/Cartesian3',
-    '../../Core/Cartographic',
-    '../../Scene/Cesium3DTileFeature',
-    '../../Scene/Cesium3DTileset',
-    '../../Scene/Cesium3DTileStyle',
-    '../../Scene/Cesium3DTileColorBlendMode',
-    '../../Core/Check',
-    '../../Core/Color',
-    '../../Core/defined',
-    '../../Core/defineProperties',
-    '../../Core/destroyObject',
-    '../../ThirdParty/knockout',
-    '../../Scene/PerformanceDisplay',
-    '../../Core/ScreenSpaceEventHandler',
-    '../../Core/ScreenSpaceEventType'
+        '../../Core/Cartesian3',
+        '../../Core/Cartographic',
+        '../../Scene/Cesium3DTileFeature',
+        '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTileStyle',
+        '../../Scene/Cesium3DTileColorBlendMode',
+        '../../Core/Check',
+        '../../Core/Color',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
+        '../../ThirdParty/knockout',
+        '../../Scene/PerformanceDisplay',
+        '../../Core/ScreenSpaceEventHandler',
+        '../../Core/ScreenSpaceEventType'
 ], function(
-    Cartesian3,
-    Cartographic,
-    Cesium3DTileFeature,
-    Cesium3DTileset,
-    Cesium3DTileStyle,
-    Cesium3DTileColorBlendMode,
-    Check,
-    Color,
-    defined,
-    defineProperties,
-    destroyObject,
-    knockout,
-    PerformanceDisplay,
-    ScreenSpaceEventHandler,
-    ScreenSpaceEventType) {
+        Cartesian3,
+        Cartographic,
+        Cesium3DTileFeature,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
+        Cesium3DTileColorBlendMode,
+        Check,
+        Color,
+        defined,
+        defineProperties,
+        destroyObject,
+        knockout,
+        PerformanceDisplay,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType) {
     'use strict';
 
     function getPickTileset(viewModel) {
@@ -41,6 +41,19 @@ define([
             }
             viewModel.pickActive = false;
         };
+    }
+
+    var stringOptions = {
+        maximumFractionDigits : 3
+    };
+
+    function formatMemoryString(memorySizeInBytes) {
+        var memoryInMegabytes = memorySizeInBytes / 1048576;
+        if (memoryInMegabytes < 1.0) {
+            return memoryInMegabytes.toLocaleString(undefined, stringOptions);
+        } else {
+            return Math.round(memoryInMegabytes).toLocaleString();
+        }
     }
 
     function getStats(tileset, isPick) {
@@ -98,9 +111,9 @@ define([
             s += '<ul class="cesium-cesiumInspector-stats">';
             s +=
                 // --- Memory stats
-                '<li><strong>Vertex Memory (MB): </strong>' + Math.round(stats.vertexMemorySizeInBytes / 1048576).toLocaleString() + '</li>' +
-                '<li><strong>Texture Memory (MB): </strong>' + Math.round(stats.textureMemorySizeInBytes / 1048576).toLocaleString() + '</li>' +
-                '<li><strong>Batch Table Memory (MB): </strong>' + Math.round(stats.batchTableMemorySizeInBytes / 1048576).toLocaleString() + '</li>';
+                '<li><strong>Vertex Memory (MB): </strong>' + formatMemoryString(stats.vertexMemorySizeInBytes) + '</li>' +
+                '<li><strong>Texture Memory (MB): </strong>' + formatMemoryString(stats.textureMemorySizeInBytes) + '</li>' +
+                '<li><strong>Batch Table Memory (MB): </strong>' + formatMemoryString(stats.batchTableMemorySizeInBytes) + '</li>';
             s += '</ul>';
         }
         return s;

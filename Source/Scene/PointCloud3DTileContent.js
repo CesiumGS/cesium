@@ -115,6 +115,7 @@ define([
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._mode = undefined;
 
         /**
@@ -1151,7 +1152,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
-        var updateModelMatrix = this._tile.transformDirty || this._mode !== frameState.mode;
+        var modelMatrix = this._tile.computedTransform;
+        var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
+        var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
+
         this._mode = frameState.mode;
 
         if (!defined(this._drawCommand)) {
@@ -1164,17 +1168,18 @@ define([
         }
 
         if (updateModelMatrix) {
+            Matrix4.clone(modelMatrix, this._modelMatrix);
             if (defined(this._rtcCenter)) {
-                Matrix4.multiplyByTranslation(this._tile.computedTransform, this._rtcCenter, this._drawCommand.modelMatrix);
+                Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, this._drawCommand.modelMatrix);
             } else if (defined(this._quantizedVolumeOffset)) {
-                Matrix4.multiplyByTranslation(this._tile.computedTransform, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
+                Matrix4.multiplyByTranslation(modelMatrix, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
             } else {
-                Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
+                Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
             }
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 var projection = frameState.mapProjection;
-                var modelMatrix = this._drawCommand.modelMatrix;
+                modelMatrix = this._drawCommand.modelMatrix;
                 var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
                 if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                     Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
@@ -1212,12 +1217,14 @@ define([
             this.batchTable.update(tileset, frameState);
         }
 
+        var commandList = frameState.commandList;
+
         var passes = frameState.passes;
         if (passes.render) {
-            frameState.addCommand(this._drawCommand);
+            commandList.push(this._drawCommand);
         }
         if (passes.pick) {
-            frameState.addCommand(this._pickCommand);
+            commandList.push(this._pickCommand);
         }
     };
 
