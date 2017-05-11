@@ -4,17 +4,19 @@ define([
         'Core/Color',
         'Core/defined',
         'Renderer/ClearCommand',
+        'Renderer/Pass',
         'Scene/CreditDisplay',
         'Scene/FrameState',
-        'Scene/Pass'
+        'Scene/JobScheduler'
     ], function(
         BoundingRectangle,
         Color,
         defined,
         ClearCommand,
+        Pass,
         CreditDisplay,
         FrameState,
-        Pass) {
+        JobScheduler) {
     'use strict';
 
     function executeCommands(context, passState, commands) {
@@ -34,7 +36,7 @@ define([
         var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')))).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')), new JobScheduler())).passes;
         frameState.passes.pick = true;
 
         primitives.update(frameState);

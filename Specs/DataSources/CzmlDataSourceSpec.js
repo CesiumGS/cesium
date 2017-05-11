@@ -24,6 +24,7 @@ defineSuite([
         'Core/Spherical',
         'Core/TimeInterval',
         'Core/TranslationRotationScale',
+        'DataSources/CompositeEntityCollection',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/StripeOrientation',
@@ -59,6 +60,7 @@ defineSuite([
         Spherical,
         TimeInterval,
         TranslationRotationScale,
+        CompositeEntityCollection,
         EntityCollection,
         ReferenceProperty,
         StripeOrientation,
@@ -1443,6 +1445,530 @@ defineSuite([
         expect(entity.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
     });
 
+    it('works with properties that are constant.', function() {
+        var testObject = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: {
+                constant_name: 'ABC',
+                constant_height: 8,
+                constant_object: {
+                    value: testObject
+                },
+                constant_array: {
+                    value: testArray
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
+    });
+
+    it('works with properties which are constant with specified type.', function() {
+        var testObject = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray = [2, 4, 16, 'test'];
+        var packet = {
+            properties: {
+                constant_name: {
+                    string: 'ABC'
+                },
+                constant_height: {
+                    number: 8
+                },
+                constant_object: {
+                    object: testObject
+                },
+                constant_array: {
+                    array: testArray
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_name.string);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.properties.constant_height.number);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray);
+    });
+
+    it('works with properties with one interval.', function() {
+        var packet = {
+            properties: {
+                changing_name: {
+                    interval: '2012/2014',
+                    value: 'ABC'
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2013');
+        var time2 = JulianDate.fromIso8601('2015');
+
+        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.changing_name.getValue(time2)).toBeUndefined();
+    });
+
+    it('works with properties with one interval with specified type.', function() {
+        var packet = {
+            properties: {
+                changing_name: {
+                    interval: '2012/2014',
+                    string: 'ABC'
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2013');
+        var time2 = JulianDate.fromIso8601('2015');
+
+        expect(entity.properties.changing_name.getValue(time1)).toEqual('ABC');
+        expect(entity.properties.changing_name.getValue(time2)).toBeUndefined();
+    });
+
+    it('works with properties with multiple intervals.', function() {
+        var array1 = [1, 2, 3];
+        var array2 = [4, 5, 6];
+        var packet = {
+            properties: {
+                changing_array: [
+                    {
+                        interval: '2012/2013',
+                        value: array1
+                    },
+                    {
+                        interval: '2013/2014',
+                        value: array2
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
+        expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('handles boolean custom properties with intervals.', function() {
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_boolean: [
+                    {
+                        interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                        boolean: true
+                    },
+                    {
+                        interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                        boolean: false
+                    },
+                    {
+                        interval: '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
+                        boolean: true
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+        expect(entity.properties.custom_boolean).toBeDefined();
+
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toEqual(true);
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:01Z'))).toEqual(false);
+        expect(entity.properties.custom_boolean.getValue(JulianDate.fromIso8601('2012-04-02T12:00:02Z'))).toEqual(true);
+    });
+
+    it('works with properties with multiple intervals with specified type.', function() {
+        var array1 = [1, 2, 3];
+        var array2 = [4, 5, 6];
+        var packet = {
+            properties: {
+                changing_array: [
+                    {
+                        interval: '2012/2013',
+                        array: array1
+                    },
+                    {
+                        interval: '2013/2014',
+                        array: array2
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.changing_array.getValue(time1)).toEqual(array1);
+        expect(entity.properties.changing_array.getValue(time2)).toEqual(array2);
+    });
+
+    it('handles sampled custom properties.', function() {
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_cartesian: {
+                    epoch: '2012-04-02T12:00:00Z',
+                    cartesian: [
+                        0, 1, 2, 3,
+                        60, 4, 5, 6,
+                        120, 7, 8, 9
+                    ]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+        expect(entity.properties.custom_cartesian).toBeDefined();
+
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+        // halfway between two samples, linearly interpolated
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:00:30Z'))).toEqual(new Cartesian3((1 + 4) / 2, (2 + 5) / 2, (3 + 6) / 2));
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:01:00Z'))).toEqual(new Cartesian3(4, 5, 6));
+        expect(entity.properties.custom_cartesian.getValue(JulianDate.fromIso8601('2012-04-02T12:02:00Z'))).toEqual(new Cartesian3(7, 8, 9));
+    });
+
+    it('handles various types of custom properties.', function() {
+        var interval1 = '2012/2013';
+        var interval2 = '2013/2014';
+        var packet = {
+            id: 'MyID',
+            properties: {
+                custom_array_constant: {
+                    array: [1, 2, 3]
+                },
+                custom_array_interval: [
+                    {
+                        interval: interval1,
+                        array: [1, 2, 3]
+                    },
+                    {
+                        interval: interval2,
+                        array: [4, 5, 6]
+                    }
+                ],
+                custom_boolean_constant: {
+                    boolean: true
+                },
+                custom_boolean_interval: [
+                    {
+                        interval: interval1,
+                        boolean: true
+                    },
+                    {
+                        interval: interval2,
+                        boolean: false
+                    }
+                ],
+                custom_boundingRectangle_constant: {
+                    boundingRectangle: [20, 30, 10, 11]
+                },
+                custom_boundingRectangle_interval: [
+                    {
+                        interval: interval1,
+                        boundingRectangle: [20, 30, 10, 11]
+                    },
+                    {
+                        interval: interval2,
+                        boundingRectangle: [21, 31, 11, 12]
+                    }
+                ],
+                custom_boundingRectangle_sampled: {
+                    epoch: '2012-06-01',
+                    boundingRectangle: [
+                        0, 20, 30, 10, 11,
+                        60, 21, 31, 11, 12
+                    ]
+                },
+                custom_cartesian2_constant: {
+                    cartesian2: [20, 30]
+                },
+                custom_cartesian2_interval: [
+                    {
+                        interval: interval1,
+                        cartesian2: [20, 30]
+                    },
+                    {
+                        interval: interval2,
+                        cartesian2: [21, 31]
+                    }
+                ],
+                custom_cartesian2_sampled: {
+                    epoch: '2012-06-01',
+                    cartesian2: [
+                        0, 20, 30,
+                        60, 21, 31
+                    ]
+                },
+                custom_cartesian_constant: {
+                    cartesian: [10, 11, 12]
+                },
+                custom_cartesian_interval: [
+                    {
+                        interval: interval1,
+                        cartesian: [10, 11, 12]
+                    },
+                    {
+                        interval: interval2,
+                        cartesian: [13, 14, 15]
+                    }
+                ],
+                custom_cartesian_sampled: {
+                    epoch: '2012-06-01',
+                    cartesian: [
+                        0, 10, 11, 12,
+                        60, 13, 14, 15
+                    ]
+                },
+                custom_color_constant: {
+                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                },
+                custom_color_interval: [
+                    {
+                        interval: interval1,
+                        rgbaf: [0.1, 0.2, 0.3, 0.4]
+                    },
+                    {
+                        interval: interval2,
+                        rgbaf: [0.5, 0.6, 0.7, 0.8]
+                    }
+                ],
+                custom_color_sampled: {
+                    epoch: '2012-06-01',
+                    rgbaf: [
+                        0, 0.1, 0.2, 0.3, 0.4,
+                        60, 0.5, 0.6, 0.7, 0.8
+                    ]
+                },
+                custom_date_constant: {
+                    date: '2014-06-01'
+                },
+                custom_date_interval: [
+                    {
+                        interval: interval1,
+                        date: '2014-06-01'
+                    },
+                    {
+                        interval: interval2,
+                        date: '2015-06-01'
+                    }
+                ]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.getById('MyID');
+        expect(entity).toBeDefined();
+        expect(entity.properties).toBeDefined();
+
+        var time1 = JulianDate.fromIso8601('2012-06-01');
+        var time2 = JulianDate.fromIso8601('2013-06-01');
+
+        expect(entity.properties.custom_array_constant).toBeDefined();
+        expect(entity.properties.custom_array_constant.getValue(time1)).toBeInstanceOf(Array);
+        expect(entity.properties.custom_array_constant.getValue(time1)).toEqual(packet.properties.custom_array_constant.array);
+
+        expect(entity.properties.custom_array_interval).toBeDefined();
+        expect(entity.properties.custom_array_interval.getValue(time1)).toBeInstanceOf(Array);
+        expect(entity.properties.custom_array_interval.getValue(time1)).toEqual(packet.properties.custom_array_interval[0].array);
+        expect(entity.properties.custom_array_interval.getValue(time2)).toEqual(packet.properties.custom_array_interval[1].array);
+
+        expect(entity.properties.custom_boolean_constant).toBeDefined();
+        expect(entity.properties.custom_boolean_constant.getValue(time1)).toEqual(packet.properties.custom_boolean_constant.boolean);
+
+        expect(entity.properties.custom_boolean_interval).toBeDefined();
+        expect(entity.properties.custom_boolean_interval.getValue(time1)).toEqual(packet.properties.custom_boolean_interval[0].boolean);
+        expect(entity.properties.custom_boolean_interval.getValue(time2)).toEqual(packet.properties.custom_boolean_interval[1].boolean);
+
+        expect(entity.properties.custom_boundingRectangle_constant).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_constant.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_constant.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_constant.boundingRectangle));
+
+        expect(entity.properties.custom_boundingRectangle_interval).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_interval[0].boundingRectangle));
+        expect(entity.properties.custom_boundingRectangle_interval.getValue(time2)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_interval[1].boundingRectangle));
+
+        expect(entity.properties.custom_boundingRectangle_sampled).toBeDefined();
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(time1)).toBeInstanceOf(BoundingRectangle);
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(time1)).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_sampled.boundingRectangle, 0 + 1));
+        expect(entity.properties.custom_boundingRectangle_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(BoundingRectangle.unpack(packet.properties.custom_boundingRectangle_sampled.boundingRectangle, 4 + 2));
+
+        expect(entity.properties.custom_cartesian2_constant).toBeDefined();
+        expect(entity.properties.custom_cartesian2_constant.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_constant.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_constant.cartesian2));
+
+        expect(entity.properties.custom_cartesian2_interval).toBeDefined();
+        expect(entity.properties.custom_cartesian2_interval.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_interval.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_interval[0].cartesian2));
+        expect(entity.properties.custom_cartesian2_interval.getValue(time2)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_interval[1].cartesian2));
+
+        expect(entity.properties.custom_cartesian2_sampled).toBeDefined();
+        expect(entity.properties.custom_cartesian2_sampled.getValue(time1)).toBeInstanceOf(Cartesian2);
+        expect(entity.properties.custom_cartesian2_sampled.getValue(time1)).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_sampled.cartesian2, 0 + 1));
+        expect(entity.properties.custom_cartesian2_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Cartesian2.unpack(packet.properties.custom_cartesian2_sampled.cartesian2, 2 + 2));
+
+        expect(entity.properties.custom_cartesian_constant).toBeDefined();
+        expect(entity.properties.custom_cartesian_constant.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_constant.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_constant.cartesian));
+
+        expect(entity.properties.custom_cartesian_interval).toBeDefined();
+        expect(entity.properties.custom_cartesian_interval.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_interval.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_interval[0].cartesian));
+        expect(entity.properties.custom_cartesian_interval.getValue(time2)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_interval[1].cartesian));
+
+        expect(entity.properties.custom_cartesian_sampled).toBeDefined();
+        expect(entity.properties.custom_cartesian_sampled.getValue(time1)).toBeInstanceOf(Cartesian3);
+        expect(entity.properties.custom_cartesian_sampled.getValue(time1)).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_sampled.cartesian, 0 + 1));
+        expect(entity.properties.custom_cartesian_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Cartesian3.unpack(packet.properties.custom_cartesian_sampled.cartesian, 3 + 2));
+
+        expect(entity.properties.custom_color_constant).toBeDefined();
+        expect(entity.properties.custom_color_constant.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_constant.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_constant.rgbaf));
+
+        expect(entity.properties.custom_color_interval).toBeDefined();
+        expect(entity.properties.custom_color_interval.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_interval.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_interval[0].rgbaf));
+        expect(entity.properties.custom_color_interval.getValue(time2)).toEqual(Color.unpack(packet.properties.custom_color_interval[1].rgbaf));
+
+        expect(entity.properties.custom_color_sampled).toBeDefined();
+        expect(entity.properties.custom_color_sampled.getValue(time1)).toBeInstanceOf(Color);
+        expect(entity.properties.custom_color_sampled.getValue(time1)).toEqual(Color.unpack(packet.properties.custom_color_sampled.rgbaf, 0 + 1));
+        expect(entity.properties.custom_color_sampled.getValue(JulianDate.addSeconds(time1, 60, new JulianDate()))).toEqual(Color.unpack(packet.properties.custom_color_sampled.rgbaf, 4 + 2));
+
+        expect(entity.properties.custom_date_constant).toBeDefined();
+        expect(entity.properties.custom_date_constant.getValue(time1)).toBeInstanceOf(JulianDate);
+        expect(entity.properties.custom_date_constant.getValue(time1)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_constant.date));
+
+        expect(entity.properties.custom_date_interval).toBeDefined();
+        expect(entity.properties.custom_date_interval.getValue(time1)).toBeInstanceOf(JulianDate);
+        expect(entity.properties.custom_date_interval.getValue(time1)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[0].date));
+        expect(entity.properties.custom_date_interval.getValue(time2)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[1].date));
+    });
+
+    it('handles properties in a way that allows CompositeEntityCollection to work', function() {
+        var testObject1 = {
+            foo: 4,
+            bar: {
+                name: 'bar'
+            }
+        };
+        var testArray1 = [2, 4, 16, 'test'];
+        var packet1 = {
+            id: 'test',
+            properties: {
+                constant_name: 'ABC',
+                constant_height: 8,
+                constant_object: {
+                    value: testObject1
+                },
+                constant_array: {
+                    value: testArray1
+                }
+            }
+        };
+
+        var dataSource1 = new CzmlDataSource();
+        dataSource1.load(makePacket(packet1));
+
+        var dataSource2 = new CzmlDataSource();
+        var composite = new CompositeEntityCollection([dataSource1.entities, dataSource2.entities]);
+
+        // Initially we use all the properties from dataSource1.
+        var entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject1);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray1);
+
+        // Load a new packet into dataSource2 and it should take precedence in the composite.
+        var packet2 = {
+            id: 'test',
+            properties: {
+                constant_name: 'DEF'
+            }
+        };
+
+        dataSource2.load(makePacket(packet2));
+
+        entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet2.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet1.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject1);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray1);
+
+        // Changed values should be mirrored in the composite, too.
+        var testObject3 = {
+            some: 'value'
+        };
+        var testArray3 = ['not', 'the', 'same', 4];
+        var packet3 = {
+            id: 'test',
+            properties: {
+                constant_height: 9,
+                constant_object: {
+                    value: testObject3
+                },
+                constant_array: {
+                    value: testArray3
+                }
+            }
+        };
+
+        dataSource2.process(packet3);
+
+        entity = composite.values[0];
+        expect(entity.properties.constant_name.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet2.properties.constant_name);
+        expect(entity.properties.constant_height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet3.properties.constant_height);
+        expect(entity.properties.constant_object.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testObject3);
+        expect(entity.properties.constant_array.getValue(Iso8601.MINIMUM_VALUE)).toEqual(testArray3);
+    });
+
     it('CZML Availability works with a single interval.', function() {
         var packet1 = {
             id : 'testObject',
@@ -1839,7 +2365,11 @@ defineSuite([
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
+                silhouetteColor : {
+                    rgbaf : [1.0, 0.0, 0.0, 1.0]
+                },
+                silhouetteSize : 2.0,
                 color : {
                     rgbaf : [0.0, 1.0, 0.0, 0.2]
                 },
@@ -1874,6 +2404,8 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
         expect(entity.model.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.silhouetteColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
+        expect(entity.model.silhouetteSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2.0);
         expect(entity.model.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
         expect(entity.model.colorBlendMode.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(entity.model.colorBlendAmount.getValue(Iso8601.MINIMUM_VALUE)).toEqual(0.5);
@@ -1903,6 +2435,10 @@ defineSuite([
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
                 heightReference: 'CLAMP_TO_GROUND',
+                silhouetteColor : {
+                    rgbaf : [1.0, 0.0, 0.0, 1.0]
+                },
+                silhouetteSize : 2.0,
                 color : {
                     rgbaf : [0.0, 1.0, 0.0, 0.2]
                 },
@@ -1941,6 +2477,8 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
         expect(entity.model.shadows.getValue(validTime)).toEqual(ShadowMode.ENABLED);
         expect(entity.model.heightReference.getValue(validTime)).toEqual(HeightReference.CLAMP_TO_GROUND);
+        expect(entity.model.silhouetteColor.getValue(validTime)).toEqual(new Color(1.0, 0.0, 0.0, 1.0));
+        expect(entity.model.silhouetteSize.getValue(validTime)).toEqual(2.0);
         expect(entity.model.color.getValue(validTime)).toEqual(new Color(0.0, 1.0, 0.0, 0.2));
         expect(entity.model.colorBlendMode.getValue(validTime)).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(entity.model.colorBlendAmount.getValue(validTime)).toEqual(0.5);
@@ -1966,6 +2504,8 @@ defineSuite([
         expect(entity.model.shadows.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.heightReference.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.color.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.silhouetteColor.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.silhouetteSize.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.colorBlendMode.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.colorBlendAmount.getValue(invalidTime)).toBeUndefined();
 
@@ -2738,6 +3278,31 @@ defineSuite([
         expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
     });
 
+    it('Polyline dash.', function() {
+        var packet = {
+            id : 'polylineDash',
+            polyline : {
+                material : {
+                    polylineDash : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        },
+                        dashLength: 16.0,
+                        dashPattern: 7.0
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+
+        var entity = dataSource.entities.getById('polylineDash');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.polyline.material.dashLength.getValue()).toEqual(16.0);
+        expect(entity.polyline.material.dashPattern.getValue()).toEqual(7.0);
+    });
+
     it('Processes extrapolation options', function() {
         var packet = {
             id : 'point',
@@ -2862,6 +3427,7 @@ defineSuite([
             expect(e.box.outline.getValue(date)).toEqual(true);
             expect(e.box.outlineColor.getValue(date)).toEqual(Color.fromBytes(121, 42, 244, 168));
             expect(e.box.outlineWidth.getValue(date)).toEqual(15323.0);
+            expect(e.box.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.corridor.show.getValue(date)).toEqual(true);
             expect(e.corridor.positions.getValue(date)).toEqual([ new Cartesian3(36415, 2702, 36618), new Cartesian3(47759, 11706, 63277) ]);
             expect(e.corridor.width.getValue(date)).toEqual(20413.0);
@@ -2874,6 +3440,7 @@ defineSuite([
             expect(e.corridor.outline.getValue(date)).toEqual(true);
             expect(e.corridor.outlineColor.getValue(date)).toEqual(Color.fromBytes(198, 25, 134, 60));
             expect(e.corridor.outlineWidth.getValue(date)).toEqual(9132.0);
+            expect(e.corridor.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.cylinder.show.getValue(date)).toEqual(true);
             expect(e.cylinder.length.getValue(date)).toEqual(33298.0);
             expect(e.cylinder.topRadius.getValue(date)).toEqual(16245.0);
@@ -2885,6 +3452,7 @@ defineSuite([
             expect(e.cylinder.outlineWidth.getValue(date)).toEqual(64018.0);
             expect(e.cylinder.numberOfVerticalLines.getValue(date)).toEqual(38567.0);
             expect(e.cylinder.slices.getValue(date)).toEqual(39979.0);
+            expect(e.cylinder.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.ellipse.show.getValue(date)).toEqual(true);
             expect(e.ellipse.semiMajorAxis.getValue(date)).toEqual(60072.0);
             expect(e.ellipse.semiMinorAxis.getValue(date)).toEqual(38653.0);
@@ -2899,6 +3467,7 @@ defineSuite([
             expect(e.ellipse.outlineColor.getValue(date)).toEqual(Color.fromBytes(160, 82, 145, 104));
             expect(e.ellipse.outlineWidth.getValue(date)).toEqual(8839.0);
             expect(e.ellipse.numberOfVerticalLines.getValue(date)).toEqual(38878.0);
+            expect(e.ellipse.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.ellipsoid.show.getValue(date)).toEqual(true);
             expect(e.ellipsoid.radii.getValue(date)).toEqual(new Cartesian3(15638, 24381, 37983));
             expect(e.ellipsoid.fill.getValue(date)).toEqual(true);
@@ -2909,11 +3478,15 @@ defineSuite([
             expect(e.ellipsoid.stackPartitions.getValue(date)).toEqual(54278.0);
             expect(e.ellipsoid.slicePartitions.getValue(date)).toEqual(28562.0);
             expect(e.ellipsoid.subdivisions.getValue(date)).toEqual(14008.0);
+            expect(e.ellipsoid.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.label.show.getValue(date)).toEqual(true);
             expect(e.label.text.getValue(date)).toEqual('string36641');
             expect(e.label.font.getValue(date)).toEqual('14px sans-serif');
             expect(e.label.style.getValue(date)).toEqual(LabelStyle.FILL_AND_OUTLINE);
             expect(e.label.scale.getValue(date)).toEqual(6510.0);
+            expect(e.label.showBackground.getValue(date)).toEqual(true);
+            expect(e.label.backgroundColor.getValue(date)).toEqual(Color.fromBytes(225, 114, 54, 128));
+            expect(e.label.backgroundPadding.getValue(date)).toEqual(new Cartesian2(5508, 56341));
             expect(e.label.pixelOffset.getValue(date)).toEqual(new Cartesian2(25913, 30821));
             expect(e.label.eyeOffset.getValue(date)).toEqual(new Cartesian3(30502, 29047, 25457));
             expect(e.label.horizontalOrigin.getValue(date)).toEqual(HorizontalOrigin.LEFT);
@@ -2931,7 +3504,10 @@ defineSuite([
             expect(e.model.maximumScale.getValue(date)).toEqual(64305.0);
             expect(e.model.incrementallyLoadTextures.getValue(date)).toEqual(true);
             expect(e.model.runAnimations.getValue(date)).toEqual(true);
+            expect(e.model.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.model.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(e.model.silhouetteColor.getValue(date)).toEqual(Color.fromBytes(29, 61, 52, 101));
+            expect(e.model.silhouetteSize.getValue(date)).toEqual(4645.0);
             expect(e.model.color.getValue(date)).toEqual(Color.fromBytes(0, 52, 75, 73));
             expect(e.model.colorBlendMode.getValue(date)).toEqual(ColorBlendMode.REPLACE);
             expect(e.model.colorBlendAmount.getValue(date)).toEqual(7475.0);
@@ -2966,12 +3542,14 @@ defineSuite([
             expect(e.polygon.perPositionHeight.getValue(date)).toEqual(true);
             expect(e.polygon.closeTop.getValue(date)).toEqual(true);
             expect(e.polygon.closeBottom.getValue(date)).toEqual(true);
+            expect(e.polygon.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.polyline.show.getValue(date)).toEqual(true);
             expect(e.polyline.positions.getValue(date)).toEqual([ new Cartesian3(23333, 31067, 17529), new Cartesian3(57924, 41186, 31648) ]);
             expect(e.polyline.width.getValue(date)).toEqual(14667.0);
             expect(e.polyline.granularity.getValue(date)).toEqual(53395.0);
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(88, 0, 232, 230));
             expect(e.polyline.followSurface.getValue(date)).toEqual(true);
+            expect(e.polyline.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.rectangle.show.getValue(date)).toEqual(true);
             expect(e.rectangle.coordinates.getValue(date)).toEqual(new Rectangle(1.13325368272577, 0.703573207377445, 0.756676249095309, 0.339217858685931));
             expect(e.rectangle.height.getValue(date)).toEqual(20608.0);
@@ -2986,6 +3564,7 @@ defineSuite([
             expect(e.rectangle.outlineWidth.getValue(date)).toEqual(59794.0);
             expect(e.rectangle.closeTop.getValue(date)).toEqual(true);
             expect(e.rectangle.closeBottom.getValue(date)).toEqual(true);
+            expect(e.rectangle.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.wall.show.getValue(date)).toEqual(true);
             expect(e.wall.positions.getValue(date)).toEqual([ new Cartesian3(21681, 40276, 30621), new Cartesian3(3959, 61967, 19442) ]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([ 49466, 44737 ]);
@@ -2996,6 +3575,7 @@ defineSuite([
             expect(e.wall.outline.getValue(date)).toEqual(true);
             expect(e.wall.outlineColor.getValue(date)).toEqual(Color.fromBytes(107, 196, 96, 198));
             expect(e.wall.outlineWidth.getValue(date)).toEqual(50458.0);
+            expect(e.wall.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e = dataSource.entities.getById('constant_position_cartographicRadians')).toBeDefined();
             expect(e.position.getValue(date)).toEqual(Cartesian3.fromRadians(0.368123392863751, 0.678098621973879, 32050));
             expect(e = dataSource.entities.getById('constant_position_cartographicDegrees')).toBeDefined();
@@ -3155,10 +3735,14 @@ defineSuite([
             expect(e.ellipsoid.material.oddColor.getValue(date)).toEqualEpsilon(new Color(0.580392156862745, 0.164705882352941, 0.741176470588235, 0.0941176470588235), 1e-14);
             expect(e = dataSource.entities.getById('constant_ellipsoid_outlineColor_rgbaf')).toBeDefined();
             expect(e.ellipsoid.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.494117647058824, 0.0823529411764706, 0.274509803921569, 0.823529411764706), 1e-14);
+            expect(e = dataSource.entities.getById('constant_label_backgroundColor_rgbaf')).toBeDefined();
+            expect(e.label.backgroundColor.getValue(date)).toEqualEpsilon(new Color(0.894117647058824, 0.949019607843137, 0.494117647058824, 0.843137254901961), 1e-14);
             expect(e = dataSource.entities.getById('constant_label_fillColor_rgbaf')).toBeDefined();
             expect(e.label.fillColor.getValue(date)).toEqualEpsilon(new Color(0.16078431372549, 0.568627450980392, 0.776470588235294, 0.505882352941176), 1e-14);
             expect(e = dataSource.entities.getById('constant_label_outlineColor_rgbaf')).toBeDefined();
             expect(e.label.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.458823529411765, 0.325490196078431, 0.909803921568627, 0.67843137254902), 1e-14);
+            expect(e = dataSource.entities.getById('constant_model_silhouetteColor_rgbaf')).toBeDefined();
+            expect(e.model.silhouetteColor.getValue(date)).toEqualEpsilon(new Color(0.294117647058824, 0.313725490196078, 0.419607843137255, 0.87843137254902), 1e-14);
             expect(e = dataSource.entities.getById('constant_model_color_rgbaf')).toBeDefined();
             expect(e.model.color.getValue(date)).toEqualEpsilon(new Color(0.568627450980392, 0.333333333333333, 0.141176470588235, 0.572549019607843), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_solidColor_color')).toBeDefined();
@@ -3169,6 +3753,11 @@ defineSuite([
             expect(e.path.material.outlineWidth.getValue(date)).toEqual(11017.0);
             expect(e = dataSource.entities.getById('material_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(166, 131, 155, 102));
+            expect(e = dataSource.entities.getById('material_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(190, 189, 9, 7));
+            expect(e.path.material.gapColor.getValue(date)).toEqual(Color.fromBytes(170, 88, 12, 24));
+            expect(e.path.material.dashLength.getValue(date)).toEqual(45848.0);
+            expect(e.path.material.dashPattern.getValue(date)).toEqual(13519.0);
             expect(e = dataSource.entities.getById('material_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(72, 114, 200, 147));
             expect(e.path.material.glowPower.getValue(date)).toEqual(42344.0);
@@ -3195,6 +3784,10 @@ defineSuite([
             expect(e.path.material.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.266666666666667, 0.556862745098039, 0.352941176470588, 0.76078431372549), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_polylineArrow_color')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.627450980392157, 0.27843137254902, 0.972549019607843, 0.92156862745098), 1e-14);
+            expect(e = dataSource.entities.getById('constant_path_material_polylineDash_color')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.113725490196078, 0.368627450980392, 0.411764705882353, 0.745098039215686), 1e-14);
+            expect(e = dataSource.entities.getById('constant_path_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.path.material.gapColor.getValue(date)).toEqualEpsilon(new Color(0.831372549019608, 0.313725490196078, 0.341176470588235, 0.749019607843137), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_polylineGlow_color')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.584313725490196, 0.0156862745098039, 0.329411764705882, 0.270588235294118), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_image_color')).toBeDefined();
@@ -3254,6 +3847,11 @@ defineSuite([
             expect(e.polyline.material.outlineWidth.getValue(date)).toEqual(6879.0);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(82, 169, 80, 107));
+            expect(e = dataSource.entities.getById('material_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(22, 214, 57, 141));
+            expect(e.polyline.material.gapColor.getValue(date)).toEqual(Color.fromBytes(150, 91, 109, 117));
+            expect(e.polyline.material.dashLength.getValue(date)).toEqual(60297.0);
+            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(40430.0);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(59, 125, 181, 171));
             expect(e.polyline.material.glowPower.getValue(date)).toEqual(41345.0);
@@ -3280,6 +3878,10 @@ defineSuite([
             expect(e.polyline.material.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.815686274509804, 0.545098039215686, 0.529411764705882, 0.317647058823529), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineArrow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.831372549019608, 0.823529411764706, 0.631372549019608, 0.443137254901961), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_material_polylineDash_color')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.462745098039216, 0.184313725490196, 0.329411764705882, 0), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.material.gapColor.getValue(date)).toEqualEpsilon(new Color(0.0509803921568627, 0.0313725490196078, 0.23921568627451, 0.4), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineGlow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.411764705882353, 0.313725490196078, 0.858823529411765, 0.380392156862745), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_image_color')).toBeDefined();
@@ -3499,6 +4101,33 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_agi_vector_direction_unitSpherical')).toBeDefined();
             expect(e = dataSource.entities.getById('constant_agi_vector_direction_cartesian')).toBeDefined();
             expect(e = dataSource.entities.getById('constant_agi_vector_direction_unitCartesian')).toBeDefined();
+            expect(e = dataSource.entities.getById('constant_custom')).toBeDefined();
+            expect(e.properties.custom_boolean.getValue(date)).toEqual(true);
+            expect(e.properties.custom_boundingRectangle.getValue(date)).toEqual(new BoundingRectangle(9369, 63524, 6904, 17690));
+            expect(e.properties.custom_cartesian.getValue(date)).toEqual(new Cartesian3(28502, 45167, 944));
+            expect(e.properties.custom_cartographicRadians.getValue(date)).toEqual(Cartesian3.fromRadians(0.350571264887744, 0.633274262413284, 42979));
+            expect(e.properties.custom_cartographicDegrees.getValue(date)).toEqual(Cartesian3.fromDegrees(18, 36, 37743));
+            expect(e.properties.custom_cartesian2.getValue(date)).toEqual(new Cartesian2(44825, 16303));
+            expect(e.properties.custom_unitCartesian.getValue(date)).toEqualEpsilon(new Cartesian3(0.77935070007851, 0.565493818550955, 0.269868907930861), 1e-14);
+            expect(e.properties.custom_spherical.getValue(date)).toEqual(Cartesian3.fromSpherical(new Spherical(1705, 13830, 21558)));
+            expect(e.properties.custom_unitSpherical.getValue(date)).toEqual(Cartesian3.fromSpherical(new Spherical(59387, 15591)));
+            expect(e.properties.custom_rgba.getValue(date)).toEqual(Color.fromBytes(50, 149, 175, 147));
+            expect(e.properties.custom_rgbaf.getValue(date)).toEqualEpsilon(new Color(0.0666666666666667, 0.0666666666666667, 0.231372549019608, 0.427450980392157), 1e-14);
+            expect(e.properties.custom_colorBlendMode.getValue(date)).toEqual(ColorBlendMode.REPLACE);
+            expect(e.properties.custom_cornerType.getValue(date)).toEqual(CornerType.BEVELED);
+            expect(e.properties.custom_heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(e.properties.custom_horizontalOrigin.getValue(date)).toEqual(HorizontalOrigin.LEFT);
+            expect(e.properties.custom_labelStyle.getValue(date)).toEqual(LabelStyle.FILL_AND_OUTLINE);
+            expect(e.properties.custom_number.getValue(date)).toEqual(31507.0);
+            expect(e.properties.custom_nearFarScalar.getValue(date)).toEqual(new NearFarScalar(14621, 24121, 16734, 56129));
+            expect(e.properties.custom_unitQuaternion.getValue(date)).toEqualEpsilon(new Quaternion(0.742737937277143, 0.267679401430615, 0.507905263014791, 0.344558178514049), 1e-14);
+            expect(e.properties.custom_shadowMode.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
+            expect(e.properties.custom_string.getValue(date)).toEqual('string41758');
+            expect(e.properties.custom_stripeOrientation.getValue(date)).toEqual(StripeOrientation.VERTICAL);
+            expect(e.properties.custom_wsen.getValue(date)).toEqual(new Rectangle(1.47520917005826, 1.17615981869183, 0.973692387723505, 1.00039738410474));
+            expect(e.properties.custom_wsenDegrees.getValue(date)).toEqual(Rectangle.fromDegrees(5, 3, 6, 19));
+            expect(e.properties.custom_uri.getValue(date)).toEqual('http://example.com/41986');
+            expect(e.properties.custom_verticalOrigin.getValue(date)).toEqual(VerticalOrigin.BOTTOM);
             expect(e = dataSource.entities.getById('ConstantPosition1')).toBeDefined();
             expect(e.position.getValue(date)).toEqual(new Cartesian3(48370, 3260, 44044));
             expect(e = dataSource.entities.getById('ConstantDouble1')).toBeDefined();
@@ -3537,6 +4166,7 @@ defineSuite([
             expect(e.box.outline.getValue(date)).toEqual(constant.box.outline.getValue(date));
             expect(e.box.outlineColor.getValue(date)).toEqual(constant.box.outlineColor.getValue(date));
             expect(e.box.outlineWidth.getValue(date)).toEqual(constant.box.outlineWidth.getValue(date));
+            expect(e.box.shadows.getValue(date)).toEqual(constant.box.shadows.getValue(date));
             expect(e.corridor.show.getValue(date)).toEqual(constant.corridor.show.getValue(date));
             expect(e.corridor.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.corridor.width.getValue(date)).toEqual(constant.corridor.width.getValue(date));
@@ -3549,6 +4179,7 @@ defineSuite([
             expect(e.corridor.outline.getValue(date)).toEqual(constant.corridor.outline.getValue(date));
             expect(e.corridor.outlineColor.getValue(date)).toEqual(constant.corridor.outlineColor.getValue(date));
             expect(e.corridor.outlineWidth.getValue(date)).toEqual(constant.corridor.outlineWidth.getValue(date));
+            expect(e.corridor.shadows.getValue(date)).toEqual(constant.corridor.shadows.getValue(date));
             expect(e.cylinder.show.getValue(date)).toEqual(constant.cylinder.show.getValue(date));
             expect(e.cylinder.length.getValue(date)).toEqual(constant.cylinder.length.getValue(date));
             expect(e.cylinder.topRadius.getValue(date)).toEqual(constant.cylinder.topRadius.getValue(date));
@@ -3560,6 +4191,7 @@ defineSuite([
             expect(e.cylinder.outlineWidth.getValue(date)).toEqual(constant.cylinder.outlineWidth.getValue(date));
             expect(e.cylinder.numberOfVerticalLines.getValue(date)).toEqual(constant.cylinder.numberOfVerticalLines.getValue(date));
             expect(e.cylinder.slices.getValue(date)).toEqual(constant.cylinder.slices.getValue(date));
+            expect(e.cylinder.shadows.getValue(date)).toEqual(constant.cylinder.shadows.getValue(date));
             expect(e.ellipse.show.getValue(date)).toEqual(constant.ellipse.show.getValue(date));
             expect(e.ellipse.semiMajorAxis.getValue(date)).toEqual(constant.ellipse.semiMajorAxis.getValue(date));
             expect(e.ellipse.semiMinorAxis.getValue(date)).toEqual(constant.ellipse.semiMinorAxis.getValue(date));
@@ -3574,6 +4206,7 @@ defineSuite([
             expect(e.ellipse.outlineColor.getValue(date)).toEqual(constant.ellipse.outlineColor.getValue(date));
             expect(e.ellipse.outlineWidth.getValue(date)).toEqual(constant.ellipse.outlineWidth.getValue(date));
             expect(e.ellipse.numberOfVerticalLines.getValue(date)).toEqual(constant.ellipse.numberOfVerticalLines.getValue(date));
+            expect(e.ellipse.shadows.getValue(date)).toEqual(constant.ellipse.shadows.getValue(date));
             expect(e.ellipsoid.show.getValue(date)).toEqual(constant.ellipsoid.show.getValue(date));
             expect(e.ellipsoid.radii.getValue(date)).toEqual(constant.ellipsoid.radii.getValue(date));
             expect(e.ellipsoid.fill.getValue(date)).toEqual(constant.ellipsoid.fill.getValue(date));
@@ -3584,11 +4217,15 @@ defineSuite([
             expect(e.ellipsoid.stackPartitions.getValue(date)).toEqual(constant.ellipsoid.stackPartitions.getValue(date));
             expect(e.ellipsoid.slicePartitions.getValue(date)).toEqual(constant.ellipsoid.slicePartitions.getValue(date));
             expect(e.ellipsoid.subdivisions.getValue(date)).toEqual(constant.ellipsoid.subdivisions.getValue(date));
+            expect(e.ellipsoid.shadows.getValue(date)).toEqual(constant.ellipsoid.shadows.getValue(date));
             expect(e.label.show.getValue(date)).toEqual(constant.label.show.getValue(date));
             expect(e.label.text.getValue(date)).toEqual(constant.label.text.getValue(date));
             expect(e.label.font.getValue(date)).toEqual(constant.label.font.getValue(date));
             expect(e.label.style.getValue(date)).toEqual(constant.label.style.getValue(date));
             expect(e.label.scale.getValue(date)).toEqual(constant.label.scale.getValue(date));
+            expect(e.label.showBackground.getValue(date)).toEqual(constant.label.showBackground.getValue(date));
+            expect(e.label.backgroundColor.getValue(date)).toEqual(constant.label.backgroundColor.getValue(date));
+            expect(e.label.backgroundPadding.getValue(date)).toEqual(constant.label.backgroundPadding.getValue(date));
             expect(e.label.pixelOffset.getValue(date)).toEqual(constant.label.pixelOffset.getValue(date));
             expect(e.label.eyeOffset.getValue(date)).toEqual(constant.label.eyeOffset.getValue(date));
             expect(e.label.horizontalOrigin.getValue(date)).toEqual(constant.label.horizontalOrigin.getValue(date));
@@ -3606,7 +4243,10 @@ defineSuite([
             expect(e.model.maximumScale.getValue(date)).toEqual(constant.model.maximumScale.getValue(date));
             expect(e.model.incrementallyLoadTextures.getValue(date)).toEqual(constant.model.incrementallyLoadTextures.getValue(date));
             expect(e.model.runAnimations.getValue(date)).toEqual(constant.model.runAnimations.getValue(date));
+            expect(e.model.shadows.getValue(date)).toEqual(constant.model.shadows.getValue(date));
             expect(e.model.heightReference.getValue(date)).toEqual(constant.model.heightReference.getValue(date));
+            expect(e.model.silhouetteColor.getValue(date)).toEqual(constant.model.silhouetteColor.getValue(date));
+            expect(e.model.silhouetteSize.getValue(date)).toEqual(constant.model.silhouetteSize.getValue(date));
             expect(e.model.color.getValue(date)).toEqual(constant.model.color.getValue(date));
             expect(e.model.colorBlendMode.getValue(date)).toEqual(constant.model.colorBlendMode.getValue(date));
             expect(e.model.colorBlendAmount.getValue(date)).toEqual(constant.model.colorBlendAmount.getValue(date));
@@ -3641,12 +4281,14 @@ defineSuite([
             expect(e.polygon.perPositionHeight.getValue(date)).toEqual(constant.polygon.perPositionHeight.getValue(date));
             expect(e.polygon.closeTop.getValue(date)).toEqual(constant.polygon.closeTop.getValue(date));
             expect(e.polygon.closeBottom.getValue(date)).toEqual(constant.polygon.closeBottom.getValue(date));
+            expect(e.polygon.shadows.getValue(date)).toEqual(constant.polygon.shadows.getValue(date));
             expect(e.polyline.show.getValue(date)).toEqual(constant.polyline.show.getValue(date));
             expect(e.polyline.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.polyline.width.getValue(date)).toEqual(constant.polyline.width.getValue(date));
             expect(e.polyline.granularity.getValue(date)).toEqual(constant.polyline.granularity.getValue(date));
             expect(e.polyline.material.color.getValue(date)).toEqual(constant.polyline.material.color.getValue(date));
             expect(e.polyline.followSurface.getValue(date)).toEqual(constant.polyline.followSurface.getValue(date));
+            expect(e.polyline.shadows.getValue(date)).toEqual(constant.polyline.shadows.getValue(date));
             expect(e.rectangle.show.getValue(date)).toEqual(constant.rectangle.show.getValue(date));
             expect(e.rectangle.coordinates.getValue(date)).toEqual(constant.rectangle.coordinates.getValue(date));
             expect(e.rectangle.height.getValue(date)).toEqual(constant.rectangle.height.getValue(date));
@@ -3661,6 +4303,7 @@ defineSuite([
             expect(e.rectangle.outlineWidth.getValue(date)).toEqual(constant.rectangle.outlineWidth.getValue(date));
             expect(e.rectangle.closeTop.getValue(date)).toEqual(constant.rectangle.closeTop.getValue(date));
             expect(e.rectangle.closeBottom.getValue(date)).toEqual(constant.rectangle.closeBottom.getValue(date));
+            expect(e.rectangle.shadows.getValue(date)).toEqual(constant.rectangle.shadows.getValue(date));
             expect(e.wall.show.getValue(date)).toEqual(constant.wall.show.getValue(date));
             expect(e.wall.positions.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.wall.minimumHeights.getValue(date)).toEqual([dataSource.entities.getById('ConstantDouble1').billboard.scale.getValue(date), dataSource.entities.getById('ConstantDouble2').billboard.scale.getValue(date)]);
@@ -3671,6 +4314,7 @@ defineSuite([
             expect(e.wall.outline.getValue(date)).toEqual(constant.wall.outline.getValue(date));
             expect(e.wall.outlineColor.getValue(date)).toEqual(constant.wall.outlineColor.getValue(date));
             expect(e.wall.outlineWidth.getValue(date)).toEqual(constant.wall.outlineWidth.getValue(date));
+            expect(e.wall.shadows.getValue(date)).toEqual(constant.wall.shadows.getValue(date));
             expect(e = dataSource.entities.getById('reference_box_material_image')).toBeDefined();
             expect(e.box.material.image.getValue(date)).toEqual(dataSource.entities.getById('material_box_material_image').box.material.image.getValue(date));
             expect(e.box.material.repeat.getValue(date)).toEqual(dataSource.entities.getById('material_box_material_image').box.material.repeat.getValue(date));
@@ -3762,6 +4406,11 @@ defineSuite([
             expect(e.path.material.outlineWidth.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineOutline').path.material.outlineWidth.getValue(date));
             expect(e = dataSource.entities.getById('reference_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineArrow').path.material.color.getValue(date));
+            expect(e = dataSource.entities.getById('reference_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.color.getValue(date));
+            expect(e.path.material.gapColor.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.gapColor.getValue(date));
+            expect(e.path.material.dashLength.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.dashLength.getValue(date));
+            expect(e.path.material.dashPattern.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.dashPattern.getValue(date));
             expect(e = dataSource.entities.getById('reference_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineGlow').path.material.color.getValue(date));
             expect(e.path.material.glowPower.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineGlow').path.material.glowPower.getValue(date));
@@ -3805,6 +4454,11 @@ defineSuite([
             expect(e.polyline.material.outlineWidth.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineOutline').polyline.material.outlineWidth.getValue(date));
             expect(e = dataSource.entities.getById('reference_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineArrow').polyline.material.color.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.color.getValue(date));
+            expect(e.polyline.material.gapColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.gapColor.getValue(date));
+            expect(e.polyline.material.dashLength.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.dashLength.getValue(date));
+            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.dashPattern.getValue(date));
             expect(e = dataSource.entities.getById('reference_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineGlow').polyline.material.color.getValue(date));
             expect(e.polyline.material.glowPower.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineGlow').polyline.material.glowPower.getValue(date));
@@ -4019,6 +4673,10 @@ defineSuite([
             expect(e.ellipsoid.subdivisions.getValue(documentStopDate)).toEqual(53957.0);
             expect(e.label.scale.getValue(documentStartDate)).toEqual(40153.0);
             expect(e.label.scale.getValue(documentStopDate)).toEqual(42123.0);
+            expect(e.label.backgroundColor.getValue(documentStartDate)).toEqual(Color.fromBytes(30, 92, 161, 169));
+            expect(e.label.backgroundColor.getValue(documentStopDate)).toEqual(Color.fromBytes(85, 52, 166, 62));
+            expect(e.label.backgroundPadding.getValue(documentStartDate)).toEqual(new Cartesian2(32945, 5504));
+            expect(e.label.backgroundPadding.getValue(documentStopDate)).toEqual(new Cartesian2(35323, 6281));
             expect(e.label.pixelOffset.getValue(documentStartDate)).toEqual(new Cartesian2(8539, 9761));
             expect(e.label.pixelOffset.getValue(documentStopDate)).toEqual(new Cartesian2(10537, 54569));
             expect(e.label.eyeOffset.getValue(documentStartDate)).toEqual(new Cartesian3(5984, 34327, 59014));
@@ -4039,6 +4697,10 @@ defineSuite([
             expect(e.model.minimumPixelSize.getValue(documentStopDate)).toEqual(40522.0);
             expect(e.model.maximumScale.getValue(documentStartDate)).toEqual(8290.0);
             expect(e.model.maximumScale.getValue(documentStopDate)).toEqual(25558.0);
+            expect(e.model.silhouetteColor.getValue(documentStartDate)).toEqual(Color.fromBytes(33, 239, 70, 81));
+            expect(e.model.silhouetteColor.getValue(documentStopDate)).toEqual(Color.fromBytes(60, 48, 26, 123));
+            expect(e.model.silhouetteSize.getValue(documentStartDate)).toEqual(65103.0);
+            expect(e.model.silhouetteSize.getValue(documentStopDate)).toEqual(29065.0);
             expect(e.model.color.getValue(documentStartDate)).toEqual(Color.fromBytes(74, 69, 164, 116));
             expect(e.model.color.getValue(documentStopDate)).toEqual(Color.fromBytes(127, 30, 46, 170));
             expect(e.model.colorBlendAmount.getValue(documentStartDate)).toEqual(64130.0);
@@ -4341,12 +5003,18 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_ellipsoid_outlineColor_rgbaf')).toBeDefined();
             expect(e.ellipsoid.outlineColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.552941176470588, 0.549019607843137, 0.431372549019608, 0.568627450980392), 1e-14);
             expect(e.ellipsoid.outlineColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.435294117647059, 0.698039215686274, 0.396078431372549, 0.772549019607843), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_label_backgroundColor_rgbaf')).toBeDefined();
+            expect(e.label.backgroundColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.96078431372549, 0.188235294117647, 0.870588235294118, 0.270588235294118), 1e-14);
+            expect(e.label.backgroundColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.882352941176471, 0.796078431372549, 0.603921568627451, 0.823529411764706), 1e-14);
             expect(e = dataSource.entities.getById('sampled_label_fillColor_rgbaf')).toBeDefined();
             expect(e.label.fillColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.709803921568627, 0.556862745098039, 0.337254901960784, 0.247058823529412), 1e-14);
             expect(e.label.fillColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.43921568627451, 0.694117647058824, 0.901960784313726, 0.0823529411764706), 1e-14);
             expect(e = dataSource.entities.getById('sampled_label_outlineColor_rgbaf')).toBeDefined();
             expect(e.label.outlineColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.631372549019608, 0.709803921568627, 0.270588235294118, 0.792156862745098), 1e-14);
             expect(e.label.outlineColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.435294117647059, 0.176470588235294, 0.235294117647059, 0.631372549019608), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_model_silhouetteColor_rgbaf')).toBeDefined();
+            expect(e.model.silhouetteColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.231372549019608, 0.866666666666667, 0.266666666666667, 0.635294117647059), 1e-14);
+            expect(e.model.silhouetteColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.749019607843137, 0.227450980392157, 0.807843137254902, 0.0823529411764706), 1e-14);
             expect(e = dataSource.entities.getById('sampled_model_color_rgbaf')).toBeDefined();
             expect(e.model.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.0509803921568627, 0.83921568627451, 0.470588235294118, 0.956862745098039), 1e-14);
             expect(e.model.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.435294117647059, 0.945098039215686, 0.431372549019608, 0.619607843137255), 1e-14);
@@ -4363,6 +5031,15 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(150, 221, 161, 136));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(19, 231, 68, 117));
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(140, 167, 151, 119));
+            expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(65, 100, 228, 104));
+            expect(e.path.material.gapColor.getValue(documentStartDate)).toEqual(Color.fromBytes(154, 198, 168, 151));
+            expect(e.path.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(16, 23, 0, 42));
+            expect(e.path.material.dashLength.getValue(documentStartDate)).toEqual(38294.0);
+            expect(e.path.material.dashLength.getValue(documentStopDate)).toEqual(33057.0);
+            expect(e.path.material.dashPattern.getValue(documentStartDate)).toEqual(58660.0);
+            expect(e.path.material.dashPattern.getValue(documentStopDate)).toEqual(3340.0);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(197, 117, 196, 254));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(18, 17, 195, 230));
@@ -4402,6 +5079,12 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_path_material_polylineArrow_color')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.0666666666666667, 0.972549019607843, 0.686274509803922, 0.325490196078431), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.2, 0.482352941176471, 0.498039215686275, 0.219607843137255), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash_color')).toBeDefined();
+            expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.803921568627451, 0.67843137254902, 0.176470588235294, 0.709803921568627), 1e-14);
+            expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.674509803921569, 0.0980392156862745, 0.447058823529412, 0.803921568627451), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.path.material.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.231372549019608, 0.745098039215686, 0.772549019607843, 0.901960784313726), 1e-14);
+            expect(e.path.material.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.713725490196078, 0.180392156862745, 0.317647058823529, 0.309803921568627), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineGlow_color')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.63921568627451, 0.2, 0.0196078431372549, 0.984313725490196), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.376470588235294, 0.815686274509804, 0.933333333333333, 0.0235294117647059), 1e-14);
@@ -4479,6 +5162,15 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(141, 137, 252, 157));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(8, 236, 198, 57));
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(77, 159, 238, 158));
+            expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(206, 194, 234, 158));
+            expect(e.polyline.material.gapColor.getValue(documentStartDate)).toEqual(Color.fromBytes(232, 145, 15, 164));
+            expect(e.polyline.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(173, 151, 118, 138));
+            expect(e.polyline.material.dashLength.getValue(documentStartDate)).toEqual(41757.0);
+            expect(e.polyline.material.dashLength.getValue(documentStopDate)).toEqual(10126.0);
+            expect(e.polyline.material.dashPattern.getValue(documentStartDate)).toEqual(33948.0);
+            expect(e.polyline.material.dashPattern.getValue(documentStopDate)).toEqual(16892.0);
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(174, 178, 78, 176));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(79, 191, 38, 195));
@@ -4518,6 +5210,12 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineArrow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.52156862745098, 0.725490196078431, 0.87843137254902, 0.823529411764706), 1e-14);
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.772549019607843, 0.862745098039216, 0.325490196078431, 0), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash_color')).toBeDefined();
+            expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.525490196078431, 0.992156862745098, 0.964705882352941, 0.364705882352941), 1e-14);
+            expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.27843137254902, 0.133333333333333, 0.447058823529412, 0.192156862745098), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.material.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.498039215686275, 0.776470588235294, 0.803921568627451, 0.690196078431373), 1e-14);
+            expect(e.polyline.material.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.376470588235294, 0.898039215686275, 0.168627450980392, 0.898039215686275), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineGlow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.705882352941177, 0.901960784313726, 0.0784313725490196, 0.356862745098039), 1e-14);
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.517647058823529, 0.207843137254902, 0.701960784313725, 0.105882352941176), 1e-14);
@@ -4761,6 +5459,37 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_vector_direction_unitSpherical')).toBeDefined();
             expect(e = dataSource.entities.getById('sampled_vector_direction_cartesian')).toBeDefined();
             expect(e = dataSource.entities.getById('sampled_vector_direction_unitCartesian')).toBeDefined();
+            expect(e = dataSource.entities.getById('sampled_custom')).toBeDefined();
+            expect(e.properties.custom_boundingRectangle.getValue(documentStartDate)).toEqual(new BoundingRectangle(10924, 3626, 12558, 56113));
+            expect(e.properties.custom_boundingRectangle.getValue(documentStopDate)).toEqual(new BoundingRectangle(59127, 45286, 34992, 17032));
+            expect(e.properties.custom_cartesian.getValue(documentStartDate)).toEqual(new Cartesian3(59456, 60648, 1004));
+            expect(e.properties.custom_cartesian.getValue(documentStopDate)).toEqual(new Cartesian3(37915, 14740, 14905));
+            expect(e.properties.custom_cartographicRadians.getValue(documentStartDate)).toEqual(Cartesian3.fromRadians(1.25380297085855, 1.03510976346284, 7102));
+            expect(e.properties.custom_cartographicRadians.getValue(documentStopDate)).toEqual(Cartesian3.fromRadians(1.10648839763778, 0.231915563506949, 340));
+            expect(e.properties.custom_cartographicDegrees.getValue(documentStartDate)).toEqual(Cartesian3.fromDegrees(44, 31, 55762));
+            expect(e.properties.custom_cartographicDegrees.getValue(documentStopDate)).toEqual(Cartesian3.fromDegrees(10, 18, 28847));
+            expect(e.properties.custom_cartesian2.getValue(documentStartDate)).toEqual(new Cartesian2(9033, 9251));
+            expect(e.properties.custom_cartesian2.getValue(documentStopDate)).toEqual(new Cartesian2(34048, 58501));
+            expect(e.properties.custom_unitCartesian.getValue(documentStartDate)).toEqualEpsilon(new Cartesian3(0.0501133095086564, 0.917195967206924, 0.395272328843601), 1e-14);
+            expect(e.properties.custom_unitCartesian.getValue(documentStopDate)).toEqualEpsilon(new Cartesian3(0.797476048450763, 0.40584478979077, 0.446454878735849), 1e-14);
+            expect(e.properties.custom_spherical.getValue(documentStartDate)).toEqual(Cartesian3.fromSpherical(new Spherical(47098, 2231, 14088)));
+            expect(e.properties.custom_spherical.getValue(documentStopDate)).toEqual(Cartesian3.fromSpherical(new Spherical(34883, 48264, 41148)));
+            expect(e.properties.custom_unitSpherical.getValue(documentStartDate)).toEqual(Cartesian3.fromSpherical(new Spherical(48811, 24254)));
+            expect(e.properties.custom_unitSpherical.getValue(documentStopDate)).toEqual(Cartesian3.fromSpherical(new Spherical(44800, 8111)));
+            expect(e.properties.custom_rgba.getValue(documentStartDate)).toEqual(Color.fromBytes(179, 175, 115, 46));
+            expect(e.properties.custom_rgba.getValue(documentStopDate)).toEqual(Color.fromBytes(136, 187, 237, 156));
+            expect(e.properties.custom_rgbaf.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431373, 0.450980392156863, 0.588235294117647, 0.72156862745098), 1e-14);
+            expect(e.properties.custom_rgbaf.getValue(documentStopDate)).toEqualEpsilon(new Color(0.419607843137255, 0.843137254901961, 0.36078431372549, 0.423529411764706), 1e-14);
+            expect(e.properties.custom_number.getValue(documentStartDate)).toEqual(24561.0);
+            expect(e.properties.custom_number.getValue(documentStopDate)).toEqual(45446.0);
+            expect(e.properties.custom_nearFarScalar.getValue(documentStartDate)).toEqual(new NearFarScalar(64112, 15354, 32827, 10368));
+            expect(e.properties.custom_nearFarScalar.getValue(documentStopDate)).toEqual(new NearFarScalar(55643, 45785, 33458, 29826));
+            expect(e.properties.custom_unitQuaternion.getValue(documentStartDate)).toEqualEpsilon(new Quaternion(0.697299305414108, 0.26496667122144, 0.615947719782462, 0.253327354041402), 1e-14);
+            expect(e.properties.custom_unitQuaternion.getValue(documentStopDate)).toEqualEpsilon(new Quaternion(0.134764165794432, 0.408681085292446, 0.902060273565587, 0.0332513608247514), 1e-14);
+            expect(e.properties.custom_wsen.getValue(documentStartDate)).toEqual(new Rectangle(1.4164143530628, 1.2888469381038, 0.679756561409663, 1.29649258884014));
+            expect(e.properties.custom_wsen.getValue(documentStopDate)).toEqual(new Rectangle(1.19133054275098, 0.9154648059314, 0.71347968461712, 1.32750822775441));
+            expect(e.properties.custom_wsenDegrees.getValue(documentStartDate)).toEqual(Rectangle.fromDegrees(29, 11, 17, 36));
+            expect(e.properties.custom_wsenDegrees.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(37, 16, 25, 23));
         });
     });
 });

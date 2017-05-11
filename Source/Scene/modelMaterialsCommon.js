@@ -2,7 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Renderer/WebGLConstants'
+        '../Core/WebGLConstants'
     ], function(
         defaultValue,
         defined,
@@ -167,7 +167,7 @@ define([
     var vertexShaderCount = 0;
     var fragmentShaderCount = 0;
     var programCount = 0;
-    function generateTechnique(gltf, khrMaterialsCommon, lightParameters) {
+    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -195,7 +195,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
-                semantic: 'MODELVIEW',
+                semantic: options.useCesiumRTCMatrixInShaders ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix: {
@@ -622,7 +622,7 @@ define([
         } else {
             value = paramValue;
         }
-     
+
         switch (paramName)  {
             case 'ambient':
                 return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
@@ -636,13 +636,13 @@ define([
                 return WebGLConstants.FLOAT;
             case 'transparency':
                 return WebGLConstants.FLOAT;
-                
+
             // these two are usually not used directly within shaders,
             // they are just added here for completeness
             case 'transparent':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
             case 'doubleSided':
-                return WebGLConstants.BOOL;                
+                return WebGLConstants.BOOL;
         }
     }
 
@@ -678,10 +678,12 @@ define([
      *
      * @private
      */
-    function modelMaterialsCommon(gltf) {
+    function modelMaterialsCommon(gltf, options) {
         if (!defined(gltf)) {
             return undefined;
         }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var hasExtension = false;
         var extensionsUsed = gltf.extensionsUsed;
@@ -709,6 +711,8 @@ define([
 
             var lightParameters = generateLightParameters(gltf);
 
+            var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
+
             var techniques = {};
             var materials = gltf.materials;
             for (var name in materials) {
@@ -719,7 +723,9 @@ define([
                         var techniqueKey = getTechniqueKey(khrMaterialsCommon);
                         var technique = techniques[techniqueKey];
                         if (!defined(technique)) {
-                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters);
+                            technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, {
+                                useCesiumRTCMatrixInShaders : hasCesiumRTCExtension
+                            });
                             techniques[techniqueKey] = technique;
                         }
 

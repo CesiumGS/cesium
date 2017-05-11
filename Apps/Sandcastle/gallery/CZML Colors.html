@@ -46,10 +46,6 @@ var czml = [{
                     "rgba" : [255, 0, 0, 100]
                 }
             }
-        },
-        "outline" : true,
-        "outlineColor" : {
-            "rgba" : [0, 0, 0, 255]
         }
     }
 }, {
@@ -64,18 +60,14 @@ var czml = [{
                     "rgbaf" : [1, 0, 0, 0.39]
                 }
             }
-        },
-        "outline" : true,
-        "outlineColor" : {
-            "rgbaf" : [0, 0, 0, 1]
         }
     }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSource = Cesium.CzmlDataSource.load(czml);
-viewer.dataSources.add(dataSource);
-viewer.zoomTo(dataSource);//Sandcastle_End
+var dataSourcePromise = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSourcePromise);
+viewer.zoomTo(dataSourcePromise);//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {

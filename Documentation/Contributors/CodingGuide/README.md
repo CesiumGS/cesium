@@ -290,12 +290,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -383,26 +383,40 @@ Some common sensible defaults are
 
 ### Throwing Exceptions
 
-* Throw Cesium's `DeveloperError` when the user has a coding error.  The most common errors are missing parameters and out-of-range parameters.  For example:
+Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+
+* For example, to check that a parameter is defined and is an object:
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
-    if (!defined(cartesian)) {
-        throw new DeveloperError('cartesian is required.');
-    }
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     return Math.max(cartesian.x, cartesian.y, cartesian.z);
 };
 ```
+
+* For more complicated parameter checks, manually check the parameter and then throw a `DeveloperError`. Example:
+```javascript
+Cartesian3.unpackArray = function(array, result) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined('array', array);
+    Check.typeOf.number.greaterThanOrEquals('array.length', array.length, 3);
+    if (array.length % 3 !== 0) {
+        throw new DeveloperError('array length must be a multiple of 3.');
+    }
+    //>>includeEnd('debug');
+
+    // ...
+};
+```
+
 * To check for `DeveloperError`, surround code in `includeStart`/`includeEnd` comments, as shown above, so developer error checks can be optimized out of release builds.  Do not include required side effects inside `includeStart`/`includeEnd`, e.g.,
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
     var c = cartesian;
-    if (!defined(c)) {
-        throw new DeveloperError('cartesian is required.');
-    }
+    Check.typeOf.object('cartesian', cartesian);
     //>>includeEnd('debug');
 
     // Works in debug. Fails in release since c is optimized out!
@@ -557,12 +571,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     var tiles = this._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -573,12 +587,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -658,13 +672,13 @@ Model.prototype.update = function(frameState) {
 
 It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
 ```javascript
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
@@ -673,16 +687,16 @@ is better written as
 ```javascript
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
 
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting the `loadTilesJson` function to the top of the file.
+even though it relies on implicitly hoisting the `loadTileset` function to the top of the file.
 
 ## Design
 

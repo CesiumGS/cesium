@@ -11,7 +11,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/isArray',
+        '../Core/loadCRN',
         '../Core/loadImage',
+        '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -24,6 +26,7 @@ define([
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
+        '../Shaders/Materials/PolylineDashMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
         '../Shaders/Materials/RimLightingMaterial',
@@ -42,7 +45,9 @@ define([
         destroyObject,
         DeveloperError,
         isArray,
+        loadCRN,
         loadImage,
+        loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -55,6 +60,7 @@ define([
         GridMaterial,
         NormalMapMaterial,
         PolylineArrowMaterial,
+        PolylineDashMaterial,
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
         RimLightingMaterial,
@@ -202,6 +208,13 @@ define([
      *  <li>PolylineArrow</li>
      *  <ul>
      *      <li><code>color</code>: diffuse color and alpha.</li>
+     *  </ul>
+     *  <li>PolylineDash</li>
+     *  <ul>
+     *      <li><code>color</code>: color for the line.</li>
+     *      <li><code>gapColor</code>: color for the gaps in the line.</li>
+     *      <li><code>dashLength</code>: Dash length in pixels.</li>
+     *      <li><code>dashPattern</code>: The 16 bit stipple pattern for the line..</li>
      *  </ul>
      *  <li>PolylineGlow</li>
      *  <ul>
@@ -413,10 +426,23 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = new Texture({
-                context : context,
-                source : image
-            });
+            var texture;
+            if (defined(image.internalFormat)) {
+                texture = new Texture({
+                    context : context,
+                    pixelFormat : image.internalFormat,
+                    width : image.width,
+                    height : image.height,
+                    source : {
+                        arrayBufferView : image.bufferView
+                    }
+                });
+            } else {
+                texture = new Texture({
+                    context : context,
+                    source : image
+                });
+            }
 
             this._textures[uniformId] = texture;
 
@@ -663,6 +689,9 @@ define([
         'mat4' : Matrix4
     };
 
+    var ktxRegex = /\.ktx$/i;
+    var crnRegex = /\.crn$/i;
+
     function createTexture2DUpdateFunction(uniformId) {
         var oldUniformValue;
         return function(material, context) {
@@ -741,7 +770,15 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
-                    when(loadImage(uniformValue), function(image) {
+                    var promise;
+                    if (ktxRegex.test(uniformValue)) {
+                        promise = loadKTX(uniformValue);
+                    } else if (crnRegex.test(uniformValue)) {
+                        promise = loadCRN(uniformValue);
+                    } else {
+                        promise = loadImage(uniformValue);
+                    }
+                    when(promise, function(image) {
                         material._loadedImages.push({
                             id : uniformId,
                             image : image
@@ -1353,7 +1390,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 0.0);
+            return (uniforms.fadeInColor.alpha < 1.0) || (uniforms.fadeOutColor.alpha < 1.0);
         }
     });
 
@@ -1370,6 +1407,26 @@ define([
                 color : new Color(1.0, 1.0, 1.0, 1.0)
             },
             source : PolylineArrowMaterial
+        },
+        translucent : true
+    });
+
+     /**
+     * Gets the name of the polyline glow material.
+     * @type {String}
+     * @readonly
+     */
+    Material.PolylineDashType = 'PolylineDash';
+    Material._materialCache.addMaterial(Material.PolylineDashType, {
+        fabric : {
+            type : Material.PolylineDashType,
+            uniforms : {
+                color : new Color(1.0, 0.0, 1.0, 1.0),
+                gapColor : new Color(0.0, 0.0, 0.0, 0.0),
+                dashLength : 16.0,
+                dashPattern : 255.0
+            },
+            source : PolylineDashMaterial
         },
         translucent : true
     });

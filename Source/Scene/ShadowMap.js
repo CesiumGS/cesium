@@ -24,29 +24,28 @@ define([
         '../Core/PixelFormat',
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
+        '../Core/WebGLConstants',
         '../Renderer/ClearCommand',
         '../Renderer/ContextLimits',
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Renderer/WebGLConstants',
         './Camera',
         './CullFace',
         './CullingVolume',
         './DebugCameraPrimitive',
-        './OrthographicFrustum',
-        './Pass',
+        './OrthographicOffCenterFrustum',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
         './Primitive',
@@ -76,29 +75,28 @@ define([
         PixelFormat,
         Quaternion,
         SphereOutlineGeometry,
+        WebGLConstants,
         ClearCommand,
         ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
+        Pass,
         PassState,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
         RenderState,
         Sampler,
-        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        WebGLConstants,
         Camera,
         CullFace,
         CullingVolume,
         DebugCameraPrimitive,
-        OrthographicFrustum,
-        Pass,
+        OrthographicOffCenterFrustum,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         Primitive,
@@ -106,16 +104,17 @@ define([
     'use strict';
 
     /**
-     * Creates a shadow map from the provided light camera.
+     * Use {@link Viewer#shadowMap} to get the scene's shadow map originating from the sun. Do not construct this directly.
      *
+     * <p>
      * The normalOffset bias pushes the shadows forward slightly, and may be disabled
      * for applications that require ultra precise shadows.
+     * </p>
      *
      * @alias ShadowMap
-     * @constructor
+     * @internalConstructor
      *
      * @param {Object} options An object containing the following properties:
-     * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
      * @param {Boolean} [options.enabled=true] Whether the shadow map is enabled.
      * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
@@ -126,6 +125,7 @@ define([
      * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      * @param {Number} [options.darkness=0.3] The shadow darkness.
+     * @param {Boolean} [options.normalOffset=true] Whether a normal bias is applied to shadows.
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
@@ -133,6 +133,7 @@ define([
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        // options.context is an undocumented option
         var context = options.context;
 
         //>>includeStart('debug', pragmas.debug);
@@ -149,6 +150,7 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
+        this._normalOffset = defaultValue(options.normalOffset, true);
         this.dirty = true;
 
         /**
@@ -193,7 +195,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.3,
@@ -204,7 +206,7 @@ define([
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : true,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
@@ -215,7 +217,7 @@ define([
             polygonOffset : false,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : false,
+            normalOffset : this._normalOffset,
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
@@ -252,7 +254,7 @@ define([
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
             // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
-            this._shadowMapCamera.frustum = new OrthographicFrustum();
+            this._shadowMapCamera.frustum = new OrthographicOffCenterFrustum();
         } else if (defined(this._lightCamera.frustum.fov)) {
             // If the light camera uses a perspective frustum, then the light source is a spot light
             this._isSpotLight = true;
@@ -381,6 +383,26 @@ define([
             set : function(value) {
                 this.dirty = this._enabled !== value;
                 this._enabled = value;
+            }
+        },
+
+        /**
+         * Determines if a normal bias will be applied to shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        normalOffset : {
+            get : function() {
+                return this._normalOffset;
+            },
+            set : function(value) {
+                this.dirty = this._normalOffset !== value;
+                this._normalOffset = value;
+                this._terrainBias.normalOffset = value;
+                this._primitiveBias.normalOffset = value;
+                this._pointBias.normalOffset = value;
             }
         },
 
@@ -1457,28 +1479,28 @@ define([
         result.receiveShadows = false;
 
         if (!defined(castShader) || oldShaderId !== command.shaderProgram.id || shadowsDirty) {
-            if (defined(castShader)) {
-                castShader.destroy();
-            }
-
             var shaderProgram = command.shaderProgram;
-            var vertexShaderSource = shaderProgram.vertexShaderSource;
-            var fragmentShaderSource = shaderProgram.fragmentShaderSource;
 
             var isTerrain = command.pass === Pass.GLOBE;
             var isOpaque = command.pass !== Pass.TRANSLUCENT;
             var isPointLight = shadowMap._isPointLight;
             var usesDepthTexture= shadowMap._usesDepthTexture;
 
-            var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
-            var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, usesDepthTexture, isOpaque);
+            var keyword =  ShadowMapShader.getShadowCastShaderKeyword(isPointLight, isTerrain, usesDepthTexture, isOpaque);
+            castShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
+            if (!defined(castShader)) {
+                var vertexShaderSource = shaderProgram.vertexShaderSource;
+                var fragmentShaderSource = shaderProgram.fragmentShaderSource;
 
-            castShader = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : castVS,
-                fragmentShaderSource : castFS,
-                attributeLocations : shaderProgram._attributeLocations
-            });
+                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, usesDepthTexture, isOpaque);
+
+                castShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
+                    vertexShaderSource : castVS,
+                    fragmentShaderSource : castFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
+            }
 
             castRenderState = shadowMap._primitiveRenderState;
             if (isPointLight) {
@@ -1558,19 +1580,18 @@ define([
             var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
 
             if (!defined(receiveShader) || shaderDirty || shadowsDirty || castShadowsDirty) {
-                if (defined(receiveShader)) {
-                    receiveShader.destroy();
+                var keyword = ShadowMapShader.getShadowReceiveShaderKeyword(lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+                receiveShader = context.shaderCache.getDerivedShaderProgram(shaderProgram, keyword);
+                if (!defined(receiveShader)) {
+                    var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
+                    var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+
+                    receiveShader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
+                        vertexShaderSource : receiveVS,
+                        fragmentShaderSource : receiveFS,
+                        attributeLocations : shaderProgram._attributeLocations
+                    });
                 }
-
-                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
-
-                receiveShader = ShaderProgram.fromCache({
-                    context : context,
-                    vertexShaderSource : receiveVS,
-                    fragmentShaderSource : receiveFS,
-                    attributeLocations : shaderProgram._attributeLocations
-                });
 
                 receiveUniformMap = combineUniforms(lightShadowMaps[0], command.uniformMap, isTerrain);
             }

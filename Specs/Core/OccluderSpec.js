@@ -255,7 +255,7 @@ defineSuite([
         expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
-    it('compute occludee point from rectangle throws without an rectangle', function() {
+    it('compute occludee point from rectangle throws without a rectangle', function() {
         expect(function() {
             return Occluder.computeOccludeePointFromRectangle();
         }).toThrowDeveloperError();

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -9,6 +10,7 @@ define([
         './Math'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -72,13 +74,8 @@ define([
      */
     Matrix3.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -106,9 +103,7 @@ define([
      */
     Matrix3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -136,24 +131,24 @@ define([
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
-    Matrix3.clone = function(values, result) {
-        if (!defined(values)) {
+    Matrix3.clone = function(matrix, result) {
+        if (!defined(matrix)) {
             return undefined;
         }
         if (!defined(result)) {
-            return new Matrix3(values[0], values[3], values[6],
-                               values[1], values[4], values[7],
-                               values[2], values[5], values[8]);
+            return new Matrix3(matrix[0], matrix[3], matrix[6],
+                               matrix[1], matrix[4], matrix[7],
+                               matrix[2], matrix[5], matrix[8]);
         }
-        result[0] = values[0];
-        result[1] = values[1];
-        result[2] = values[2];
-        result[3] = values[3];
-        result[4] = values[4];
-        result[5] = values[5];
-        result[6] = values[6];
-        result[7] = values[7];
-        result[8] = values[8];
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+        result[4] = matrix[4];
+        result[5] = matrix[5];
+        result[6] = matrix[6];
+        result[7] = matrix[7];
+        result[8] = matrix[8];
         return result;
     };
 
@@ -180,9 +175,7 @@ define([
      */
     Matrix3.fromArray = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -212,9 +205,7 @@ define([
      */
     Matrix3.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values parameter is required');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         return Matrix3.clone(values, result);
@@ -230,9 +221,7 @@ define([
      */
     Matrix3.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
+        Check.defined('values', values);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -261,9 +250,7 @@ define([
      */
     Matrix3.fromQuaternion = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required');
-        }
+        Check.typeOf.object('quaternion', quaternion);
         //>>includeEnd('debug');
 
         var x2 = quaternion.x * quaternion.x;
@@ -315,10 +302,9 @@ define([
      */
     Matrix3.fromHeadingPitchRoll = function(headingPitchRoll, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(headingPitchRoll)) {
-            throw new DeveloperError('headingPitchRoll is required');
-        }
+        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
+
         var cosTheta = Math.cos(-headingPitchRoll.pitch);
         var cosPsi = Math.cos(-headingPitchRoll.heading);
         var cosPhi = Math.cos(headingPitchRoll.roll);
@@ -332,7 +318,7 @@ define([
 
         var m10 = cosTheta * sinPsi;
         var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
-        var m12 = -sinTheta * cosPhi + cosPhi * sinTheta * sinPsi;
+        var m12 = -sinPhi * cosPsi + cosPhi * sinTheta * sinPsi;
 
         var m20 = -sinTheta;
         var m21 = sinPhi * cosTheta;
@@ -371,9 +357,7 @@ define([
      */
     Matrix3.fromScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.object('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -411,9 +395,7 @@ define([
      */
     Matrix3.fromUniformScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof scale !== 'number') {
-            throw new DeveloperError('scale is required.');
-        }
+        Check.typeOf.number('scale', scale);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -438,7 +420,7 @@ define([
     /**
      * Computes a Matrix3 instance representing the cross product equivalent matrix of a Cartesian3 vector.
      *
-     * @param {Cartesian3} the vector on the left hand side of the cross product operation.
+     * @param {Cartesian3} vector the vector on the left hand side of the cross product operation.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns {Matrix3} The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
@@ -451,9 +433,7 @@ define([
      */
     Matrix3.fromCrossProduct = function(vector, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(vector)) {
-            throw new DeveloperError('vector is required.');
-        }
+        Check.typeOf.object('vector', vector);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -490,9 +470,7 @@ define([
      */
     Matrix3.fromRotationX = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.typeOf.number('angle', angle);
         //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
@@ -533,9 +511,7 @@ define([
      */
     Matrix3.fromRotationY = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.typeOf.number('angle', angle);
         //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
@@ -576,9 +552,7 @@ define([
      */
     Matrix3.fromRotationZ = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(angle)) {
-            throw new DeveloperError('angle is required.');
-        }
+        Check.typeOf.number('angle', angle);
         //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
@@ -614,9 +588,7 @@ define([
      */
     Matrix3.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -652,12 +624,10 @@ define([
      */
     Matrix3.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof row !== 'number' || row < 0 || row > 2) {
-            throw new DeveloperError('row must be 0, 1, or 2.');
-        }
-        if (typeof column !== 'number' || column < 0 || column > 2) {
-            throw new DeveloperError('column must be 0, 1, or 2.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('row', row, 0);
+        Check.typeOf.number.lessThanOrEquals('row', row, 2);
+        Check.typeOf.number.greaterThanOrEquals('column', column, 0);
+        Check.typeOf.number.lessThanOrEquals('column', column, 2);
         //>>includeEnd('debug');
 
         return column * 3 + row;
@@ -675,16 +645,10 @@ define([
      */
     Matrix3.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-
-        if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index must be 0, 1, or 2.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 2);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var startIndex = index * 3;
@@ -711,18 +675,11 @@ define([
      */
     Matrix3.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index must be 0, 1, or 2.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 2);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix3.clone(matrix, result);
@@ -745,15 +702,10 @@ define([
      */
     Matrix3.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index must be 0, 1, or 2.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 2);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var x = matrix[index];
@@ -779,18 +731,11 @@ define([
      */
     Matrix3.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof index !== 'number' || index < 0 || index > 2) {
-            throw new DeveloperError('index must be 0, 1, or 2.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
+        Check.typeOf.number.lessThanOrEquals('index', index, 2);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result = Matrix3.clone(matrix, result);
@@ -811,12 +756,8 @@ define([
      */
     Matrix3.getScale = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.x = Cartesian3.magnitude(Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn));
@@ -849,15 +790,9 @@ define([
      */
     Matrix3.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = left[0] * right[0] + left[3] * right[1] + left[6] * right[2];
@@ -894,15 +829,9 @@ define([
      */
     Matrix3.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] + right[0];
@@ -927,15 +856,9 @@ define([
      */
     Matrix3.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = left[0] - right[0];
@@ -960,15 +883,9 @@ define([
      */
     Matrix3.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('cartesian', cartesian);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var vX = cartesian.x;
@@ -995,15 +912,9 @@ define([
      */
     Matrix3.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar must be a number');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = matrix[0] * scalar;
@@ -1036,15 +947,9 @@ define([
      */
     Matrix3.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(scale)) {
-            throw new DeveloperError('scale is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('scale', scale);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = matrix[0] * scale.x;
@@ -1068,12 +973,8 @@ define([
      */
     Matrix3.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = -matrix[0];
@@ -1097,12 +998,8 @@ define([
      */
     Matrix3.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var column0Row0 = matrix[0];
@@ -1244,9 +1141,7 @@ define([
      */
     Matrix3.computeEigenDecomposition = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
@@ -1292,12 +1187,8 @@ define([
      */
     Matrix3.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result[0] = Math.abs(matrix[0]);
@@ -1321,9 +1212,7 @@ define([
      */
     Matrix3.determinant = function(matrix) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
+        Check.typeOf.object('matrix', matrix);
         //>>includeEnd('debug');
 
         var m11 = matrix[0];
@@ -1350,12 +1239,8 @@ define([
      */
     Matrix3.inverse = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         var m11 = matrix[0];
@@ -1425,9 +1310,7 @@ define([
      */
     Matrix3.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon must be a number');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||

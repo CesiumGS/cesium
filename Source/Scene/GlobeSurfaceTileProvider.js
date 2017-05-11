@@ -30,15 +30,16 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/DepthFunction',
-        '../Scene/Pass',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './OrthographicFrustum',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
@@ -73,15 +74,16 @@ define([
         BufferUsage,
         ContextLimits,
         DrawCommand,
+        Pass,
         RenderState,
         VertexArray,
         BlendingState,
         DepthFunction,
-        Pass,
         PerInstanceColorAppearance,
         Primitive,
         GlobeSurfaceTile,
         ImageryLayer,
+        OrthographicFrustum,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
@@ -502,7 +504,8 @@ define([
             return Visibility.NONE;
         }
 
-        if (frameState.mode === SceneMode.SCENE3D) {
+        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -567,8 +570,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
-        var tileBoundingBox = surfaceTile.tileBoundingBox;
-        return tileBoundingBox.distanceToCamera(frameState);
+        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+        return tileBoundingRegion.distanceToCamera(frameState);
     };
 
     /**
@@ -752,6 +755,9 @@ define([
             u_scaleAndBias : function() {
                 return this.properties.scaleAndBias;
             },
+            u_dayTextureSplit : function() {
+                return this.properties.dayTextureSplit;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -776,6 +782,7 @@ define([
                 dayTextureHue : [],
                 dayTextureSaturation : [],
                 dayTextureOneOverGamma : [],
+                dayTextureSplit : [],
                 dayIntensity : 0.0,
 
                 southAndNorthLatitude : new Cartesian2(),
@@ -1070,6 +1077,7 @@ define([
             var applySaturation = false;
             var applyGamma = false;
             var applyAlpha = false;
+            var applySplit = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1127,6 +1135,9 @@ define([
                 uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
                 applyGamma = applyGamma || uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
+                uniformMapProperties.dayTextureSplit[numberOfDayTextures] = imageryLayer.splitDirection;
+                applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
+
                 if (defined(imagery.credits)) {
                     var creditDisplay = frameState.creditDisplay;
                     var credits = imagery.credits;
@@ -1148,7 +1159,7 @@ define([
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

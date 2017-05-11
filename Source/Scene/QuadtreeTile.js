@@ -264,6 +264,7 @@ define([
 
         /**
          * Gets the southwest child tile.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile}
          */
         southwestChild : {
@@ -283,6 +284,7 @@ define([
 
         /**
          * Gets the southeast child tile.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile}
          */
         southeastChild : {
@@ -302,6 +304,7 @@ define([
 
         /**
          * Gets the northwest child tile.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile}
          */
         northwestChild : {
@@ -321,6 +324,7 @@ define([
 
         /**
          * Gets the northeast child tile.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile}
          */
         northeastChild : {

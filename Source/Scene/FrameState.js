@@ -9,14 +9,16 @@ define([
      * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
+     * @param {Context} context The rendering context.
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
+     * @param {JobScheduler} jobScheduler The job scheduler
      *
      * @alias FrameState
      * @constructor
      *
      * @private
      */
-    function FrameState(context, creditDisplay) {
+    function FrameState(context, creditDisplay, jobScheduler) {
         /**
          * The rendering context.
          * @type {Context}
@@ -67,6 +69,13 @@ define([
         this.time = undefined;
 
         /**
+         * The job scheduler.
+         *
+         * @type {JobScheduler}
+         */
+        this.jobScheduler = jobScheduler;
+
+        /**
          * The map projection to use in 2D and Columbus View modes.
          *
          * @type {MapProjection}
@@ -95,6 +104,15 @@ define([
          */
         this.occluder = undefined;
 
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = undefined;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
@@ -107,7 +125,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            pick : false
+            pick : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            depth : false
         };
 
         /**
@@ -164,9 +189,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        * @type {Number}
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
@@ -179,7 +205,7 @@ define([
             /**
              * All shadow maps that are enabled this frame.
              */
-             shadowMaps : [],
+            shadowMaps : [],
 
             /**
              * Shadow maps that originate from light sources. Does not include shadow maps that are used for
@@ -217,7 +243,41 @@ define([
              */
             outOfView : true
         };
+
+        /**
+        * The position of the splitter to use when rendering imagery layers on either side of a splitter.
+        * This value should be between 0.0 and 1.0 with 0 being the far left of the viewport and 1 being the far right of the viewport.
+        * @type {Number}
+        * @default 0.0
+        */
+        this.imagerySplitPosition = 0.0;
+
+        /**
+         * Distances to the near and far planes of the camera frustums
+         * @type {Number[]}
+         * @default []
+         */
+        this.frustumSplits = [];
+
+        /**
+         * The current scene background color
+         *
+         * @type {Color}
+         */
+        this.backgroundColor = undefined;
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         * @type {Number}
+         */
+        this.minimumDisableDepthTestDistance = undefined;
     }
+
+    FrameState.prototype.addCommand = function(command) {
+        this.commandList.push(command);
+    };
 
     /**
      * A function that will be called at the end of the frame.

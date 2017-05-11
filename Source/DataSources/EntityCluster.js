@@ -15,6 +15,7 @@ define([
         '../Scene/LabelCollection',
         '../Scene/PointPrimitive',
         '../Scene/PointPrimitiveCollection',
+        '../Scene/SceneMode',
         '../ThirdParty/kdbush'
     ], function(
         BoundingRectangle,
@@ -32,6 +33,7 @@ define([
         LabelCollection,
         PointPrimitive,
         PointPrimitiveCollection,
+        SceneMode,
         kdbush) {
     'use strict';
 
@@ -166,7 +168,7 @@ define([
             var item = collection.get(i);
             item.clusterShow = false;
 
-            if (!item.show || !occluder.isPointVisible(item.position)) {
+            if (!item.show || (entityCluster._scene.mode === SceneMode.SCENE3D && !occluder.isPointVisible(item.position))) {
                 continue;
             }
 
@@ -208,7 +210,7 @@ define([
             var pointCollection = entityCluster._pointCollection;
 
             if ((!defined(labelCollection) && !defined(billboardCollection) && !defined(pointCollection)) ||
-		(!entityCluster._clusterBillboards && !entityCluster._clusterLabels && !entityCluster._clusterPoints)) {
+                (!entityCluster._clusterBillboards && !entityCluster._clusterLabels && !entityCluster._clusterPoints)) {
                 return;
             }
 
@@ -256,10 +258,10 @@ define([
                 getScreenSpacePositions(labelCollection, points, scene, occluder, entityCluster);
             }
             if (entityCluster._clusterBillboards) {
-        	getScreenSpacePositions(billboardCollection, points, scene, occluder, entityCluster);
+                getScreenSpacePositions(billboardCollection, points, scene, occluder, entityCluster);
             }
             if (entityCluster._clusterPoints) {
-        	getScreenSpacePositions(pointCollection, points, scene, occluder, entityCluster);
+                getScreenSpacePositions(pointCollection, points, scene, occluder, entityCluster);
             }
 
             var i;
@@ -471,48 +473,48 @@ define([
                 return this._clusterEvent;
             }
         },
-	/**
+        /**
          * Gets or sets whether clustering billboard entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterBillboards : {
-	    get : function() {
-		return this._clusterBillboards;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterBillboards;
-		this._clusterBillboards = value;
-	    }
-	},
-	/**
+        clusterBillboards : {
+            get : function() {
+                return this._clusterBillboards;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterBillboards;
+                this._clusterBillboards = value;
+            }
+        },
+        /**
          * Gets or sets whether clustering labels entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterLabels : {
-	    get : function() {
-		return this._clusterLabels;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterLabels;
-		this._clusterLabels = value;
-	    }
-	},
-	/**
+        clusterLabels : {
+            get : function() {
+                return this._clusterLabels;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterLabels;
+                this._clusterLabels = value;
+            }
+        },
+        /**
          * Gets or sets whether clustering point entities is enabled.
          * @memberof EntityCluster.prototype
          * @type {Boolean}
          */
-	clusterPoints : {
-	    get : function() {
-		return this._clusterPoints;
-	    },
-	    set : function(value) {
-		this._clusterDirty = this._clusterDirty || value !== this._clusterPoints;
-		this._clusterPoints = value;
-	    }
-	}
+        clusterPoints : {
+            get : function() {
+                return this._clusterPoints;
+            },
+            set : function(value) {
+                this._clusterDirty = this._clusterDirty || value !== this._clusterPoints;
+                this._clusterPoints = value;
+            }
+        }
     });
 
     function createGetEntity(collectionProperty, CollectionConstructor, unusedIndicesProperty, entityIndexProperty) {
@@ -721,10 +723,21 @@ define([
         // If clustering is enabled before the label collection is updated,
         // the glyphs haven't been created so the screen space bounding boxes
         // are incorrect.
+        var commandList;
         if (defined(this._labelCollection) && this._labelCollection.length > 0 && this._labelCollection.get(0)._glyphs.length === 0) {
-            var commandList = frameState.commandList;
+            commandList = frameState.commandList;
             frameState.commandList = [];
             this._labelCollection.update(frameState);
+            frameState.commandList = commandList;
+        }
+
+        // If clustering is enabled before the billboard collection is updated,
+        // the images haven't been added to the image atlas so the screen space bounding boxes
+        // are incorrect.
+        if (defined(this._billboardCollection) && this._billboardCollection.length > 0 && !defined(this._billboardCollection.get(0).width)) {
+            commandList = frameState.commandList;
+            frameState.commandList = [];
+            this._billboardCollection.update(frameState);
             frameState.commandList = commandList;
         }
 

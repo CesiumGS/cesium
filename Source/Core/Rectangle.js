@@ -1,19 +1,19 @@
 /*global define*/
 define([
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './freezeObject',
         './Math'
     ], function(
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         freezeObject,
         CesiumMath) {
@@ -107,13 +107,8 @@ define([
      */
     Rectangle.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -136,9 +131,7 @@ define([
      */
     Rectangle.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -161,9 +154,7 @@ define([
      */
     Rectangle.computeWidth = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
         var east = rectangle.east;
         var west = rectangle.west;
@@ -180,15 +171,13 @@ define([
      */
     Rectangle.computeHeight = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
         return rectangle.north - rectangle.south;
     };
 
     /**
-     * Creates an rectangle given the boundary longitude and latitude in degrees.
+     * Creates a rectangle given the boundary longitude and latitude in degrees.
      *
      * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
@@ -219,6 +208,32 @@ define([
     };
 
     /**
+     * Creates a rectangle given the boundary longitude and latitude in radians.
+     *
+     * @param {Number} [west=0.0] The westernmost longitude in radians in the range [-Math.PI, Math.PI].
+     * @param {Number} [south=0.0] The southernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
+     * @param {Number} [east=0.0] The easternmost longitude in radians in the range [-Math.PI, Math.PI].
+     * @param {Number} [north=0.0] The northernmost latitude in radians in the range [-Math.PI/2, Math.PI/2].
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+     *
+     * @example
+     * var rectangle = Cesium.Rectangle.fromRadians(0.0, Math.PI/4, Math.PI/8, 3*Math.PI/4);
+     */
+    Rectangle.fromRadians = function(west, south, east, north, result) {
+        if (!defined(result)) {
+            return new Rectangle(west, south, east, north);
+        }
+
+        result.west = defaultValue(west, 0.0);
+        result.south = defaultValue(south, 0.0);
+        result.east = defaultValue(east, 0.0);
+        result.north = defaultValue(north, 0.0);
+
+        return result;
+    };
+
+    /**
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
      *
      * @param {Cartographic[]} cartographics The list of Cartographic instances.
@@ -227,9 +242,7 @@ define([
      */
     Rectangle.fromCartographicArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographics)) {
-            throw new DeveloperError('cartographics is required.');
-        }
+        Check.defined('cartographics', cartographics);
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -284,9 +297,7 @@ define([
      */
     Rectangle.fromCartesianArray = function(cartesians, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         var west = Number.MAX_VALUE;
@@ -404,9 +415,7 @@ define([
      */
     Rectangle.prototype.equalsEpsilon = function(other, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return defined(other) &&
@@ -428,50 +437,28 @@ define([
      */
     Rectangle.validate = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
 
         var north = rectangle.north;
-        if (typeof north !== 'number') {
-            throw new DeveloperError('north is required to be a number.');
-        }
-
-        if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError('north must be in the interval [-Pi/2, Pi/2].');
-        }
+        Check.typeOf.number.greaterThanOrEquals('north', north, -CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.lessThanOrEquals('north', north, CesiumMath.PI_OVER_TWO);
 
         var south = rectangle.south;
-        if (typeof south !== 'number') {
-            throw new DeveloperError('south is required to be a number.');
-        }
-
-        if (south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
-            throw new DeveloperError('south must be in the interval [-Pi/2, Pi/2].');
-        }
+        Check.typeOf.number.greaterThanOrEquals('south', south, -CesiumMath.PI_OVER_TWO);
+        Check.typeOf.number.lessThanOrEquals('south', south, CesiumMath.PI_OVER_TWO);
 
         var west = rectangle.west;
-        if (typeof west !== 'number') {
-            throw new DeveloperError('west is required to be a number.');
-        }
-
-        if (west < -Math.PI || west > Math.PI) {
-            throw new DeveloperError('west must be in the interval [-Pi, Pi].');
-        }
+        Check.typeOf.number.greaterThanOrEquals('west', west, -Math.PI);
+        Check.typeOf.number.lessThanOrEquals('west', west, Math.PI);
 
         var east = rectangle.east;
-        if (typeof east !== 'number') {
-            throw new DeveloperError('east is required to be a number.');
-        }
-
-        if (east < -Math.PI || east > Math.PI) {
-            throw new DeveloperError('east must be in the interval [-Pi, Pi].');
-        }
+        Check.typeOf.number.greaterThanOrEquals('east', east, -Math.PI);
+        Check.typeOf.number.lessThanOrEquals('east', east, Math.PI);
         //>>includeEnd('debug');
     };
 
     /**
-     * Computes the southwest corner of an rectangle.
+     * Computes the southwest corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -479,9 +466,7 @@ define([
      */
     Rectangle.southwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -494,7 +479,7 @@ define([
     };
 
     /**
-     * Computes the northwest corner of an rectangle.
+     * Computes the northwest corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -502,9 +487,7 @@ define([
      */
     Rectangle.northwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -517,7 +500,7 @@ define([
     };
 
     /**
-     * Computes the northeast corner of an rectangle.
+     * Computes the northeast corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -525,9 +508,7 @@ define([
      */
     Rectangle.northeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -540,7 +521,7 @@ define([
     };
 
     /**
-     * Computes the southeast corner of an rectangle.
+     * Computes the southeast corner of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -548,9 +529,7 @@ define([
      */
     Rectangle.southeast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -563,7 +542,7 @@ define([
     };
 
     /**
-     * Computes the center of an rectangle.
+     * Computes the center of a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -571,9 +550,7 @@ define([
      */
     Rectangle.center = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var east = rectangle.east;
@@ -610,12 +587,8 @@ define([
      */
     Rectangle.intersection = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
-        if (!defined(otherRectangle)) {
-            throw new DeveloperError('otherRectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         var rectangleEast = rectangle.east;
@@ -673,12 +646,8 @@ define([
      */
     Rectangle.simpleIntersection = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
-        if (!defined(otherRectangle)) {
-            throw new DeveloperError('otherRectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         var west = Math.max(rectangle.west, otherRectangle.west);
@@ -711,12 +680,8 @@ define([
      */
     Rectangle.union = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
-        if (!defined(otherRectangle)) {
-            throw new DeveloperError('otherRectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('otherRectangle', otherRectangle);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -762,12 +727,8 @@ define([
      */
     Rectangle.expand = function(rectangle, cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('cartographic', cartographic);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -791,12 +752,8 @@ define([
      */
     Rectangle.contains = function(rectangle, cartographic) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
+        Check.typeOf.object('cartographic', cartographic);
         //>>includeEnd('debug');
 
         var longitude = cartographic.longitude;
@@ -819,7 +776,7 @@ define([
 
     var subsampleLlaScratch = new Cartographic();
     /**
-     * Samples an rectangle so that it includes a list of Cartesian points suitable for passing to
+     * Samples a rectangle so that it includes a list of Cartesian points suitable for passing to
      * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
      * for rectangles that cover the poles or cross the equator.
      *
@@ -831,9 +788,7 @@ define([
      */
     Rectangle.subsample = function(rectangle, ellipsoid, surfaceHeight, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

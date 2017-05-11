@@ -2,7 +2,6 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
-        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -11,6 +10,7 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './BlendOption',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -19,7 +19,6 @@ define([
     ], function(
         BoundingRectangle,
         Cartesian2,
-        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -28,6 +27,7 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        BlendOption,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -54,6 +54,9 @@ define([
         this.index = index;
         this.dimensions = dimensions;
     }
+
+    // Traditionally, leading is %20 of the font size.
+    var defaultLineSpacingPercent = 1.2;
 
     var whitePixelCanvasId = 'ID_WHITE_PIXEL';
     var whitePixelSize = new Cartesian2(4, 4);
@@ -135,7 +138,7 @@ define([
         // presize glyphs to match the new text length
         glyphs.length = textLength;
 
-        var showBackground = label._showBackground && (glyphs.length > 0);
+        var showBackground = label._showBackground && (text.split('\n').join('').length > 0);
         var backgroundBillboard = label._backgroundBillboard;
         var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
         if (!showBackground) {
@@ -166,7 +169,9 @@ define([
             backgroundBillboard.id = label._id;
             backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
             backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+            backgroundBillboard.scaleByDistance = label._scaleByDistance;
             backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+            backgroundBillboard.disableDepthTestDistance = label._disableDepthTestDistance;
         }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
@@ -258,7 +263,9 @@ define([
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+                billboard.disableDepthTestDistance = label._disableDepthTestDistance;
             }
         }
 
@@ -267,17 +274,32 @@ define([
         label._repositionAllGlyphs = true;
     }
 
+    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
+        if (horizontalOrigin === HorizontalOrigin.CENTER) {
+            return -lineWidth / 2;
+        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+            return -(lineWidth + backgroundPadding.x);
+        }
+        return backgroundPadding.x;
+    }
+
     // reusable Cartesian2 instances
     var glyphPixelOffset = new Cartesian2();
     var scratchBackgroundPadding = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
+        var text = label._text;
         var glyph;
         var dimensions;
-        var totalWidth = 0;
-        var maxDescent = Number.NEGATIVE_INFINITY;
-        var maxY = 0;
+        var lastLineWidth = 0;
+        var maxLineWidth = 0;
+        var lineWidths = [];
+        var maxGlyphDescent = Number.NEGATIVE_INFINITY;
+        var maxGlyphY = 0;
+        var numberOfLines = 1;
+        var glyphIndex = 0;
+        var glyphLength = glyphs.length;
 
         var backgroundBillboard = label._backgroundBillboard;
         var backgroundPadding = scratchBackgroundPadding;
@@ -285,89 +307,109 @@ define([
             (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
             backgroundPadding);
 
-        var glyphIndex = 0;
-        var glyphLength = glyphs.length;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
-            maxY = Math.max(maxY, dimensions.height - dimensions.descent);
-            maxDescent = Math.max(maxDescent, dimensions.descent);
+            if (text.charAt(glyphIndex) === '\n') {
+                lineWidths.push(lastLineWidth);
+                ++numberOfLines;
+                lastLineWidth = 0;
+            } else {
+                glyph = glyphs[glyphIndex];
+                dimensions = glyph.dimensions;
+                maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
+                maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
 
-            //Computing the total width must also account for the kering that occurs between letters.
-            totalWidth += dimensions.width - dimensions.bounds.minx;
-            if (glyphIndex < glyphLength - 1) {
-                totalWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+                //Computing the line width must also account for the kerning that occurs between letters.
+                lastLineWidth += dimensions.width - dimensions.bounds.minx;
+                if (glyphIndex < glyphLength - 1) {
+                    lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+                }
+                maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
             }
         }
-        var maxHeight = maxY + maxDescent;
+        lineWidths.push(lastLineWidth);
+        var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
-        var widthOffset = 0;
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            widthOffset -= totalWidth / 2 * scale;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            widthOffset -= (totalWidth + backgroundPadding.x) * scale;
-        } else {
-            widthOffset += backgroundPadding.x * scale;
-        }
+        var verticalOrigin = label._verticalOrigin;
+        var lineIndex = 0;
+        var lineWidth = lineWidths[lineIndex];
+        var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
+        var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
+        var otherLinesHeight = lineSpacing * (numberOfLines - 1);
 
-        glyphPixelOffset.x = widthOffset * resolutionScale;
+        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var verticalOrigin = label._verticalOrigin;
+        var lineOffsetY = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
-
-            if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = -dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxY - dimensions.height + dimensions.descent + backgroundPadding.y) * scale;
-            } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = -(maxY - dimensions.height) / 2 * scale - dimensions.descent * scale;
+            if (text.charAt(glyphIndex) === '\n') {
+                ++lineIndex;
+                lineOffsetY += lineSpacing;
+                lineWidth = lineWidths[lineIndex];
+                widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
+                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
             } else {
-                // VerticalOrigin.BOTTOM
-                glyphPixelOffset.y = (maxDescent - dimensions.descent + backgroundPadding.y) * scale;
-            }
+                glyph = glyphs[glyphIndex];
+                dimensions = glyph.dimensions;
 
-            glyphPixelOffset.y *= resolutionScale;
+                if (verticalOrigin === VerticalOrigin.TOP) {
+                    glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
+                } else if (verticalOrigin === VerticalOrigin.CENTER) {
+                    glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
+                } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphPixelOffset.y = otherLinesHeight;
+                } else {
+                    // VerticalOrigin.BOTTOM
+                    glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
+                }
+                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
 
-            if (defined(glyph.billboard)) {
-                glyph.billboard._setTranslate(glyphPixelOffset);
-            }
+                if (defined(glyph.billboard)) {
+                    glyph.billboard._setTranslate(glyphPixelOffset);
+                }
 
-            //Compute the next x offset taking into acocunt the kerning performed
-            //on both the current letter as well as the next letter to be drawn
-            //as well as any applied scale.
-            if (glyphIndex < glyphLength - 1) {
-                var nextGlyph = glyphs[glyphIndex + 1];
-                glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                //Compute the next x offset taking into acocunt the kerning performed
+                //on both the current letter as well as the next letter to be drawn
+                //as well as any applied scale.
+                if (glyphIndex < glyphLength - 1) {
+                    var nextGlyph = glyphs[glyphIndex + 1];
+                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                }
             }
         }
 
-        if (defined(backgroundBillboard) && (glyphLength > 0)) {
-            glyphPixelOffset.x = (widthOffset - backgroundPadding.x * scale) * resolutionScale;
-            if (verticalOrigin === VerticalOrigin.BASELINE) {
-                glyphPixelOffset.y = -backgroundPadding.y * scale - maxDescent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxY - maxHeight) * scale - maxDescent * scale;
+        if (defined(backgroundBillboard) && (text.split('\n').join('').length > 0)) {
+            if (horizontalOrigin === HorizontalOrigin.CENTER) {
+                widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
+            } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+                widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
+            } else {
+                widthOffset = 0;
+            }
+            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+
+            if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = -(maxY - maxHeight) / 2 * scale - maxDescent * scale;
+                glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
+            } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
             } else {
                 // VerticalOrigin.BOTTOM
                 glyphPixelOffset.y = 0;
             }
-            glyphPixelOffset.y *= resolutionScale;
-            backgroundBillboard.width = totalWidth + (backgroundPadding.x * 2);
-            backgroundBillboard.height = maxHeight + (backgroundPadding.y * 2);
+            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
+
+            backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
+            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
             backgroundBillboard._setTranslate(glyphPixelOffset);
         }
     }
 
     function destroyLabel(labelCollection, label) {
         var glyphs = label._glyphs;
-        for ( var i = 0, len = glyphs.length; i < len; ++i) {
+        for (var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
         }
         if (defined(label._backgroundBillboard)) {
@@ -402,6 +444,9 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
+     * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -495,6 +540,16 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * The label blending option. The default is used for rendering both opaque and translucent labels.
+         * However, if either all of the labels are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+         */
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
     }
 
     defineProperties(LabelCollection.prototype, {
@@ -628,7 +683,7 @@ define([
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
 
-        for ( var i = 0, len = labels.length; i < len; ++i) {
+        for (var i = 0, len = labels.length; i < len; ++i) {
             destroyLabel(this, labels[i]);
         }
 
@@ -749,6 +804,10 @@ define([
             var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
             this._totalGlyphCount += glyphCountDifference;
         }
+
+        var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
+        billboardCollection.blendOption = blendOption;
+        backgroundBillboardCollection.blendOption = blendOption;
 
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);

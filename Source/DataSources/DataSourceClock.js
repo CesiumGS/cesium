@@ -165,12 +165,12 @@ define([
         if (!defined(result)) {
             result = new Clock();
         }
-        result.startTime = this.startTime;
-        result.stopTime = this.stopTime;
-        result.currentTime = this.currentTime;
-        result.clockRange = this.clockRange;
-        result.multiplier = this.multiplier;
-        result.clockStep = this.clockStep;
+        result.startTime = defaultValue(this.startTime, result.startTime);
+        result.stopTime = defaultValue(this.stopTime, result.stopTime);
+        result.currentTime = defaultValue(this.currentTime, result.currentTime);
+        result.clockRange = defaultValue(this.clockRange, result.clockRange);
+        result.multiplier = defaultValue(this.multiplier, result.multiplier);
+        result.clockStep = defaultValue(this.clockStep, result.clockStep);
         return result;
     };
 

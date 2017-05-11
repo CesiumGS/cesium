@@ -81,6 +81,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
+                    'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
@@ -327,7 +328,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
@@ -409,7 +410,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 var mimeLookup = getMimeType(blobName);
                 var contentType = mimeLookup.type;
                 var compress = mimeLookup.compress;
-                var contentEncoding = compress ? 'gzip' : undefined;
+                var contentEncoding = compress || mimeLookup.isCompressed ? 'gzip' : undefined;
                 var etag;
 
                 totalFiles++;
@@ -529,21 +530,22 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 function getMimeType(filename) {
     var ext = path.extname(filename);
     if (ext === '.bin' || ext === '.terrain') {
-        return { type : 'application/octet-stream', compress : true };
+        return {type : 'application/octet-stream', compress : true, isCompressed : false};
     } else if (ext === '.md' || ext === '.glsl') {
-        return { type : 'text/plain', compress : true };
+        return {type : 'text/plain', compress : true, isCompressed : false};
     } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
-        return { type : 'application/json', compress : true };
+        return {type : 'application/json', compress : true, isCompressed : false};
     } else if (ext === '.js') {
-        return { type : 'application/javascript', compress : true };
+        return {type : 'application/javascript', compress : true, isCompressed : false};
     } else if (ext === '.svg') {
-        return { type : 'image/svg+xml', compress : true };
+        return {type : 'image/svg+xml', compress : true, isCompressed : false};
     } else if (ext === '.woff') {
-        return { type : 'application/font-woff', compress : false };
+        return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
     var mimeType = mime.lookup(filename);
-    return {type : mimeType, compress : compressible(mimeType)};
+    var compress = compressible(mimeType);
+    return {type : mimeType, compress : compress, isCompressed : false};
 }
 
 // get all files currently in bucket asynchronously
@@ -570,7 +572,8 @@ function listAll(s3, bucketName, prefix, files, marker) {
 gulp.task('deploy-set-version', function() {
     var version = yargs.argv.version;
     if (version) {
-        packageJson.version += '-' + version;
+        // NPM versions can only contain alphanumeric and hyphen characters
+        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -627,6 +630,7 @@ gulp.task('test', function(done) {
     var includeCategory = argv.include ? argv.include : '';
     var excludeCategory = argv.exclude ? argv.exclude : '';
     var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
     var release = argv.release ? argv.release : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
@@ -660,7 +664,7 @@ gulp.task('test', function(done) {
         },
         files: files,
         client: {
-            args: [includeCategory, excludeCategory, webglValidation, release]
+            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
@@ -955,7 +959,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 // we still are using from the set, then delete any files remaining in the set.
     var leftOverJsFiles = {};
 
-    globby.sync(['Source/Shaders/**/*.js']).forEach(function(file) {
+    globby.sync(['Source/Shaders/**/*.js', 'Source/ThirdParty/Shaders/*.js']).forEach(function(file) {
         leftOverJsFiles[path.normalize(file)] = true;
     });
 
@@ -963,7 +967,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
     var builtinConstants = [];
     var builtinStructs = [];
 
-    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl']);
+    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl', 'Source/ThirdParty/Shaders/*.glsl']);
     glslFiles.forEach(function(glslFile) {
         glslFile = path.normalize(glslFile);
         var baseName = path.basename(glslFile, '.glsl');

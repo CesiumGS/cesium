@@ -65,7 +65,7 @@ define([
 
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
+    var scratchBitangent = new Cartesian3();
 
     var scratchCartographic = new Cartographic();
     var projectedCenterScratch = new Cartesian3();
@@ -81,19 +81,22 @@ define([
         var ellipsoid = options.ellipsoid;
         var stRotation = options.stRotation;
         var size = (extrude) ? positions.length / 3 * 2 : positions.length / 3;
+        var shadowVolume = options.shadowVolume;
 
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size * 3) : undefined;
+
+        var extrudeNormals = (shadowVolume) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
         // Raise positions to a height above the ellipsoid and compute the
-        // texture coordinates, normals, tangents, and binormals.
+        // texture coordinates, normals, tangents, and bitangents.
         var normal = scratchNormal;
         var tangent = scratchTangent;
-        var binormal = scratchBinormal;
+        var bitangent = scratchBitangent;
 
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
@@ -136,44 +139,52 @@ define([
                 textureCoordinates[textureCoordIndex++] = texCoordScratch.y;
             }
 
-            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent || shadowVolume) {
+                normal = ellipsoid.geodeticSurfaceNormal(position, normal);
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                if (vertexFormat.tangent || vertexFormat.binormal) {
-                    tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
-                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                if (shadowVolume) {
+                    extrudeNormals[i + bottomOffset] = -normal.x;
+                    extrudeNormals[i1 + bottomOffset] = -normal.y;
+                    extrudeNormals[i2 + bottomOffset] = -normal.z;
                 }
-                if (vertexFormat.normal) {
-                    normals[i] = normal.x;
-                    normals[i1] = normal.y;
-                    normals[i2] = normal.z;
-                    if (extrude) {
-                        normals[i + bottomOffset] = -normal.x;
-                        normals[i1 + bottomOffset] = -normal.y;
-                        normals[i2 + bottomOffset] = -normal.z;
+
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
+                    if (vertexFormat.tangent || vertexFormat.bitangent) {
+                        tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
+                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                     }
-                }
-
-                if (vertexFormat.tangent) {
-                    tangents[i] = tangent.x;
-                    tangents[i1] = tangent.y;
-                    tangents[i2] = tangent.z;
-                    if (extrude) {
-                        tangents[i + bottomOffset] = -tangent.x;
-                        tangents[i1 + bottomOffset] = -tangent.y;
-                        tangents[i2 + bottomOffset] = -tangent.z;
+                    if (vertexFormat.normal) {
+                        normals[i] = normal.x;
+                        normals[i1] = normal.y;
+                        normals[i2] = normal.z;
+                        if (extrude) {
+                            normals[i + bottomOffset] = -normal.x;
+                            normals[i1 + bottomOffset] = -normal.y;
+                            normals[i2 + bottomOffset] = -normal.z;
+                        }
                     }
-                }
 
-                if (vertexFormat.binormal) {
-                    binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
-                    binormals[i] = binormal.x;
-                    binormals[i1] = binormal.y;
-                    binormals[i2] = binormal.z;
-                    if (extrude) {
-                        binormals[i + bottomOffset] = binormal.x;
-                        binormals[i1 + bottomOffset] = binormal.y;
-                        binormals[i2 + bottomOffset] = binormal.z;
+                    if (vertexFormat.tangent) {
+                        tangents[i] = tangent.x;
+                        tangents[i1] = tangent.y;
+                        tangents[i2] = tangent.z;
+                        if (extrude) {
+                            tangents[i + bottomOffset] = -tangent.x;
+                            tangents[i1 + bottomOffset] = -tangent.y;
+                            tangents[i2 + bottomOffset] = -tangent.z;
+                        }
+                    }
+
+                    if (vertexFormat.bitangent) {
+                        bitangent = Cartesian3.normalize(Cartesian3.cross(normal, tangent, bitangent), bitangent);
+                        bitangents[i ] = bitangent.x;
+                        bitangents[i1] = bitangent.y;
+                        bitangents[i2] = bitangent.z;
+                        if (extrude) {
+                            bitangents[i + bottomOffset] = bitangent.x;
+                            bitangents[i1 + bottomOffset] = bitangent.y;
+                            bitangents[i2 + bottomOffset] = bitangent.z;
+                        }
                     }
                 }
             }
@@ -222,13 +233,22 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : binormals
+                values : bitangents
             });
         }
+
+        if (shadowVolume) {
+            attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+        }
+
         return attributes;
     }
 
@@ -369,15 +389,18 @@ define([
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
+        var bitangents = (vertexFormat.bitangent) ? new Float32Array(size * 3) : undefined;
+
+        var shadowVolume = options.shadowVolume;
+        var extrudeNormals = (shadowVolume) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
         // Raise positions to a height above the ellipsoid and compute the
-        // texture coordinates, normals, tangents, and binormals.
+        // texture coordinates, normals, tangents, and bitangents.
         var normal = scratchNormal;
         var tangent = scratchTangent;
-        var binormal = scratchBinormal;
+        var bitangent = scratchBitangent;
 
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
@@ -421,6 +444,13 @@ define([
             position = ellipsoid.scaleToGeodeticSurface(position, position);
             extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+
+            if (shadowVolume) {
+                extrudeNormals[i + length] = -normal.x;
+                extrudeNormals[i1 + length] = -normal.y;
+                extrudeNormals[i2 + length] = -normal.z;
+            }
+
             var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian4);
             position = Cartesian3.add(position, scaledNormal, position);
             scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
@@ -436,9 +466,9 @@ define([
                 finalPositions[i2] = position.z;
             }
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
 
-                binormal = Cartesian3.clone(normal, binormal);
+                bitangent = Cartesian3.clone(normal, bitangent);
                 var next = Cartesian3.fromArray(positions, (i + 3) % length, scratchCartesian4);
                 Cartesian3.subtract(next, position, next);
                 var bottom = Cartesian3.subtract(extrudedPosition, position, scratchCartesian3);
@@ -456,7 +486,7 @@ define([
                 }
 
                 if (vertexFormat.tangent) {
-                    tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
+                    tangent = Cartesian3.normalize(Cartesian3.cross(bitangent, normal, tangent), tangent);
                     tangents[i] = tangent.x;
                     tangents[i1] = tangent.y;
                     tangents[i2] = tangent.z;
@@ -466,14 +496,14 @@ define([
                     tangents[i + 2 + length] = tangent.z;
                 }
 
-                if (vertexFormat.binormal) {
-                    binormals[i] = binormal.x;
-                    binormals[i1] = binormal.y;
-                    binormals[i2] = binormal.z;
+                if (vertexFormat.bitangent) {
+                    bitangents[i ] = bitangent.x;
+                    bitangents[i1] = bitangent.y;
+                    bitangents[i2] = bitangent.z;
 
-                    binormals[i + length] = binormal.x;
-                    binormals[i1 + length] = binormal.y;
-                    binormals[i2 + length] = binormal.z;
+                    bitangents[i + length] = bitangent.x;
+                    bitangents[i1 + length] = bitangent.y;
+                    bitangents[i2 + length] = bitangent.z;
                 }
             }
         }
@@ -520,13 +550,22 @@ define([
             });
         }
 
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
+        if (vertexFormat.bitangent) {
+            attributes.bitangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : binormals
+                values : bitangents
             });
         }
+
+        if (shadowVolume) {
+            attributes.extrudeDirection = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : extrudeNormals
+            });
+        }
+
         return attributes;
     }
 
@@ -724,6 +763,7 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
+        this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
 
         this._rectangle = computeRectangle(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
@@ -733,7 +773,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 8;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -775,7 +815,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
@@ -794,7 +835,8 @@ define([
         stRotation : undefined,
         height : undefined,
         granularity : undefined,
-        extrudedHeight : undefined
+        extrudedHeight : undefined,
+        shadowVolume: undefined
     };
 
     /**
@@ -833,7 +875,8 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var extrude = array[startingIndex] === 1.0;
+        var extrude = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -843,6 +886,7 @@ define([
             scratchOptions.rotation = rotation;
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
+            scratchOptions.shadowVolume = shadowVolume;
             return new EllipseGeometry(scratchOptions);
         }
 
@@ -857,6 +901,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._extrude = extrude;
+        result._shadowVolume = shadowVolume;
         result._rectangle = Rectangle.clone(rectangle);
 
         return result;
@@ -890,6 +935,7 @@ define([
         if (ellipseGeometry._extrude) {
             options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
             options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+            options.shadowVolume = ellipseGeometry._shadowVolume;
             geometry = computeExtrudedEllipse(options);
         } else {
             geometry = computeEllipse(options);
@@ -923,7 +969,8 @@ define([
             granularity : granularity,
             extrudedHeight : minHeight,
             height : maxHeight,
-            vertexFormat : VertexFormat.POSITION_ONLY
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            shadowVolume: true
         });
     };
 
