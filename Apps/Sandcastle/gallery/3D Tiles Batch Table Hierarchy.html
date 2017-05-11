@@ -86,9 +86,9 @@ viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 
 var scene = viewer.scene;
-var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
+var url = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : tilesetUrl
+    url : url
 }));
 inspectorViewModel.tileset = tileset;
 
@@ -167,8 +167,8 @@ function setStyle(style) {
 }
 
 var styleOptions = [];
-for (var j = 0; j < styles.length; ++j) {
-    var style = styles[j];
+for (var i = 0; i < styles.length; ++i) {
+    var style = styles[i];
     styleOptions.push({
         text : style.name,
         onselect : setStyle(style.style)

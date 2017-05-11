@@ -35,7 +35,7 @@ defineSuite([
         featureTable.featuresLength = 3;
         var all = featureTable.getGlobalProperty('TEST', ComponentDatatype.UNSIGNED_BYTE);
         expect(all).toEqual([0, 1, 2, 3, 4, 5]);
-        var feature = featureTable.getProperty('TEST', 1, ComponentDatatype.UNSIGNED_BYTE, 2);
+        var feature = featureTable.getProperty('TEST', ComponentDatatype.UNSIGNED_BYTE, 2, 1);
         expect(feature).toEqual([2, 3]);
         var properties = featureTable.getPropertyArray('TEST', ComponentDatatype.UNSIGNED_BYTE, 2);
         expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
@@ -51,7 +51,7 @@ defineSuite([
         featureTable._cachedArrayBufferViews.TEST = new Uint8Array([0, 1, 2, 3, 4, 5]);
         var all = featureTable.getGlobalProperty('TEST', ComponentDatatype.UNSIGNED_BYTE, 6);
         expect(all).toEqual([0, 1, 2, 3, 4, 5]);
-        var feature = featureTable.getProperty('TEST', 1, ComponentDatatype.UNSIGNED_BYTE, 2);
+        var feature = featureTable.getProperty('TEST', ComponentDatatype.UNSIGNED_BYTE, 2, 1);
         expect(feature).toEqual([2, 3]);
         var properties = featureTable.getPropertyArray('TEST', ComponentDatatype.UNSIGNED_BYTE, 2);
         expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
@@ -66,7 +66,7 @@ defineSuite([
         featureTable.featuresLength = 3;
         var all = featureTable.getGlobalProperty('TEST', ComponentDatatype.UNSIGNED_BYTE, 6);
         expect(all).toEqual([0, 1, 2, 3, 4, 5]);
-        var feature = featureTable.getProperty('TEST', 1, ComponentDatatype.UNSIGNED_BYTE, 2);
+        var feature = featureTable.getProperty('TEST', ComponentDatatype.UNSIGNED_BYTE, 2, 1);
         expect(feature).toEqual([2, 3]);
         var properties = featureTable.getPropertyArray('TEST', ComponentDatatype.UNSIGNED_BYTE, 2);
         expect(properties).toEqual([0, 1, 2, 3, 4, 5]);

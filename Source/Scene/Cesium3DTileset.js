@@ -138,6 +138,8 @@ define([
      * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
      * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail. When true, the siblings of any visible and downloaded tile are downloaded as well.
      *
+     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
+     *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
      *      url : 'http://localhost:8002/tilesets/Seattle'
@@ -192,6 +194,34 @@ define([
         this._trimTiles = false;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
+
+        this._requestHeaps = {};
+        this._hasMixedContent = false;
+
+        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
+        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
+            selectionHeuristic: selectionHeuristic
+        });
+
+        this._backfaceCommands = new ManagedArray();
+
+        this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
+        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
+        this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
+
+        this._styleEngine = new Cesium3DTileStyleEngine();
+
+        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
+
+        this._statistics = new Cesium3DTilesetStatistics();
+        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastPick = new Cesium3DTilesetStatistics();
+
+        this._tilesLoaded = false;
+
+        this._tileInfoLabels = undefined;
+
+        this._readyPromise = when.defer();
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
@@ -268,11 +298,6 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
-        this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
-        this._styleEngine = new Cesium3DTileStyleEngine();
-
         /**
          * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
          * the original feature, e.g. glTF material or per-point color in the tile.
@@ -292,14 +317,6 @@ define([
          */
         this.colorBlendAmount = 0.5;
 
-        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
-
-        this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastColor = new Cesium3DTilesetStatistics();
-        this._statisticsLastPick = new Cesium3DTilesetStatistics();
-
-        this._tilesLoaded = false;
-
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -317,7 +334,7 @@ define([
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * When true, assigns a random color to each tile.  This is useful for visualizing
-         * what models belong to what tiles, espeically with additive refinement where models
+         * what models belong to what tiles, especially with additive refinement where models
          * from parent tiles may be interleaved with models from child tiles.
          * </p>
          *
@@ -329,7 +346,7 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders each tile's content as a wireframe
+         * When true, renders each tile's content as a wireframe.
          * </p>
          *
          * @type {Boolean}
@@ -340,9 +357,9 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders the bounding volume for each tile.  The bounding volume is
+         * When true, renders the bounding volume for each visible tile.  The bounding volume is
          * white if the tile's content has an explicit bounding volume; otherwise, it
-         * is red.
+         * is red.  Tiles that are not at final resolution are yellow.
          * </p>
          *
          * @type {Boolean}
@@ -382,12 +399,11 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
-        this._tileInfoLabels = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the number of commands, points, triangles and features for this tile.
+         * When true, draws labels to indicate the number of commands, points, triangles and features of each tile.
          * </p>
          *
          * @type {Boolean}
@@ -398,7 +414,7 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the vertex and texture memory usage.
+         * When true, draws labels to indicate the vertex and texture memory usage of each tile.
          * </p>
          *
          * @type {Boolean}
@@ -500,27 +516,6 @@ define([
          */
         this.tileVisible = new Event();
 
-        this._readyPromise = when.defer();
-
-        var that = this;
-
-        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that._root = that.loadTileset(tilesetUrl, tilesetJson);
-
-            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-            that._asset = tilesetJson.asset;
-            that._properties = tilesetJson.properties;
-            that._geometricError = tilesetJson.geometricError;
-            that._gltfUpAxis = gltfUpAxis;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that._readyPromise.reject(error);
-        });
-
         /**
          * Determines if level-of-detail skipping optimization should be used.
          *
@@ -529,9 +524,29 @@ define([
          */
         this.skipLODs = defaultValue(options.skipLODs, true);
 
+        /**
+         * Multiplier defining the minimum screen space error to skip.
+         * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
+         * are leaves or have a screen space error <= 100 / skipSSEFactor.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 10
+         */
         this.skipScreenSpaceErrorFactor = defaultValue(options.skipScreenSpaceErrorFactor, 10);
 
-        this._skipLevels = defaultValue(options.skipLevels, 1);
+        /**
+         * Constant defining the minimum number of levels skip. When it is 0, no levels are skipped.
+         * For example, if a tile is level 1, no tiles will be loaded unless they
+         * are at level greater than 2.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 1
+         */
+        this.skipLevels = defaultValue(options.skipLevels, 1);
 
         /**
          * When true, only tiles that meet the maximum screen space error will ever be downloaded.
@@ -556,15 +571,24 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
-        this._requestHeaps = {};
-        this._hasMixedContent = false;
+        var that = this;
 
-        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
-        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic: selectionHeuristic
+        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+        RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            that._root = that.loadTileset(tilesetUrl, tilesetJson);
+
+            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
+            that._asset = tilesetJson.asset;
+            that._properties = tilesetJson.properties;
+            that._geometricError = tilesetJson.geometricError;
+            that._gltfUpAxis = gltfUpAxis;
+            that._readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that._readyPromise.reject(error);
         });
-
-        this._backfaceCommands = new ManagedArray();
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -786,9 +810,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
-                    throw new DeveloperError('maximumScreenSpaceError must be greater than or equal to zero');
-                }
+                Check.typeOf.number.greaterThanOrEquals('maximumScreenSpaceError', value, 0);
                 //>>includeEnd('debug');
 
                 this._maximumScreenSpaceError = value;
@@ -907,6 +929,21 @@ define([
         },
 
         /**
+         * Returns the total amount of memory used in bytes by the tileset.
+         * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
+         * of the loaded tiles in the tileset.
+         *
+         * @type {Number}
+         * @see Cesium3DTileset#maximumMemoryUsage
+         */
+        totalMemoryUsageInBytes : {
+            get : function() {
+                var statistics = this._statistics;
+                return statistics.textureMemorySizeInBytes + statistics.vertexMemorySizeInBytes + statistics.batchTableMemorySizeInBytes;
+            }
+        },
+
+        /**
          * @private
          */
         styleEngine : {
@@ -921,61 +958,6 @@ define([
         statistics : {
             get : function() {
                 return this._statistics;
-            }
-        },
-
-        /**
-         * Multiplier defining the minumum screen space error to skip.
-         * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
-         * are leaves or have a screen space error <= 100 / skipSSEFactor.
-         *
-         * Only used when tileset.skipLODs === true.
-         *
-         * @type {Number}
-         * @default 10
-         */
-        skipScreenSpaceErrorFactor : {
-            get : function() {
-                return this._skipScreenSpaceErrorFactor;
-            },
-
-            set : function(value) {
-                this._skipScreenSpaceErrorFactor = value;
-            }
-        },
-
-         /**
-         * Constant defining the minumum number of levels skip. When it is 0, no levels are skipped.
-         * For example, if a tile is level 1, no tiles will be loaded unless they
-         * are at level greater than 2.
-         *
-         * Only used when tileset.skipLODs === true.
-         *
-         * @type {Number}
-         * @default 1
-         */
-        skipLevels : {
-            get : function() {
-                return this._skipLevels;
-            },
-
-            set : function(value) {
-                this._skipLevels = value;
-            }
-        },
-
-        /**
-         * Returns the total amount of memory used in bytes by the tileset.
-         * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
-         * of the loaded tiles in the tileset.
-         *
-         * @type {Number}
-         * @see Cesium3DTileset#maximumMemoryUsage
-         */
-        totalMemoryUsageInBytes : {
-            get : function() {
-                var statistics = this._statistics;
-                return statistics.textureMemorySizeInBytes + statistics.vertexMemorySizeInBytes + statistics.batchTableMemorySizeInBytes;
             }
         }
     });
@@ -995,9 +977,11 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
             throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
         }
+        //>>includeEnd('debug');
 
         var statistics = this._statistics;
 
@@ -1232,7 +1216,7 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset.skipLODs ? tileset._skipLevels : 0;
+        var skipLevels = tileset.skipLODs ? tileset.skipLevels : 0;
         var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
 
         return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
@@ -1558,7 +1542,6 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
-     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (!this.show || !this.ready) {
@@ -1633,7 +1616,6 @@ define([
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
      *
      * @example
      * tileset = tileset && tileset.destroy();

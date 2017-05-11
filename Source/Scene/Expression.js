@@ -23,7 +23,7 @@ define([
         CesiumMath,
         jsep,
         ExpressionNodeType) {
-    "use strict";
+    'use strict';
 
     var unaryOperators = ['!', '-', '+'];
     var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];

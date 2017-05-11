@@ -41,7 +41,7 @@ defineSuite([
             content.applyDebugSettings();
         }).toThrowDeveloperError();
         expect(function() {
-            content.applyStyleWithShader();
+            content.applyStyle();
         }).toThrowDeveloperError();
         expect(function() {
             content.update();

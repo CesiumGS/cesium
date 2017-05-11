@@ -171,8 +171,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Tileset3DTileContent.prototype.applyStyle = function(frameState, style) {
     };
 
     /**

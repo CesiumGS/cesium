@@ -136,8 +136,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Empty3DTileContent.prototype.applyStyle = function(frameState, style) {
     };
 
     /**

@@ -586,7 +586,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function() {
-                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     color : '${NORMAL}[0] > 0.5'
                 }));
             }).toThrowDeveloperError();
@@ -597,7 +597,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function() {
-                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     color : 'color() * ${non_existent_property}'
                 }));
             }).toThrowDeveloperError();
@@ -622,7 +622,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function() {
-                content.applyStyleWithShader(scene.frameState, new Cesium3DTileStyle({
+                content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     show : '1 < "2"'
                 }));
             }).toThrowDeveloperError();
