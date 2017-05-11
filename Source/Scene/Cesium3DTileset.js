@@ -382,7 +382,10 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+
         this._tileDebugLabels = undefined;
+        this._onlyPickedTileDebugLabel = false;
+        this._pickedTile = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1306,67 +1309,80 @@ define([
         }
     }
 
+    function addTileDebugLabel(tile, tileset) {
+        var boundingVolume = tile._boundingVolume.boundingVolume;
+        var halfAxes = boundingVolume.halfAxes;
+        var radius = boundingVolume.radius;
+
+        var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
+        if (defined(halfAxes)) {
+            position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+            position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+            position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+        } else if (defined(radius)) {
+            var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
+            normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
+            position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
+        }
+
+        var labelString = '';
+        var attributes = 0;
+
+        if (tileset.debugShowGeometricError) {
+            labelString += '\nGeometric error: ' + tile.geometricError;
+            attributes++;
+        }
+
+        if (tileset.debugShowRenderingStatistics) {
+            labelString += '\nCommands: ' + tile.commandsLength;
+            attributes++;
+
+            // Don't display number of points or triangles if 0.
+            var numberOfPoints = tile.content.pointsLength;
+            if (numberOfPoints > 0) {
+                labelString += '\nPoints: ' + tile.content.pointsLength;
+                attributes++;
+            }
+
+            var numberOfTriangles = tile.content.trianglesLength;
+            if (numberOfTriangles > 0) {
+                labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                attributes++;
+            }
+
+            labelString += '\nFeatures: ' + tile.content.featuresLength;
+            attributes ++;
+        }
+
+        if (tileset.debugShowMemoryUsage) {
+            labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
+            labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
+            attributes += 2;
+        }
+
+        tileset._tileDebugLabels.add({
+            text : labelString.substring(1),
+            position : position,
+            font : (19-attributes) + 'px sans-serif',
+            showBackground : true,
+            disableDepthTestDistance : Number.POSITIVE_INFINITY
+        });
+    }
+
     function updateTileDebugLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         tileset._tileDebugLabels.removeAll();
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
-            var boundingVolume = tile._boundingVolume.boundingVolume;
-            var halfAxes = boundingVolume.halfAxes;
-            var radius = boundingVolume.radius;
 
-            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
-            if (defined(halfAxes)) {
-                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-            } else if (defined(radius)) {
-                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
-                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
-                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
+        if (tileset._onlyPickedTileDebugLabel) {
+            if (defined(tileset._pickedTile)) {
+                addTileDebugLabel(tileset._pickedTile, tileset);
             }
-
-            var labelString = '';
-            var attributes = 0;
-
-            if (tileset.debugShowGeometricError) {
-                labelString += '\nGeometric error: ' + tile.geometricError;
-                attributes++;
+        } else {
+            for (var i = 0; i < length; ++i) {
+                var tile = selectedTiles[i];
+                addTileDebugLabel(tile, tileset);
             }
-            if (tileset.debugShowRenderingStatistics) {
-                labelString += '\nCommands: ' + tile.commandsLength;
-                attributes++;
-
-                // Don't display number of points or triangles if 0.
-                var numberOfPoints = tile.content.pointsLength;
-                if (numberOfPoints > 0) {
-                    labelString += '\nPoints: ' + tile.content.pointsLength;
-                    attributes++;
-                }
-                var numberOfTriangles = tile.content.trianglesLength;
-                if (numberOfTriangles > 0) {
-                    labelString += '\nTriangles: ' + tile.content.trianglesLength;
-                    attributes++;
-                }
-
-                labelString += '\nFeatures: ' + tile.content.featuresLength;
-                attributes ++;
-            }
-
-            if (tileset.debugShowMemoryUsage) {
-                labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
-                labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
-                attributes += 2;
-            }
-
-            tileset._tileDebugLabels.add({
-                text : labelString.substring(1),
-                position : position,
-                font : (19-attributes) + 'px sans-serif',
-                showBackground : true,
-                disableDepthTestDistance : Number.POSITIVE_INFINITY
-            });
         }
         tileset._tileDebugLabels.update(frameState);
     }

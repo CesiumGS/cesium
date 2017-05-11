@@ -327,9 +327,11 @@ define([
                         var picked = scene.pick(e.endPosition);
                         if (picked instanceof Cesium3DTileFeature) {
                             that.feature = picked;
+                            that._tileset._pickedTile = picked.content._tile;
                             that._pickStatsText = getStats(that._tileset, true);
                         } else {
                             that.feature = undefined;
+                            that._tileset._pickedTile = undefined;
                         }
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
@@ -338,7 +340,6 @@ define([
                 }
             }
         });
-
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
          *
@@ -470,6 +471,27 @@ define([
          * @default false
          */
         this.freezeFrame = false;
+
+        var showOnlyPickedTileDebugLabel = knockout.observable();
+        knockout.defineProperty(this, 'showOnlyPickedTileDebugLabel', {
+            get : function() {
+                return showOnlyPickedTileDebugLabel();
+            },
+            set : function(value) {
+                showOnlyPickedTileDebugLabel(value);
+                if (that._tileset) {
+                    that._tileset._onlyPickedTileDebugLabel = value;
+                    that.picking = true;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show debug labels only for the currently picked tile.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showOnlyPickedTileDebugLabel = false;
 
         var showGeometricError = knockout.observable();
         knockout.defineProperty(this, 'showGeometricError', {
@@ -638,7 +660,7 @@ define([
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
-                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
+                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError',
                                    'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
