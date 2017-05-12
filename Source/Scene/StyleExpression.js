@@ -52,5 +52,22 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     * @param {String} returnType The return type of the generated function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    StyleExpression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
+        DeveloperError.throwInstantiationError();
+    };
+
     return StyleExpression;
 });

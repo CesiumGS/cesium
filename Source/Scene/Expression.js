@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
@@ -15,6 +16,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Check,
         Color,
         defined,
         defineProperties,
@@ -78,43 +80,43 @@ define([
         }
     };
 
+    var unaryFunctions = {
+        abs : getEvaluateUnaryComponentwise(Math.abs),
+        sqrt : getEvaluateUnaryComponentwise(Math.sqrt),
+        cos : getEvaluateUnaryComponentwise(Math.cos),
+        sin : getEvaluateUnaryComponentwise(Math.sin),
+        tan : getEvaluateUnaryComponentwise(Math.tan),
+        acos : getEvaluateUnaryComponentwise(Math.acos),
+        asin : getEvaluateUnaryComponentwise(Math.asin),
+        atan : getEvaluateUnaryComponentwise(Math.atan),
+        radians : getEvaluateUnaryComponentwise(CesiumMath.toRadians),
+        degrees : getEvaluateUnaryComponentwise(CesiumMath.toDegrees),
+        sign : getEvaluateUnaryComponentwise(CesiumMath.sign),
+        floor : getEvaluateUnaryComponentwise(Math.floor),
+        ceil : getEvaluateUnaryComponentwise(Math.ceil),
+        round : getEvaluateUnaryComponentwise(Math.round),
+        exp : getEvaluateUnaryComponentwise(Math.exp),
+        exp2 : getEvaluateUnaryComponentwise(exp2),
+        log : getEvaluateUnaryComponentwise(Math.log),
+        log2 : getEvaluateUnaryComponentwise(log2),
+        fract : getEvaluateUnaryComponentwise(fract),
+        length : length,
+        normalize: normalize
+    };
+
     var binaryFunctions = {
-        atan2 : Math.atan2,
-        pow : Math.pow,
-        min : Math.min,
-        max : Math.max,
+        atan2 : getEvaluateBinaryCommponentwise(Math.atan2, false),
+        pow : getEvaluateBinaryCommponentwise(Math.pow, false),
+        min : getEvaluateBinaryCommponentwise(Math.min, true),
+        max : getEvaluateBinaryCommponentwise(Math.max, true),
         distance : distance,
         dot : dot,
         cross : cross
     };
 
-    var unaryFunctions = {
-        abs : Math.abs,
-        sqrt : Math.sqrt,
-        cos : Math.cos,
-        sin : Math.sin,
-        tan : Math.tan,
-        acos : Math.acos,
-        asin : Math.asin,
-        atan : Math.atan,
-        radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees,
-        sign : CesiumMath.sign,
-        floor : Math.floor,
-        ceil : Math.ceil,
-        round : Math.round,
-        exp : Math.exp,
-        exp2 : exp2,
-        log : Math.log,
-        log2 : log2,
-        fract : fract,
-        length : length,
-        normalize: normalize
-    };
-
     var ternaryFunctions = {
-        clamp : CesiumMath.clamp,
-        mix : CesiumMath.lerp
+        clamp : getEvaluateTernaryCommponentwise(CesiumMath.clamp, true),
+        mix : getEvaluateTernaryCommponentwise(CesiumMath.lerp, true)
     };
 
     function fract(number) {
@@ -129,78 +131,155 @@ define([
         return CesiumMath.logBase(number, 2.0);
     }
 
-    function length(arg) {
-        if (typeof arg === 'number') {
-            return Math.abs(arg);
-        } else if (arg instanceof Cartesian2) {
-            return Cartesian2.magnitude(arg);
-        } else if (arg instanceof Cartesian3) {
-            return Cartesian3.magnitude(arg);
-        } else if (arg instanceof Cartesian4) {
-            return Cartesian4.magnitude(arg);
-        } else {
+    function getEvaluateUnaryComponentwise(operation) {
+        return function(call, left) {
+            if (typeof left === 'number') {
+                return operation(left);
+            } else if (left instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x), operation(left.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x), operation(left.y), operation(left.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x), operation(left.y), operation(left.z), operation(left.w), ScratchStorage.getCartesian4());
+            }
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Invalid argument type for length() function');
+            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
             //>>includeEnd('debug');
-        }
+        };
     }
 
-    function distance(x, y) {
-        if (typeof x === 'number' && typeof y === 'number') {
-            return Math.abs(x - y);
-        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
-            return Cartesian2.distance(x, y);
-        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
-            return Cartesian3.distance(x, y);
-        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
-            return Cartesian4.distance(x, y);
-        } else {
+    function getEvaluateBinaryCommponentwise(operation, allowScalar) {
+        return function(call, left, right) {
+            if (allowScalar && typeof right === 'number') {
+                if (typeof left === 'number') {
+                    return operation(left, right);
+                } else if (left instanceof Cartesian2) {
+                    return Cartesian2.fromElements(operation(left.x, right), operation(left.y, right), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(operation(left.x, right), operation(left.y, right), operation(left.z, right), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.fromElements(operation(left.x, right), operation(left.y, right), operation(left.z, right), operation(left.w, right), ScratchStorage.getCartesian4());
+                }
+            }
+
+            if (typeof left === 'number' && typeof right === 'number') {
+                return operation(left, right);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x, right.x), operation(left.y, right.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x, right.x), operation(left.y, right.y), operation(left.z, right.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x, right.x), operation(left.y, right.y), operation(left.z, right.z), operation(left.w, right.w), ScratchStorage.getCartesian4());
+            }
+
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function distance requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
             //>>includeEnd('debug');
-        }
+        };
     }
 
-    function normalize(arg) {
-        if (typeof arg === 'number') {
+    function getEvaluateTernaryCommponentwise(operation, allowScalar) {
+        return function(call, left, right, test) {
+            if (allowScalar && typeof test === 'number') {
+                if (typeof left === 'number' && typeof right === 'number') {
+                    return operation(left, right, test);
+                } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                    return Cartesian2.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                    return Cartesian3.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), operation(left.z, right.z, test), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                    return Cartesian4.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), operation(left.z, right.z, test), operation(left.w, right.w, test), ScratchStorage.getCartesian4());
+                }
+            }
+
+            if (typeof left === 'number' && typeof right === 'number' && typeof test === 'number') {
+                return operation(left, right, test);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2 && test instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3 && test instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), operation(left.z, right.z, test.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4 && test instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), operation(left.z, right.z, test.z), operation(left.w, right.w, test.w), ScratchStorage.getCartesian4());
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ', ' + right + ', and ' + test + '.');
+            //>>includeEnd('debug');
+        };
+    }
+
+    function length(call, left) {
+        if (typeof left === 'number') {
+            return Math.abs(left);
+        } else if (left instanceof Cartesian2) {
+            return Cartesian2.magnitude(left);
+        } else if (left instanceof Cartesian3) {
+            return Cartesian3.magnitude(left);
+        } else if (left instanceof Cartesian4) {
+            return Cartesian4.magnitude(left);
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
+    }
+
+    function normalize(call, left) {
+        if (typeof left === 'number') {
             return 1.0;
-        } else if (arg instanceof Cartesian2) {
-            return Cartesian2.normalize(arg, ScratchStorage.getCartesian2());
-        } else if (arg instanceof Cartesian3) {
-            return Cartesian3.normalize(arg, ScratchStorage.getCartesian3());
-        } else if (arg instanceof Cartesian4) {
-            return Cartesian4.normalize(arg, ScratchStorage.getCartesian4());
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Invalid argument type for normalize() function');
-            //>>includeEnd('debug');
+        } else if (left instanceof Cartesian2) {
+            return Cartesian2.normalize(left, ScratchStorage.getCartesian2());
+        } else if (left instanceof Cartesian3) {
+            return Cartesian3.normalize(left, ScratchStorage.getCartesian3());
+        } else if (left instanceof Cartesian4) {
+            return Cartesian4.normalize(left, ScratchStorage.getCartesian4());
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
     }
 
-    function dot(x, y) {
-        if (typeof x === 'number' && typeof y === 'number') {
-            return x * y;
-        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
-            return Cartesian2.dot(x, y);
-        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
-            return Cartesian3.dot(x, y);
-        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
-            return Cartesian4.dot(x, y);
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function dot requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
-            //>>includeEnd('debug');
+    function distance(call, left, right) {
+        if (typeof left === 'number' && typeof right === 'number') {
+            return Math.abs(left - right);
+        } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+            return Cartesian2.distance(left, right);
+        } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.distance(left, right);
+        } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+            return Cartesian4.distance(left, right);
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
     }
 
-    function cross(x, y) {
-        if (x instanceof Cartesian3 && y instanceof Cartesian3) {
-            return Cartesian3.cross(x, y, ScratchStorage.getCartesian3());
-        } else {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Invalid argument type for cross() function, must be vec3');
-            //>>includeEnd('debug');
+    function dot(call, left, right) {
+        if (typeof left === 'number' && typeof right === 'number') {
+            return left * right;
+        } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+            return Cartesian2.dot(left, right);
+        } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.dot(left, right);
+        } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+            return Cartesian4.dot(left, right);
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+    }
+
+    function cross(call, left, right) {
+        if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.cross(left, right, ScratchStorage.getCartesian3());
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vec3 arguments. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
     }
 
     /**
@@ -227,9 +306,7 @@ define([
      */
     function Expression(expression) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof expression !== 'string') {
-            throw new DeveloperError('expression must be a string.');
-        }
+        Check.typeOf.string('expression', expression);
         //>>includeEnd('debug');
 
         this._expression = expression;
@@ -845,26 +922,14 @@ define([
     }
 
     function evaluateTilesetTime(frameState, feature) {
-        return feature._content._tileset.timeSinceLoad;
+        return feature.content.tileset.timeSinceLoad;
     }
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof left === 'number' || call === 'length' || call === 'normalize') {
-                return evaluate(left);
-            } else if (left instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
-            }
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
-            //>>includeEnd('debug');
-            return evaluate(left); // jshint ignore:line
+            return evaluate(call, left);
         };
     }
 
@@ -873,38 +938,7 @@ define([
         return function(feature) {
             var left = this._left.evaluate(feature);
             var right = this._right.evaluate(feature);
-
-            // Special handling for vector operations
-            if (call === 'distance' || call === 'dot' || call === 'cross') {
-                return evaluate(left, right);
-            }
-
-            // Legal Type Mismatch
-            if ((call === 'min' || call === 'max') && typeof right === 'number') {
-                if (left instanceof Cartesian2) {
-                    return Cartesian2.fromElements(evaluate(left.x, right), evaluate(left.y, right), ScratchStorage.getCartesian2());
-                } else if (left instanceof Cartesian3) {
-                    return Cartesian3.fromElements(evaluate(left.x, right), evaluate(left.y, right), evaluate(left.z, right), ScratchStorage.getCartesian3());
-                } else if (left instanceof Cartesian4) {
-                    return Cartesian4.fromElements(evaluate(left.x, right), evaluate(left.y, right), evaluate(left.z, right), evaluate(left.w, right), ScratchStorage.getCartesian4());
-                }
-            }
-
-            // Arguments match
-            if (typeof left === 'number' && typeof right === 'number') {
-                return evaluate(left, right);
-            } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x, right.x), evaluate(left.y, right.y), evaluate(left.z, right.z), evaluate(left.w, right.w), ScratchStorage.getCartesian4());
-            }
-
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function ' + call + '\'s argument types are mismatched');
-            //>>includeEnd('debug');
-            return evaluate(left, right); // jshint ignore:line
+            return evaluate(call, left, right);
         };
     }
 
@@ -914,33 +948,7 @@ define([
             var left = this._left.evaluate(feature);
             var right = this._right.evaluate(feature);
             var test = this._test.evaluate(feature);
-
-            // Legal Type Mismatch
-            if (typeof left === 'object' && typeof right === 'object' && typeof test === 'number') {
-                if (left instanceof Cartesian2 && right instanceof Cartesian2) {
-                    return Cartesian2.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), ScratchStorage.getCartesian2());
-                } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
-                    return Cartesian3.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), ScratchStorage.getCartesian3());
-                } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
-                    return Cartesian4.fromElements(evaluate(left.x, right.x, test), evaluate(left.y, right.y, test), evaluate(left.z, right.z, test), evaluate(left.w, right.w, test), ScratchStorage.getCartesian4());
-                }
-            }
-
-            // All Arguments match
-            if (typeof left === 'number' && typeof right === 'number' && typeof test === 'number') {
-                return evaluate(left, right, test);
-            } else if (left instanceof Cartesian2 && right instanceof Cartesian2 && test instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3 && right instanceof Cartesian3 && test instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), evaluate(left.z, right.z, test.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4 && right instanceof Cartesian4 && test instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x, right.x, test.x), evaluate(left.y, right.y, test.y), evaluate(left.z, right.z, test.z), evaluate(left.w, right.w, test.w), ScratchStorage.getCartesian4());
-            }
-
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function ' + call + '\'s argument types are mismatched');
-            //>>includeEnd('debug');
-            return evaluate(left, right, test); // jshint ignore:line
+            return evaluate(call, left, right, test);
         };
     }
 

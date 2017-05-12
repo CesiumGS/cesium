@@ -781,7 +781,7 @@ define([
                     return;
                 }
                 var currentFeature = this._feature;
-                if (defined(currentFeature) && defined(currentFeature._batchTable) && !currentFeature._batchTable.isDestroyed()) {
+                if (defined(currentFeature) && defined(currentFeature.content.batchTable) && !currentFeature.content.batchTable.isDestroyed()) {
                     // Restore original color to feature that is no longer selected
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {

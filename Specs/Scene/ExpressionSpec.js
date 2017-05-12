@@ -23,8 +23,8 @@ defineSuite([
         this._properties = {};
         this._className = undefined;
         this._inheritedClassName = undefined;
-        this._content = {
-            _tileset : {
+        this.content = {
+            tileset : {
                 timeSinceLoad : 0.0
             }
         };
@@ -2911,7 +2911,7 @@ defineSuite([
         var feature = new MockFeature();
         var expression = new Expression('${tiles3d_tileset_time}');
         expect(expression.evaluate(frameState, feature)).toEqual(0.0);
-        feature._content._tileset.timeSinceLoad = 1.0;
+        feature.content.tileset.timeSinceLoad = 1.0;
         expect(expression.evaluate(frameState, feature)).toEqual(1.0);
     });
 
