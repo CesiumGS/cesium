@@ -56,3 +56,62 @@ this._showTouch = createCommand(function() {
 });
 ```
 下面介绍一些命名约定以及它们的设计模式, 例如：options parameters, result parameters and scratch variables, and from constructors.
+
+编码格式
+-----------
+通常来讲，新代码的格式与原来的代码格式保持一致。
+* 使用缩进四个空格。不要使用制表符tab。
+* 代码后面不要加多余空格。
+* {和前面的声明放在同一行。
+```JavaScript
+function defaultValue(a, b) {
+   // ...
+}
+
+if (!defined(result)) {
+   // ...
+}
+```
+* 在if for while 中使用大括号，即使只有一行。
+```JavaScript
+if (!defined(result))
+    result = new Cartesian3();
+```
+最好写成
+```JavaScript
+if (!defined(result)) {
+    result = new Cartesian3();
+}
+```
+* 尽量使用() 例如：
+```JavaScript
+var foo = x > 0.0 && y !== 0.0;
+```
+最好写成
+```JavaScript
+var foo = (x > 0.0) && (y !== 0.0);
+```
+*　在一个函数内尽量使用空白行将相同类型的操作归类。　例如：
+```JavaScript
+function Model(options) {
+    // ...
+    this._allowPicking = defaultValue(options.allowPicking, true);
+
+    this._ready = false;
+    this._readyPromise = when.defer();
+    // ...
+};
+```
+* 在JavaScript中一般使用单引号来代替双引号。在html中则使用双引号。
+* 在文本编辑中，包括JavaScript文件。在文件的最后使用一个换行符，以降低差异化处理的可能性。
+计量单位
+---------
+* Cesium使用国际标准单位
+ * 表示距离用米
+ * 角用弧度表示
+ * 时间及时间间隔用秒
+* 如果一个函数使用的参数不是使用标准单位则需要将单位名字写到函数中。 例如：
+```JavaScript
+Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) { /* ... */ }
+```
+ 
