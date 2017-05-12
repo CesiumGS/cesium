@@ -67,8 +67,6 @@ define([
      * @private
      */
     function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
-        featuresLength = defaultValue(featuresLength, 0);
-
         /**
          * @readonly
          */
@@ -993,7 +991,7 @@ define([
         var type = uniformMatch[1];
 
         source = ShaderSource.replaceMain(source, 'tile_main');
-        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below don't affect it
+        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below doesn't affect it
 
         // If the tile color is white, use the source color. This implies the feature has not been styled.
         // Highlight: tile_colorBlend is 0.0 and the source color is used
@@ -1249,8 +1247,6 @@ define([
                 }
             };
 
-            // uniformMap goes through getUniformMap first in Model.
-            // Combine in this order so uniforms with the same name are overridden.
             return combine(batchUniformMap, uniformMap);
         };
     };

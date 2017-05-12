@@ -900,6 +900,8 @@ define([
         /**
          * A 4x4 transformation matrix that transforms the tileset's root tile.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
          */
@@ -920,6 +922,8 @@ define([
         /**
          * Returns the time, in seconds, since the tileset was loaded and first updated.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Number}
          */
         timeSinceLoad : {
@@ -932,6 +936,8 @@ define([
          * Returns the total amount of memory used in bytes by the tileset.
          * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
          * of the loaded tiles in the tileset.
+         *
+         * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
          * @see Cesium3DTileset#maximumMemoryUsage
@@ -964,8 +970,7 @@ define([
 
     /**
      * Marks the tileset's {@link Cesium3DTileset#style} as dirty, which forces all
-     * features to re-evaluate the style in the next frame each is visible.  Call
-     * this when a style changes.
+     * features to re-evaluate the style in the next frame each is visible.
      */
     Cesium3DTileset.prototype.makeStyleDirty = function() {
         this._styleEngine.makeDirty();
@@ -1010,30 +1015,30 @@ define([
         var stack = [];
         stack.push({
             header : tilesetJson.root,
-            cesium3DTile : rootTile
+            tile3D : rootTile
         });
 
         while (stack.length > 0) {
             var tile = stack.pop();
-            var tile3D = tile.cesium3DTile;
+            var tile3D = tile.tile3D;
             var children = tile.header.children;
             if (defined(children)) {
                 var length = children.length;
-                for (var k = 0; k < length; ++k) {
-                    var childHeader = children[k];
+                for (var i = 0; i < length; ++i) {
+                    var childHeader = children[i];
                     var childTile = new Cesium3DTile(this, baseUrl, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
                     ++statistics.numberTotal;
                     stack.push({
                         header : childHeader,
-                        cesium3DTile : childTile
+                        tile3D : childTile
                     });
                 }
             }
 
             if (this._cullWithChildrenBounds) {
-                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D, true);
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D);
             }
 
             // Create a load heap, one for each unique server. We can only make limited requests to a given
@@ -1136,8 +1141,17 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
+    function selectionHeuristic(tileset, ancestor, tile) {
+        var skipLevels = tileset.skipLODs ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
+
+        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
+               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
+               (tile._depth > ancestor._depth + skipLevels);
+    }
+
     function sortForLoad(a, b) {
-        var distanceDifference = a.distanceToCamera - b.distanceToCamera;
+        var distanceDifference = a._distanceToCamera - b._distanceToCamera;
         if (a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
             return distanceDifference;
         }
@@ -1147,27 +1161,6 @@ define([
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
-    function destroySubtree(tileset, tile) {
-        var root = tile;
-        var statistics = tileset._statistics;
-        var stack = scratchStack;
-        stack.push(tile);
-        while (stack.length > 0) {
-            tile = stack.pop();
-            var children = tile.children;
-            var length = children.length;
-            for (var i = 0; i < length; ++i) {
-                stack.push(children[i]);
-            }
-            if (tile !== root) {
-                unloadTileFromCache(tileset, tile);
-                tile.destroy();
-                --statistics.numberTotal;
-            }
-        }
-        root.children = [];
-    }
 
     function requestContent(tileset, tile, outOfCore) {
         if (!outOfCore) {
@@ -1214,17 +1207,6 @@ define([
             }
         }
     }
-
-    function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset.skipLODs ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
-
-        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
-               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
-               (tile._depth > ancestor._depth + skipLevels);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
 
     function addToProcessingQueue(tileset, tile) {
         return function() {
@@ -1275,7 +1257,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian = new Cartesian3();
 
     var stringOptions = {
         maximumFractionDigits : 3
@@ -1300,15 +1282,15 @@ define([
             var halfAxes = boundingVolume.halfAxes;
             var radius = boundingVolume.radius;
 
-            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian2);
+            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
             if (defined(halfAxes)) {
                 position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
                 position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
                 position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
             } else if (defined(radius)) {
-                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian2);
-                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian2);
-                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian2);
+                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
             }
 
             var labelString = '';
@@ -1319,7 +1301,7 @@ define([
                 attributes++;
             }
             if (tileset.debugShowRenderingStatistics) {
-                labelString += '\nCommands: ' + tile._commandsLength;
+                labelString += '\nCommands: ' + tile.commandsLength;
                 attributes++;
 
                 // Don't display number of points or triangles if 0.
@@ -1369,7 +1351,7 @@ define([
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-        var tile, i;
+        var i;
 
         var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
@@ -1381,7 +1363,7 @@ define([
 
         var lengthBeforeUpdate = commandList.length;
         for (i = 0; i < length; ++i) {
-            tile = selectedTiles[i];
+            var tile = selectedTiles[i];
             // tiles may get unloaded and destroyed between selection and update
             if (tile.selected) {
                 // Raise visible event before update in case the visible event
@@ -1406,7 +1388,7 @@ define([
              * 1. Render just the backfaces of unresolved tiles in order to lay down z
              * 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
              *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
-             *    Because children are always drawn before ancestors (@see {@link traverseAndSelect}),
+             *    Because children are always drawn before ancestors (@see {@link Cesium3DTilesetTraversal#traverseAndSelect}),
              *    this effectively draws children first and does not draw ancestors if a descendant has already
              *    been drawn at that pixel.
              *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
@@ -1449,6 +1431,27 @@ define([
         } else {
             tileset._tileInfoLabels = tileset._tileInfoLabels && tileset._tileInfoLabels.destroy();
         }
+    }
+
+    function destroySubtree(tileset, tile) {
+        var root = tile;
+        var statistics = tileset._statistics;
+        var stack = scratchStack;
+        stack.push(tile);
+        while (stack.length > 0) {
+            tile = stack.pop();
+            var children = tile.children;
+            var length = children.length;
+            for (var i = 0; i < length; ++i) {
+                stack.push(children[i]);
+            }
+            if (tile !== root) {
+                unloadTileFromCache(tileset, tile);
+                tile.destroy();
+                --statistics.numberTotal;
+            }
+        }
+        root.children = [];
     }
 
     function unloadTileFromCache(tileset, tile) {

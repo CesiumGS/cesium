@@ -6,9 +6,9 @@ define([
     'use strict';
 
     /**
-     * @private
-     *
      * Additive refinement renders the entire cut of the tree.  Replacement refine renders just the front.
+     *
+     * @private
      */
     var Cesium3DTileRefine = {
         ADD : 0,      // Render this tile and, if it doesn't meet the SSE, refine to its children

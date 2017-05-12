@@ -50,7 +50,7 @@ define([
 
     defineProperties(TileOrientedBoundingBox.prototype, {
         /**
-         * The underlying bounding volume
+         * The underlying bounding volume.
          *
          * @memberof TileOrientedBoundingBox.prototype
          *
@@ -63,7 +63,7 @@ define([
             }
         },
         /**
-         * The underlying bounding sphere
+         * The underlying bounding sphere.
          *
          * @memberof TileOrientedBoundingBox.prototype
          *
@@ -108,6 +108,13 @@ define([
 
     /**
      * Update the bounding box after the tile is transformed.
+     *
+     * @param {Cartesian3} center The center of the box.
+     * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
+     *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+     *                           cube centered at the origin.
+     *
+     * @private
      */
     TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
         Cartesian3.clone(center, this._orientedBoundingBox.center);
@@ -120,6 +127,8 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
+     *
+     * @private
      */
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
