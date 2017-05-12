@@ -78,9 +78,9 @@ define([
      * @private
      */
     function PointCloud3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
 
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
@@ -214,15 +214,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        url : {
-            get : function() {
-                return this._url;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         tileset : {
             get : function() {
                 return this._tileset;
@@ -235,6 +226,15 @@ define([
         tile : {
             get : function() {
                 return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
+                return this._url;
             }
         },
 

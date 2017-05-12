@@ -36,9 +36,9 @@ define([
      * @private
      */
     function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
         this._contents = [];
         this._readyPromise = when.defer();
 
@@ -152,15 +152,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        url : {
-            get : function() {
-                return this._url;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         tileset : {
             get : function() {
                 return this._tileset;
@@ -173,6 +164,15 @@ define([
         tile : {
             get : function() {
                 return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
+                return this._url;
             }
         },
 

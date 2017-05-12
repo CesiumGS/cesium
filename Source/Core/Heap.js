@@ -126,7 +126,6 @@ define([
             }
             if (candidate !== index) {
                 swap(data, candidate, index);
-
                 index = candidate;
             } else {
                 break;

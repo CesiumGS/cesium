@@ -155,19 +155,6 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         *
-         * @type {String}
-         * @readonly
-         */
-        url : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
-
-        /**
          * Gets the tileset for this tile.
          *
          * @type {Cesium3DTileset}
@@ -190,6 +177,20 @@ define([
                 DeveloperError.throwInstantiationError();
             }
         },
+
+        /**
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        url : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
         /**
          * Gets the batch table for this content.
          * <p>

@@ -2,13 +2,11 @@
 define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/isArray'
+        '../Core/defined'
     ], function(
         ComponentDatatype,
         defaultValue,
-        defined,
-        isArray) {
+        defined) {
     'use strict';
 
     /**

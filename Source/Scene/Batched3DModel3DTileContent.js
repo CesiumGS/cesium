@@ -50,9 +50,9 @@ define([
      * @private
      */
     function Batched3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
         this._model = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -144,15 +144,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
-                return this._url;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         tileset : {
             get : function() {
                 return this._tileset;
@@ -165,6 +156,15 @@ define([
         tile : {
             get : function() {
                 return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url: {
+            get: function() {
+                return this._url;
             }
         },
 
@@ -258,7 +258,6 @@ define([
 
         var batchLength;
 
-        // TODO : remove this legacy check before merging into master
         // Legacy header #1: [batchLength] [batchTableByteLength]
         // Legacy header #2: [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]
         // Current header: [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength]

@@ -70,9 +70,9 @@ define([
      * @private
      */
     function Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
         this._modelInstanceCollection = undefined;
         this._batchTable = undefined;
         this._features = undefined;
@@ -173,15 +173,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
-                return this._url;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         tileset : {
             get : function() {
                 return this._tileset;
@@ -200,9 +191,18 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        url: {
+            get: function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         batchTable : {
             get : function() {
-                return undefined;
+                return this._batchTable;
             }
         }
     });
@@ -415,9 +415,7 @@ define([
             instanceTranslationRotationScale.rotation = instanceQuaternion;
 
             // Get the instance scale
-            instanceScale.x = 1.0;
-            instanceScale.y = 1.0;
-            instanceScale.z = 1.0;
+            instanceScale = Cartesian3.fromElements(1.0, 1.0, 1.0, instanceScale);
             var scale = featureTable.getProperty('SCALE', ComponentDatatype.FLOAT, 1, i);
             if (defined(scale)) {
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);

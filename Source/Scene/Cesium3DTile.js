@@ -200,7 +200,7 @@ define([
             contentUrl = joinUrls(baseUrl, contentHeader.url);
             requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
-            content = new Empty3DTileContent();
+            content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
             contentState = Cesium3DTileContentState.READY;
         }
