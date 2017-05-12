@@ -320,7 +320,7 @@ define([
 
     var nwScratch = new Cartographic();
     /**
-     * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
+     * Computes the geometric representation of an outline of a rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
      * @returns {Geometry|undefined} The computed vertices and indices.

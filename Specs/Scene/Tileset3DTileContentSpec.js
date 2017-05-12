@@ -41,16 +41,8 @@ defineSuite([
         return Cesium3DTilesTester.resolvesReadyPromise(scene, tilesetOfTilesetsUrl);
     });
 
-    it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('json');
-    });
-
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, tilesetOfTilesetsUrl);
-    });
-
-    it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, tilesetOfTilesetsUrl);
     });
 
 }, 'WebGL');

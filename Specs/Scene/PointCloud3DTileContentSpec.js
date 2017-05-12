@@ -81,25 +81,18 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
-            magic : [120, 120, 120, 120]
-        });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
-    });
-
     it('throws with invalid version', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             version: 2
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if featureTableJsonByteLength is 0', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJsonByteLength : 0
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the feature table does not contain POINTS_LENGTH', function() {
@@ -110,7 +103,7 @@ defineSuite([
                 }
             }
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the feature table does not contain POSITION or POSITION_QUANTIZED', function() {
@@ -119,7 +112,7 @@ defineSuite([
                 POINTS_LENGTH : 1
             }
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE', function() {
@@ -132,7 +125,7 @@ defineSuite([
                 QUANTIZED_VOLUME_OFFSET : [0.0, 0.0, 0.0]
             }
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET', function() {
@@ -145,7 +138,7 @@ defineSuite([
                 QUANTIZED_VOLUME_SCALE : [1.0, 1.0, 1.0]
             }
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the BATCH_ID semantic is defined but BATCHES_LENGTH is not', function() {
@@ -156,7 +149,7 @@ defineSuite([
                 BATCH_ID : [0, 1]
             }
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('BATCH_ID semantic uses componentType of UNSIGNED_SHORT by default', function() {
@@ -174,10 +167,6 @@ defineSuite([
 
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.resolvesReadyPromise(scene, pointCloudRGBUrl);
-    });
-
-    it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('pnts');
     });
 
     it('renders point cloud with rgb colors', function() {
@@ -699,10 +688,6 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
-    });
-
-    it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointCloudRGBUrl);
     });
 
 }, 'WebGL');

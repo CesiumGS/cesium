@@ -82,7 +82,10 @@ define([
         atan2 : Math.atan2,
         pow : Math.pow,
         min : Math.min,
-        max : Math.max
+        max : Math.max,
+        distance : distance,
+        dot : dot,
+        cross : cross
     };
 
     var unaryFunctions = {
@@ -105,7 +108,7 @@ define([
         log : Math.log,
         log2 : log2,
         fract : fract,
-        length: length,
+        length : length,
         normalize: normalize
     };
 
@@ -142,6 +145,22 @@ define([
         }
     }
 
+    function distance(x, y) {
+        if (typeof x === 'number' && typeof y === 'number') {
+            return Math.abs(x - y);
+        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
+            return Cartesian2.distance(x, y);
+        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.distance(x, y);
+        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
+            return Cartesian4.distance(x, y);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function distance requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
+        }
+    }
+
     function normalize(arg) {
         if (typeof arg === 'number') {
             return 1.0;
@@ -154,6 +173,32 @@ define([
         } else {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid argument type for normalize() function');
+            //>>includeEnd('debug');
+        }
+    }
+
+    function dot(x, y) {
+        if (typeof x === 'number' && typeof y === 'number') {
+            return x * y;
+        } else if (x instanceof Cartesian2 && y instanceof Cartesian2) {
+            return Cartesian2.dot(x, y);
+        } else if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.dot(x, y);
+        } else if (x instanceof Cartesian4 && y instanceof Cartesian4) {
+            return Cartesian4.dot(x, y);
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function dot requires matching types of inputs. Arguments are ' + x + ' and ' + y + '.');
+            //>>includeEnd('debug');
+        }
+    }
+
+    function cross(x, y) {
+        if (x instanceof Cartesian3 && y instanceof Cartesian3) {
+            return Cartesian3.cross(x, y, ScratchStorage.getCartesian3());
+        } else {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Invalid argument type for cross() function, must be vec3');
             //>>includeEnd('debug');
         }
     }
@@ -280,9 +325,9 @@ define([
         }
 
         shaderExpression = returnType + ' ' + functionName + '() \n' +
-            '{ \n' +
-            '    return ' + shaderExpression + '; \n' +
-            '} \n';
+                           '{ \n' +
+                           '    return ' + shaderExpression + '; \n' +
+                           '} \n';
 
         return shaderExpression;
     };
@@ -433,7 +478,7 @@ define([
                 createRuntimeAst(expression, args[1]),
                 createRuntimeAst(expression, args[2])
             ];
-           return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
@@ -828,6 +873,11 @@ define([
         return function(feature) {
             var left = this._left.evaluate(feature);
             var right = this._right.evaluate(feature);
+
+            // Special handling for vector operations
+            if (call === 'distance' || call === 'dot' || call === 'cross') {
+                return evaluate(left, right);
+            }
 
             // Legal Type Mismatch
             if ((call === 'min' || call === 'max') && typeof right === 'number') {

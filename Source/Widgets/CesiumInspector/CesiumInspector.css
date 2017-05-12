@@ -1,7 +1,5 @@
 .cesium-cesiumInspector {
     border-radius: 5px;
-    -webkit-transition: width ease-in-out 0.25s;
-    -moz-transition: width ease-in-out 0.25s;
     transition: width ease-in-out 0.25s;
     background: rgba(48, 51, 54, 0.8);
     border: 1px solid #444;
@@ -105,8 +103,6 @@
 
 .cesium-cesiumInspector-section {
     margin-bottom: 10px;
-    -webkit-transition: max-height 0.25s;
-    -moz-transition: max-height 0.25s;
     transition: max-height 0.25s;
 }
 

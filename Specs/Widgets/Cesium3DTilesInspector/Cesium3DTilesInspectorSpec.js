@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector',
-        'Scene/Cesium3DTileset',
-        'Specs/createScene',
         'Core/Ellipsoid',
-        'Scene/Globe'
+        'Scene/Cesium3DTileset',
+        'Scene/Globe',
+        'Specs/createScene'
     ], function(
         Cesium3DTilesInspector,
-        Cesium3DTileset,
-        createScene,
         Ellipsoid,
-        Globe) {
+        Cesium3DTileset,
+        Globe,
+        createScene) {
     'use strict';
 
     // Parent tile with content and four child tiles with content

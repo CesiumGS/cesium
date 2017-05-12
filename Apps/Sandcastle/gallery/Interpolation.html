@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw a box.">
+    <meta name="description" content="Construct new data points within the range of a discrete set of known data points.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -40,7 +40,7 @@ viewer.scene.globe.enableLighting = true;
 
 //Use STK World Terrain
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
     requestVertexNormals : true
 });
