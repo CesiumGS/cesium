@@ -54,7 +54,7 @@ var czml = [{
     }
 }, {
     "id" : "greenCorridor",
-    "name" : "Green corridor at height with mitered corners",
+    "name" : "Green corridor at height with mitered corners and outline",
     "corridor" : {
         "positions" : {
             "cartographicDegrees" : [
@@ -72,11 +72,15 @@ var czml = [{
                     "rgba" : [0, 255, 0, 255]
                 }
             }
+        },
+        "outline" : true, // height must be set for outlines to display
+        "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
         }
     }
 }, {
     "id" : "blueCorridor",
-    "name" : "Blue extruded corridor with beveled corners",
+    "name" : "Blue extruded corridor with beveled corners and outline",
     "corridor" : {
         "positions" : {
             "cartographicDegrees" : [
@@ -95,6 +99,10 @@ var czml = [{
                     "rgba" : [0, 0, 255, 255]
                 }
             }
+        },
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [255, 255, 255, 255]
         }
     }
 }];

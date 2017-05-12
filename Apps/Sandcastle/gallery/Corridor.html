@@ -43,7 +43,7 @@ var redCorridor = viewer.entities.add({
 });
 
 var greenCorridor = viewer.entities.add({
-    name : 'Green corridor at height with mitered corners',
+    name : 'Green corridor at height with mitered corners and outline',
     corridor : {
         positions : Cesium.Cartesian3.fromDegreesArray([
                                                         -90.0, 40.0,
@@ -53,7 +53,8 @@ var greenCorridor = viewer.entities.add({
                                                     height: 100000.0,
                                                     width : 200000.0,
         cornerType: Cesium.CornerType.MITERED,
-        material : Cesium.Color.GREEN
+        material : Cesium.Color.GREEN,
+        outline : true // height required for outlines to display
     }
 });
 
@@ -70,8 +71,8 @@ var blueCorridor = viewer.entities.add({
         width : 200000.0,
         cornerType: Cesium.CornerType.BEVELED,
         material : Cesium.Color.BLUE.withAlpha(0.5),
-        outline : true,
-        outlineColor : Cesium.Color.BLUE
+        outline : true, // height or extrudedHeight must be set for outlines to display
+        outlineColor : Cesium.Color.WHITE
     }
 });
 
