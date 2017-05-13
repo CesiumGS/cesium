@@ -17,7 +17,7 @@ Cesium是世界上最大的JavaScript代码库之一。 自从创建以来，我
 * [计量单位](#计量单位)
 * [基本代码结构](#基本代码结构)
 * [功能](#功能)
-   * [`options` 对象参数](#可选参数)
+   * [`options` Parameters](#options-parameters)
    * [Default Parameter Values](#default-parameter-values)
    * [Throwing Exceptions](#throwing-exceptions)
    * [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
@@ -477,22 +477,21 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
 ```
-* :speedboat: 同理，尽量不要改变属性的类型， 例如，把一个字符串赋值给一个整形变量，For the same reason, do not change the type of a property, e.g., assign a string to a number, e.g.,
+* :speedboat: 同理，尽量不要改变属性的类型， 例如，把一个字符串赋值给一个整形变量，
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = 'Cesium'; // Changes x to a string, slows down property access
 ```
 
-### `from` Constructors
+### `from` 构造函数
 
-:art: Constructor functions should take the basic components of the class as parameters.  For example, `Cartesian3` takes `x`, `y`, and `z`.
+:art: 构造函数一般使用基本组件作为类的参数，例如，`Cartesian3` 使用 `x`, `y`, 和 `z`.
 
-It is often convenient to construct objects from other parameters.  Since JavaScript doesn't have function overloading, Cesium uses static
-functions prefixed with `from` to construct objects in this way.  For example:
+为了方便构造对象使用其它类型的参数，但是JavaScript有没有函数重载的概念，所以Cesium使用一个固定的函数前缀`from`来表示构造对象。例如：
 ```javascript
 var p = Cartesian3.fromRadians(-2.007, 0.645); // Construct a Cartesian3 object using longitude and latitude
 ```
-These are implemented with an optional `result` parameter, which allows callers to pass in a scratch variable:
+这个实现使用了一个可选参数 `result` ，允许调用者传入一个草稿变量：
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height, result) {
     // Compute x, y, z using longitude, latitude, height
@@ -507,34 +506,34 @@ Cartesian3.fromRadians = function(longitude, latitude, height, result) {
     return result;
 };
 ```
-Since calling a `from` constructor should not require an existing object, the function is assigned to `Cartesian3.fromRadians`, not `Cartesian3.prototype.fromRadians`.
+由于调用一个`from` 构造函数不需要建立在对象之上，这个构造函数应该写成`Cartesian3.fromRadians`, 而不是 `Cartesian3.prototype.fromRadians`.
 
-### `to` Functions
+### `to` 函数
 
-Functions that start with `to` return a new type of object, e.g.,
+带 `to` 前缀的函数一般用来返回一个新的类型的对象，例如：
 ```javascript
 Cartesian3.prototype.toString = function() {
     return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
 };
 ```
 
-### Use Prototype Functions for Fundamental Classes Sparingly
+### 通常基础类很少使用原型函数
 
-:art: Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
+:art: 基本的数学类比如 `Cartesian3`, `Quaternion`, `Matrix4`, 和 `JulianDate`  一般很少使用原型函数。例如，`Cartesian3`并没有向下面 `add` 这样的原型函数： Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
 v0.add(v1, result);
 ```
-Instead, this is written as
+一般而言写成这样
 ```javascript
 Cartesian3.add(v0, v1, result);
 ```
-The only exceptions are
+但是下面这些除外
 * `clone`
 * `equals`
 * `equalsEpsilon`
 * `toString`
 
-These prototype functions generally delegate to the non-prototype (static) version, e.g.,
+但其实这些原型函数也只是非原型函数的静态版本，例如：
 ```javascript
 Cartesian3.equals = function(left, right) {
     return (left === right) ||
@@ -549,18 +548,18 @@ Cartesian3.prototype.equals = function(right) {
     return Cartesian3.equals(this, right);
 };
 ```
-The prototype versions have the benefit of being able to be used polymorphically.
+原型版本的好处能够以多态方式使用。
 
-### Static Constants
+### 常量
 
-To create a static constant related to a class, use `freezeObject`:
+使用`freezeObject`来创建常量:
 ```javascript
 Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
 ```
 
-### Private Functions
+### 私有函数
 
-Like private properties, private functions start with an `_`.  In practice, these are rarely used.  Instead, for better encapsulation, a file-scoped function that takes `this` as the first parameter is used.  For example,
+私有函数和私有属性以 `_`后缀开头。但是在实践中，却很少使用这些。相反，为了更好的封装，使用一个 file-scoped 函数并且把`this`作为第一个参数。
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     this._processTiles(frameState);
@@ -576,7 +575,7 @@ Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     }
 }
 ```
-is better written as
+最好写成
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     processTiles(this, frameState);
