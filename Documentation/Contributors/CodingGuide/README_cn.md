@@ -17,7 +17,7 @@ Cesium是世界上最大的JavaScript代码库之一。 自从创建以来，我
 * [计量单位](#计量单位)
 * [基本代码结构](#基本代码结构)
 * [功能](#功能)
-   * [`options` Parameters](#options-parameters)
+   * [`options` 对象参数](#可选参数)
    * [Default Parameter Values](#default-parameter-values)
    * [Throwing Exceptions](#throwing-exceptions)
    * [`result` Parameters and Scratch Variables](#result-parameters-and-scratch-variables)
@@ -347,22 +347,22 @@ var p = new Cartesian3(1.0, 2.0, 3.0);
 
 ### 默认参数
 
-If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  Use Cesium's `defaultValue` to assign a default value.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
+ 如何函数参数和类的属性存在缺省值，即不一定要求指定。 使用后Cesium的`defaultValue` 来分配默认值。比如下面这个例子， `Cartesian3.fromRadians` 的`height`属性默认值是0 ：
 ```javascript
 Cartesian3.fromRadians = function(longitude, latitude, height) {
     height = defaultValue(height, 0.0);
     // ...
 };
 ```
-* :speedboat: Don't use `defaultValue` if it could cause an unnecessary function call or memory allocation, e.g.,
+* :speedboat: 如果使用`defaultValue`会不可避免的导致调用函数或者分配内存，那么则不使用。例如：
 ```javascript
 this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
 ```
-is better written as
+最好写成
 ```javascript
 this._mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
 ```
-* If an `options` parameter is optional, use `defaultValue.EMPTY_OBJECT`, e.g.,
+* 如果`defaultValueIf`的参数是一个`options`对象参数，则参数的默认值通常使用`defaultValue.EMPTY_OBJECT`，例如：
 ```javascript
 function DebugModelMatrixPrimitive(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -372,16 +372,16 @@ function DebugModelMatrixPrimitive(options) {
 }
 ```
 
-Some common sensible defaults are
+一些常用的默认值
 * `height`: `0.0`
 * `ellipsoid`: `Ellipsoid.WGS84`
 * `show`: `true`
 
-### Throwing Exceptions
+### 异常处理
 
-Use the functions of Cesium's [Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) class to throw a `DeveloperError` when the user has a coding error. The most common errors are parameters that are missing, have the wrong type or are out of rangers of the wrong type or are out of range.
+在用户编码错误时，通常使用Cesium的[Check](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Check.js) 类来抛出一个`DeveloperError`。 最常见的错误有 缺少参数、参数类型错误、超出范围。
 
-* For example, to check that a parameter is defined and is an object:
+* 例如：检测一个对象是否是制定的定义类型：
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
@@ -392,7 +392,7 @@ Cartesian3.maximumComponent = function(cartesian) {
 };
 ```
 
-* For more complicated parameter checks, manually check the parameter and then throw a `DeveloperError`. Example:
+* 对于更加复杂的参数检查，手动检测参数然后抛出一个`DeveloperError`异常。例如：
 ```javascript
 Cartesian3.unpackArray = function(array, result) {
     //>>includeStart('debug', pragmas.debug);
@@ -407,7 +407,7 @@ Cartesian3.unpackArray = function(array, result) {
 };
 ```
 
-* To check for `DeveloperError`, surround code in `includeStart`/`includeEnd` comments, as shown above, so developer error checks can be optimized out of release builds.  Do not include required side effects inside `includeStart`/`includeEnd`, e.g.,
+* 关于检测 `DeveloperError` 的所有代码都写在 `includeStart`/`includeEnd`范围内, 如上所示, 这样开发人员就可以将错误检测优化在编译成release版时。不要包含会产生副作用的代码在`includeStart`/`includeEnd`范围内，例如：
 ```javascript
 Cartesian3.maximumComponent = function(cartesian) {
     //>>includeStart('debug', pragmas.debug);
@@ -419,28 +419,28 @@ Cartesian3.maximumComponent = function(cartesian) {
     return Math.max(c.x, c.y, c.z);
 };
 ```
-* Throw Cesium's `RuntimeError` for an error that will not be known until runtime.  Unlike developer errors, runtime error checks are not optimized out of release builds.
+* 只有在执行时才会抛出Cesium的`RuntimeError`错误。不同于developer errors，运行时的错误检测在release版时不会被优化。
 ```javascript
 if (typeof WebGLRenderingContext === 'undefined') {
     throw new RuntimeError('The browser does not support WebGL.');
 }
 ```
-* :art: Exceptions are exceptional.  Avoid throwing exceptions, e.g., if a polyline is only provided one position, instead of two or more, instead of throwing an exception just don't render it.
+* :art: 在特殊情况下，不要抛出异常，例如，如果一个折线仅仅只有一个点，这个时候不要抛出异常，只要不渲染它就行了。
 
 ### `result` Parameters and Scratch Variables
 
-:speedboat: In JavaScript, user-defined classes such as `Cartesian3` are reference types and are therefore allocated on the heap.  Frequently allocating these types causes a significant performance problem because it creates GC pressure, which causes the Garbage Collector to run longer and more frequently.
+:speedboat: 在JavaScript中，用户定义的类（如`Cartesian3`）是引用类型，因此在堆上分配。 频繁分配这些类型会导致重大的性能问题，因为它会加大GC（图形上下文）的压力，这会导致垃圾收集器运行时间更长更频繁。
 
-Cesium uses required `result` parameters to avoid implicit memory allocation.  For example,
+Cesium 通过使用`result`参数来避免隐试内存分配。 例如：
 ```javascript
 var sum = Cartesian3.add(v0, v1);
 ```
-would have to implicitly allocate a new `Cartesian3` object for the returned sum.  Instead, `Cartesian3.add` requires a `result` parameter:
+手动创建一个`Cartesian3`对象赋值给`result`来代替直接使用`Cartesian3.add`产生隐试分配，然后把`result`传入`Cartesian3.add`。这样就可以比上面少分配了一次内存。
 ```javascript
 var result = new Cartesian3();
 var sum = Cartesian3.add(v0, v1, result); // Result and sum reference the same object
 ```
-This makes allocations explicit to the caller, which allows the caller to, for example, reuse the result object in a file-scoped scratch variable:
+显试创建对象分配内存还能够最高效率使用内存，例如，重复使用`result`对象在一个作用域内，把它看做一个草稿变量：
 ```javascript
 var scratchDistance = new Cartesian3();
 
@@ -449,18 +449,18 @@ Cartesian3.distance = function(left, right) {
     return Cartesian3.magnitude(scratchDistance);
 };
 ```
-The code is not as clean, but the performance improvement is often dramatic.
+虽然代码看起来不是很简洁，但是却能带来不小的性能提升。
 
-As described below, `from` constructors also use optional `result` parameters.
+下面要说的也同样如此，在累的构造函数中也使用可选的`result`参数。
 
-## Classes
+## 类
 
-* :art: Classes should be **cohesive**. A class should represent one abstraction.
-* :art: Classes should be **loosely coupled**. Two classes should not be entangled and rely on each other's implementation details; they should communicate through well-defined interfaces.
+* :art: 类应该具有内聚性**cohesive**。一个类应该可以表示为一个抽象化的实体。
+* :art: 类应该具有低耦合性**loosely coupled**。两个类的实现细节应该相互独立；类之间通过定义好的接口进行通信。
 
-### Constructor Functions
+### 构造函数
 
-* Create a class by creating a constructor function:
+* 创建一个类通常使用一个构造函数：
 ```javascript
 function Cartesian3(x, y, z) {
     this.x = defaultValue(x, 0.0);
@@ -468,16 +468,16 @@ function Cartesian3(x, y, z) {
     this.z = defaultValue(z, 0.0);
 };
 ```
-* Create an instance of a class (an _object_) by calling the constructor function with `new`:
+* 创建一个类的实例（对象）则使用`new`和构造函数：
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
-* :speedboat: Assign to all the property members of a class in the constructor function. This allows JavaScript engines to use a hidden class and avoid entering dictionary mode.  Assign `undefined` if no initial value makes sense.  Do not add properties to an object, e.g.,
+* :speedboat: 所有的类属性都写在构造函数中。这样可以让编译引擎使用隐试类并且避免进入字典模式。如果没有初始值就分配为`undefined`。尽量不向对象添加属性，:trollface: 按我的理解就是尽量把属性写入构造函数中方便编译引擎优化，避免频繁的改变类对象结构。例如：
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.w = 4.0; // Adds the w property to p, slows down property access since the object enters dictionary mode
 ```
-* :speedboat: For the same reason, do not change the type of a property, e.g., assign a string to a number, e.g.,
+* :speedboat: 同理，尽量不要改变属性的类型， 例如，把一个字符串赋值给一个整形变量，For the same reason, do not change the type of a property, e.g., assign a string to a number, e.g.,
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = 'Cesium'; // Changes x to a string, slows down property access
