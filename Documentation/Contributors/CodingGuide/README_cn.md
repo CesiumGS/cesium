@@ -12,11 +12,11 @@ Cesium是世界上最大的JavaScript代码库之一。 自从创建以来，我
 
 在某种程度上来说，本指南可以总结为与现有代码相似的新代码。
 
-* [Naming](#naming)
-* [Formatting](#formatting)
-* [Units](#units)
-* [Basic Code Construction](#basic-code-construction)
-* [Functions](#functions)
+* [命名](#命名)
+* [编码格式](#编码格式)
+* [计量单位](#计量单位)
+* [基本代码结构](#基本代码结构)
+* [功能](#功能)
    * [`options` Parameters](#options-parameters)
    * [Default Parameter Values](#default-parameter-values)
    * [Throwing Exceptions](#throwing-exceptions)
@@ -142,13 +142,13 @@ function Model(options) {
 ```JavaScript
 Cartesian3.fromDegrees = function(longitude, latitude, height, ellipsoid, result) { /* ... */ }
 ```
- ## Basic Code Construction
+ ## 基本代码结构
 
-* Cesium uses JavaScript's [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) so each module (file) contains
+* Cesium使用JavaScript的严格模式Cesium uses JavaScript's [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode) 所以每个模块（文件）都包含
 ```javascript
 'use strict';
 ```
-* :speedboat: To avoid type coercion (implicit type conversion), test for equality with `===` and `!==`, e.g.,
+* :speedboat: 为了避免类型的强制转换 （隐试强制转换），检测是否相等使用 === 和 !== , 例如：
 ```javascript
 var i = 1;
 
@@ -160,15 +160,15 @@ if (i !== 1) {
     // ...
 }
 ```
-* To aid the human reader, append `.0` to whole numbers intended to be floating-point values, e.g., unless `f` is an integer,
+* 为了方便阅读，通常在数字后面加上'.0'作为一个浮点值，类型是整形除外。
 ```javascript
 var f = 1;
 ```
-is better written as
+最好写成
 ```javascript
 var f = 1.0;
 ```
-* Declare variables where they are first used.  For example,
+* 变量的声明放在第一次被使用的地方， 例如：
 ```javascript
 var i;
 var m;
@@ -179,7 +179,7 @@ for (i = 0; i < length; ++i) {
     // Use m
 }
 ```
-is better written as
+最好写成
 ```javascript
 var models = [ /* ... */ ];
 var length = models.length;
@@ -188,25 +188,25 @@ for (var i = 0; i < length; ++i) {
     // Use m
 }
 ```
-* Variables have function-level, not block-level scope.  Do not rely on variable hoisting, i.e., using a variable before it is declared, e.g.,
+* 变量是函数级的作用域，而不是块级作用域。不要依赖变量作用域提升，使用变量要在声明之前，例如：
 ```javascript
 console.log(i); // i is undefined here.  Never use a variable before it is declared.
 var i = 0.0;
 ```
-* :speedboat: Avoid redundant nested property access.  This
+* :speedboat: 避免使用多次属性的嵌套访问。比如
 ```javascript
 scene._state.isSkyAtmosphereVisible = true
 scene._state.isSunVisible = true;
 scene._state.isMoonVisible = false;
 ```
-is better written as
+最好写成
 ```javascript
 var state = scene._state;
 state.isSkyAtmosphereVisible = true
 state.isSunVisible = true;
 state.isMoonVisible = false;
 ```
-* Do not create a local variable that is used only once unless it significantly improves readability, e.g.,
+* 当一个变量只是用一次时尽量不要创建它，除非它能够提升较多的可读性， 例如：
 ```javascript
 function radiiEquals(left, right) {
     var leftRadius = left.radius;
@@ -214,14 +214,14 @@ function radiiEquals(left, right) {
     return (leftRadius === rightRadius);
 }
 ```
-is better written as
+最好写成
 ```javascript
 function radiiEquals(left, right) {
     return (left.radius === right.radius);
 }
 ```
-* Use `undefined` instead of `null`.
-* Test if a variable is defined using Cesium's `defined` function, e.g.,
+* 使用 `undefined` 代替 `null`.
+* 测试一个变量是否被定义使用Cesium的defined函数， 例如：
 ```javascript
 var v = undefined;
 if (defined(v)) {
@@ -233,7 +233,7 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `freezeObject` function to create enums, e.g.,
+* 使用Cesium的 `freezeObject` 功能来创建枚举变量， 例如：
 ```javascript
 /*global define*/
 define([
@@ -250,21 +250,21 @@ define([
     return freezeObject(ModelAnimationState);
 });
 ```
-* Use descriptive comments for non-obvious code, e.g.,
+* 添加注释在关键或者语义不明显的地方，例如：
 ```javascript
 byteOffset += sizeOfUint32; // Add 4 to byteOffset
 ```
-is better written as
+最好写成
 ```javascript
 byteOffset += sizeOfUint32; // Skip length field
 ```
-* `TODO` comments need to be removed or addressed before the code is merged into master.  Used sparingly, `PERFORMANCE_IDEA`, can be handy later when profiling.
-* Remove commented out code before merging into master.
+* `TODO` 这部分内容需要被移除或者处理在合并到主版本之前。谨慎使用，`PERFORMANCE_IDEA`, 表示它可以等到进行性能分析是再进行。
+* 在合并到主版本之前移除被注释掉的代码。
 
-## Functions
+## 功能
 
-* :art: Functions should be **cohesive**; they should only do one task.
-* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g.,
+* :art: 函数（功能）应该具有内聚性 **cohesive**; 它应该被设计成只完成一个任务。
+* 在函数内部，语句应该是相似抽象等级，如果一个代码块的抽象等级比其它代码低太多，建议把它放入单独一个函数中， 例如：
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     var tiles = this._processingQueue;
@@ -278,7 +278,7 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 ```
-is better written as
+最好写成
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     processTiles(this, frameState);
@@ -295,7 +295,7 @@ function processTiles(tileset, frameState) {
     }
 }
 ```
-* Do not use an unnecessary `else` block at the end of a function, e.g.,
+* 在函数结尾不要使用多余的 `else` 代码块， 例如：
 ```javascript
 function getTransform(node) {
     if (defined(node.matrix)) {
@@ -305,7 +305,7 @@ function getTransform(node) {
     }
 }
 ```
-is better written as
+最好写成
 ```javascript
 function getTransform(node) {
     if (defined(node.matrix)) {
@@ -315,15 +315,15 @@ function getTransform(node) {
     return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
 }
 ```
-* :speedboat: Smaller functions are more likely to be optimized by JavaScript engines.  Consider this for code that is likely to be a hot spot.
+* :speedboat: 更小的功能集更容易的被编译引擎优化，编写代码时需要注意这也是很关键的一点。
 
-### `options` Parameters
+### `options` 可选参数
 
-:art: Many Cesium functions take an `options` parameter to support optional parameters, self-documenting code, and forward compatibility.  For example, consider:
+:art: 许多Cesium函数使用一个 `options` 对象来作为参数，它可以很方便的支持可选参数、个人文档编程、向前兼容。例如：
 ```javascript
 var sphere = new SphereGeometry(10.0, 32, 16, VertexFormat.POSITION_ONLY);
 ```
-It is not clear what the numeric values represent, and the caller needs to know the order of parameters.  If this took an `options` parameter, it would look like this:
+只看上面的代码会并不清楚每个参数表示什么意思，而且参数之间必须是有顺序的。如果使用一个 `options` 对象参数, 就像这样：
 ```javascript
 var sphere = new SphereGeometry({
     radius : 10.0,
@@ -332,7 +332,7 @@ var sphere = new SphereGeometry({
     vertexFormat : VertexFormat.POSITION_ONLY
 });
 ```
-* :speedboat: Using `{ /* ... */ }` creates an object literal, which is a memory allocation.  Avoid designing functions that use an `options` parameter if the function is likely to be a hot spot; otherwise, callers will have to use a scratch variable (see [below](#result-parameters-and-scratch-variables)) for performance.  Constructor functions for non-math classes are good candidates for `options` parameters since Cesium avoids constructing objects in hot spots.  For example,
+* :speedboat: 使用 `{ /* ... */ }` 将会创建对象并且分配内存。 如果这个功能需要被频繁使用则在设计时避免使用 `options` 对象参数；否则的话， callers 将会使用一个 scratch variable (see [below](#result-parameters-and-scratch-variables)) 来提升性能。对于非数学的构造函数还是建议使用 `options` 对象参数，这样的话就能尽量避免频繁的构造对象。例如：
 ```javascript
 var p = new Cartesian3({
     x : 1.0,
@@ -340,12 +340,12 @@ var p = new Cartesian3({
     z : 3.0
 });
 ```
-is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of
+这种构造 `Cartesian3` 的方式是不推荐的， 从性能上考虑它并不如下面这种形式。
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
 
-### Default Parameter Values
+### 默认参数
 
 If a _sensible_ default exists for a function parameter or class property, don't require the user to provide it.  Use Cesium's `defaultValue` to assign a default value.  For example, `height` defaults to zero in `Cartesian3.fromRadians`:
 ```javascript
