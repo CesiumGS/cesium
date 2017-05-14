@@ -367,6 +367,7 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+        /*eslint-disable new-cap*/
         if (!JSHINT(getScriptFromEditor(false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
@@ -377,7 +378,7 @@ require({
                     errorLines.push(line);
                 }
             }
-        }
+        }/*eslint-enable new-cap*/
     }
 
     function scheduleHint() {

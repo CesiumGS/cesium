@@ -138,11 +138,10 @@ define([
 
         var glWrapper = {};
 
-        /*jslint forin: true*/
-        /*jshint forin: false*/
-        // JSLint normally demands that a for..in loop must directly contain an if,
+        // JavaScript linters normally demand that a for..in loop must directly contain an if,
         // but in our loop below, we actually intend to iterate all properties, including
         // those in the prototype.
+        /*eslint-disable guard-for-in*/
         for (var propertyName in gl) {
             var property = gl[propertyName];
 
@@ -152,7 +151,7 @@ define([
             } else {
                 Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunction));
             }
-        }
+        }/*eslint-enable guard-for-in*/
 
         return glWrapper;
     }

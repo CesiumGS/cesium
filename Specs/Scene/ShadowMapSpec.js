@@ -494,9 +494,7 @@ defineSuite([
         // Move the camera into the shadowed area
         scene.camera.moveRight(0.2);
 
-        var shadowedColor;
         renderAndCall(function(rgba) {
-            shadowedColor = rgba;
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
         });
@@ -712,7 +710,6 @@ defineSuite([
         ];
 
         for (var i = 0; i < 6; ++i) {
-            /* jshint loopfunc: true */
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
                 modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),

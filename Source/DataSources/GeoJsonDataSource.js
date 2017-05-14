@@ -81,7 +81,6 @@ define([
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
     var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
-    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
 
     var sizes = {
         small : 24,
@@ -627,7 +626,6 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
         /**

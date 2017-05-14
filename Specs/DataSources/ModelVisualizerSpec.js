@@ -80,9 +80,9 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new ModelVisualizer(scene, entityCollection);
+        visualizer = new ModelVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 

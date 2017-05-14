@@ -1,0 +1,26 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true,
+        "mocha": true,
+        "jasmine": true
+    },
+    "plugins": [
+        "html"
+    ],
+    "rules": {
+        "curly": ["error"],
+        "eqeqeq": ["error"],
+        "guard-for-in": ["error"],
+        "new-cap": ["error", {"properties": false}],
+        "no-caller": ["error"],
+        "no-empty": ["error"],
+        "no-extend-native": ["error"],
+        "no-irregular-whitespace": ["error"],
+        "no-new": ["error"],
+        "no-undef": ["error"],
+        "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+        "strict": ["error"],
+        "wrap-iife": ["error", "any"]
+    }
+}

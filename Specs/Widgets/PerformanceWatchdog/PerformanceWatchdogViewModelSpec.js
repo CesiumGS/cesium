@@ -33,7 +33,7 @@ defineSuite([
     });
 
     function spinWait(milliseconds) {
-        /*jshint noempty: false*/
+        /*eslint-disable no-empty*/
         var endTime = getTimestamp() + milliseconds;
         while (getTimestamp() < endTime) {
         }

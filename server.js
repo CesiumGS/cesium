@@ -1,6 +1,6 @@
+/*eslint-env node*/
 (function() {
     'use strict';
-    /*jshint node:true*/
 
     var express = require('express');
     var compression = require('compression');

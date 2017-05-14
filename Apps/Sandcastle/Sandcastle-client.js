@@ -64,8 +64,8 @@
                     if (lineEnd1 > lineStart) {
                         try {
                             lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
-                        } catch (ex) {
-                        }
+                        } catch (ex) {/*eslint-disable no-empty*/
+                        }/*eslint-enable no-empty*/
                     }
                 }
             }
@@ -100,8 +100,8 @@
                         pos += 12;
                         lineNumber = parseInt(errorMsg.substring(pos), 10);
                     }
-                } catch (ex) {
-                }
+                } catch (ex) {/*eslint-disable no-empty*/
+                }/*eslint-enable no-empty*/
             }
             window.parent.postMessage({
                 'error' : errorMsg,
@@ -145,8 +145,8 @@
                     'lineNumber' : lineNumber
                 });
             }
-        } catch (ex) {
-        }
+        } catch (ex) {/*eslint-disable no-empty*/
+        }/*eslint-enable no-empty*/
     };
 
     Sandcastle.highlight = function(obj) {
