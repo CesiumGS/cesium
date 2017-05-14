@@ -559,7 +559,7 @@ Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
 
 ### 私有函数
 
-私有函数和私有属性以 `_`后缀开头。但是在实践中，却很少使用这些。相反，为了更好的封装，使用一个 file-scoped 函数并且把`this`作为第一个参数。
+私有函数和私有属性以 `_`前缀开头。但是在实践中，却很少使用这些。相反，为了更好的封装，使用一个 file-scoped 函数并且把`this`作为第一个参数。
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     this._processTiles(frameState);
@@ -592,16 +592,16 @@ function processTiles(tileset, frameState) {
 }
 ```
 
-### Property Getter/Setters
+### 属性的 Getter/Setters
 
-Public properties that can be read or written without extra processing can simply be assigned in the constructor function, e.g.,
+公共属性可以读写而不需要额外的处理，可以非常简单的直接在构造函数中分配，例如：
 ```javascript
 function Model(options) {
    this.show = defaultValue(options.show, true);
 };
 ```
 
-Read-only properties can be created with a private property and a getter using Cesium's `defineProperties` function, e.g.,
+只读属性创建可以通过创建私有属性和使用`getter`，一般使用Cesium的 `defineProperties`函数创建，例如：
 ```javascript
 function Cesium3DTileset(options) {
     this._url = options.url;
@@ -615,8 +615,9 @@ defineProperties(Cesium3DTileset.prototype, {
     }
 });
 ```
-Getters can perform any needed computation to return the property, but the performance expectation is that they execute quickly.
+在需要返回属性的地方都会触发`Getters`，所以可以在`Getters`中执行任何对返回值的计算，但是从性能上考虑最好内部是能够被快速执行的。
 
+同理在需要设置属性的地方都会触发`Setters`，并且可以在写入私有属性之前添加额外的处理，想设置一个标志来进行延时处理。例如： 
 Setters can also perform computation before assigning to a private property, set a flag to delay computation, or both, for example:
 ```javascript
 defineProperties(UniformState.prototype, {
@@ -642,11 +643,11 @@ defineProperties(UniformState.prototype, {
 });
 ```
 
-* :speedboat: Calling the getter/setter function is slower than direct property access so functions internal to a class can use the private property directly when appropriate.
+* :speedboat: 使用`getter/setter`从性能上来讲是低于直接访问属性的，所以在函数内部可以适当的直接对属性操作。Calling the getter/setter function is slower than direct property access so functions internal to a class can use the private property directly when appropriate.
 
-### Shadowed Property
+### 跟踪属性 Shadowed Property
 
-When the overhead of getter/setter functions is prohibitive or reference-type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
+但使用`getter/setter`造成是开销过高时最好使用引用，这样就能够通过传入一个`result`参数来修改属性，可以尝试以一个公共属性和私有属性绑定做成一个跟踪属性，例如：When the overhead of getter/setter functions is prohibitive or reference-type semantics are desired, e.g., the ability to pass a property as a `result` parameter so its properties can be modified, consider combining a public property with a private shadowed property, e.g.,
 ```javascript
 function Model(options) {
     this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -662,10 +663,11 @@ Model.prototype.update = function(frameState) {
     }
 };
 ```
+:trollface: 像上面这个例子就是防止多次设置`_modelMatrix`造成`getter`的多次调用开销过大。上面这种写法只有`update`调用时才会调用`getter`。
 
-### Put the Constructor Function at the Top of the File
+### 构造函数要放在文件的最上面
 
-It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
+构造函数一般放在文件的头部，即使构造需要调用一些辅助函数但还是要放在前面。:trollface: 我觉得这应该加强代码的友好型，把最重要的放在最前面，例如： `Cesium3DTileset.js`,
 ```javascript
 function loadTileset(tileset, tilesJson, done) {
     // ...
@@ -678,7 +680,7 @@ function Cesium3DTileset(options) {
     });
 };
 ```
-is better written as
+最好写成
 ```javascript
 function Cesium3DTileset(options) {
     // ...
@@ -691,25 +693,26 @@ function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting the `loadTileset` function to the top of the file.
+尽管构造函数调用了`loadTileset`函数但是还是在它前面。实际上它利用的是JavaScript的作用域提升，作用域提升分为变量和函数，前一个容易造成混乱一般不使用。
 
-## Design
 
-* :house: Make a class or function part of the Cesium API only if it will likely be useful to end users; avoid making an implementation detail part of the public API.  When something is public, it makes the Cesium API bigger and harder to learn, is harder to change later, and requires more documentation work.
-* :art: Put new classes and functions in the right part of the Cesium stack (directory).  From the bottom up:
-   * `Source/Core` - Number crunching. Pure math such as [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). Pure geometry such as [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). Fundamental algorithms such as [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js). Request helper functions such as [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js).
-   * `Source/Renderer` - WebGL abstractions such as [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) and WebGL-specific utilities such as [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  Identifiers in this directory are not part of the public Cesium API.
-   * `Source/Scene` - The graphics engine, including primitives such as [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). Code in this directory often depends on `Renderer`.
-   * `Source/DataSources` - Entity API, such as [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), and data sources such as [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
-   * `Source/Widgets` - Widgets such as the main Cesium [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
+## 设计架构
 
-It is usually obvious what directory a file belongs in.  When it isn't, the decision is usually between `Core` and another directory.  Put the file in `Core` if it is pure number crunching or a utility that is expected to be generally useful to Cesium, e.g., [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) belongs in `Core` since many parts of the Cesium stack use 4x4 matrices; on the other hand, [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) is in `DataSources` because it is specific to data sources.
+* :house: 制作一个类或者函数只有在确定这对最终用户有用的情况下才放入到Cesium库中；避免让一些实现细节作为公共库的一部分，如果随意添加会使得Cesium库越来越庞大，这实际上是臃肿的庞大将会越来越难被看懂学习，而且日后拓展也更加困难，并且需要更多的维护文档。:trollface: 这其实就是质量管理体系，告诉你别什么都往上加。先Think Think。。。。。这是Cesium分支如此多的一部分原因，保证主版本分支是稳定的高质量代码。
+* :art: 在Cesium中，创建一个新的类或者函数都应该把它放在正确的位置（目录）。从底层到高层：
+   * `Source/Core` - 数值运算，纯数学运算比如 [`Cartesian3`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Cartesian3.js). 纯几何运算比如 [`CylinderGeometry`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/CylinderGeometry.js). 基础算法比如 [`mergeSort`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/mergeSort.js). 辅助帮助功能 [`loadArrayBuffer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/loadArrayBuffer.js).
+   * `Source/Renderer` - 这个目录一般是 `WebGL` 相关 [`ShaderProgram`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderProgram.js) 还有基于`WebGL`一些特点的实用库比如 [`ShaderCache`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Renderer/ShaderCache.js).  这个目录的标识符并不属于公共的Cesium库。Identifiers in this directory are not part of the public Cesium API.
+   * `Source/Scene` - 图形引擎，基本图元比如 [Model](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Scene/Model.js). 这个目录下的代码常常会依赖 `Renderer`.
+   * `Source/DataSources` - 实体类 Entity API, 比如 [`Entity`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/Entity.js), 又比如数据源 [`CzmlDataSource`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/CzmlDataSource.js).
+   * `Source/Widgets` - 这个目录包含了Cesium中主要的窗口部件类比如 [`Viewer`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/Viewer/Viewer.js).
+
+通常情况下文件该放在哪是比较明显的。如果不是，那么它大概率是介于`Core`和其它目录之间。如果它是纯数值运算或者是对Cesium非常有实用且具有通用性的功能，那么把它放到`Core`下，例如： [`Matrix4`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Core/Matrix4.js) 属于 `Core` 应为Cesium的许多类都会用到4x4矩阵转换；另一方面比如， [`BoundingSphereState`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/DataSources/BoundingSphereState.js) 应该放在 `DataSources` 因为它是基于特定数据源的。
 
 ![](1.jpg)
 
-Modules (files) should only reference modules in the same level or a lower level of the stack.  For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
+模块的依赖应该只限于和它的同级目录或者比它更底层的目录。例如，一个在`Scene`下的模块可以依赖使用在 `Scene`, `Renderer`, 和 `Core`下的所有模块，但是不能够依赖使用在`DataSources` 或者 `Widgets`下的模块。
 
-* Modules in `define` statements should be in alphabetical order.  This can be done automatically with `npm run sortRequires`, see the [Build Guide](../BuildGuide/README.md).  For example, the modules required by `Scene/ModelAnimation.js` are:
+* `define`中的模块应该按字母顺序排列。可以使用`npm run sortRequires`自动完成， 请看[Build Guide](../BuildGuide/README.md)。比如`Scene/ModelAnimation.js`所依赖的模块是：
 ```javascript
 define([
         '../Core/defaultValue',
@@ -726,25 +729,25 @@ define([
         ModelAnimationLoop,
         ModelAnimationState) { /* ... */ });
 ```
-* WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
+* 需要明确删除WebGL资源，因此这种类（以及包含这些类的类等）需要具有`destroy`和`isDestroyed`函数，例如：
 ```javascript
 var primitive = new Primitive(/* ... */);
 expect(content.isDestroyed()).toEqual(false);
 primitive.destroy();
 expect(content.isDestroyed()).toEqual(true);
 ```
-A `destroy` function is implemented with Cesium's `destroyObject` function, e.g.,
+`destroy` 函数的实现需要使用Cesium的 `destroyObject` 函数， 例如：
 ```javascript
 SkyBox.prototype.destroy = function() {
     this._vertexArray = this._vertexArray && this._vertexArray.destroy();
     return destroyObject(this);
 };
 ```
-* Only `destroy` objects that you create; external objects given to a class should be destroyed by their owner, not the class.
+* 使用`destroy`仅仅只销毁你创建的对象；外部对象应该交给拥有这个对象的类去实现，并不是这个类。
 
-### Deprecation and Breaking Changes
+### 弃用更新 Deprecation and Breaking Changes
 
-From release to release, we strive to keep the public Cesium API stable but also maintain mobility for speedy development and to take the API in the right direction.  As such, we sparingly deprecate and then remove or replace parts of the public API.
+每次发布，我们努力保持公众铯API稳定，并且不丢失流动性保持快速发展，且保证API在正确的方向。 因此，每次删除或者替换部分API都是我们经过谨慎考虑的。
 
 A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
 
@@ -763,22 +766,22 @@ function Foo() {
 * Mention the deprecation in the `Deprecated` section of [`CHANGES.md`](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CHANGES.md).  Include what Cesium version it will be removed in.
 * Create an [issue](https://github.com/AnalyticalGraphicsInc/cesium/issues) to remove the API with the appropriate `remove in [version]` label.
 
-## Third-Party Libraries
+## 第三方库 Third-Party Libraries
 
-:house: Cesium uses third-party libraries sparingly.  If you want to add a new one, please start a thread on the [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)).  The library should
-* Have a compatible license such as MIT, BSD, or Apache 2.0.
-* Provide capabilities that Cesium truly needs and that the team doesn't have the time and/or expertise to develop.
-* Be lightweight, tested, maintained, and reasonably widely used.
-* Not pollute the global namespace.
-* Provide enough value to justify adding a third-party library whose integration needs to be maintained and has the potential to slightly count against Cesium when some users evaluate it (generally, fewer third-parties is better).
+:house: Cesium 使用第三方库是非常谨慎的。如果你想要新添加一个第三方库，请先看看下面这些 [Cesium forum](http://cesiumjs.org/forum.html) ([example discussion](https://groups.google.com/forum/#!topic/cesium-dev/Bh4BolxlT80)). 第三方库应该具有以下特性
+* 证书兼容性强比如像MIT, BSD, or Apache 2.0这样的。
+* 第三方提供的功能是Cesium确实需要的并且开发团队没有时间或者技术来开发它。
+* 第三库需要是轻量级、经过多次测试、可维护性强、并且已经被广泛使用。
+* 不会和全局命名冲突。
+* 提供足够的材料来证明确实需要集成一个需要维护的第三方库，因为使用第三方库会让潜在的用户评估Cesiumde时候轻微的反感它。（通常来说，最好尽量少使用第三方库）。
 
 ## Widgets
 
-Cesium includes a handful of standard widgets that are used in the Viewer, including animation and timeline controls, a base layer picker, and a geocoder.  These widgets are all built using [Knockout](http://knockoutjs.com/)) for automatic UI refreshing.  Knockout uses a Model View ViewModel (MVVM) design pattern.  You can learn more about this design pattern in [Understanding MVVM - A Guide For JavaScript Developers](https://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
+Cesium的`Viewer`中包含了一些标准的小部件，有动画和时间线控制，一个基本的底图选择器，一个地理解析器`geocoder`。这些控件的创建都是使用 [Knockout](http://knockoutjs.com/)) 自动化 UI 刷新完成的.  Knockout 使用 模型-视图-视图模型 设计模式(MVVM).  详细学习这些设计模式参考 [Understanding MVVM - A Guide For JavaScript Developers](https://addyosmani.com/blog/understanding-mvvm-a-guide-for-javascript-developers/)
 
-To learn about using the Knockout library, see the [Get started](http://knockoutjs.com/) section of their home page.  They also have a great [interactive tutorial](http://learn.knockoutjs.com/) with step by step instructions.
+想要如何使用 Knockout library, 参考 [Get started](http://knockoutjs.com/) 主页相关的部分.  那有个非常不错的教程 [interactive tutorial](http://learn.knockoutjs.com/) 帮助你一步一步使用Knockout。
 
-Cesium also uses the [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) plugin to simplify knockout syntax.  This lets us use knockout observables the same way we use other variables.  Call `knockout.track` to create the observables.  Here is an example from [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) that makes observables for `tooltip`, `showInstructions` and `_touch` properties.
+Cesium也使用了 [Knockout-ES5](http://blog.stevensanderson.com/2013/05/20/knockout-es5-a-plugin-to-simplify-your-syntax/) 插件来简化knockout的语法。 它可以让我们使用其它的变量来实现 knockout observables 相同的效果.  调用 `knockout.track` 来创建 observables.  这个例子来之 [BaseLayerPickerViewModel](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Source/Widgets/BaseLayerPicker/BaseLayerPickerViewModel.js#L73) 这让 observables 拥有 `tooltip`, `showInstructions`和 `_touch` 属性.
 
 ``` javascript
 knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
