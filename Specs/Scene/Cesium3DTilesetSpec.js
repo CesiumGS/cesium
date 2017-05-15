@@ -2504,9 +2504,8 @@ defineSuite([
     it('tile expires', function() {
         return Cesium3DTilesTester.loadTileset(scene, batchedExpirationUrl).then(function(tileset) {
             // Intercept the request and load content that produces more draw commands, to simulate fetching new content after the original expires
-            var originalLoad = loadWithXhr.load;
             spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                originalLoad(batchedColorsB3dmUrl, responseType, method, data, headers, deferred, overrideMimeType);
+                loadWithXhr.defaultLoad(batchedColorsB3dmUrl, responseType, method, data, headers, deferred, overrideMimeType);
             });
             var tile = tileset._root;
             var stats = tileset._statistics;
@@ -2562,6 +2561,7 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(stats.numberOfCommands).toBe(1); // Still renders expired content
                 return tile.contentReady;
+
             }).then(function() {
                 scene.renderForSpecs();
 
