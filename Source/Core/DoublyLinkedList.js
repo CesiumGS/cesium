@@ -1,10 +1,8 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
+        '../Core/defineProperties'
     ], function(
-        Check,
         defined,
         defineProperties) {
     'use strict';
