@@ -1335,7 +1335,7 @@ define([
                 attributes++;
             }
             if (tileset.debugShowRenderingStatistics) {
-                labelString += '\nCommands: ' + tile._commandsLength;
+                labelString += '\nCommands: ' + tile.commandsLength;
                 attributes++;
 
                 // Don't display number of points or triangles if 0.

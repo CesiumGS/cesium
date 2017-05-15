@@ -1393,7 +1393,7 @@ defineSuite([
             expect(tileset._tileDebugLabels.length).toEqual(1);
 
             var content = tileset._root.content;
-            var expected = 'Commands: ' + tileset._root._commandsLength + '\n' +
+            var expected = 'Commands: ' + tileset._root.commandsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
                            'Features: ' + content.featuresLength;
 
