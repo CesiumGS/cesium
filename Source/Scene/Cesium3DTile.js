@@ -959,7 +959,7 @@ define([
         var savedCommandList = frameState.commandList;
         frameState.commandList = scratchCommandList;
 
-        updateContent(this, tileset, frameState);
+        this._content.update(tileset, frameState);
 
         scratchCommandList.length = 0;
         frameState.commandList = savedCommandList;
