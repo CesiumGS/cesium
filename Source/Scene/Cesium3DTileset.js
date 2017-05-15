@@ -219,7 +219,7 @@ define([
 
         this._tilesLoaded = false;
 
-        this._tileInfoLabels = undefined;
+        this._tileDebugLabels = undefined;
 
         this._readyPromise = when.defer();
 
@@ -1272,10 +1272,10 @@ define([
         }
     }
 
-    function updateTileInfoLabels(tileset, frameState) {
+    function updateTileDebugLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
-        tileset._tileInfoLabels.removeAll();
+        tileset._tileDebugLabels.removeAll();
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             var boundingVolume = tile._boundingVolume.boundingVolume;
@@ -1326,7 +1326,7 @@ define([
                 attributes += 2;
             }
 
-            tileset._tileInfoLabels.add({
+            tileset._tileDebugLabels.add({
                 text : labelString.substring(1),
                 position : position,
                 font : (19-attributes) + 'px sans-serif',
@@ -1334,7 +1334,7 @@ define([
                 disableDepthTestDistance : Number.POSITIVE_INFINITY
             });
         }
-        tileset._tileInfoLabels.update(frameState);
+        tileset._tileDebugLabels.update(frameState);
     }
 
     var stencilClearCommand = new ClearCommand({
@@ -1424,12 +1424,12 @@ define([
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
-            if (!defined(tileset._tileInfoLabels)) {
-                tileset._tileInfoLabels = new LabelCollection();
+            if (!defined(tileset._tileDebugLabels)) {
+                tileset._tileDebugLabels = new LabelCollection();
             }
-            updateTileInfoLabels(tileset, frameState);
+            updateTileDebugLabels(tileset, frameState);
         } else {
-            tileset._tileInfoLabels = tileset._tileInfoLabels && tileset._tileInfoLabels.destroy();
+            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
         }
     }
 
@@ -1627,7 +1627,7 @@ define([
      */
     Cesium3DTileset.prototype.destroy = function() {
         // Destroy debug labels
-        this._tileInfoLabels = this._tileInfoLabels && this._tileInfoLabels.destroy();
+        this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
 
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {

@@ -1329,19 +1329,19 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).toBeDefined();
-            expect(tileset._tileInfoLabels.length).toEqual(5);
+            expect(tileset._tileDebugLabels).toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(5);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
-            expect(tileset._tileInfoLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError);
-            expect(tileset._tileInfoLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError);
-            expect(tileset._tileInfoLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError);
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
+            expect(tileset._tileDebugLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
+            expect(tileset._tileDebugLabels._labels[2].text).toEqual('Geometric error: ' + root.children[1].geometricError);
+            expect(tileset._tileDebugLabels._labels[3].text).toEqual('Geometric error: ' + root.children[2].geometricError);
+            expect(tileset._tileDebugLabels._labels[4].text).toEqual('Geometric error: ' + root.children[3].geometricError);
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 
@@ -1350,16 +1350,16 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).toBeDefined();
-            expect(tileset._tileInfoLabels.length).toEqual(2);
+            expect(tileset._tileDebugLabels).toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(2);
 
             var root = tileset._root;
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
-            expect(tileset._tileInfoLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual('Geometric error: ' + root.geometricError);
+            expect(tileset._tileDebugLabels._labels[1].text).toEqual('Geometric error: ' + root.children[0].geometricError);
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 
@@ -1370,16 +1370,16 @@ defineSuite([
             scene.renderForSpecs();
 
             var length = tileset._selectedTiles.length;
-            expect(tileset._tileInfoLabels).toBeDefined();
-            expect(tileset._tileInfoLabels.length).toEqual(length);
+            expect(tileset._tileDebugLabels).toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(length);
 
             for (var i = 0; i < length; ++i) {
-                expect(tileset._tileInfoLabels._labels[i].text).toEqual('Geometric error: ' + tileset._selectedTiles[i].geometricError);
+                expect(tileset._tileDebugLabels._labels[i].text).toEqual('Geometric error: ' + tileset._selectedTiles[i].geometricError);
             }
 
             tileset.debugShowGeometricError = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 
@@ -1389,19 +1389,19 @@ defineSuite([
             tileset.debugShowRenderingStatistics = true;
             viewRootOnly();
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).toBeDefined();
-            expect(tileset._tileInfoLabels.length).toEqual(1);
+            expect(tileset._tileDebugLabels).toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(1);
 
             var content = tileset._root.content;
             var expected = 'Commands: ' + tileset._root.commandsLength + '\n' +
                            'Triangles: ' + content.trianglesLength + '\n' +
                            'Features: ' + content.featuresLength;
 
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowRenderingStatistics = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 
@@ -1411,17 +1411,17 @@ defineSuite([
             tileset.debugShowMemoryUsage = true;
             viewRootOnly();
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).toBeDefined();
-            expect(tileset._tileInfoLabels.length).toEqual(1);
+            expect(tileset._tileDebugLabels).toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(1);
 
             var expected = 'Texture Memory: 0\n' +
                            'Vertex Memory: 0.008';
 
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowMemoryUsage = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 
@@ -1433,7 +1433,7 @@ defineSuite([
             tileset.debugShowMemoryUsage = true;
             viewRootOnly();
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).toBeDefined();
+            expect(tileset._tileDebugLabels).toBeDefined();
 
             var expected = 'Geometric error: 70\n' +
                            'Commands: 1\n' +
@@ -1441,13 +1441,13 @@ defineSuite([
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
                            'Vertex Memory: 0.008';
-            expect(tileset._tileInfoLabels._labels[0].text).toEqual(expected);
+            expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowGeometricError = false;
             tileset.debugShowRenderingStatistics = false;
             tileset.debugShowMemoryUsage = false;
             scene.renderForSpecs();
-            expect(tileset._tileInfoLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels).not.toBeDefined();
         });
     });
 

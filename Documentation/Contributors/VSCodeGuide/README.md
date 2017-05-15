@@ -32,24 +32,26 @@ one that forces a separate (non-integrated) window to pop open outside of VSCode
 Make sure you are pointed at the correct exe as shown above, with Git 2.0.0 or
 higher installed, to get the correct integrated shell behavior.
 
-## VSCode Plugins (mostly optional)
+## VSCode Extensions (mostly optional)
 
 Click on the extensions icon, or press CTRL-SHIFT-X to see the list of installed
 VSCode extensions.  While we don't officially endorse any particular 3rd-party
-plugin, there are some that appear to be quite useful to Cesium.  Just enter
-the desired plugin name in the search box and click install.  You will need to
-restart VSCode after you are done installing plugins.
+extension, there are some that appear to be quite useful to Cesium.  Just enter
+the desired extension name in the search box and click install.  You will need to
+restart VSCode after you are done installing extensions.
 
-* **jshint** by Dirk Baeumer -- This plugin picks up on Cesium's own jsHint settings,
+* **jshint** by Dirk Baeumer -- This extension picks up on Cesium's own jsHint settings,
 and will warn of any violations.  The Cesium main repository should pass jsHint
 using the Cesium jsHint settings with no warnings and no errors.  Proposed
 contributions to Cesium that introduce jsHint warnings will need to be corrected
 before they are accepted.
 
-* **Shader languages support for VS Code** by slevesque -- This plugin provides
+* **Shader languages support for VS Code** by slevesque -- This extension provides
 syntax highlighting for Cesium's shader code.
 
 * **Prettify JSON** by Mohsen Azimi -- This seems generally useful.
+
+* **glTF Extension for VS Code** by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files [glTF Tools](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode).
 
 ## VSCode Tasks and Files
 

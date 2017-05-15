@@ -241,7 +241,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.tileInfoVisible = false;
+        this.tileDebugLabelsVisible = false;
 
         /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
@@ -255,7 +255,7 @@ define([
         this._feature = undefined;
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileInfoVisible', 'styleString', '_feature']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileDebugLabelsVisible', 'styleString', '_feature']);
 
         this._properties = knockout.observable({});
         /**
@@ -850,10 +850,10 @@ define([
     };
 
     /**
-     * Toggles the visibility of the tile info section
+     * Toggles the visibility of the tile Debug Info section
      */
-    Cesium3DTilesInspectorViewModel.prototype.toggleTileInfo = function() {
-        this.tileInfoVisible = !this.tileInfoVisible;
+    Cesium3DTilesInspectorViewModel.prototype.toggleTileDebugLabels = function() {
+        this.tileDebugLabelsVisible = !this.tileDebugLabelsVisible;
     };
 
     /**

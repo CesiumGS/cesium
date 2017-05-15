@@ -51,9 +51,9 @@ define([
     var wrapLongitudeInversMatrix = new Matrix4();
     var wrapLongitudeOrigin = new Cartesian3();
     var wrapLongitudeXZNormal = new Cartesian3();
-    var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var wrapLongitudeXZPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var wrapLongitudeYZNormal = new Cartesian3();
-    var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var wrapLongitudeYZPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
 

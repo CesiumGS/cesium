@@ -304,16 +304,6 @@ define([
         this.lastStyleTime = 0;
 
         /**
-         * The number of commands issues by the tile this frame.
-         *
-         * @type {Number}
-         * @readonly
-         *
-         * @private
-         */
-        this.commandsLength = 0;
-
-        /**
          * Marks whether the tile's children bounds are fully contained within the tile's bounds
          *
          * @type {Cesium3DTileOptimizationHint}
@@ -347,6 +337,8 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
+
+        this._commandsLength = 0;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -517,6 +509,19 @@ define([
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+            }
+        },
+
+        /**
+         * Returns the number of draw commands used by this tile.
+         *
+         * @readonly
+         *
+         * @private
+         */
+        commandsLength : {
+            get : function() {
+                return this._commandsLength;
             }
         }
     });
@@ -942,7 +947,7 @@ define([
         var initCommandLength = frameState.commandList.length;
         applyDebugSettings(this, tileset, frameState);
         updateContent(this, tileset, frameState);
-        this.commandsLength = frameState.commandList.length - initCommandLength;
+        this._commandsLength = frameState.commandList.length - initCommandLength;
     };
 
     var scratchCommandList = [];

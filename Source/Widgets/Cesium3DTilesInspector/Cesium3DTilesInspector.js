@@ -131,7 +131,7 @@ define([
         var displayPanelContents = document.createElement('div');
         var updatePanelContents = document.createElement('div');
         var loggingPanelContents = document.createElement('div');
-        var tileInfoPanelContents = document.createElement('div');
+        var tileDebugLabelsPanelContents = document.createElement('div');
         var stylePanelContents = document.createElement('div');
 
         var properties = document.createElement('div');
@@ -196,15 +196,15 @@ define([
         errorBox.setAttribute('data-bind', 'text: editorError');
         stylePanelContents.appendChild(errorBox);
 
-        tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
 
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
-        var tileInfoPanel = makeSection('Tile Info', 'tileInfoVisible', 'toggleTileInfo', tileInfoPanelContents);
+        var tileDebugLabelsPanel = makeSection('Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
         var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
 
         // first add and bind all the toggleable panels
@@ -212,7 +212,7 @@ define([
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
-        element.appendChild(tileInfoPanel);
+        element.appendChild(tileDebugLabelsPanel);
         element.appendChild(stylePanel);
 
         knockout.applyBindings(viewModel, element);
