@@ -46,10 +46,6 @@ define([
                 }
             }
         });
-
-        viewer.scene.postRender.addEventListener(function() {
-            viewer.cesiumInspector.viewModel.update();
-        });
     }
 
     return viewerCesiumInspectorMixin;
