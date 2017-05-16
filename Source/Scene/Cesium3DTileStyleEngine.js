@@ -5,7 +5,6 @@ define([
         '../Core/defineProperties',
         '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
-        '../Scene/Material',
         './LabelStyle'
     ], function(
         Color,
@@ -13,7 +12,6 @@ define([
         defineProperties,
         DistanceDisplayCondition,
         NearFarScalar,
-        Material,
         LabelStyle) {
     'use strict';
 
@@ -139,7 +137,7 @@ define([
             feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
 
             if (defined(feature.anchorLineColor)) {
-              feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature);
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature);
             }
 
             var scaleByDistanceNearRange = style.scaleByDistanceNearRange;

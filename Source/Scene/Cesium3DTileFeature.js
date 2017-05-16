@@ -2,13 +2,11 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Scene/Material'
+        '../Core/defineProperties'
     ], function(
         Color,
         defined,
-        defineProperties,
-        Material) {
+        defineProperties) {
     'use strict';
 
     /**
