@@ -33,6 +33,7 @@ define([
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
     var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
     var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
+    var DEFAULT_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
     var DEFAULT_BACKGROUND_COLOR_EXPRESSION = 'rgba(42, 42, 42, 0.8)';
     var DEFAULT_BACKGROUND_X_PADDING_EXPRESSION = 7.0;
     var DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION = 5.0;
@@ -75,6 +76,7 @@ define([
         this._outlineWidth = undefined;
         this._labelStyle = undefined;
         this._font = undefined;
+        this._anchorLineColor = undefined;
         this._backgroundColor = undefined;
         this._backgroundXPadding = undefined;
         this._backgroundYPadding = undefined;
@@ -136,6 +138,7 @@ define([
         var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
         var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
         var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
+        var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_ANCHOR_LINE_COLOR_EXPRESSION);
         var backgroundColorExpression = defaultValue(styleJson.backgroundColor, DEFAULT_BACKGROUND_COLOR_EXPRESSION);
         var backgroundXPaddingExpression = defaultValue(styleJson.backgroundXPadding, DEFAULT_BACKGROUND_X_PADDING_EXPRESSION);
         var backgroundYPaddingExpression = defaultValue(styleJson.backgroundYPadding, DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION);
@@ -221,6 +224,15 @@ define([
         }
 
         that._font = font;
+
+        var anchorLineColor;
+        if (typeof anchorLineColorExpression === 'string') {
+            anchorLineColor = new Expression(anchorLineColorExpression);
+        } else if (defined(anchorLineColorExpression.conditions)) {
+            anchorLineColor = new ConditionsExpression(anchorLineColorExpression);
+        }
+
+        that._anchorLineColor = anchorLineColor;
 
         var backgroundColor;
         if (typeof backgroundColorExpression === 'string') {
@@ -638,6 +650,21 @@ define([
             },
             set : function(value) {
                 this._font = value;
+            }
+        },
+
+        anchorLineColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._anchorLineColor;
+            },
+            set : function(value) {
+                this._anchorLineColor = value;
             }
         },
 

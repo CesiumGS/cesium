@@ -129,6 +129,31 @@ define([
             }
         },
 
+        /**
+         * Gets and sets the color for the anchor line.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         */
+        anchorLineColor : {
+            get : function() {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    return polyline.material.uniforms.color;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.material.uniforms.color = value;
+                }
+            }
+        },
+
         font : {
             get : function() {
                 if (defined(this._labelCollection)) {
