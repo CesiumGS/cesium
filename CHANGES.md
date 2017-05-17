@@ -8,6 +8,8 @@ Change Log
 * Fix issue where polylines in a `PolylineCollection` would ignore the far distance when updating the distance display condition. [#5283](https://github.com/AnalyticalGraphicsInc/cesium/pull/5283)
 * Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
 * Fix `BoundingSphere.fromOrientedBoundingBox`. [#5334](https://github.com/AnalyticalGraphicsInc/cesium/issues/5334)
+* Fixed bug where polylines would not update when `PolylineCollection` model matrix was updated [#5327](https://github.com/AnalyticalGraphicsInc/cesium/pull/5327)
+* Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 
 ### 1.33 - 2017-05-01
 
@@ -25,8 +27,6 @@ Change Log
 * Fixed bug in conversion formula in `Matrix3.fromHeadingPitchRoll`. [#5195](https://github.com/AnalyticalGraphicsInc/cesium/issues/5195)
 * Upgrade FXAA to version 3.11. [#5200](https://github.com/AnalyticalGraphicsInc/cesium/pull/5200)
 * `Scene.pickPosition` now caches results per frame to increase performance. [#5117](https://github.com/AnalyticalGraphicsInc/cesium/issues/5117)
-* Fixed bug where polylines would not update when `PolylineCollection` model matrix was updated [#5327](https://github.com/AnalyticalGraphicsInc/cesium/pull/5327)
-* Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 
 ### 1.32 - 2017-04-03
 
