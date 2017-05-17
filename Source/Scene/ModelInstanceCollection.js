@@ -481,7 +481,7 @@ define([
         };
     }
 
-    function getVertexBufferData(collection, context) {
+    function getVertexBufferData(collection) {
         var instances = collection._instances;
         var instancesLength = collection.length;
         var collectionCenter = collection._center;
@@ -563,7 +563,7 @@ define([
             });
         }
 
-        var vertexBufferData = getVertexBufferData(collection, context);
+        var vertexBufferData = getVertexBufferData(collection);
         collection._vertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : vertexBufferData,
@@ -571,8 +571,8 @@ define([
         });
     }
 
-    function updateVertexBuffer(collection, context) {
-        var vertexBufferData = getVertexBufferData(collection, context);
+    function updateVertexBuffer(collection) {
+        var vertexBufferData = getVertexBufferData(collection);
         collection._vertexBuffer.copyFromArrayView(vertexBufferData);
     }
 
@@ -960,7 +960,7 @@ define([
             this._dirty = false;
 
             // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
-            updateVertexBuffer(this, context);
+            updateVertexBuffer(this);
         }
 
         // If any node changes due to an animation, update the commands. This could be inefficient if the model is

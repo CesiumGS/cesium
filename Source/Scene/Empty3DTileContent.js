@@ -17,11 +17,13 @@ define([
      *
      * @private
      */
-    function Empty3DTileContent() {
+    function Empty3DTileContent(tileset, tile) {
+        this._tileset = tileset;
+        this._tile = tile;
+
         /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
     }
 
@@ -99,14 +101,38 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         * @type {String}
-         * @readonly
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         url: {
             get: function() {
-                return this._url;
+                return undefined;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return undefined;
             }
         }
     });
@@ -136,8 +162,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Empty3DTileContent.prototype.applyStyle = function(frameState, style) {
     };
 
     /**

@@ -339,6 +339,8 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
+     *
+     * @private
      */
     TileBoundingRegion.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);

@@ -2661,10 +2661,10 @@ define([
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : a.componentType,
-                                    normalize              : false,
-                                    offsetInBytes          : a.byteOffset,
-                                    strideInBytes          : a.byteStride
+                                    componentDatatype : a.componentType,
+                                    normalize : false,
+                                    offsetInBytes : a.byteOffset,
+                                    strideInBytes : a.byteStride
                                 });
                             }
                         }

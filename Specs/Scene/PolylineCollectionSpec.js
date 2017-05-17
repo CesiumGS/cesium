@@ -7,6 +7,7 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'Core/HeadingPitchRange',
         'Core/Math',
+        'Core/Matrix4',
         'Scene/Camera',
         'Scene/Material',
         'Scene/SceneMode',
@@ -19,6 +20,7 @@ defineSuite([
         DistanceDisplayCondition,
         HeadingPitchRange,
         CesiumMath,
+        Matrix4,
         Camera,
         Material,
         SceneMode,
@@ -1369,6 +1371,26 @@ defineSuite([
         p1.width = 1;
         expect(scene).notToRender([0, 0, 0, 255]);
 
+    });
+
+    it('renders with model matrix', function() {
+        polylines.add({
+            positions : [{
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }]
+        });
+
+        expect(scene).toRender([0, 0, 0, 255]);
+        scene.primitives.add(polylines);
+        expect(scene).toRender([0, 0, 0, 255]);
+        polylines.modelMatrix = Matrix4.fromUniformScale(1000000.0, polylines.modelMatrix);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('is picked', function() {

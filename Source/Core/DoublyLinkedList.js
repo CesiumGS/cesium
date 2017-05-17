@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
+        '../Core/defineProperties'
     ], function(
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -82,12 +80,6 @@ define([
     };
 
     DoublyLinkedList.prototype.splice = function(node, nextNode) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(node) || !defined(nextNode)) {
-            throw new DeveloperError('node and nextNode are required.');
-        }
-        //>>includeEnd('debug');
-
         if (node === nextNode) {
             return;
         }
@@ -108,6 +100,6 @@ define([
         nextNode.next = oldNodeNext;
         nextNode.previous = node;
     };
-    
+
     return DoublyLinkedList;
 });
