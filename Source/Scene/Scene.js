@@ -1631,6 +1631,11 @@ define([
             return;
         }
 
+        if (command instanceof ClearCommand) {
+            command.execute(context, passState);
+            return;
+        }
+
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
         var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
