@@ -400,7 +400,7 @@ define([
 
         return {
             vertices : vertices,
-            indices : Uint16Array.from(indices),
+            indices : new Uint16Array(indices),
             maximumHeight : maxHeight,
             minimumHeight : minHeight,
             encoding : encoding,

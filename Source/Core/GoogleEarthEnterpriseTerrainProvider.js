@@ -161,7 +161,7 @@ define([
         this._readyPromise = metadata.readyPromise
             .then(function(result) {
                 if (!metadata.terrainPresent) {
-                    var e = new RuntimeError('Server doesn\'t have terrain');
+                    var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have terrain');
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
                     return when.reject(e);
                 }

@@ -921,13 +921,11 @@ define([
         var creditDisplay = frameState.creditDisplay;
 
         var terrainData = surfaceTile.terrainData;
-        if (defined(terrainData)) {
-            if (defined(terrainData.credits)) {
-                var tileCredits = terrainData.credits;
-                for (var tileCreditIndex = 0,
-                         tileCreditLength = tileCredits.length; tileCreditIndex < tileCreditLength; ++tileCreditIndex) {
-                    creditDisplay.addCredit(tileCredits[tileCreditIndex]);
-                }
+        if (defined(terrainData) && defined(terrainData.credits)) {
+            var tileCredits = terrainData.credits;
+            for (var tileCreditIndex = 0,
+                     tileCreditLength = tileCredits.length; tileCreditIndex < tileCreditLength; ++tileCreditIndex) {
+                creditDisplay.addCredit(tileCredits[tileCreditIndex]);
             }
         }
 

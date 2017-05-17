@@ -148,7 +148,7 @@ define([
         this._readyPromise = metadata.readyPromise
             .then(function(result) {
                 if (!metadata.imageryPresent) {
-                    var e = new RuntimeError('Server doesn\'t have imagery');
+                    var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have imagery');
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
                     return when.reject(e);
                 }
