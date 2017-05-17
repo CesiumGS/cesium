@@ -325,13 +325,20 @@ define([
                 if (value) {
                     that._eventHandler.setInputAction(function(e) {
                         var picked = scene.pick(e.endPosition);
-                        if (picked instanceof Cesium3DTileFeature) {
+                        if (picked && defined(picked.content)) {
                             that.feature = picked;
-                            that._tileset._pickedTile = picked.content._tile;
+                            var pos;
+                            e.endPosition.x += 10;
+                            e.endPosition.y -= 10;
+                            if (scene.pickPositionSupported && (pos = scene.pickPosition(e.endPosition))) {
+                                that._tileset._debugPickPosition = pos;
+                            }
+                            that._tileset._debugPickedTile = picked.content._tile;
                             that._pickStatsText = getStats(that._tileset, true);
+
                         } else {
                             that.feature = undefined;
-                            that._tileset._pickedTile = undefined;
+                            that._tileset._debugPickedTile = undefined;
                         }
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
@@ -481,7 +488,6 @@ define([
                 showOnlyPickedTileDebugLabel(value);
                 if (that._tileset) {
                     that._tileset._onlyPickedTileDebugLabel = value;
-                    that.picking = true;
                 }
             }
         });
@@ -768,6 +774,7 @@ define([
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
                                     'freezeFrame',
+                                    'showOnlyPickedTileDebugLabel',
                                     'showGeometricError',
                                     'showRenderingStatistics',
                                     'showMemoryUsage'];

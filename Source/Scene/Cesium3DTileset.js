@@ -385,7 +385,8 @@ define([
 
         this._tileDebugLabels = undefined;
         this._onlyPickedTileDebugLabel = false;
-        this._pickedTile = undefined;
+        this._debugPickedTile = undefined;
+        this._debugPickPosition = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1375,8 +1376,11 @@ define([
         tileset._tileDebugLabels.removeAll();
 
         if (tileset._onlyPickedTileDebugLabel) {
-            if (defined(tileset._pickedTile)) {
-                addTileDebugLabel(tileset._pickedTile, tileset);
+            if (defined(tileset._debugPickedTile)) {
+                addTileDebugLabel(tileset._debugPickedTile, tileset);
+                if (defined(tileset._debugPickPosition)) {
+                    tileset._tileDebugLabels._labels[0].position = tileset._debugPickPosition;
+                }
             }
         } else {
             for (var i = 0; i < length; ++i) {
