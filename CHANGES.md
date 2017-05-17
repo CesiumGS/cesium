@@ -10,6 +10,7 @@ Change Log
 * Fix `BoundingSphere.fromOrientedBoundingBox`. [#5334](https://github.com/AnalyticalGraphicsInc/cesium/issues/5334)
 * Fixed bug where polylines would not update when `PolylineCollection` model matrix was updated [#5327](https://github.com/AnalyticalGraphicsInc/cesium/pull/5327)
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
+* Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 
 ### 1.33 - 2017-05-01
 
