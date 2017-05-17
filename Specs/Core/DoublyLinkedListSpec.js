@@ -365,17 +365,4 @@ defineSuite([
         list.splice(node, node3);
         expectOrder(list, [node, node3, node2, node4]);
     });
-
-    it('splice throws without nodes', function() {
-        var list = new DoublyLinkedList();
-        var node = list.add(1);
-
-        expect(function() {
-            list.splice(undefined, node);
-        }).toThrowDeveloperError();
-
-        expect(function() {
-            list.splice(node, undefined);
-        }).toThrowDeveloperError();
-    });
 });

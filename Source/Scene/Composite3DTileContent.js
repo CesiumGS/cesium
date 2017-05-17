@@ -36,16 +36,10 @@ define([
      * @private
      */
     function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
         this._contents = [];
-
-        /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
-         */
-        this.batchTable = undefined;
-
         this._readyPromise = when.defer();
 
         initialize(this, arrayBuffer, byteOffset, factory);
@@ -97,7 +91,8 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a tile in the composite.
          */
         trianglesLength : {
             get : function() {
@@ -106,7 +101,8 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>vertexMemorySizeInBytes</code> for a tile in the composite.
          */
         vertexMemorySizeInBytes : {
             get : function() {
@@ -115,7 +111,8 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.   <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>textureMemorySizeInBytes</code> for a tile in the composite.
          */
         textureMemorySizeInBytes : {
             get : function() {
@@ -124,7 +121,8 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>batchTableMemorySizeInBytes</code> for a tile in the composite.
          */
         batchTableMemorySizeInBytes : {
             get : function() {
@@ -152,33 +150,42 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         * @type {String}
-         * @readonly
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+         * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a tile in the composite.
+         */
+        batchTable : {
+            get : function() {
+                return undefined;
             }
         }
     });
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
-     */
-    Composite3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return false;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-     * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
-     */
-    Composite3DTileContent.prototype.getFeature = function(batchId) {
-        return undefined;
-    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
@@ -217,9 +224,12 @@ define([
                 var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
                 content._contents.push(innerContent);
                 contentPromises.push(innerContent.readyPromise);
-            } else {
+            }
+            //>>includeStart('debug', pragmas.debug);
+            else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
+            //>>includeEnd('debug');
 
             byteOffset += tileByteLength;
         }
@@ -232,6 +242,22 @@ define([
     }
 
     /**
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+     */
+    Composite3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+     * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+     */
+    Composite3DTileContent.prototype.getFeature = function(batchId) {
+        return undefined;
+    };
+
+    /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
@@ -239,6 +265,17 @@ define([
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
             contents[i].applyDebugSettings(enabled, color);
+        }
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Composite3DTileContent.prototype.applyStyle = function(frameState, style) {
+        var contents = this._contents;
+        var length = contents.length;
+        for (var i = 0; i < length; ++i) {
+            contents[i].applyStyle(frameState, style);
         }
     };
 

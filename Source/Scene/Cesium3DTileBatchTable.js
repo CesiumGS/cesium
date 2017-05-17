@@ -67,8 +67,6 @@ define([
      * @private
      */
     function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
-        featuresLength = defaultValue(featuresLength, 0);
-
         /**
          * @readonly
          */
@@ -384,6 +382,20 @@ define([
         }
     };
 
+    Cesium3DTileBatchTable.prototype.setAllShow = function(show) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(show)) {
+            throw new DeveloperError('show is required.');
+        }
+        //>>includeEnd('debug');
+
+        var featuresLength = this.featuresLength;
+        for (var i = 0; i < featuresLength; ++i) {
+            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
+            this.setShow(i, show);
+        }
+    };
+
     Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
@@ -401,7 +413,7 @@ define([
         return (this._showAlphaProperties[offset] === 255);
     };
 
-    var scratchColor = new Array(4);
+    var scratchColorBytes = new Array(4);
 
     Cesium3DTileBatchTable.prototype.setColor = function(batchId, color) {
         var featuresLength = this.featuresLength;
@@ -420,7 +432,7 @@ define([
             return;
         }
 
-        var newColor = color.toBytes(scratchColor);
+        var newColor = color.toBytes(scratchColorBytes);
         var newAlpha = newColor[3];
 
         var batchValues = getBatchValues(this);
@@ -499,6 +511,26 @@ define([
             batchValues[offset + 2],
             showAlphaProperties[propertyOffset + 1],
             result);
+    };
+
+    var scratchColor = new Color();
+
+    Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
+        if (!defined(style)) {
+            this.setAllColor(Color.WHITE);
+            this.setAllShow(true);
+            return;
+        }
+
+        var content = this._content;
+        var length = this.featuresLength;
+        for (var i = 0; i < length; ++i) {
+            var feature = content.getFeature(i);
+            var color = style.color.evaluateColor(frameState, feature, scratchColor);
+            var show = style.show.evaluate(frameState, feature);
+            this.setColor(i, color);
+            this.setShow(i, show);
+        }
     };
 
     function getBinaryProperty(binaryProperty, index) {
@@ -959,7 +991,7 @@ define([
         var type = uniformMatch[1];
 
         source = ShaderSource.replaceMain(source, 'tile_main');
-        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below don't affect it
+        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below doesn't affect it
 
         // If the tile color is white, use the source color. This implies the feature has not been styled.
         // Highlight: tile_colorBlend is 0.0 and the source color is used
@@ -1215,8 +1247,6 @@ define([
                 }
             };
 
-            // uniformMap goes through getUniformMap first in Model.
-            // Combine in this order so uniforms with the same name are overridden.
             return combine(batchUniformMap, uniformMap);
         };
     };

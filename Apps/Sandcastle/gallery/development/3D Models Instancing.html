@@ -53,12 +53,10 @@ var centerLatitude = 40.042530612;
 var height = 50.0;
 
 function orientCamera(center, radius) {
-    var controller = scene.screenSpaceCameraController;
-    var r = Math.max(radius, camera.frustum.near);
-
+    var range = Math.max(radius, camera.frustum.near) * 2.0;
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);
-    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
     camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 

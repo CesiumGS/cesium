@@ -91,7 +91,7 @@ define([
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
         if (!defined(styleJson.color)) {
-            // If there is no color style do not create a shader function. Otherwise a function would be created by the default style (white).
+            // If there is no color style do not create a shader function.
             that._colorShaderFunctionReady = true;
         }
 
@@ -101,6 +101,7 @@ define([
         }
 
         if (!defined(styleJson.pointSize)) {
+            // If there is no point size style do not create a shader function.
             that._pointSizeShaderFunctionReady = true;
         }
 

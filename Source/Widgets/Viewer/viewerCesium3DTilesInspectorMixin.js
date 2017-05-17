@@ -1,8 +1,8 @@
 /*global define*/
 define([
-    '../../Core/Check',
-    '../../Core/defineProperties',
-    '../Cesium3DTilesInspector/Cesium3DTilesInspector'
+        '../../Core/Check',
+        '../../Core/defineProperties',
+        '../Cesium3DTilesInspector/Cesium3DTilesInspector'
     ], function(
         Check,
         defineProperties,

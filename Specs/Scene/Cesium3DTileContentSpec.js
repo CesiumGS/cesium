@@ -32,6 +32,18 @@ defineSuite([
             return content.readyPromise;
         }).toThrowDeveloperError();
         expect(function() {
+            return content.tileset;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.tile;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.url;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.batchTable;
+        }).toThrowDeveloperError();
+        expect(function() {
             return content.hasProperty(0, 'height');
         }).toThrowDeveloperError();
         expect(function() {
@@ -41,7 +53,7 @@ defineSuite([
             content.applyDebugSettings();
         }).toThrowDeveloperError();
         expect(function() {
-            content.applyStyleWithShader();
+            content.applyStyle();
         }).toThrowDeveloperError();
         expect(function() {
             content.update();
