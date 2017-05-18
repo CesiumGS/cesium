@@ -9,6 +9,7 @@ Change Log
 * Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
 * Fix `BoundingSphere.fromOrientedBoundingBox`. [#5334](https://github.com/AnalyticalGraphicsInc/cesium/issues/5334)
 * Fixed bug where polylines would not update when `PolylineCollection` model matrix was updated [#5327](https://github.com/AnalyticalGraphicsInc/cesium/pull/5327)
+* Fixed a bug where adding a ground clamped label without a position would show up at a previous label's clamped position. [#5338](https://github.com/AnalyticalGraphicsInc/cesium/issues/5338)
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 
