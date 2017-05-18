@@ -239,7 +239,6 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
-
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
@@ -956,6 +955,7 @@ define([
 
         var position = ellipsoid.cartesianToCartographic(owner._position);
         if (!defined(position)) {
+            owner._actualClampedPosition = undefined;
             return;
         }
 
