@@ -12,6 +12,7 @@ Change Log
 * Fixed a bug where adding a ground clamped label without a position would show up at a previous label's clamped position. [#5338](https://github.com/AnalyticalGraphicsInc/cesium/issues/5338)
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
+* Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
 
 ### 1.33 - 2017-05-01
 

@@ -223,20 +223,19 @@ define([
                 Cartesian3.clone(Cartesian3.UNIT_Z, camera3D.up);
             } else {
                 camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
-
-                var frustum;
-                if (this._morphToOrthographic) {
-                    var camera = scene.camera;
-                    frustum = scratch2DTo3DFrustumOrtho;
-                    frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-                    frustum.width = camera.frustum.right - camera.frustum.left;
-                } else {
-                    frustum = scratch2DTo3DFrustumPersp;
-                    frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-                    frustum.fov = CesiumMath.toRadians(60.0);
-                }
-                camera3D.frustum = frustum;
             }
+
+            var frustum;
+            var camera = scene.camera;
+            if (camera.frustum instanceof OrthographicFrustum) {
+                frustum = camera.frustum.clone();
+            } else {
+                frustum = scratch2DTo3DFrustumPersp;
+                frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+                frustum.fov = CesiumMath.toRadians(60.0);
+            }
+            camera3D.frustum = frustum;
+
             var complete = complete3DCallback(camera3D);
             createMorphHandler(this, complete);
 
