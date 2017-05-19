@@ -244,7 +244,7 @@ define([
             chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
         }
 
-        when(loadJson(chunkUrl), function(chunk) {
+        loadJson(chunkUrl, function(chunk) {
             xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
             var samples = xysData._samples;

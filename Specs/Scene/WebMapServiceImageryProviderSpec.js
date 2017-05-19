@@ -10,6 +10,7 @@ defineSuite([
         'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Core/WebMercatorTilingScheme',
         'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
@@ -30,6 +31,7 @@ defineSuite([
         CesiumMath,
         queryToObject,
         Rectangle,
+        RequestScheduler,
         WebMercatorTilingScheme,
         GetFeatureInfoFormat,
         Imagery,
@@ -700,6 +702,9 @@ defineSuite([
                 if (tries < 3) {
                     error.retry = true;
                 }
+                setTimeout(function() {
+                    RequestScheduler.update();
+                }, 1);
             });
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -717,6 +722,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;

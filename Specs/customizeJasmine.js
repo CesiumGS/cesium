@@ -9,7 +9,7 @@ define([
         equalsMethodEqualityTester) {
     "use strict";
 
-    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
+    return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release, RequestScheduler) {
         function defineSuite(deps, name, suite, categories, focus) {
             /*global define,describe,fdescribe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
@@ -72,6 +72,8 @@ define([
 
         window.it = function(description, f, timeout, categories) {
             originalIt(description, function(done) {
+                // Clear the RequestScheduler before for each test in case requests are still active from previous tests
+                RequestScheduler.clearForSpecs();
                 var result = f();
                 when(result, function() {
                     done();

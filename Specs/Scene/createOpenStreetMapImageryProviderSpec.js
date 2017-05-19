@@ -5,6 +5,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -17,6 +18,7 @@ defineSuite([
         loadImage,
         CesiumMath,
         Rectangle,
+        RequestScheduler,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -223,6 +225,9 @@ defineSuite([
             if (tries < 3) {
                 error.retry = true;
             }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -243,6 +248,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;

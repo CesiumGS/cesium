@@ -12,6 +12,8 @@ defineSuite([
     'Core/loadImage',
     'Core/loadWithXhr',
     'Core/Math',
+    'Core/Request',
+    'Core/RequestScheduler',
     'Core/TerrainProvider',
     'Specs/pollToPromise',
     'ThirdParty/when'
@@ -28,6 +30,8 @@ defineSuite([
     loadImage,
     loadWithXhr,
     CesiumMath,
+    Request,
+    RequestScheduler,
     TerrainProvider,
     pollToPromise,
     when) {
@@ -71,6 +75,12 @@ defineSuite([
             return when(promise, f, function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
+        });
+    }
+
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
         });
     }
 
@@ -304,17 +314,15 @@ defineSuite([
                     });
                 })
                 .then(function() {
-                    var promise = terrainProvider.requestTileGeometry(1, 2, 3);
-                    expect(promise).toBeDefined();
-                    return promise;
-                })
-                .then(function(terrainData) {
-                    expect(terrainData).toBeDefined();
-                    for (var i = 0; i < 10; ++i) {
-                        promises.push(terrainProvider.requestTileGeometry(i, i, i));
+                    var promise;
+                    for (var i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                        promise = terrainProvider.requestTileGeometry(i, i, i, createRequest());
+                        promises.push(promise);
                     }
+                    RequestScheduler.update();
+                    expect(promise).toBeDefined();
 
-                    return terrainProvider.requestTileGeometry(1, 2, 3);
+                    return terrainProvider.requestTileGeometry(1, 2, 3, createRequest());
                 })
                 .then(function(terrainData) {
                     expect(terrainData).toBeUndefined();

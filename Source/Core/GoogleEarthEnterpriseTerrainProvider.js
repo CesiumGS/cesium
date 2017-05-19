@@ -5,6 +5,7 @@ define([
     './defaultValue',
     './defined',
     './defineProperties',
+    './deprecationWarning',
     './DeveloperError',
     './Event',
     './GeographicTilingScheme',
@@ -15,9 +16,10 @@ define([
     './loadArrayBuffer',
     './Math',
     './Rectangle',
+    './Request',
+    './RequestType',
     './RuntimeError',
     './TaskProcessor',
-    './throttleRequestByServer',
     './TileProviderError'
 ], function(
     when,
@@ -25,6 +27,7 @@ define([
     defaultValue,
     defined,
     defineProperties,
+    deprecationWarning,
     DeveloperError,
     Event,
     GeographicTilingScheme,
@@ -35,9 +38,10 @@ define([
     loadArrayBuffer,
     CesiumMath,
     Rectangle,
+    Request,
+    RequestType,
     RuntimeError,
     TaskProcessor,
-    throttleRequestByServer,
     TileProviderError) {
     'use strict';
 
@@ -339,9 +343,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -349,7 +351,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseProvider#ready}
      *            returns true.
      */
-    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -439,15 +441,19 @@ define([
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
             promise = terrainPromises[q];
         } else { // Create new request for terrain
-            var requestPromise;
-            throttleRequests = defaultValue(throttleRequests, true);
-            if (throttleRequests) {
-                requestPromise = throttleRequestByServer(url, loadArrayBuffer);
-                if (!defined(requestPromise)) {
-                    return undefined; // Throttled
-                }
-            } else {
-                requestPromise = loadArrayBuffer(url);
+            if (typeof request === 'boolean') {
+                deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.36.');
+                request = new Request({
+                    throttle : request,
+                    throttleByServer : request,
+                    type : RequestType.TERRAIN
+                });
+            }
+
+            var requestPromise = loadArrayBuffer(url, undefined, request);
+
+            if (!defined(requestPromise)) {
+                return undefined; // Throttled
             }
 
             promise = requestPromise
@@ -569,7 +575,12 @@ define([
 
         if (metadata.isValid(quadKey)) {
             // We will need this tile, so request metadata and return false for now
-            metadata.populateSubtree(x, y, level);
+            var request = new Request({
+                throttle : true,
+                throttleByServer : true,
+                type : RequestType.TERRAIN
+            });
+            metadata.populateSubtree(x, y, level, request);
         }
         return false;
     };

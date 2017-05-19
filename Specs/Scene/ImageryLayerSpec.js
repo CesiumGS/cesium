@@ -6,6 +6,7 @@ defineSuite([
         'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Renderer/ComputeEngine',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
@@ -28,6 +29,7 @@ defineSuite([
         loadJsonp,
         loadWithXhr,
         Rectangle,
+        RequestScheduler,
         ComputeEngine,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
@@ -104,6 +106,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -166,6 +169,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -202,6 +206,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 1, 3);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -237,6 +242,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 1, 3);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -292,6 +298,7 @@ defineSuite([
             var imagery = new Imagery(layer, 4400, 2686, 13);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -327,6 +334,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -386,6 +394,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             imageryLayer._requestImagery(new Imagery(imageryLayer, 0, 0, 0));
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return errorRaised;

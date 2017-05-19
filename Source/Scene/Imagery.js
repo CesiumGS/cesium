@@ -2,10 +2,12 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/RequestState',
         './ImageryState'
     ], function(
         defined,
         destroyObject,
+        RequestState,
         ImageryState) {
     'use strict';
 
@@ -20,6 +22,7 @@ define([
         this.x = x;
         this.y = y;
         this.level = level;
+        this.request = undefined;
 
         if (level !== 0) {
             var parentX = x / 2 | 0;
@@ -84,10 +87,15 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, distance) {
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this);
+            this.imageryLayer._requestImagery(this, distance);
+        }
+
+        if (defined(this.request) && this.request.state === RequestState.ISSUED) {
+            // Update distance while loading to prioritize request
+            this.request.distance = distance;
         }
 
         if (this.state === ImageryState.RECEIVED) {
