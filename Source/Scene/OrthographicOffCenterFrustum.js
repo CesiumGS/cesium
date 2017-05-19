@@ -180,6 +180,7 @@ define([
         var f = this.far;
 
         var right = Cartesian3.cross(direction, up, getPlanesRight);
+        Cartesian3.normalize(right, right);
         var nearCenter = getPlanesNearCenter;
         Cartesian3.multiplyByScalar(direction, n, nearCenter);
         Cartesian3.add(position, nearCenter, nearCenter);
