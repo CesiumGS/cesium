@@ -67,6 +67,9 @@ define([
         var baseUri = first;
         if (second.isAbsolute()) {
             baseUri = second;
+            if (second.scheme === 'data') {
+                return second.toString();
+            }
         }
 
         var url = '';
