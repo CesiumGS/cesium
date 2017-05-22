@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-### Version TODO
+### 1.35 - 2017-07-03
 
 * Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
    * `Cesium3DTileset`
