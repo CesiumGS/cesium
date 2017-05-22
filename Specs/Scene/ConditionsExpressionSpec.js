@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/ConditionsExpression',
-        'Core/Color',
-        'Scene/Expression'
+        'Core/Color'
     ], function(
         ConditionsExpression,
-        Color,
-        Expression) {
+        Color) {
     'use strict';
 
     var frameState = {};
@@ -28,27 +26,12 @@ defineSuite([
     };
 
     var jsonExpWithExpression = {
-        expression : '${Height}/2',
+        expressions : {
+            halfHeight: '${Height}/2'
+        },
         conditions : [
             ['${expression} > 50', 'color("blue")'],
             ['${expression} > 25', 'color("red")'],
-            ['true', 'color("lime")']
-        ]
-    };
-
-    var jsonExpWithMultipleExpression = {
-        expression : '${Height}/2',
-        conditions : [
-            ['${expression} > 50 && ${expression} < 100', 'color("blue")'],
-            ['${expression} > 25 && ${expression} < 26', 'color("red")'],
-            ['true', 'color("lime")']
-        ]
-    };
-
-
-    var jsonExpWithUndefinedExpression = {
-        conditions : [
-            ['${expression} === undefined', 'color("blue")'],
             ['true', 'color("lime")']
         ]
     };
@@ -65,19 +48,12 @@ defineSuite([
         ]
     };
 
-    var jsonExpWithMixedExpressions = {
-        expression: '${Height}',
-        expressions : {
-            halfHeight: '${Height}/2',
-            quarterHeight: '${Height}/4'
-        },
+    var jsonExpWithUndefinedExpression = {
         conditions : [
-            ['${expression} > 100 && ${halfHeight} < 100', 'color("blue")'],
-            ['${quarterHeight} > 50 && ${halfHeight} < 26', 'color("red")'],
+            ['${expression} === undefined', 'color("blue")'],
             ['true', 'color("lime")']
         ]
     };
-
 
     it('constructs', function() {
         var expression = new ConditionsExpression(jsonExp);
@@ -112,7 +88,7 @@ defineSuite([
     });
 
     it('evaluates conditional with multiple expressions', function() {
-        var expression = new ConditionsExpression(jsonExpWithMultipleExpression);
+        var expression = new ConditionsExpression(jsonExpWithMultipleExpressions);
         expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
         expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
         expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
@@ -151,23 +127,10 @@ defineSuite([
 
     it('constructs and evaluates conditional expression with multiple expressions', function() {
         var expression = new ConditionsExpression(jsonExpWithMultipleExpressions);
-        expect(expression._expressions).toEqual({halfHeight: '${Height}/2', quarterHeight: '${Height}/4', expression: undefined});
+        expect(expression._expressions).toEqual({halfHeight: '${Height}/2', quarterHeight: '${Height}/4'});
         expect(expression._conditions).toEqual([
             ['${halfHeight} > 50 && ${halfHeight} < 100', 'color("blue")'],
             ['${quarterHeight} > 50 && ${quarterHeight} < 52', 'color("red")'],
-            ['true', 'color("lime")']
-        ]);
-        expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
-        expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
-        expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
-    });
-
-    it('constructs and evaluates conditional expression with mixed expressions', function() {
-        var expression = new ConditionsExpression(jsonExpWithMixedExpressions);
-        expect(expression._expressions).toEqual({halfHeight: '${Height}/2', quarterHeight: '${Height}/4', expression: '${Height}'});
-        expect(expression._conditions).toEqual([
-            ['${expression} > 100 && ${halfHeight} < 100', 'color("blue")'],
-            ['${quarterHeight} > 50 && ${halfHeight} < 26', 'color("red")'],
             ['true', 'color("lime")']
         ]);
         expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);

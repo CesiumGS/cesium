@@ -29,15 +29,13 @@ define([
      *
      * @example
      * var expression = new Cesium.Expression({
-     *     expression : 'regExp("^1(\\d)").exec(${id})',
      *     expressions : {
-     *         id : "RegEx('^1(\\d)$').exec(${id})",
+     *         id : "RegEx('^id_(\d+)$').exec(${name})",
      *         Area : "${length} * ${height}"
      *     },
      *     conditions : [
-     *         ['${expression} === "1"', 'color("#FF0000")'],
-     *         ['${expression} === "2"', 'color("#00FF00")'],
-     *         ["(${id} !== 1) && (${Area} > 0)", "color('#0000FF')"],
+     *         ['${Area} > 10, 'color("#FF0000")'],
+     *         ['${id} !== "1"', 'color("#00FF00")'],
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
@@ -49,12 +47,9 @@ define([
         this._conditionsExpression = clone(conditionsExpression, true);
         this._conditions = conditionsExpression.conditions;
 
-        // Insert expression to expressions if it exists
-        // Then evaluate using expressions throughout class
-        // this._expression has to stay in prototype for specs to keep passing, but it can be removed in the future.
-        this._expression = conditionsExpression.expression;
-        this._expressions = conditionsExpression.expressions || {};
-        this._expressions.expression = conditionsExpression.expression;
+        // Insert expressions into conditions
+        // this._expressions has to stay in prototype for specs to keep passing, but it can be removed in the future.
+        this._expressions = defaultValue(conditionsExpression.expressions, defaultValue.EMPTY_OBJECT);
         this._runtimeConditions = undefined;
 
         setRuntime(this);
@@ -94,13 +89,14 @@ define([
                 var cond = String(statement[0]);
                 var condExpression = String(statement[1]);
 
-                //Loop over all expressions for replacement instead of only replacing one
+                // Loop over all expressions for replacement
                 for (var key in expressions) {
-                    if (expressions.hasOwnProperty((key))) {
+                    if (expressions.hasOwnProperty(key)) {
                         var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
-                        if (defined(expressions[key])) {
-                            cond = cond.replace(expressionPlaceholder, expressions[key]);
-                            condExpression = condExpression.replace(expressionPlaceholder, expressions[key]);
+                        var expressionReplace = expressions[key];
+                        if (expression) {
+                            cond = cond.replace(expressionPlaceholder, expressionReplace);
+                            condExpression = condExpression.replace(expressionPlaceholder, expressionReplace);
                         } else {
                             cond = cond.replace(expressionPlaceholder, 'undefined');
                             condExpression = condExpression.replace(expressionPlaceholder, 'undefined');

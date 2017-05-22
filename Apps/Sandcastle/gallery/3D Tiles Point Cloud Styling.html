@@ -190,6 +190,21 @@ addStyle('Style point size', {
     pointSize : "${temperature} * 10"
 });
 
+addStyle('Multiple expressions', {
+    expressions : {
+        length : "length(${POSITION})",
+        time : "${tiles3d_tileset_time} * 0.1"
+    },
+    color : {
+        conditions : [
+            ["${length} < 0.1", "${length} * color('red')"],
+            ["${length} < 0.5", "vec4(vec3(${temperature} * mod(${time})), 1.0)"],
+            ["true", "${COLOR}"]
+        ]
+    },
+    show : "${length} < 0.9"
+});
+
 function setStyle(style) {
     tileset.style = new Cesium.Cesium3DTileStyle(style);
 }
