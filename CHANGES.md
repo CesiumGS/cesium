@@ -13,6 +13,7 @@ Change Log
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 * Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
+* Added support for https and http/2 to development web server [#5316](https://github.com/AnalyticalGraphicsInc/cesium/pull/5316)
 
 ### 1.33 - 2017-05-01
 
