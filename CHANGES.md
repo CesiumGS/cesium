@@ -9,8 +9,7 @@ Change Log
    * `Cesium3DTile`
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
-   * `Cesium3DTilesInspector`
-   * `Cesium3DTilesInspectorViewModel`
+   * `Cesium3DTilesInspector`, `Cesium3DTilesInspectorViewModel`, and `viewerCesium3DTilesInspectorMixin`
 
 ### 1.34 - 2017-06-01
 
