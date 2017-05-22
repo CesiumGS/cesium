@@ -47,6 +47,7 @@ define([
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
+            var invertVelocity = false;
             var xBasis;
             var yBasis;
             var zBasis;
@@ -54,8 +55,16 @@ define([
             if (mode === SceneMode.SCENE3D) {
                 // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
                 // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-                deltaTime = JulianDate.addSeconds(time, 0.001, deltaTime);
+                JulianDate.addSeconds(time, 0.001, deltaTime);
                 var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
+
+                // If no valid position at (time + 0.001), sample at (time - 0.001) and invert the vector
+                if (!defined(deltaCartesian)) {
+                    JulianDate.addSeconds(time, -0.001, deltaTime);
+                    deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
+                    invertVelocity = true;
+                }
+
                 if (defined(deltaCartesian)) {
                     var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
                     var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, updateTransformMatrix3Scratch2);
@@ -73,7 +82,11 @@ define([
                     var inertialCartesian = Matrix3.multiplyByVector(toInertial, cartesian, updateTransformCartesian3Scratch5);
                     var inertialDeltaCartesian = Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, updateTransformCartesian3Scratch6);
 
-                    Cartesian3.subtract(inertialCartesian, inertialDeltaCartesian, updateTransformCartesian3Scratch4);
+                    if (invertVelocity) {
+                        Cartesian3.subtract(inertialDeltaCartesian, inertialCartesian, updateTransformCartesian3Scratch4);
+                    } else {
+                        Cartesian3.subtract(inertialCartesian, inertialDeltaCartesian, updateTransformCartesian3Scratch4);
+                    }
                     var inertialVelocity = Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
 
                     // http://en.wikipedia.org/wiki/Standard_gravitational_parameter
