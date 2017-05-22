@@ -327,15 +327,13 @@ define([
                         var picked = scene.pick(e.endPosition);
                         if (picked && defined(picked.content)) {
                             that.feature = picked;
-                            var pos;
-                            e.endPosition.x += 10;
-                            e.endPosition.y -= 10;
-                            if (scene.pickPositionSupported && (pos = scene.pickPosition(e.endPosition))) {
-                                that._tileset._debugPickPosition = pos;
+                            var position;
+                            if (scene.pickPositionSupported) {
+                                position = scene.pickPosition(e.endPosition);
+                                that._tileset._debugPickPosition = position;
                             }
-                            that._tileset._debugPickedTile = picked.content._tile;
+                            that._tileset._debugPickedTile = picked.content.tile;
                             that._pickStatsText = getStats(that._tileset, true);
-
                         } else {
                             that.feature = undefined;
                             that._tileset._debugPickedTile = undefined;

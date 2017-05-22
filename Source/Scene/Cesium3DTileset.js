@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
@@ -51,6 +52,7 @@ define([
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartographic,
         Check,
@@ -1346,7 +1348,9 @@ define([
             if (defined(tileset._debugPickedTile)) {
                 addTileDebugLabel(tileset._debugPickedTile, tileset);
                 if (defined(tileset._debugPickPosition)) {
-                    tileset._tileDebugLabels._labels[0].position = tileset._debugPickPosition;
+                    var label = tileset._tileDebugLabels.get(0);
+                    label.position = tileset._debugPickPosition;
+                    label.pixelOffset = new Cartesian2(15, -15);
                 }
             }
         } else {
