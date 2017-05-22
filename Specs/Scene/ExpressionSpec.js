@@ -126,6 +126,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates with additional expressions', function() {
+        var additionalExpressions = {
+            halfHeight: '${Height}/2'
+        };
+        var feature = new MockFeature();
+        feature.addProperty('Height', 10);
+
+        var expression = new Expression('${halfHeight}', additionalExpressions);
+        expect(expression.evaluate(frameState, feature)).toEqual(5);
+    });
+
     it('gets expressions', function() {
         var expressionString = "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)";
         var expression = new Expression(expressionString);

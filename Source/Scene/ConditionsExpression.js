@@ -26,13 +26,10 @@ define([
      * @constructor
      *
      * @param {Object} [conditionsExpression] The conditions expression defined using the 3D Tiles Styling language.
+     * @param {Object} [expressions] Additional expressions defined in the style.
      *
      * @example
-     * var expression = new Cesium.Expression({
-     *     expressions : {
-     *         id : "RegEx('^id_(\d+)$').exec(${name})",
-     *         Area : "${length} * ${height}"
-     *     },
+     * var expression = new Cesium.ConditionsExpression({
      *     conditions : [
      *         ['${Area} > 10, 'color("#FF0000")'],
      *         ['${id} !== "1"', 'color("#00FF00")'],
@@ -43,16 +40,12 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
-    function ConditionsExpression(conditionsExpression) {
+    function ConditionsExpression(conditionsExpression, expressions) {
         this._conditionsExpression = clone(conditionsExpression, true);
         this._conditions = conditionsExpression.conditions;
-
-        // Insert expressions into conditions
-        // this._expressions has to stay in prototype for specs to keep passing, but it can be removed in the future.
-        this._expressions = defaultValue(conditionsExpression.expressions, defaultValue.EMPTY_OBJECT);
         this._runtimeConditions = undefined;
 
-        setRuntime(this);
+        setRuntime(this, expressions);
     }
 
     defineProperties(ConditionsExpression.prototype, {
@@ -78,35 +71,18 @@ define([
         this.expression = expression;
     }
 
-    function setRuntime(expression) {
+    function setRuntime(expression, expressions) {
         var runtimeConditions = [];
         var conditions = expression._conditions;
         if (defined(conditions)) {
-            var expressions = expression._expressions;
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
                 var cond = String(statement[0]);
                 var condExpression = String(statement[1]);
-
-                // Loop over all expressions for replacement
-                for (var key in expressions) {
-                    if (expressions.hasOwnProperty(key)) {
-                        var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
-                        var expressionReplace = expressions[key];
-                        if (expression) {
-                            cond = cond.replace(expressionPlaceholder, expressionReplace);
-                            condExpression = condExpression.replace(expressionPlaceholder, expressionReplace);
-                        } else {
-                            cond = cond.replace(expressionPlaceholder, 'undefined');
-                            condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
-                        }
-                    }
-                }
-
                 runtimeConditions.push(new Statement(
-                    new Expression(cond),
-                    new Expression(condExpression)
+                    new Expression(cond, expressions),
+                    new Expression(condExpression, expressions)
                 ));
             }
         }
