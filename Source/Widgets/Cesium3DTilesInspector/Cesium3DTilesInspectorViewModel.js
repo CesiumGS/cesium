@@ -981,5 +981,13 @@ define([
         return destroyObject(this);
     };
 
+    /**
+     * Generates an HTML string of the statistics
+     * @param {Cesium3DTileset} tileset The tileset
+     * @param {Boolean} isPick Whether this is getting the statistics for a picked feature
+     * @returns {String} The formatted statistics
+     */
+    Cesium3DTilesInspectorViewModel.getStats = getStats;
+
     return Cesium3DTilesInspectorViewModel;
 });
