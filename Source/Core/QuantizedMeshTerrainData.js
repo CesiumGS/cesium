@@ -202,7 +202,7 @@ define([
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
-         * An array of credits for this tile
+         * An array of credits for this tile.
          * @memberof QuantizedMeshTerrainData.prototype
          * @type {Credit[]}
          */
