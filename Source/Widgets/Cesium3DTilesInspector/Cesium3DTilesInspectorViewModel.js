@@ -984,7 +984,7 @@ define([
     /**
      * Generates an HTML string of the statistics
      * @param {Cesium3DTileset} tileset The tileset
-     * @param {Boolean} isPick Whether this is getting the statistics for a picked feature
+     * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
      * @returns {String} The formatted statistics
      */
     Cesium3DTilesInspectorViewModel.getStats = getStats;
