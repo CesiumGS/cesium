@@ -1369,18 +1369,21 @@ define([
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
+        rs = clone(renderState, false);
+        if (defined(primitive._depthFailAppearance)) {
+            rs.depthTest.enabled = false;
+        }
+
         if (primitive.allowPicking) {
             if (twoPasses) {
-                rs = clone(renderState, false);
                 rs.cull = {
                     enabled : false
                 };
                 primitive._pickRS = RenderState.fromCache(rs);
             } else {
-                primitive._pickRS = primitive._frontFaceRS;
+                primitive._pickRS = RenderState.fromCache(rs);
             }
         } else {
-            rs = clone(renderState, false);
             rs.colorMask = {
                 red : false,
                 green : false,
