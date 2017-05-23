@@ -184,16 +184,17 @@ addStyle('Style point size', {
 addStyle('Multiple expressions', {
     expressions : {
         length : "length(${POSITION})",
-        time : "${tiles3d_tileset_time} * 0.1"
+        time : "${tiles3d_tileset_time} * 3.0"
     },
     color : {
         conditions : [
-            ["${length} < 0.1", "${length} * color('red')"],
-            ["${length} < 0.5", "vec4(vec3(${temperature} * mod(${time})), 1.0)"],
+            ["${length} < 0.5", "${length} * color('red')"],
+            ["${length} < 1.0", "vec4(vec3(${temperature} * fract(${time})), 1.0)"],
             ["true", "${COLOR}"]
         ]
     },
-    show : "${length} < 0.9"
+    pointSize : "5.0 - ${length} * 2.0",
+    show : "${length} < 2.0"
 });
 
 function setStyle(style) {
