@@ -82,11 +82,7 @@ define([
                     var inertialCartesian = Matrix3.multiplyByVector(toInertial, cartesian, updateTransformCartesian3Scratch5);
                     var inertialDeltaCartesian = Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, updateTransformCartesian3Scratch6);
 
-                    if (invertVelocity) {
-                        Cartesian3.subtract(inertialDeltaCartesian, inertialCartesian, updateTransformCartesian3Scratch4);
-                    } else {
-                        Cartesian3.subtract(inertialCartesian, inertialDeltaCartesian, updateTransformCartesian3Scratch4);
-                    }
+                    Cartesian3.subtract(inertialCartesian, inertialDeltaCartesian, updateTransformCartesian3Scratch4);
                     var inertialVelocity = Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
 
                     // http://en.wikipedia.org/wiki/Standard_gravitational_parameter
@@ -127,6 +123,11 @@ define([
 
                         // Y is along the angular momentum vector (e.g. "orbit normal")
                         yBasis = Cartesian3.cross(zBasis, inertialDeltaCartesian, updateTransformCartesian3Scratch3);
+
+                        if(invertVelocity) {
+                            yBasis = Cartesian3.multiplyByScalar(yBasis, -1, yBasis);
+                        }
+
                         if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON7)) {
                             // X is along the cross of y and z (right handed basis / in the direction of motion)
                             xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
