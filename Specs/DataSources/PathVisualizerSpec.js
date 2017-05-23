@@ -85,7 +85,7 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        visualizer = new PathVisualizer(scene, entityCollection);
+        var visualizer = new PathVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);

@@ -82,7 +82,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        visualizer && visualizer.destroy();
         entityCluster.destroy();
     });
 
@@ -122,6 +122,7 @@ defineSuite([
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no point does not create a pointPrimitive.', function() {

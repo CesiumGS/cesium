@@ -58,7 +58,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        visualizer && visualizer.destroy();
         entityCluster.destroy();
     });
 
@@ -91,6 +91,7 @@ defineSuite([
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no label does not create a label.', function() {

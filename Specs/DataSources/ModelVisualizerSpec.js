@@ -52,7 +52,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        visualizer && visualizer.destroy();
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -84,6 +84,7 @@ defineSuite([
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
         visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no model does not create one.', function() {
