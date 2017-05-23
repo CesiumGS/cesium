@@ -14,6 +14,7 @@ Change Log
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 * Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
 * Updated documentation for Quaternion.fromHeadingPitchRoll [#5264](https://github.com/AnalyticalGraphicsInc/cesium/issues/5264)
+* Fixed a crash where EllipsoidGeometry and EllipsoidOutlineGeometry were given floating point values when expecting integers. [#5260](https://github.com/AnalyticalGraphicsInc/cesium/issues/5260)
 
 ### 1.33 - 2017-05-01
 
