@@ -63,7 +63,6 @@ define([
         this._show = undefined;
         this._pointSize = undefined;
         this._meta = undefined;
-        this._expressions = undefined;
 
         this._colorShaderFunction = undefined;
         this._showShaderFunction = undefined;

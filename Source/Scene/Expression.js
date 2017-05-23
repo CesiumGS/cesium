@@ -438,7 +438,7 @@ define([
     }
 
     function replaceExpressions(expression, expressions) {
-        if (!defined(expressions) || (defined(expressions) && expressions.length === 0)) {
+        if (!defined(expressions)) {
             return expression;
         }
         for (var key in expressions) {
