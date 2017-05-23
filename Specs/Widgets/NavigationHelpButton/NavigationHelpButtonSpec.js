@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
-        'Core/defined',
         'Core/FeatureDetection',
         'Specs/DomEventSimulator'
     ], function(
         NavigationHelpButton,
-        defined,
         FeatureDetection,
         DomEventSimulator) {
     'use strict';

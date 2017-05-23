@@ -6,7 +6,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/Math',
         'Core/NearFarScalar',
@@ -27,7 +26,6 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
-        defined,
         DistanceDisplayCondition,
         CesiumMath,
         NearFarScalar,
@@ -100,7 +98,9 @@ defineSuite([
         expect(label.id).not.toBeDefined();
         expect(label.translucencyByDistance).not.toBeDefined();
         expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
+        expect(label.scaleByDistance).not.toBeDefined();
         expect(label.distanceDisplayCondition).not.toBeDefined();
+        expect(label.disableDepthTestDistance).toEqual(0.0);
     });
 
     it('can add a label with specified values', function() {
@@ -133,7 +133,9 @@ defineSuite([
         var backgroundPadding = new Cartesian2(11, 12);
         var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+        var scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+        var disableDepthTestDistance = 10.0;
         var label = labels.add({
             show : show,
             position : position,
@@ -154,7 +156,9 @@ defineSuite([
             id : 'id',
             translucencyByDistance : translucency,
             pixelOffsetScaleByDistance : pixelOffsetScale,
-            distanceDisplayCondition : distanceDisplayCondition
+            scaleByDistance : scaleByDistance,
+            distanceDisplayCondition : distanceDisplayCondition,
+            disableDepthTestDistance : disableDepthTestDistance
         });
 
         expect(label.show).toEqual(show);
@@ -176,7 +180,9 @@ defineSuite([
         expect(label.id).toEqual('id');
         expect(label.translucencyByDistance).toEqual(translucency);
         expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
+        expect(label.scaleByDistance).toEqual(scaleByDistance);
         expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
+        expect(label.disableDepthTestDistance).toEqual(disableDepthTestDistance);
     });
 
     it('can specify font using units other than pixels', function() {
@@ -617,6 +623,22 @@ defineSuite([
         expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it('renders label with scaleByDistance', function() {
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : solidBox,
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            scaleByDistance: new NearFarScalar(2.0, 1.0, 4.0, 0.0)
+        });
+
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+        expect(scene).toRender([255, 255, 255, 255]);
+
+        camera.position = new Cartesian3(4.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+    });
+
     it('renders label with distanceDisplayCondition', function() {
         labels.add({
             position : Cartesian3.ZERO,
@@ -654,6 +676,43 @@ defineSuite([
         var dc = new DistanceDisplayCondition(100.0, 10.0);
         expect(function() {
             l.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders with disableDepthTestDistance', function() {
+        var l = labels.add({
+            position : new Cartesian3(-1.0, 0.0, 0.0),
+            text : solidBox,
+            fillColor : Color.LIME,
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : solidBox,
+            fillColor : Color.BLUE,
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        expect(scene).toRender([0, 0, 255, 255]);
+
+        l.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it('throws with new label with disableDepthTestDistance less than 0.0', function() {
+        expect(function() {
+            labels.add({
+                disableDepthTestDistance : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with disableDepthTestDistance set less than 0.0', function() {
+        var l = labels.add();
+        expect(function() {
+            l.disableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
     });
 
@@ -886,6 +945,7 @@ defineSuite([
             var scale = 2.0;
             var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
             var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+            var scaleByDistance = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
 
             label.show = show;
             label.position = position;
@@ -902,6 +962,7 @@ defineSuite([
             label.scale = scale;
             label.translucencyByDistance = translucency;
             label.pixelOffsetScaleByDistance = pixelOffsetScale;
+            label.scaleByDistance = scaleByDistance;
 
             expect(label.show).toEqual(show);
             expect(label.position).toEqual(position);
@@ -918,6 +979,7 @@ defineSuite([
             expect(label.scale).toEqual(scale);
             expect(label.translucencyByDistance).toEqual(translucency);
             expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
+            expect(label.scaleByDistance).toEqual(scaleByDistance);
         });
 
         it('is destroyed after being removed', function() {
@@ -1212,6 +1274,8 @@ defineSuite([
             var translucency2 = new NearFarScalar(1.1e4, 1.2, 1.3e6, 4.0);
             var pixelOffsetScale1 = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
             var pixelOffsetScale2 = new NearFarScalar(1.5e4, 1.6, 1.7e6, 8.0);
+            var scaleByDistance1 = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+            var scaleByDistance2 = new NearFarScalar(1.5e4, 1.6, 1.7e6, 8.0);
 
             var label = labels.add({
                 position : position1,
@@ -1223,6 +1287,7 @@ defineSuite([
                 id : id1,
                 translucencyByDistance : translucency1,
                 pixelOffsetScaleByDistance : pixelOffsetScale1,
+                scaleByDistance : scaleByDistance1,
                 showBackground : true
             });
 
@@ -1237,6 +1302,7 @@ defineSuite([
             label.id = id2;
             label.translucencyByDistance = translucency2;
             label.pixelOffsetScaleByDistance = pixelOffsetScale2;
+            label.scaleByDistance = scaleByDistance2;
 
             scene.renderForSpecs();
 
@@ -1253,6 +1319,7 @@ defineSuite([
                 expect(billboard.id).toEqual(label.id);
                 expect(billboard.translucencyByDistance).toEqual(label.translucencyByDistance);
                 expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
+                expect(billboard.scaleByDistance).toEqual(label.scaleByDistance);
 
                 expect(billboard.pickPrimitive).toEqual(label);
             }
@@ -1271,6 +1338,7 @@ defineSuite([
                     id : 'id1',
                     translucencyByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
                     pixelOffsetScaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
+                    scaleByDistance : new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0),
                     showBackground : true
                 });
                 scene.renderForSpecs();
@@ -1392,6 +1460,17 @@ defineSuite([
                 });
             });
 
+            it('scaleByDistance', function() {
+                var newValue = new NearFarScalar(1.5e4, 1.6, 1.7e6, 8.0);
+                expect(label.scaleByDistance).not.toEqual(newValue);
+                label.scaleByDistance = newValue;
+                scene.renderForSpecs();
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.scaleByDistance).toEqual(label.scaleByDistance);
+                });
+            });
+
             it('translucencyByDistance to undefined', function() {
                 var newValue;
                 expect(label.translucencyByDistance).not.toEqual(newValue);
@@ -1411,6 +1490,17 @@ defineSuite([
 
                 getGlyphBillboards().forEach(function(billboard) {
                     expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
+                });
+            });
+
+            it('scaleByDistance to undefined', function() {
+                var newValue;
+                expect(label.scaleByDistance).not.toEqual(newValue);
+                label.scaleByDistance = newValue;
+                scene.renderForSpecs();
+
+                getGlyphBillboards().forEach(function(billboard) {
+                    expect(billboard.scaleByDistance).toEqual(label.scaleByDistance);
                 });
             });
 
@@ -1954,6 +2044,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('Label.scaleByDistance throws with nearDistance === farDistance', function() {
+        var label = labels.add();
+        var scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            label.scaleByDistance = scaleByDistance;
+        }).toThrowDeveloperError();
+    });
+
     it('new label throws with invalid translucencyByDistance (nearDistance === farDistance)', function() {
         var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
@@ -1972,6 +2070,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('new label throws with invalid scaleByDistance (nearDistance === farDistance)', function() {
+        var scaleByDistance = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            labels.add({
+                scaleByDistance : scaleByDistance
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('Label.translucencyByDistance throws with nearDistance > farDistance', function() {
         var label = labels.add();
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
@@ -1985,6 +2092,14 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             label.pixelOffsetScaleByDistance = pixelOffsetScale;
+        }).toThrowDeveloperError();
+    });
+
+    it('Label.scaleByDistance throws with nearDistance > farDistance', function() {
+        var label = labels.add();
+        var scaleByDistance = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+        expect(function() {
+            label.scaleByDistance = scaleByDistance;
         }).toThrowDeveloperError();
     });
 

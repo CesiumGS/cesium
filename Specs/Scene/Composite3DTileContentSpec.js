@@ -25,8 +25,8 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         // One item in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 50.0));
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 30.0));
     });
 
     afterAll(function() {
@@ -38,8 +38,6 @@ defineSuite([
     });
 
     function expectRenderComposite(tileset) {
-        Cesium3DTilesTester.expectRender(scene, tileset);
-
         expect(scene).toPickAndCall(function(result) {
             // Pick a building
             var pickedBuilding = result;
@@ -83,18 +81,11 @@ defineSuite([
         });
     }
 
-    it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
-            magic : [120, 120, 120, 120]
-        });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
-    });
-
     it('throws with invalid version', function() {
         var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             version : 2
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('throws with invalid inner tile content type', function() {
@@ -103,7 +94,7 @@ defineSuite([
                 magic : [120, 120, 120, 120]
             })]
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
+        Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'cmpt');
     });
 
     it('resolves readyPromise', function() {
@@ -123,10 +114,6 @@ defineSuite([
         return Cesium3DTilesTester.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');
     });
 
-    it('rejects readyPromise on failed request', function() {
-        return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('cmpt');
-    });
-
     it('renders composite', function() {
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(expectRenderComposite);
     });
@@ -137,10 +124,6 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, compositeUrl);
-    });
-
-    it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, compositeUrl);
     });
 
 }, 'WebGL');

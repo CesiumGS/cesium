@@ -1158,13 +1158,16 @@ define([
 
             if (defined(polygon)) {
                 wall.fill = polygon.fill;
-                wall.outline = polygon.outline;
                 wall.material = polygon.material;
             }
 
+            //Always outline walls so they show up in 2D.
+            wall.outline = true;
             if (defined(polyline)) {
                 wall.outlineColor = defined(polyline.material) ? polyline.material.color : Color.WHITE;
                 wall.outlineWidth = polyline.width;
+            } else if (defined(polygon)) {
+                wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
         } else {
             if (dataSource._clampToGround && !canExtrude && tessellate) {
@@ -2256,11 +2259,12 @@ define([
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'),
+     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz',
      *      {
-     *          camera: viewer.scene.camera,
-     *          canvas: viewer.scene.canvas
-     *      });
+     *           camera: viewer.scene.camera,
+     *           canvas: viewer.scene.canvas
+     *      })
+     * );
      */
     function KmlDataSource(options) {
         options = defaultValue(options, {});

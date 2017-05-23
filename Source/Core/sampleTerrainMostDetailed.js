@@ -3,14 +3,12 @@ define([
     '../ThirdParty/when',
     './defined',
     './sampleTerrain',
-    './DeveloperError',
-    './Rectangle'
+    './DeveloperError'
 ], function(
     when,
     defined,
     sampleTerrain,
-    DeveloperError,
-    Rectangle) {
+    DeveloperError) {
     "use strict";
 
     /**
@@ -26,7 +24,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//assets.agi.com/stk-terrain/world'
+     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),

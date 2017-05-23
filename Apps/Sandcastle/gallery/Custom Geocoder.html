@@ -4,16 +4,16 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Cluster labels, billboards and points.">
+    <meta name="description" content="Attach a custom data source to the geocoder widget.">
     <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -36,7 +36,6 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
 /**
  * This class is an example of a custom geocoder. It provides geocoding through the OpenStreetMap Nominatim service.
  * @alias OpenStreetMapNominatimGeocoder
@@ -78,13 +77,13 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 //Sandcastle_End
-        Sandcastle.finishedLoading();
-    }
-    if (typeof Cesium !== "undefined") {
-        startup(Cesium);
-    } else if (typeof require === "function") {
-        require(["Cesium"], startup);
-    }
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>

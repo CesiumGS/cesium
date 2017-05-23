@@ -8,10 +8,8 @@ define([
     'use strict';
 
     /**
-     * <p>
      * Derived classes of this interface provide access to individual features in the tile.
      * Access derived objects through {@link Cesium3DTile#content}.
-     * </p>
      * <p>
      * This type describes an interface and is not intended to be instantiated directly.
      * </p>
@@ -26,35 +24,14 @@ define([
      * @see Tileset3DTileContent
      * @see Empty3DTileContent
      */
-    function Cesium3DTileContent(tileset, tile, url) {
-        // Private members are not exposed in the public Cesium API, but derived classes
-        // need to implement them.  The scope should be treated like C#'s internal.  When
-        // we're ready, we'll add these members to the public API so users can implement
-        // new tile formats.
-
-        /**
-         * The current state of the tile's content.
-         *
-         * @type {Cesium3DTileContentState}
-         * @readonly
-         *
-         * @private
-         */
-        this.state = undefined;
-
-        /**
-         * Gets the batch table texture for this tile.
-         *
-         * @type {Cesium3DTileBatchTable}
-         * @readonly
-         *
-         * @private
-         */
-        this.batchTable = undefined;
-
+    function Cesium3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         /**
          * Gets or sets if any feature's property changed.  Used to
          * optimized applying a style when a feature's property changed.
+         * <p>
+         * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+         * not part of the public Cesium API.
+         * </p>
          *
          * @type {Boolean}
          *
@@ -79,10 +56,80 @@ define([
         },
 
         /**
+         * Gets the number of points in the tile.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pointsLength : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the number of triangles in the tile.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's vertex memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's texture memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile's batch table memory in bytes.
+         *
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @memberof Composite3DTileContent.prototype
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Array}
          * @readonly
@@ -94,30 +141,69 @@ define([
         },
 
         /**
-         * Gets the promise that will be resolved when the tile's content is ready to process.
-         * This happens after the content is downloaded but before the content is ready
-         * to render.
+         * Gets the promise that will be resolved when the tile's content is ready to render.
+         *
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Promise.<Cesium3DTileContent>}
          * @readonly
-         *
-         * @private
          */
-        contentReadyToProcessPromise : {
+        readyPromise : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
 
         /**
-         * Gets the promise that will be resolved when the tile's content is ready to render.
+         * Gets the tileset for this tile.
          *
-         * @type {Promise.<Cesium3DTileContent>}
+         * @type {Cesium3DTileset}
+         * @readonly
+         */
+        tileset : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the tile containing this content.
+         *
+         * @type {Cesium3DTile}
+         * @readonly
+         */
+        tile : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the url of the tile's content.
+         * @memberof Cesium3DTileContent.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        url : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the batch table for this content.
+         * <p>
+         * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
+         * not part of the public Cesium API.
+         * </p>
+         *
+         * @type {Cesium3DTileBatchTable}
          * @readonly
          *
          * @private
          */
-        readyPromise : {
+        batchTable : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -151,48 +237,15 @@ define([
     };
 
     /**
-     * Requests the tile's content.
-     * <p>
-     * The request may not be made if the Cesium Request Scheduler can't prioritize it.
-     * </p>
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @returns {Boolean} Whether the request was initiated. May be false if the RequestScheduler is full.
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.request = function() {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
-     * Parses the tile's content's array buffer and initializes the content.  This does not
-     * necessarily move the state to READY since WebGL resource creation may be
-     * amortized over several frames.
-     * <p>
-     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
-     * not part of the public Cesium API.
-     * </p>
-     *
-     * @param {Object} arrayBuffer The array buffer containing the contents payload.
-     * @param {Number} byteOffset The zero-based offset, in bytes, into the array buffer.
-     *
-     * @private
-     */
-    Cesium3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
-        DeveloperError.throwInstantiationError();
-    };
-
-    /**
      * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
      * <p>
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
+     * @param {Boolean} enabled Whether to enable or disable debug settings.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+
      * @private
      */
     Cesium3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
@@ -200,8 +253,7 @@ define([
     };
 
     /**
-     * Apply a style to the content using a shader instead of a batch table. Currently this is only
-     * applicable for {@link PointCloud3DTileContent}.
+     * Apply a style to the content
      * <p>
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
@@ -210,11 +262,9 @@ define([
      * @param {FrameSate} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      *
-     * @returns {Boolean} <code>true</code> if this content is styled with a shader; otherwise, <code>false</code>.
-     *
      * @private
      */
-    Cesium3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
+    Cesium3DTileContent.prototype.applyStyle = function(frameState, style) {
         DeveloperError.throwInstantiationError();
     };
 

@@ -483,7 +483,7 @@ define([
             return interpolateHeight(this, u, v);
         }
 
-        interpolateMeshHeight(this, u, v);
+        return interpolateMeshHeight(this, u, v);
     };
 
     var texCoordScratch0 = new Cartesian2();

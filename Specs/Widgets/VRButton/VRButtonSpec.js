@@ -1,12 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/VRButton/VRButton'
+        'Widgets/VRButton/VRButton',
+        'Specs/createScene'
     ], function(
-        VRButton) {
+        VRButton,
+        createScene) {
     'use strict';
 
+    var scene;
+
+    beforeEach(function() {
+        scene = createScene();
+    });
+
+    afterEach(function() {
+        scene.destroyForSpecs();
+    });
+
     it('constructor sets default values', function() {
-        var vrButton = new VRButton(document.body, {});
+        var vrButton = new VRButton(document.body, scene);
         expect(vrButton.container).toBe(document.body);
         expect(vrButton.viewModel.vrElement).toBe(document.body);
         expect(vrButton.isDestroyed()).toEqual(false);
@@ -16,7 +28,7 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');
-        var vrButton = new VRButton(document.body, {}, testElement);
+        var vrButton = new VRButton(document.body, scene, testElement);
         expect(vrButton.container).toBe(document.body);
         expect(vrButton.viewModel.vrElement).toBe(testElement);
         vrButton.destroy();
@@ -26,7 +38,7 @@ defineSuite([
         var testElement = document.createElement('span');
         testElement.id = 'testElement';
         document.body.appendChild(testElement);
-        var vrButton = new VRButton('testElement', {});
+        var vrButton = new VRButton('testElement', scene);
         expect(vrButton.container).toBe(testElement);
         document.body.removeChild(testElement);
         vrButton.destroy();
@@ -34,13 +46,13 @@ defineSuite([
 
     it('throws if container is undefined', function() {
         expect(function() {
-            return new VRButton(undefined, {});
+            return new VRButton(undefined, scene);
         }).toThrowDeveloperError();
     });
 
     it('throws if container string is undefined', function() {
         expect(function() {
-            return new VRButton('testElement', {});
+            return new VRButton('testElement', scene);
         }).toThrowDeveloperError();
     });
 

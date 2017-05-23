@@ -35,19 +35,15 @@ defineSuite([
     });
 
     it('compacts underlying array', function() {
-        var q = new Queue({
-            compact : true
-        });
-
         var i;
         for (i = 0; i < 1000; i++) {
-            q.enqueue(i);
+            queue.enqueue(i);
         }
         for (i = 0; i < 1000; i++) {
-            q.dequeue();
+            queue.dequeue();
         }
 
-        expect(q._array.length).toBeLessThan(1000);
+        expect(queue._array.length).toBeLessThan(1000);
     });
 
     it('can peek at the item at the head of the queue', function() {

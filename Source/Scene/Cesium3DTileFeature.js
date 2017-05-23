@@ -43,7 +43,6 @@ define([
      */
     function Cesium3DTileFeature(tileset, content, batchId) {
         this._content = content;
-        this._batchTable = content.batchTable;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
@@ -69,10 +68,10 @@ define([
          */
         show : {
             get : function() {
-                return this._batchTable.getShow(this._batchId);
+                return this._content.batchTable.getShow(this._batchId);
             },
             set : function(value) {
-                this._batchTable.setShow(this._batchId, value);
+                this._content.batchTable.setShow(this._batchId, value);
             }
         },
 
@@ -95,10 +94,25 @@ define([
                 if (!this._color) {
                     this._color = new Color();
                 }
-                return this._batchTable.getColor(this._batchId, this._color);
+                return this._content.batchTable.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                this._batchTable.setColor(this._batchId, value);
+                this._content.batchTable.setColor(this._batchId, value);
+            }
+        },
+
+        /**
+         * Gets the feature content.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileContent}
+         *
+         * @readonly
+         */
+        content : {
+            get : function() {
+                return this._content;
             }
         }
     });
@@ -116,7 +130,7 @@ define([
      * @returns {Boolean} Whether the feature contains this property.
      */
     Cesium3DTileFeature.prototype.hasProperty = function(name) {
-        return this._batchTable.hasProperty(this._batchId, name);
+        return this._content.batchTable.hasProperty(this._batchId, name);
     };
 
     /**
@@ -131,7 +145,7 @@ define([
      * @returns {String[]} The names of the feature's properties.
      */
     Cesium3DTileFeature.prototype.getPropertyNames = function() {
-        return this._batchTable.getPropertyNames(this._batchId);
+        return this._content.batchTable.getPropertyNames(this._batchId);
     };
 
     /**
@@ -159,7 +173,7 @@ define([
      * @see {Cesium3DTileset#properties}
      */
     Cesium3DTileFeature.prototype.getProperty = function(name) {
-        return this._batchTable.getProperty(this._batchId, name);
+        return this._content.batchTable.getProperty(this._batchId, name);
     };
 
     /**
@@ -191,7 +205,7 @@ define([
      * @see {Cesium3DTileset#properties}
      */
     Cesium3DTileFeature.prototype.setProperty = function(name, value) {
-        this._batchTable.setProperty(this._batchId, name, value);
+        this._content.batchTable.setProperty(this._batchId, name, value);
 
         // PERFORMANCE_IDEA: Probably overkill, but maybe only mark the tile dirty if the
         // property is in one of the style's expressions or - if it can be done quickly -
@@ -212,7 +226,7 @@ define([
      * @private
      */
     Cesium3DTileFeature.prototype.isExactClass = function(className) {
-        return this._batchTable.isExactClass(this._batchId, className);
+        return this._content.batchTable.isExactClass(this._batchId, className);
     };
 
     /**
@@ -227,7 +241,7 @@ define([
      * @private
      */
     Cesium3DTileFeature.prototype.isClass = function(className) {
-        return this._batchTable.isClass(this._batchId, className);
+        return this._content.batchTable.isClass(this._batchId, className);
     };
 
     /**
@@ -241,7 +255,7 @@ define([
      * @private
      */
     Cesium3DTileFeature.prototype.getExactClassName = function() {
-        return this._batchTable.getExactClassName(this._batchId);
+        return this._content.batchTable.getExactClassName(this._batchId);
     };
 
     return Cesium3DTileFeature;

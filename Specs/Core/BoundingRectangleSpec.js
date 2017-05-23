@@ -111,7 +111,7 @@ defineSuite([
         expect(rectangle.height).toEqual(0.0);
     });
 
-    it('create a bounding rectangle from an rectangle', function() {
+    it('create a bounding rectangle from a rectangle', function() {
         var rectangle = Rectangle.MAX_VALUE;
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingRectangle(rectangle.west, rectangle.south, rectangle.east - rectangle.west, rectangle.north - rectangle.south);

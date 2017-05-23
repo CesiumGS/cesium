@@ -220,6 +220,7 @@ define([
         Cartesian3.subtract(normal, position, normal);
         Cartesian3.normalize(normal, normal);
         Cartesian3.cross(normal, up, normal);
+        Cartesian3.normalize(normal, normal);
 
         var plane = planes[0];
         if (!defined(plane)) {
@@ -234,8 +235,8 @@ define([
         Cartesian3.multiplyByScalar(right, r, normal);
         Cartesian3.add(nearCenter, normal, normal);
         Cartesian3.subtract(normal, position, normal);
-        Cartesian3.normalize(normal, normal);
         Cartesian3.cross(up, normal, normal);
+        Cartesian3.normalize(normal, normal);
 
         plane = planes[1];
         if (!defined(plane)) {
@@ -250,8 +251,8 @@ define([
         Cartesian3.multiplyByScalar(up, b, normal);
         Cartesian3.add(nearCenter, normal, normal);
         Cartesian3.subtract(normal, position, normal);
-        Cartesian3.normalize(normal, normal);
         Cartesian3.cross(right, normal, normal);
+        Cartesian3.normalize(normal, normal);
 
         plane = planes[2];
         if (!defined(plane)) {
@@ -266,8 +267,8 @@ define([
         Cartesian3.multiplyByScalar(up, t, normal);
         Cartesian3.add(nearCenter, normal, normal);
         Cartesian3.subtract(normal, position, normal);
-        Cartesian3.normalize(normal, normal);
         Cartesian3.cross(normal, right, normal);
+        Cartesian3.normalize(normal, normal);
 
         plane = planes[3];
         if (!defined(plane)) {

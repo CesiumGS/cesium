@@ -5,7 +5,7 @@ define([
         defined) {
     'use strict';
 
-    var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+    var dataUriRegex = /^data:/i;
 
     /**
      * Determines if the specified uri is a data uri.

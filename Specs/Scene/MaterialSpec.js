@@ -7,10 +7,8 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/loadImage',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Renderer/Texture',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
@@ -24,10 +22,8 @@ defineSuite([
         defined,
         Ellipsoid,
         GeometryInstance,
-        loadImage,
         Rectangle,
         RectangleGeometry,
-        Texture,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
@@ -200,6 +196,10 @@ defineSuite([
 
     it('draws PolylineArrow built-in material', function() {
         verifyPolylineMaterial('PolylineArrow');
+    });
+
+    it('draws PolylineDash built-in material', function() {
+        verifyPolylineMaterial('PolylineDash');
     });
 
     it('draws PolylineGlow built-in material', function() {

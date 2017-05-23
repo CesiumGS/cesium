@@ -15,7 +15,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-   * [Running Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
+   * [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -164,11 +164,11 @@ When one or more tests fail, output looks like this:
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
-It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, Edge, IE, and Safari.
 
 #### Run Tests with a Specific Browser or Browsers
 
-`npm run test -- --browsers Firefox,Chrome`
+`npm run test -- --browsers Firefox,Chrome,Edge`
 
 #### Run All Tests with WebGL Validation
 

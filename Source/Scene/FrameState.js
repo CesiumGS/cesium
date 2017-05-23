@@ -133,7 +133,14 @@ define([
              * @type {Boolean}
              * @default false
              */
-            pick : false
+            pick : false,
+
+            /**
+             * <code>true</code> if the primitive should update for a depth only pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            depth : false
         };
 
         /**
@@ -194,11 +201,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        *
-        * @type {Number}
-        * @default 1.0
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
@@ -211,7 +217,7 @@ define([
             /**
              * All shadow maps that are enabled this frame.
              */
-             shadowMaps : [],
+            shadowMaps : [],
 
             /**
              * Shadow maps that originate from light sources. Does not include shadow maps that are used for
@@ -264,11 +270,22 @@ define([
          * @default []
          */
         this.frustumSplits = [];
-    }
 
-    FrameState.prototype.addCommand = function(command) {
-        this.commandList.push(command);
-    };
+        /**
+         * The current scene background color
+         *
+         * @type {Color}
+         */
+        this.backgroundColor = undefined;
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied.
+         * @type {Number}
+         */
+        this.minimumDisableDepthTestDistance = undefined;
+    }
 
     /**
      * A function that will be called at the end of the frame.

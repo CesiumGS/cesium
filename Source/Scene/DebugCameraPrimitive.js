@@ -121,10 +121,8 @@ define([
         }
 
         if (!defined(this._outlinePrimitive)) {
-            var view = this._camera.viewMatrix;
-            var projection = this._camera.frustum.projectionMatrix;
-            var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
-            var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
+            var camera = this._camera;
+            var frustum = camera.frustum;
 
             var frustumSplits = frameState.frustumSplits;
             var numFrustums = frustumSplits.length - 1;
@@ -135,20 +133,59 @@ define([
                 numFrustums = 1;
             }
 
+            var view = this._camera.viewMatrix;
+            var inverseView;
+            var inverseViewProjection;
+            if (defined(camera.frustum.fovy)) {
+                var projection = this._camera.frustum.projectionMatrix;
+                var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
+                inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
+            } else {
+                inverseView = Matrix4.inverseTransformation(view, scratchMatrix);
+            }
+
+
             var positions = new Float64Array(3 * 4 * (numFrustums + 1));
             var f;
             for (f = 0; f < numFrustums + 1; ++f) {
                 for (var i = 0; i < 4; ++i) {
                     var corner = Cartesian4.clone(frustumCornersNDC[i], scratchFrustumCorners[i]);
 
-                    Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
-                    Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
-                    Cartesian3.subtract(corner, this._camera.positionWC, corner);
-                    Cartesian3.normalize(corner, corner);
+                    var worldCoords;
+                    if (!defined(inverseViewProjection)) {
+                        if (defined(frustum._offCenterFrustum)) {
+                            frustum = frustum._offCenterFrustum;
+                        }
 
-                    var fac = Cartesian3.dot(this._camera.directionWC, corner);
-                    Cartesian3.multiplyByScalar(corner, frustumSplits[f] / fac, corner);
-                    Cartesian3.add(corner, this._camera.positionWC, corner);
+                        var near;
+                        var far;
+                        if (f === numFrustums) {
+                            near = frustumSplits[f - 1];
+                            far = frustumSplits[f];
+                        } else {
+                            near = frustumSplits[f];
+                            far = frustumSplits[f + 1];
+                        }
+                        corner.x = (corner.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;
+                        corner.y = (corner.y * (frustum.top - frustum.bottom) + frustum.bottom + frustum.top) * 0.5;
+                        corner.z = (corner.z * (near - far) - near - far) * 0.5;
+                        corner.w = 1.0;
+
+                        worldCoords = Matrix4.multiplyByVector(inverseView, corner, corner);
+                    } else {
+                        corner = Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
+
+                        // Reverse perspective divide
+                        var w = 1.0 / corner.w;
+                        Cartesian3.multiplyByScalar(corner, w, corner);
+
+                        Cartesian3.subtract(corner, this._camera.positionWC, corner);
+                        Cartesian3.normalize(corner, corner);
+
+                        var fac = Cartesian3.dot(this._camera.directionWC, corner);
+                        Cartesian3.multiplyByScalar(corner, frustumSplits[f] / fac, corner);
+                        Cartesian3.add(corner, this._camera.positionWC, corner);
+                    }
 
                     positions[12 * f + i * 3] = corner.x;
                     positions[12 * f + i * 3 + 1] = corner.y;

@@ -6,11 +6,11 @@ defineSuite([
         'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
         'Core/Intersect',
         'Core/Math',
         'Core/Plane',
         'Core/Rectangle',
-        'Scene/Cesium3DTile',
         'Scene/SceneMode',
         'Specs/createFrameState'
     ], function(
@@ -20,11 +20,11 @@ defineSuite([
         Cartographic,
         Color,
         Ellipsoid,
+        GeographicTilingScheme,
         Intersect,
         CesiumMath,
         Plane,
         Rectangle,
-        Cesium3DTile,
         SceneMode,
         createFrameState) {
     'use strict';
@@ -118,6 +118,48 @@ defineSuite([
         var northeastPosition = Cartesian3.fromRadians(east, north);
         expectedDistance = Cartesian3.distance(camera.position, northeastPosition);
         expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, CesiumMath.EPSILON1);
+    });
+
+    it('distanceToCamera close to south plane at the northern hemisphere', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var tilingScheme = new GeographicTilingScheme({ellipsoid : ellipsoid});
+
+        // Tile on the northern hemisphere
+        var rectangle = tilingScheme.tileXYToRectangle(5, 0, 2);
+        var cameraPositionCartographic = new Cartographic((rectangle.west + rectangle.east) * 0.5, rectangle.south, 0.0);
+
+        cameraPositionCartographic.south -= CesiumMath.EPSILON8;
+
+        var tile = new TileBoundingRegion({
+            rectangle : rectangle,
+            minimumHeight : 0.0,
+            maximumHeight : 10.0
+        });
+
+
+        camera.position = ellipsoid.cartographicToCartesian(cameraPositionCartographic, new Cartesian3());
+        expect(tile.distanceToCamera(frameState)).toBeLessThan(CesiumMath.EPSILON8 * ellipsoid.maximumRadius);
+    });
+
+    it('distanceToCamera close to north plane at the southern hemisphere', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var tilingScheme = new GeographicTilingScheme({ellipsoid : ellipsoid});
+
+        // Tile on the southern hemisphere
+        var rectangle = tilingScheme.tileXYToRectangle(4, 3, 2);
+        var cameraPositionCartographic = new Cartographic((rectangle.west + rectangle.east) * 0.5, rectangle.north, 0.0);
+
+        cameraPositionCartographic.north += CesiumMath.EPSILON8;
+
+        var tile = new TileBoundingRegion({
+            rectangle : rectangle,
+            minimumHeight : 0.0,
+            maximumHeight : 10.0
+        });
+
+
+        camera.position = ellipsoid.cartographicToCartesian(cameraPositionCartographic, new Cartesian3());
+        expect(tile.distanceToCamera(frameState)).toBeLessThan(CesiumMath.EPSILON8 * ellipsoid.maximumRadius);
     });
 
     it('distanceToCamera in 2D', function() {

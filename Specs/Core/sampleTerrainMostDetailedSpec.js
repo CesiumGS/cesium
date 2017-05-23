@@ -2,21 +2,15 @@
 defineSuite([
         'Core/sampleTerrainMostDetailed',
         'Core/Cartographic',
-        'Core/CesiumTerrainProvider',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'ThirdParty/when'
+        'Core/CesiumTerrainProvider'
     ], function(
         sampleTerrainMostDetailed,
         Cartographic,
-        CesiumTerrainProvider,
-        GeographicTilingScheme,
-        Rectangle,
-        when) {
+        CesiumTerrainProvider) {
     "use strict";
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : '//assets.agi.com/stk-terrain/world'
+        url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
     });
 
     it('queries heights', function() {
@@ -82,7 +76,7 @@ defineSuite([
 
     it('works for a dodgy point right near the edge of a tile', function() {
         var stkWorldTerrain = new CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world'
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
         });
 
         var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];

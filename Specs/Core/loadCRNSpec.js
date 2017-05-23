@@ -2,13 +2,11 @@
 defineSuite([
     'Core/loadCRN',
     'Core/PixelFormat',
-    'Core/RequestErrorEvent',
-    'Core/RuntimeError'
+    'Core/RequestErrorEvent'
 ], function(
     loadCRN,
     PixelFormat,
-    RequestErrorEvent,
-    RuntimeError) {
+    RequestErrorEvent) {
     'use strict';
 
     var validCompressed = new Uint8Array([72, 120, 0, 74, 227, 123, 0, 0, 0, 138, 92, 167, 0, 4, 0, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 22, 0, 1, 0, 0, 96, 0, 0, 12, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 108, 0, 0, 0, 137, 0, 10, 96, 0, 0, 0, 0, 0, 0, 16, 4, 9, 130, 0, 0, 0, 0, 0, 0, 109, 4, 0, 0, 198, 96, 128, 0, 0, 0, 0, 0, 26, 80, 0, 0, 6, 96, 0, 0, 0, 0, 0, 0, 16, 0, 51, 0, 0, 0, 0, 0, 0, 0, 128, 1, 152, 0, 0, 0, 0, 0, 0, 4, 0]);

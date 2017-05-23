@@ -10,8 +10,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -23,8 +22,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
-        when,
-        Cesium3DTileContentState) {
+        when) {
     'use strict';
 
     /**
@@ -37,21 +35,14 @@ define([
      *
      * @private
      */
-    function Composite3DTileContent(tileset, tile, url, factory) {
-        this._url = url;
+    function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
         this._contents = [];
-        this._factory = factory;
-
-        /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
-         */
-        this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTable = undefined;
-
-        this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
+
+        initialize(this, arrayBuffer, byteOffset, factory);
     }
 
     defineProperties(Composite3DTileContent.prototype, {
@@ -90,6 +81,56 @@ define([
         },
 
         /**
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>pointsLength</code> for a tile in the composite.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a tile in the composite.
+         */
+        trianglesLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>vertexMemorySizeInBytes</code> for a tile in the composite.
+         */
+        vertexMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.   <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>textureMemorySizeInBytes</code> for a tile in the composite.
+         */
+        textureMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
+         * always returns <code>0</code>.  Instead call <code>batchTableMemorySizeInBytes</code> for a tile in the composite.
+         */
+        batchTableMemorySizeInBytes : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content of the composite's inner tiles, which can also be composites.
          */
@@ -102,21 +143,103 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
+        readyPromise : {
             get : function() {
-                return this._contentReadyToProcessPromise.promise;
+                return this._readyPromise.promise;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        readyPromise : {
+        tileset : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
+         * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a tile in the composite.
+         */
+        batchTable : {
+            get : function() {
+                return undefined;
             }
         }
     });
+
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+
+    function initialize(content, arrayBuffer, byteOffset, factory) {
+        byteOffset = defaultValue(byteOffset, 0);
+
+        var uint8Array = new Uint8Array(arrayBuffer);
+        var view = new DataView(arrayBuffer);
+        byteOffset += sizeOfUint32;  // Skip magic
+
+        //>>includeStart('debug', pragmas.debug);
+        var version = view.getUint32(byteOffset, true);
+        if (version !== 1) {
+            throw new DeveloperError('Only Composite Tile version 1 is supported. Version ' + version + ' is not.');
+        }
+        //>>includeEnd('debug');
+        byteOffset += sizeOfUint32;
+
+        // Skip byteLength
+        byteOffset += sizeOfUint32;
+
+        var tilesLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        var contentPromises = [];
+
+        for (var i = 0; i < tilesLength; ++i) {
+            var tileType = getMagic(uint8Array, byteOffset);
+
+            // Tile byte length is stored after magic and version
+            var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
+
+            var contentFactory = factory[tileType];
+
+            if (defined(contentFactory)) {
+                var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
+                content._contents.push(innerContent);
+                contentPromises.push(innerContent.readyPromise);
+            }
+            //>>includeStart('debug', pragmas.debug);
+            else {
+                throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
+            }
+            //>>includeEnd('debug');
+
+            byteOffset += tileByteLength;
+        }
+
+        when.all(contentPromises).then(function() {
+            content._readyPromise.resolve(content);
+        }).otherwise(function(error) {
+            content._readyPromise.reject(error);
+        });
+    }
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
@@ -134,106 +257,6 @@ define([
         return undefined;
     };
 
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Composite3DTileContent.prototype.request = function() {
-        var that = this;
-
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Composite3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
-        byteOffset = defaultValue(byteOffset, 0);
-
-        var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'cmpt') {
-            throw new DeveloperError('Invalid Composite Tile. Expected magic=cmpt. Read magic=' + magic);
-        }
-
-        var view = new DataView(arrayBuffer);
-
-        byteOffset += sizeOfUint32;  // Skip magic number
-
-        //>>includeStart('debug', pragmas.debug);
-        var version = view.getUint32(byteOffset, true);
-        if (version !== 1) {
-            throw new DeveloperError('Only Composite Tile version 1 is supported. Version ' + version + ' is not.');
-        }
-        //>>includeEnd('debug');
-        byteOffset += sizeOfUint32;
-
-        // Skip byteLength
-        byteOffset += sizeOfUint32;
-
-        var tilesLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
-        var contentPromises = [];
-
-        for (var i = 0; i < tilesLength; ++i) {
-            var tileType = getMagic(uint8Array, byteOffset);
-
-            // Tile byte length is stored after magic and version
-            var tileByteLength = view.getUint32(byteOffset + sizeOfUint32 * 2, true);
-
-            var contentFactory = this._factory[tileType];
-
-            if (defined(contentFactory)) {
-                var content = contentFactory(this._tileset, this._tile, this._url);
-                content.initialize(arrayBuffer, byteOffset);
-                this._contents.push(content);
-                contentPromises.push(content.readyPromise);
-            } else {
-                throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
-            }
-
-            byteOffset += tileByteLength;
-        }
-
-        var that = this;
-
-        when.all(contentPromises).then(function() {
-            that.state = Cesium3DTileContentState.READY;
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-    };
-
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -248,11 +271,22 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
+    Composite3DTileContent.prototype.applyStyle = function(frameState, style) {
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            contents[i].update(tileset, context, frameState, commandList);
+            contents[i].applyStyle(frameState, style);
+        }
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Composite3DTileContent.prototype.update = function(tileset, frameState) {
+        var contents = this._contents;
+        var length = contents.length;
+        for (var i = 0; i < length; ++i) {
+            contents[i].update(tileset, frameState);
         }
     };
 

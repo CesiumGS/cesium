@@ -81,6 +81,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
+                    'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
@@ -327,7 +328,7 @@ gulp.task('deploy-s3', function(done) {
         return;
     }
 
-    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+    var argv = yargs.usage('Usage: deploy-s3 -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
@@ -571,7 +572,8 @@ function listAll(s3, bucketName, prefix, files, marker) {
 gulp.task('deploy-set-version', function() {
     var version = yargs.argv.version;
     if (version) {
-        packageJson.version += '-' + version;
+        // NPM versions can only contain alphanumeric and hyphen characters
+        packageJson.version += '-' + version.replace(/[^[0-9A-Za-z-]/g, '');
         fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
     }
 });
@@ -957,7 +959,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 // we still are using from the set, then delete any files remaining in the set.
     var leftOverJsFiles = {};
 
-    globby.sync(['Source/Shaders/**/*.js']).forEach(function(file) {
+    globby.sync(['Source/Shaders/**/*.js', 'Source/ThirdParty/Shaders/*.js']).forEach(function(file) {
         leftOverJsFiles[path.normalize(file)] = true;
     });
 
@@ -965,7 +967,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
     var builtinConstants = [];
     var builtinStructs = [];
 
-    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl']);
+    var glslFiles = globby.sync(['Source/Shaders/**/*.glsl', 'Source/ThirdParty/Shaders/*.glsl']);
     glslFiles.forEach(function(glslFile) {
         glslFile = path.normalize(glslFile);
         var baseName = path.basename(glslFile, '.glsl');

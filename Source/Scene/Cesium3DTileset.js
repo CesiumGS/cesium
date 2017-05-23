@@ -2,7 +2,9 @@
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/Color',
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,26 +12,39 @@ define([
         '../Core/DeveloperError',
         '../Core/DoublyLinkedList',
         '../Core/Event',
+        '../Core/freezeObject',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
+        '../Core/Heap',
         '../Core/Intersect',
         '../Core/isDataUri',
         '../Core/joinUrls',
         '../Core/JulianDate',
         '../Core/loadJson',
+        '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Renderer/ClearCommand',
+        '../Renderer/Pass',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './Axis',
         './Cesium3DTile',
+        './Cesium3DTileChildrenVisibility',
         './Cesium3DTileColorBlendMode',
+        './Cesium3DTileOptimizations',
+        './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetStatistics',
+        './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
+        './LabelCollection',
+        './OrthographicFrustum',
         './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
@@ -38,7 +53,9 @@ define([
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         Color,
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -46,26 +63,39 @@ define([
         DeveloperError,
         DoublyLinkedList,
         Event,
+        freezeObject,
         getBaseUri,
         getExtensionFromUri,
+        Heap,
         Intersect,
         isDataUri,
         joinUrls,
         JulianDate,
         loadJson,
+        ManagedArray,
         CesiumMath,
         Matrix4,
         Request,
         RequestScheduler,
         RequestType,
+        ClearCommand,
+        Pass,
         Uri,
         when,
+        Axis,
         Cesium3DTile,
+        Cesium3DTileChildrenVisibility,
         Cesium3DTileColorBlendMode,
+        Cesium3DTileOptimizations,
+        Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
+        Cesium3DTilesetStatistics,
+        Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
+        LabelCollection,
+        OrthographicFrustum,
         SceneMode,
         ShadowMode,
         TileBoundingRegion,
@@ -85,20 +115,30 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
-     * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
+     * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
+     * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
-     * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
+     * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
+     * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
+     * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and vertex memory in megabytes used by each tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
+     * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
+     * @param {Number} [options.baseScreenSpaceError=1024] The screen-space error that must be reached before skipping LODs
+     * @param {Number} [options.skipScreenSpaceErrorFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
+     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipScreenSpaceErrorFactor to determine which tiles to load.
+     * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
+     * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail. When true, the siblings of any visible and downloaded tile are downloaded as well.
+     *
+     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -113,9 +153,7 @@ define([
         var url = options.url;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.typeOf.string('options.url', url);
         //>>includeEnd('debug');
 
         var tilesetUrl;
@@ -123,7 +161,7 @@ define([
 
         if (getExtensionFromUri(url) === 'json') {
             tilesetUrl = url;
-            baseUrl = getBaseUri(url);
+            baseUrl = getBaseUri(url, true);
         } else if (isDataUri(url)) {
             tilesetUrl = url;
             baseUrl = '';
@@ -139,8 +177,10 @@ define([
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
+        this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._desiredTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
@@ -153,7 +193,35 @@ define([
         this._replacementSentinel  = replacementList.add();
         this._trimTiles = false;
 
-        this._refineToVisible = defaultValue(options.refineToVisible, false);
+        this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
+
+        this._requestHeaps = {};
+        this._hasMixedContent = false;
+
+        this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
+        this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
+            selectionHeuristic: selectionHeuristic
+        });
+
+        this._backfaceCommands = new ManagedArray();
+
+        this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
+        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
+        this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
+
+        this._styleEngine = new Cesium3DTileStyleEngine();
+
+        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
+
+        this._statistics = new Cesium3DTilesetStatistics();
+        this._statisticsLastColor = new Cesium3DTilesetStatistics();
+        this._statisticsLastPick = new Cesium3DTilesetStatistics();
+
+        this._tilesLoaded = false;
+
+        this._tileDebugLabels = undefined;
+
+        this._readyPromise = when.defer();
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
@@ -230,10 +298,6 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-        this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
-        this._styleEngine = new Cesium3DTileStyleEngine();
-
         /**
          * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
          * the original feature, e.g. glTF material or per-point color in the tile.
@@ -253,52 +317,6 @@ define([
          */
         this.colorBlendAmount = 0.5;
 
-        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * Determines if rendering statistics are output to the console.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
-        this._debugShowStatistics = false;
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * Determines if rendering statistics for picking are output to the console.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowPickStatistics = defaultValue(options.debugShowPickStatistics, false);
-        this._debugShowPickStatistics = false;
-
-        this._statistics = {
-            // Rendering stats
-            visited : 0,
-            numberOfCommands : 0,
-            // Loading stats
-            numberOfAttemptedRequests : 0,
-            numberOfPendingRequests : 0,
-            numberProcessing : 0,
-            numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
-            numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
-            // Styling stats
-            numberOfTilesStyled : 0,
-            numberOfFeaturesStyled : 0,
-
-            lastColor : new Cesium3DTilesetStatistics(),
-            lastPick : new Cesium3DTilesetStatistics()
-        };
-
-        this._tilesLoaded = false;
-
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -311,14 +329,12 @@ define([
          * @default false
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
-        this._debugFreezeFrame = this.debugFreezeFrame;
-        this._debugCameraFrustum = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * When true, assigns a random color to each tile.  This is useful for visualizing
-         * what models belong to what tiles, espeically with additive refinement where models
+         * what models belong to what tiles, especially with additive refinement where models
          * from parent tiles may be interleaved with models from child tiles.
          * </p>
          *
@@ -330,7 +346,7 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders each tile's content as a wireframe
+         * When true, renders each tile's content as a wireframe.
          * </p>
          *
          * @type {Boolean}
@@ -341,9 +357,9 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders the bounding volume for each tile.  The bounding volume is
+         * When true, renders the bounding volume for each visible tile.  The bounding volume is
          * white if the tile's content has an explicit bounding volume; otherwise, it
-         * is red.
+         * is red.  Tiles that are not at final resolution are yellow.
          * </p>
          *
          * @type {Boolean}
@@ -372,6 +388,39 @@ define([
          * @default false
          */
         this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the geometric error of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of commands, points, triangles and features of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowRenderingStatistics = defaultValue(options.debugShowRenderingStatistics, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the vertex and texture memory usage of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -420,7 +469,7 @@ define([
         this.allTilesLoaded = new Event();
 
         /**
-         * The event fired to indicate that a tile's content was unloaded from the cache.
+         * The event fired to indicate that a tile's content was unloaded.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
          * </p>
@@ -438,7 +487,7 @@ define([
          *     console.log('A tile was unloaded from the cache.');
          * });
          *
-         * @see Cesium3DTileset#maximumNumberOfLoadedTiles
+         * @see Cesium3DTileset#maximumMemoryUsage
          * @see Cesium3DTileset#trimLoadedTiles
          */
         this.tileUnload = new Event();
@@ -467,32 +516,79 @@ define([
          */
         this.tileVisible = new Event();
 
-        this._readyPromise = when.defer();
+        /**
+         * Determines if level-of-detail skipping optimization should be used.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.skipLODs = defaultValue(options.skipLODs, true);
+
+        /**
+         * Multiplier defining the minimum screen space error to skip.
+         * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
+         * are leaves or have a screen space error <= 100 / skipSSEFactor.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 10
+         */
+        this.skipScreenSpaceErrorFactor = defaultValue(options.skipScreenSpaceErrorFactor, 10);
+
+        /**
+         * Constant defining the minimum number of levels skip. When it is 0, no levels are skipped.
+         * For example, if a tile is level 1, no tiles will be loaded unless they
+         * are at level greater than 2.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Number}
+         * @default 1
+         */
+        this.skipLevels = defaultValue(options.skipLevels, 1);
+
+        /**
+         * When true, only tiles that meet the maximum screen space error will ever be downloaded.
+         * Skipping factors are ignored and just the desired tiles are loaded.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.immediatelyLoadDesiredLOD = defaultValue(options.immediatelyLoadDesiredLOD, false);
+
+        /**
+         * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
+         * When true, the siblings of any visible and downloaded tile are downloaded as well.
+         * This may be useful for ensuring that tiles are already available when the viewer turns left/right.
+         *
+         * Only used when tileset.skipLODs === true.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         var that = this;
-        this.loadTileset(tilesetUrl).then(function(data) {
-            var tilesetJson = data.tilesetJson;
+
+        // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
+        RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            that._root = that.loadTileset(tilesetUrl, tilesetJson);
+
+            var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
             that._geometricError = tilesetJson.geometricError;
-            that._root = data.root;
+            that._gltfUpAxis = gltfUpAxis;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that._readyPromise.reject(error);
         });
-    }
-
-    function Cesium3DTilesetStatistics() {
-        this.selected = 0;
-        this.visited = 0;
-        this.numberOfCommands = 0;
-        this.numberOfAttemptedRequests = 0;
-        this.numberOfPendingRequests = 0;
-        this.numberProcessing = 0;
-        this.numberContentReady = 0;
-        this.numberTotal = 0;
-        this.numberOfTilesStyled = 0;
-        this.numberOfFeaturesStyled = 0;
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -714,9 +810,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
-                    throw new DeveloperError('maximumScreenSpaceError must be greater than or equal to zero');
-                }
+                Check.typeOf.number.greaterThanOrEquals('maximumScreenSpaceError', value, 0);
                 //>>includeEnd('debug');
 
                 this._maximumScreenSpaceError = value;
@@ -724,38 +818,38 @@ define([
         },
 
         /**
-         * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
+         * The maximum amount of memory in MB that can be used by the tileset.
+         * Tiles not in view are unloaded to enforce this.
          * <p>
          * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
          * </p>
          * <p>
-         * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
+         * If tiles sized more than <code>maximumMemoryUsage</code> are needed
          * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-         * for the current view than the number of tiles loaded will exceed
-         * <code>maximumNumberOfLoadedTiles</code>.  For example, if the maximum is 128 tiles, but
-         * 150 tiles are needed to meet the screen-space error, then 150 tiles may be loaded.  When
+         * for the current view, then the memory usage of the tiles loaded will exceed
+         * <code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but
+         * 300 MB of tiles are needed to meet the screen-space error, then 300 MB of tiles may be loaded.  When
          * these tiles go out of view, they will be unloaded.
          * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
-         * @default 256
+         * @default 512
          *
-         * @exception {DeveloperError} <code>maximumNumberOfLoadedTiles</code> must be greater than or equal to zero.
+         * @exception {DeveloperError} <code>maximumMemoryUsage</code> must be greater than or equal to zero.
+         * @see Cesium3DTileset#totalMemoryUsageInBytes
          */
-        maximumNumberOfLoadedTiles : {
+        maximumMemoryUsage : {
             get : function() {
-                return this._maximumNumberOfLoadedTiles;
+                return this._maximumMemoryUsage;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
-                    throw new DeveloperError('maximumNumberOfLoadedTiles must be greater than or equal to zero');
-                }
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0);
                 //>>includeEnd('debug');
 
-                this._maximumNumberOfLoadedTiles = value;
+                this._maximumMemoryUsage = value;
             }
         },
 
@@ -806,6 +900,8 @@ define([
         /**
          * A 4x4 transformation matrix that transforms the tileset's root tile.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
          */
@@ -826,11 +922,30 @@ define([
         /**
          * Returns the time, in seconds, since the tileset was loaded and first updated.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Number}
          */
         timeSinceLoad : {
             get : function() {
                 return this._timeSinceLoad;
+            }
+        },
+
+        /**
+         * Returns the total amount of memory used in bytes by the tileset.
+         * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
+         * of the loaded tiles in the tileset.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Number}
+         * @see Cesium3DTileset#maximumMemoryUsage
+         */
+        totalMemoryUsageInBytes : {
+            get : function() {
+                var statistics = this._statistics;
+                return statistics.textureMemorySizeInBytes + statistics.vertexMemorySizeInBytes + statistics.batchTableMemorySizeInBytes;
             }
         },
 
@@ -841,13 +956,21 @@ define([
             get : function() {
                 return this._styleEngine;
             }
+        },
+
+        /**
+         * @private
+         */
+        statistics : {
+            get : function() {
+                return this._statistics;
+            }
         }
     });
 
     /**
      * Marks the tileset's {@link Cesium3DTileset#style} as dirty, which forces all
-     * features to re-evaluate the style in the next frame each is visible.  Call
-     * this when a style changes.
+     * features to re-evaluate the style in the next frame each is visible.
      */
     Cesium3DTileset.prototype.makeStyleDirty = function() {
         this._styleEngine.makeDirty();
@@ -858,120 +981,86 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
-        var that = this;
+    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
+            throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+        }
+        //>>includeEnd('debug');
 
-        // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
-        return RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
+        var statistics = this._statistics;
 
-            if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
-                throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
-            }
-
-            var stats = that._statistics;
-
-            // Append the version to the baseUrl
+        // Append the version to the baseUrl
+        var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
+        if (!hasVersionQuery) {
             var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
-            that._baseUrl = joinUrls(that._baseUrl, versionQuery);
-
-            // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
-            // Get the baseUrl relative to the external tileset.
-            var baseUrl = getBaseUri(tilesetUrl, true);
-            baseUrl = joinUrls(baseUrl, versionQuery);
-            var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
-
-            var refiningTiles = [];
-
-            // If there is a parentTile, add the root of the currently loading tileset
-            // to parentTile's children, and increment its numberOfChildrenWithoutContent
-            if (defined(parentTile)) {
-                parentTile.children.push(rootTile);
-                ++parentTile.numberOfChildrenWithoutContent;
-
-                // When an external tileset is loaded, its ancestor needs to recheck its refinement
-                var ancestor = getAncestorWithContent(parentTile);
-                if (defined(ancestor) && (ancestor.refine === Cesium3DTileRefine.REPLACE)) {
-                    refiningTiles.push(ancestor);
-                }
-            }
-
-            ++stats.numberTotal;
-
-            var stack = [];
-            stack.push({
-                header : tilesetJson.root,
-                cesium3DTile : rootTile
-            });
-
-            while (stack.length > 0) {
-                var t = stack.pop();
-                var tile3D = t.cesium3DTile;
-                var children = t.header.children;
-                var hasEmptyChild = false;
-                if (defined(children)) {
-                    var length = children.length;
-                    for (var k = 0; k < length; ++k) {
-                        var childHeader = children[k];
-                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, tile3D);
-                        tile3D.children.push(childTile);
-                        ++stats.numberTotal;
-                        stack.push({
-                            header : childHeader,
-                            cesium3DTile : childTile
-                        });
-                        if (!childTile.hasContent) {
-                            hasEmptyChild = true;
-                        }
-                    }
-                }
-                if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
-                    // Tiles that use replacement refinement and have empty child tiles need to keep track of
-                    // descendants with content in order to refine correctly.
-                    refiningTiles.push(tile3D);
-                }
-            }
-
-            prepareRefiningTiles(refiningTiles);
-
-            return {
-                tilesetJson : tilesetJson,
-                root : rootTile
-            };
-        });
-    };
-
-    function getAncestorWithContent(ancestor) {
-        while(defined(ancestor) && !ancestor.hasContent) {
-            ancestor = ancestor.parent;
+            this._baseUrl = joinUrls(this._baseUrl, versionQuery);
+            tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
         }
-        return ancestor;
-    }
 
-    function prepareRefiningTiles(refiningTiles) {
+        // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+        // Get the baseUrl relative to the external tileset.
+        var baseUrl = getBaseUri(tilesetUrl, true);
+        var rootTile = new Cesium3DTile(this, baseUrl, tilesetJson.root, parentTile);
+
+        // If there is a parentTile, add the root of the currently loading tileset
+        // to parentTile's children, and update its _depth.
+        if (defined(parentTile)) {
+            parentTile.children.push(rootTile);
+            rootTile._depth = parentTile._depth + 1;
+        }
+
+        ++statistics.numberTotal;
+
         var stack = [];
-        var length = refiningTiles.length;
-        for (var i = 0; i < length; ++i) {
-            var refiningTile = refiningTiles[i];
-            refiningTile.descendantsWithContent = [];
-            stack.push(refiningTile);
-            while (stack.length > 0) {
-                var tile = stack.pop();
-                var children = tile.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var childTile = children[k];
-                    if (childTile.hasContent) {
-                        refiningTile.descendantsWithContent.push(childTile);
-                    } else {
-                        stack.push(childTile);
-                    }
+        stack.push({
+            header : tilesetJson.root,
+            tile3D : rootTile
+        });
+
+        while (stack.length > 0) {
+            var tile = stack.pop();
+            var tile3D = tile.tile3D;
+            var children = tile.header.children;
+            if (defined(children)) {
+                var length = children.length;
+                for (var i = 0; i < length; ++i) {
+                    var childHeader = children[i];
+                    var childTile = new Cesium3DTile(this, baseUrl, childHeader, tile3D);
+                    tile3D.children.push(childTile);
+                    childTile._depth = tile3D._depth + 1;
+                    ++statistics.numberTotal;
+                    stack.push({
+                        header : childHeader,
+                        tile3D : childTile
+                    });
                 }
             }
+
+            if (this._cullWithChildrenBounds) {
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D);
+            }
+
+            // Create a load heap, one for each unique server. We can only make limited requests to a given
+            // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
+            // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
+            // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
+            // not matter much as we will try to load them all.
+            // The heap approach is a O(n log k) to find the best tiles for loading.
+            var requestServer = tile3D.requestServer;
+            if (defined(requestServer)) {
+                if (!defined(this._requestHeaps[requestServer])) {
+                    var heap = new Heap(sortForLoad);
+                    this._requestHeaps[requestServer] = heap;
+                    heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
+                    heap.reserve(heap.maximumSize);
+                }
+                tile3D._requestHeap = this._requestHeaps[requestServer];
+            }
         }
-    }
+
+        return rootTile;
+    };
 
     var scratchPositionNormal = new Cartesian3();
     var scratchCartographic = new Cartographic();
@@ -1052,450 +1141,72 @@ define([
         tileset._dynamicScreenSpaceErrorComputedDensity = density;
     }
 
-    function getScreenSpaceError(tileset, geometricError, tile, frameState) {
-        if (geometricError === 0.0) {
-            // Leaf nodes do not have any error so save the computation
-            return 0.0;
-        }
+    function selectionHeuristic(tileset, ancestor, tile) {
+        var skipLevels = tileset.skipLODs ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
 
-        // Avoid divide by zero when viewer is inside the tile
-        var camera = frameState.camera;
-        var context = frameState.context;
-        var height = context.drawingBufferHeight;
-
-        var error;
-        if (frameState.mode === SceneMode.SCENE2D) {
-            var frustum = camera.frustum;
-            var width = context.drawingBufferWidth;
-
-            var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-            error = geometricError / pixelSize;
-        } else {
-            // Avoid divide by zero when viewer is inside the tile
-            var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
-            var sseDenominator = camera.frustum.sseDenominator;
-            error = (geometricError * height) / (distance * sseDenominator);
-
-            if (tileset.dynamicScreenSpaceError) {
-                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-                var factor = tileset.dynamicScreenSpaceErrorFactor;
-                var dynamicError = CesiumMath.fog(distance, density) * factor;
-                error -= dynamicError;
-            }
-        }
-
-        return error;
+        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
+               (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
+               (tile._depth > ancestor._depth + skipLevels);
     }
 
-    function computeDistanceToCamera(children, frameState) {
-        var length = children.length;
-        for (var i = 0; i < length; ++i) {
-            var child = children[i];
-            child.distanceToCamera = child.distanceToTile(frameState);
+    function sortForLoad(a, b) {
+        var distanceDifference = a._distanceToCamera - b._distanceToCamera;
+        if (a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
+            return distanceDifference;
         }
-    }
 
-    function updateTransforms(children, parentTransform) {
-        var length = children.length;
-        for (var i = 0; i < length; ++i) {
-            var child = children[i];
-            child.updateTransform(parentTransform);
-        }
-    }
-
-    // PERFORMANCE_IDEA: is it worth exploiting frame-to-frame coherence in the sort, i.e., the
-    // list of children are probably fully or mostly sorted unless the camera moved significantly?
-    function sortChildrenByDistanceToCamera(a, b) {
-        // Sort by farthest child first since this is going on a stack
-        return b.distanceToCamera - a.distanceToCamera;
+        var screenSpaceErrorDifference = b._screenSpaceError - a._screenSpaceError;
+        return screenSpaceErrorDifference === 0 ? distanceDifference : screenSpaceErrorDifference;
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
-    function isVisible(visibilityPlaneMask) {
-        return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
-    }
 
     function requestContent(tileset, tile, outOfCore) {
         if (!outOfCore) {
             return;
         }
-        if (!tile.canRequestContent()) {
+
+        if (tile.hasEmptyContent) {
             return;
         }
 
-        tile.requestContent();
+        var statistics = tileset._statistics;
+        var expired = tile.contentExpired;
+        var requested = tile.requestContent();
 
-        var stats = tileset._statistics;
-
-        if (!tile.contentUnloaded) {
-            ++stats.numberOfPendingRequests;
-
-            var removeFunction = removeFromProcessingQueue(tileset, tile);
-            tile.content.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
-            tile.content.readyPromise.then(removeFunction).otherwise(removeFunction);
-        } else {
-            ++stats.numberOfAttemptedRequests;
-        }
-    }
-
-    function selectTile(tileset, tile, fullyVisible, frameState) {
-        // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
-        // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.contentReady && (fullyVisible || (tile.contentsVisibility(frameState) !== Intersect.OUTSIDE))) {
-            tileset._selectedTiles.push(tile);
-            tile.selected = true;
-
-            var tileContent = tile.content;
-            if (tileContent.featurePropertiesDirty) {
-                // A feature's property in this tile changed, the tile needs to be re-styled.
-                tileContent.featurePropertiesDirty = false;
-                tile.lastStyleTime = 0; // Force applying the style to this tile
-                tileset._selectedTilesToStyle.push(tile);
-            }  else if ((tile.lastSelectedFrameNumber !== frameState.frameNumber - 1)) {
-                // Tile is newly selected; it is selected this frame, but was not selected last frame.
-                tileset._selectedTilesToStyle.push(tile);
-            }
-            tile.lastSelectedFrameNumber = frameState.frameNumber;
-        }
-    }
-
-    function touch(tileset, tile, outOfCore) {
-        if (!outOfCore) {
-            return;
-        }
-        var node = tile.replacementNode;
-        if (defined(node)) {
-            tileset._replacementList.splice(tileset._replacementSentinel, node);
-        }
-    }
-
-    var scratchStack = [];
-    var scratchRefiningTiles = [];
-
-    function selectTiles(tileset, frameState, outOfCore) {
-        if (tileset.debugFreezeFrame) {
+        if (!requested) {
+            ++statistics.numberOfAttemptedRequests;
             return;
         }
 
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-
-        tileset._selectedTiles.length = 0;
-        tileset._selectedTilesToStyle.length = 0;
-
-        scratchRefiningTiles.length = 0;
-
-        // Move sentinel node to the tail so, at the start of the frame, all tiles
-        // may be potentially replaced.  Tiles are moved to the right of the sentinel
-        // when they are selected so they will not be replaced.
-        var replacementList = tileset._replacementList;
-        replacementList.splice(replacementList.tail, tileset._replacementSentinel);
-
-        var root = tileset._root;
-        root.updateTransform(tileset._modelMatrix);
-
-        if (!root.insideViewerRequestVolume(frameState)) {
-            return;
-        }
-
-        root.distanceToCamera = root.distanceToTile(frameState);
-
-        if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
-            // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
-            return;
-        }
-
-        root.visibilityPlaneMask = root.visibility(frameState, CullingVolume.MASK_INDETERMINATE);
-        if (root.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
-            return;
-        }
-
-        if (root.contentUnloaded) {
-            requestContent(tileset, root, outOfCore);
-            return;
-        }
-
-        var stats = tileset._statistics;
-
-        var stack = scratchStack;
-        stack.push(root);
-        while (stack.length > 0) {
-            // Depth first.  We want the high detail tiles first.
-            var t = stack.pop();
-            t.selected = false;
-            t.replaced = false;
-            ++stats.visited;
-
-            var visibilityPlaneMask = t.visibilityPlaneMask;
-            var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
-
-            touch(tileset, t, outOfCore);
-
-            // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
-            var sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
-            // PERFORMANCE_IDEA: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
-
-            var children = t.children;
-            var childrenLength = children.length;
-            var child;
-            var k;
-            var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
-
-            if (t.hasTilesetContent) {
-                // If tile has tileset content, skip it and process its child instead (the tileset root)
-                // No need to check visibility or sse of the child because its bounding volume
-                // and geometric error are equal to its parent.
-                if (t.contentReady) {
-                    child = t.children[0];
-                    child.visibilityPlaneMask = t.visibilityPlaneMask;
-                    child.distanceToCamera = t.distanceToCamera;
-                    child.updateTransform(t.computedTransform);
-                    if (child.contentUnloaded) {
-                        requestContent(tileset, child, outOfCore);
-                    } else {
-                        stack.push(child);
-                    }
-                }
-                continue;
-            }
-
-            if (additiveRefinement) {
-                // With additive refinement, the tile is rendered
-                // regardless of if its SSE is sufficient.
-                selectTile(tileset, t, fullyVisible, frameState);
-
-                if (sse > maximumScreenSpaceError) {
-                    // Tile does not meet SSE. Refine them in front-to-back order.
-
-                    // Only sort and refine (render or request children) if any
-                    // children are loaded or request slots are available.
-                    var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
-                    if (anyChildrenLoaded || t.canRequestContent()) {
-                        updateTransforms(children, t.computedTransform);
-
-                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                        computeDistanceToCamera(children, frameState);
-
-                        // Sort children by distance for (1) request ordering, and (2) early-z
-                        children.sort(sortChildrenByDistanceToCamera);
-
-                        // With additive refinement, we only request or refine when children are visible
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
-                                // Use parent's geometric error with child's box to see if we already meet the SSE
-                                if (getScreenSpaceError(tileset, t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                    child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                                    if (isVisible(child.visibilityPlaneMask)) {
-                                        if (child.contentUnloaded) {
-                                            requestContent(tileset, child, outOfCore);
-                                        } else {
-                                            stack.push(child);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                // t.refine === Cesium3DTileRefine.REPLACE
-                //
-                // With replacement refinement, if the tile's SSE
-                // is not sufficient, its children (or ancestors) are
-                // rendered instead
-
-                if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
-                    // This tile meets the SSE so add its commands.
-                    // Select tile if it's a leaf (childrenLength === 0)
-                    selectTile(tileset, t, fullyVisible, frameState);
-                } else if (!tileset._refineToVisible) {
-                    // Tile does not meet SSE.
-                    // Refine when all children (visible or not) are loaded.
-
-                    // Only sort children by distance if we are going to refine to them
-                    // or slots are available to request them.  If we are just rendering the
-                    // tile (and can't make child requests because no slots are available)
-                    // then the children do not need to be sorted.
-
-                    var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || t.canRequestContent()) {
-                        updateTransforms(children, t.computedTransform);
-
-                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                        computeDistanceToCamera(children, frameState);
-
-                        // Sort children by distance for (1) request ordering, and (2) early-z
-                        children.sort(sortChildrenByDistanceToCamera);
-                    }
-
-                    if (!allChildrenLoaded) {
-                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(tileset, t, fullyVisible, frameState);
-
-                        if (outOfCore) {
-                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
-                                child = children[k];
-                                // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
-                                if (child.contentUnloaded) {
-                                    requestContent(tileset, child, outOfCore);
-                                } else {
-                                    // Touch loaded child even though it is not selected this frame since
-                                    // we want to keep it in the cache for when all children are loaded
-                                    // and this tile can refine to them.
-                                    touch(tileset, child, outOfCore);
-                                }
-                            }
-                        }
-                    } else {
-                        // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
-                        var anyChildrenVisible = false;
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (child.insideViewerRequestVolume(frameState)) {
-                                child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                            } else {
-                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                            }
-
-                            if (isVisible(child.visibilityPlaneMask)) {
-                                stack.push(child);
-                                anyChildrenVisible = true;
-                            } else {
-                                // Touch the child tile even if it is not visible. Since replacement refinement
-                                // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
-                                touch(tileset, child, outOfCore);
-                            }
-                        }
-
-                        if (anyChildrenVisible) {
-                            t.replaced = true;
-                            if (defined(t.descendantsWithContent)) {
-                                scratchRefiningTiles.push(t);
-                            }
-                        } else {
-                            // Even though the children are all loaded they may not be visible if the camera
-                            // is not inside their request volumes.
-                            selectTile(tileset, t, fullyVisible, frameState);
-                        }
-                    }
-                } else {
-                    // Tile does not meet SSE.
-                    // Refine when all visible children are loaded.
-
-                    // Get visibility for all children. Check if any visible children are not loaded.
-                    // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
-                    var allVisibleChildrenLoaded = true;
-                    var someVisibleChildrenLoaded = false;
-                    for (k = 0; k < childrenLength; ++k) {
-                        child = children[k];
-                        child.updateTransform(t.computedTransform);
-                        if (child.insideViewerRequestVolume(frameState)) {
-                            child.visibilityPlaneMask = child.visibility(frameState, visibilityPlaneMask);
-                        } else {
-                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
-                        }
-                        if (isVisible(child.visibilityPlaneMask)) {
-                            if (child.contentReady) {
-                                someVisibleChildrenLoaded = true;
-                            } else {
-                                allVisibleChildrenLoaded = false;
-                            }
-                        }
-                    }
-
-                    if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
-                        // No children are visible, select this tile
-                        selectTile(tileset, t, fullyVisible, frameState);
-                        continue;
-                    }
-
-                    // Only sort children by distance if we are going to refine to them
-                    // or slots are available to request them.  If we are just rendering the
-                    // tile (and can't make child requests because no slots are available)
-                    // then the children do not need to be sorted.
-
-                    if (someVisibleChildrenLoaded || t.canRequestContent()) {
-                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                        computeDistanceToCamera(children, frameState);
-
-                        // Sort children by distance for (1) request ordering, and (2) early-z
-                        children.sort(sortChildrenByDistanceToCamera);
-                    }
-
-                    if (!allVisibleChildrenLoaded) {
-                        // TODO : render parent against a plane mask of its visible children so there is no overlap,
-                        //        then the refineToVisible flags can be removed.
-
-                        // Tile does not meet SSE.  Add its commands and push its visible children to the stack.
-                        // The parent tile and child tiles will render simultaneously until all visible children
-                        // are ready. This allows the visible children to stay loaded while other children stream in,
-                        // otherwise if only the parent is selected the subtree may be unloaded from the cache.
-                        selectTile(tileset, t, fullyVisible, frameState);
-
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (isVisible(child.visibilityPlaneMask)) {
-                                if (child.contentUnloaded) {
-                                    requestContent(tileset, child, outOfCore);
-                                } else {
-                                    stack.push(child);
-                                }
-                            }
-                        }
-                    } else {
-                        // Tile does not meet SSE and its visible children are loaded. Refine to them in front-to-back order.
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (isVisible(child.visibilityPlaneMask)) {
-                                stack.push(child);
-                            }
-                        }
-
-                        t.replaced = true;
-                        if (defined(t.descendantsWithContent)) {
-                            scratchRefiningTiles.push(t);
-                        }
-                    }
-                }
+        if (expired) {
+            if (tile.hasRenderableContent) {
+                statistics.decrementLoadCounts(tile.content);
+                --tileset._statistics.numberContentReady;
+            } else if (tile.hasTilesetContent) {
+                destroySubtree(tileset, tile);
             }
         }
 
-        checkRefiningTiles(scratchRefiningTiles, tileset, frameState);
+        ++statistics.numberOfPendingRequests;
+
+        var removeFunction = removeFromProcessingQueue(tileset, tile);
+        tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
+        tile.contentReadyPromise.then(removeFunction).otherwise(removeFunction);
     }
 
-    function checkRefiningTiles(refiningTiles, tileset, frameState) {
-        // In the common case, a tile that uses replacement refinement is refinable once all its
-        // children are loaded. However if it has an empty child, refining to its children would
-        // show a visible gap. In this case, the empty child's children (or further descendants)
-        // would need to be selected before the original tile is refinable. It is hard to determine
-        // this easily during the traversal, so this fixes the situation retroactively.
-        var descendant;
-        var refiningTilesLength = refiningTiles.length;
-        for (var i = 0; i < refiningTilesLength; ++i) {
-            var j;
-            var refinable = true;
-            var refiningTile = refiningTiles[i];
-            var descendantsLength = refiningTile.descendantsWithContent.length;
-            for (j = 0; j < descendantsLength; ++j) {
-                descendant = refiningTile.descendantsWithContent[j];
-                if (!descendant.selected && !descendant.replaced &&
-                    (frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE)) {
-                        refinable = false;
-                        break;
-                }
-            }
-            if (!refinable) {
-                selectTile(tileset, refiningTile, true, frameState);
-                for (j = 0; j < descendantsLength; ++j) {
-                    descendant = refiningTile.descendantsWithContent[j];
-                    descendant.selected = false;
+    function requestTiles(tileset, requestHeaps, outOfCore) {
+        for (var name in requestHeaps) {
+            if (requestHeaps.hasOwnProperty(name)) {
+                var heap = requestHeaps[name];
+                var tile;
+                while (defined(tile = heap.pop())) {
+                    requestContent(tileset, tile, outOfCore);
                 }
             }
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
 
     function addToProcessingQueue(tileset, tile) {
         return function() {
@@ -1513,11 +1224,17 @@ define([
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
-                if (tile.hasContent) {
+
+                if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
+                    tileset._statistics.incrementLoadCounts(tile.content);
                     ++tileset._statistics.numberContentReady;
-                    tile.replacementNode = tileset._replacementList.add(tile);
+
+                    // Add to the tile cache. Previously expired tiles are already in the cache.
+                    if (!defined(tile.replacementNode)) {
+                        tile.replacementNode = tileset._replacementList.add(tile);
+                    }
                 }
             } else {
                 // Not in processing queue
@@ -1540,114 +1257,227 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function clearStats(tileset) {
-        var stats = tileset._statistics;
-        stats.visited = 0;
-        stats.numberOfCommands = 0;
-        stats.numberOfAttemptedRequests = 0;
-        stats.numberOfTilesStyled = 0;
-        stats.numberOfFeaturesStyled = 0;
-    }
+    var scratchCartesian = new Cartesian3();
 
-    function showStats(tileset, isPick) {
-        var stats = tileset._statistics;
-        var last = isPick ? stats.lastPick : stats.lastColor;
+    var stringOptions = {
+        maximumFractionDigits : 3
+    };
 
-        var outputStats = (tileset.debugShowStatistics && !isPick) || (tileset.debugShowPickStatistics && isPick);
-        var showStatsThisFrame =
-            ((tileset._debugShowStatistics !== tileset.debugShowStatistics) ||
-             (tileset._debugShowPickStatistics !== tileset.debugShowPickStatistics));
-        var statsChanged =
-            (last.visited !== stats.visited ||
-             last.numberOfCommands !== stats.numberOfCommands ||
-             last.selected !== tileset._selectedTiles.length ||
-             last.numberOfAttemptedRequests !== stats.numberOfAttemptedRequests ||
-             last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
-             last.numberProcessing !== stats.numberProcessing ||
-             last.numberContentReady !== stats.numberContentReady ||
-             last.numberTotal !== stats.numberTotal ||
-             last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
-
-        if (outputStats && (showStatsThisFrame || statsChanged)) {
-            // The shadowed properties are used to ensure that when a show stats properties
-            // is set to true, it outputs the stats on the next frame even if they didn't
-            // change from the previous frame.
-            tileset._debugShowStatistics = tileset.debugShowStatistics;
-            tileset._debugShowPickStatistics = tileset.debugShowPickStatistics;
-
-            // Since the pick pass uses a smaller frustum around the pixel of interest,
-            // the stats will be different than the normal render pass.
-            var s = isPick ? '[Pick ]: ' : '[Color]: ';
-            s +=
-                // --- Rendering stats
-                'Visited: ' + stats.visited +
-                // Number of commands returned is likely to be higher than the number of tiles selected
-                // because of tiles that create multiple commands.
-                ', Selected: ' + tileset._selectedTiles.length +
-                // Number of commands executed is likely to be higher because of commands overlapping
-                // multiple frustums.
-                ', Commands: ' + stats.numberOfCommands +
-
-                // --- Cache/loading stats
-                ' | Requests: ' + stats.numberOfPendingRequests +
-                ', Attempted: ' + stats.numberOfAttemptedRequests +
-                ', Processing: ' + stats.numberProcessing +
-                ', Content Ready: ' + stats.numberContentReady +
-                // Total number of tiles includes tiles without content, so "Ready" may never reach
-                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                ', Total: ' + stats.numberTotal +
-
-                // --- Styling stats
-                ' | Tiles styled: ' + stats.numberOfTilesStyled +
-                ', Features styled: ' + stats.numberOfFeaturesStyled;
-
-            /*global console*/
-            console.log(s);
+    function formatMemoryString(memorySizeInBytes) {
+        var memoryInMegabytes = memorySizeInBytes / 1048576;
+        if (memoryInMegabytes < 1.0) {
+            return memoryInMegabytes.toLocaleString(undefined, stringOptions);
+        } else {
+            return Math.round(memoryInMegabytes).toLocaleString();
         }
-
-        last.visited = stats.visited;
-        last.numberOfCommands = stats.numberOfCommands;
-        last.selected = tileset._selectedTiles.length;
-        last.numberOfAttemptedRequests = stats.numberOfAttemptedRequests;
-        last.numberOfPendingRequests = stats.numberOfPendingRequests;
-        last.numberProcessing = stats.numberProcessing;
-        last.numberContentReady = stats.numberContentReady;
-        last.numberTotal = stats.numberTotal;
-        last.numberOfTilesStyled = stats.numberOfTilesStyled;
-        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }
+
+    function updateTileDebugLabels(tileset, frameState) {
+        var selectedTiles = tileset._selectedTiles;
+        var length = selectedTiles.length;
+        tileset._tileDebugLabels.removeAll();
+        for (var i = 0; i < length; ++i) {
+            var tile = selectedTiles[i];
+            var boundingVolume = tile._boundingVolume.boundingVolume;
+            var halfAxes = boundingVolume.halfAxes;
+            var radius = boundingVolume.radius;
+
+            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+            if (defined(halfAxes)) {
+                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+            } else if (defined(radius)) {
+                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+            }
+
+            var labelString = '';
+            var attributes = 0;
+
+            if (tileset.debugShowGeometricError) {
+                labelString += '\nGeometric error: ' + tile.geometricError;
+                attributes++;
+            }
+            if (tileset.debugShowRenderingStatistics) {
+                labelString += '\nCommands: ' + tile.commandsLength;
+                attributes++;
+
+                // Don't display number of points or triangles if 0.
+                var numberOfPoints = tile.content.pointsLength;
+                if (numberOfPoints > 0) {
+                    labelString += '\nPoints: ' + tile.content.pointsLength;
+                    attributes++;
+                }
+                var numberOfTriangles = tile.content.trianglesLength;
+                if (numberOfTriangles > 0) {
+                    labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                    attributes++;
+                }
+
+                labelString += '\nFeatures: ' + tile.content.featuresLength;
+                attributes ++;
+            }
+
+            if (tileset.debugShowMemoryUsage) {
+                labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
+                labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
+                attributes += 2;
+            }
+
+            tileset._tileDebugLabels.add({
+                text : labelString.substring(1),
+                position : position,
+                font : (19-attributes) + 'px sans-serif',
+                showBackground : true,
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+        }
+        tileset._tileDebugLabels.update(frameState);
+    }
+
+    var stencilClearCommand = new ClearCommand({
+        stencil : 0,
+        pass : Pass.CESIUM_3D_TILE
+    });
 
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
-        for (var i = 0; i < length; ++i) {
+        var i;
+
+        var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+
+        tileset._backfaceCommands.length = 0;
+
+        if (bivariateVisibilityTest) {
+            commandList.push(stencilClearCommand);
+        }
+
+        var lengthBeforeUpdate = commandList.length;
+        for (i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
+            // tiles may get unloaded and destroyed between selection and update
             if (tile.selected) {
                 // Raise visible event before update in case the visible event
                 // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
+                statistics.incrementSelectionCounts(tile.content);
+                ++statistics.selected;
+            }
+        }
+        var lengthAfterUpdate = commandList.length;
+
+        tileset._backfaceCommands.trim();
+
+        if (bivariateVisibilityTest) {
+            /**
+             * Consider 'effective leaf' tiles as selected tiles that have no selected descendants. They may have children,
+             * but they are currently our effective leaves because they do not have selected descendants. These tiles
+             * are those where with tile._finalResolution === true.
+             * Let 'unresolved' tiles be those with tile._finalResolution === false.
+             *
+             * 1. Render just the backfaces of unresolved tiles in order to lay down z
+             * 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
+             *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
+             *    Because children are always drawn before ancestors (@see {@link Cesium3DTilesetTraversal#traverseAndSelect}),
+             *    this effectively draws children first and does not draw ancestors if a descendant has already
+             *    been drawn at that pixel.
+             *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
+             *    If they are behind the backfaces of the ancestor, then they will not be drawn.
+             *
+             * NOTE: Step 2 sometimes causes visual artifacts when backfacing child content has some faces that
+             * partially face the camera and are inside of the ancestor content. Because they are inside, they will
+             * not be culled by the depth writes in Step 1, and because they partially face the camera, the stencil tests
+             * will draw them on top of the ancestor content.
+             *
+             * NOTE: Because we always render backfaces of unresolved tiles, if the camera is looking at the backfaces
+             * of an object, they will always be drawn while loading, even if backface culling is enabled.
+             */
+
+            var backfaceCommands = tileset._backfaceCommands.internalArray;
+            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
+            var backfaceCommandsLength = backfaceCommands.length;
+
+            commandList.length += backfaceCommands.length;
+
+            // copy commands to the back of the commandList
+            for (i = addedCommandsLength - 1; i >= 0; --i) {
+                commandList[lengthBeforeUpdate + backfaceCommandsLength + i] = commandList[lengthBeforeUpdate + i];
+            }
+
+            // move backface commands to the front of the commandList
+            for (i = 0; i < backfaceCommandsLength; ++i) {
+                commandList[lengthBeforeUpdate + i] = backfaceCommands[i];
             }
         }
 
         // Number of commands added by each update above
-        tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+        statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
+            if (!defined(tileset._tileDebugLabels)) {
+                tileset._tileDebugLabels = new LabelCollection();
+            }
+            updateTileDebugLabels(tileset, frameState);
+        } else {
+            tileset._tileDebugLabels = tileset._tileDebugLabels && tileset._tileDebugLabels.destroy();
+        }
     }
 
-    function unloadTiles(tileset, frameState) {
+    function destroySubtree(tileset, tile) {
+        var root = tile;
+        var statistics = tileset._statistics;
+        var stack = scratchStack;
+        stack.push(tile);
+        while (stack.length > 0) {
+            tile = stack.pop();
+            var children = tile.children;
+            var length = children.length;
+            for (var i = 0; i < length; ++i) {
+                stack.push(children[i]);
+            }
+            if (tile !== root) {
+                unloadTileFromCache(tileset, tile);
+                tile.destroy();
+                --statistics.numberTotal;
+            }
+        }
+        root.children = [];
+    }
+
+    function unloadTileFromCache(tileset, tile) {
+        var node = tile.replacementNode;
+        if (!defined(node)) {
+            return;
+        }
+
+        var statistics = tileset._statistics;
+        var replacementList = tileset._replacementList;
+        var tileUnload = tileset.tileUnload;
+
+        tileUnload.raiseEvent(tile);
+        replacementList.remove(node);
+        statistics.decrementLoadCounts(tile.content);
+        --statistics.numberContentReady;
+    }
+
+    function unloadTiles(tileset) {
         var trimTiles = tileset._trimTiles;
         tileset._trimTiles = false;
 
-        var stats = tileset._statistics;
-        var maximumNumberOfLoadedTiles = tileset._maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
-        var tileUnload = tileset.tileUnload;
+
+        var totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
+        var maximumMemoryUsageInBytes = tileset._maximumMemoryUsage * 1024 * 1024;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
         // right of the sentinel were used this frame.
@@ -1655,24 +1485,19 @@ define([
         // The sub-list to the left of the sentinel is ordered from LRU to MRU.
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
-        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
+        while ((node !== sentinel) && ((totalMemoryUsageInBytes > maximumMemoryUsageInBytes) || trimTiles)) {
             var tile = node.item;
-
-            tileUnload.raiseEvent(tile);
-            tile.unloadContent();
-
-            var currentNode = node;
             node = node.next;
-            replacementList.remove(currentNode);
-
-            --stats.numberContentReady;
+            unloadTileFromCache(tileset, tile);
+            tile.unloadContent();
+            totalMemoryUsageInBytes = tileset.totalMemoryUsageInBytes;
         }
     }
 
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
-     * {@link Cesium3DTileset#maximumNumberOfLoadedTiles}.
+     * {@link Cesium3DTileset#maximumMemoryUsage}.
      * <p>
      * Tile unloads occur at the next frame to keep all the WebGL delete calls
      * within the render loop.
@@ -1686,11 +1511,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function raiseLoadProgressEvent(tileset, frameState) {
-        var stats = tileset._statistics;
-        var numberOfPendingRequests = stats.numberOfPendingRequests;
-        var numberProcessing = stats.numberProcessing;
-        var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
-        var lastNumberProcessing = stats.lastColor.numberProcessing;
+        var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLastColor;
+        var numberOfPendingRequests = statistics.numberOfPendingRequests;
+        var numberProcessing = statistics.numberProcessing;
+        var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
+        var lastNumberProcessing = statisticsLast.numberProcessing;
 
         var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing);
 
@@ -1700,35 +1526,12 @@ define([
             });
         }
 
-        tileset._tilesLoaded = (stats.numberOfPendingRequests === 0) && (stats.numberProcessing === 0) && (stats.numberOfAttemptedRequests === 0);
+        tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function applyDebugSettings(tileset, frameState) {
-        // Draw a debug camera in freeze frame mode
-        var enterFreezeFrame = tileset.debugFreezeFrame && !tileset._debugFreezeFrame;
-        var exitFreezeFrame = !tileset.debugFreezeFrame && tileset._debugFreezeFrame;
-        tileset._debugFreezeFrame = tileset.debugFreezeFrame;
-        if (tileset.debugFreezeFrame) {
-            if (enterFreezeFrame) {
-                // Recreate debug camera when entering freeze frame mode
-                tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
-                tileset._debugCameraFrustum = new DebugCameraPrimitive({
-                    camera : frameState.camera,
-                    updateOnChange : false
-                });
-            }
-            tileset._debugCameraFrustum.update(frameState);
-        } else if (exitFreezeFrame) {
-            // Destroy debug camera when exiting freeze frame
-            tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
         }
     }
 
@@ -1742,7 +1545,6 @@ define([
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
      *
-     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (!this.show || !this.ready) {
@@ -1761,9 +1563,8 @@ define([
         var isPick = (passes.pick && !passes.render);
         var outOfCore = !isPick;
 
-        applyDebugSettings(this, frameState);
-
-        clearStats(this);
+        var statistics = this._statistics;
+        statistics.clear();
 
         if (outOfCore) {
             processTiles(this, frameState);
@@ -1773,11 +1574,12 @@ define([
             updateDynamicScreenSpaceError(this, frameState);
         }
 
-        selectTiles(this, frameState, outOfCore);
+        Cesium3DTilesetTraversal.selectTiles(this, frameState, outOfCore);
+        requestTiles(this, this._requestHeaps, outOfCore);
         updateTiles(this, frameState);
 
         if (outOfCore) {
-            unloadTiles(this, frameState);
+            unloadTiles(this);
         }
 
         // Events are raised (added to the afterRender queue) here since promises
@@ -1785,7 +1587,9 @@ define([
         // model's readyPromise.
         raiseLoadProgressEvent(this, frameState);
 
-        showStats(this, isPick);
+        // Update last statistics
+        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastColor;
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
     };
 
     /**
@@ -1802,6 +1606,8 @@ define([
         return false;
     };
 
+    var scratchStack = [];
+
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
@@ -1814,23 +1620,25 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     *
      * @example
      * tileset = tileset && tileset.destroy();
      *
      * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
+        // Destroy debug labels
+        this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
+
         // Traverse the tree and destroy all tiles
         if (defined(this._root)) {
             var stack = scratchStack;
             stack.push(this._root);
 
             while (stack.length > 0) {
-                var t = stack.pop();
-                t.destroy();
+                var tile = stack.pop();
+                tile.destroy();
 
-                var children = t.children;
+                var children = tile.children;
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     stack.push(children[i]);
@@ -1839,7 +1647,6 @@ define([
         }
 
         this._root = undefined;
-        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         return destroyObject(this);
     };
 

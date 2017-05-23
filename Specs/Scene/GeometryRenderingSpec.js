@@ -33,6 +33,7 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
+        'Scene/PerspectiveFrustum',
         'Scene/PolylineColorAppearance',
         'Scene/Primitive',
         'Scene/SceneMode',
@@ -72,6 +73,7 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         Material,
         PerInstanceColorAppearance,
+        PerspectiveFrustum,
         PolylineColorAppearance,
         Primitive,
         SceneMode,
@@ -94,6 +96,15 @@ defineSuite([
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterEach(function() {

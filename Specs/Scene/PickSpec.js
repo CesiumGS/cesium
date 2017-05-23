@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/Cartesian2',
         'Core/FeatureDetection',
         'Core/GeometryInstance',
         'Core/Math',
@@ -8,12 +7,12 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/SceneMode',
         'Specs/createScene'
     ], 'Scene/Pick', function(
-        Cartesian2,
         FeatureDetection,
         GeometryInstance,
         CesiumMath,
@@ -21,6 +20,7 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         EllipsoidSurfaceAppearance,
+        OrthographicFrustum,
         PerspectiveFrustum,
         Primitive,
         SceneMode,
@@ -309,15 +309,20 @@ defineSuite([
         var rectangle = createRectangle();
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
-        scene.morphTo3D(0.0);
     });
 
-    it('picks in 2D when rotated', function() {
-        scene.morphTo2D(0.0);
+    it('picks in 3D with orthographic projection', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.aspectRatio = 1.0;
+        frustum.width = 20.0;
+        camera.frustum = frustum;
+
+        // force off center update
+        expect(frustum.projectionMatrix).toBeDefined();
+
         camera.setView({ destination : primitiveRectangle });
         var rectangle = createRectangle();
         scene.initializeFrame();
         expect(scene).toPickPrimitive(rectangle);
-        scene.morphTo3D(0.0);
     });
 }, 'WebGL');

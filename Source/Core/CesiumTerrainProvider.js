@@ -19,11 +19,9 @@ define([
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
-        './Rectangle',
         './Request',
         './RequestScheduler',
         './RequestType',
-        './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
         './TileProviderError'
@@ -47,11 +45,9 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
-        Rectangle,
         Request,
         RequestScheduler,
         RequestType,
-        RuntimeError,
         TerrainProvider,
         TileAvailability,
         TileProviderError) {
@@ -78,7 +74,7 @@ define([
      * // Construct a terrain provider that uses per vertex normals for lighting
      * // to add shading detail to an imagery provider.
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/world',
+     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
      *     requestVertexNormals : true
      * });
      *
@@ -531,10 +527,10 @@ define([
 
         var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
-            extensionList.push(this._littleEndianExtensionSize ? "octvertexnormals" : "vertexnormals");
+            extensionList.push(this._littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
         }
         if (this._requestWaterMask && this._hasWaterMask) {
-            extensionList.push("watermask");
+            extensionList.push('watermask');
         }
 
         function tileLoader(tileUrl) {

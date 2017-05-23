@@ -28,9 +28,11 @@ defineSuite([
         'Renderer/Pass',
         'Renderer/RenderState',
         'Renderer/ShaderSource',
+        'Scene/Axis',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
+        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -63,9 +65,11 @@ defineSuite([
         Pass,
         RenderState,
         ShaderSource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
+        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {
@@ -85,7 +89,8 @@ defineSuite([
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
-    var boxesEcefUrl = './Data/Models/Boxes-ECEF/ecef.glb';
+    var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
+
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
@@ -153,6 +158,11 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     function addZoomTo(model) {
@@ -296,7 +306,7 @@ defineSuite([
     });
 
     it('renders ECEF in 2D', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
@@ -318,13 +328,61 @@ defineSuite([
     });
 
     it('renders ECEF in CV', function() {
-        return loadModel(boxesEcefUrl, {
+        return loadModel(boxEcefUrl, {
             modelMatrix : Matrix4.IDENTITY,
             minimumPixelSize : undefined
         }).then(function(m) {
             scene.morphToColumbusView(0.0);
             verifyRender(m);
             primitives.remove(m);
+        });
+    });
+
+    it('Renders x-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to x-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_X_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.X
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.X);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders y-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be z-up to y-up.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Axis.Z_UP_TO_Y_UP, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Y
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Y);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Renders z-up model', function() {
+        return loadJson(boxEcefUrl).then(function(gltf) {
+            // Model data is z-up. Edit the transform to be the identity.
+            gltf.nodes.node_transform.matrix = Matrix4.pack(Matrix4.IDENTITY, new Array(16));
+
+            return loadModelJson(gltf, {
+                modelMatrix : Matrix4.IDENTITY,
+                upAxis : Axis.Z
+            }).then(function(m) {
+                verifyRender(m);
+                expect(m.upAxis).toBe(Axis.Z);
+                primitives.remove(m);
+            });
         });
     });
 
@@ -2231,6 +2289,36 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+            });
+        });
+    });
+
+    it('gets triangle count', function() {
+        expect(texturedBoxModel.trianglesLength).toBe(12);
+        expect(cesiumAirModel.trianglesLength).toBe(5984);
+    });
+
+    it('gets memory usage', function() {
+        // Texture is originally 211*211 but is scaled up to 256*256 to support its minification filter and then is mipmapped
+        var expectedTextureMemory = Math.floor(256*256*4*(4/3));
+        var expectedVertexMemory = 840;
+        var options = {
+            cacheKey : 'memory-usage-test',
+            incrementallyLoadTextures : false
+        };
+        return loadModel(texturedBoxUrl, options).then(function(model) {
+            // The first model owns the resources
+            expect(model.vertexMemorySizeInBytes).toBe(expectedVertexMemory);
+            expect(model.textureMemorySizeInBytes).toBe(expectedTextureMemory);
+            expect(model.cachedVertexMemorySizeInBytes).toBe(0);
+            expect(model.cachedTextureMemorySizeInBytes).toBe(0);
+
+            return loadModel(texturedBoxUrl, options).then(function(model) {
+                // The second model is sharing the resources, so its memory usage is reported as 0
+                expect(model.vertexMemorySizeInBytes).toBe(0);
+                expect(model.textureMemorySizeInBytes).toBe(0);
+                expect(model.cachedVertexMemorySizeInBytes).toBe(expectedVertexMemory);
+                expect(model.cachedTextureMemorySizeInBytes).toBe(expectedTextureMemory);
             });
         });
     });

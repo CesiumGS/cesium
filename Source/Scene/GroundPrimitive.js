@@ -5,8 +5,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
@@ -41,8 +39,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        clone,
-        Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -999,7 +995,7 @@ define([
 
     /**
      * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
-     * GroundPrimitive asynchronously.
+     * GroundPrimitive synchronously.
      *
      * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
      *
