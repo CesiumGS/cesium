@@ -1457,7 +1457,12 @@ defineSuite([
             tileset.debugShowGeometricError = true;
             tileset.debugShowRenderingStatistics = true;
             tileset.debugShowMemoryUsage = true;
-            scene.pickForSpecs();
+            tileset._onlyPickedTileDebugLabel = true;
+
+            var scratchPosition = new Cartesian3(1.0, 1.0, 1.0);
+            tileset.debugPickedTile = tileset._root;
+            tileset.debugPickPosition = scratchPosition;
+
             scene.renderForSpecs();
             expect(tileset._tileDebugLabels).toBeDefined();
 
@@ -1467,13 +1472,12 @@ defineSuite([
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
                            'Vertex Memory: 0.008';
-            expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
+            expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
+            expect(tileset._tileDebugLabels.get(0).position).toEqual(scratchPosition);
 
-            tileset.debugShowGeometricError = false;
-            tileset.debugShowRenderingStatistics = false;
-            tileset.debugShowMemoryUsage = false;
+            tileset.debugPickedTile = undefined;
             scene.renderForSpecs();
-            expect(tileset._tileDebugLabels).not.toBeDefined();
+            expect(tileset._tileDebugLabels.length).toEqual(0);
         });
     });
 

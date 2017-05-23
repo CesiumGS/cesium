@@ -325,18 +325,23 @@ define([
                 if (value) {
                     that._eventHandler.setInputAction(function(e) {
                         var picked = scene.pick(e.endPosition);
-                        if (picked && defined(picked.content)) {
+                        if (picked instanceof Cesium3DTileFeature) {
                             that.feature = picked;
-                            var position;
-                            if (scene.pickPositionSupported) {
-                                position = scene.pickPosition(e.endPosition);
-                                that._tileset._debugPickPosition = position;
-                            }
-                            that._tileset._debugPickedTile = picked.content.tile;
                             that._pickStatsText = getStats(that._tileset, true);
                         } else {
                             that.feature = undefined;
-                            that._tileset._debugPickedTile = undefined;
+                        }
+                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
+                            var position;
+                            if (scene.pickPositionSupported) {
+                                position = scene.pickPosition(e.endPosition);
+                                that._tileset.debugPickPosition = position;
+                            } else {
+                                position = undefined;
+                            }
+                            that._tileset.debugPickedTile = picked.content.tile;
+                        } else {
+                            that._tileset.debugPickedTile = undefined;
                         }
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {

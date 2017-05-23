@@ -192,7 +192,7 @@ define([
         // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
         // (sentinel, tail] -> tiles that were selected this frame
         this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
-        this._replacementSentinel  = replacementList.add();
+        this._replacementSentinel = replacementList.add();
         this._trimTiles = false;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
@@ -202,7 +202,7 @@ define([
 
         this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
         this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic: selectionHeuristic
+            selectionHeuristic : selectionHeuristic
         });
 
         this._backfaceCommands = new ManagedArray();
@@ -404,8 +404,8 @@ define([
 
         this._tileDebugLabels = undefined;
         this._onlyPickedTileDebugLabel = false;
-        this._debugPickedTile = undefined;
-        this._debugPickPosition = undefined;
+        this.debugPickedTile = undefined;
+        this.debugPickPosition = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1279,7 +1279,7 @@ define([
         }
     }
 
-    function addTileDebugLabel(tile, tileset) {
+    function computeTileLabelPosition(tile) {
         var boundingVolume = tile._boundingVolume.boundingVolume;
         var halfAxes = boundingVolume.halfAxes;
         var radius = boundingVolume.radius;
@@ -1294,7 +1294,10 @@ define([
             normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
             position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
         }
+        return position;
+    }
 
+    function addTileDebugLabel(tile, tileset, position) {
         var labelString = '';
         var attributes = 0;
 
@@ -1345,18 +1348,15 @@ define([
         tileset._tileDebugLabels.removeAll();
 
         if (tileset._onlyPickedTileDebugLabel) {
-            if (defined(tileset._debugPickedTile)) {
-                addTileDebugLabel(tileset._debugPickedTile, tileset);
-                if (defined(tileset._debugPickPosition)) {
-                    var label = tileset._tileDebugLabels.get(0);
-                    label.position = tileset._debugPickPosition;
-                    label.pixelOffset = new Cartesian2(15, -15);
-                }
+            if (defined(tileset.debugPickedTile)) {
+                var position = (defined(tileset.debugPickPosition)) ? tileset.debugPickPosition : computeTileLabelPosition(tileset.debugPickedTile);
+                addTileDebugLabel(tileset.debugPickedTile, tileset, position);
+                tileset._tileDebugLabels.get(0).pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
             }
         } else {
             for (var i = 0; i < length; ++i) {
                 var tile = selectedTiles[i];
-                addTileDebugLabel(tile, tileset);
+                addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
             }
         }
         tileset._tileDebugLabels.update(frameState);
