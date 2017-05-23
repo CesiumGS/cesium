@@ -138,12 +138,14 @@ addStyle('Color all features derived from door', {
 });
 
 addStyle('Color features by class name', {
+    "expressions" : {
+        "suffix" : "regExp('door(.*)').exec(getExactClassName())"
+    },
     "color" : {
-        "expression" : "regExp('door(.*)').exec(getExactClassName())",
         "conditions" : [
-            ["${expression} === 'knob'", "color('yellow')"],
-            ["${expression} === ''", "color('lime')"],
-            ["${expression} === null", "color('gray')"],
+            ["${suffix} === 'knob'", "color('yellow')"],
+            ["${suffix} === ''", "color('lime')"],
+            ["${suffix} === null", "color('gray')"],
             ["true", "color('blue'"]
         ]
     }
