@@ -134,9 +134,9 @@ defineSuite([
 
         it('showOnlyPickedTileDebugLabel', function() {
             viewModel.showOnlyPickedTileDebugLabel = true;
-            expect(viewModel.tileset._onlyPickedTileDebugLabel).toBe(true);
+            expect(viewModel.tileset.debugPickedTileLabelOnly).toBe(true);
             viewModel.showOnlyPickedTileDebugLabel = false;
-            expect(viewModel.tileset._onlyPickedTileDebugLabel).toBe(false);
+            expect(viewModel.tileset.debugPickedTileLabelOnly).toBe(false);
         });
 
         it('showGeometricError', function() {

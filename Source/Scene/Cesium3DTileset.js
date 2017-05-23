@@ -403,7 +403,7 @@ define([
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
 
         this._tileDebugLabels = undefined;
-        this._onlyPickedTileDebugLabel = false;
+        this.debugPickedTileLabelOnly = false;
         this.debugPickedTile = undefined;
         this.debugPickPosition = undefined;
 
@@ -1333,13 +1333,15 @@ define([
             attributes += 2;
         }
 
-        tileset._tileDebugLabels.add({
+        var newLabel = {
             text : labelString.substring(1),
             position : position,
             font : (19-attributes) + 'px sans-serif',
             showBackground : true,
             disableDepthTestDistance : Number.POSITIVE_INFINITY
-        });
+        };
+
+        return tileset._tileDebugLabels.add(newLabel);
     }
 
     function updateTileDebugLabels(tileset, frameState) {
@@ -1347,11 +1349,11 @@ define([
         var length = selectedTiles.length;
         tileset._tileDebugLabels.removeAll();
 
-        if (tileset._onlyPickedTileDebugLabel) {
+        if (tileset.debugPickedTileLabelOnly) {
             if (defined(tileset.debugPickedTile)) {
                 var position = (defined(tileset.debugPickPosition)) ? tileset.debugPickPosition : computeTileLabelPosition(tileset.debugPickedTile);
-                addTileDebugLabel(tileset.debugPickedTile, tileset, position);
-                tileset._tileDebugLabels.get(0).pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
+                var label = addTileDebugLabel(tileset.debugPickedTile, tileset, position);
+                label.pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
             }
         } else {
             for (var i = 0; i < length; ++i) {

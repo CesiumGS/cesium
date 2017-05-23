@@ -335,9 +335,9 @@ define([
                             var position;
                             if (scene.pickPositionSupported) {
                                 position = scene.pickPosition(e.endPosition);
-                                that._tileset.debugPickPosition = position;
-                            } else {
-                                position = undefined;
+                                if (defined(position)) {
+                                    that._tileset.debugPickPosition = position;
+                                }
                             }
                             that._tileset.debugPickedTile = picked.content.tile;
                         } else {
@@ -487,7 +487,7 @@ define([
             set : function(value) {
                 showOnlyPickedTileDebugLabel(value);
                 if (that._tileset) {
-                    that._tileset._onlyPickedTileDebugLabel = value;
+                    that._tileset.debugPickedTileLabelOnly = value;
                 }
             }
         });

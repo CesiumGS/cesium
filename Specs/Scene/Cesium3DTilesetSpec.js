@@ -1457,7 +1457,7 @@ defineSuite([
             tileset.debugShowGeometricError = true;
             tileset.debugShowRenderingStatistics = true;
             tileset.debugShowMemoryUsage = true;
-            tileset._onlyPickedTileDebugLabel = true;
+            tileset.debugPickedTileLabelOnly = true;
 
             var scratchPosition = new Cartesian3(1.0, 1.0, 1.0);
             tileset.debugPickedTile = tileset._root;
