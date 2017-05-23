@@ -183,9 +183,7 @@ define([
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
      *
-     * @param {Number} heading The heading angle in radians.
-     * @param {Number} pitch The pitch angle in radians.
-     * @param {Number} roll The roll angle in radians.
+     * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */

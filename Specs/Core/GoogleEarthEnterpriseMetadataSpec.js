@@ -51,19 +51,64 @@ defineSuite([
 
     it('decode', function() {
         CesiumMath.setRandomNumberSeed(123123);
+        var key = new Uint8Array(1025);
         var data = new Uint8Array(1025);
         for (var i = 0; i < 1025; ++i) {
+            key[i] = Math.floor(CesiumMath.nextRandomNumber() * 256);
             data[i] = Math.floor(CesiumMath.nextRandomNumber() * 256);
         }
 
-        var buffer = data.buffer.slice();
-        var a = new Uint8Array(buffer);
-        decodeGoogleEarthEnterpriseData(buffer);
+        var keyBuffer = key.buffer.slice(0, 1024); // Key length should be divisible by 4
+        var dataBuffer = data.buffer.slice();
+        var a = new Uint8Array(dataBuffer);
+        decodeGoogleEarthEnterpriseData(keyBuffer, dataBuffer);
         expect(a).not.toEqual(data);
 
         // For the algorithm encode/decode are the same
-        decodeGoogleEarthEnterpriseData(buffer);
+        decodeGoogleEarthEnterpriseData(keyBuffer, dataBuffer);
+
         expect(a).toEqual(data);
+    });
+
+    it('decode requires key' , function() {
+        var data = new Uint8Array(3);
+
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(undefined, data.buffer);
+        }).toThrowDeveloperError();
+    });
+
+    it('decode requires data' , function() {
+        var key = new Uint8Array(4);
+
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(key.buffer);
+        }).toThrowDeveloperError();
+    });
+
+    it('decode throws if key length isn\'t greater than 0 and a multiple 4' , function() {
+        var key;
+        var data = new Uint8Array(3);
+
+        key = new Uint8Array(0);
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
+        }).toThrowRuntimeError();
+
+        key = new Uint8Array(1);
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
+        }).toThrowRuntimeError();
+
+        key = new Uint8Array(2);
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
+        }).toThrowRuntimeError();
+
+        key = new Uint8Array(3);
+        expect(function() {
+            decodeGoogleEarthEnterpriseData(key.buffer, data.buffer);
+        }).toThrowRuntimeError();
     });
 
     it('populateSubtree', function() {
@@ -103,10 +148,17 @@ defineSuite([
     it('resolves readyPromise', function() {
         var baseurl = 'http://fake.fake.invalid/';
 
+        var req = 0;
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
             expect(responseType).toEqual('arraybuffer');
-            loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+            if (req === 0) {
+                expect(url).toEqual(baseurl + 'dbRoot.v5?output=proto');
+                deferred.reject(); // Reject dbRoot request and use defaults
+            } else {
+                expect(url).toEqual(baseurl + 'flatfile?q2-0-q.1');
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+            }
+            ++req;
         });
 
         var provider = new GoogleEarthEnterpriseMetadata({
@@ -115,6 +167,13 @@ defineSuite([
 
         return provider.readyPromise.then(function(result) {
             expect(result).toBe(true);
+
+            expect(provider.imageryPresent).toBe(true);
+            expect(provider.protoImagery).toBeUndefined();
+            expect(provider.terrainPresent).toBe(true);
+            expect(provider.negativeAltitudeThreshold).toBe(CesiumMath.EPSILON12);
+            expect(provider.negativeAltitudeExponentBias).toBe(32);
+            expect(provider.providers).toEqual({});
 
             var tileInfo = provider._tileInfo['0'];
             expect(tileInfo).toBeDefined();
@@ -144,10 +203,17 @@ defineSuite([
         var proxy = new DefaultProxy('/proxy/');
         var baseurl = 'http://fake.fake.invalid/';
 
+        var req = 0;
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));
             expect(responseType).toEqual('arraybuffer');
-            loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+            if (req === 0) {
+                expect(url).toEqual(proxy.getURL(baseurl + 'dbRoot.v5?output=proto'));
+                deferred.reject(); // Reject dbRoot request and use defaults
+            } else {
+                expect(url).toEqual(proxy.getURL(baseurl + 'flatfile?q2-0-q.1'));
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.metadata', responseType, method, data, headers, deferred);
+            }
+            ++req;
         });
 
         var provider = new GoogleEarthEnterpriseMetadata({

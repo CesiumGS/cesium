@@ -23,12 +23,13 @@ Change Log
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 * Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
+* Updated documentation for Quaternion.fromHeadingPitchRoll [#5264](https://github.com/AnalyticalGraphicsInc/cesium/issues/5264)
 
 ### 1.33 - 2017-05-01
 
 * Breaking changes
    * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
-* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189). 
+* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189).
 * Support for dashed polylines [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159).
    * Added `PolylineDash` Material type.
    * Added `PolylineDashMaterialProperty` to the Entity API.
