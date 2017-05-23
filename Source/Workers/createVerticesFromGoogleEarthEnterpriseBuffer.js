@@ -63,7 +63,7 @@ define([
 
         var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
             parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
-            parameters.includeWebMercatorT);
+            parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold);
         var vertices = statistics.vertices;
         transferableObjects.push(vertices.buffer);
         var indices = statistics.indices;
@@ -84,15 +84,13 @@ define([
         };
     }
 
-    var negativeElevationFactor = -Math.pow(2, 32);
-    var negativeElevationThreshold = CesiumMath.EPSILON12;
     var scratchCartographic = new Cartographic();
     var scratchCartesian = new Cartesian3();
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
 
-    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT) {
+    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT, negativeAltitudeExponentBias, negativeElevationThreshold) {
         var geographicWest;
         var geographicSouth;
         var geographicEast;
@@ -243,7 +241,7 @@ define([
                 // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
                 // by -2^32 to get the real negative altitude value.
                 if (height < negativeElevationThreshold) {
-                    height *= negativeElevationFactor;
+                    height *= negativeAltitudeExponentBias;
                 }
                 height *= exaggeration;
 
@@ -402,7 +400,7 @@ define([
 
         return {
             vertices : vertices,
-            indices : Uint16Array.from(indices),
+            indices : new Uint16Array(indices),
             maximumHeight : maxHeight,
             minimumHeight : minHeight,
             encoding : encoding,

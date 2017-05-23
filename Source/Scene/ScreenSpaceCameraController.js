@@ -838,7 +838,7 @@ define([
     var translateCVEndPos = new Cartesian3();
     var translatCVDifference = new Cartesian3();
     var translateCVOrigin = new Cartesian3();
-    var translateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var translateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var translateCVStartMouse = new Cartesian2();
     var translateCVEndMouse = new Cartesian2();
 
@@ -920,7 +920,7 @@ define([
     var rotateCVTransform = new Matrix4();
     var rotateCVVerticalTransform = new Matrix4();
     var rotateCVOrigin = new Cartesian3();
-    var rotateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var rotateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var rotateCVCartesian3 = new Cartesian3();
     var rotateCVCart = new Cartographic();
     var rotateCVOldTransform = new Matrix4();
@@ -1242,7 +1242,7 @@ define([
     }
 
     var scratchStrafeRay = new Ray();
-    var scratchStrafePlane = new Plane(Cartesian3.ZERO, 0.0);
+    var scratchStrafePlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var scratchStrafeIntersection = new Cartesian3();
     var scratchStrafeDirection = new Cartesian3();
 
