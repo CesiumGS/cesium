@@ -224,6 +224,18 @@ define([
             } else {
                 camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
             }
+
+            var frustum;
+            var camera = scene.camera;
+            if (camera.frustum instanceof OrthographicFrustum) {
+                frustum = camera.frustum.clone();
+            } else {
+                frustum = scratch2DTo3DFrustumPersp;
+                frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+                frustum.fov = CesiumMath.toRadians(60.0);
+            }
+            camera3D.frustum = frustum;
+
             var complete = complete3DCallback(camera3D);
             createMorphHandler(this, complete);
 
@@ -386,6 +398,19 @@ define([
             camera3D = getColumbusViewTo3DCamera(transitioner, ellipsoid);
         }
 
+        var frustum;
+        if (transitioner._morphToOrthographic) {
+            frustum = scratch2DTo3DFrustumOrtho;
+            frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+            frustum.width = camera.frustum.right - camera.frustum.left;
+        } else {
+            frustum = scratch2DTo3DFrustumPersp;
+            frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+            frustum.fov = CesiumMath.toRadians(60.0);
+        }
+
+        camera3D.frustum = frustum;
+
         var complete = complete3DCallback(camera3D);
         createMorphHandler(transitioner, complete);
 
@@ -417,21 +442,12 @@ define([
         }
 
         var morph;
-        var frustum;
         if (transitioner._morphToOrthographic) {
             morph = function() {
-                frustum = scratch2DTo3DFrustumOrtho;
-                frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-                frustum.width = camera.frustum.right - camera.frustum.left;
-                camera.frustum = frustum;
                 morphFromColumbusViewTo3D(transitioner, duration, camera3D, complete);
             };
         } else {
             morph = function() {
-                frustum = scratch2DTo3DFrustumPersp;
-                frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-                frustum.fov = CesiumMath.toRadians(60.0);
-                camera3D.frustum = frustum;
                 morphOrthographicToPerspective(transitioner, duration, camera3D, function() {
                     morphFromColumbusViewTo3D(transitioner, duration, camera3D, complete);
                 });
@@ -853,6 +869,8 @@ define([
                 Cartesian3.clone(camera3D.up, camera.up);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.normalize(camera.right, camera.right);
+
+                camera.frustum = camera3D.frustum.clone();
             }
 
             var wasMorphing = defined(transitioner._completeMorph);

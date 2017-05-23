@@ -410,7 +410,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 var mimeLookup = getMimeType(blobName);
                 var contentType = mimeLookup.type;
                 var compress = mimeLookup.compress;
-                var contentEncoding = compress ? 'gzip' : undefined;
+                var contentEncoding = compress || mimeLookup.isCompressed ? 'gzip' : undefined;
                 var etag;
 
                 totalFiles++;
@@ -530,21 +530,22 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 function getMimeType(filename) {
     var ext = path.extname(filename);
     if (ext === '.bin' || ext === '.terrain') {
-        return { type : 'application/octet-stream', compress : true };
+        return {type : 'application/octet-stream', compress : true, isCompressed : false};
     } else if (ext === '.md' || ext === '.glsl') {
-        return { type : 'text/plain', compress : true };
+        return {type : 'text/plain', compress : true, isCompressed : false};
     } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
-        return { type : 'application/json', compress : true };
+        return {type : 'application/json', compress : true, isCompressed : false};
     } else if (ext === '.js') {
-        return { type : 'application/javascript', compress : true };
+        return {type : 'application/javascript', compress : true, isCompressed : false};
     } else if (ext === '.svg') {
-        return { type : 'image/svg+xml', compress : true };
+        return {type : 'image/svg+xml', compress : true, isCompressed : false};
     } else if (ext === '.woff') {
-        return { type : 'application/font-woff', compress : false };
+        return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
     var mimeType = mime.lookup(filename);
-    return {type : mimeType, compress : compressible(mimeType)};
+    var compress = compressible(mimeType);
+    return {type : mimeType, compress : compress, isCompressed : false};
 }
 
 // get all files currently in bucket asynchronously

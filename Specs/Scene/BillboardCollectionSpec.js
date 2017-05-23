@@ -1877,6 +1877,10 @@ defineSuite([
             scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
             cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
             expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+
+            //Setting position to zero should clear the clamped position.
+            b.position = Cartesian3.ZERO;
+            expect(b._clampedPosition).toBeUndefined();
         });
 
         it('changing the terrain provider', function() {
