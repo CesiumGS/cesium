@@ -52,8 +52,6 @@ define([
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
      * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(data) {
         this._style = undefined;

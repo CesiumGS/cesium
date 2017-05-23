@@ -120,11 +120,11 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
                 var model = this._modelInstanceCollection._model;
                 if (defined(model)) {
-                    return model.vertexMemorySizeInBytes;
+                    return model.geometryByteLength;
                 }
                 return 0;
             }
@@ -133,11 +133,11 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
                 var model = this._modelInstanceCollection._model;
                 if (defined(model)) {
-                    return model.textureMemorySizeInBytes;
+                    return model.texturesByteLength;
                 }
                 return 0;
             }
@@ -146,7 +146,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
                 return this._batchTable.memorySizeInBytes;
             }

@@ -1,11 +1,11 @@
 
-ul.cesium-cesiumInspector-stats {
+ul.cesium-cesiumInspector-statistics {
     margin: 0;
     padding-top: 3px;
     padding-bottom: 3px;
 }
 
-ul.cesium-cesiumInspector-stats + ul.cesium-cesiumInspector-stats {
+ul.cesium-cesiumInspector-statistics + ul.cesium-cesiumInspector-statistics {
     border-top: 1px solid #aaa;
 }
 
@@ -100,7 +100,7 @@ input[type=range]:focus {
     pointer-events: all;
 }
 
-.cesium-3DTilesInspector-stats {
+.cesium-3DTilesInspector-statistics {
     font-size: 11px;
 }
 

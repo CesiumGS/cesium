@@ -94,7 +94,7 @@ define([
     }
 
     /**
-     * Inspector widget to aid in debugging 3D tiles
+     * Inspector widget to aid in debugging 3D Tiles
      *
      * @alias Cesium3DTilesInspector
      * @constructor
@@ -167,16 +167,16 @@ define([
 
         loggingPanelContents.appendChild(makeCheckbox('performance', 'Performance'));
         loggingPanelContents.appendChild(performanceContainer);
-        loggingPanelContents.appendChild(makeCheckbox('showStats', 'Stats'));
-        var stats = document.createElement('div');
-        stats.className = 'cesium-3dTilesInspector-stats';
-        stats.setAttribute('data-bind', 'html: statsText, visible: showStats');
-        loggingPanelContents.appendChild(stats);
-        loggingPanelContents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
-        var pickStats = document.createElement('div');
-        pickStats.className = 'cesium-3dTilesInspector-stats';
-        pickStats.setAttribute('data-bind', 'html: pickStatsText, visible: showPickStats');
-        loggingPanelContents.appendChild(pickStats);
+        loggingPanelContents.appendChild(makeCheckbox('showStatistics', 'Statistics'));
+        var statistics = document.createElement('div');
+        statistics.className = 'cesium-3dTilesInspector-statistics';
+        statistics.setAttribute('data-bind', 'html: statisticsText, visible: showStatistics');
+        loggingPanelContents.appendChild(statistics);
+        loggingPanelContents.appendChild(makeCheckbox('showPickStatistics', 'Pick Statistics'));
+        var pickStatistics = document.createElement('div');
+        pickStatistics.className = 'cesium-3dTilesInspector-statistics';
+        pickStatistics.setAttribute('data-bind', 'html: pickStatisticsText, visible: showPickStatistics');
+        loggingPanelContents.appendChild(pickStatistics);
 
         stylePanelContents.appendChild(document.createTextNode('Color Blend Mode: '));
         var blendDropdown = document.createElement('select');

@@ -102,9 +102,9 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-         * always returns <code>0</code>.  Instead call <code>vertexMemorySizeInBytes</code> for a tile in the composite.
+         * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a tile in the composite.
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
                 return 0;
             }
@@ -112,9 +112,9 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.   <code>Composite3DTileContent</code>
-         * always returns <code>0</code>.  Instead call <code>textureMemorySizeInBytes</code> for a tile in the composite.
+         * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a tile in the composite.
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
                 return 0;
             }
@@ -122,9 +122,9 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
-         * always returns <code>0</code>.  Instead call <code>batchTableMemorySizeInBytes</code> for a tile in the composite.
+         * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a tile in the composite.
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
                 return 0;
             }
