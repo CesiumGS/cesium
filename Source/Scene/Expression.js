@@ -441,18 +441,16 @@ define([
         if (!defined(expressions) || (defined(expressions) && expressions.length === 0)) {
             return expression;
         }
-        var result = expression;
-        var match = variableRegex.exec(expression);
-        while (match !== null) {
-            var placeholder = match[0];
-            var variableName = match[1];
-            var expressionReplace = expressions[variableName];
-            if (defined(expressionReplace)) {
-                result = result.replace(placeholder, expressionReplace);
+        for (var key in expressions) {
+            if (expressions.hasOwnProperty(key)) {
+                var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
+                var expressionReplace = expressions[key];
+                if (defined(expressionReplace)) {
+                    expression = expression.replace(expressionPlaceholder, expressionReplace);
+                }
             }
-            match = variableRegex.exec(result);
         }
-        return result;
+        return expression;
     }
 
     function removeBackslashes(expression) {
