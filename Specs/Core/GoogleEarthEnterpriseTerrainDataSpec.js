@@ -469,34 +469,37 @@ defineSuite([
 
     it('requires buffer', function() {
         expect(function() {
-            /* jshint unused:false */
+            /*eslint-disable no-unused-vars*/
             var data = new GoogleEarthEnterpriseTerrainData({
                 childTileMask : 8,
                 negativeAltitudeExponentBias : 32,
                 negativeElevationThreshold : CesiumMath.EPSILON12
             });
+            /*eslint-enable no-unused-vars*/
         }).toThrowDeveloperError();
     });
 
     it('requires negativeAltitudeExponentBias', function() {
         expect(function() {
-            /* jshint unused:false */
+            /*eslint-disable no-unused-vars*/
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
                 childTileMask : 8,
                 negativeElevationThreshold : CesiumMath.EPSILON12
             });
+            /*eslint-enable no-unused-vars*/
         }).toThrowDeveloperError();
     });
 
     it('requires negativeElevationThreshold', function() {
         expect(function() {
-            /* jshint unused:false */
+            /*eslint-disable no-unused-vars*/
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : new ArrayBuffer(1),
                 childTileMask : 8,
                 negativeAltitudeExponentBias : 32
             });
+            /*eslint-enable no-unused-vars*/
         }).toThrowDeveloperError();
     });
 });
