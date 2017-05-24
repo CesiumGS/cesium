@@ -871,7 +871,7 @@ define([
                     currentTile.color = oldColor;
                 }
 
-                if (defined(tile) && hasFeatures(tile)) {
+                if (defined(tile) && !hasFeatures(tile)) {
                     // Highlight new tile
                     Color.clone(tile.color, oldColor);
                     tile.color = highlightColor;
