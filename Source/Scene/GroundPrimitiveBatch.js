@@ -128,8 +128,9 @@ define([
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
-        this._quantizedOffset = options.quantizedOffset;
-        this._quantizedScale = options.quantizedScale;
+        this._rectangle = options.rectangle;
+        //this._quantizedOffset = options.quantizedOffset;
+        //this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
@@ -174,22 +175,26 @@ define([
     });
 
     function packBuffer(primitive) {
-        var packedBuffer = new Float64Array(2 + Cartesian3.packedLength * 3 + Ellipsoid.packedLength);
+        //var packedBuffer = new Float64Array(2 + Cartesian3.packedLength * 3 + Ellipsoid.packedLength + Rectangle.packedLength);
+        var packedBuffer = new Float64Array(2 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
 
         var offset = 0;
         packedBuffer[offset++] = primitive._minimumHeight;
         packedBuffer[offset++] = primitive._maximumHeight;
 
-        Cartesian3.pack(primitive._quantizedOffset, packedBuffer, offset);
-        offset += Cartesian3.packedLength;
+        //Cartesian3.pack(primitive._quantizedOffset, packedBuffer, offset);
+        //offset += Cartesian3.packedLength;
 
-        Cartesian3.pack(primitive._quantizedScale, packedBuffer, offset);
-        offset += Cartesian3.packedLength;
+        //Cartesian3.pack(primitive._quantizedScale, packedBuffer, offset);
+        //offset += Cartesian3.packedLength;
 
         Cartesian3.pack(primitive._center, packedBuffer, offset);
         offset += Cartesian3.packedLength;
 
         Ellipsoid.pack(primitive._ellipsoid, packedBuffer, offset);
+        offset += Ellipsoid.packedLength;
+
+        Rectangle.pack(primitive._rectangle, packedBuffer, offset);
 
         return packedBuffer;
     }

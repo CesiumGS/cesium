@@ -6,6 +6,7 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
@@ -18,6 +19,7 @@ define([
         defined,
         Ellipsoid,
         IndexDatatype,
+        CesiumMath,
         Matrix4,
         OrientedBoundingBox,
         Rectangle,
@@ -25,10 +27,11 @@ define([
         createTaskProcessorWorker) {
     'use strict';
 
-    var scratchQuantizedOffset = new Cartesian3();
-    var scratchQuantizedScale = new Cartesian3();
+    //var scratchQuantizedOffset = new Cartesian3();
+    //var scratchQuantizedScale = new Cartesian3();
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
+    var scratchRectangle = new Rectangle();
     var scratchHeights = {
         min : undefined,
         max : undefined
@@ -41,16 +44,19 @@ define([
         scratchHeights.min = packedBuffer[offset++];
         scratchHeights.max = packedBuffer[offset++];
 
-        Cartesian3.unpack(packedBuffer, offset, scratchQuantizedOffset);
-        offset += Cartesian3.packedLength;
+        //Cartesian3.unpack(packedBuffer, offset, scratchQuantizedOffset);
+        //offset += Cartesian3.packedLength;
 
-        Cartesian3.unpack(packedBuffer, offset, scratchQuantizedScale);
-        offset += Cartesian3.packedLength;
+        //Cartesian3.unpack(packedBuffer, offset, scratchQuantizedScale);
+        //offset += Cartesian3.packedLength;
 
         Cartesian3.unpack(packedBuffer, offset, scratchCenter);
         offset += Cartesian3.packedLength;
 
         Ellipsoid.unpack(packedBuffer, offset, scratchEllipsoid);
+        offset += Ellipsoid.packedLength;
+
+        Rectangle.unpack(packedBuffer, offset, scratchRectangle);
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -101,7 +107,13 @@ define([
         return packedBuffer;
     }
 
-    var scratchDecodeMatrix = new Matrix4();
+    function zigZagDecode(value) {
+        return (value >> 1) ^ (-(value & 1));
+    }
+
+    var maxShort = 32767;
+
+    //var scratchDecodeMatrix = new Matrix4();
     var scratchEncodedPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScaledNormal = new Cartesian3();
@@ -111,7 +123,8 @@ define([
     var scratchBVRectangle = new Rectangle();
 
     function createVerticesFromVectorTile(parameters, transferableObjects) {
-        var positions = parameters.positions;
+        //var positions = parameters.positions;
+        var positions = new Uint16Array(parameters.positions);
         var counts = new Uint32Array(parameters.counts);
         var indexCounts = new Uint32Array(parameters.indexCounts);
         var indices = new Uint32Array(parameters.indices);
@@ -122,13 +135,15 @@ define([
 
         unpackBuffer(parameters.packedBuffer);
 
-        var quantizedOffset = scratchQuantizedOffset;
-        var quantizedScale = scratchQuantizedScale;
+        //var quantizedOffset = scratchQuantizedOffset;
+        //var quantizedScale = scratchQuantizedScale;
         var center = scratchCenter;
         var ellipsoid = scratchEllipsoid;
+        var rectangle = scratchRectangle;
         var minHeight = scratchHeights.min;
         var maxHeight = scratchHeights.max;
 
+        /*
         var decodeMatrix;
         if (defined(quantizedOffset) && defined(quantizedScale)) {
             decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
@@ -137,10 +152,30 @@ define([
             decodeMatrix = Matrix4.IDENTITY;
             positions = new Float32Array(positions);
         }
+        */
 
         var i;
         var j;
         var rgba;
+
+        var positionsLength = positions.length / 2;
+        var decodedPositions = new Float32Array(positionsLength * 3);
+        var u = 0;
+        var v = 0;
+        for (i = 0; i < positionsLength; ++i) {
+            u += zigZagDecode(positions[i]);
+            v += zigZagDecode(positions[i + positionsLength]);
+
+            lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+            lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+
+            var cartographic = Cartographic.fromRadians(lon, lat, 0.0, scratchBVCartographic);
+            var decodedPosition = ellipsoid.cartographicToCartesian(cartographic, scratchEncodedPosition);
+            Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
+        }
+
+        positions = decodedPositions;
+        positionsLength = positions.length;
 
         var countsLength = counts.length;
         var offsets = new Array(countsLength);
@@ -155,7 +190,7 @@ define([
             currentIndexOffset += indexCounts[i];
         }
 
-        var positionsLength = positions.length;
+        //var positionsLength = positions.length;
         var batchedPositions = new Float32Array(positionsLength * 2);
         var batchedIds = new Uint16Array(positionsLength / 3 * 2);
         var batchedIndexOffsets = new Uint32Array(indexOffsets.length);
@@ -233,9 +268,11 @@ define([
             var maxLon = Number.NEGATIVE_INFINITY;
 
             for (j = 0; j < polygonCount; ++j) {
-                var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-                var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
-                var position = Cartesian3.add(rtcPosition, center, rtcPosition);
+                //var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                //var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
+                //var position = Cartesian3.add(rtcPosition, center, rtcPosition);
+
+                var position = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
 
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
@@ -267,7 +304,7 @@ define([
                 batchIdIndex += 2;
             }
 
-            var rectangle = scratchBVRectangle;
+            rectangle = scratchBVRectangle;
             rectangle.west = minLon;
             rectangle.east = maxLon;
             rectangle.south = minLat;

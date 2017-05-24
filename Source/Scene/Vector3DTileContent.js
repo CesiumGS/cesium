@@ -14,6 +14,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -43,6 +44,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
+        CesiumMath,
         Matrix4,
         Request,
         RequestScheduler,
@@ -222,9 +224,18 @@ define([
         };
     }
 
+    function zigZagDecode(value) {
+        return (value >> 1) ^ (-(value & 1));
+    }
+
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-    var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
+    //var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
+
+    var maxShort = 32767;
+
+    var scratchCartographic = new Cartographic();
+    var scratchCartesian3 = new Cartesian3();
 
     function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -327,9 +338,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var outlinePolygons = defaultValue(featureTableJson.OUTLINE_POLYGONS, false);
-        var numberOfOutlines = outlinePolygons ? numberOfPolygons : 0;
-        var totalPrimitives = numberOfPolygons + numberOfOutlines + numberOfPolylines + numberOfPoints;
+        //var outlinePolygons = defaultValue(featureTableJson.OUTLINE_POLYGONS, false);
+        //var numberOfOutlines = outlinePolygons ? numberOfPolygons : 0;
+        var totalPrimitives = numberOfPolygons + /*numberOfOutlines +*/ numberOfPolylines + numberOfPoints;
 
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content, numberOfPolygons));
         content.batchTable = batchTable;
@@ -338,6 +349,7 @@ define([
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
         var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
 
+        /*
         var isQuantized = defined(featureTableJson.QUANTIZED_VOLUME_OFFSET) && defined(featureTableJson.QUANTIZED_VOLUME_SCALE);
         //>>includeStart('debug', pragmas.debug);
         if (!isQuantized && defined(featureTableJson.QUANTIZED_VOLUME_OFFSET)) {
@@ -354,13 +366,16 @@ define([
             quantizedOffset = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_OFFSET);
             quantizedScale = Cartesian3.unpack(featureTableJson.QUANTIZED_VOLUME_SCALE);
         }
+        */
 
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
 
+        /*
         var positions;
         var polylinePositions;
         var pointsPositions;
+
         if (isQuantized) {
             positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
             byteOffset += positionByteLength;
@@ -374,6 +389,14 @@ define([
             byteOffset += polylinePositionByteLength;
             pointsPositions = new Float32Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfFloat32);
         }
+        */
+
+
+        var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+        byteOffset += positionByteLength;
+        var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
+        byteOffset += polylinePositionByteLength;
+        var pointsPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
 
         byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
         var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
@@ -386,24 +409,56 @@ define([
 
         var i;
 
+        var u;
+        var v;
+        var height;
+
+        var lat;
+        var lon;
+        var alt;
+
+        // TODO: must have rectangle
+        var rectangle = content._tile.contentBoundingVolume.rectangle;
+
         if (numberOfPoints > 0) {
+            /*
             var decodeMatrix;
             if (defined(quantizedOffset) && defined(quantizedScale)) {
                 decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), new Matrix4());
             } else {
                 decodeMatrix = Matrix4.IDENTITY;
             }
+            */
 
             content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
             content._labelCollection = new LabelCollection({ batchTable : batchTable });
 
+            u = 0;
+            v = 0;
+            height = 0;
+
             for (i = 0; i < numberOfPoints; ++i) {
+                /*
                 var x = pointsPositions[i * 3];
                 var y = pointsPositions[i * 3 + 1];
                 var z = pointsPositions[i * 3 + 2];
                 var position = Cartesian3.fromElements(x, y, z);
                 Matrix4.multiplyByPoint(decodeMatrix, position, position);
                 Cartesian3.add(position, center, position);
+                */
+
+                u += zigZagDecode(pointsPositions[i]);
+                v += zigZagDecode(pointsPositions[i + numberOfPoints]);
+                height += zigZagDecode(pointsPositions[i + numberOfPoints * 2]);
+
+                lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+                lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+                alt = CesiumMath.lerp(minHeight, maxHeight, height / maxShort);
+
+                var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchCartographic);
+
+                // TODO: ellipsoid
+                var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic, scratchCartesian3);
 
                 var b = content._billboardCollection.add();
                 b.position = position;
@@ -434,14 +489,16 @@ define([
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
                 center : center,
-                quantizedOffset : quantizedOffset,
-                quantizedScale : quantizedScale,
+                rectangle : rectangle,
+                //quantizedOffset : quantizedOffset,
+                //quantizedScale : quantizedScale,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : content.batchTable,
                 batchIds : batchIds
             });
         }
 
+        /*
         if (outlinePolygons && numberOfPolygons > 0) {
             var outlinePositionsLength = positions.length + 3 * numberOfPolygons;
             var outlinePositions = isQuantized ? new Uint16Array(outlinePositionsLength) : new Float32Array(outlinePositionsLength);
@@ -482,10 +539,11 @@ define([
                 batchTable : content.batchTable
             });
         }
+        */
 
         var widths = new Array(numberOfPolylines);
         batchIds = new Array(numberOfPolylines);
-        var polygonBatchOffset = numberOfPoints + (outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : numberOfPolygons);
+        var polygonBatchOffset = numberOfPoints + /*(outlinePolygons && numberOfPolygons > 0 ? 2.0 * numberOfPolygons : */ numberOfPolygons;//);
         for (i = 0; i < numberOfPolylines; ++i) {
             widths[i] = 2.0;
             batchIds[i] = i + polygonBatchOffset;
@@ -497,9 +555,12 @@ define([
                 widths : widths,
                 counts : polylineCounts,
                 batchIds : batchIds,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
                 center : center,
-                quantizedOffset : quantizedOffset,
-                quantizedScale : quantizedScale,
+                rectangle : rectangle,
+                //quantizedOffset : quantizedOffset,
+                //quantizedScale : quantizedScale,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : content.batchTable
             });

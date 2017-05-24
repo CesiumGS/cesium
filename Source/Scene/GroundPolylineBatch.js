@@ -1,11 +1,15 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/Ellipsoid',
         '../Core/IndexDatatype',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
@@ -21,11 +25,15 @@ define([
         './BlendingState'
     ], function(
         Cartesian3,
+        Cartographic,
         Color,
         ComponentDatatype,
+        defaultValue,
         defined,
         destroyObject,
+        Ellipsoid,
         IndexDatatype,
+        CesiumMath,
         Matrix4,
         TranslationRotationScale,
         Buffer,
@@ -67,9 +75,13 @@ define([
         this._counts = options.counts;
         this._batchIds = options.batchIds;
 
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._minimumHeight = options.minimumHeight;
+        this._maximumHeight = options.maximumHeight;
         this._center = options.center;
-        this._quantizedOffset = options.quantizedOffset;
-        this._quantizedScale = options.quantizedScale;
+        this._rectangle = options.rectangle;
+        //this._quantizedOffset = options.quantizedOffset;
+        //this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
         this._batchTable = options.batchTable;
@@ -96,13 +108,46 @@ define([
         a_batchId : 4
     };
 
+    /*
     function decodePosition(positions, index, decodeMatrix, center, result) {
         var encodedPosition = Cartesian3.unpack(positions, index, result);
         var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
         return Cartesian3.add(rtcPosition, center, rtcPosition);
     }
+    */
 
-    var scratchDecodeMatrix = new Matrix4();
+    var maxShort = 32767;
+
+    function zigZagDecode(value) {
+        return (value >> 1) ^ (-(value & 1));
+    }
+
+    var scratchBVCartographic = new Cartographic();
+    var scratchEncodedPosition = new Cartesian3();
+
+    function decodePositions(positions, rectangle, minimumHeight, maximumHeight, ellipsoid) {
+        var positionsLength = positions.length / 3;
+        var decoded = new Float32Array(positions.length);
+        var u = 0;
+        var v = 0;
+        var h = 0;
+        for (var i = 0; i < positionsLength; ++i) {
+            u += zigZagDecode(positions[i]);
+            v += zigZagDecode(positions[i + positionsLength]);
+            h += zigZagDecode(positions[i + positionsLength * 2]);
+
+            var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+            var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+            var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
+
+            var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchBVCartographic);
+            var decodedPosition = ellipsoid.cartographicToCartesian(cartographic, scratchEncodedPosition);
+            Cartesian3.pack(decodedPosition, decoded, i * 3);
+        }
+        return decoded;
+    }
+
+    //var scratchDecodeMatrix = new Matrix4();
     var scratchP0 = new Cartesian3();
     var scratchP1 = new Cartesian3();
     var scratchPrev = new Cartesian3();
@@ -114,7 +159,14 @@ define([
             return;
         }
 
-        var positions = primitive._positions;
+        var rectangle = primitive._rectangle;
+        var minimumHeight = primitive._minimumHeight;
+        var maximumHeight = primitive._maximumHeight;
+        var ellipsoid = primitive._ellipsoid;
+
+        var positions = decodePositions(primitive._positions, rectangle, minimumHeight, maximumHeight, ellipsoid);
+
+        //var positions = primitive._positions;
         var widths = primitive._widths;
         var ids = primitive._batchIds;
         var counts = primitive._counts;
@@ -133,15 +185,17 @@ define([
         var batchIdIndex = 0;
 
         var center = primitive._center;
-        var quantizedOffset = primitive._quantizedOffset;
-        var quantizedScale = primitive._quantizedScale;
+        //var quantizedOffset = primitive._quantizedOffset;
+        //var quantizedScale = primitive._quantizedScale;
 
+        /*
         var decodeMatrix;
         if (defined(quantizedOffset) && defined(quantizedScale)) {
             decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
         } else {
             decodeMatrix = Matrix4.IDENTITY;
         }
+        */
 
         var i;
         var offset = 0;
@@ -155,26 +209,33 @@ define([
             for (var j = 0; j < count; ++j) {
                 var previous;
                 if (j === 0) {
-                    var p0 = decodePosition(positions, offset * 3, decodeMatrix, center, scratchP0);
-                    var p1 = decodePosition(positions, (offset + 1) * 3, decodeMatrix, center, scratchP1);
+                    //var p0 = decodePosition(positions, offset * 3, decodeMatrix, center, scratchP0);
+                    //var p1 = decodePosition(positions, (offset + 1) * 3, decodeMatrix, center, scratchP1);
+                    var p0 = Cartesian3.unpack(positions, offset * 3, scratchP0);
+                    var p1 = Cartesian3.unpack(positions, (offset + 1) * 3, scratchP1);
 
                     previous = Cartesian3.subtract(p0, p1, scratchPrev);
                     Cartesian3.add(p0, previous, previous);
                 } else {
-                    previous = decodePosition(positions, (offset + j - 1) * 3, decodeMatrix, center, scratchPrev);
+                    //previous = decodePosition(positions, (offset + j - 1) * 3, decodeMatrix, center, scratchPrev);
+                    previous = Cartesian3.unpack(positions, (offset + j - 1) * 3, scratchPrev);
                 }
 
-                var current = decodePosition(positions, (offset + j) * 3, decodeMatrix, center, scratchCur);
+                //var current = decodePosition(positions, (offset + j) * 3, decodeMatrix, center, scratchCur);
+                var current = Cartesian3.unpack(positions, (offset + j) * 3, scratchCur);
 
                 var next;
                 if (j === count - 1) {
-                    var p2 = decodePosition(positions, (offset + count - 1) * 3, decodeMatrix, center, scratchP0);
-                    var p3 = decodePosition(positions, (offset + count - 2) * 3, decodeMatrix, center, scratchP1);
+                    //var p2 = decodePosition(positions, (offset + count - 1) * 3, decodeMatrix, center, scratchP0);
+                    //var p3 = decodePosition(positions, (offset + count - 2) * 3, decodeMatrix, center, scratchP1);
+                    var p2 = Cartesian3.unpack(positions, (offset + count - 1) * 3, scratchP0);
+                    var p3 = Cartesian3.unpack(positions, (offset + count - 2) * 3, scratchP1);
 
                     next = Cartesian3.subtract(p2, p3, scratchNext);
                     Cartesian3.add(p2, next, next);
                 } else {
-                    next = decodePosition(positions, (offset + j + 1) * 3, decodeMatrix, center, scratchNext);
+                    //next = decodePosition(positions, (offset + j + 1) * 3, decodeMatrix, center, scratchNext);
+                    next = Cartesian3.unpack(positions, (offset + j + 1) * 3, scratchNext);
                 }
 
                 Cartesian3.subtract(previous, center, previous);
