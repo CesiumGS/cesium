@@ -1194,6 +1194,22 @@ defineSuite([
         });
     });
 
+    it('set tile color', function() {
+        return Cesium3DTilesTester.loadTileset(scene, noBatchIdsUrl).then(function(tileset) {
+            // Get initial color
+            var color;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                color = rgba;
+            });
+
+            // Check for color
+            tileset._root.color = Color.RED;
+            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
+                expect(rgba).not.toEqual(color);
+            });
+        });
+    });
+
     it('debugFreezeFrame', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             viewRootOnly();

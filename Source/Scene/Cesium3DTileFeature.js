@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defined',
         '../Core/defineProperties'
     ], function(
         Color,
+        defined,
         defineProperties) {
     'use strict';
 
@@ -91,7 +93,7 @@ define([
          */
         color : {
             get : function() {
-                if (!this._color) {
+                if (!defined(this._color)) {
                     this._color = new Color();
                 }
                 return this._content.batchTable.getColor(this._batchId, this._color);
