@@ -1471,7 +1471,7 @@ defineSuite([
                            'Triangles: 120\n' +
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
-                           'Vertex Memory: 0.008';
+                           'Geometry Memory: 0.008';
             expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
             expect(tileset._tileDebugLabels.get(0).position).toEqual(scratchPosition);
 
