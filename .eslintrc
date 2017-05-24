@@ -1,4 +1,5 @@
 {
+    "extends": "eslint:recommended",
     "env": {
         "browser": true,
         "jasmine": true
@@ -25,8 +26,10 @@
         "guard-for-in": ["error"],
         "new-cap": ["error", {"properties": false}],
         "no-caller": ["error"],
+        "no-console": "off",
         "no-empty": ["error"],
         "no-extend-native": ["error"],
+        "no-extra-boolean-cast": "off",
         "no-irregular-whitespace": ["error"],
         "no-new": ["error"],
         "no-undef": ["error"],
