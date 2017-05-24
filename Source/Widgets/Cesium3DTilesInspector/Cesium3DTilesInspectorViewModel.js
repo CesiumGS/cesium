@@ -856,12 +856,13 @@ define([
                     return;
                 }
                 var currentTile = this._tile;
-                if (defined(currentTile) && currentTile.content.featuresLength === 0) {
+
+                if (defined(currentTile) && !hasFeatures(currentTile)) {
                     // Restore original color to tile that is no longer selected
                     currentTile.color = oldColor;
                 }
 
-                if (defined(tile) && tile.content.featuresLength === 0) {
+                if (defined(tile) && hasFeatures(tile)) {
                     // Highlight new tile
                     Color.clone(tile.color, oldColor);
                     tile.color = highlightColor;
@@ -870,6 +871,23 @@ define([
             }
         }
     });
+
+    function hasFeatures(tile) {
+        var content = tile.content;
+        if (content.featuresLength > 0) {
+            return true;
+        }
+        var innerContents = content.innerContents;
+        if (defined(innerContents)) {
+            var length = innerContents.length;
+            for (var i = 0; i < length; ++i) {
+                if (innerContents[i].featuresLength > 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     /**
      * Toggles the pick tileset mode
