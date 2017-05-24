@@ -10,7 +10,7 @@ define([
      *
      * @exports Cesium3DTileRefine
      *
-     * @see Cesium3DTile#refine
+     * @private
      */
     var Cesium3DTileRefine = {
         /**

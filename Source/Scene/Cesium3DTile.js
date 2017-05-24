@@ -164,6 +164,7 @@ define([
          *
          * @type {Cesium3DTileRefine}
          * @readonly
+         * @private
          */
         this.refine = refine;
 

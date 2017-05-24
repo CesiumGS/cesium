@@ -227,8 +227,10 @@ define([
      * Returns the {@link Cesium3DTileFeature} object for the feature with the
      * given <code>batchId</code>.  This object is used to get and modify the
      * feature's properties.
-     *
+     * <p>
      * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
+     * </p>
+     *
      * @see {@link  https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable}.
      *
      * @param {Number} batchId The batchId for the feature.

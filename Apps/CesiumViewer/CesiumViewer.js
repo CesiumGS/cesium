@@ -34,7 +34,7 @@ define([
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
      * 'lookAt' : CZML id,      // The CZML ID of the object to track at startup.
      * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
-     * 'statistics' : true,     // Enable the FPS performance display.
+     * 'stats'  : true,         // Enable the FPS performance display.
      * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
      * 'scene3DOnly' : false    // Enable 3D only mode
      * 'view' : longitude,latitude,[height,heading,pitch,roll]
@@ -130,7 +130,7 @@ define([
         }
     }
 
-    if (endUserOptions.statistics) {
+    if (endUserOptions.stats) {
         scene.debugShowFramesPerSecond = true;
     }
 
