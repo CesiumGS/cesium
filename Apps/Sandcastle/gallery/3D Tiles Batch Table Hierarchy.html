@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
-    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <meta name="description" content="Demonstrates use cases for a batch table hierarchy.">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -84,6 +84,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+
+viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
 var scene = viewer.scene;
 var url = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
