@@ -1551,10 +1551,10 @@ defineSuite([
         expression = new Expression('cos(vec2(0, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec3(0, Math.PI, -Math.PI)');
+        expression = new Expression('cos(vec3(0, Math.PI, -Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(1.0, -1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('cos(vec4(0, Math.PI, -Math.PI, 0)');
+        expression = new Expression('cos(vec4(0, Math.PI, -Math.PI, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(1.0, -1.0, -1.0, 1.0), CesiumMath.EPSILON7);
     });
 
@@ -1575,10 +1575,10 @@ defineSuite([
         expression = new Expression('sin(vec2(0, Math.PI/2))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec3(0, Math.PI/2, -Math.PI/2)');
+        expression = new Expression('sin(vec3(0, Math.PI/2, -Math.PI/2))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, -1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('sin(vec4(0, Math.PI/2, -Math.PI/2, 0)');
+        expression = new Expression('sin(vec4(0, Math.PI/2, -Math.PI/2, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, -1.0, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1599,10 +1599,10 @@ defineSuite([
         expression = new Expression('tan(vec2(0, Math.PI/4))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, 1.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec3(0, Math.PI/4, Math.PI)');
+        expression = new Expression('tan(vec3(0, Math.PI/4, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON7);
 
-        expression = new Expression('tan(vec4(0, Math.PI/4, Math.PI, -Math.PI/4)');
+        expression = new Expression('tan(vec4(0, Math.PI/4, Math.PI, -Math.PI/4))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, 1.0, 0.0, -1.0), CesiumMath.EPSILON7);
     });
 
@@ -1623,10 +1623,10 @@ defineSuite([
         expression = new Expression('acos(vec2(1, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
 
-        expression = new Expression('acos(vec3(1, 0, 1)');
+        expression = new Expression('acos(vec3(1, 0, 1))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
 
-        expression = new Expression('acos(vec4(1, 0, 1, 0)');
+        expression = new Expression('acos(vec4(1, 0, 1, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1647,10 +1647,10 @@ defineSuite([
         expression = new Expression('asin(vec2(0, 1))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
 
-        expression = new Expression('asin(vec3(0, 1, 0)');
+        expression = new Expression('asin(vec3(0, 1, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
 
-        expression = new Expression('asin(vec4(0, 1, 0, 1)');
+        expression = new Expression('asin(vec4(0, 1, 0, 1))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_TWO, 0.0, CesiumMath.PI_OVER_TWO, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1671,10 +1671,10 @@ defineSuite([
         expression = new Expression('atan(vec2(0, 1))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian2(0.0, CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
 
-        expression = new Expression('atan(vec3(0, 1, 0)');
+        expression = new Expression('atan(vec3(0, 1, 0))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(0.0, CesiumMath.PI_OVER_FOUR, 0.0, CesiumMath.PI_OVER_FOUR), CesiumMath.EPSILON7);
 
-        expression = new Expression('atan(vec4(0, 1, 0, 1)');
+        expression = new Expression('atan(vec4(0, 1, 0, 1))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(0.0, CesiumMath.PI_OVER_FOUR, 0.0, CesiumMath.PI_OVER_FOUR, 0.0), CesiumMath.EPSILON7);
     });
 
@@ -1698,7 +1698,7 @@ defineSuite([
         expression = new Expression('radians(vec3(180, 90, 180))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(Math.PI, CesiumMath.PI_OVER_TWO, Math.PI), CesiumMath.EPSILON7);
 
-        expression = new Expression('radians(vec4(180, 90, 180, 90)');
+        expression = new Expression('radians(vec4(180, 90, 180, 90))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(Math.PI, CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO), CesiumMath.EPSILON7);
     });
 
@@ -1722,7 +1722,7 @@ defineSuite([
         expression = new Expression('degrees(vec3(2 * Math.PI, Math.PI, 2 * Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian3(360, 180, 360), CesiumMath.EPSILON7);
 
-        expression = new Expression('degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI)');
+        expression = new Expression('degrees(vec4(2 * Math.PI, Math.PI, 2 * Math.PI, Math.PI))');
         expect(expression.evaluate(frameState, undefined)).toEqualEpsilon(new Cartesian4(360, 180, 360, 180), CesiumMath.EPSILON7);
     });
 
