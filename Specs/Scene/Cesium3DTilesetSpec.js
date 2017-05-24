@@ -1324,7 +1324,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with regions', function() {
+    it('show tile debug labels with regions', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
@@ -1345,7 +1345,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with boxes', function() {
+    it('show tile debug labels with boxes', function() {
         // tilesetWithTransformsUrl has bounding boxes
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
@@ -1363,7 +1363,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with bounding spheres', function() {
+    it('show tile debug labels with bounding spheres', function() {
         // tilesetWithViewerRequestVolumeUrl has bounding sphere
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
@@ -1383,7 +1383,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with rendering statistics', function() {
+    it('show tile debug labels with rendering statistics', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowRenderingStatistics = true;
@@ -1405,7 +1405,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with memory usage', function() {
+    it('show tile debug labels with memory usage', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowMemoryUsage = true;
@@ -1425,7 +1425,7 @@ defineSuite([
         });
     });
 
-    it('show tile info labels with all stats', function() {
+    it('show tile debug labels with all stats', function() {
         // tilesetUrl has bounding regions
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.debugShowGeometricError = true;
@@ -1448,6 +1448,36 @@ defineSuite([
             tileset.debugShowMemoryUsage = false;
             scene.renderForSpecs();
             expect(tileset._tileDebugLabels).not.toBeDefined();
+        });
+    });
+
+    it('show only picked tile debug label with all stats', function() {
+        // tilesetUrl has bounding regions
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            tileset.debugShowGeometricError = true;
+            tileset.debugShowRenderingStatistics = true;
+            tileset.debugShowMemoryUsage = true;
+            tileset.debugPickedTileLabelOnly = true;
+
+            var scratchPosition = new Cartesian3(1.0, 1.0, 1.0);
+            tileset.debugPickedTile = tileset._root;
+            tileset.debugPickPosition = scratchPosition;
+
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels).toBeDefined();
+
+            var expected = 'Geometric error: 70\n' +
+                           'Commands: 1\n' +
+                           'Triangles: 120\n' +
+                           'Features: 10\n' +
+                           'Texture Memory: 0\n' +
+                           'Vertex Memory: 0.008';
+            expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
+            expect(tileset._tileDebugLabels.get(0).position).toEqual(scratchPosition);
+
+            tileset.debugPickedTile = undefined;
+            scene.renderForSpecs();
+            expect(tileset._tileDebugLabels.length).toEqual(0);
         });
     });
 

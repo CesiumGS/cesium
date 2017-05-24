@@ -132,11 +132,32 @@ defineSuite([
             expect(viewModel.tileset.debugShowViewerRequestVolume).toBe(false);
         });
 
+        it('showOnlyPickedTileDebugLabel', function() {
+            viewModel.showOnlyPickedTileDebugLabel = true;
+            expect(viewModel.tileset.debugPickedTileLabelOnly).toBe(true);
+            viewModel.showOnlyPickedTileDebugLabel = false;
+            expect(viewModel.tileset.debugPickedTileLabelOnly).toBe(false);
+        });
+
         it('showGeometricError', function() {
             viewModel.showGeometricError = true;
             expect(viewModel.tileset.debugShowGeometricError).toBe(true);
             viewModel.showGeometricError = false;
             expect(viewModel.tileset.debugShowGeometricError).toBe(false);
+        });
+
+        it('showRenderingStatistics', function() {
+            viewModel.showRenderingStatistics = true;
+            expect(viewModel.tileset.debugShowRenderingStatistics).toBe(true);
+            viewModel.showRenderingStatistics = false;
+            expect(viewModel.tileset.debugShowRenderingStatistics).toBe(false);
+        });
+
+        it('showMemoryUsage', function() {
+            viewModel.showMemoryUsage = true;
+            expect(viewModel.tileset.debugShowMemoryUsage).toBe(true);
+            viewModel.showMemoryUsage = false;
+            expect(viewModel.tileset.debugShowMemoryUsage).toBe(false);
         });
     });
 

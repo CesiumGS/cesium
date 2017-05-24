@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
@@ -51,6 +52,7 @@ define([
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartographic,
         Check,
@@ -190,7 +192,7 @@ define([
         // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
         // (sentinel, tail] -> tiles that were selected this frame
         this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
-        this._replacementSentinel  = replacementList.add();
+        this._replacementSentinel = replacementList.add();
         this._trimTiles = false;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
@@ -200,7 +202,7 @@ define([
 
         this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
         this._skipTraversal = new Cesium3DTilesetTraversal.SkipTraversal({
-            selectionHeuristic: selectionHeuristic
+            selectionHeuristic : selectionHeuristic
         });
 
         this._backfaceCommands = new ManagedArray();
@@ -399,6 +401,11 @@ define([
          * @default false
          */
         this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+
+        this._tileDebugLabels = undefined;
+        this.debugPickedTileLabelOnly = false;
+        this.debugPickedTile = undefined;
+        this.debugPickPosition = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1272,67 +1279,87 @@ define([
         }
     }
 
+    function computeTileLabelPosition(tile) {
+        var boundingVolume = tile._boundingVolume.boundingVolume;
+        var halfAxes = boundingVolume.halfAxes;
+        var radius = boundingVolume.radius;
+
+        var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
+        if (defined(halfAxes)) {
+            position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
+            position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
+            position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
+        } else if (defined(radius)) {
+            var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
+            normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
+            position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+        }
+        return position;
+    }
+
+    function addTileDebugLabel(tile, tileset, position) {
+        var labelString = '';
+        var attributes = 0;
+
+        if (tileset.debugShowGeometricError) {
+            labelString += '\nGeometric error: ' + tile.geometricError;
+            attributes++;
+        }
+
+        if (tileset.debugShowRenderingStatistics) {
+            labelString += '\nCommands: ' + tile.commandsLength;
+            attributes++;
+
+            // Don't display number of points or triangles if 0.
+            var numberOfPoints = tile.content.pointsLength;
+            if (numberOfPoints > 0) {
+                labelString += '\nPoints: ' + tile.content.pointsLength;
+                attributes++;
+            }
+
+            var numberOfTriangles = tile.content.trianglesLength;
+            if (numberOfTriangles > 0) {
+                labelString += '\nTriangles: ' + tile.content.trianglesLength;
+                attributes++;
+            }
+
+            labelString += '\nFeatures: ' + tile.content.featuresLength;
+            attributes ++;
+        }
+
+        if (tileset.debugShowMemoryUsage) {
+            labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
+            labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
+            attributes += 2;
+        }
+
+        var newLabel = {
+            text : labelString.substring(1),
+            position : position,
+            font : (19-attributes) + 'px sans-serif',
+            showBackground : true,
+            disableDepthTestDistance : Number.POSITIVE_INFINITY
+        };
+
+        return tileset._tileDebugLabels.add(newLabel);
+    }
+
     function updateTileDebugLabels(tileset, frameState) {
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         tileset._tileDebugLabels.removeAll();
-        for (var i = 0; i < length; ++i) {
-            var tile = selectedTiles[i];
-            var boundingVolume = tile._boundingVolume.boundingVolume;
-            var halfAxes = boundingVolume.halfAxes;
-            var radius = boundingVolume.radius;
 
-            var position = Cartesian3.clone(boundingVolume.center, scratchCartesian);
-            if (defined(halfAxes)) {
-                position.x += 0.75 * (halfAxes[0] + halfAxes[3] + halfAxes[6]);
-                position.y += 0.75 * (halfAxes[1] + halfAxes[4] + halfAxes[7]);
-                position.z += 0.75 * (halfAxes[2] + halfAxes[5] + halfAxes[8]);
-            } else if (defined(radius)) {
-                var normal = Cartesian3.normalize(boundingVolume.center, scratchCartesian);
-                normal = Cartesian3.multiplyByScalar(normal, 0.75 * radius, scratchCartesian);
-                position = Cartesian3.add(normal, boundingVolume.center, scratchCartesian);
+        if (tileset.debugPickedTileLabelOnly) {
+            if (defined(tileset.debugPickedTile)) {
+                var position = (defined(tileset.debugPickPosition)) ? tileset.debugPickPosition : computeTileLabelPosition(tileset.debugPickedTile);
+                var label = addTileDebugLabel(tileset.debugPickedTile, tileset, position);
+                label.pixelOffset = new Cartesian2(15, -15); // Offset to avoid picking the label.
             }
-
-            var labelString = '';
-            var attributes = 0;
-
-            if (tileset.debugShowGeometricError) {
-                labelString += '\nGeometric error: ' + tile.geometricError;
-                attributes++;
+        } else {
+            for (var i = 0; i < length; ++i) {
+                var tile = selectedTiles[i];
+                addTileDebugLabel(tile, tileset, computeTileLabelPosition(tile));
             }
-            if (tileset.debugShowRenderingStatistics) {
-                labelString += '\nCommands: ' + tile.commandsLength;
-                attributes++;
-
-                // Don't display number of points or triangles if 0.
-                var numberOfPoints = tile.content.pointsLength;
-                if (numberOfPoints > 0) {
-                    labelString += '\nPoints: ' + tile.content.pointsLength;
-                    attributes++;
-                }
-                var numberOfTriangles = tile.content.trianglesLength;
-                if (numberOfTriangles > 0) {
-                    labelString += '\nTriangles: ' + tile.content.trianglesLength;
-                    attributes++;
-                }
-
-                labelString += '\nFeatures: ' + tile.content.featuresLength;
-                attributes ++;
-            }
-
-            if (tileset.debugShowMemoryUsage) {
-                labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
-                labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
-                attributes += 2;
-            }
-
-            tileset._tileDebugLabels.add({
-                text : labelString.substring(1),
-                position : position,
-                font : (19-attributes) + 'px sans-serif',
-                showBackground : true,
-                disableDepthTestDistance : Number.POSITIVE_INFINITY
-            });
         }
         tileset._tileDebugLabels.update(frameState);
     }
