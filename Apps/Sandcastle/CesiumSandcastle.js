@@ -378,7 +378,8 @@ require({
                     errorLines.push(line);
                 }
             }
-        }/*eslint-enable new-cap*/
+        }
+        /*eslint-enable new-cap*/
     }
 
     function scheduleHint() {

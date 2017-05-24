@@ -37,6 +37,7 @@ defineSuite([
         var endTime = getTimestamp() + milliseconds;
         while (getTimestamp() < endTime) {
         }
+        /*eslint-enable no-empty*/
     }
 
     it('throws when constructed without a scene', function() {

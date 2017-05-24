@@ -30,8 +30,10 @@ defineSuite([
 
     function spinWait(milliseconds) {
         var endTime = getTimestamp() + milliseconds;
-        while (getTimestamp() < endTime) {/*eslint-disable no-empty*/
-        }/*eslint-enable no-empty*/
+        /*eslint-disable no-empty*/
+        while (getTimestamp() < endTime) {
+        }
+        /*eslint-enable no-empty*/
     }
 
     it('throws when constructed without a scene', function() {

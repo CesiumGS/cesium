@@ -151,7 +151,8 @@ define([
             } else {
                 Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunction));
             }
-        }/*eslint-enable guard-for-in*/
+        }
+        /*eslint-enable guard-for-in*/
 
         return glWrapper;
     }
