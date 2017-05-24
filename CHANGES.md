@@ -23,6 +23,7 @@ Change Log
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 * Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
+* Fixed a bug which prevented KML descriptions with relative paths from loading. [#5352](https://github.com/AnalyticalGraphicsInc/cesium/pull/5352)
 * Updated documentation for Quaternion.fromHeadingPitchRoll [#5264](https://github.com/AnalyticalGraphicsInc/cesium/issues/5264)
 
 ### 1.33 - 2017-05-01

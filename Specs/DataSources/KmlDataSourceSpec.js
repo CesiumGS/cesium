@@ -1832,6 +1832,28 @@ defineSuite([
         });
     });
 
+    it('BalloonStyle: relative description paths absolute to sourceUri', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+            <description><![CDATA[<img src="foo/bar.png"/>]]></description>\
+        </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            sourceUri : 'http://test.invalid'
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            var element = document.createElement('div');
+            element.innerHTML = entity.description.getValue();
+
+            var a = element.firstChild.firstChild;
+            expect(a.localName).toEqual('img');
+            expect(a.getAttribute('src')).toEqual('http://test.invalid/foo/bar.png');
+        });
+    });
+
     it('BalloonStyle: description retargets existing links to _blank', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Placemark>\
