@@ -34,6 +34,7 @@
         "no-new": ["error"],
         "no-undef": ["error"],
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+        "semi": ["error"],
         "strict": ["error"],
         "wrap-iife": ["error", "any"]
     }
