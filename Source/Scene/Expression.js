@@ -27,6 +27,150 @@ define([
         ExpressionNodeType) {
     'use strict';
 
+    /**
+     * Evaluates an expression defined using the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * <p>
+     * Implements the {@link StyleExpression} interface.
+     * </p>
+     *
+     * @alias Expression
+     * @constructor
+     *
+     * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
+     * @param {Object} [expressions] Additional expressions defined in the style.
+     *
+     * @example
+     * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
+     *
+     * @example
+     * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
+     */
+    function Expression(expression, expressions) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('expression', expression);
+        //>>includeEnd('debug');
+
+        this._expression = expression;
+        expression = replaceExpressions(expression, expressions);
+        expression = replaceVariables(removeBackslashes(expression));
+
+        // customize jsep operators
+        jsep.addBinaryOp('=~', 0);
+        jsep.addBinaryOp('!~', 0);
+
+        var ast;
+        try {
+            ast = jsep(expression);
+        } catch (e) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError(e);
+            //>>includeEnd('debug');
+        }
+
+        this._runtimeAst = createRuntimeAst(this, ast);
+    }
+
+    defineProperties(Expression.prototype, {
+        /**
+         * Gets the expression defined in the 3D Tiles Styling language.
+         *
+         * @memberof Expression.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default undefined
+         */
+        expression : {
+            get : function() {
+                return this._expression;
+            }
+        }
+    });
+
+    /**
+     * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
+     * the expression in the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
+     * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
+     * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
+     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
+     * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4} The result of evaluating the expression.
+     */
+    Expression.prototype.evaluate = function(frameState, feature) {
+        ScratchStorage.reset();
+        var result = this._runtimeAst.evaluate(frameState, feature);
+        if ((result instanceof Cartesian2) || (result instanceof Cartesian3) || (result instanceof Cartesian4)) {
+            return result.clone();
+        }
+        return result;
+    };
+
+    /**
+     * Evaluates the result of a Color expression, using the values defined by a feature.
+     * <p>
+     * This is equivalent to {@link StyleExpression#evaluate} but avoids allocating memory by accepting a result argument.
+     * </p>
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
+     * @param {Color} [result] The object in which to store the result
+     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+     */
+    Expression.prototype.evaluateColor = function(frameState, feature, result) {
+        ScratchStorage.reset();
+        var color = this._runtimeAst.evaluate(frameState, feature);
+        return Color.fromCartesian4(color, result);
+    };
+
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     * @param {String} returnType The return type of the generated function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
+        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
+        if (!defined(shaderExpression)) {
+            return undefined;
+        }
+
+        shaderExpression = returnType + ' ' + functionName + '() \n' +
+                           '{ \n' +
+                           '    return ' + shaderExpression + '; \n' +
+                           '} \n';
+
+        return shaderExpression;
+    };
+
+    /**
+     * Gets the shader expression for this expression.
+     * Returns undefined if the shader expression can't be generated from this expression.
+     *
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader expression.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
+    };
+
     var unaryOperators = ['!', '-', '+'];
     var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
@@ -281,150 +425,6 @@ define([
         throw new DeveloperError('Function "' + call + '" requires vec3 arguments. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
     }
-
-    /**
-     * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
-     * <p>
-     * Implements the {@link StyleExpression} interface.
-     * </p>
-     *
-     * @alias Expression
-     * @constructor
-     *
-     * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
-     * @param {Object} [expressions] Additional expressions defined in the style.
-     *
-     * @example
-     * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
-     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
-     *
-     * @example
-     * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
-     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-     */
-    function Expression(expression, expressions) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('expression', expression);
-        //>>includeEnd('debug');
-
-        this._expression = expression;
-        expression = replaceExpressions(expression, expressions);
-        expression = replaceVariables(removeBackslashes(expression));
-
-        // customize jsep operators
-        jsep.addBinaryOp('=~', 0);
-        jsep.addBinaryOp('!~', 0);
-
-        var ast;
-        try {
-            ast = jsep(expression);
-        } catch (e) {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError(e);
-            //>>includeEnd('debug');
-        }
-
-        this._runtimeAst = createRuntimeAst(this, ast);
-    }
-
-    defineProperties(Expression.prototype, {
-        /**
-         * Gets the expression defined in the 3D Tiles Styling language.
-         *
-         * @memberof Expression.prototype
-         *
-         * @type {String}
-         * @readonly
-         *
-         * @default undefined
-         */
-        expression : {
-            get : function() {
-                return this._expression;
-            }
-        }
-    });
-
-    /**
-     * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
-     * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-     * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
-     * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
-     * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
-     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
-     * @returns {Boolean|Number|String|Cartesian2|Cartesian3|Cartesian4|RegExp} The result of evaluating the expression.
-     */
-    Expression.prototype.evaluate = function(frameState, feature) {
-        ScratchStorage.reset();
-        var result = this._runtimeAst.evaluate(frameState, feature);
-        if ((result instanceof Cartesian2) || (result instanceof Cartesian3) || (result instanceof Cartesian4)) {
-            return result.clone();
-        }
-        return result;
-    };
-
-    /**
-     * Evaluates the result of a Color expression, using the values defined by a feature.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
-     * @param {Color} [result] The object in which to store the result
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     */
-    Expression.prototype.evaluateColor = function(frameState, feature, result) {
-        ScratchStorage.reset();
-        var color = this._runtimeAst.evaluate(frameState, feature);
-        return Color.fromCartesian4(color, result);
-    };
-
-    /**
-     * Gets the shader function for this expression.
-     * Returns undefined if the shader function can't be generated from this expression.
-     *
-     * @param {String} functionName Name to give to the generated function.
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     * @param {String} returnType The return type of the generated function.
-     *
-     * @returns {String} The shader function.
-     *
-     * @private
-     */
-    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
-        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
-        if (!defined(shaderExpression)) {
-            return undefined;
-        }
-
-        shaderExpression = returnType + ' ' + functionName + '() \n' +
-                           '{ \n' +
-                           '    return ' + shaderExpression + '; \n' +
-                           '} \n';
-
-        return shaderExpression;
-    };
-
-    /**
-     * Gets the shader expression for this expression.
-     * Returns undefined if the shader expression can't be generated from this expression.
-     *
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     *
-     * @returns {String} The shader expression.
-     *
-     * @private
-     */
-    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
-        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
-    };
 
     function Node(type, value, left, right, test) {
         this._type = type;

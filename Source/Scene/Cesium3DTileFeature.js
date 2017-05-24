@@ -10,14 +10,14 @@ define([
     'use strict';
 
     /**
-     * Provides access to a feature's properties stored in the 3D tile's batch table, as well
+     * Provides access to a feature's properties stored in the tile's batch table, as well
      * as the ability to show/hide a feature and change its highlight color via
      * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color}, respectively.
      * <p>
      * Modifications to a <code>Cesium3DTileFeature</code> object have the lifetime of the tile's
      * content.  If the tile's content is unloaded, e.g., due to it going out of view and needing
-     * to free space in the cache for visible tiles, listen to the DOC_TBA event to save any
-     * modifications.
+     * to free space in the cache for visible tiles, listen to the {@link Cesium3DTileset#tileUnload} event to save any
+     * modifications. Also listen to the {@link Cesium3DTileset#tileVisible} event to reapply any modifications.
      * </p>
      * <p>
      * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
@@ -31,14 +31,12 @@ define([
      * // On mouse over, display all the properties for a feature in the console log.
      * handler.setInputAction(function(movement) {
      *     var feature = scene.pick(movement.endPosition);
-     *     if (Cesium.defined(feature) && (feature.primitive === tileset)) {
-     *         var properties = tileset.properties;
-     *         if (Cesium.defined(properties)) {
-     *             for (var name in properties) {
-     *                 if (properties.hasOwnProperty(name)) {
-     *                     console.log(name + ': ' + feature.getProperty(name));
-     *                 }
-     *             }
+     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+     *         var propertyNames = feature.getPropertyNames();
+     *         var length = propertyNames.length;
+     *         for (var i = 0; i < length; ++i) {
+     *             var propertyName = propertyNames[i];
+     *             console.log(propertyName + ': ' + feature.getProperty(propertyName));
      *         }
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -60,7 +58,8 @@ define([
 
     defineProperties(Cesium3DTileFeature.prototype, {
         /**
-         * Gets and sets if the feature will be shown.
+         * Gets and sets if the feature will be shown. This is set for all features
+         * when a style's show is evaluated.
          *
          * @memberof Cesium3DTileFeature.prototype
          *
@@ -79,11 +78,8 @@ define([
 
         /**
          * Gets and sets the highlight color multiplied with the feature's color.  When
-         * this is white, the feature's color is not changed.
-         * <p>
-         * Only <code>red</code>, <code>green</code>, and <code>blue</code> components
-         * are used; <code>alpha</code> is ignored.
-         * </p>
+         * this is white, the feature's color is not changed. This is set for all features
+         * when a style's color is evaluated.
          *
          * @memberof Cesium3DTileFeature.prototype
          *
@@ -104,13 +100,14 @@ define([
         },
 
         /**
-         * Gets the feature content.
+         * Gets the content of the tile containing the feature.
          *
          * @memberof Cesium3DTileFeature.prototype
          *
          * @type {Cesium3DTileContent}
          *
          * @readonly
+         * @private
          */
         content : {
             get : function() {
@@ -121,12 +118,9 @@ define([
 
     /**
      * Returns whether the feature contains this property. This includes properties from this feature's
-     * class and inherited classes, in addition to the standard batch table properties.
-     * <p>
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
-     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
-     * that are not part of the feature's properties in the stored 3D Tileset.
-     * </p>
+     * class and inherited classes when using a batch table hierarchy.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {Boolean} Whether the feature contains this property.
@@ -137,12 +131,9 @@ define([
 
     /**
      * Returns an array of property names for the feature. This includes properties from this feature's
-     * class and inherited classes, in addition to the standard batch table properties.
-     * <p>
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
-     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
-     * that are not part of the feature's properties in the stored 3D Tileset.
-     * </p>
+     * class and inherited classes when using a batch table hierarchy.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *
      * @returns {String[]} The names of the feature's properties.
      */
@@ -151,28 +142,25 @@ define([
     };
 
     /**
-     * Returns the value of the feature's property with the given name.
+     * Returns the value of the feature's property with the given name. This includes properties from this feature's
+     * class and inherited classes when using a batch table hierarchy.
      * <p>
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
-     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
-     * that are not part of the feature's properties in the stored 3D Tileset.
+     * The value is copied before being returned.
      * </p>
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.
      *
      * @example
      * // Display all the properties for a feature in the console log.
-     * var properties = tileset.properties;
-     * if (Cesium.defined(properties)) {
-     *     for (var name in properties) {
-     *         if (properties.hasOwnProperty(name)) {
-     *             console.log(name + ': ' + feature.getProperty(name));
-     *         }
-     *     }
+     * var propertyNames = feature.getPropertyNames();
+     * var length = propertyNames.length;
+     * for (var i = 0; i < length; ++i) {
+     *     var propertyName = propertyNames[i];
+     *     console.log(propertyName + ': ' + feature.getProperty(propertyName));
      * }
-     *
-     * @see {Cesium3DTileset#properties}
      */
     Cesium3DTileFeature.prototype.getProperty = function(name) {
         return this._content.batchTable.getProperty(this._batchId, name);
@@ -183,14 +171,11 @@ define([
      * <p>
      * If a property with the given name doesn't exist, it is created.
      * </p>
-     * <p>
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
-     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
-     * that are not part of the feature's properties in the stored 3D Tileset.
-     * </p>
      *
      * @param {String} name The case-sensitive name of the property.
      * @param {*} value The value of the property that will be copied.
+     *
+     * @exception {DeveloperError} Inherited batch table hierarchy property is read only.
      *
      * @example
      * var height = feature.getProperty('Height'); // e.g., the height of a building
@@ -203,8 +188,6 @@ define([
      *     feature.setProperty(name, true);
      *     console.log('first click');
      * }
-     *
-     * @see {Cesium3DTileset#properties}
      */
     Cesium3DTileFeature.prototype.setProperty = function(name, value) {
         this._content.batchTable.setProperty(this._batchId, name, value);

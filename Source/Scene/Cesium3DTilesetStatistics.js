@@ -9,31 +9,31 @@ define([
      * @private
      */
     function Cesium3DTilesetStatistics() {
-        // Rendering stats
+        // Rendering statistics
         this.selected = 0;
         this.visited = 0;
-        // Loading stats
+        // Loading statistics
         this.numberOfCommands = 0;
         this.numberOfAttemptedRequests = 0;
         this.numberOfPendingRequests = 0;
         this.numberProcessing = 0;
         this.numberContentReady = 0; // Number of tiles with content loaded, does not include empty tiles
         this.numberTotal = 0; // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
-        // Features stats
+        // Features statistics
         this.numberOfFeaturesSelected = 0; // Number of features rendered
         this.numberOfFeaturesLoaded = 0; // Number of features in memory
         this.numberOfPointsSelected = 0;
         this.numberOfPointsLoaded = 0;
         this.numberOfTrianglesSelected = 0;
-        // Styling stats
+        // Styling statistics
         this.numberOfTilesStyled = 0;
         this.numberOfFeaturesStyled = 0;
-        // Optimization stats
+        // Optimization statistics
         this.numberOfTilesCulledWithChildrenUnion = 0;
-        // Memory stats
-        this.vertexMemorySizeInBytes = 0;
-        this.textureMemorySizeInBytes = 0;
-        this.batchTableMemorySizeInBytes = 0;
+        // Memory statistics
+        this.geometryByteLength = 0;
+        this.texturesByteLength = 0;
+        this.batchTableByteLength = 0;
     }
 
     Cesium3DTilesetStatistics.prototype.clear = function() {
@@ -54,16 +54,16 @@ define([
         var pointsLength = content.pointsLength;
         var trianglesLength = content.trianglesLength;
         var featuresLength = content.featuresLength;
-        var vertexMemorySizeInBytes = content.vertexMemorySizeInBytes;
-        var textureMemorySizeInBytes = content.textureMemorySizeInBytes;
-        var batchTableMemorySizeInBytes = content.batchTableMemorySizeInBytes;
+        var geometryByteLength = content.geometryByteLength;
+        var texturesByteLength = content.texturesByteLength;
+        var batchTableByteLength = content.batchTableByteLength;
 
         if (load) {
             statistics.numberOfFeaturesLoaded += decrement ? -featuresLength : featuresLength;
             statistics.numberOfPointsLoaded += decrement ? -pointsLength : pointsLength;
-            statistics.vertexMemorySizeInBytes += decrement ? -vertexMemorySizeInBytes : vertexMemorySizeInBytes;
-            statistics.textureMemorySizeInBytes += decrement ? -textureMemorySizeInBytes : textureMemorySizeInBytes;
-            statistics.batchTableMemorySizeInBytes += decrement ? -batchTableMemorySizeInBytes : batchTableMemorySizeInBytes;
+            statistics.geometryByteLength += decrement ? -geometryByteLength : geometryByteLength;
+            statistics.texturesByteLength += decrement ? -texturesByteLength : texturesByteLength;
+            statistics.batchTableByteLength += decrement ? -batchTableByteLength : batchTableByteLength;
         } else {
             statistics.numberOfFeaturesSelected += decrement ? -featuresLength : featuresLength;
             statistics.numberOfPointsSelected += decrement ? -pointsLength : pointsLength;
@@ -108,9 +108,9 @@ define([
         result.numberOfTilesStyled = statistics.numberOfTilesStyled;
         result.numberOfFeaturesStyled = statistics.numberOfFeaturesStyled;
         result.numberOfTilesCulledWithChildrenUnion = statistics.numberOfTilesCulledWithChildrenUnion;
-        result.vertexMemorySizeInBytes = statistics.vertexMemorySizeInBytes;
-        result.textureMemorySizeInBytes = statistics.textureMemorySizeInBytes;
-        result.batchTableMemorySizeInBytes = statistics.batchTableMemorySizeInBytes;
+        result.geometryByteLength = statistics.geometryByteLength;
+        result.texturesByteLength = statistics.texturesByteLength;
+        result.batchTableByteLength = statistics.batchTableByteLength;
     };
 
     return Cesium3DTilesetStatistics;

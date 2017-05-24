@@ -56,7 +56,7 @@ define([
         }
 
         var lastStyleTime = this._lastStyleTime;
-        var stats = tileset._statistics;
+        var statistics = tileset._statistics;
 
         // If a new style was assigned, loop through all the visible tiles; otherwise, loop through
         // only the tiles that are newly visible, i.e., they are visible this frame, but were not
@@ -76,8 +76,8 @@ define([
                     var content = tile.content;
                     tile.lastStyleTime = lastStyleTime;
                     content.applyStyle(frameState, this._style);
-                    stats.numberOfFeaturesStyled += content.featuresLength;
-                    ++stats.numberOfTilesStyled;
+                    statistics.numberOfFeaturesStyled += content.featuresLength;
+                    ++statistics.numberOfTilesStyled;
                 }
             }
         }

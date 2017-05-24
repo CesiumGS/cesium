@@ -89,8 +89,7 @@ define([
 
     /**
      * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;
-     * the content is loaded on-demand when needed based on the view using
-     * {@link Cesium3DTile#requestContent}.
+     * the content is loaded on-demand when needed based on the view.
      * <p>
      * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
      * </p>
@@ -98,7 +97,7 @@ define([
      * @alias Cesium3DTile
      * @constructor
      */
-    function Cesium3DTile(tileset, baseUrl, header, parent) {
+    function Cesium3DTile(tileset, basePath, header, parent) {
         this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
@@ -115,6 +114,7 @@ define([
         /**
          * The final computed transform of this tile
          * @type {Matrix4}
+         * @readonly
          */
         this.computedTransform = computedTransform;
 
@@ -142,7 +142,7 @@ define([
 
         /**
          * The error, in meters, introduced if this tile is rendered and its children are not.
-         * This is used to compute Screen-Space Error (SSE), i.e., the error measured in pixels.
+         * This is used to compute screen space error, i.e., the error measured in pixels.
          *
          * @type {Number}
          * @readonly
@@ -164,6 +164,7 @@ define([
          *
          * @type {Cesium3DTileRefine}
          * @readonly
+         * @private
          */
         this.refine = refine;
 
@@ -197,7 +198,7 @@ define([
         if (defined(contentHeader)) {
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
-            contentUrl = joinUrls(baseUrl, contentHeader.url);
+            contentUrl = joinUrls(basePath, contentHeader.url);
             requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
             content = new Empty3DTileContent(tileset, this);
@@ -274,6 +275,7 @@ define([
          * The time in seconds after the tile's content is ready when the content expires and new content is requested.
          *
          * @type {Number}
+         * @readonly
          */
         this.expireDuration = expireDuration;
 
@@ -281,6 +283,7 @@ define([
          * The date when the content expires and new content is requested.
          *
          * @type {JulianDate}
+         * @readonly
          */
         this.expireDate = expireDate;
 
@@ -383,6 +386,7 @@ define([
          *
          * @type {TileBoundingVolume}
          * @readonly
+         * @private
          */
         contentBoundingVolume : {
             get : function() {
@@ -447,6 +451,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentAvailable : {
             get : function() {
@@ -462,6 +468,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentReady : {
             get : function() {
@@ -477,6 +485,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentUnloaded : {
             get : function() {
@@ -492,6 +502,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentExpired : {
             get : function() {

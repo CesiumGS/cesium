@@ -116,13 +116,20 @@ define([
      * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
-     * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
+     * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
-     * @param {Boolean} [options.cullWithChildrenBounds=true] Whether to cull tiles using the union of their children bounding volumes.
-     * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
+     * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
+     * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
+     * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
+     * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
+     * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
+     * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
+     * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
+     * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -131,20 +138,36 @@ define([
      * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
      * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
-     * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and vertex memory in megabytes used by each tile.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
-     * @param {Boolean} [options.skipLODs=true] Determines if level-of-detail skipping optimization should be used.
-     * @param {Number} [options.baseScreenSpaceError=1024] The screen-space error that must be reached before skipping LODs
-     * @param {Number} [options.skipScreenSpaceErrorFactor=10] Multiplier defining the minimum screen space error to skip when loading tiles. Used in conjuction with skipLevels to determine which tiles to load.
-     * @param {Number} [options.skipLevels=1] Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjuction with skipScreenSpaceErrorFactor to determine which tiles to load.
-     * @param {Boolean} [options.immediatelyLoadDesiredLOD=false] When true, do not progressively refine. Immediately load the desired LOD.
-     * @param {Boolean} [options.loadSiblings=false] Determines whether sibling tiles should be loaded when skipping levels-of-detail. When true, the siblings of any visible and downloaded tile are downloaded as well.
+     * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      *
-     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
+     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
      *      url : 'http://localhost:8002/tilesets/Seattle'
+     * }));
+     *
+     * @example
+     * // Common setting for the skipLevelOfDetail optimization
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      skipLevelOfDetail : true,
+     *      baseScreenSpaceError : 1024,
+     *      skipScreenSpaceErrorFactor : 16,
+     *      skipLevels : 1,
+     *      immediatelyLoadDesiredLevelOfDetail : false,
+     *      loadSiblings : false,
+     *      cullWithChildrenBounds : true
+     * }));
+     *
+     * @example
+     * // Common settings for the dynamicScreenSpaceError optimization
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     *      url : 'http://localhost:8002/tilesets/Seattle',
+     *      dynamicScreenSpaceError : true,
+     *      dynamicScreenSpaceErrorDensity : 0.00278,
+     *      dynamicScreenSpaceErrorFactor : 4.0,
+     *      dynamicScreenSpaceErrorHeightFalloff : 0.25
      * }));
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles specification}
@@ -159,21 +182,21 @@ define([
         //>>includeEnd('debug');
 
         var tilesetUrl;
-        var baseUrl;
+        var basePath;
 
         if (getExtensionFromUri(url) === 'json') {
             tilesetUrl = url;
-            baseUrl = getBaseUri(url, true);
+            basePath = getBaseUri(url, true);
         } else if (isDataUri(url)) {
             tilesetUrl = url;
-            baseUrl = '';
+            basePath = '';
         } else {
-            baseUrl = url;
-            tilesetUrl = joinUrls(baseUrl, 'tileset.json');
+            basePath = url;
+            tilesetUrl = joinUrls(basePath, 'tileset.json');
         }
 
         this._url = url;
-        this._baseUrl = baseUrl;
+        this._basePath = basePath;
         this._tilesetUrl = tilesetUrl;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
@@ -208,7 +231,6 @@ define([
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-        this._baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
         this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
 
         this._styleEngine = new Cesium3DTileStyleEngine();
@@ -226,10 +248,10 @@ define([
         this._readyPromise = when.defer();
 
         /**
-         * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
+         * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
          * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
          * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
-         * The algorithm is biased towards "street views" where the camera is close to the floor of the tileset and looking
+         * The algorithm is biased towards "street views" where the camera is close to the ground plane of the tileset and looking
          * at the horizon. In addition results are more accurate for tightly fitting bounding volumes like box and region.
          *
          * @type {Boolean}
@@ -240,33 +262,35 @@ define([
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
-         * A scalar that determines the density used to adjust the dynamic SSE, similar to {@link Fog}. Increasing this
+         * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
          * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
          * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
          * This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tiles
          * beyond a certain distance all roughly having an error of 1.0.
-         *
-         * The dynamic error is in the range [0.0, 1.0) and is multiplied by dynamicScreenSpaceErrorFactor to produce the
+         * <p>
+         * The dynamic error is in the range [0.0, 1.0) and is multiplied by <code>dynamicScreenSpaceErrorFactor</code> to produce the
          * final dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.
-         *
-         * Increasing dynamicScreenSpaceErrorDensity has the effect of moving the error midpoint closer to the camera.
+         * </p>
+         * <p>
+         * Increasing <code>dynamicScreenSpaceErrorDensity</code> has the effect of moving the error midpoint closer to the camera.
          * It is analogous to moving fog closer to the camera.
+         * </p>
          *
          * @type {Number}
          * @default 0.00278
          *
-         * @see Fog.density
+         * @see Fog#density
          */
         this.dynamicScreenSpaceErrorDensity = 0.00278;
 
         /**
-         * A factor used to increase the screen space error of tiles for dynamic SSE. As this value increases less tiles
+         * A factor used to increase the screen space error of tiles for dynamic screen space error. As this value increases less tiles
          * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
          *
          * @type {Number}
          * @default 4.0
          *
-         * @see Fog.screenSpaceErrorFactor
+         * @see Fog#screenSpaceErrorFactor
          */
         this.dynamicScreenSpaceErrorFactor = 4.0;
 
@@ -274,8 +298,9 @@ define([
          * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
          * full computed density is applied, otherwise the density falls off. This has the effect of higher density at
          * street level views.
-         *
+         * <p>
          * Valid values are between 0.0 and 1.0.
+         * </p>
          *
          * @type {Number}
          * @default 0.25
@@ -286,6 +311,12 @@ define([
 
         /**
          * Determines whether the tileset casts or receives shadows from each light source.
+         * <p>
+         * Enabling shadows has a performance impact. A tileset that casts shadows must be rendered twice, once from the camera and again from the light's point of view.
+         * </p>
+         * <p>
+         * Shadows are rendered only when {@link Viewer#shadows} is <code>true</code>.
+         * </p>
          *
          * @type {ShadowMode}
          * @default ShadowMode.ENABLED
@@ -310,7 +341,7 @@ define([
         this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
         /**
-         * Defines the value used to linearly interpolate between the source color and feature color when the colorBlendMode is MIX.
+         * Defines the value used to linearly interpolate between the source color and feature color when the {@link Cesium3DTileset#colorBlendMode} is <code>MIX</code>.
          * A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-between
          * resulting in a mix of the source color and feature color.
          *
@@ -421,7 +452,7 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, draws labels to indicate the vertex and texture memory usage of each tile.
+         * When true, draws labels to indicate the geometry and texture memory usage of each tile.
          * </p>
          *
          * @type {Boolean}
@@ -445,7 +476,7 @@ define([
          * @default new Event()
          *
          * @example
-         * city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+         * tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
          *     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
          *         console.log('Stopped loading');
          *         return;
@@ -467,7 +498,7 @@ define([
          * @default new Event()
          *
          * @example
-         * city.allTilesLoaded.addEventListener(function() {
+         * tileset.allTilesLoaded.addEventListener(function() {
          *     console.log('All tiles are loaded');
          * });
          *
@@ -520,35 +551,60 @@ define([
          *         console.log('A Batched 3D Model tile is visible.');
          *     }
          * });
+         *
+         * @example
+         * // Apply a red style and then manually set random colors for every other feature when the tile becomes visible.
+         * tileset.style = new Cesium.Cesium3DTileStyle({
+         *     color : 'color("red")'
+         * });
+         * tileset.tileVisible.addEventListener(function(tile) {
+         *     var content = tile.content;
+         *     var featuresLength = content.featuresLength;
+         *     for (var i = 0; i < featuresLength; i+=2) {
+         *         content.getFeature(i).color = Cesium.Color.fromRandom();
+         *     }
+         * });
          */
         this.tileVisible = new Event();
 
         /**
-         * Determines if level-of-detail skipping optimization should be used.
+         * Optimization option. Determines if level of detail skipping should be applied during the traversal
          *
          * @type {Boolean}
          * @default true
          */
-        this.skipLODs = defaultValue(options.skipLODs, true);
+        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
+
+        /**
+         * The screen space error that must be reached before skipping levels of detail.
+         * <p>
+         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * </p>
+         *
+         * @type {Number}
+         * @default 1024
+         */
+        this.baseScreenSpaceError = defaultValue(options.baseScreenSpaceError, 1024);
 
         /**
          * Multiplier defining the minimum screen space error to skip.
          * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
-         * are leaves or have a screen space error <= 100 / skipSSEFactor.
-         *
-         * Only used when tileset.skipLODs === true.
+         * are leaves or have a screen space error <code><= 100 / skipScreenSpaceErrorFactor</code>.
+         * <p>
+         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * </p>
          *
          * @type {Number}
-         * @default 10
+         * @default 16
          */
-        this.skipScreenSpaceErrorFactor = defaultValue(options.skipScreenSpaceErrorFactor, 10);
+        this.skipScreenSpaceErrorFactor = defaultValue(options.skipScreenSpaceErrorFactor, 16);
 
         /**
-         * Constant defining the minimum number of levels skip. When it is 0, no levels are skipped.
-         * For example, if a tile is level 1, no tiles will be loaded unless they
-         * are at level greater than 2.
-         *
-         * Only used when tileset.skipLODs === true.
+         * Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped.
+         * For example, if a tile is level 1, no tiles will be loaded unless they are at level greater than 2.
+         * <p>
+         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * </p>
          *
          * @type {Number}
          * @default 1
@@ -558,25 +614,132 @@ define([
         /**
          * When true, only tiles that meet the maximum screen space error will ever be downloaded.
          * Skipping factors are ignored and just the desired tiles are loaded.
-         *
-         * Only used when tileset.skipLODs === true.
+         * <p>
+         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * </p>
          *
          * @type {Boolean}
          * @default false
          */
-        this.immediatelyLoadDesiredLOD = defaultValue(options.immediatelyLoadDesiredLOD, false);
+        this.immediatelyLoadDesiredLevelOfDetail = defaultValue(options.immediatelyLoadDesiredLevelOfDetail, false);
 
         /**
-         * Determines whether sibling tiles should be loaded when skipping levels-of-detail.
-         * When true, the siblings of any visible and downloaded tile are downloaded as well.
+         * Determines whether siblings of visible tiles are always downloaded during traversal.
          * This may be useful for ensuring that tiles are already available when the viewer turns left/right.
-         *
-         * Only used when tileset.skipLODs === true.
+         * <p>
+         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * </p>
          *
          * @type {Boolean}
          * @default false
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * Determines if only the tiles from last frame should be used for rendering.  This
+         * effectively "freezes" the tileset to the previous frame so it is possible to zoom
+         * out and see what was rendered.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, assigns a random color to each tile.  This is useful for visualizing
+         * what features belong to what tiles, especially with additive refinement where features
+         * from parent tiles may be interleaved with features from child tiles.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders each tile's content as a wireframe.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = defaultValue(options.debugWireframe, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the bounding volume for each visible tile.  The bounding volume is
+         * white if the tile has a content bounding volume; otherwise, it is red.  Tiles that don't meet the
+         * screen space error and are still refining to their descendants are yellow.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the bounding volume for each visible tile's content. The bounding volume is
+         * blue if the tile has a content bounding volume; otherwise it is red.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the viewer request volume for each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the geometric error of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the number of commands, points, triangles and features of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowRenderingStatistics = defaultValue(options.debugShowRenderingStatistics, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the geometry and texture memory usage of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
         var that = this;
 
@@ -646,8 +809,8 @@ define([
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
          * console.log('Minimum building height: ' + tileset.properties.height.minimum);
          *
-         * @see {Cesium3DTileFeature#getProperty}
-         * @see {Cesium3DTileFeature#setProperty}
+         * @see Cesium3DTileFeature#getProperty
+         * @see Cesium3DTileFeature#setProperty
          */
         properties : {
             get : function() {
@@ -690,7 +853,7 @@ define([
          * @readonly
          *
          * @example
-         * Cesium.when(tileset.readyPromise).then(function(tileset) {
+         * tileset.readyPromise.then(function(tileset) {
          *     // tile.properties is not defined until readyPromise resolves.
          *     var properties = tileset.properties;
          *     if (Cesium.defined(properties)) {
@@ -747,9 +910,9 @@ define([
          * @type {String}
          * @readonly
          */
-        baseUrl : {
+        basePath : {
             get : function() {
-                return this._baseUrl;
+                return this._basePath;
             }
         },
 
@@ -764,7 +927,7 @@ define([
          * <p>
          * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
          * event is raised, so code in <code>tileVisible</code> can manually set a feature's
-         * properties using {@link Cesium3DTileContent#getFeature}.  When
+         * properties (e.g. color and show) after the style is applied. When
          * a new style is assigned any manually set properties are overwritten.
          * </p>
          *
@@ -801,8 +964,12 @@ define([
         },
 
         /**
-         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
-         * values will provide better performance but lower visual quality.
+         * The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tile
+         * refines to its descendants, and therefore plays a major role in balancing performance with visual quality.
+         * <p>
+         * Depending on the tileset, <code>maximumScreenSpaceError</code> may need to be tweaked to achieve the right balance.
+         * Higher values provide better performance but lower visual quality.
+         * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -825,17 +992,21 @@ define([
         },
 
         /**
-         * The maximum amount of memory in MB that can be used by the tileset.
+         * The maximum amount of GPU memory (in MB) that may be used by the tileset. This value is estimated from
+         * geometry, textures, and batch table textures of loaded tiles. For point clouds, this value also
+         * includes per-point metadata.
+         * <p>
          * Tiles not in view are unloaded to enforce this.
+         * </p>
          * <p>
          * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
          * </p>
          * <p>
          * If tiles sized more than <code>maximumMemoryUsage</code> are needed
-         * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
+         * to meet the desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
          * for the current view, then the memory usage of the tiles loaded will exceed
          * <code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but
-         * 300 MB of tiles are needed to meet the screen-space error, then 300 MB of tiles may be loaded.  When
+         * 300 MB of tiles are needed to meet the screen space error, then 300 MB of tiles may be loaded.  When
          * these tiles go out of view, they will be unloaded.
          * </p>
          *
@@ -861,28 +1032,6 @@ define([
         },
 
         /**
-         * The tileset's bounding volume.
-         *
-         * @memberof Cesium3DTileset.prototype
-         *
-         * @type {TileBoundingVolume}
-         * @readonly
-         *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
-         */
-        boundingVolume : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._root._boundingVolume;
-            }
-        },
-
-        /**
          * The tileset's bounding sphere.
          *
          * @memberof Cesium3DTileset.prototype
@@ -891,6 +1040,16 @@ define([
          * @readonly
          *
          * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
+         * @example
+         * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+         *     url : 'http://localhost:8002/tilesets/Seattle'
+         * }));
+         *
+         * tileset.readyPromise.then(function(tileset) {
+         *     // Set the camera to view the newly added tileset
+         *     viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));
+         * });
          */
         boundingSphere : {
             get : function() {
@@ -905,7 +1064,7 @@ define([
         },
 
         /**
-         * A 4x4 transformation matrix that transforms the tileset's root tile.
+         * A 4x4 transformation matrix that transforms the entire tileset.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -927,11 +1086,12 @@ define([
         },
 
         /**
-         * Returns the time, in seconds, since the tileset was loaded and first updated.
+         * Returns the time, in milliseconds, since the tileset was loaded and first updated.
          *
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
+         * @readonly
          */
         timeSinceLoad : {
             get : function() {
@@ -940,19 +1100,21 @@ define([
         },
 
         /**
-         * Returns the total amount of memory used in bytes by the tileset.
-         * This is calculated as the sum of the vertex and index buffer, texture memory and batch table size
-         * of the loaded tiles in the tileset.
+         * The total amount of GPU memory in bytes used by the tileset. This value is estimated from
+         * geometry, texture, and batch table textures of loaded tiles. For point clouds, this value also
+         * includes per-point metadata.
          *
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
+         * @readonly
+         *
          * @see Cesium3DTileset#maximumMemoryUsage
          */
         totalMemoryUsageInBytes : {
             get : function() {
                 var statistics = this._statistics;
-                return statistics.textureMemorySizeInBytes + statistics.vertexMemorySizeInBytes + statistics.batchTableMemorySizeInBytes;
+                return statistics.texturesByteLength + statistics.geometryByteLength + statistics.batchTableByteLength;
             }
         },
 
@@ -989,26 +1151,28 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
+        var asset = tilesetJson.asset;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
-            throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+        Check.typeOf.object('tilesetJson.asset', asset);
+        if (asset.version !== '0.0' && asset.version !== '1.0') {
+            throw new DeveloperError('The tileset must be 3D Tiles version 0.0 or 1.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
         }
         //>>includeEnd('debug');
 
         var statistics = this._statistics;
 
-        // Append the version to the baseUrl
+        // Append the version to the basePath
         var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
         if (!hasVersionQuery) {
-            var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
-            this._baseUrl = joinUrls(this._baseUrl, versionQuery);
+            var versionQuery = '?v=' + defaultValue(asset.tilesetVersion, '0.0');
+            this._basePath = joinUrls(this._basePath, versionQuery);
             tilesetUrl = joinUrls(tilesetUrl, versionQuery, false);
         }
 
         // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
-        // Get the baseUrl relative to the external tileset.
-        var baseUrl = getBaseUri(tilesetUrl, true);
-        var rootTile = new Cesium3DTile(this, baseUrl, tilesetJson.root, parentTile);
+        // Get the basePath relative to the external tileset.
+        var basePath = getBaseUri(tilesetUrl, true);
+        var rootTile = new Cesium3DTile(this, basePath, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -1033,7 +1197,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, baseUrl, childHeader, tile3D);
+                    var childTile = new Cesium3DTile(this, basePath, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
                     ++statistics.numberTotal;
@@ -1149,10 +1313,10 @@ define([
     }
 
     function selectionHeuristic(tileset, ancestor, tile) {
-        var skipLevels = tileset.skipLODs ? tileset.skipLevels : 0;
-        var skipScreenSpaceErrorFactor = tileset.skipLODs ? tileset.skipScreenSpaceErrorFactor : 0.1;
+        var skipLevels = tileset.skipLevelOfDetail ? tileset.skipLevels : 0;
+        var skipScreenSpaceErrorFactor = tileset.skipLevelOfDetail ? tileset.skipScreenSpaceErrorFactor : 1.0;
 
-        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLOD) &&
+        return (ancestor !== tile && !tile.hasEmptyContent && !tileset.immediatelyLoadDesiredLevelOfDetail) &&
                (tile._screenSpaceError < ancestor._screenSpaceError / skipScreenSpaceErrorFactor) &&
                (tile._depth > ancestor._depth + skipLevels);
     }
@@ -1328,8 +1492,8 @@ define([
         }
 
         if (tileset.debugShowMemoryUsage) {
-            labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.textureMemorySizeInBytes);
-            labelString += '\nVertex Memory: ' + formatMemoryString(tile.content.vertexMemorySizeInBytes);
+            labelString += '\nTexture Memory: ' + formatMemoryString(tile.content.texturesByteLength);
+            labelString += '\nGeometry Memory: ' + formatMemoryString(tile.content.geometryByteLength);
             attributes += 2;
         }
 
@@ -1380,7 +1544,7 @@ define([
         var tileVisible = tileset.tileVisible;
         var i;
 
-        var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
+        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer && length > 0;
 
         tileset._backfaceCommands.length = 0;
 
@@ -1582,7 +1746,7 @@ define([
             this._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
-        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp), 0.0);
+        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
 
         // Do not do out-of-core operations (new content requests, cache removal,
         // process new tiles) during the pick pass.

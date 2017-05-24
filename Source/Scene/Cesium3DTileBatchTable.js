@@ -1264,7 +1264,7 @@ define([
         var commandEnd = commandList.length;
         var tile = this._content._tile;
         var tileset = tile._tileset;
-        var bivariateVisibilityTest = tileset.skipLODs && tileset._hasMixedContent && frameState.context.stencilBuffer;
+        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
         for (var i = commandStart; i < commandEnd; ++i) {
@@ -1460,7 +1460,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
-            content._tileset._statistics.batchTableMemorySizeInBytes += batchTable._pickTexture.sizeInBytes;
+            content._tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
         }
     }
 
@@ -1491,7 +1491,7 @@ define([
             // Create batch texture on-demand
             if (!defined(this._batchTexture)) {
                 this._batchTexture = createTexture(this, context, this._batchValues);
-                tileset._statistics.batchTableMemorySizeInBytes += this._batchTexture.sizeInBytes;
+                tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
             }
 
             updateBatchTexture(this);  // Apply per-feature show/color updates

@@ -99,25 +99,25 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
-                return this._model.vertexMemorySizeInBytes;
+                return this._model.geometryByteLength;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
-                return this._model.textureMemorySizeInBytes;
+                return this._model.texturesByteLength;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
                 return this._batchTable.memorySizeInBytes;
             }
@@ -344,7 +344,7 @@ define([
         // The pick shader still needs to be patched.
         content._model = new Model({
             gltf : gltfView,
-            cull : false,           // The model is already culled by the 3D tiles
+            cull : false,           // The model is already culled by 3D Tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : basePath,
             requestType : RequestType.TILES3D,
