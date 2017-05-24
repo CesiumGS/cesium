@@ -196,6 +196,7 @@ define([
         errorBox.setAttribute('data-bind', 'text: editorError');
         stylePanelContents.appendChild(errorBox);
 
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showOnlyPickedTileDebugLabel', 'Show Picked Only'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
