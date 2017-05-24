@@ -866,12 +866,12 @@ define([
                 }
                 var currentTile = this._tile;
 
-                if (defined(currentTile) && !hasFeatures(currentTile)) {
+                if (defined(currentTile) && !hasFeatures(currentTile.content)) {
                     // Restore original color to tile that is no longer selected
                     currentTile.color = oldColor;
                 }
 
-                if (defined(tile) && !hasFeatures(tile)) {
+                if (defined(tile) && !hasFeatures(tile.content)) {
                     // Highlight new tile
                     Color.clone(tile.color, oldColor);
                     tile.color = highlightColor;
@@ -881,8 +881,7 @@ define([
         }
     });
 
-    function hasFeatures(tile) {
-        var content = tile.content;
+    function hasFeatures(content) {
         if (content.featuresLength > 0) {
             return true;
         }
@@ -890,10 +889,11 @@ define([
         if (defined(innerContents)) {
             var length = innerContents.length;
             for (var i = 0; i < length; ++i) {
-                if (innerContents[i].featuresLength > 0) {
-                    return true;
+                if (!hasFeatures(innerContents[i])) {
+                    return false;
                 }
             }
+            return true;
         }
         return false;
     }
