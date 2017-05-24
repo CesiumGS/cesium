@@ -536,10 +536,12 @@ define([
                 return maximumScreenSpaceError();
             },
             set : function(value) {
-                value = parseFloat(value);
-                maximumScreenSpaceError(value);
-                if (that._tileset) {
-                    that._tileset.maximumScreenSpaceError = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    maximumScreenSpaceError(value);
+                    if (that._tileset) {
+                        that._tileset.maximumScreenSpaceError = value;
+                    }
                 }
             }
         });
@@ -557,10 +559,12 @@ define([
                 return dynamicScreenSpaceErrorDensity();
             },
             set : function(value) {
-                value = parseFloat(value);
-                dynamicScreenSpaceErrorDensity(value);
-                if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorDensity = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    dynamicScreenSpaceErrorDensity(value);
+                    if (that._tileset) {
+                        that._tileset.dynamicScreenSpaceErrorDensity = value;
+                    }
                 }
             }
         });
@@ -596,10 +600,12 @@ define([
                 return dynamicScreenSpaceErrorFactor();
             },
             set : function(value) {
-                value = parseFloat(value);
-                dynamicScreenSpaceErrorFactor(value);
-                if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorFactor = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    dynamicScreenSpaceErrorFactor(value);
+                    if (that._tileset) {
+                        that._tileset.dynamicScreenSpaceErrorFactor = value;
+                    }
                 }
             }
         });
