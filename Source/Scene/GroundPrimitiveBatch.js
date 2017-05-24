@@ -91,10 +91,9 @@ define([
      * @param {Number[]} options.indexCounts The number of indices for each polygon.
      * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
      * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Rectangle} options.rectangle The rectangle containing the tile.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
-     * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
-     * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
      * @param {Number[]} options.batchIds The batch ids for each polygon.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
@@ -129,8 +128,6 @@ define([
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
         this._rectangle = options.rectangle;
-        //this._quantizedOffset = options.quantizedOffset;
-        //this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
@@ -175,18 +172,11 @@ define([
     });
 
     function packBuffer(primitive) {
-        //var packedBuffer = new Float64Array(2 + Cartesian3.packedLength * 3 + Ellipsoid.packedLength + Rectangle.packedLength);
         var packedBuffer = new Float64Array(2 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
 
         var offset = 0;
         packedBuffer[offset++] = primitive._minimumHeight;
         packedBuffer[offset++] = primitive._maximumHeight;
-
-        //Cartesian3.pack(primitive._quantizedOffset, packedBuffer, offset);
-        //offset += Cartesian3.packedLength;
-
-        //Cartesian3.pack(primitive._quantizedScale, packedBuffer, offset);
-        //offset += Cartesian3.packedLength;
 
         Cartesian3.pack(primitive._center, packedBuffer, offset);
         offset += Cartesian3.packedLength;

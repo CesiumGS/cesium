@@ -7,10 +7,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
-        '../Core/TranslationRotationScale',
         './createTaskProcessorWorker'
     ], function(
         Cartesian3,
@@ -20,15 +18,11 @@ define([
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
-        Matrix4,
         OrientedBoundingBox,
         Rectangle,
-        TranslationRotationScale,
         createTaskProcessorWorker) {
     'use strict';
 
-    //var scratchQuantizedOffset = new Cartesian3();
-    //var scratchQuantizedScale = new Cartesian3();
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchRectangle = new Rectangle();
@@ -43,12 +37,6 @@ define([
         var offset = 0;
         scratchHeights.min = packedBuffer[offset++];
         scratchHeights.max = packedBuffer[offset++];
-
-        //Cartesian3.unpack(packedBuffer, offset, scratchQuantizedOffset);
-        //offset += Cartesian3.packedLength;
-
-        //Cartesian3.unpack(packedBuffer, offset, scratchQuantizedScale);
-        //offset += Cartesian3.packedLength;
 
         Cartesian3.unpack(packedBuffer, offset, scratchCenter);
         offset += Cartesian3.packedLength;
@@ -113,7 +101,6 @@ define([
 
     var maxShort = 32767;
 
-    //var scratchDecodeMatrix = new Matrix4();
     var scratchEncodedPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScaledNormal = new Cartesian3();
@@ -123,7 +110,6 @@ define([
     var scratchBVRectangle = new Rectangle();
 
     function createVerticesFromVectorTile(parameters, transferableObjects) {
-        //var positions = parameters.positions;
         var positions = new Uint16Array(parameters.positions);
         var counts = new Uint32Array(parameters.counts);
         var indexCounts = new Uint32Array(parameters.indexCounts);
@@ -135,24 +121,11 @@ define([
 
         unpackBuffer(parameters.packedBuffer);
 
-        //var quantizedOffset = scratchQuantizedOffset;
-        //var quantizedScale = scratchQuantizedScale;
         var center = scratchCenter;
         var ellipsoid = scratchEllipsoid;
         var rectangle = scratchRectangle;
         var minHeight = scratchHeights.min;
         var maxHeight = scratchHeights.max;
-
-        /*
-        var decodeMatrix;
-        if (defined(quantizedOffset) && defined(quantizedScale)) {
-            decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
-            positions = new Uint16Array(positions);
-        } else {
-            decodeMatrix = Matrix4.IDENTITY;
-            positions = new Float32Array(positions);
-        }
-        */
 
         var i;
         var j;
@@ -268,12 +241,7 @@ define([
             var maxLon = Number.NEGATIVE_INFINITY;
 
             for (j = 0; j < polygonCount; ++j) {
-                //var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-                //var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
-                //var position = Cartesian3.add(rtcPosition, center, rtcPosition);
-
                 var position = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
                 var lon = carto.longitude;

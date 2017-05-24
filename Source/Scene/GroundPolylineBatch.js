@@ -11,7 +11,6 @@ define([
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -35,7 +34,6 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix4,
-        TranslationRotationScale,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -59,9 +57,10 @@ define([
      * @param {Float32Array|Uint16Array} options.positions The positions of the polylines
      * @param {Number[]} options.counts The number or positions in the each polyline.
      * @param {Number[]} options.widths The width of each polyline.
+     * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
+     * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Rectangle} options.rectangle The rectangle containing the tile.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
-     * @param {Number} [options.quantizedOffset] The quantized offset. If undefined, the positions should be in Float32Array and are not quantized.
-     * @param {Number} [options.quantizedScale] The quantized scale. If undefined, the positions should be in Float32Array and are not quantized.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polylines.
      * @param {Number[]} options.batchIds The batch ids for each polyline.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polylines.
@@ -80,8 +79,6 @@ define([
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
         this._rectangle = options.rectangle;
-        //this._quantizedOffset = options.quantizedOffset;
-        //this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
         this._batchTable = options.batchTable;
@@ -107,14 +104,6 @@ define([
         expandAndWidth : 3,
         a_batchId : 4
     };
-
-    /*
-    function decodePosition(positions, index, decodeMatrix, center, result) {
-        var encodedPosition = Cartesian3.unpack(positions, index, result);
-        var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
-        return Cartesian3.add(rtcPosition, center, rtcPosition);
-    }
-    */
 
     var maxShort = 32767;
 
@@ -147,7 +136,6 @@ define([
         return decoded;
     }
 
-    //var scratchDecodeMatrix = new Matrix4();
     var scratchP0 = new Cartesian3();
     var scratchP1 = new Cartesian3();
     var scratchPrev = new Cartesian3();
@@ -165,8 +153,6 @@ define([
         var ellipsoid = primitive._ellipsoid;
 
         var positions = decodePositions(primitive._positions, rectangle, minimumHeight, maximumHeight, ellipsoid);
-
-        //var positions = primitive._positions;
         var widths = primitive._widths;
         var ids = primitive._batchIds;
         var counts = primitive._counts;
@@ -185,17 +171,6 @@ define([
         var batchIdIndex = 0;
 
         var center = primitive._center;
-        //var quantizedOffset = primitive._quantizedOffset;
-        //var quantizedScale = primitive._quantizedScale;
-
-        /*
-        var decodeMatrix;
-        if (defined(quantizedOffset) && defined(quantizedScale)) {
-            decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
-        } else {
-            decodeMatrix = Matrix4.IDENTITY;
-        }
-        */
 
         var i;
         var offset = 0;
@@ -209,32 +184,25 @@ define([
             for (var j = 0; j < count; ++j) {
                 var previous;
                 if (j === 0) {
-                    //var p0 = decodePosition(positions, offset * 3, decodeMatrix, center, scratchP0);
-                    //var p1 = decodePosition(positions, (offset + 1) * 3, decodeMatrix, center, scratchP1);
                     var p0 = Cartesian3.unpack(positions, offset * 3, scratchP0);
                     var p1 = Cartesian3.unpack(positions, (offset + 1) * 3, scratchP1);
 
                     previous = Cartesian3.subtract(p0, p1, scratchPrev);
                     Cartesian3.add(p0, previous, previous);
                 } else {
-                    //previous = decodePosition(positions, (offset + j - 1) * 3, decodeMatrix, center, scratchPrev);
                     previous = Cartesian3.unpack(positions, (offset + j - 1) * 3, scratchPrev);
                 }
 
-                //var current = decodePosition(positions, (offset + j) * 3, decodeMatrix, center, scratchCur);
                 var current = Cartesian3.unpack(positions, (offset + j) * 3, scratchCur);
 
                 var next;
                 if (j === count - 1) {
-                    //var p2 = decodePosition(positions, (offset + count - 1) * 3, decodeMatrix, center, scratchP0);
-                    //var p3 = decodePosition(positions, (offset + count - 2) * 3, decodeMatrix, center, scratchP1);
                     var p2 = Cartesian3.unpack(positions, (offset + count - 1) * 3, scratchP0);
                     var p3 = Cartesian3.unpack(positions, (offset + count - 2) * 3, scratchP1);
 
                     next = Cartesian3.subtract(p2, p3, scratchNext);
                     Cartesian3.add(p2, next, next);
                 } else {
-                    //next = decodePosition(positions, (offset + j + 1) * 3, decodeMatrix, center, scratchNext);
                     next = Cartesian3.unpack(positions, (offset + j + 1) * 3, scratchNext);
                 }
 
