@@ -15,8 +15,6 @@ define([
         Expression) {
     'use strict';
 
-    var expressionPlaceholder = /\$\{expression}/g;
-
     /**
      * Evaluates a conditions expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
@@ -28,25 +26,24 @@ define([
      * @constructor
      *
      * @param {Object} [conditionsExpression] The conditions expression defined using the 3D Tiles Styling language.
+     * @param {Object} [expressions] Additional expressions defined in the style.
      *
      * @example
      * var expression = new Cesium.ConditionsExpression({
      *     conditions : [
-     *         ['${Height} < 100', 'color("#FF0000")'],
-     *         ['${Height} < 200', 'color("#00FF00")'],
+     *         ['${Area} > 10, 'color("#FF0000")'],
+     *         ['${id} !== "1"', 'color("#00FF00")'],
      *         ['true', 'color("#FFFFFF")']
      *     ]
      * });
      * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      */
-    function ConditionsExpression(conditionsExpression) {
+    function ConditionsExpression(conditionsExpression, expressions) {
         this._conditionsExpression = clone(conditionsExpression, true);
         this._conditions = conditionsExpression.conditions;
-        this._expression = conditionsExpression.expression;
-
         this._runtimeConditions = undefined;
 
-        setRuntime(this);
+        setRuntime(this, expressions);
     }
 
     defineProperties(ConditionsExpression.prototype, {
@@ -72,26 +69,18 @@ define([
         this.expression = expression;
     }
 
-    function setRuntime(expression) {
+    function setRuntime(expression, expressions) {
         var runtimeConditions = [];
         var conditions = expression._conditions;
         if (defined(conditions)) {
-            var exp = expression._expression;
             var length = conditions.length;
             for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
                 var cond = String(statement[0]);
                 var condExpression = String(statement[1]);
-                if (defined(exp)) {
-                    cond = cond.replace(expressionPlaceholder, exp);
-                    condExpression = condExpression.replace(expressionPlaceholder, exp);
-                } else {
-                    cond = cond.replace(expressionPlaceholder, 'undefined');
-                    condExpression = condExpression.replace(expressionPlaceholder, 'undefined');
-                }
                 runtimeConditions.push(new Statement(
-                    new Expression(cond),
-                    new Expression(condExpression)
+                    new Expression(cond, expressions),
+                    new Expression(condExpression, expressions)
                 ));
             }
         }

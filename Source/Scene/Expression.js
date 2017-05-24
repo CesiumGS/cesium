@@ -38,6 +38,7 @@ define([
      * @constructor
      *
      * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
+     * @param {Object} [expressions] Additional expressions defined in the style.
      *
      * @example
      * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
@@ -47,12 +48,13 @@ define([
      * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
      * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      */
-    function Expression(expression) {
+    function Expression(expression, expressions) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('expression', expression);
         //>>includeEnd('debug');
 
         this._expression = expression;
+        expression = replaceExpressions(expression, expressions);
         expression = replaceVariables(removeBackslashes(expression));
 
         // customize jsep operators
@@ -433,6 +435,22 @@ define([
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
+    }
+
+    function replaceExpressions(expression, expressions) {
+        if (!defined(expressions)) {
+            return expression;
+        }
+        for (var key in expressions) {
+            if (expressions.hasOwnProperty(key)) {
+                var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
+                var expressionReplace = expressions[key];
+                if (defined(expressionReplace)) {
+                    expression = expression.replace(expressionPlaceholder, expressionReplace);
+                }
+            }
+        }
+        return expression;
     }
 
     function removeBackslashes(expression) {
