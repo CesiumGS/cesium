@@ -16,13 +16,6 @@ define([
      *
      * @alias Cesium3DTileContent
      * @constructor
-     *
-     * @see Batched3DModel3DTileContent
-     * @see Instanced3DModel3DTileContent
-     * @see PointCloud3DTileContent
-     * @see Composite3DTileContent
-     * @see Tileset3DTileContent
-     * @see Empty3DTileContent
      */
     function Cesium3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         /**
@@ -57,6 +50,12 @@ define([
 
         /**
          * Gets the number of points in the tile.
+         * <p>
+         * Only applicable for tiles with Point Cloud content. This is different than {@link Cesium3DTileContent#featuresLength} which
+         * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
+         * </p>
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md#batched-points}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -84,14 +83,14 @@ define([
         },
 
         /**
-         * Gets the tile's vertex memory in bytes.
+         * Gets the tile's geometry memory in bytes.
          *
          * @memberof Cesium3DTileContent.prototype
          *
          * @type {Number}
          * @readonly
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -105,21 +104,21 @@ define([
          * @type {Number}
          * @readonly
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
 
         /**
-         * Gets the tile's batch table memory in bytes.
+         * Gets the amount of memory used by the batch table textures, in bytes.
          *
          * @memberof Cesium3DTileContent.prototype
          *
          * @type {Number}
          * @readonly
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -128,6 +127,8 @@ define([
         /**
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -226,11 +227,16 @@ define([
      * Returns the {@link Cesium3DTileFeature} object for the feature with the
      * given <code>batchId</code>.  This object is used to get and modify the
      * feature's properties.
+     * <p>
+     * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
+     * </p>
+     *
+     * @see {@link  https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable}.
      *
      * @param {Number} batchId The batchId for the feature.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
      *
-     * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength - 1}.
+     * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength} - 1.
      */
     Cesium3DTileContent.prototype.getFeature = function(batchId) {
         DeveloperError.throwInstantiationError();

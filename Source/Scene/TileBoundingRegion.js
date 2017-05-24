@@ -244,7 +244,7 @@ define([
     var vectorScratch = new Cartesian3();
 
     /**
-     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
+     * Gets the distance from the camera to the closest point on the tile.  This is used for level of detail selection.
      *
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.

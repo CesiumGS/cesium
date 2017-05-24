@@ -56,64 +56,64 @@ define([
         }
     }
 
-    function getStats(tileset, isPick) {
+    function getStatistics(tileset, isPick) {
         if (!defined(tileset)) {
             return '';
         }
 
-        var stats = tileset.statistics;
+        var statistics = tileset.statistics;
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
-        // the stats will be different than the normal render pass.
-        var s = '<ul class="cesium-cesiumInspector-stats">';
+        // the statistics will be different than the normal render pass.
+        var s = '<ul class="cesium-cesiumInspector-statistics">';
         s +=
-            // --- Rendering stats
-            '<li><strong>Visited: </strong>' + stats.visited.toLocaleString() + '</li>' +
+            // --- Rendering statistics
+            '<li><strong>Visited: </strong>' + statistics.visited.toLocaleString() + '</li>' +
             // Number of commands returned is likely to be higher than the number of tiles selected
             // because of tiles that create multiple commands.
             '<li><strong>Selected: </strong>' + tileset._selectedTiles.length.toLocaleString() + '</li>' +
             // Number of commands executed is likely to be higher because of commands overlapping
             // multiple frustums.
-            '<li><strong>Commands: </strong>' + stats.numberOfCommands.toLocaleString() + '</li>';
+            '<li><strong>Commands: </strong>' + statistics.numberOfCommands.toLocaleString() + '</li>';
         s += '</ul>';
         if (!isPick) {
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Cache/loading stats
-                '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests.toLocaleString() + '</li>' +
-                '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests.toLocaleString() + '</li>' +
-                '<li><strong>Processing: </strong>' + stats.numberProcessing.toLocaleString() + '</li>' +
-                '<li><strong>Content Ready: </strong>' + stats.numberContentReady.toLocaleString() + '</li>' +
+                // --- Cache/loading statistics
+                '<li><strong>Requests: </strong>' + statistics.numberOfPendingRequests.toLocaleString() + '</li>' +
+                '<li><strong>Attempted: </strong>' + statistics.numberOfAttemptedRequests.toLocaleString() + '</li>' +
+                '<li><strong>Processing: </strong>' + statistics.numberProcessing.toLocaleString() + '</li>' +
+                '<li><strong>Content Ready: </strong>' + statistics.numberContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + stats.numberTotal.toLocaleString() + '</li>';
+                '<li><strong>Total: </strong>' + statistics.numberTotal.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Features stats
-                '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected.toLocaleString() + '</li>' +
-                '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
-                '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected.toLocaleString() + '</li>' +
-                '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded.toLocaleString() + '</li>' +
-                '<li><strong>Triangles Selected: </strong>' + stats.numberOfTrianglesSelected.toLocaleString() + '</li>';
+                // --- Features statistics
+                '<li><strong>Features Selected: </strong>' + statistics.numberOfFeaturesSelected.toLocaleString() + '</li>' +
+                '<li><strong>Features Loaded: </strong>' + statistics.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
+                '<li><strong>Points Selected: </strong>' + statistics.numberOfPointsSelected.toLocaleString() + '</li>' +
+                '<li><strong>Points Loaded: </strong>' + statistics.numberOfPointsLoaded.toLocaleString() + '</li>' +
+                '<li><strong>Triangles Selected: </strong>' + statistics.numberOfTrianglesSelected.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Styling stats
-                '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled.toLocaleString() + '</li>' +
-                '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled.toLocaleString() + '</li>';
+                // --- Styling statistics
+                '<li><strong>Tiles styled: </strong>' + statistics.numberOfTilesStyled.toLocaleString() + '</li>' +
+                '<li><strong>Features styled: </strong>' + statistics.numberOfFeaturesStyled.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Optimization stats
-                '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
+                // --- Optimization statistics
+                '<li><strong>Children Union Culled: </strong>' + statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Memory stats
-                '<li><strong>Vertex Memory (MB): </strong>' + formatMemoryString(stats.vertexMemorySizeInBytes) + '</li>' +
-                '<li><strong>Texture Memory (MB): </strong>' + formatMemoryString(stats.textureMemorySizeInBytes) + '</li>' +
-                '<li><strong>Batch Table Memory (MB): </strong>' + formatMemoryString(stats.batchTableMemorySizeInBytes) + '</li>';
+                // --- Memory statistics
+                '<li><strong>Geometry Memory (MB): </strong>' + formatMemoryString(statistics.geometryByteLength) + '</li>' +
+                '<li><strong>Texture Memory (MB): </strong>' + formatMemoryString(statistics.texturesByteLength) + '</li>' +
+                '<li><strong>Batch Table Memory (MB): </strong>' + formatMemoryString(statistics.batchTableByteLength) + '</li>';
             s += '</ul>';
         }
         return s;
@@ -159,8 +159,8 @@ define([
             container : performanceContainer
         });
 
-        this._statsText = '';
-        this._pickStatsText = '';
+        this._statisticsText = '';
+        this._pickStatisticsText = '';
         this._editorError = '';
 
         /**
@@ -172,20 +172,20 @@ define([
         this.performance = false;
 
         /**
-         * Gets or sets the flag to show stats.  This property is observable.
+         * Gets or sets the flag to show statistics.  This property is observable.
          *
          * @type {Boolean}
          * @default true
          */
-        this.showStats = true;
+        this.showStatistics = true;
 
         /**
-         * Gets or sets the flag to show pick stats.  This property is observable.
+         * Gets or sets the flag to show pick statistics.  This property is observable.
          *
          * @type {Boolean}
          * @default false
          */
-        this.showPickStats = true;
+        this.showPickStatistics = true;
 
         /**
          * Gets or sets the flag to show the inspector.  This property is observable.
@@ -254,7 +254,7 @@ define([
         this._tileset = undefined;
         this._feature = undefined;
 
-        knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
+        knockout.track(this, ['performance', 'inspectorVisible', '_statisticsText', '_pickStatisticsText', '_editorError', 'showPickStatistics', 'showStatistics',
                               'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileDebugLabelsVisible', 'styleString', '_feature']);
 
         this._properties = knockout.observable({});
@@ -327,7 +327,7 @@ define([
                         var picked = scene.pick(e.endPosition);
                         if (picked instanceof Cesium3DTileFeature) {
                             that.feature = picked;
-                            that._pickStatsText = getStats(that._tileset, true);
+                            that._pickStatisticsText = getStatistics(that._tileset, true);
                         } else {
                             that.feature = undefined;
                         }
@@ -707,25 +707,25 @@ define([
         },
 
         /**
-         * Gets the stats text.  This property is observable.
+         * Gets the statistics text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {String}
          * @readonly
          */
-        statsText : {
+        statisticsText : {
             get : function() {
-                return this._statsText;
+                return this._statisticsText;
             }
         },
         /**
-         * Gets the pick stats text.  This property is observable.
+         * Gets the pick statistics text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {String}
          * @readonly
          */
-        pickStatsText : {
+        pickStatisticsText : {
             get : function() {
-                return this._pickStatsText;
+                return this._pickStatisticsText;
             }
         },
 
@@ -754,7 +754,7 @@ define([
         },
 
         /**
-         * Gets or sets the tileset of the view model
+         * Gets or sets the tileset of the view model.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {Cesium3DTileset}
          */
@@ -803,13 +803,13 @@ define([
                     this._properties({});
                 }
 
-                this._statsText = getStats(tileset, false);
-                this._pickStatsText = getStats(tileset, true);
+                this._statisticsText = getStatistics(tileset, false);
+                this._pickStatisticsText = getStatistics(tileset, true);
             }
         },
 
         /**
-         * Gets the current feature of the view model
+         * Gets the current feature of the view model.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {Cesium3DTileFeature}
          */
@@ -907,7 +907,7 @@ define([
     };
 
     /**
-     * Compiles the style in the style editor
+     * Compiles the style in the style editor.
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
         var tileset = this._tileset;
@@ -930,7 +930,7 @@ define([
     };
 
     /**
-     * Handles key press events on the style editor
+     * Handles key press events on the style editor.
      */
     Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function(sender, event) {
         if (event.keyCode === 9) { //tab
@@ -994,8 +994,8 @@ define([
                 }
             }
         }
-        if (this.showStats) {
-            this._statsText = getStats(tileset, false);
+        if (this.showStatistics) {
+            this._statisticsText = getStatistics(tileset, false);
         }
     };
 
@@ -1028,7 +1028,7 @@ define([
      * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
      * @returns {String} The formatted statistics
      */
-    Cesium3DTilesInspectorViewModel.getStats = getStats;
+    Cesium3DTilesInspectorViewModel.getStatistics = getStatistics;
 
     return Cesium3DTilesInspectorViewModel;
 });

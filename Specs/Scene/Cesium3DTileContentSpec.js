@@ -17,13 +17,13 @@ defineSuite([
             return content.trianglesLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.vertexMemorySizeInBytes;
+            return content.geometryByteLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.textureMemorySizeInBytes;
+            return content.texturesByteLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.batchTableMemorySizeInBytes;
+            return content.batchTableByteLength;
         }).toThrowDeveloperError();
         expect(function() {
             return content.innerContents;

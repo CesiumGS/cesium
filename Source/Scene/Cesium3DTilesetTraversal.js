@@ -66,7 +66,7 @@ define([
 
         loadTile(root, frameState);
 
-        if (!tileset.skipLODs) {
+        if (!tileset.skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
             tileset._baseTraversal.execute(tileset, root, maximumScreenSpaceError, frameState, outOfCore);
             var leaves = tileset._baseTraversal.leaves;
@@ -75,14 +75,14 @@ define([
                 tileset._desiredTiles.push(leaves.get(i));
             }
         } else {
-            if (tileset.immediatelyLoadDesiredLOD) {
+            if (tileset.immediatelyLoadDesiredLevelOfDetail) {
                 tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
             } else {
                 // leaves of the base traversal is where we start the skip traversal
                 tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 
-                // load and select tiles without skipping up to tileset._baseScreenSpaceError
-                tileset._baseTraversal.execute(tileset, root, tileset._baseScreenSpaceError, frameState, outOfCore);
+                // load and select tiles without skipping up to tileset.baseScreenSpaceError
+                tileset._baseTraversal.execute(tileset, root, tileset.baseScreenSpaceError, frameState, outOfCore);
 
                 // skip traversal starts from a prepopulated queue from the base traversal
                 tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
@@ -357,8 +357,8 @@ define([
     };
 
     BaseTraversal.prototype.leafHandler = function(tile) {
-        // if skipLODs is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
-        if (this.tileset.skipLODs || !hasAdditiveContent(tile)) {
+        // if skipLevelOfDetail is off, leaves of the base traversal get pushed to tileset._desiredTiles. additive tiles have already been pushed
+        if (this.tileset.skipLevelOfDetail || !hasAdditiveContent(tile)) {
             if (tile.refine === Cesium3DTileRefine.REPLACE && !childrenAreVisible(tile)) {
                 ++this.tileset._statistics.numberOfTilesCulledWithChildrenUnion;
                 return;

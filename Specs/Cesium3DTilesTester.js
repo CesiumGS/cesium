@@ -142,7 +142,7 @@ define([
     var counter = 0;
     Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
-            baseUrl : counter++
+            basePath : counter++
         };
         var url = '';
         var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);

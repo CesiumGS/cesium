@@ -10,6 +10,7 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
    * `Cesium3DTilesInspector`, `Cesium3DTilesInspectorViewModel`, and `viewerCesium3DTilesInspectorMixin`
+   * `Cesium3DTileColorBlendMode`
 
 ### 1.34 - 2017-06-01
 
