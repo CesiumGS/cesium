@@ -1664,6 +1664,7 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
+* Added `BezierSpline` and `BSpline`.
 
 ### b24 - 2014-01-06
 
@@ -1725,8 +1726,8 @@ Beta Releases
            var spline = new HermiteSpline(controlPoints);
 
     should now look like:
-
-           var spline = new HermiteSpline({
+    
+           var spline = HermiteSpline.createNaturalCubic({
                times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
                points : [
                    new Cartesian3(1235398.0, -4810983.0, 4146266.0),
