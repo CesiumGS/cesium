@@ -367,7 +367,7 @@ define([
     };
 
     function clearStyle(content) {
-        var length = content.featuresLength;
+        var length = content._featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
             feature.show = true;
@@ -397,6 +397,7 @@ define([
             return;
         }
 
+        var length = this._featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = this.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
