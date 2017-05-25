@@ -22,29 +22,27 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<img id="logo" style="display: none" src="../images/Cesium_Logo_overlay.png" />
+<img id="htmlOverlay" style="position: absolute" src="../images/Cesium_Logo_overlay.png">
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var logo = document.getElementById('logo');
-viewer.container.appendChild(logo);
-logo.style.position = 'absolute';
+// To geographically place an HTML element on top of the Cesium canvas, we use
+// scene.cartesianToCanvasCoordinates to map a world position to canvas x and y values.
+// This example places and img element, but any element will work.
 
-var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-handler.setInputAction(function(movement) {
+var htmlOverlay = document.getElementById('htmlOverlay');
+var scratch = new Cesium.Cartesian2();
+viewer.scene.preRender.addEventListener(function() {
     var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
-    var tmp = new Cesium.Cartesian2();
-    var result = viewer.scene.cartesianToCanvasCoordinates(position, tmp);
-    if(result){
-        logo.style.display = 'block';
-        logo.style.bottom = tmp.y + 'px';
-        logo.style.left = tmp.x + 'px';
+    var canvasPosition = viewer.scene.cartesianToCanvasCoordinates(position, scratch);
+    if (Cesium.defined(canvasPosition)) {
+        htmlOverlay.style.top = canvasPosition.y + 'px';
+        htmlOverlay.style.left = canvasPosition.x + 'px';
     }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
