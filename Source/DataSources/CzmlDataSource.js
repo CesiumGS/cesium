@@ -497,7 +497,6 @@ define([
     function unwrapInterval(type, czmlInterval, sourceUri) {
         // The associations in this function need to be kept in sync with the
         // associations in getPropertyType
-        /*jshint sub:true*/
         switch (type) {
             case Array:
                 return czmlInterval.array;

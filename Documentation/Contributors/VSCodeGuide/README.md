@@ -40,18 +40,21 @@ extension, there are some that appear to be quite useful to Cesium.  Just enter
 the desired extension name in the search box and click install.  You will need to
 restart VSCode after you are done installing extensions.
 
-* **jshint** by Dirk Baeumer -- This extension picks up on Cesium's own jsHint settings,
-and will warn of any violations.  The Cesium main repository should pass jsHint
-using the Cesium jsHint settings with no warnings and no errors.  Proposed
-contributions to Cesium that introduce jsHint warnings will need to be corrected
+* **[eslint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)**
+by Dirk Baeumer -- This extension picks up on Cesium's own eslint settings,
+and will warn of any violations.  The Cesium main repository should pass eslint
+using the Cesium eslint settings with no warnings and no errors.  Proposed
+contributions to Cesium that introduce eslint warnings will need to be corrected
 before they are accepted.
 
-* **Shader languages support for VS Code** by slevesque -- This extension provides
-syntax highlighting for Cesium's shader code.
+* **[Shader languages support for VS Code](https://marketplace.visualstudio.com/items?itemName=slevesque.shader)**
+by slevesque -- This extension provides syntax highlighting for Cesium's shader code.
 
-* **Prettify JSON** by Mohsen Azimi -- This seems generally useful.
+* **[Prettify JSON](https://marketplace.visualstudio.com/items?itemName=mohsen1.prettify-json)**
+ by Mohsen Azimi -- This seems generally useful.
 
-* **glTF Extension for VS Code** by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files [glTF Tools](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode).
+* **[glTF Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode)**
+by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files.
 
 ## VSCode Tasks and Files
 

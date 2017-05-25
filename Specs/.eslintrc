@@ -1,0 +1,6 @@
+{
+    "extends": "../.eslintrc",
+    "env": {
+        "jasmine": true
+    }
+}
