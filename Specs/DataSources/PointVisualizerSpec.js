@@ -4,6 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
@@ -24,6 +25,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        defined,
         defineProperties,
         DistanceDisplayCondition,
         Ellipsoid,
@@ -82,7 +84,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 

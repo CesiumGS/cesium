@@ -3,6 +3,7 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
@@ -21,6 +22,7 @@ defineSuite([
         ModelVisualizer,
         BoundingSphere,
         Cartesian3,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         Matrix4,
@@ -52,7 +54,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
     });
 
     it('constructor throws if no scene is passed.', function() {
