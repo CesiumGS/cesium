@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
@@ -23,6 +24,7 @@ define([
         '../Shaders/PolylineCommon',
         './BlendingState'
     ], function(
+        AttributeCompression,
         Cartesian3,
         Cartographic,
         Color,
@@ -107,23 +109,21 @@ define([
 
     var maxShort = 32767;
 
-    function zigZagDecode(value) {
-        return (value >> 1) ^ (-(value & 1));
-    }
-
     var scratchBVCartographic = new Cartographic();
     var scratchEncodedPosition = new Cartesian3();
 
     function decodePositions(positions, rectangle, minimumHeight, maximumHeight, ellipsoid) {
         var positionsLength = positions.length / 3;
+        var uBuffer = positions.subarray(0, positionsLength);
+        var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
+        var heightBuffer = positions.subarray(2 * positionsLength, 3 * positionsLength);
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
+
         var decoded = new Float32Array(positions.length);
-        var u = 0;
-        var v = 0;
-        var h = 0;
         for (var i = 0; i < positionsLength; ++i) {
-            u += zigZagDecode(positions[i]);
-            v += zigZagDecode(positions[i + positionsLength]);
-            h += zigZagDecode(positions[i + positionsLength * 2]);
+            var u = uBuffer[i];
+            var v = vBuffer[i];
+            var h = heightBuffer[i];
 
             var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
             var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);

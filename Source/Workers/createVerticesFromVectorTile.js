@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AttributeCompression',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
@@ -11,6 +12,7 @@ define([
         '../Core/Rectangle',
         './createTaskProcessorWorker'
     ], function(
+        AttributeCompression,
         Cartesian3,
         Cartographic,
         Color,
@@ -95,10 +97,6 @@ define([
         return packedBuffer;
     }
 
-    function zigZagDecode(value) {
-        return (value >> 1) ^ (-(value & 1));
-    }
-
     var maxShort = 32767;
 
     var scratchEncodedPosition = new Cartesian3();
@@ -130,25 +128,26 @@ define([
         var i;
         var j;
         var rgba;
+        var lat;
+        var lon;
 
         var positionsLength = positions.length / 2;
+        var uBuffer = positions.subarray(0, positionsLength);
+        var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer);
+
         var decodedPositions = new Float32Array(positionsLength * 3);
-        var u = 0;
-        var v = 0;
         for (i = 0; i < positionsLength; ++i) {
-            u += zigZagDecode(positions[i]);
-            v += zigZagDecode(positions[i + positionsLength]);
+            var u = uBuffer[i];
+            var v = vBuffer[i];
 
             lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
             lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
 
-            var cartographic = Cartographic.fromRadians(lon, lat, 0.0, scratchBVCartographic);
-            var decodedPosition = ellipsoid.cartographicToCartesian(cartographic, scratchEncodedPosition);
+            var cart = Cartographic.fromRadians(lon, lat, 0.0, scratchBVCartographic);
+            var decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
             Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
         }
-
-        positions = decodedPositions;
-        positionsLength = positions.length;
 
         var countsLength = counts.length;
         var offsets = new Array(countsLength);
@@ -163,9 +162,8 @@ define([
             currentIndexOffset += indexCounts[i];
         }
 
-        //var positionsLength = positions.length;
-        var batchedPositions = new Float32Array(positionsLength * 2);
-        var batchedIds = new Uint16Array(positionsLength / 3 * 2);
+        var batchedPositions = new Float32Array(positionsLength * 3 * 2);
+        var batchedIds = new Uint16Array(positionsLength * 2);
         var batchedIndexOffsets = new Uint32Array(indexOffsets.length);
         var batchedIndexCounts = new Uint32Array(indexCounts.length);
         var batchedIndices = [];
@@ -241,10 +239,10 @@ define([
             var maxLon = Number.NEGATIVE_INFINITY;
 
             for (j = 0; j < polygonCount; ++j) {
-                var position = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
-                var lat = carto.latitude;
-                var lon = carto.longitude;
+                lat = carto.latitude;
+                lon = carto.longitude;
 
                 minLat = Math.min(lat, minLat);
                 maxLat = Math.max(lat, maxLat);
