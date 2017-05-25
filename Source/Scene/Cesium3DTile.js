@@ -338,10 +338,13 @@ define([
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugViewerRequestVolume = undefined;
-        this._debugColor = new Color.fromRandom({ alpha : 1.0 });
+        this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
         this._commandsLength = 0;
+
+        this._color = undefined;
+        this._colorDirty = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -402,6 +405,30 @@ define([
         boundingSphere : {
             get : function() {
                 return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
+         * Gets and sets the tile's highlight color.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         *
+         * @private
+         */
+        color : {
+            get : function() {
+                if (!defined(this._color)) {
+                    this._color = new Color();
+                }
+                return Color.clone(this._color);
+            },
+            set : function(value) {
+                this._color = Color.clone(value, this._color);
+                this._colorDirty = true;
             }
         },
 
@@ -926,13 +953,24 @@ define([
             tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
         }
 
-        if (tileset.debugColorizeTiles && !tile._debugColorizeTiles) {
+        var debugColorizeTilesOn = tileset.debugColorizeTiles && !tile._debugColorizeTiles;
+        var debugColorizeTilesOff = !tileset.debugColorizeTiles && tile._debugColorizeTiles;
+
+        if (debugColorizeTilesOn) {
             tile._debugColorizeTiles = true;
-            tile._content.applyDebugSettings(true, tile._debugColor);
-        } else if (!tileset.debugColorizeTiles && tile._debugColorizeTiles) {
+            tile.color = tile._debugColor;
+        } else if (debugColorizeTilesOff) {
             tile._debugColorizeTiles = false;
-            tile._content.applyDebugSettings(false, tile._debugColor);
-            tileset.makeStyleDirty(); //Re-apply style now that colorize is switched off
+            tile.color = Color.WHITE;
+        }
+
+        if (tile._colorDirty) {
+            tile._colorDirty = false;
+            tile._content.applyDebugSettings(true, tile._color);
+        }
+
+        if (debugColorizeTilesOff) {
+            tileset.makeStyleDirty(); // Re-apply style now that colorize is switched off
         }
     }
 

@@ -253,9 +253,10 @@ define([
 
         this._tileset = undefined;
         this._feature = undefined;
+        this._tile = undefined;
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statisticsText', '_pickStatisticsText', '_editorError', 'showPickStatistics', 'showStatistics',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileDebugLabelsVisible', 'styleString', '_feature']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileDebugLabelsVisible', 'styleString', '_feature', '_tile']);
 
         this._properties = knockout.observable({});
         /**
@@ -326,11 +327,19 @@ define([
                     that._eventHandler.setInputAction(function(e) {
                         var picked = scene.pick(e.endPosition);
                         if (picked instanceof Cesium3DTileFeature) {
+                            // Picked a feature
                             that.feature = picked;
-                            that._pickStatisticsText = getStatistics(that._tileset, true);
-                        } else {
+                            that.tile = picked.content.tile;
+                        } else if (defined(picked) && defined(picked.content)) {
+                            // Picked a tile
                             that.feature = undefined;
+                            that.tile = picked.content.tile;
+                        } else {
+                            // Picked nothing
+                            that.feature = undefined;
+                            that.tile = undefined;
                         }
+
                         if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
                             var position;
                             if (scene.pickPositionSupported) {
@@ -346,6 +355,7 @@ define([
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
                     that.feature = undefined;
+                    that.tile = undefined;
                     that._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
                 }
             }
@@ -767,6 +777,7 @@ define([
                 this._style = undefined;
                 this.styleString = '{}';
                 this.feature = undefined;
+                this.tile = undefined;
 
                 if (defined(tileset)) {
                     var that = this;
@@ -822,7 +833,7 @@ define([
                     return;
                 }
                 var currentFeature = this._feature;
-                if (defined(currentFeature) && defined(currentFeature.content.batchTable) && !currentFeature.content.batchTable.isDestroyed()) {
+                if (defined(currentFeature)) {
                     // Restore original color to feature that is no longer selected
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
@@ -838,8 +849,54 @@ define([
                 }
                 this._feature = feature;
             }
+        },
+
+        /**
+         * Gets the current tile of the view model
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {Cesium3DTile}
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            },
+            set : function(tile) {
+                if (this._tile === tile) {
+                    return;
+                }
+                var currentTile = this._tile;
+
+                if (defined(currentTile) && !hasFeatures(currentTile.content)) {
+                    // Restore original color to tile that is no longer selected
+                    currentTile.color = oldColor;
+                }
+
+                if (defined(tile) && !hasFeatures(tile.content)) {
+                    // Highlight new tile
+                    Color.clone(tile.color, oldColor);
+                    tile.color = highlightColor;
+                }
+                this._tile = tile;
+            }
         }
     });
+
+    function hasFeatures(content) {
+        if (content.featuresLength > 0) {
+            return true;
+        }
+        var innerContents = content.innerContents;
+        if (defined(innerContents)) {
+            var length = innerContents.length;
+            for (var i = 0; i < length; ++i) {
+                if (!hasFeatures(innerContents[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Toggles the pick tileset mode
@@ -927,6 +984,7 @@ define([
 
         // set feature again so pick coloring is set
         this.feature = this._feature;
+        this.tile = this._tile;
     };
 
     /**
@@ -996,6 +1054,7 @@ define([
         }
         if (this.showStatistics) {
             this._statisticsText = getStatistics(tileset, false);
+            this._pickStatisticsText = getStatistics(tileset, true);
         }
     };
 
