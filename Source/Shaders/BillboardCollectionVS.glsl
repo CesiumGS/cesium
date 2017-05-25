@@ -53,9 +53,9 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         {
             vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
             vec3 normal = normalize(cross(alignedAxis, pos));
-            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
-            tangent = czm_modelViewProjection * tangent;
-            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
+            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
+            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
         }
 
         float cosTheta = cos(angle);
@@ -256,6 +256,7 @@ void main()
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    //gl_Position = czm_modelViewProjection * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
 
 #ifdef DISABLE_DEPTH_DISTANCE
