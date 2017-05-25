@@ -339,7 +339,9 @@ define([
                             that.feature = undefined;
                             that.tile = undefined;
                         }
-
+                        if (!defined(that._tileset)) {
+                            return;
+                        }
                         if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
                             var position;
                             if (scene.pickPositionSupported) {
@@ -395,7 +397,7 @@ define([
             },
             set : function(value) {
                 wireframe(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugWireframe = value;
                 }
             }
@@ -415,7 +417,7 @@ define([
             },
             set : function(value) {
                 showBoundingVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowBoundingVolume = value;
                 }
             }
@@ -435,7 +437,7 @@ define([
             },
             set : function(value) {
                 showContentBoundingVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowContentBoundingVolume = value;
                 }
             }
@@ -455,7 +457,7 @@ define([
             },
             set : function(value) {
                 showRequestVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowViewerRequestVolume = value;
                 }
             }
@@ -475,7 +477,7 @@ define([
             },
             set : function(value) {
                 freezeFrame(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugFreezeFrame = value;
                     that._scene.debugShowFrustumPlanes = value;
                 }
@@ -496,7 +498,7 @@ define([
             },
             set : function(value) {
                 showOnlyPickedTileDebugLabel(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugPickedTileLabelOnly = value;
                 }
             }
@@ -516,7 +518,7 @@ define([
             },
             set : function(value) {
                 showGeometricError(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowGeometricError = value;
                 }
             }
@@ -536,7 +538,7 @@ define([
             },
             set : function(value) {
                 showRenderingStatistics(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowRenderingStatistics = value;
                 }
             }
@@ -557,7 +559,7 @@ define([
             },
             set : function(value) {
                 showMemoryUsage(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowMemoryUsage = value;
                 }
             }
@@ -580,7 +582,7 @@ define([
                 value = Number(value);
                 if (!isNaN(value)) {
                     maximumScreenSpaceError(value);
-                    if (that._tileset) {
+                    if (defined(that._tileset)) {
                         that._tileset.maximumScreenSpaceError = value;
                     }
                 }
@@ -603,7 +605,7 @@ define([
                 value = Number(value);
                 if (!isNaN(value)) {
                     dynamicScreenSpaceErrorDensity(value);
-                    if (that._tileset) {
+                    if (defined(that._tileset)) {
                         that._tileset.dynamicScreenSpaceErrorDensity = value;
                     }
                 }
@@ -644,7 +646,7 @@ define([
                 value = Number(value);
                 if (!isNaN(value)) {
                     dynamicScreenSpaceErrorFactor(value);
-                    if (that._tileset) {
+                    if (defined(that._tileset)) {
                         that._tileset.dynamicScreenSpaceErrorFactor = value;
                     }
                 }
