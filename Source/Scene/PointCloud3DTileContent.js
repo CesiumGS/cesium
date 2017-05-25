@@ -10,16 +10,11 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/getMagic',
         '../Core/getStringFromTypedArray',
-        '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestType',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -34,7 +29,6 @@ define([
         './BlendingState',
         './Cesium3DTileBatchTable',
         './Cesium3DTileColorBlendMode',
-        './Cesium3DTileContentState',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './SceneMode'
@@ -49,16 +43,11 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        getMagic,
         getStringFromTypedArray,
-        loadArrayBuffer,
         Matrix3,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
-        Request,
-        RequestScheduler,
-        RequestType,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -73,7 +62,6 @@ define([
         BlendingState,
         Cesium3DTileBatchTable,
         Cesium3DTileColorBlendMode,
-        Cesium3DTileContentState,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         SceneMode) {
@@ -89,10 +77,10 @@ define([
      *
      * @private
      */
-    function PointCloud3DTileContent(tileset, tile, url) {
-        this._url = url;
+    function PointCloud3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
 
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
@@ -104,6 +92,7 @@ define([
         this._styleTranslucent = false;
         this._constantColor = Color.clone(Color.WHITE);
         this._rtcCenter = undefined;
+        this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
 
         // These values are used to regenerate the shader when the style changes
         this._styleableShaderAttributes = undefined;
@@ -114,7 +103,6 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
-        // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -127,19 +115,21 @@ define([
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._mode = undefined;
 
+        this._readyPromise = when.defer();
+        this._pointsLength = 0;
+        this._geometryByteLength = 0;
+
+        this._features = undefined;
+
         /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
-        this._features = undefined;
-        this._pointsLength = 0;
+        initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(PointCloud3DTileContent.prototype, {
@@ -148,8 +138,8 @@ define([
          */
         featuresLength : {
             get : function() {
-                if (defined(this.batchTable)) {
-                    return this.batchTable.featuresLength;
+                if (defined(this._batchTable)) {
+                    return this._batchTable.featuresLength;
                 }
                 return 0;
             }
@@ -167,18 +157,48 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        innerContents : {
+        trianglesLength : {
             get : function() {
-                return undefined;
+                return 0;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
+        geometryByteLength : {
             get : function() {
-                return this._contentReadyToProcessPromise.promise;
+                return this._geometryByteLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        texturesByteLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableByteLength : {
+            get : function() {
+                if (defined(this._batchTable)) {
+                    return this._batchTable.memorySizeInBytes;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        innerContents : {
+            get : function() {
+                return undefined;
             }
         },
 
@@ -189,110 +209,58 @@ define([
             get : function() {
                 return this._readyPromise.promise;
             }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
+            }
         }
     });
 
-    function createFeatures(content) {
-        var tileset = content._tileset;
-        var featuresLength = content.featuresLength;
-        if (!defined(content._features) && (featuresLength > 0)) {
-            var features = new Array(featuresLength);
-            for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
-            }
-            content._features = features;
-        }
-    }
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
-        if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(batchId, name);
-        }
-        return false;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     *
-     * In this context a feature refers to a group of points that share the same BATCH_ID.
-     * For example all the points that represent a door in a house point cloud would be a feature.
-     *
-     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
-     * in b3dm and i3dm.
-     *
-     * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
-     * are not accessible by getFeature. They are only used for dynamic styling.
-     */
-    PointCloud3DTileContent.prototype.getFeature = function(batchId) {
-        if (defined(this.batchTable)) {
-            var featuresLength = this.featuresLength;
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-            }
-            //>>includeEnd('debug');
-            createFeatures(this);
-            return this._features[batchId];
-        }
-        return undefined;
-    };
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.request = function() {
-        var that = this;
-
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-        return true;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'pnts') {
-            throw new DeveloperError('Invalid Points tile.  Expected magic=pnts.  Read magic=' + magic);
-        }
-
         var view = new DataView(arrayBuffer);
-        byteOffset += sizeOfUint32;  // Skip magic number
+        byteOffset += sizeOfUint32;  // Skip magic
 
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Points tile version 1 is supported.  Version ' + version + ' is not.');
+            throw new DeveloperError('Only Point Cloud tile version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
@@ -356,29 +324,29 @@ define([
 
         if (defined(featureTableJson.POSITION)) {
             positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
-            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER');
+            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
             if (defined(rtcCenter)) {
-                this._rtcCenter = Cartesian3.unpack(rtcCenter);
+                content._rtcCenter = Cartesian3.unpack(rtcCenter);
             }
         } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
             positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
             isQuantized = true;
 
-            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE');
+            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeScale)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
             }
             //>>includeEnd('debug');
-            this._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
+            content._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
 
-            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET');
+            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeOffset)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
             }
             //>>includeEnd('debug');
-            this._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
+            content._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -401,14 +369,14 @@ define([
             colors = featureTable.getPropertyArray('RGB565', ComponentDatatype.UNSIGNED_SHORT, 1);
             isRGB565 = true;
         } else if (defined(featureTableJson.CONSTANT_RGBA)) {
-            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA');
-            this._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], this._constantColor);
+            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
+            content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         } else {
             // Use a default constant color
-            this._constantColor = Color.clone(Color.DARKGRAY, this._constantColor);
+            content._constantColor = Color.clone(Color.DARKGRAY, content._constantColor);
         }
 
-        this._isTranslucent = isTranslucent;
+        content._isTranslucent = isTranslucent;
 
         // Get the normals
         var normals;
@@ -424,16 +392,7 @@ define([
         // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
-            var componentType;
-            var componentTypeName = featureTableJson.BATCH_ID.componentType;
-            if (defined(componentTypeName)) {
-                componentType = ComponentDatatype.fromName(componentTypeName);
-            } else {
-                // If the componentType is omitted, default to UNSIGNED_SHORT
-                componentType = ComponentDatatype.UNSIGNED_SHORT;
-            }
-
-            batchIds = featureTable.getPropertyArray('BATCH_ID', componentType, 1);
+            batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
 
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             //>>includeStart('debug', pragmas.debug);
@@ -446,7 +405,7 @@ define([
                 // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
                 batchTableBinary = new Uint8Array(batchTableBinary);
             }
-            this.batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
+            content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
         }
 
         // If points are not batched and there are per-point properties, use these properties for styling purposes
@@ -468,25 +427,21 @@ define([
             }
         }
 
-        this._parsedContent = {
+        content._parsedContent = {
             positions : positions,
             colors : colors,
             normals : normals,
             batchIds : batchIds,
             styleableProperties : styleableProperties
         };
-        this._pointsLength = pointsLength;
-
-        this._isQuantized = isQuantized;
-        this._isOctEncoded16P = isOctEncoded16P;
-        this._isRGB565 = isRGB565;
-        this._hasColors = defined(colors);
-        this._hasNormals = defined(normals);
-        this._hasBatchIds = defined(batchIds);
-
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-    };
+        content._pointsLength = pointsLength;
+        content._isQuantized = isQuantized;
+        content._isOctEncoded16P = isOctEncoded16P;
+        content._isRGB565 = isRGB565;
+        content._hasColors = defined(colors);
+        content._hasNormals = defined(normals);
+        content._hasBatchIds = defined(batchIds);
+    }
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -512,7 +467,7 @@ define([
         var hasNormals = content._hasNormals;
         var hasBatchIds = content._hasBatchIds;
 
-        var batchTable = content.batchTable;
+        var batchTable = content._batchTable;
         var hasBatchTable = defined(batchTable);
 
         var styleableVertexAttributes = [];
@@ -534,6 +489,8 @@ define([
                         typedArray : property.typedArray,
                         usage : BufferUsage.STATIC_DRAW
                     });
+
+                    content._geometryByteLength += vertexBuffer.sizeInBytes;
 
                     var vertexAttribute = {
                         index : attributeLocation,
@@ -583,6 +540,7 @@ define([
             typedArray : positions,
             usage : BufferUsage.STATIC_DRAW
         });
+        content._geometryByteLength += positionsVertexBuffer.sizeInBytes;
 
         var colorsVertexBuffer;
         if (hasColors) {
@@ -591,6 +549,7 @@ define([
                 typedArray : colors,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._geometryByteLength += colorsVertexBuffer.sizeInBytes;
         }
 
         var normalsVertexBuffer;
@@ -600,6 +559,7 @@ define([
                 typedArray : normals,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._geometryByteLength += normalsVertexBuffer.sizeInBytes;
         }
 
         var batchIdsVertexBuffer;
@@ -609,6 +569,7 @@ define([
                 typedArray : batchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
+            content._geometryByteLength += batchIdsVertexBuffer.sizeInBytes;
         }
 
         var attributes = [];
@@ -742,8 +703,8 @@ define([
         });
 
         content._drawCommand = new DrawCommand({
-            boundingVolume : content._tile.contentBoundingVolume.boundingSphere,
-            cull : false, // Already culled by 3D tiles
+            boundingVolume : undefined, // Updated in update
+            cull : false, // Already culled by 3D Tiles
             modelMatrix : new Matrix4(),
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
@@ -751,13 +712,13 @@ define([
             shaderProgram : undefined, // Updated in createShaders
             uniformMap : drawUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
         });
 
         content._pickCommand = new DrawCommand({
-            boundingVolume : content._tile.contentBoundingVolume.boundingSphere,
-            cull : false, // Already culled by 3D tiles
+            boundingVolume : undefined, // Updated in update
+            cull : false, // Already culled by 3D Tiles
             modelMatrix : new Matrix4(),
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
@@ -765,12 +726,12 @@ define([
             shaderProgram : undefined, // Updated in createShaders
             uniformMap : pickUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
-            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
         });
     }
 
-    var semantics = ['POSITION', 'COLOR', 'NORMAL'];
+    var defaultProperties = ['POSITION', 'COLOR', 'NORMAL', 'POSITION_ABSOLUTE'];
 
     function getStyleableProperties(source, properties) {
         // Get all the properties used by this style
@@ -778,22 +739,10 @@ define([
         var matches = regex.exec(source);
         while (matches !== null) {
             var name = matches[1];
-            if ((semantics.indexOf(name) === -1) && (properties.indexOf(name) === -1)) {
+            if (properties.indexOf(name) === -1) {
                 properties.push(name);
             }
             matches = regex.exec(source);
-        }
-    }
-
-    function getStyleableSemantics(source, properties) {
-        // Get the semantics used by this style
-        var length = semantics.length;
-        for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            if (source.indexOf(styleName) >= 0) {
-                properties.push(semantic);
-            }
         }
     }
 
@@ -808,17 +757,17 @@ define([
     }
 
     function modifyStyleFunction(source) {
-        // Replace occurrences of czm_tiles3d_style_SEMANTIC with semantic
-        var length = semantics.length;
+        // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
+        var length = defaultProperties.length;
         for (var i = 0; i < length; ++i) {
-            var semantic = semantics[i];
-            var styleName = 'czm_tiles3d_style_' + semantic;
-            var replaceName = semantic.toLowerCase();
-            source = source.replace(new RegExp(styleName, 'g'), replaceName);
+            var property = defaultProperties[i];
+            var styleName = 'czm_tiles3d_style_' + property;
+            var replaceName = property.toLowerCase();
+            source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -827,7 +776,7 @@ define([
         var attribute;
 
         var context = frameState.context;
-        var batchTable = content.batchTable;
+        var batchTable = content._batchTable;
         var hasBatchTable = defined(batchTable);
         var hasStyle = defined(style);
         var isQuantized = content._isQuantized;
@@ -870,26 +819,25 @@ define([
 
         // Get the properties in use by the style
         var styleableProperties = [];
-        var styleableSemantics = [];
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            getStyleableSemantics(colorStyleFunction, styleableSemantics);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            getStyleableSemantics(showStyleFunction, styleableSemantics);
             showStyleFunction = modifyStyleFunction(showStyleFunction);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            getStyleableSemantics(pointSizeStyleFunction, styleableSemantics);
             pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
         }
 
-        var usesColorSemantic = styleableSemantics.indexOf('COLOR') >= 0;
-        var usesNormalSemantic = styleableSemantics.indexOf('NORMAL') >= 0;
+        var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
+        var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
+
+        // Split default properties from user properties
+        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
 
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
@@ -902,7 +850,7 @@ define([
         for (name in styleableShaderAttributes) {
             if (styleableShaderAttributes.hasOwnProperty(name)) {
                 attribute = styleableShaderAttributes[name];
-                var enabled = (styleableProperties.indexOf(name) >= 0);
+                var enabled = (userProperties.indexOf(name) >= 0);
                 var vertexAttribute = getVertexAttribute(vertexArray, attribute.location);
                 vertexAttribute.enabled = enabled;
             }
@@ -930,9 +878,9 @@ define([
 
         var attributeDeclarations = '';
 
-        var length = styleableProperties.length;
+        var length = userProperties.length;
         for (i = 0; i < length; ++i) {
-            name = styleableProperties[i];
+            name = userProperties[i];
             attribute = styleableShaderAttributes[name];
             //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
@@ -1032,6 +980,7 @@ define([
         } else {
             vs += '    vec3 position = a_position; \n';
         }
+        vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
@@ -1044,15 +993,15 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, position_absolute, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
@@ -1092,7 +1041,7 @@ define([
         if (hasBatchTable) {
             // Batched points always use the HIGHLIGHT color blend mode
             drawVS = batchTable.getVertexShaderCallback(false, 'a_batchId')(drawVS);
-            drawFS = batchTable.getFragmentShaderCallback(false, Cesium3DTileColorBlendMode.HIGHLIGHT)(drawFS);
+            drawFS = batchTable.getFragmentShaderCallback(false, undefined)(drawFS);
         }
 
         var pickVS = vs;
@@ -1143,6 +1092,54 @@ define([
         }
     }
 
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content.featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
+            }
+            content._features = features;
+        }
+    }
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
+        if (defined(this._batchTable)) {
+            return this._batchTable.hasProperty(batchId, name);
+        }
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     *
+     * In this context a feature refers to a group of points that share the same BATCH_ID.
+     * For example all the points that represent a door in a house point cloud would be a feature.
+     *
+     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
+     * in b3dm and i3dm.
+     *
+     * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
+     * are not accessible by getFeature. They are only used for dynamic styling.
+     */
+    PointCloud3DTileContent.prototype.getFeature = function(batchId) {
+        if (defined(this._batchTable)) {
+            var featuresLength = this.featuresLength;
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+            }
+            //>>includeEnd('debug');
+            createFeatures(this);
+            return this._features[batchId];
+        }
+        return undefined;
+    };
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
@@ -1153,12 +1150,12 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        if (!defined(this.batchTable)) {
+    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+        if (defined(this._batchTable)) {
+            this._batchTable.applyStyle(frameState, style);
+        } else {
             createShaders(this, frameState, style);
-            return true;
         }
-        return false;
     };
 
     var scratchComputedTranslation = new Cartesian4();
@@ -1168,7 +1165,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
-        var updateModelMatrix = this._tile.transformDirty || this._mode !== frameState.mode;
+        var modelMatrix = this._tile.computedTransform;
+        var modelMatrixChanged = !Matrix4.equals(this._modelMatrix, modelMatrix);
+        var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
+
         this._mode = frameState.mode;
 
         if (!defined(this._drawCommand)) {
@@ -1176,24 +1176,23 @@ define([
             createShaders(this, frameState, tileset.style);
             updateModelMatrix = true;
 
-            // Set state to ready
-            this.state = Cesium3DTileContentState.READY;
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
         }
 
         if (updateModelMatrix) {
+            Matrix4.clone(modelMatrix, this._modelMatrix);
             if (defined(this._rtcCenter)) {
-                Matrix4.multiplyByTranslation(this._tile.computedTransform, this._rtcCenter, this._drawCommand.modelMatrix);
+                Matrix4.multiplyByTranslation(modelMatrix, this._rtcCenter, this._drawCommand.modelMatrix);
             } else if (defined(this._quantizedVolumeOffset)) {
-                Matrix4.multiplyByTranslation(this._tile.computedTransform, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
+                Matrix4.multiplyByTranslation(modelMatrix, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
             } else {
-                Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
+                Matrix4.clone(modelMatrix, this._drawCommand.modelMatrix);
             }
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 var projection = frameState.mapProjection;
-                var modelMatrix = this._drawCommand.modelMatrix;
+                modelMatrix = this._drawCommand.modelMatrix;
                 var translation = Matrix4.getColumn(modelMatrix, 3, scratchComputedTranslation);
                 if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                     Transforms.basisTo2D(projection, modelMatrix, modelMatrix);
@@ -1225,18 +1224,20 @@ define([
         // Update the render state
         var isTranslucent = (this._highlightColor.alpha < 1.0) || (this._constantColor.alpha < 1.0) || this._styleTranslucent;
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
-        this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+        this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE;
 
-        if (defined(this.batchTable)) {
-            this.batchTable.update(tileset, frameState);
+        if (defined(this._batchTable)) {
+            this._batchTable.update(tileset, frameState);
         }
+
+        var commandList = frameState.commandList;
 
         var passes = frameState.passes;
         if (passes.render) {
-            frameState.addCommand(this._drawCommand);
+            commandList.push(this._drawCommand);
         }
         if (passes.pick) {
-            frameState.addCommand(this._pickCommand);
+            commandList.push(this._pickCommand);
         }
     };
 
@@ -1258,7 +1259,7 @@ define([
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
             pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
-        this.batchTable = this.batchTable && this.batchTable.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 

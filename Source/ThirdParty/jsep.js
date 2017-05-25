@@ -1,13 +1,16 @@
-//     JavaScript Expression Parser (JSEP) 0.3.0
+//     JavaScript Expression Parser (JSEP) 0.3.1
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/
 
-/*global module: true, exports: true, console: true */
+/*global define*/
 define(function() {
+
+/*global module: true, exports: true, console: true */
+(function (root) {
 	'use strict';
 	// Node Types
 	// ----------
-	
+
 	// This is the full set of types that any JSEP node can be.
 	// Store them here to save space when minified
 	var COMPOUND = 'Compound',
@@ -43,7 +46,7 @@ define(function() {
 
 	// Operations
 	// ----------
-	
+
 	// Set `t` to `true` to save space (when minified, not gzipped)
 		t = true,
 	// Use a quickly-accessible map to store all of the unary operators
@@ -55,7 +58,7 @@ define(function() {
 		binary_ops = {
 			'||': 1, '&&': 2, '|': 3,  '^': 4,  '&': 5,
 			'==': 6, '!=': 6, '===': 6, '!==': 6,
-			'<': 7,  '>': 7,  '<=': 7,  '>=': 7, 
+			'<': 7,  '>': 7,  '<=': 7,  '>=': 7,
 			'<<':8,  '>>': 8, '>>>': 8,
 			'+': 9, '-': 9,
 			'*': 10, '/': 10, '%': 10
@@ -104,13 +107,15 @@ define(function() {
 		isIdentifierStart = function(ch) {
 			return (ch === 36) || (ch === 95) || // `$` and `_`
 					(ch >= 65 && ch <= 90) || // A...Z
-					(ch >= 97 && ch <= 122); // a...z
+					(ch >= 97 && ch <= 122) || // a...z
+                    (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
 		},
 		isIdentifierPart = function(ch) {
 			return (ch === 36) || (ch === 95) || // `$` and `_`
 					(ch >= 65 && ch <= 90) || // A...Z
 					(ch >= 97 && ch <= 122) || // a...z
-					(ch >= 48 && ch <= 57); // 0...9
+					(ch >= 48 && ch <= 57) || // 0...9
+                    (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
 		},
 
 		// Parsing
@@ -134,7 +139,7 @@ define(function() {
 						ch = exprICode(++index);
 					}
 				},
-				
+
 				// The main parsing function. Much of this code is dedicated to ternary expressions
 				gobbleExpression = function() {
 					var test = gobbleBinaryExpression(),
@@ -238,7 +243,7 @@ define(function() {
 					i = stack.length - 1;
 					node = stack[i];
 					while(i > 1) {
-						node = createBinaryExpression(stack[i - 1].value, stack[i - 2], node); 
+						node = createBinaryExpression(stack[i - 1].value, stack[i - 2], node);
 						i -= 2;
 					}
 					return node;
@@ -248,7 +253,7 @@ define(function() {
 				// e.g. `foo.bar(baz)`, `1`, `"abc"`, `(a % 2)` (because it's in parenthesis)
 				gobbleToken = function() {
 					var ch, to_check, tc_len;
-					
+
 					gobbleSpaces();
 					ch = exprICode(index);
 
@@ -278,7 +283,7 @@ define(function() {
 							}
 							to_check = to_check.substr(0, --tc_len);
 						}
-						
+
 						return false;
 					}
 				},
@@ -297,7 +302,7 @@ define(function() {
 							number += exprI(index++);
 						}
 					}
-					
+
 					ch = exprI(index);
 					if(ch === 'e' || ch === 'E') { // exponent marker
 						number += exprI(index++);
@@ -312,7 +317,7 @@ define(function() {
 							throwError('Expected exponent (' + number + exprI(index) + ')', index);
 						}
 					}
-					
+
 
 					chCode = exprICode(index);
 					// Check to make sure this isn't a variable name that start with a number (123abc)
@@ -350,6 +355,7 @@ define(function() {
 								case 'b': str += '\b'; break;
 								case 'f': str += '\f'; break;
 								case 'v': str += '\x0B'; break;
+								default : str += '\\' + ch;
 							}
 						} else {
 							str += ch;
@@ -366,7 +372,7 @@ define(function() {
 						raw: quote + str + quote
 					};
 				},
-				
+
 				// Gobbles only identifiers
 				// e.g.: `foo`, `_value`, `$x1`
 				// Also, this function checks if that identifier is a literal:
@@ -412,11 +418,12 @@ define(function() {
 				// until the terminator character `)` or `]` is encountered.
 				// e.g. `foo(bar, baz)`, `my_func()`, or `[bar, baz]`
 				gobbleArguments = function(termination) {
-					var ch_i, args = [], node;
+					var ch_i, args = [], node, closed = false;
 					while(index < length) {
 						gobbleSpaces();
 						ch_i = exprICode(index);
 						if(ch_i === termination) { // done parsing
+							closed = true;
 							index++;
 							break;
 						} else if (ch_i === COMMA_CODE) { // between expressions
@@ -429,6 +436,9 @@ define(function() {
 							args.push(node);
 						}
 					}
+					if (!closed) {
+						throwError('Expected ' + String.fromCharCode(termination), index);
+					}
 					return args;
 				},
 
@@ -439,7 +449,7 @@ define(function() {
 				gobbleVariable = function() {
 					var ch_i, node;
 					ch_i = exprICode(index);
-						
+
 					if(ch_i === OPAREN_CODE) {
 						node = gobbleGroup();
 					} else {
@@ -513,7 +523,7 @@ define(function() {
 				},
 
 				nodes = [], ch_i, node;
-				
+
 			while(index < length) {
 				ch_i = exprICode(index);
 
@@ -545,7 +555,7 @@ define(function() {
 		};
 
 	// To be filled in by the template
-	jsep.version = '0.3.0';
+	jsep.version = '0.3.1';
 	jsep.toString = function() { return 'JavaScript Expression Parser (JSEP) v' + jsep.version; };
 
 	/**
@@ -554,6 +564,7 @@ define(function() {
 	 * @return jsep
 	 */
 	jsep.addUnaryOp = function(op_name) {
+		max_unop_len = Math.max(op_name.length, max_unop_len);
 		unary_ops[op_name] = t; return this;
 	};
 
@@ -566,6 +577,17 @@ define(function() {
 	jsep.addBinaryOp = function(op_name, precedence) {
 		max_binop_len = Math.max(op_name.length, max_binop_len);
 		binary_ops[op_name] = precedence;
+		return this;
+	};
+
+	/**
+	 * @method jsep.addLiteral
+	 * @param {string} literal_name The name of the literal to add
+	 * @param {*} literal_value The value of the literal
+	 * @return jsep
+	 */
+	jsep.addLiteral = function(literal_name, literal_value) {
+		literals[literal_name] = literal_value;
 		return this;
 	};
 
@@ -583,6 +605,17 @@ define(function() {
 	};
 
 	/**
+	 * @method jsep.removeAllUnaryOps
+	 * @return jsep
+	 */
+	jsep.removeAllUnaryOps = function() {
+		unary_ops = {};
+		max_unop_len = 0;
+
+		return this;
+	};
+
+	/**
 	 * @method jsep.removeBinaryOp
 	 * @param {string} op_name The name of the binary op to remove
 	 * @return jsep
@@ -594,6 +627,59 @@ define(function() {
 		}
 		return this;
 	};
-    
-    return jsep;
+
+	/**
+	 * @method jsep.removeAllBinaryOps
+	 * @return jsep
+	 */
+	jsep.removeAllBinaryOps = function() {
+		binary_ops = {};
+		max_binop_len = 0;
+
+		return this;
+	};
+
+	/**
+	 * @method jsep.removeLiteral
+	 * @param {string} literal_name The name of the literal to remove
+	 * @return jsep
+	 */
+	jsep.removeLiteral = function(literal_name) {
+		delete literals[literal_name];
+		return this;
+	};
+
+	/**
+	 * @method jsep.removeAllLiterals
+	 * @return jsep
+	 */
+	jsep.removeAllLiterals = function() {
+		literals = {};
+
+		return this;
+	};
+
+	// In desktop environments, have a way to restore the old value for `jsep`
+	if (typeof exports === 'undefined') {
+		var old_jsep = root.jsep;
+		// The star of the show! It's a function!
+		root.jsep = jsep;
+		// And a courteous function willing to move out of the way for other similarly-named objects!
+		jsep.noConflict = function() {
+			if(root.jsep === jsep) {
+				root.jsep = old_jsep;
+			}
+			return jsep;
+		};
+	} else {
+		// In Node.JS environments
+		if (typeof module !== 'undefined' && module.exports) {
+			exports = module.exports = jsep;
+		} else {
+			exports.parse = jsep;
+		}
+	}
+}(this));
+
+    return jsep.noConflict();
 });

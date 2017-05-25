@@ -335,7 +335,7 @@ define([
             this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
         }
 
-        this._modelMatrix = modelMatrix;
+        this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
 
         if (this._segments.positions.length !== segmentPositionsLength) {
             // number of positions changed

@@ -87,7 +87,6 @@ define([
         surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
         surfaceTile.tileBoundingRegion.minimumHeight = mesh.minimumHeight;
         surfaceTile.tileBoundingRegion.maximumHeight = mesh.maximumHeight;
-
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
 

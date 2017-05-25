@@ -5,7 +5,9 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/EventHelper',
         '../../Core/Fullscreen',
+        '../../Scene/OrthographicFrustum',
         '../../ThirdParty/knockout',
         '../../ThirdParty/NoSleep',
         '../createCommand',
@@ -16,7 +18,9 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EventHelper,
         Fullscreen,
+        OrthographicFrustum,
         knockout,
         NoSleep,
         createCommand,
@@ -55,7 +59,11 @@ define([
         }
     }
 
-    function toggleVR(viewModel, scene, isVRMode) {
+    function toggleVR(viewModel, scene, isVRMode, isOrthographic) {
+        if (isOrthographic()) {
+            return;
+        }
+
         if (isVRMode()) {
             scene.useWebVR = false;
             if (viewModel._locked) {
@@ -139,11 +147,25 @@ define([
             return isVRMode() ? 'Exit VR mode' : 'Enter VR mode';
         });
 
+        var isOrthographic = knockout.observable(false);
+
+        this._isOrthographic = undefined;
+        knockout.defineProperty(this, '_isOrthographic', {
+            get : function() {
+                return isOrthographic();
+            }
+        });
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(scene.preRender, function() {
+            isOrthographic(scene.camera.frustum instanceof OrthographicFrustum);
+        });
+
         this._locked = false;
         this._noSleep = new NoSleep();
 
         this._command = createCommand(function() {
-            toggleVR(that, scene, isVRMode);
+            toggleVR(that, scene, isVRMode, isOrthographic);
         }, knockout.getObservable(this, 'isVREnabled'));
 
         this._vrElement = defaultValue(getElement(vrElement), document.body);
@@ -211,6 +233,8 @@ define([
      * properly clean up the view model when it is no longer needed.
      */
     VRButtonViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
+        document.removeEventListener(Fullscreen.changeEventName, this._callback);
         destroyObject(this);
     };
 

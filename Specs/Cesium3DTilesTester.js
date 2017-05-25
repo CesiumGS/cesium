@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/arrayFill',
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
@@ -9,6 +10,7 @@ define([
         'Scene/TileBoundingSphere',
         'Specs/pollToPromise'
     ], function(
+        arrayFill,
         Color,
         defaultValue,
         defined,
@@ -109,11 +111,11 @@ define([
         });
     };
 
-    Cesium3DTilesTester.loadTileset = function(scene, url) {
+    Cesium3DTilesTester.loadTileset = function(scene, url, options) {
+        options = defaultValue(options, {});
+        options.url = url;
         // Load all visible tiles
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : url
-        }));
+        var tileset = scene.primitives.add(new Cesium3DTileset(options));
 
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     };
@@ -121,19 +123,16 @@ define([
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         expect(function() {
-            content.initialize(arrayBuffer);
+            var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, type);
             content.update(tileset, scene.frameState);
         }).toThrowDeveloperError();
-        return content;
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
         var tileset = {};
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.initialize(arrayBuffer);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
         return content;
     };
@@ -143,33 +142,16 @@ define([
     var counter = 0;
     Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
-            baseUrl : counter++
+            basePath : counter++
         };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.initialize(arrayBuffer);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
         content.update(tileset, scene.frameState);
 
         return content.readyPromise.then(function(content) {
             fail('should not resolve');
         }).otherwise(function(error) {
-            expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-        });
-    };
-
-    Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
-        var tileset = {
-            loadTileset : Cesium3DTileset.prototype.loadTileset
-        };
-        var url = 'invalid';
-        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
-        content.request();
-
-        return content.readyPromise.then(function(content) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-            expect(error.statusCode).toEqual(404);
+            expect(error).toBeDefined();
         });
     };
 
@@ -177,7 +159,7 @@ define([
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             var content = tileset._root.content;
             return content.readyPromise.then(function(content) {
-                expect(content.state).toEqual(Cesium3DTileContentState.READY);
+                expect(content).toBeDefined();
             });
         });
     };
@@ -191,33 +173,19 @@ define([
         });
     };
 
-    Cesium3DTilesTester.tileDestroysBeforeLoad = function(scene, url) {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : url
-        }));
-        scene.renderForSpecs();
-        return tileset.readyPromise.then(function(tileset) {
-            var content = tileset._root.content;
-            scene.renderForSpecs(); // Request root
-            scene.primitives.remove(tileset);
-
-            return content.readyPromise.then(function(content) {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-                return content;
-            });
-        });
-    };
-
     Cesium3DTilesTester.generateBatchedTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
         var featuresLength = defaultValue(options.featuresLength, 1);
+        var featureTableJson = {
+            BATCH_LENGTH : featuresLength
+        };
+        var featureTableJsonString = JSON.stringify(featureTableJson);
+        var featureTableJsonByteLength = featureTableJsonString.length;
 
-        var headerByteLength = 24;
+        var headerByteLength = 28;
         var byteLength = headerByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -225,11 +193,12 @@ define([
         view.setUint8(1, magic[1]);
         view.setUint8(2, magic[2]);
         view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // batchTableJsonByteLength
-        view.setUint32(16, 0, true);               // batchTableBinaryByteLength
-        view.setUint32(20, featuresLength, true);  // batchLength
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
+        view.setUint32(16, 0, true);                            // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
 
         return buffer;
     };
@@ -247,7 +216,7 @@ define([
         var featuresLength = defaultValue(options.featuresLength, 1);
         var featureTableJson = {
             INSTANCES_LENGTH : featuresLength,
-            POSITION : new Array(featuresLength * 3).fill(0)
+            POSITION : arrayFill(new Array(featuresLength * 3), 0)
         };
         var featureTableJsonString = JSON.stringify(featureTableJson);
         var featureTableJsonByteLength = featureTableJsonString.length;

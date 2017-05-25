@@ -15,6 +15,7 @@ attribute vec4 texCoordExpandAndBatchIndex;
 varying vec2  v_st;
 varying float v_width;
 varying vec4  czm_pickColor;
+varying float v_angle;
 
 void main()
 {
@@ -89,7 +90,7 @@ void main()
         }
     #endif
 
-    vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev);
+    vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, v_angle);
     gl_Position = czm_viewportOrthographic * positionWC * show;
 
     v_st = vec2(texCoord, clamp(expandDir, 0.0, 1.0));

@@ -116,7 +116,7 @@ define([
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._cull = defaultValue(options.cull, true);
+        this._cull = defaultValue(options.cull, true); // Undocumented option
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
@@ -156,6 +156,7 @@ define([
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
         this._incrementallyLoadTextures = options.incrementallyLoadTextures;
+        this._upAxis = options.upAxis; // Undocumented option
 
         this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
         this._shadows = this.shadows;
@@ -357,8 +358,7 @@ define([
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
                 var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-                var colorBlendMode = batchTable._content._tileset.colorBlendMode;
-                fs = batchTable.getFragmentShaderCallback(true, colorBlendMode, diffuseUniformName)(fs);
+                fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
         };
@@ -481,7 +481,7 @@ define([
         };
     }
 
-    function getVertexBufferData(collection, context) {
+    function getVertexBufferData(collection) {
         var instances = collection._instances;
         var instancesLength = collection.length;
         var collectionCenter = collection._center;
@@ -563,7 +563,7 @@ define([
             });
         }
 
-        var vertexBufferData = getVertexBufferData(collection, context);
+        var vertexBufferData = getVertexBufferData(collection);
         collection._vertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : vertexBufferData,
@@ -571,8 +571,8 @@ define([
         });
     }
 
-    function updateVertexBuffer(collection, context) {
-        var vertexBufferData = getVertexBufferData(collection, context);
+    function updateVertexBuffer(collection) {
+        var vertexBufferData = getVertexBufferData(collection);
         collection._vertexBuffer.copyFromArrayView(vertexBufferData);
     }
 
@@ -606,6 +606,7 @@ define([
             asynchronous : collection._asynchronous,
             allowPicking : allowPicking,
             incrementallyLoadTextures : collection._incrementallyLoadTextures,
+            upAxis : collection._upAxis,
             precreatedAttributes : undefined,
             vertexShaderLoaded : undefined,
             fragmentShaderLoaded : undefined,
@@ -959,7 +960,7 @@ define([
             this._dirty = false;
 
             // PERFORMANCE_IDEA: only update dirty sub-sections instead of the whole collection
-            updateVertexBuffer(this, context);
+            updateVertexBuffer(this);
         }
 
         // If any node changes due to an animation, update the commands. This could be inefficient if the model is
@@ -974,11 +975,12 @@ define([
         updateShowBoundingVolume(this);
 
         var passes = frameState.passes;
+        var commandList = frameState.commandList;
         var commands = passes.render ? this._drawCommands : this._pickCommands;
         var commandsLength = commands.length;
 
         for (var i = 0; i < commandsLength; ++i) {
-            frameState.addCommand(commands[i]);
+            commandList.push(commands[i]);
         }
     };
 

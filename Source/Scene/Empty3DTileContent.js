@@ -1,14 +1,10 @@
 /*global define*/
 define([
         '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../ThirdParty/when',
-        './Cesium3DTileContentState'
+        '../Core/destroyObject'
     ], function(
         defineProperties,
-        destroyObject,
-        when,
-        Cesium3DTileContentState) {
+        destroyObject) {
     'use strict';
 
     /**
@@ -21,24 +17,14 @@ define([
      *
      * @private
      */
-    function Empty3DTileContent() {
+    function Empty3DTileContent(tileset, tile) {
+        this._tileset = tileset;
+        this._tile = tile;
+
         /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = undefined;
-        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
-
-        // Transition into the PROCESSING state.
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
-
-        // Transition into the READY state.
-        this.state = Cesium3DTileContentState.READY;
-        this._readyPromise.resolve(this);
     }
 
     defineProperties(Empty3DTileContent.prototype, {
@@ -46,6 +32,51 @@ define([
          * Part of the {@link Cesium3DTileContent} interface.
          */
         featuresLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        trianglesLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        geometryByteLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        texturesByteLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableByteLength : {
             get : function() {
                 return 0;
             }
@@ -63,18 +94,45 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
+        readyPromise : {
             get : function() {
-                return this._contentReadyToProcessPromise.promise;
+                return undefined;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        readyPromise : {
+        tileset : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url: {
+            get: function() {
+                return undefined;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return undefined;
             }
         }
     });
@@ -98,26 +156,13 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContent.prototype.request = function() {
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Empty3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
     Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Empty3DTileContent.prototype.applyStyle = function(frameState, style) {
     };
 
     /**

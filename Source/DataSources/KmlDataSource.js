@@ -255,7 +255,7 @@ define([
         });
     }
 
-    function replaceAttributes(div, elementType, attributeName, uriResolver) {
+    function embedDataUris(div, elementType, attributeName, uriResolver) {
         var keys = uriResolver.keys;
         var baseUri = new Uri('.');
         var elements = div.querySelectorAll(elementType);
@@ -271,6 +271,16 @@ define([
                     element.setAttribute('download', key);
                 }
             }
+        }
+    }
+
+    function applyBasePath(div, elementType, attributeName, proxy, sourceUri) {
+        var elements = div.querySelectorAll(elementType);
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+            var value = element.getAttribute(attributeName);
+            var uri = resolveHref(value, proxy, sourceUri);
+            element.setAttribute(attributeName, uri);
         }
     }
 
@@ -1433,7 +1443,7 @@ define([
 
     var scratchDiv = document.createElement('div');
 
-    function processDescription(node, entity, styleEntity, uriResolver) {
+    function processDescription(node, entity, styleEntity, uriResolver, proxy, sourceUri) {
         var i;
         var key;
         var keys;
@@ -1518,9 +1528,13 @@ define([
 
         //Rewrite any KMZ embedded urls
         if (defined(uriResolver) && uriResolver.keys.length > 1) {
-            replaceAttributes(scratchDiv, 'a', 'href', uriResolver);
-            replaceAttributes(scratchDiv, 'img', 'src', uriResolver);
+            embedDataUris(scratchDiv, 'a', 'href', uriResolver);
+            embedDataUris(scratchDiv, 'img', 'src', uriResolver);
         }
+
+        //Make relative urls absolute using the sourceUri
+        applyBasePath(scratchDiv, 'a', 'href', proxy, sourceUri);
+        applyBasePath(scratchDiv, 'img', 'src', proxy, sourceUri);
 
         var tmp = '<div class="cesium-infoBox-description-lighter" style="';
         tmp += 'overflow:auto;';
@@ -1584,7 +1598,7 @@ define([
         kmlData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
         processExtendedData(featureNode, entity);
-        processDescription(featureNode, entity, styleEntity, uriResolver);
+        processDescription(featureNode, entity, styleEntity, uriResolver, dataSource._proxy, sourceUri);
 
         if (defined(queryFirstNode(featureNode, 'Camera', namespaces.kml))) {
             console.log('KML - Unsupported view: Camera');

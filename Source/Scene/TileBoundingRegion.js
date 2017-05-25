@@ -3,15 +3,18 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/IntersectionTests',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/Plane',
+        '../Core/Ray',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
         './PerInstanceColorAppearance',
@@ -21,15 +24,18 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Check,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         GeometryInstance,
+        IntersectionTests,
         Matrix4,
         OrientedBoundingBox,
+        Plane,
+        Ray,
         Rectangle,
         RectangleOutlineGeometry,
         PerInstanceColorAppearance,
@@ -38,19 +44,22 @@ define([
     'use strict';
 
     /**
+     * A tile bounding volume specified as a longitude/latitude/height region.
+     * @alias TileBoundingRegion
+     * @constructor
+     *
      * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.rectangle
-     * @param {Number} [options.minimumHeight=0.0]
-     * @param {Number} [options.maximumHeight=0.0]
-     * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84]
+     * @param {Rectangle} options.rectangle The rectangle specifying the longitude and latitude range of the region.
+     * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
+     * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
+     * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
      *
      * @private
      */
     function TileBoundingRegion(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.rectangle)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.object('options.rectangle', options.rectangle);
         //>>includeEnd('debug');
 
         this.rectangle = Rectangle.clone(options.rectangle);
@@ -153,9 +162,13 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3Scratch3 = new Cartesian3();
+    var eastWestNormalScratch = new Cartesian3();
     var westernMidpointScratch = new Cartesian3();
     var easternMidpointScratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
+    var planeScratch = new Plane(Cartesian3.UNIT_X, 0.0);
+    var rayScratch = new Ray();
 
     function computeBox(tileBB, rectangle, ellipsoid) {
         ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle), tileBB.southwestCornerCartesian);
@@ -180,14 +193,47 @@ define([
         Cartesian3.normalize(eastNormal, tileBB.eastNormal);
 
         // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
         var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
-        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
+        var eastWestNormal = Cartesian3.normalize(westVector, eastWestNormalScratch);
+
+        var south = rectangle.south;
+        var southSurfaceNormal;
+
+        if (south > 0.0) {
+            // Compute a plane that doesn't cut through the tile.
+            cartographicScratch.longitude = (rectangle.west +  rectangle.east) * 0.5;
+            cartographicScratch.latitude = south;
+            var southCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
+            Cartesian3.clone(eastWestNormal, rayScratch.direction);
+            var westPlane = Plane.fromPointNormal(tileBB.southwestCornerCartesian, tileBB.westNormal, planeScratch);
+            // Find a point that is on the west and the south planes
+            IntersectionTests.rayPlane(rayScratch, westPlane, tileBB.southwestCornerCartesian);
+            southSurfaceNormal = ellipsoid.geodeticSurfaceNormal(southCenterCartesian, cartesian3Scratch2);
+
+        } else {
+            southSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
+        }
+        var southNormal = Cartesian3.cross(southSurfaceNormal, westVector, cartesian3Scratch3);
         Cartesian3.normalize(southNormal, tileBB.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
-        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
+        var north = rectangle.north;
+        var northSurfaceNormal;
+        if (north < 0.0) {
+            // Compute a plane that doesn't cut through the tile.
+            cartographicScratch.longitude = (rectangle.west + rectangle.east) * 0.5;
+            cartographicScratch.latitude = north;
+            var northCenterCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, rayScratch.origin);
+            Cartesian3.negate(eastWestNormal, rayScratch.direction);
+            var eastPlane = Plane.fromPointNormal(tileBB.northeastCornerCartesian, tileBB.eastNormal, planeScratch);
+            // Find a point that is on the east and the north planes
+            IntersectionTests.rayPlane(rayScratch, eastPlane, tileBB.northeastCornerCartesian);
+            northSurfaceNormal = ellipsoid.geodeticSurfaceNormal(northCenterCartesian, cartesian3Scratch2);
+
+        } else {
+            northSurfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
+        }
+        var northNormal = Cartesian3.cross(westVector, northSurfaceNormal, cartesian3Scratch3);
         Cartesian3.normalize(northNormal, tileBB.northNormal);
     }
 
@@ -198,16 +244,14 @@ define([
     var vectorScratch = new Cartesian3();
 
     /**
-     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
+     * Gets the distance from the camera to the closest point on the tile.  This is used for level of detail selection.
      *
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
-        }
+        Check.defined('frameState', frameState);
         //>>includeEnd('debug');
         var camera = frameState.camera;
         var cameraCartesianPosition = camera.positionWC;
@@ -285,9 +329,7 @@ define([
      */
     TileBoundingRegion.prototype.intersectPlane = function(plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
         return this._orientedBoundingBox.intersectPlane(plane);
     };
@@ -297,12 +339,12 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
+     *
+     * @private
      */
     TileBoundingRegion.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        Check.defined('color', color);
         //>>includeEnd('debug');
 
         var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);

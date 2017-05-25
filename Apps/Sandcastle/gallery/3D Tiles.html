@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <meta name="description" content="Interact with sample 3D Tiles tilesets.">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -19,15 +19,27 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    #toolbar button { display: block; }
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar .header {
+        font-weight: bold;
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <select data-bind="options: tilesets, optionsText: 'name', value: selectedTileset, optionsCaption: 'Choose a Tileset...'"></select>
-    <div>
-        <input type="checkbox" data-bind="checked: annotate" /> Annotate
-    </div>
+    <div><input type="checkbox" data-bind="checked: shadows" /> Shadows</div>
+    <div class="header">Right click action:</div>
+    <div><input type="radio" value='zoom' data-bind="checked: rightClickAction" />Zoom to feature</div>
+    <div><input type="radio" value='annotate' data-bind="checked: rightClickAction" />Annotate</div>
+    <div class="header">Middle click action:</div>
+    <div><input type="radio" value='hide' data-bind="checked: middleClickAction" />Hide feature</div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -42,8 +54,10 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
 });
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 
+viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
+
 var scene = viewer.scene;
-scene.fog.enabled = false;
+scene.pickTranslucentDepth = true;
 scene.globe.depthTestAgainstTerrain = true;
 
 scene.camera.setView({
@@ -86,13 +100,11 @@ var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function() {
     var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
-        var properties = feature.primitive.properties; // get properties from tileset
-        if (Cesium.defined(properties)) {
-            for (var name in properties) {
-                if (properties.hasOwnProperty(name)) {
-                    console.log(name + ': ' + feature.getProperty(name));
-                }
-            }
+        var propertyNames = feature.getPropertyNames();
+        var length = propertyNames.length;
+        for (var i = 0; i < length; ++i) {
+            var propertyName = propertyNames[i];
+            console.log(propertyName + ': ' + feature.getProperty(propertyName));
         }
 
         // evaluate feature description

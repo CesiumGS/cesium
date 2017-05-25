@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
@@ -15,6 +16,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Check,
         Color,
         defined,
         defineProperties,
@@ -23,7 +25,151 @@ define([
         CesiumMath,
         jsep,
         ExpressionNodeType) {
-    "use strict";
+    'use strict';
+
+    /**
+     * Evaluates an expression defined using the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * <p>
+     * Implements the {@link StyleExpression} interface.
+     * </p>
+     *
+     * @alias Expression
+     * @constructor
+     *
+     * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
+     * @param {Object} [expressions] Additional expressions defined in the style.
+     *
+     * @example
+     * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
+     *
+     * @example
+     * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
+     */
+    function Expression(expression, expressions) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('expression', expression);
+        //>>includeEnd('debug');
+
+        this._expression = expression;
+        expression = replaceExpressions(expression, expressions);
+        expression = replaceVariables(removeBackslashes(expression));
+
+        // customize jsep operators
+        jsep.addBinaryOp('=~', 0);
+        jsep.addBinaryOp('!~', 0);
+
+        var ast;
+        try {
+            ast = jsep(expression);
+        } catch (e) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError(e);
+            //>>includeEnd('debug');
+        }
+
+        this._runtimeAst = createRuntimeAst(this, ast);
+    }
+
+    defineProperties(Expression.prototype, {
+        /**
+         * Gets the expression defined in the 3D Tiles Styling language.
+         *
+         * @memberof Expression.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default undefined
+         */
+        expression : {
+            get : function() {
+                return this._expression;
+            }
+        }
+    });
+
+    /**
+     * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
+     * the expression in the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
+     * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
+     * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
+     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
+     * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4} The result of evaluating the expression.
+     */
+    Expression.prototype.evaluate = function(frameState, feature) {
+        ScratchStorage.reset();
+        var result = this._runtimeAst.evaluate(frameState, feature);
+        if ((result instanceof Cartesian2) || (result instanceof Cartesian3) || (result instanceof Cartesian4)) {
+            return result.clone();
+        }
+        return result;
+    };
+
+    /**
+     * Evaluates the result of a Color expression, using the values defined by a feature.
+     * <p>
+     * This is equivalent to {@link StyleExpression#evaluate} but avoids allocating memory by accepting a result argument.
+     * </p>
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
+     * @param {Color} [result] The object in which to store the result
+     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+     */
+    Expression.prototype.evaluateColor = function(frameState, feature, result) {
+        ScratchStorage.reset();
+        var color = this._runtimeAst.evaluate(frameState, feature);
+        return Color.fromCartesian4(color, result);
+    };
+
+    /**
+     * Gets the shader function for this expression.
+     * Returns undefined if the shader function can't be generated from this expression.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     * @param {String} returnType The return type of the generated function.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
+        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
+        if (!defined(shaderExpression)) {
+            return undefined;
+        }
+
+        shaderExpression = returnType + ' ' + functionName + '() \n' +
+                           '{ \n' +
+                           '    return ' + shaderExpression + '; \n' +
+                           '} \n';
+
+        return shaderExpression;
+    };
+
+    /**
+     * Gets the shader expression for this expression.
+     * Returns undefined if the shader expression can't be generated from this expression.
+     *
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader expression.
+     *
+     * @private
+     */
+    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
+        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
+    };
 
     var unaryOperators = ['!', '-', '+'];
     var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
@@ -78,38 +224,43 @@ define([
         }
     };
 
-    var binaryFunctions = {
-        atan2 : Math.atan2,
-        pow : Math.pow,
-        min : Math.min,
-        max : Math.max
+    var unaryFunctions = {
+        abs : getEvaluateUnaryComponentwise(Math.abs),
+        sqrt : getEvaluateUnaryComponentwise(Math.sqrt),
+        cos : getEvaluateUnaryComponentwise(Math.cos),
+        sin : getEvaluateUnaryComponentwise(Math.sin),
+        tan : getEvaluateUnaryComponentwise(Math.tan),
+        acos : getEvaluateUnaryComponentwise(Math.acos),
+        asin : getEvaluateUnaryComponentwise(Math.asin),
+        atan : getEvaluateUnaryComponentwise(Math.atan),
+        radians : getEvaluateUnaryComponentwise(CesiumMath.toRadians),
+        degrees : getEvaluateUnaryComponentwise(CesiumMath.toDegrees),
+        sign : getEvaluateUnaryComponentwise(CesiumMath.sign),
+        floor : getEvaluateUnaryComponentwise(Math.floor),
+        ceil : getEvaluateUnaryComponentwise(Math.ceil),
+        round : getEvaluateUnaryComponentwise(Math.round),
+        exp : getEvaluateUnaryComponentwise(Math.exp),
+        exp2 : getEvaluateUnaryComponentwise(exp2),
+        log : getEvaluateUnaryComponentwise(Math.log),
+        log2 : getEvaluateUnaryComponentwise(log2),
+        fract : getEvaluateUnaryComponentwise(fract),
+        length : length,
+        normalize: normalize
     };
 
-    var unaryFunctions = {
-        abs : Math.abs,
-        sqrt : Math.sqrt,
-        cos : Math.cos,
-        sin : Math.sin,
-        tan : Math.tan,
-        acos : Math.acos,
-        asin : Math.asin,
-        atan : Math.atan,
-        radians : CesiumMath.toRadians,
-        degrees : CesiumMath.toDegrees,
-        sign : CesiumMath.sign,
-        floor : Math.floor,
-        ceil : Math.ceil,
-        round : Math.round,
-        exp : Math.exp,
-        exp2 : exp2,
-        log : Math.log,
-        log2 : log2,
-        fract : fract
+    var binaryFunctions = {
+        atan2 : getEvaluateBinaryCommponentwise(Math.atan2, false),
+        pow : getEvaluateBinaryCommponentwise(Math.pow, false),
+        min : getEvaluateBinaryCommponentwise(Math.min, true),
+        max : getEvaluateBinaryCommponentwise(Math.max, true),
+        distance : distance,
+        dot : dot,
+        cross : cross
     };
 
     var ternaryFunctions = {
-        clamp : CesiumMath.clamp,
-        mix : CesiumMath.lerp
+        clamp : getEvaluateTernaryCommponentwise(CesiumMath.clamp, true),
+        mix : getEvaluateTernaryCommponentwise(CesiumMath.lerp, true)
     };
 
     function fract(number) {
@@ -121,152 +272,159 @@ define([
     }
 
     function log2(number) {
-    	return CesiumMath.logBase(number, 2.0);
+        return CesiumMath.logBase(number, 2.0);
     }
 
-    /**
-     * Evaluates an expression defined using the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
-     * <p>
-     * Implements the {@link StyleExpression} interface.
-     * </p>
-     *
-     * @alias Expression
-     * @constructor
-     *
-     * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
-     *
-     * @example
-     * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
-     * expression.evaluate(frameState, feature); // returns true or false depending on the feature's properties
-     *
-     * @example
-     * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
-     * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-     */
-    function Expression(expression) {
-        //>>includeStart('debug', pragmas.debug);
-        if (typeof expression !== 'string') {
-            throw new DeveloperError('expression must be a string.');
-        }
-        //>>includeEnd('debug');
-
-        this._expression = expression;
-        expression = replaceVariables(removeBackslashes(expression));
-
-        // customize jsep operators
-        jsep.addBinaryOp('=~', 0);
-        jsep.addBinaryOp('!~', 0);
-
-        var ast;
-        try {
-            ast = jsep(expression);
-        } catch (e) {
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError(e);
-            //>>includeEnd('debug');
-        }
-
-        this._runtimeAst = createRuntimeAst(this, ast);
-    }
-
-    defineProperties(Expression.prototype, {
-        /**
-         * Gets the expression defined in the 3D Tiles Styling language.
-         *
-         * @memberof Expression.prototype
-         *
-         * @type {String}
-         * @readonly
-         *
-         * @default undefined
-         */
-        expression : {
-            get : function() {
-                return this._expression;
+    function getEvaluateUnaryComponentwise(operation) {
+        return function(call, left) {
+            if (typeof left === 'number') {
+                return operation(left);
+            } else if (left instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x), operation(left.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x), operation(left.y), operation(left.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x), operation(left.y), operation(left.z), operation(left.w), ScratchStorage.getCartesian4());
             }
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+            //>>includeEnd('debug');
+        };
+    }
+
+    function getEvaluateBinaryCommponentwise(operation, allowScalar) {
+        return function(call, left, right) {
+            if (allowScalar && typeof right === 'number') {
+                if (typeof left === 'number') {
+                    return operation(left, right);
+                } else if (left instanceof Cartesian2) {
+                    return Cartesian2.fromElements(operation(left.x, right), operation(left.y, right), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3) {
+                    return Cartesian3.fromElements(operation(left.x, right), operation(left.y, right), operation(left.z, right), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4) {
+                    return Cartesian4.fromElements(operation(left.x, right), operation(left.y, right), operation(left.z, right), operation(left.w, right), ScratchStorage.getCartesian4());
+                }
+            }
+
+            if (typeof left === 'number' && typeof right === 'number') {
+                return operation(left, right);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x, right.x), operation(left.y, right.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x, right.x), operation(left.y, right.y), operation(left.z, right.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x, right.x), operation(left.y, right.y), operation(left.z, right.z), operation(left.w, right.w), ScratchStorage.getCartesian4());
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+            //>>includeEnd('debug');
+        };
+    }
+
+    function getEvaluateTernaryCommponentwise(operation, allowScalar) {
+        return function(call, left, right, test) {
+            if (allowScalar && typeof test === 'number') {
+                if (typeof left === 'number' && typeof right === 'number') {
+                    return operation(left, right, test);
+                } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+                    return Cartesian2.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), ScratchStorage.getCartesian2());
+                } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+                    return Cartesian3.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), operation(left.z, right.z, test), ScratchStorage.getCartesian3());
+                } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+                    return Cartesian4.fromElements(operation(left.x, right.x, test), operation(left.y, right.y, test), operation(left.z, right.z, test), operation(left.w, right.w, test), ScratchStorage.getCartesian4());
+                }
+            }
+
+            if (typeof left === 'number' && typeof right === 'number' && typeof test === 'number') {
+                return operation(left, right, test);
+            } else if (left instanceof Cartesian2 && right instanceof Cartesian2 && test instanceof Cartesian2) {
+                return Cartesian2.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), ScratchStorage.getCartesian2());
+            } else if (left instanceof Cartesian3 && right instanceof Cartesian3 && test instanceof Cartesian3) {
+                return Cartesian3.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), operation(left.z, right.z, test.z), ScratchStorage.getCartesian3());
+            } else if (left instanceof Cartesian4 && right instanceof Cartesian4 && test instanceof Cartesian4) {
+                return Cartesian4.fromElements(operation(left.x, right.x, test.x), operation(left.y, right.y, test.y), operation(left.z, right.z, test.z), operation(left.w, right.w, test.w), ScratchStorage.getCartesian4());
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ', ' + right + ', and ' + test + '.');
+            //>>includeEnd('debug');
+        };
+    }
+
+    function length(call, left) {
+        if (typeof left === 'number') {
+            return Math.abs(left);
+        } else if (left instanceof Cartesian2) {
+            return Cartesian2.magnitude(left);
+        } else if (left instanceof Cartesian3) {
+            return Cartesian3.magnitude(left);
+        } else if (left instanceof Cartesian4) {
+            return Cartesian4.magnitude(left);
         }
-    });
 
-    /**
-     * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
-     * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-     * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
-     * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
-     * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
-     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
-     * @returns {Boolean|Number|String|Cartesian2|Cartesian3|Cartesian4|RegExp} The result of evaluating the expression.
-     */
-    Expression.prototype.evaluate = function(frameState, feature) {
-        ScratchStorage.reset();
-        var result = this._runtimeAst.evaluate(frameState, feature);
-        if ((result instanceof Cartesian2) || (result instanceof Cartesian3) || (result instanceof Cartesian4)) {
-            return result.clone();
-        }
-        return result;
-    };
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
+    }
 
-    /**
-     * Evaluates the result of a Color expression, using the values defined by a feature.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
-     * @param {Color} [result] The object in which to store the result
-     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
-     */
-    Expression.prototype.evaluateColor = function(frameState, feature, result) {
-        ScratchStorage.reset();
-        var color = this._runtimeAst.evaluate(frameState, feature);
-        return Color.fromCartesian4(color, result);
-    };
-
-    /**
-     * Gets the shader function for this expression.
-     * Returns undefined if the shader function can't be generated from this expression.
-     *
-     * @param {String} functionName Name to give to the generated function.
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     * @param {String} returnType The return type of the generated function.
-     *
-     * @returns {String} The shader function.
-     *
-     * @private
-     */
-    Expression.prototype.getShaderFunction = function(functionName, attributePrefix, shaderState, returnType) {
-        var shaderExpression = this.getShaderExpression(attributePrefix, shaderState);
-        if (!defined(shaderExpression)) {
-            return undefined;
+    function normalize(call, left) {
+        if (typeof left === 'number') {
+            return 1.0;
+        } else if (left instanceof Cartesian2) {
+            return Cartesian2.normalize(left, ScratchStorage.getCartesian2());
+        } else if (left instanceof Cartesian3) {
+            return Cartesian3.normalize(left, ScratchStorage.getCartesian3());
+        } else if (left instanceof Cartesian4) {
+            return Cartesian4.normalize(left, ScratchStorage.getCartesian4());
         }
 
-        shaderExpression = returnType + ' ' + functionName + '() \n' +
-            '{ \n' +
-            '    return ' + shaderExpression + '; \n' +
-            '} \n';
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
+        //>>includeEnd('debug');
+    }
 
-        return shaderExpression;
-    };
+    function distance(call, left, right) {
+        if (typeof left === 'number' && typeof right === 'number') {
+            return Math.abs(left - right);
+        } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+            return Cartesian2.distance(left, right);
+        } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.distance(left, right);
+        } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+            return Cartesian4.distance(left, right);
+        }
 
-    /**
-     * Gets the shader expression for this expression.
-     * Returns undefined if the shader expression can't be generated from this expression.
-     *
-     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
-     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
-     *
-     * @returns {String} The shader expression.
-     *
-     * @private
-     */
-    Expression.prototype.getShaderExpression = function(attributePrefix, shaderState) {
-        return this._runtimeAst.getShaderExpression(attributePrefix, shaderState);
-    };
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+    }
+
+    function dot(call, left, right) {
+        if (typeof left === 'number' && typeof right === 'number') {
+            return left * right;
+        } else if (left instanceof Cartesian2 && right instanceof Cartesian2) {
+            return Cartesian2.dot(left, right);
+        } else if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.dot(left, right);
+        } else if (left instanceof Cartesian4 && right instanceof Cartesian4) {
+            return Cartesian4.dot(left, right);
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+    }
+
+    function cross(call, left, right) {
+        if (left instanceof Cartesian3 && right instanceof Cartesian3) {
+            return Cartesian3.cross(left, right, ScratchStorage.getCartesian3());
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Function "' + call + '" requires vec3 arguments. Arguments are ' + left + ' and ' + right + '.');
+        //>>includeEnd('debug');
+    }
 
     function Node(type, value, left, right, test) {
         this._type = type;
@@ -277,6 +435,22 @@ define([
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
+    }
+
+    function replaceExpressions(expression, expressions) {
+        if (!defined(expressions)) {
+            return expression;
+        }
+        for (var key in expressions) {
+            if (expressions.hasOwnProperty(key)) {
+                var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
+                var expressionReplace = expressions[key];
+                if (defined(expressionReplace)) {
+                    expression = expression.replace(expressionPlaceholder, expressionReplace);
+                }
+            }
+        }
+        return expression;
     }
 
     function removeBackslashes(expression) {
@@ -399,7 +573,7 @@ define([
                 createRuntimeAst(expression, args[1]),
                 createRuntimeAst(expression, args[2])
             ];
-           return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (argsLength < 4) {
@@ -766,40 +940,33 @@ define([
     }
 
     function evaluateTilesetTime(frameState, feature) {
-        return feature._content._tileset.timeSinceLoad;
+        return feature.content.tileset.timeSinceLoad;
     }
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
         return function(feature) {
             var left = this._left.evaluate(feature);
-            if (typeof left === 'number') {
-                return evaluate(left);
-            } else if (left instanceof Cartesian2) {
-                return Cartesian2.fromElements(evaluate(left.x), evaluate(left.y), ScratchStorage.getCartesian2());
-            } else if (left instanceof Cartesian3) {
-                return Cartesian3.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), ScratchStorage.getCartesian3());
-            } else if (left instanceof Cartesian4) {
-                return Cartesian4.fromElements(evaluate(left.x), evaluate(left.y), evaluate(left.z), evaluate(left.w), ScratchStorage.getCartesian4());
-            }
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Function "' + call + '" requires a vector or number argument. Argument is ' + left + '.');
-            //>>includeEnd('debug');
-            return evaluate(left); // jshint ignore:line
+            return evaluate(call, left);
         };
     }
 
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature));
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+            return evaluate(call, left, right);
         };
     }
 
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
         return function(feature) {
-            return evaluate(this._left.evaluate(feature), this._right.evaluate(feature), this._test.evaluate(feature));
+            var left = this._left.evaluate(feature);
+            var right = this._right.evaluate(feature);
+            var test = this._test.evaluate(feature);
+            return evaluate(call, left, right, test);
         };
     }
 
@@ -1557,7 +1724,7 @@ define([
                 } else if (value === 'Number') {
                     return 'float(' + left + ')';
                 } else if (value === 'round') {
-                	return 'floor(' + left + ' + 0.5)';
+                    return 'floor(' + left + ' + 0.5)';
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 } else if ((value === 'isNaN') || (value === 'isFinite') || (value === 'String') || (value === 'isExactClass') || (value === 'isClass') || (value === 'getExactClassName')) {

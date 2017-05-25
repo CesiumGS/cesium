@@ -28,6 +28,7 @@ define([
         './PolylineGraphics',
         './PolylineVolumeGraphics',
         './Property',
+        './PropertyBag',
         './RectangleGraphics',
         './WallGraphics'
     ], function(
@@ -59,6 +60,7 @@ define([
         PolylineGraphics,
         PolylineVolumeGraphics,
         Property,
+        PropertyBag,
         RectangleGraphics,
         WallGraphics) {
     'use strict';
@@ -109,6 +111,7 @@ define([
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+     * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
      * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
@@ -131,7 +134,7 @@ define([
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -165,6 +168,8 @@ define([
         this._polylineVolumeSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
+        this._properties = undefined;
+        this._propertiesSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
         this._viewFrom = undefined;
@@ -416,6 +421,12 @@ define([
          * @type {PolylineVolumeGraphics}
          */
         polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
+        /**
+         * Gets or sets the bag of arbitrary properties associated with this entity.
+         * @memberof Entity.prototype
+         * @type {PropertyBag}
+         */
+        properties : createPropertyTypeDescriptor('properties', PropertyBag),
         /**
          * Gets or sets the position.
          * @memberof Entity.prototype

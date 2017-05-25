@@ -1677,6 +1677,27 @@
     }
   },
   {
+    "id":"material_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgba":[
+              190,189,9,7
+            ]
+          },
+          "gapColor":{
+            "rgba":[
+              170,88,12,24
+            ]
+          },
+          "dashLength":45848,
+          "dashPattern":13519
+        }
+      }
+    }
+  },
+  {
     "id":"material_path_material_polylineGlow",
     "path":{
       "material":{
@@ -1800,6 +1821,34 @@
           "color":{
             "rgbaf":[
               0.6274509803921569,0.2784313725490196,0.9725490196078431,0.9215686274509803
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_path_material_polylineDash_color",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgbaf":[
+              0.11372549019607843,0.3686274509803922,0.4117647058823529,0.7450980392156863
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_path_material_polylineDash_gapColor",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "rgbaf":[
+              0.8313725490196079,0.3137254901960784,0.3411764705882353,0.7490196078431373
             ]
           }
         }
@@ -2138,6 +2187,27 @@
     }
   },
   {
+    "id":"material_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgba":[
+              22,214,57,141
+            ]
+          },
+          "gapColor":{
+            "rgba":[
+              150,91,109,117
+            ]
+          },
+          "dashLength":60297,
+          "dashPattern":40430
+        }
+      }
+    }
+  },
+  {
     "id":"material_polyline_material_polylineGlow",
     "polyline":{
       "material":{
@@ -2261,6 +2331,34 @@
           "color":{
             "rgbaf":[
               0.8313725490196079,0.8235294117647058,0.6313725490196078,0.44313725490196076
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_material_polylineDash_color",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "rgbaf":[
+              0.4627450980392157,0.1843137254901961,0.32941176470588235,0
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_material_polylineDash_gapColor",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "rgbaf":[
+              0.050980392156862744,0.03137254901960784,0.23921568627450981,0.4
             ]
           }
         }
@@ -5132,6 +5230,115 @@
     }
   },
   {
+    "id":"constant_custom",
+    "properties":{
+      "custom_boolean":true,
+      "custom_boundingRectangle":{
+        "boundingRectangle":[
+          9369,63524,6904,17690
+        ]
+      },
+      "custom_cartesian":{
+        "cartesian":[
+          28502,45167,944
+        ]
+      },
+      "custom_cartographicRadians":{
+        "cartographicRadians":[
+          0.350571264887744,0.633274262413284,42979
+        ]
+      },
+      "custom_cartographicDegrees":{
+        "cartographicDegrees":[
+          18,36,37743
+        ]
+      },
+      "custom_cartesian2":{
+        "cartesian2":[
+          44825,16303
+        ]
+      },
+      "custom_unitCartesian":{
+        "unitCartesian":[
+          0.7793507000785103,0.5654938185509552,0.26986890793086105
+        ]
+      },
+      "custom_spherical":{
+        "spherical":[
+          1705,13830,21558
+        ]
+      },
+      "custom_unitSpherical":{
+        "unitSpherical":[
+          59387,15591
+        ]
+      },
+      "custom_rgba":{
+        "rgba":[
+          50,149,175,147
+        ]
+      },
+      "custom_rgbaf":{
+        "rgbaf":[
+          0.06666666666666667,0.06666666666666667,0.23137254901960785,0.42745098039215684
+        ]
+      },
+      "custom_colorBlendMode":{
+        "colorBlendMode":"REPLACE"
+      },
+      "custom_cornerType":{
+        "cornerType":"BEVELED"
+      },
+      "custom_heightReference":{
+        "heightReference":"CLAMP_TO_GROUND"
+      },
+      "custom_horizontalOrigin":{
+        "horizontalOrigin":"LEFT"
+      },
+      "custom_labelStyle":{
+        "labelStyle":"FILL_AND_OUTLINE"
+      },
+      "custom_number":{
+        "number":31507
+      },
+      "custom_nearFarScalar":{
+        "nearFarScalar":[
+          14621,24121,16734,56129
+        ]
+      },
+      "custom_unitQuaternion":{
+        "unitQuaternion":[
+          0.7427379372771427,0.2676794014306149,0.5079052630147908,0.34455817851404885
+        ]
+      },
+      "custom_shadowMode":{
+        "shadowMode":"CAST_ONLY"
+      },
+      "custom_string":{
+        "string":"string41758"
+      },
+      "custom_stripeOrientation":{
+        "stripeOrientation":"VERTICAL"
+      },
+      "custom_wsen":{
+        "wsen":[
+          1.47520917005826,1.17615981869183,0.973692387723505,1.00039738410474
+        ]
+      },
+      "custom_wsenDegrees":{
+        "wsenDegrees":[
+          5,3,6,19
+        ]
+      },
+      "custom_uri":{
+        "uri":"http://example.com/41986"
+      },
+      "custom_verticalOrigin":{
+        "verticalOrigin":"BOTTOM"
+      }
+    }
+  },
+  {
     "id":"ConstantPosition1",
     "position":{
       "cartesian":[
@@ -6470,6 +6677,27 @@
     }
   },
   {
+    "id":"reference_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "reference":"material_path_material_polylineDash#path.material.color"
+          },
+          "gapColor":{
+            "reference":"material_path_material_polylineDash#path.material.gapColor"
+          },
+          "dashLength":{
+            "reference":"material_path_material_polylineDash#path.material.dashLength"
+          },
+          "dashPattern":{
+            "reference":"material_path_material_polylineDash#path.material.dashPattern"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_path_material_polylineGlow",
     "path":{
       "material":{
@@ -6647,6 +6875,27 @@
         "polylineArrow":{
           "color":{
             "reference":"material_polyline_material_polylineArrow#polyline.material.color"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.color"
+          },
+          "gapColor":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.gapColor"
+          },
+          "dashLength":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.dashLength"
+          },
+          "dashPattern":{
+            "reference":"material_polyline_material_polylineDash#polyline.material.dashPattern"
           }
         }
       }
@@ -10334,6 +10583,43 @@
     }
   },
   {
+    "id":"sampled_path_material_polylineDash",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,140,167,151,119,
+              3600,65,100,228,104
+            ]
+          },
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,154,198,168,151,
+              3600,16,23,0,42
+            ]
+          },
+          "dashLength":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,38294,
+              3600,33057
+            ]
+          },
+          "dashPattern":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,58660,
+              3600,3340
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_path_material_polylineGlow",
     "path":{
       "material":{
@@ -10502,6 +10788,38 @@
             "rgbaf":[
               0,0.06666666666666667,0.9725490196078431,0.6862745098039216,0.3254901960784314,
               3600,0.2,0.4823529411764706,0.4980392156862745,0.2196078431372549
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_polylineDash_color",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.803921568627451,0.6784313725490196,0.17647058823529413,0.7098039215686275,
+              3600,0.6745098039215687,0.09803921568627451,0.4470588235294118,0.803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_polylineDash_gapColor",
+    "path":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.23137254901960785,0.7450980392156863,0.7725490196078432,0.9019607843137255,
+              3600,0.7137254901960784,0.1803921568627451,0.3176470588235294,0.30980392156862746
             ]
           }
         }
@@ -10871,6 +11189,43 @@
     }
   },
   {
+    "id":"sampled_polyline_material_polylineDash",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,77,159,238,158,
+              3600,206,194,234,158
+            ]
+          },
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,232,145,15,164,
+              3600,173,151,118,138
+            ]
+          },
+          "dashLength":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,41757,
+              3600,10126
+            ]
+          },
+          "dashPattern":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,33948,
+              3600,16892
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_polyline_material_polylineGlow",
     "polyline":{
       "material":{
@@ -11039,6 +11394,38 @@
             "rgbaf":[
               0,0.5215686274509804,0.7254901960784313,0.8784313725490196,0.8235294117647058,
               3600,0.7725490196078432,0.8627450980392157,0.3254901960784314,0
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_polylineDash_color",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "color":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.5254901960784314,0.9921568627450981,0.9647058823529412,0.36470588235294116,
+              3600,0.2784313725490196,0.13333333333333333,0.4470588235294118,0.19215686274509805
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_polylineDash_gapColor",
+    "polyline":{
+      "material":{
+        "polylineDash":{
+          "gapColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.4980392156862745,0.7764705882352941,0.803921568627451,0.6901960784313725,
+              3600,0.3764705882352941,0.8980392156862745,0.16862745098039217,0.8980392156862745
             ]
           }
         }
@@ -14601,6 +14988,116 @@
         "unitCartesian":[
           0,0.5532827915003591,0.6961099100967651,0.4575031646826541,
           3600,0.7546657014303162,0.11520131359926604,0.6459166636878882
+        ]
+      }
+    }
+  },
+  {
+    "id":"sampled_custom",
+    "properties":{
+      "custom_boundingRectangle":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "boundingRectangle":[
+          0,10924,3626,12558,56113,
+          3600,59127,45286,34992,17032
+        ]
+      },
+      "custom_cartesian":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartesian":[
+          0,59456,60648,1004,
+          3600,37915,14740,14905
+        ]
+      },
+      "custom_cartographicRadians":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartographicRadians":[
+          0,1.25380297085855,1.03510976346284,7102,
+          3600,1.10648839763778,0.231915563506949,340
+        ]
+      },
+      "custom_cartographicDegrees":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartographicDegrees":[
+          0,44,31,55762,
+          3600,10,18,28847
+        ]
+      },
+      "custom_cartesian2":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "cartesian2":[
+          0,9033,9251,
+          3600,34048,58501
+        ]
+      },
+      "custom_unitCartesian":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "unitCartesian":[
+          0,0.05011330950865643,0.9171959672069245,0.3952723288436012,
+          3600,0.7974760484507633,0.4058447897907701,0.4464548787358491
+        ]
+      },
+      "custom_spherical":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "spherical":[
+          0,47098,2231,14088,
+          3600,34883,48264,41148
+        ]
+      },
+      "custom_unitSpherical":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "unitSpherical":[
+          0,48811,24254,
+          3600,44800,8111
+        ]
+      },
+      "custom_rgba":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgba":[
+          0,179,175,115,46,
+          3600,136,187,237,156
+        ]
+      },
+      "custom_rgbaf":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "rgbaf":[
+          0,0.8901960784313725,0.45098039215686275,0.5882352941176471,0.7215686274509804,
+          3600,0.4196078431372549,0.8431372549019608,0.3607843137254902,0.4235294117647059
+        ]
+      },
+      "custom_number":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,24561,
+          3600,45446
+        ]
+      },
+      "custom_nearFarScalar":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "nearFarScalar":[
+          0,64112,15354,32827,10368,
+          3600,55643,45785,33458,29826
+        ]
+      },
+      "custom_unitQuaternion":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "unitQuaternion":[
+          0,0.6972993054141079,0.26496667122143996,0.6159477197824619,0.25332735404140194,
+          3600,0.134764165794432,0.408681085292446,0.902060273565587,0.0332513608247514
+        ]
+      },
+      "custom_wsen":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "wsen":[
+          0,1.4164143530628,1.2888469381038,0.679756561409663,1.29649258884014,
+          3600,1.19133054275098,0.9154648059314,0.71347968461712,1.32750822775441
+        ]
+      },
+      "custom_wsenDegrees":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "wsenDegrees":[
+          0,29,11,17,36,
+          3600,37,16,25,23
         ]
       }
     }

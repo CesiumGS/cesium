@@ -39,6 +39,7 @@ define([
         '../Scene/Primitive',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './OrthographicFrustum',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
@@ -82,6 +83,7 @@ define([
         Primitive,
         GlobeSurfaceTile,
         ImageryLayer,
+        OrthographicFrustum,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
@@ -502,7 +504,8 @@ define([
             return Visibility.NONE;
         }
 
-        if (frameState.mode === SceneMode.SCENE3D) {
+        var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -915,6 +918,16 @@ define([
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
+        var creditDisplay = frameState.creditDisplay;
+
+        var terrainData = surfaceTile.terrainData;
+        if (defined(terrainData) && defined(terrainData.credits)) {
+            var tileCredits = terrainData.credits;
+            for (var tileCreditIndex = 0,
+                     tileCreditLength = tileCredits.length; tileCreditIndex < tileCreditLength; ++tileCreditIndex) {
+                creditDisplay.addCredit(tileCredits[tileCreditIndex]);
+            }
+        }
 
         var maxTextures = ContextLimits.maximumTextureImageUnits;
 
@@ -1136,7 +1149,6 @@ define([
                 applySplit = applySplit || uniformMapProperties.dayTextureSplit[numberOfDayTextures] !== 0.0;
 
                 if (defined(imagery.credits)) {
-                    var creditDisplay = frameState.creditDisplay;
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
                         creditDisplay.addCredit(credits[creditIndex]);

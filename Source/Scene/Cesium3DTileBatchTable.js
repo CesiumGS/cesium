@@ -9,6 +9,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -26,7 +27,9 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './getBinaryAccessor'
+        './getBinaryAccessor',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         arrayFill,
         Cartesian2,
@@ -37,6 +40,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -54,15 +58,15 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        getBinaryAccessor) {
+        getBinaryAccessor,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
      * @private
      */
     function Cesium3DTileBatchTable(content, featuresLength, batchTableJson, batchTableBinary) {
-        featuresLength = defaultValue(featuresLength, 0);
-
         /**
          * @readonly
          */
@@ -132,6 +136,21 @@ define([
         this._textureStep = textureStep;
     }
 
+    defineProperties(Cesium3DTileBatchTable.prototype, {
+        memorySizeInBytes : {
+            get : function() {
+                var memory = 0;
+                if (defined(this._pickTexture)) {
+                    memory += this._pickTexture.sizeInBytes;
+                }
+                if (defined(this._batchTexture)) {
+                    memory += this._batchTexture.sizeInBytes;
+                }
+                return memory;
+            }
+        }
+    });
+
     function initializeHierarchy(json, binary) {
         var i;
         var classId;
@@ -167,11 +186,13 @@ define([
             }
         }
 
-        if (defined(parentIds.byteOffset)) {
-            parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
-            parentIds.type = 'SCALAR';
-            binaryAccessor = getBinaryAccessor(parentIds);
-            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+        if (defined(parentIds)) {
+            if (defined(parentIds.byteOffset)) {
+                parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
+                parentIds.type = 'SCALAR';
+                binaryAccessor = getBinaryAccessor(parentIds);
+                parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
+            }
         }
 
         var classesLength = classes.length;
@@ -226,6 +247,11 @@ define([
         var parentIndexes = hierarchy.parentIndexes;
         var classIds = hierarchy.classIds;
         var instancesLength = classIds.length;
+
+        if (!defined(parentIds)) {
+            // No need to validate if there are no parents
+            return;
+        }
 
         if (instanceIndex >= instancesLength) {
             throw new DeveloperError('Parent index ' + instanceIndex + ' exceeds the total number of instances: ' + instancesLength);
@@ -356,6 +382,20 @@ define([
         }
     };
 
+    Cesium3DTileBatchTable.prototype.setAllShow = function(show) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(show)) {
+            throw new DeveloperError('show is required.');
+        }
+        //>>includeEnd('debug');
+
+        var featuresLength = this.featuresLength;
+        for (var i = 0; i < featuresLength; ++i) {
+            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
+            this.setShow(i, show);
+        }
+    };
+
     Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
@@ -373,7 +413,7 @@ define([
         return (this._showAlphaProperties[offset] === 255);
     };
 
-    var scratchColor = new Array(4);
+    var scratchColorBytes = new Array(4);
 
     Cesium3DTileBatchTable.prototype.setColor = function(batchId, color) {
         var featuresLength = this.featuresLength;
@@ -392,7 +432,7 @@ define([
             return;
         }
 
-        var newColor = color.toBytes(scratchColor);
+        var newColor = color.toBytes(scratchColorBytes);
         var newAlpha = newColor[3];
 
         var batchValues = getBatchValues(this);
@@ -471,6 +511,26 @@ define([
             batchValues[offset + 2],
             showAlphaProperties[propertyOffset + 1],
             result);
+    };
+
+    var scratchColor = new Color();
+
+    Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
+        if (!defined(style)) {
+            this.setAllColor(Color.WHITE);
+            this.setAllShow(true);
+            return;
+        }
+
+        var content = this._content;
+        var length = this.featuresLength;
+        for (var i = 0; i < length; ++i) {
+            var feature = content.getFeature(i);
+            var color = style.color.evaluateColor(frameState, feature, scratchColor);
+            var show = style.show.evaluate(frameState, feature);
+            this.setColor(i, color);
+            this.setShow(i, show);
+        }
     };
 
     function getBinaryProperty(binaryProperty, index) {
@@ -555,11 +615,18 @@ define([
         }
     }
 
+    function traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback) {
+        return endConditionCallback(hierarchy, instanceIndex);
+    }
+
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
         // Traverse over the hierarchy and process each instance with the endConditionCallback.
         // When the endConditionCallback returns a value, the traversal stops and that value is returned.
         var parentCounts = hierarchy.parentCounts;
-        if (defined(parentCounts)) {
+        var parentIds = hierarchy.parentIds;
+        if (!defined(parentIds)) {
+            return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
+        } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         }
         return traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback);
@@ -859,8 +926,6 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n';                          // Per-feature show/hide
-// TODO: Translucent should still write depth for picking?  For example, we want to grab highlighted building that became translucent
-// TODO: Same TODOs below in getFragmentShaderCallback
                 if (handleTranslucent) {
                     newMain +=
                         '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
@@ -896,34 +961,37 @@ define([
         };
     };
 
-    function modifyDiffuse(source, colorBlendMode, diffuseUniformName) {
+    function getHighlightOnlyShader(source) {
+        source = ShaderSource.replaceMain(source, 'tile_main');
+        return source +
+               'void tile_color(vec4 tile_featureColor) \n' +
+               '{ \n' +
+               '    tile_main(); \n' +
+               '    gl_FragColor *= tile_featureColor; \n' +
+               '} \n';
+    }
+
+    function modifyDiffuse(source, diffuseUniformName) {
         // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
         if (!defined(diffuseUniformName)) {
-            source = ShaderSource.replaceMain(source, 'tile_main');
-            return source +
-                   'void tile_color(vec4 tile_featureColor) \n' +
-                   '{ \n' +
-                   '    tile_main(); \n' +
-                   '    gl_FragColor *= tile_featureColor; \n' +
-                   '} \n';
+            return getHighlightOnlyShader(source);
         }
 
         // Find the diffuse uniform
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(uniformMatch)) {
-            throw new DeveloperError('Could not find uniform declaration for ' + diffuseUniformName + ' of type vec3, vec4, or sampler2D');
+            // Could not find uniform declaration of type vec3, vec4, or sampler2D
+            return getHighlightOnlyShader(source);
         }
-        //>>includeEnd('debug');
 
         var declaration = uniformMatch[0];
         var type = uniformMatch[1];
 
         source = ShaderSource.replaceMain(source, 'tile_main');
-        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below don't affect it
+        source = source.replace(declaration, ''); // Remove uniform declaration for now so the replace below doesn't affect it
 
         // If the tile color is white, use the source color. This implies the feature has not been styled.
         // Highlight: tile_colorBlend is 0.0 and the source color is used
@@ -977,12 +1045,12 @@ define([
         return source;
     }
 
-    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, colorBlendMode, diffuseUniformName) {
+    Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseUniformName) {
         if (this.featuresLength === 0) {
             return;
         }
         return function(source) {
-            source = modifyDiffuse(source, colorBlendMode, diffuseUniformName);
+            source = modifyDiffuse(source, diffuseUniformName);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
@@ -1179,8 +1247,6 @@ define([
                 }
             };
 
-            // uniformMap goes through getUniformMap first in Model.
-            // Combine in this order so uniforms with the same name are overridden.
             return combine(batchUniformMap, uniformMap);
         };
     };
@@ -1193,35 +1259,48 @@ define([
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
-    function updateDerivedCommands(derivedCommands, command) {
-        for (var name in derivedCommands) {
-            if (derivedCommands.hasOwnProperty(name)) {
-                var derivedCommand = derivedCommands[name];
-                derivedCommand.castShadows = command.castShadows;
-                derivedCommand.receiveShadows = command.receiveShadows;
-                derivedCommand.primitiveType = command.primitiveType;
-            }
-        }
-    }
-
-    Cesium3DTileBatchTable.prototype.getAddCommand = function() {
+    Cesium3DTileBatchTable.prototype.addDerivedCommands = function(frameState, commandStart) {
+        var commandList = frameState.commandList;
+        var commandEnd = commandList.length;
+        var tile = this._content._tile;
+        var tileset = tile._tileset;
+        var bivariateVisibilityTest = tileset.skipLevelOfDetail && tileset._hasMixedContent && frameState.context.stencilBuffer;
         var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
-// TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
-        return function(command) {
-            var commandList = this.commandList;
-
+        for (var i = commandStart; i < commandEnd; ++i) {
+            var command = commandList[i];
             var derivedCommands = command.derivedCommands.tileset;
             if (!defined(derivedCommands)) {
                 derivedCommands = {};
                 command.derivedCommands.tileset = derivedCommands;
-
                 derivedCommands.originalCommand = deriveCommand(command);
-                derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
-                derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            updateDerivedCommands(derivedCommands, command);
+            updateDerivedCommand(derivedCommands.originalCommand, command);
+
+            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+                if (!defined(derivedCommands.translucent)) {
+                    derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
+                }
+                updateDerivedCommand(derivedCommands.translucent, command);
+            }
+
+            if (bivariateVisibilityTest) {
+                if (command.pass !== Pass.TRANSLUCENT) {
+                    if (!defined(derivedCommands.zback)) {
+                        derivedCommands.zback = deriveZBackfaceCommand(derivedCommands.originalCommand);
+                    }
+                    tileset._backfaceCommands.push(derivedCommands.zback);
+                }
+                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== tile._lastSelectionDepth) {
+                    derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
+                    tile._lastSelectionDepth = tile._selectionDepth;
+                }
+                updateDerivedCommand(derivedCommands.stencil, command);
+            }
+
+            var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
+            var translucentCommand = derivedCommands.translucent;
 
             // If the command was originally opaque:
             //    * If the styling applied to the tile is all opaque, use the original command
@@ -1230,35 +1309,34 @@ define([
             //      and back faces) with a translucent render state.
             //    * If the styling causes both opaque and translucent features in this tile,
             //      then use both sets of commands.
-// TODO: if the tile has multiple commands, we do not know what features are in what
-// commands so the third-case may be overkill.  Change this to a PERFORMANCE_IDEA?
             if (command.pass !== Pass.TRANSLUCENT) {
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
-                    commandList.push(derivedCommands.originalCommand);
+                    commandList[i] = opaqueCommand;
                 }
-
                 if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
-// TODO: vector tiles, for example, will not always want two passes for translucency.  Some primitives,
-// for example, those created from Cesium geometries, will also already return commands for two
-// passes if the command is originally translucent.  Same TODO below.
-                    commandList.push(derivedCommands.back);
-                    commandList.push(derivedCommands.front);
+                    commandList[i] = translucentCommand;
                 }
-
                 if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
-                    commandList.push(derivedCommands.originalCommand);
-                    commandList.push(derivedCommands.back);
-                    commandList.push(derivedCommands.front);
+                    // PERFORMANCE_IDEA: if the tile has multiple commands, we do not know what features are in what
+                    // commands so this case may be overkill.
+                    commandList[i] = opaqueCommand;
+                    commandList.push(translucentCommand);
                 }
             } else {
                 // Command was originally translucent so no need to derive new commands;
                 // as of now, a style can't change an originally translucent feature to
                 // opaque since the style's alpha is modulated, not a replacement.  When
                 // this changes, we need to derive new opaque commands here.
-                commandList.push(derivedCommands.originalCommand);
+                commandList[i] = opaqueCommand;
             }
-        };
+        }
     };
+
+    function updateDerivedCommand(derivedCommand, command) {
+        derivedCommand.castShadows = command.castShadows;
+        derivedCommand.receiveShadows = command.receiveShadows;
+        derivedCommand.primitiveType = command.primitiveType;
+    }
 
     function getStyleCommandsNeeded(batchTable) {
         var translucentFeaturesLength = batchTable._translucentFeaturesLength;
@@ -1272,13 +1350,6 @@ define([
         return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
     }
 
-    function deriveTranslucentCommand(command, cullFace) {
-        var derivedCommand = deriveCommand(command);
-        derivedCommand.pass = Pass.TRANSLUCENT;
-        derivedCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
-        return derivedCommand;
-    }
-
     function deriveCommand(command) {
         var derivedCommand = DrawCommand.shallowClone(command);
 
@@ -1286,6 +1357,10 @@ define([
         // the shader knows not to cull vertices that were originally transparent
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
+
+        if (!translucentCommand) {
+            derivedCommand.pass = Pass.CESIUM_3D_TILE;
+        }
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {
@@ -1295,10 +1370,44 @@ define([
         return derivedCommand;
     }
 
-    function getTranslucentRenderState(renderState, cullFace) {
-        var rs = clone(renderState, true);
+    function deriveTranslucentCommand(command) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+        derivedCommand.pass = Pass.TRANSLUCENT;
+        derivedCommand.renderState = getTranslucentRenderState(command.renderState);
+        return derivedCommand;
+    }
+
+    function deriveZBackfaceCommand(command) {
+        // Write just backface depth of unresolved tiles so resolved stenciled tiles do not appear in front
+        var derivedCommand = DrawCommand.shallowClone(command);
+        var rs = clone(derivedCommand.renderState, true);
         rs.cull.enabled = true;
-        rs.cull.face = cullFace;
+        rs.cull.face = CullFace.FRONT;
+        derivedCommand.renderState = RenderState.fromCache(rs);
+        derivedCommand.castShadows = false;
+        derivedCommand.receiveShadows = false;
+        return derivedCommand;
+    }
+
+    function deriveStencilCommand(command, reference) {
+        var derivedCommand = command;
+        if (command.renderState.depthMask) { // ignore if tile does not write depth (ex. translucent)
+            // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+            // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+            derivedCommand = DrawCommand.shallowClone(command);
+            var rs = clone(derivedCommand.renderState, true);
+            rs.stencilTest.enabled = true;
+            rs.stencilTest.reference = reference;
+            rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+            rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+            derivedCommand.renderState = RenderState.fromCache(rs);
+        }
+        return derivedCommand;
+    }
+
+    function getTranslucentRenderState(renderState) {
+        var rs = clone(renderState, true);
+        rs.cull.enabled = false;
         rs.depthTest.enabled = true;
         rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;
@@ -1351,6 +1460,7 @@ define([
             }
 
             batchTable._pickTexture = createTexture(batchTable, context, bytes);
+            content._tileset._statistics.batchTableByteLength += batchTable._pickTexture.sizeInBytes;
         }
     }
 
@@ -1381,6 +1491,7 @@ define([
             // Create batch texture on-demand
             if (!defined(this._batchTexture)) {
                 this._batchTexture = createTexture(this, context, this._batchValues);
+                tileset._statistics.batchTableByteLength += this._batchTexture.sizeInBytes;
             }
 
             updateBatchTexture(this);  // Apply per-feature show/color updates

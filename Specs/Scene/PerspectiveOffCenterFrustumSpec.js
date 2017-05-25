@@ -64,40 +64,40 @@ defineSuite([
         var leftPlane = planes[0];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(x, 0.0, -x, 0.0);
-        expect(leftPlane).toEqual(expectedResult);
+        expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get frustum right plane', function() {
         var rightPlane = planes[1];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(-x, 0.0, -x, 0.0);
-        expect(rightPlane).toEqual(expectedResult);
+        expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get frustum bottom plane', function() {
         var bottomPlane = planes[2];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(0.0, x, -x, 0.0);
-        expect(bottomPlane).toEqual(expectedResult);
+        expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get frustum top plane', function() {
         var topPlane = planes[3];
         var x = 1.0 / Math.sqrt(2.0);
         var expectedResult = new Cartesian4(0.0, -x, -x, 0.0);
-        expect(topPlane).toEqual(expectedResult);
+        expect(topPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get frustum near plane', function() {
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
-        expect(nearPlane).toEqual(expectedResult);
+        expect(nearPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get frustum far plane', function() {
         var farPlane = planes[5];
         var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);
-        expect(farPlane).toEqual(expectedResult);
+        expect(farPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON15);
     });
 
     it('get perspective projection matrix', function() {

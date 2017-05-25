@@ -3,11 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -18,11 +18,11 @@ define([
         BoundingSphere,
         BoxOutlineGeometry,
         Cartesian3,
+        Check,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         GeometryInstance,
         Matrix3,
         Matrix4,
@@ -31,6 +31,18 @@ define([
         Primitive) {
     'use strict';
 
+    /**
+     * A tile bounding volume specified as an oriented bounding box.
+     * @alias TileOrientedBoundingBox
+     * @constructor
+     *
+     * @param {Cartesian3} [center=Cartesian3.ZERO] The center of the box.
+     * @param {Matrix3} [halfAxes=Matrix3.ZERO] The three orthogonal half-axes of the bounding box.
+     *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+     *                                          cube centered at the origin.
+     *
+     * @private
+     */
     function TileOrientedBoundingBox(center, halfAxes) {
         this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
         this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
@@ -38,7 +50,7 @@ define([
 
     defineProperties(TileOrientedBoundingBox.prototype, {
         /**
-         * The underlying bounding volume
+         * The underlying bounding volume.
          *
          * @memberof TileOrientedBoundingBox.prototype
          *
@@ -51,14 +63,14 @@ define([
             }
         },
         /**
-         * The underlying bounding sphere
-         * 
+         * The underlying bounding sphere.
+         *
          * @memberof TileOrientedBoundingBox.prototype
-         * 
+         *
          * @type {BoundingSphere}
          * @readonly
          */
-        boundingSphere : { 
+        boundingSphere : {
             get : function() {
                 return this._boundingSphere;
             }
@@ -73,9 +85,7 @@ define([
      */
     TileOrientedBoundingBox.prototype.distanceToCamera = function(frameState) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
-        }
+        Check.defined('frameState', frameState);
         //>>includeEnd('debug');
         return Math.sqrt(this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC));
     };
@@ -91,15 +101,20 @@ define([
      */
     TileOrientedBoundingBox.prototype.intersectPlane = function(plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
         return this._orientedBoundingBox.intersectPlane(plane);
     };
 
     /**
      * Update the bounding box after the tile is transformed.
+     *
+     * @param {Cartesian3} center The center of the box.
+     * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
+     *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
+     *                           cube centered at the origin.
+     *
+     * @private
      */
     TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
         Cartesian3.clone(center, this._orientedBoundingBox.center);
@@ -112,12 +127,12 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
+     *
+     * @private
      */
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        Check.defined('color', color);
         //>>includeEnd('debug');
 
         var geometry = new BoxOutlineGeometry({
