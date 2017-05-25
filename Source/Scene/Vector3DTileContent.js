@@ -9,10 +9,12 @@ define([
     '../Core/destroyObject',
     '../Core/defineProperties',
     '../Core/DeveloperError',
+    '../Core/DistanceDisplayCondition',
     '../Core/Ellipsoid',
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
     '../Core/loadArrayBuffer',
+    '../Core/NearFarScalar',
     '../Core/PinBuilder',
     '../Core/Request',
     '../Core/RequestScheduler',
@@ -20,10 +22,10 @@ define([
     '../ThirdParty/when',
     './BillboardCollection',
     './Cesium3DTileBatchTable',
-    './Cesium3DTileContentState',
     './Cesium3DTileFeature',
     './HorizontalOrigin',
     './LabelCollection',
+    './LabelStyle',
     './PointPrimitiveCollection',
     './PolylineCollection'
 ], function(
@@ -36,10 +38,12 @@ define([
     destroyObject,
     defineProperties,
     DeveloperError,
+    DistanceDisplayCondition,
     Ellipsoid,
     getMagic,
     getStringFromTypedArray,
     loadArrayBuffer,
+    NearFarScalar,
     PinBuilder,
     Request,
     RequestScheduler,
@@ -47,10 +51,10 @@ define([
     when,
     BillboardCollection,
     Cesium3DTileBatchTable,
-    Cesium3DTileContentState,
     Cesium3DTileFeature,
     HorizontalOrigin,
     LabelCollection,
+    LabelStyle,
     PointPrimitiveCollection,
     PolylineCollection) {
     'use strict';
@@ -61,24 +65,24 @@ define([
      *
      * @private
      */
-    function Vector3DTileContent(tileset, tile, url) {
-        this._labelCollection = undefined;
-        this._polylineCollection = undefined;
-        this._url = url;
+    function Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
+        this._labelCollection = undefined;
+        this._polylineCollection = undefined;
+        this._batchTable = undefined;
+        this._features = undefined;
+        this._featuresLength = 0;
+        this._readyPromise = when.defer();
+        this._ready = false;
 
         /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
-        this._contentReadyToProcessPromise = when.defer();
-        this._readyPromise = when.defer();
-        this._featuresLength = 0;
-        this._features = undefined;
+        initialize(this, arrayBuffer, byteOffset);
     }
 
     defineProperties(Vector3DTileContent.prototype, {
@@ -94,6 +98,60 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointsLength : {
+            get : function() {
+                return this._featuresLength;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        trianglesLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        geometryByteLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        texturesByteLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableByteLength : {
+            get : function() {
+                return this._batchTable.memorySizeInBytes;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
         innerContents : {
             get : function() {
                 return undefined;
@@ -103,96 +161,44 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        contentReadyToProcessPromise : {
+        tileset : {
             get : function() {
-                return this._contentReadyToProcessPromise.promise;
+                return this._tileset;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        readyPromise : {
+        tile : {
             get : function() {
-                return this._readyPromise.promise;
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url: {
+            get: function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
             }
         }
     });
 
-    function createFeatures(content) {
-        var tileset = content._tileset;
-        var featuresLength = content._featuresLength;
-        if (!defined(content._features) && (featuresLength > 0)) {
-            var features = new Array(featuresLength);
-            for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
-            }
-            content._features = features;
-        }
-    }
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTable.hasProperty(name);
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.getFeature = function(batchId) {
-        var featuresLength = this._featuresLength;
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-        }
-        //>>includeEnd('debug');
-
-        createFeatures(this);
-        return this._features[batchId];
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.request = function() {
-        var that = this;
-
-        var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : this._url,
-            server : this._tile.requestServer,
-            requestFunction : loadArrayBuffer,
-            type : RequestType.TILES3D,
-            distance : distance
-        }));
-
-        if (!defined(promise)) {
-            return false;
-        }
-
-        this.state = Cesium3DTileContentState.LOADING;
-        promise.then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that._readyPromise.reject(error);
-        });
-
-        return true;
-    };
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -216,23 +222,12 @@ define([
         byteOffset += sizeOfUint32;
 
         if (byteLength === 0) {
-            this.state = Cesium3DTileContentState.PROCESSING;
-            this._contentReadyToProcessPromise.resolve(this);
-            this.state = Cesium3DTileContentState.READY;
-            this._readyPromise.resolve(this);
+            content._readyPromise.resolve(content);
             return;
         }
 
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-
-        /*
-        //>>includeStart('debug', pragmas.debug);
-        if (featureTableJSONByteLength === 0) {
-            throw new DeveloperError('Feature table must have a byte length greater than zero');
-        }
-        //>>includeEnd('debug');
-        */
 
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
@@ -288,17 +283,17 @@ define([
         var positions = new Float64Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat64);
 
         var length = text.length;
-        this._featuresLength = length;
+        content._featuresLength = length;
 
-        var batchTable = new Cesium3DTileBatchTable(this, length, batchTableJson, batchTableBinary);
-        this.batchTable = batchTable;
+        var batchTable = new Cesium3DTileBatchTable(content, length, batchTableJson, batchTableBinary);
+        content._batchTable = batchTable;
 
         var labelCollection = new LabelCollection({
             batchTable : batchTable
         });
         var polylineCollection = new PolylineCollection();
 
-        var displayCondition = this._tileset.distanceDisplayCondition;
+        var displayCondition = content._tileset.distanceDisplayCondition;
 
         for (var i = 0; i < length; ++i) {
             var labelText = text[i];
@@ -324,14 +319,45 @@ define([
                 distanceDisplayCondition : displayCondition
             });
 
-            this.batchTable.setColor(i, Color.WHITE);
+            content._batchTable.setColor(i, Color.WHITE);
         }
 
-        this.state = Cesium3DTileContentState.PROCESSING;
-        this._contentReadyToProcessPromise.resolve(this);
+        content._labelCollection = labelCollection;
+        content._polylineCollection = polylineCollection;
+    }
 
-        this._labelCollection = labelCollection;
-        this._polylineCollection = polylineCollection;
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content._featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
+            }
+            content._features = features;
+        }
+    }
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this._batchTable.hasProperty(batchId, name);
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Vector3DTileContent.prototype.getFeature = function(batchId) {
+        var featuresLength = this._featuresLength;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     /**
@@ -340,11 +366,98 @@ define([
     Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
+    function clearStyle(content) {
+        var length = content.featuresLength;
+        for (var i = 0; i < length; ++i) {
+            var feature = content.getFeature(i);
+            feature.show = true;
+            feature.color = Color.WHITE;
+            feature.outlineColor = Color.BLACK;
+            feature.outlineWidth = 1.0;
+            feature.labelStyle = LabelStyle.FILL;
+            feature.font = '30px sans-serif';
+            feature.anchorLineColor = Color.WHITE;
+            feature.backgroundColor = 'rgba(42, 42, 42, 0.8)';
+            feature.backgroundXPadding = 7.0;
+            feature.backgroundYPadding = 5.0;
+            feature.backgroundEnabled = false;
+            feature.scaleByDistance = undefined;
+            feature.translucencyByDistance = undefined;
+        }
+    }
+
+    var scratchColor = new Color();
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Vector3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
+        if (!defined(style)) {
+            clearStyle(this);
+            return;
+        }
+
+        for (var i = 0; i < length; ++i) {
+            var feature = this.getFeature(i);
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature);
+            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
+            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature);
+            feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
+            feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
+            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+
+            if (defined(feature.anchorLineColor)) {
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature);
+            }
+
+            var scaleByDistanceNearRange = style.scaleByDistanceNearRange;
+            var scaleByDistanceNearValue = style.scaleByDistanceNearValue;
+            var scaleByDistanceFarRange = style.scaleByDistanceFarRange;
+            var scaleByDistanceFarValue = style.scaleByDistanceFarValue;
+
+            if (defined(scaleByDistanceNearRange) && defined(scaleByDistanceNearValue) &&
+                defined(scaleByDistanceFarRange) && defined(scaleByDistanceFarValue)) {
+                var nearRange = scaleByDistanceNearRange.evaluate(frameState, feature);
+                var nearValue = scaleByDistanceNearValue.evaluate(frameState, feature);
+                var farRange = scaleByDistanceFarRange.evaluate(frameState, feature);
+                var farValue = scaleByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.scaleByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            } else {
+                feature.scaleByDistance = undefined;
+            }
+
+            var translucencyByDistanceNearRange = style.translucencyByDistanceNearRange;
+            var translucencyByDistanceNearValue = style.translucencyByDistanceNearValue;
+            var translucencyByDistanceFarRange = style.translucencyByDistanceFarRange;
+            var translucencyByDistanceFarValue = style.translucencyByDistanceFarValue;
+
+            if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
+                defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
+                var tNearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
+                var tNearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
+                var tFarRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
+                var tFarValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.translucencyByDistance = new NearFarScalar(tNearRange, tNearValue, tFarRange, tFarValue);
+            } else {
+                feature.translucencyByDistance = undefined;
+            }
+
+            var distanceDisplayConditionNear = style.distanceDisplayConditionNear;
+            var distanceDisplayConditionFar = style.distanceDisplayConditionFar;
+
+            if (defined(distanceDisplayConditionNear) && defined(distanceDisplayConditionFar)) {
+                var near = distanceDisplayConditionNear.evaluate(frameState, feature);
+                var far = distanceDisplayConditionFar.evaluate(frameState, feature);
+
+                feature.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+            }
+        }
     };
 
     /**
@@ -355,13 +468,13 @@ define([
             return;
         }
 
-        this.batchTable.update(tileset, frameState);
+        this._batchTable.update(tileset, frameState);
         this._labelCollection.update(frameState);
         this._polylineCollection.update(frameState);
 
-        if (this.state !== Cesium3DTileContentState.READY) {
-            this.state = Cesium3DTileContentState.READY;
+        if (!this._ready) {
             this._readyPromise.resolve(this);
+            this._ready = true;
         }
     };
 
@@ -378,6 +491,7 @@ define([
     Vector3DTileContent.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
         this._polylineCollection = this._polylineCollection && this._polylineCollection.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 
