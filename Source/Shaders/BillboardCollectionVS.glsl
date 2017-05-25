@@ -51,8 +51,6 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         float angle = rotation;
         if (validAlignedAxis)
         {
-            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
-            vec3 normal = normalize(cross(alignedAxis, pos));
             vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
             angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
                     (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
