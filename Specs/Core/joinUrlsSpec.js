@@ -160,4 +160,13 @@ defineSuite([
         var result = joinUrls('http://www.xyz.com/', 'MODULE');
         expect(result).toEqual('http://www.xyz.com/MODULE');
     });
+
+    it('does not join data uris', function() {
+        var dataUri = 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D';
+        var result = joinUrls(dataUri, relativePath);
+        expect(result).toEqual(dataUri);
+
+        result = joinUrls(absolutePath, dataUri);
+        expect(result).toEqual(dataUri);
+    });
 });

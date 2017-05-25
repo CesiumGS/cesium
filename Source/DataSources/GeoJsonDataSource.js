@@ -79,10 +79,6 @@ define([
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
     var defaultClampToGround = false;
 
-    var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
-    var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
-    var defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
-
     var sizes = {
         small : 24,
         medium : 48,
@@ -597,7 +593,6 @@ define([
             },
             set : function(value) {
                 defaultStroke = value;
-                defaultStrokeMaterialProperty.color.setValue(value);
             }
         },
         /**
@@ -612,7 +607,6 @@ define([
             },
             set : function(value) {
                 defaultStrokeWidth = value;
-                defaultStrokeWidthProperty.setValue(value);
             }
         },
         /**
@@ -627,7 +621,6 @@ define([
             },
             set : function(value) {
                 defaultFill = value;
-                defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
             }
         },
         /**

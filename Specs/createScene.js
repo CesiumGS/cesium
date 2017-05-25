@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/Cartesian2',
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
@@ -7,6 +8,7 @@ define([
         'Specs/createCanvas',
         'Specs/getWebGLStub'
     ], function(
+        Cartesian2,
         clone,
         defaultValue,
         defined,
@@ -55,6 +57,10 @@ define([
         scene.renderForSpecs = function(time) {
             this.initializeFrame();
             this.render(time);
+        };
+
+        scene.pickForSpecs = function() {
+            this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);
