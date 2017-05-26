@@ -1,4 +1,3 @@
-/* jshint jasmine: true*/
 /*global defineSuite*/
 defineSuite([
         'Core/loadText',

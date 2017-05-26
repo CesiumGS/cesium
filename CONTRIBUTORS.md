@@ -141,3 +141,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Heiko Thiel](https://github.com/SunBlack)
 * [Sravan Kumar Kilaru](https://github.com/kilarusravankumar)
 * [Ryan King](https://github.com/ryki2658)
+* [Jason Wohlgemuth](https://github.com/jhwohlgemuth)

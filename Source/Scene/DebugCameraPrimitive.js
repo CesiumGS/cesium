@@ -151,7 +151,6 @@ define([
                 for (var i = 0; i < 4; ++i) {
                     var corner = Cartesian4.clone(frustumCornersNDC[i], scratchFrustumCorners[i]);
 
-                    var worldCoords;
                     if (!defined(inverseViewProjection)) {
                         if (defined(frustum._offCenterFrustum)) {
                             frustum = frustum._offCenterFrustum;
@@ -171,7 +170,7 @@ define([
                         corner.z = (corner.z * (near - far) - near - far) * 0.5;
                         corner.w = 1.0;
 
-                        worldCoords = Matrix4.multiplyByVector(inverseView, corner, corner);
+                        Matrix4.multiplyByVector(inverseView, corner, corner);
                     } else {
                         corner = Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
 

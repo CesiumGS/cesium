@@ -3384,7 +3384,6 @@ defineSuite([
 
     it('checks validation document', function() {
         return CzmlDataSource.load('Data/CZML/ValidationDocument.czml').then(function(dataSource) {
-            /*jshint -W120 */
             var e;
             var date;
             var documentStartDate = JulianDate.fromIso8601('2016-06-17T12:00:00Z');

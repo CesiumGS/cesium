@@ -29,6 +29,7 @@ Change Log
 * Updated documentation for Quaternion.fromHeadingPitchRoll [#5264](https://github.com/AnalyticalGraphicsInc/cesium/issues/5264)
 * Fixed an issue where using the depth fail material for polylines would cause a crash in Edge. [#5359](https://github.com/AnalyticalGraphicsInc/cesium/pull/5359)
 * Fixed a crash where EllipsoidGeometry and EllipsoidOutlineGeometry were given floating point values when expecting integers. [#5260](https://github.com/AnalyticalGraphicsInc/cesium/issues/5260)
+* Fixed an issue where billboards were not properly aligned. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2487)
 
 ### 1.33 - 2017-05-01
 
