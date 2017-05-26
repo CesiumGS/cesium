@@ -2451,19 +2451,8 @@ define([
             scene._globeDepth.clear(context, passState, clearColor);
         }
 
-        // Determine if there are any translucent surfaces in any of the frustums.
-        var renderTranslucentCommands = false;
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
-                renderTranslucentCommands = true;
-                break;
-            }
-        }
-
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
