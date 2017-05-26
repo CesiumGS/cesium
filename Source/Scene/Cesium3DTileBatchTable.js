@@ -600,7 +600,7 @@ define([
     }
 
     function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
-        while (true) {
+        while (true) { // eslint-disable-line no-constant-condition
             var result = endConditionCallback(hierarchy, instanceIndex);
             if (defined(result)) {
                 // The end condition was met, stop the traversal and return the result
