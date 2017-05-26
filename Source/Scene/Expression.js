@@ -1198,7 +1198,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
         //>>includeEnd('debug');
-        return -left; // jshint ignore:line
+        return -left; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluatePositive = function(frameState, feature) {
@@ -1329,7 +1329,7 @@ define([
         throw new DeveloperError('Operator "+" requires vector or number arguments of matching types, or at least one string argument. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return left + right; // jshint ignore:line
+        return left + right; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateMinus = function(frameState, feature) {
@@ -1349,7 +1349,7 @@ define([
         throw new DeveloperError('Operator "-" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return left - right; // jshint ignore:line
+        return left - right; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateTimes = function(frameState, feature) {
@@ -1381,7 +1381,7 @@ define([
         throw new DeveloperError('Operator "*" requires vector or number arguments. If both arguments are vectors they must be matching types. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return left * right; // jshint ignore:line
+        return left * right; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateDivide = function(frameState, feature) {
@@ -1407,7 +1407,7 @@ define([
         throw new DeveloperError('Operator "/" requires vector or number arguments of matching types, or a number as the second argument. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return left / right; // jshint ignore:line
+        return left / right; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateMod = function(frameState, feature) {
@@ -1427,7 +1427,7 @@ define([
         throw new DeveloperError('Operator "%" requires vector or number arguments of matching types. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return left % right; // jshint ignore:line
+        return left % right; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateEqualsStrict = function(frameState, feature) {
@@ -1545,7 +1545,7 @@ define([
         throw new DeveloperError('Operator "=~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return false; // jshint ignore:line
+        return false; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateRegExpNotMatch = function(frameState, feature) {
@@ -1562,7 +1562,7 @@ define([
         throw new DeveloperError('Operator "!~" requires one RegExp argument and one string argument. Arguments are ' + left + ' and ' + right + '.');
         //>>includeEnd('debug');
 
-        return false; // jshint ignore:line
+        return false; // eslint-disable-line no-unreachable
     };
 
     Node.prototype._evaluateRegExpExec = function(frameState, feature) {
@@ -1731,8 +1731,8 @@ define([
                     //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Error generating style shader: "' + value + '" is not supported.');
                     //>>includeEnd('debug');
-                    // Return undefined when not in debug. Tell jsHint to ignore this line.
-                    return undefined; // jshint ignore:line
+                    // Return undefined when not in debug. Tell esLint to ignore this line.
+                    return undefined; // eslint-disable-line no-unreachable
                 } else if (defined(unaryFunctions[value])) {
                     return value + '(' + left + ')';
                 }
@@ -1788,7 +1788,7 @@ define([
                     throw new DeveloperError('Error generating style shader: Invalid array length. Array length should be 2, 3, or 4.');
                 }
                 //>>includeEnd('debug');
-                break;
+                break; // eslint-disable-line no-unreachable
             case ExpressionNodeType.REGEX:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error generating style shader: Regular expressions are not supported.');

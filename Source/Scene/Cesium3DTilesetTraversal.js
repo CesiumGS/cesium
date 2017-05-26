@@ -287,7 +287,7 @@ define([
         this.internalDFS.frameState = this.frameState;
         this.internalDFS.outOfCore = this.outOfCore;
         this.internalDFS.baseScreenSpaceError = this.baseScreenSpaceError;
-        DFS(root, this);
+        depthFirstSearch(root, this);
     };
 
     BaseTraversal.prototype.visitStart = function(tile) {
@@ -378,7 +378,7 @@ define([
 
     InternalBaseTraversal.prototype.execute = function(root) {
         this.allLoaded = true;
-        DFS(root, this);
+        depthFirstSearch(root, this);
         return this.allLoaded;
     };
 
@@ -433,7 +433,7 @@ define([
         this.internalDFS.outOfCore = outOfCore;
 
         this.maxChildrenLength = 0;
-        BFS(root, this);
+        breadthFirstSearch(root, this);
         this.queue1.length = 0;
         this.queue2.length = 0;
         this.scratchQueue.length = 0;
@@ -476,7 +476,7 @@ define([
         this.tileset = root._tileset;
         this.root = root;
         this.queue = queue;
-        DFS(root, this);
+        depthFirstSearch(root, this);
     };
 
     InternalSkipTraversal.prototype.visitStart = function(tile) {
@@ -736,7 +736,7 @@ define([
         return tile.refine === Cesium3DTileRefine.ADD && tile.hasRenderableContent;
     }
 
-    function DFS(root, options) {
+    function depthFirstSearch(root, options) {
         var stack = options.stack;
 
         if (defined(root) && (!defined(options.shouldVisit) || options.shouldVisit(root))) {
@@ -769,7 +769,7 @@ define([
         stack.trim(maxLength);
     }
 
-    function BFS(root, options) {
+    function breadthFirstSearch(root, options) {
         var queue1 = options.queue1;
         var queue2 = options.queue2;
 
