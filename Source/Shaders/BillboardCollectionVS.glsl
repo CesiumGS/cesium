@@ -72,7 +72,7 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
 
     if (sizeInMeters)
     {
-        originTranslate += originTranslate / czm_metersPerPixel(positionEC);
+        originTranslate /= czm_metersPerPixel(positionEC);
     }
 
     positionWC.xy += originTranslate;
