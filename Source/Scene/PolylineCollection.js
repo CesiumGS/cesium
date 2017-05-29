@@ -28,6 +28,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
+        '../Renderer/Texture',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -65,6 +66,7 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArray,
+        Texture,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -1013,6 +1015,19 @@ define([
         }
     }
 
+    var scratchTextureArray = [];
+    function createTextureId(texture) {
+        scratchTextureArray[0] = texture.pixelFormat;
+        scratchTextureArray[1] = texture.pixelDatatype;
+        scratchTextureArray[2] = texture.dimensions;
+        scratchTextureArray[3] = texture.preMultiplyAlpha;
+        scratchTextureArray[4] = texture.flipY;
+        scratchTextureArray[5] = texture.width;
+        scratchTextureArray[6] = texture.sizeInBytes;
+
+        return JSON.stringify(scratchTextureArray);
+    }
+
     var scratchUniformArray = [];
     function createMaterialId(material) {
         var uniforms = Material._uniformList[material.type];
@@ -1020,10 +1035,16 @@ define([
         scratchUniformArray.length = 2.0 * length;
 
         var index = 0;
+        var value;
         for (var i = 0; i < length; ++i) {
             var uniform = uniforms[i];
             scratchUniformArray[index] = uniform;
-            scratchUniformArray[index + 1] = material._uniforms[uniform]();
+            value = material._uniforms[uniform]();
+            if(value instanceof Texture){
+                scratchUniformArray[index + 1] = createTextureId(value);
+            } else {
+                scratchUniformArray[index + 1] = value;
+            }
             index += 2;
         }
 
