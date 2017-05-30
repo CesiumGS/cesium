@@ -1,17 +1,17 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './freezeObject',
         './Math',
         './scaleToGeodeticSurface'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         freezeObject,
         CesiumMath,
         scaleToGeodeticSurface) {
@@ -63,12 +63,8 @@ define([
      */
     Cartographic.fromRadians = function(longitude, latitude, height, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(longitude)) {
-            throw new DeveloperError('longitude is required.');
-        }
-        if (!defined(latitude)) {
-            throw new DeveloperError('latitude is required.');
-        }
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
         //>>includeEnd('debug');
 
         height = defaultValue(height, 0.0);
@@ -96,12 +92,8 @@ define([
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(longitude)) {
-            throw new DeveloperError('longitude is required.');
-        }
-        if (!defined(latitude)) {
-            throw new DeveloperError('latitude is required.');
-        }
+        Check.typeOf.number('longitude', longitude);
+        Check.typeOf.number('latitude', latitude);
         //>>includeEnd('debug');
         longitude = CesiumMath.toRadians(longitude);
         latitude = CesiumMath.toRadians(latitude);
@@ -204,9 +196,7 @@ define([
      */
     Cartographic.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return (left === right) ||
