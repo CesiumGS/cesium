@@ -152,7 +152,7 @@ defineSuite([
     });
 
     it('cartesianToCartographic works close to center', function() {
-        var expected = new Cartographic(9.999999999999999e-11, 1.0067394967422763e-20, -6378137.0);
+        var expected = new Cartographic(9.999999999999999e-11, 1.0067394967422766e-20, -6378137.0);
         var returnedResult = Ellipsoid.WGS84.cartesianToCartographic(new Cartesian3(1e-50, 1e-60, 1e-70));
         expect(returnedResult).toEqual(expected);
     });

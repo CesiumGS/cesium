@@ -46,9 +46,9 @@ define([
                                             y === 0.0 ? 0.0 : 1.0 / y,
                                             z === 0.0 ? 0.0 : 1.0 / z);
 
-        ellipsoid._oneOverRadiiSquared = new Cartesian3(x === 0.0 ? 0.0 : 1.0 / (x * x),
-                                                   y === 0.0 ? 0.0 : 1.0 / (y * y),
-                                                   z === 0.0 ? 0.0 : 1.0 / (z * z));
+        ellipsoid._oneOverRadiiSquared = new Cartesian3(ellipsoid._oneOverRadii.x * ellipsoid._oneOverRadii.x,
+                                                   ellipsoid._oneOverRadii.y * ellipsoid._oneOverRadii.y,
+                                                   ellipsoid._oneOverRadii.z * ellipsoid._oneOverRadii.z);
 
         ellipsoid._minimumRadius = Math.min(x, y, z);
 
@@ -523,7 +523,7 @@ define([
      * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
-        return scaleToGeodeticSurface(cartesian, this._oneOverRadii, this._oneOverRadiiSquared, this._centerToleranceSquared, result);
+        return scaleToGeodeticSurface(cartesian, this._oneOverRadiiSquared, this._centerToleranceSquared, result);
     };
 
     /**

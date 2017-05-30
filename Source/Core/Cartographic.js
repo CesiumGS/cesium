@@ -118,12 +118,11 @@ define([
      * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
      */
     Cartographic.fromCartesian = function(cartesian, ellipsoid, result) {
-        var oneOverRadii = defined(ellipsoid) ? ellipsoid.oneOverRadii : wgs84OneOverRadii;
         var oneOverRadiiSquared = defined(ellipsoid) ? ellipsoid.oneOverRadiiSquared : wgs84OneOverRadiiSquared;
         var centerToleranceSquared = defined(ellipsoid) ? ellipsoid._centerToleranceSquared : wgs84CenterToleranceSquared;
 
         //`cartesian is required.` is thrown from scaleToGeodeticSurface
-        var p = scaleToGeodeticSurface(cartesian, oneOverRadii, oneOverRadiiSquared, centerToleranceSquared, cartesianToCartographicP);
+        var p = scaleToGeodeticSurface(cartesian, oneOverRadiiSquared, centerToleranceSquared, cartesianToCartographicP);
 
         if (!defined(p)) {
             return undefined;
