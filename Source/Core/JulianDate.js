@@ -6,6 +6,7 @@ define([
         './defined',
         './DeveloperError',
         './GregorianDate',
+        './isArray',
         './isLeapYear',
         './LeapSecond',
         './TimeConstants',
@@ -17,6 +18,7 @@ define([
         defined,
         DeveloperError,
         GregorianDate,
+        isArray,
         isLeapYear,
         LeapSecond,
         TimeConstants,
@@ -954,6 +956,35 @@ define([
      */
     JulianDate.greaterThanOrEquals = function(left, right) {
         return JulianDate.compare(left, right) >= 0;
+    };
+
+    /**
+     * @private
+     * @param {JulianDate[]} julianDates Array of Julian dates
+     * @returns {Boolean} <code>true</code> if each Julian date in julianDates is a valid Iso8601 date.
+     */
+    JulianDate.validIso8601 = function(julianDates) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(julianDates)) {
+            throw new DeveloperError('julianDates must be defined');
+        }
+        if (!isArray(julianDates)) {
+            throw new DeveloperError('julianDates must be an array');
+        }
+        //>>includeEnd('debug');
+
+        var MINIMUM_VALUE = JulianDate.fromIso8601('0000-01-01T00:00:00Z');
+        var MAXIMUM_VALUE = JulianDate.fromIso8601('9999-12-31T24:00:00Z');
+
+        var datesAllValid = true;
+
+        for (var i = 0; i < julianDates.length; i++) {
+            var julian = julianDates[i];
+            datesAllValid = datesAllValid && JulianDate.greaterThanOrEquals(julian, MINIMUM_VALUE) && JulianDate.lessThanOrEquals(julian, MAXIMUM_VALUE);
+        }
+
+        return datesAllValid;
+
     };
 
     /**
