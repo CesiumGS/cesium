@@ -39,6 +39,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Shehzan Mohammed](https://github.com/shehzan10)
    * [Rachel Hwang](https://github.com/rahwang)
    * [Joseph Klinger](https://github.com/klingerj)
+   * [Mohamad Moneimne](https://github.com/moneimne)
+   * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
