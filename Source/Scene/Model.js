@@ -4274,6 +4274,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
+                    extension !== 'BLENDER_actions' && extension !== 'BLENDER_physics' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
