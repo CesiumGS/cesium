@@ -1,17 +1,17 @@
 /*global define*/
 define([
     './Cartesian3',
+    './Check',
     './defaultValue',
     './defineProperties',
     './defined',
-    './DeveloperError',
     '../ThirdParty/when'
 ], function(
     Cartesian3,
+    Check,
     defaultValue,
     defineProperties,
     defined,
-    DeveloperError,
     when) {
     'use strict';
 
@@ -33,9 +33,7 @@ define([
      */
     CartographicGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(query)) {
-            throw new DeveloperError('query must be defined');
-        }
+        Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
         var splitQuery = query.match(/[^\s,\n]+/g);
