@@ -4,14 +4,12 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Intersect'
     ], function(
         Cartesian3,
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         Intersect) {
     'use strict';
 
@@ -174,7 +172,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('box', box);
         Check.defined('plane', plane);
-
         //>>includeEnd('debug');
 
         intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);
