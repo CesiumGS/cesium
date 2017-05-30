@@ -514,6 +514,16 @@ define([
 
             zoomingOnVector = object._zoomingOnVector = false;
             rotatingZoom = object._rotatingZoom = false;
+        } else {
+            if (defined(object._globe)) {
+                pickedPosition = mode !== SceneMode.SCENE2D ? pickGlobe(object, startPosition, scratchPickCartesian) : camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+            }
+            if (defined(pickedPosition)) {
+                object._useZoomWorldPosition = true;
+                object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+            } else {
+                object._useZoomWorldPosition = false;
+            }
         }
 
         if (!object._useZoomWorldPosition) {
