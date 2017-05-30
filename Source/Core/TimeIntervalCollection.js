@@ -562,6 +562,7 @@ define([
             } else {
                 // Interval is completely overlapped
                 intervals.splice(index, 1);
+                indexInterval = intervals[index];
             }
         }
 
