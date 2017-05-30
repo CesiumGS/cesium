@@ -35,7 +35,7 @@
   "devDependencies": {
     "almond": "^0.3.3",
     "aws-sdk": "^2.18.0",
-    "bluebird": "^3.4.6",
+    "bluebird": "^3.5.0",
     "compressible": "^2.0.9",
     "compression": "^1.6.2",
     "electron": "^1.6.1",
