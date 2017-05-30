@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -27,6 +28,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -548,6 +550,7 @@ define([
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.center = position.getValue(Iso8601.MINIMUM_VALUE, options.center);
+            options.center = options.center ? options.center : new Cartesian3();
             options.semiMajorAxis = semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMajorAxis);
             options.semiMinorAxis = semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMinorAxis);
             options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
