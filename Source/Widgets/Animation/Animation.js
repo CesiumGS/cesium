@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/FeatureDetection',
         '../getElement',
         '../subscribeAndEvaluate'
     ], function(
@@ -13,6 +14,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         getElement,
         subscribeAndEvaluate) {
     'use strict';
@@ -152,6 +154,10 @@ define([
         }
 
         if (e.type === 'mousedown' || (shuttleRingDragging && e.type === 'mousemove') ||
+                // Use e.isPrimary to detect whether, in a multi-point input scenario,
+                // the current event represents the primary input, i.e. the first touch on the input surface
+                (e.type === 'pointerdown' && e.isPrimary) ||
+                (shuttleRingDragging && e.type === 'pointermove') ||
                 (e.type === 'touchstart' && e.touches.length === 1) ||
                 (shuttleRingDragging && e.type === 'touchmove' && e.touches.length === 1)) {
             var centerX = widget._centerX;
@@ -510,19 +516,29 @@ define([
         }
         this._mouseCallback = mouseCallback;
 
-        shuttleRingBackPanel.addEventListener('mousedown', mouseCallback, true);
-        shuttleRingBackPanel.addEventListener('touchstart', mouseCallback, true);
-        shuttleRingSwooshG.addEventListener('mousedown', mouseCallback, true);
-        shuttleRingSwooshG.addEventListener('touchstart', mouseCallback, true);
-        document.addEventListener('mousemove', mouseCallback, true);
-        document.addEventListener('touchmove', mouseCallback, true);
-        document.addEventListener('mouseup', mouseCallback, true);
-        document.addEventListener('touchend', mouseCallback, true);
-        document.addEventListener('touchcancel', mouseCallback, true);
-        this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
-        this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
-        this._knobOuter.addEventListener('mousedown', mouseCallback, true);
-        this._knobOuter.addEventListener('touchstart', mouseCallback, true);
+        if (FeatureDetection.supportsPointerEvents()) {
+            shuttleRingBackPanel.addEventListener('pointerdown', mouseCallback, true);
+            shuttleRingSwooshG.addEventListener('pointerdown', mouseCallback, true);
+            document.addEventListener('pointermove', mouseCallback, true);
+            document.addEventListener('pointerup', mouseCallback, true);
+            document.addEventListener('pointercancel', mouseCallback, true);
+            this._shuttleRingPointer.addEventListener('pointerdown', mouseCallback, true);
+            this._knobOuter.addEventListener('pointerdown', mouseCallback, true);
+        } else {
+            shuttleRingBackPanel.addEventListener('mousedown', mouseCallback, true);
+            shuttleRingBackPanel.addEventListener('touchstart', mouseCallback, true);
+            shuttleRingSwooshG.addEventListener('mousedown', mouseCallback, true);
+            shuttleRingSwooshG.addEventListener('touchstart', mouseCallback, true);
+            document.addEventListener('mousemove', mouseCallback, true);
+            document.addEventListener('touchmove', mouseCallback, true);
+            document.addEventListener('mouseup', mouseCallback, true);
+            document.addEventListener('touchend', mouseCallback, true);
+            document.addEventListener('touchcancel', mouseCallback, true);
+            this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
+            this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
+            this._knobOuter.addEventListener('mousedown', mouseCallback, true);
+            this._knobOuter.addEventListener('touchstart', mouseCallback, true);
+        }
 
         //TODO: Since the animation widget uses SVG and has no HTML backing,
         //we need to wire everything up manually.  Knockout can supposedly
