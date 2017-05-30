@@ -15,6 +15,7 @@ define([
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
+        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -48,6 +49,7 @@ define([
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
+        RuntimeError,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -512,29 +514,6 @@ define([
             }
         }
 
-        var uniformMap = {
-            u_pointSize : function() {
-                return content._pointSize;
-            },
-            u_highlightColor : function() {
-                return content._highlightColor;
-            },
-            u_constantColor : function() {
-                return content._constantColor;
-            },
-            u_tilesetTime : function() {
-                return content._tileset.timeSinceLoad;
-            }
-        };
-
-        if (isQuantized) {
-            uniformMap = combine(uniformMap, {
-                u_quantizedVolumeScale : function() {
-                    return content._quantizedVolumeScale;
-                }
-            });
-        }
-
         var positionsVertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : positions,
@@ -663,30 +642,7 @@ define([
         var vertexArray = new VertexArray({
             context : context,
             attributes : attributes
-        });
-
-        var drawUniformMap = uniformMap;
-
-        if (hasBatchTable) {
-            drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
-        }
-
-        var pickUniformMap;
-
-        if (hasBatchTable) {
-            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
-        } else {
-            content._pickId = context.createPickId({
-                primitive : content._tileset,
-                content : content
-            });
-
-            pickUniformMap = combine(uniformMap, {
-                czm_pickColor : function() {
-                    return content._pickId.color;
-                }
-            });
-        }
+        });        
 
         content._opaqueRenderState = RenderState.fromCache({
             depthTest : {
@@ -710,7 +666,7 @@ define([
             vertexArray : vertexArray,
             count : pointsLength,
             shaderProgram : undefined, // Updated in createShaders
-            uniformMap : drawUniformMap,
+            uniformMap : undefined, // Updated in createShaders
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
@@ -724,7 +680,7 @@ define([
             vertexArray : vertexArray,
             count : pointsLength,
             shaderProgram : undefined, // Updated in createShaders
-            uniformMap : pickUniformMap,
+            uniformMap : undefined, // Updated in createShaders
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
             owner : content
@@ -744,6 +700,22 @@ define([
             }
             matches = regex.exec(source);
         }
+    }
+
+    function getGLSLType(type) {
+        switch (type) {
+            case 'bool': return 'bool';
+            case 'int': return 'int';
+            case 'uint': return 'uint';
+            case 'float': return 'float';
+            case 'double': return 'double';
+            case 'vec2': return 'vec2';
+            case 'vec3': return 'vec3';
+            case 'vec4': return 'vec4';
+            case 'Color': return 'vec4';
+            case 'RegExp': throw new RuntimeError('RegExp is not a supported type in the context of GLSL.');
+        }
+        throw new RuntimeError('Cannot translate unknown data type into GLSL type.');
     }
 
     function getVertexAttribute(vertexArray, index) {
@@ -837,7 +809,7 @@ define([
         var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
 
         // Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
+        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1 && !(property in style.mutableVariables); });
 
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
@@ -901,12 +873,36 @@ define([
             attributeLocations[attributeName] = attribute.location;
         }
 
+        var uniformMap = {
+            u_pointSize : function() {
+                return content._pointSize;
+            },
+            u_highlightColor : function() {
+                return content._highlightColor;
+            },
+            u_constantColor : function() {
+                return content._constantColor;
+            },
+            u_tilesetTime : function() {
+                return content._tileset.timeSinceLoad;
+            }
+        };
+
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
                  'uniform float u_tilesetTime; \n';
+
+        for (var mutableVariable in style.mutableVariables) {
+            var mutableUniformName = 'u_mutable' + mutableVariable;
+            var mutableUniformDefiniton = style.mutableVariables[mutableVariable];
+            vs += 'uniform ' + getGLSLType(mutableUniformDefiniton.type) + ' ' + mutableUniformName + '; \n';
+            uniformMap[mutableUniformName] = function() {
+                return mutableUniformDefiniton.value;
+            }
+        }
 
         vs += attributeDeclarations;
 
@@ -939,6 +935,11 @@ define([
 
         if (isQuantized) {
             vs += 'uniform vec3 u_quantizedVolumeScale; \n';
+            uniformMap = combine(uniformMap, {
+                u_quantizedVolumeScale : function() {
+                    return content._quantizedVolumeScale;
+                }
+            });
         }
 
         if (hasColorStyle) {
@@ -1029,6 +1030,12 @@ define([
 
         vs += '} \n';
 
+        for (var mutableVariable in style.mutableVariables) {
+            var styleName = 'czm_tiles3d_style_' + mutableVariable;
+            var replaceName = 'u_mutable' + mutableVariable;
+            vs = vs.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+        }
+
         var fs = 'varying vec4 v_color; \n' +
                  'void main() \n' +
                  '{ \n' +
@@ -1077,6 +1084,27 @@ define([
             fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
+
+        if (hasBatchTable) {
+            drawCommand.uniformMap = batchTable.getUniformMapCallback()(uniformMap);
+        } else {
+            drawCommand.uniformMap = uniformMap;
+        }
+
+        if (hasBatchTable) {
+            pickCommand.uniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
+        } else {
+            content._pickId = context.createPickId({
+                primitive : content._tileset,
+                content : content
+            });
+
+            pickCommand.uniformMap = combine(uniformMap, {
+                czm_pickColor : function() {
+                    return content._pickId.color;
+                }
+            });
+        }
 
         try {
             // Check if the shader compiles correctly. If not there is likely a syntax error with the style.
