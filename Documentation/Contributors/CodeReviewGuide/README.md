@@ -47,7 +47,7 @@ This guide describes best practices for code reviews.
 
 ## Merging
 
-* Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs JSHint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green `Merge pull request` button:
+* Cesium uses Travis CI for continuous integration.  Travis automatically builds Cesium, runs ESLint, and generates the documentation for each branch pushed to GitHub.  Before merging a pull request, verify that all Travis checks pass, indicated by the green check-mark and green `Merge pull request` button:
 
 ![](Travis.jpg)
 
@@ -99,7 +99,7 @@ When in doubt, merge.
 Futher Reading: [Merge vs Rebase](https://www.derekgourlay.com/blog/git-when-to-merge-vs-when-to-rebase/).
 
 #### Merge
-With merge, your commits will become interleaved with other target branch commits based on timestamp. 
+With merge, your commits will become interleaved with other target branch commits based on timestamp.
 ```
 git fetch --all # Fetch updates from all remotes
 git merge upstream/target

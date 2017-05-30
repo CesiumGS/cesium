@@ -2307,7 +2307,7 @@ define([
     }
 
     /**
-     * Get the camera position needed to view an rectangle on an ellipsoid or map
+     * Get the camera position needed to view a rectangle on an ellipsoid or map
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Cartesian3} [result] The camera position needed to view the rectangle
@@ -2394,6 +2394,11 @@ define([
             throw new DeveloperError('windowPosition is required.');
         }
         //>>includeEnd('debug');
+
+        var canvas = this._scene.canvas;
+        if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+            return undefined;
+        }
 
         if (!defined(result)) {
             result = new Cartesian3();
@@ -3105,6 +3110,46 @@ define([
         }
 
         return result;
+    };
+
+    /**
+     * Switches the frustum/projection to perspective.
+     *
+     * This function is a no-op in 2D which must always be orthographic.
+     */
+    Camera.prototype.switchToPerspectiveFrustum = function() {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof PerspectiveFrustum) {
+            return;
+        }
+
+        var scene = this._scene;
+        this.frustum = new PerspectiveFrustum();
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.fov = CesiumMath.toRadians(60.0);
+    };
+
+    /**
+     * Switches the frustum/projection to orthographic.
+     *
+     * This function is a no-op in 2D which will always be orthographic.
+     */
+    Camera.prototype.switchToOrthographicFrustum = function() {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof OrthographicFrustum) {
+            return;
+        }
+
+        var scene = this._scene;
+        this.frustum = new OrthographicFrustum();
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+
+        // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
+        this.frustum.width = Cartesian3.magnitude(this.position);
+
+        // Check the projection matrix. It will always be defined, but we need to force an off-center update.
+        var projectionMatrix = this.frustum.projectionMatrix;
+        if (defined(projectionMatrix)) {
+            this._adjustOrthographicFrustum(true);
+        }
     };
 
     /**

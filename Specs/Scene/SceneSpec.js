@@ -33,6 +33,7 @@ defineSuite([
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
+        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
@@ -72,6 +73,7 @@ defineSuite([
         Scene,
         ScreenSpaceCameraController,
         TweenCollection,
+        SceneTransforms,
         createCanvas,
         createScene,
         equals,
@@ -375,23 +377,6 @@ defineSuite([
         });
 
         primitives.raiseToTop(rectanglePrimitive1);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).not.toEqual(0);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-        });
-    });
-
-    it('renders fast path with no translucent primitives', function() {
-        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-
-        var rectanglePrimitive = createRectangle(rectangle, 1000.0);
-        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-
-        var primitives = scene.primitives;
-        primitives.add(rectanglePrimitive);
-
-        scene.camera.setView({ destination : rectangle });
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).not.toEqual(0);
             expect(rgba[1]).toEqual(0);
@@ -838,6 +823,41 @@ defineSuite([
         });
     });
 
+    it('pickPosition caches results per frame',function(){
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({ destination : rectangle });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+        spyOn(SceneTransforms, 'transformWindowToDrawingBuffer').and.callThrough();
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer).toHaveBeenCalled();
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(1);
+
+            var rectanglePrimitive = createRectangle(rectangle);
+            rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+            var primitives = scene.primitives;
+            primitives.add(rectanglePrimitive);
+        });
+
+        expect(scene).toRenderAndCall(function() {
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+
+            scene.pickPosition(windowPosition);
+            expect(SceneTransforms.transformWindowToDrawingBuffer.calls.count()).toEqual(2);
+        });
+    });
+
     it('pickPosition throws without windowPosition', function() {
         expect(function() {
             scene.pickPosition();
@@ -1078,4 +1098,28 @@ defineSuite([
         }
         s.destroyForSpecs();
     });
+
+    it('throws when minimumDisableDepthTestDistance is set less than 0.0', function() {
+        expect(function() {
+            scene.minimumDisableDepthTestDistance = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('converts to canvas coordinates',function(){
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, undefined);
+    });
+
+    it('converts to canvas coordinates and return it in a variable',function(){
+        var result = new Cartesian2();
+        var mockPosition = new Cartesian3();
+        spyOn(SceneTransforms, 'wgs84ToWindowCoordinates');
+        scene.cartesianToCanvasCoordinates(mockPosition, result);
+
+        expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
+    });
+
 }, 'WebGL');

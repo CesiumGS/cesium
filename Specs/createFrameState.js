@@ -5,19 +5,21 @@ define([
         'Core/JulianDate',
         'Scene/Camera',
         'Scene/CreditDisplay',
-        'Scene/FrameState'
+        'Scene/FrameState',
+        'Scene/JobScheduler'
     ], function(
         defaultValue,
         GeographicProjection,
         JulianDate,
         Camera,
         CreditDisplay,
-        FrameState) {
+        FrameState,
+        JobScheduler) {
     'use strict';
 
     function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')));
+        var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')), new JobScheduler());
 
         var projection = new GeographicProjection();
         frameState.mapProjection = projection;
@@ -36,6 +38,8 @@ define([
 
         frameState.passes.render = true;
         frameState.passes.pick = false;
+
+        frameState.minimumDisableDepthTestDistance = 0.0;
 
         return frameState;
     }

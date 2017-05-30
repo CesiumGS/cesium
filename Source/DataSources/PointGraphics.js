@@ -51,6 +51,8 @@ define([
         this._heightReferenceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._disableDepthTestDistance = undefined;
+        this._disableDepthTestDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -142,7 +144,15 @@ define([
          * @memberof PointGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         */
+        disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 
     /**
@@ -164,6 +174,7 @@ define([
         result.translucencyByDistance = this._translucencyByDistance;
         result.heightReference = this.heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.disableDepthTestDistance = this.disableDepthTestDistance;
         return result;
     };
 
@@ -189,6 +200,7 @@ define([
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
 
     return PointGraphics;

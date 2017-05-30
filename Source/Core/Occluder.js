@@ -174,7 +174,7 @@ define([
      * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
      * var point = new Cesium.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
-     * 
+     *
      * @see Occluder#computeVisibility
      */
     Occluder.prototype.isPointVisible = function(occludee) {
@@ -206,7 +206,7 @@ define([
     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
     * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
     * occluder.isBoundingSphereVisible(bigSphere); //returns true
-    * 
+    *
     * @see Occluder#computeVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
@@ -265,7 +265,7 @@ define([
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.computeVisibility(sphere2); //returns Visibility.NONE
-     * 
+     *
      * @see Occluder#isVisible
      */
     Occluder.prototype.computeVisibility = function(occludeeBS) {
@@ -406,7 +406,7 @@ define([
 
     var computeOccludeePointFromRectangleScratch = [];
     /**
-     * Computes a point that can be used as the occludee position to the visibility functions from an rectangle.
+     * Computes a point that can be used as the occludee position to the visibility functions from a rectangle.
      *
      * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.

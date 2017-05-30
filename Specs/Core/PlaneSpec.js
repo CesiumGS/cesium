@@ -23,6 +23,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor throws if normal is not normalized', function() {
+        expect(function() {
+            return new Plane(new Cartesian3(1.0, 2.0, 3.0), 0.0);
+        }).toThrowDeveloperError();
+    });
+
     it('constructor throws without a distance', function() {
         expect(function() {
             return new Plane(Cartesian3.UNIT_X, undefined);
@@ -31,6 +37,7 @@ defineSuite([
 
     it('constructs from a point and a normal', function() {
         var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
         var point = new Cartesian3(4.0, 5.0, 6.0);
         var plane = Plane.fromPointNormal(point, normal);
         expect(plane.normal).toEqual(normal);
@@ -39,6 +46,7 @@ defineSuite([
 
     it('constructs from a point and a normal with result', function() {
         var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
         var point = new Cartesian3(4.0, 5.0, 6.0);
 
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
@@ -75,14 +83,28 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromPointNormal throws if normal is not normalized', function() {
+        expect(function() {
+            return Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.ZERO);
+        }).toThrowDeveloperError();
+    });
+
     it('fromCartesian4 throws without coefficients', function() {
         expect(function() {
             return Plane.fromCartesian4(undefined);
         }).toThrowDeveloperError();
     });
 
+    it('fromCartesian4 throws if normal is not normalized', function() {
+        expect(function() {
+            return Plane.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+        }).toThrowDeveloperError();
+    });
+
     it('gets the distance to a point', function() {
-        var plane = new Plane(new Cartesian3(1.0, 2.0, 3.0), 12.34);
+        var normal = new Cartesian3(1.0, 2.0, 3.0);
+        normal = Cartesian3.normalize(normal, normal);
+        var plane = new Plane(normal, 12.34);
         var point = new Cartesian3(4.0, 5.0, 6.0);
 
         expect(Plane.getPointDistance(plane, point)).toEqual(Cartesian3.dot(plane.normal, point) + plane.distance);
