@@ -1906,6 +1906,18 @@ define([
                 passState.framebuffer = fb;
             }
 
+            us.updatePass(Pass.CESIUM_3D_TILE);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            // Clear the stencil after the ground pass
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
+            }
+
             us.updatePass(Pass.GROUND);
             commands = frustumCommands.commands[Pass.GROUND];
             length = frustumCommands.indices[Pass.GROUND];
@@ -1925,12 +1937,14 @@ define([
                 }
             }
 
+            /*
             us.updatePass(Pass.CESIUM_3D_TILE);
             commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
             length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
+            */
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
