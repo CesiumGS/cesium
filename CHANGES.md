@@ -5,6 +5,7 @@ Change Log
 
 * Breaking changes
    * Passing `options.clock` when creating a new `Viewer` instance has been deprecated and will be removed in Cesium 1.37, pass `options.clockViewModel` instead.
+   * `GoogleEarthImageryProvider` has been deprecated and will be removed in Cesium 1.37, use `GoogleEarthEnterpriseMapsProvider` instead. 
 * Fix issue where polylines in a `PolylineCollection` would ignore the far distance when updating the distance display condition. [#5283](https://github.com/AnalyticalGraphicsInc/cesium/pull/5283)
 * Fixed a crash when calling `Camera.pickEllipsoid` with a canvas of size 0.
 * Fix `BoundingSphere.fromOrientedBoundingBox`. [#5334](https://github.com/AnalyticalGraphicsInc/cesium/issues/5334)
