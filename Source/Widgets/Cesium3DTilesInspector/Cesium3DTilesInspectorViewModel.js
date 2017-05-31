@@ -244,6 +244,14 @@ define([
         this.tileDebugLabelsVisible = false;
 
         /**
+         * Gets or sets the flag to show the optimization info section. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false;
+         */
+        this.optimizationVisible = false;
+
+        /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
          *
          * @type {String}
@@ -256,7 +264,8 @@ define([
         this._tile = undefined;
 
         knockout.track(this, ['performance', 'inspectorVisible', '_statisticsText', '_pickStatisticsText', '_editorError', 'showPickStatistics', 'showStatistics',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileDebugLabelsVisible', 'styleString', '_feature', '_tile']);
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'optimizationVisible',
+                              'tileDebugLabelsVisible', 'styleString', '_feature', '_tile']);
 
         this._properties = knockout.observable({});
         /**
@@ -683,12 +692,138 @@ define([
          */
         this.pickActive = false;
 
+        var skipLevelOfDetail = knockout.observable();
+        knockout.defineProperty(this, 'skipLevelOfDetail', {
+            get : function() {
+                return skipLevelOfDetail();
+            },
+            set : function(value) {
+                skipLevelOfDetail(value);
+                if (defined(that._tileset)) {
+                    that._tileset.skipLevelOfDetail = skipLevelOfDetail;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to determine if level of detail skipping should be applied during the traversal.
+         * This property is observable.
+         * @type {Boolean}
+         * @default true
+         */
+        this.skipLevelOfDetail = true;
+
+        var skipScreenSpaceErrorFactor = knockout.observable();
+        knockout.defineProperty(this, 'skipScreenSpaceErrorFactor', {
+            get : function() {
+                return skipScreenSpaceErrorFactor();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    skipScreenSpaceErrorFactor(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.skipScreenSpaceErrorFactor = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the multiplier defining the minimum screen space error to skip. This property is observable.
+         * @type {Number}
+         * @default 16
+         */
+        this.skipScreenSpaceErrorFactor = 16;
+
+        var baseScreenSpaceError = knockout.observable();
+        knockout.defineProperty(this, 'baseScreenSpaceError', {
+            get : function() {
+                return baseScreenSpaceError();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    baseScreenSpaceError(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.baseScreenSpaceError = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the screen space error that must be reached before skipping levels of detail. This property is observable.
+         * @type {Number}
+         * @default 1024
+         */
+        this.baseScreenSpaceError = 1024;
+
+        var skipLevels = knockout.observable();
+        knockout.defineProperty(this, 'skipLevels', {
+            get : function() {
+                return skipLevels();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    skipLevels(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.skipLevels = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the constant defining the minimum number of levels to skip when loading tiles. This property is observable.
+         * @type {Number}
+         * @default 1
+         */
+        this.skipLevels = 1;
+
+        var immediatelyLoadDesiredLOD = knockout.observable();
+        knockout.defineProperty(this, 'immediatelyLoadDesiredLOD', {
+            get : function() {
+                return immediatelyLoadDesiredLOD();
+            },
+            set : function(value) {
+                immediatelyLoadDesiredLOD(value);
+                if (defined(that._tileset)) {
+                    that._tileset.immediatelyLoadDesiredLevelOfDetail = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag which, when true, only tiles that meet the maximum screen space error will ever be downloaded.
+         * This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.immediatelyLoadDesiredLOD = false;
+
+        var loadSiblings = knockout.observable();
+        knockout.defineProperty(this, 'loadSiblings', {
+            get : function() {
+                loadSiblings();
+            },
+            set : function(value) {
+                loadSiblings(value);
+                if (defined(that._tileset)) {
+                    that._tileset.loadSiblings = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag which determines whether siblings of visible tiles are always downloaded during traversal.
+         * This property is observable
+         * @type {Boolean}
+         * @default false
+         */
+        this.loadSiblings = false;
+
         this._style = undefined;
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
-                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
-                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError',
-                                   'showRenderingStatistics', 'showMemoryUsage'];
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
+                                   'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLOD', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -812,6 +947,12 @@ define([
                     this.dynamicScreenSpaceErrorDensity = tileset.dynamicScreenSpaceErrorDensity;
                     this.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor;
                     this.colorBlendMode = tileset.colorBlendMode;
+                    this.skipLevelOfDetail = tileset.skipLevelOfDetail;
+                    this.skipScreenSpaceErrorFactor = tileset.skipScreenSpaceErrorFactor;
+                    this.baseScreenSpaceError = tileset.baseScreenSpaceError;
+                    this.skipLevels = tileset.skipLevels;
+                    this.immediatelyLoadDesiredLOD = tileset.immediatelyLoadDesiredLevelOfDetail;
+                    this.loadSiblings = tileset.loadSiblings;
                 } else {
                     this._properties({});
                 }
@@ -947,6 +1088,13 @@ define([
      */
     Cesium3DTilesInspectorViewModel.prototype.toggleStyle = function() {
         this.styleVisible = !this.styleVisible;
+    };
+
+    /**
+     * Toggles the visibility of the optimization section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleOptimization = function() {
+        this.optimizationVisible = !this.optimizationVisible;
     };
 
     /**
