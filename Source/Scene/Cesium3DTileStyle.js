@@ -61,7 +61,7 @@ define([
         this._show = undefined;
         this._pointSize = undefined;
         this._meta = undefined;
-        this._mutableVariables = undefined;
+        this._mutables = undefined;
 
         this._colorShaderFunction = undefined;
         this._showShaderFunction = undefined;
@@ -153,7 +153,7 @@ define([
 
         that._meta = meta;
 
-        that._mutableVariables = defaultValue(styleJson.mutableVariables, defaultValue.EMPTY_OBJECT);
+        that._mutables = defaultValue(styleJson.mutables, defaultValue.EMPTY_OBJECT);
 
         that._ready = true;
     }
@@ -348,9 +348,9 @@ define([
                 this._pointSizeShaderFunctionReady = false;
                 this._pointSize = value;
             }
-        },       
+        },
 
-		/**
+        /**
          * Gets or sets the object containing application-specific expression that can be explicitly
          * evaluated, e.g., for display in a UI.
          *
@@ -394,7 +394,7 @@ define([
          *
          * @example
          * var style = new Cesium3DTileStyle({
-         *     mutableVariables : {
+         *     mutables : {
          *         pickColor : 'Color',
 		 *         pickPosition : 'Cartesian4',
          *     }
@@ -402,7 +402,7 @@ define([
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
-        mutableVariables : {
+        mutables : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -410,10 +410,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._mutableVariables;
+                return this._mutables;
             },
             set : function(value) {
-                this._mutableVariables = value;
+                this._mutables = value;
             }
         }
     });
@@ -484,13 +484,13 @@ define([
         return this._pointSizeShaderFunction;
     };
 
-    Cesium3DTileStyle.prototype.setMutableVariableValue = function(variableName, value) {
+    Cesium3DTileStyle.prototype.setMutableValue = function(variableName, value) {
         //>>includeStart('debug', pragmas.debug);
-        if (!variableName in this._mutableVariables) {
-            throw new DeveloperError('Unknown mutable variable "' + variableName + '".');
+        if (!variableName in this._mutables) {
+            throw new DeveloperError('Unknown mutable "' + variableName + '".');
         }
         //>>includeEnd('debug');
-        this._mutableVariables[variableName].value = value;
+        this._mutables[variableName].value = value;
     };
 
     return Cesium3DTileStyle;

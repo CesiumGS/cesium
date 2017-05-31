@@ -808,8 +808,8 @@ define([
         var usesColorSemantic = styleableProperties.indexOf('COLOR') >= 0;
         var usesNormalSemantic = styleableProperties.indexOf('NORMAL') >= 0;
 
-        // Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1 && !(property in style.mutableVariables); });
+        // Split default properties from user properties		
+        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1 && !(hasStyle && (property in style.mutables)); });
 
         //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
@@ -895,12 +895,14 @@ define([
                  'uniform vec4 u_highlightColor; \n' +
                  'uniform float u_tilesetTime; \n';
 
-        for (var mutableVariable in style.mutableVariables) {
-            var mutableUniformName = 'u_mutable' + mutableVariable;
-            var mutableUniformDefiniton = style.mutableVariables[mutableVariable];
-            vs += 'uniform ' + getGLSLType(mutableUniformDefiniton.type) + ' ' + mutableUniformName + '; \n';
-            uniformMap[mutableUniformName] = function() {
-                return mutableUniformDefiniton.value;
+        if (hasStyle) {
+            for (var mutableVariable in style.mutables) {
+                var mutableUniformName = 'u_mutable' + mutableVariable;
+                var mutableUniformDefiniton = style.mutables[mutableVariable];
+                vs += 'uniform ' + getGLSLType(mutableUniformDefiniton.type) + ' ' + mutableUniformName + '; \n';
+                uniformMap[mutableUniformName] = function() {
+                    return mutableUniformDefiniton.value;
+                }
             }
         }
 
@@ -1030,10 +1032,12 @@ define([
 
         vs += '} \n';
 
-        for (var mutableVariable in style.mutableVariables) {
-            var styleName = 'czm_tiles3d_style_' + mutableVariable;
-            var replaceName = 'u_mutable' + mutableVariable;
-            vs = vs.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+        if (hasStyle) {
+            for (var mutable in style.mutables) {
+                var styleName = 'czm_tiles3d_style_' + mutable;
+                var replaceName = 'u_mutable' + mutable;
+                vs = vs.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+            }
         }
 
         var fs = 'varying vec4 v_color; \n' +
