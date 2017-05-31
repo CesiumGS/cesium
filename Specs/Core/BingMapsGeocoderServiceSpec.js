@@ -22,6 +22,10 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    afterAll(function() {
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
+    });
+
     it('constructor throws without scene', function() {
         expect(function() {
             return new BingMapsGeocoderService();
@@ -30,14 +34,17 @@ defineSuite([
 
     it('returns geocoder results', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: [{
                 resources : [{
                     name : 'a',
                     bbox : [32.0, 3.0, 3.0, 4.0]
                 }]
             }]
-        });
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].displayName).toEqual('a');
@@ -48,9 +55,12 @@ defineSuite([
 
     it('returns no geocoder results if Bing has no results', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: []
-        });
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
@@ -59,11 +69,14 @@ defineSuite([
 
     it('returns no geocoder results if Bing has results but no resources', function (done) {
         var query = 'some query';
-        jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
+        var data = {
             resourceSets: [{
                 resources: []
             }]
-        });
+        };
+        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+            deferred.resolve(data);
+        };
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
