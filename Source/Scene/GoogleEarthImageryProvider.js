@@ -43,6 +43,9 @@ define([
      *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
      *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
      *
+     *        This provider is for use with 2D Maps API as part of Google Earth Enterprise. For 3D Earth API uses, it
+     *        is necessary to use {@link GoogleEarthEnterpriseImageryProvider}
+     *
      * @alias GoogleEarthImageryProvider
      * @constructor
      *
