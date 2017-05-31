@@ -123,10 +123,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var metadata;
         if (defined(options.metadata)) {
-            this._metadata = options.metadata;
+            metadata = this._metadata = options.metadata;
         } else {
-            this._metadata = new GoogleEarthEnterpriseMetadata({
+            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
                 url : options.url,
                 proxy : options.proxy
             });
@@ -157,8 +158,14 @@ define([
         this._ready = false;
         var that = this;
         var metadataError;
-        this._readyPromise = this._metadata.readyPromise
+        this._readyPromise = metadata.readyPromise
             .then(function(result) {
+                if (!metadata.terrainPresent) {
+                    var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have terrain');
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                    return when.reject(e);
+                }
+
                 TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
@@ -252,8 +259,8 @@ define([
         },
 
         /**
-         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-         * the source of the imagery.  This function should not be called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain.  This function should not be called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
          * @memberof GoogleEarthEnterpriseProvider.prototype
          * @type {Credit}
          * @readonly
@@ -368,9 +375,13 @@ define([
         // If its in the cache, return it
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
+            var credit = metadata.providers[info.terrainProvider];
             return new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
-                childTileMask : computeChildMask(quadKey, info, metadata)
+                childTileMask : computeChildMask(quadKey, info, metadata),
+                credits : defined(credit) ? [credit] : undefined,
+                negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
+                negativeElevationThreshold: metadata.negativeAltitudeThreshold
             });
         }
 
@@ -444,13 +455,15 @@ define([
                     if (defined(terrain)) {
                         return taskProcessor.scheduleTask({
                             buffer : terrain,
-                            type : 'Terrain'
+                            type : 'Terrain',
+                            key : metadata.key
                         }, [terrain])
                             .then(function(terrainTiles) {
                                 // Add requested tile and mark it as SELF
                                 var requestedInfo = metadata.getTileInformationFromQuadKey(q);
                                 requestedInfo.terrainState = TerrainState.SELF;
                                 terrainCache.add(q, terrainTiles[0]);
+                                var provider = requestedInfo.terrainProvider;
 
                                 // Add children to cache
                                 var count = terrainTiles.length - 1;
@@ -460,6 +473,9 @@ define([
                                     if (defined(child)) {
                                         terrainCache.add(childKey, terrainTiles[j + 1]);
                                         child.terrainState = TerrainState.PARENT;
+                                        if (child.terrainProvider === 0) {
+                                            child.terrainProvider = provider;
+                                        }
                                     }
                                 }
                             });
@@ -485,9 +501,13 @@ define([
             .then(function() {
                 var buffer = terrainCache.get(quadKey);
                 if (defined(buffer)) {
+                    var credit = metadata.providers[info.terrainProvider];
                     return new GoogleEarthEnterpriseTerrainData({
                         buffer : buffer,
-                        childTileMask : computeChildMask(quadKey, info, metadata)
+                        childTileMask : computeChildMask(quadKey, info, metadata),
+                        credits : defined(credit) ? [credit] : undefined,
+                        negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
+                        negativeElevationThreshold: metadata.negativeAltitudeThreshold
                     });
                 } else {
                     info.terrainState = TerrainState.NONE;

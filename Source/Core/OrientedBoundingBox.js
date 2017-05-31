@@ -182,7 +182,7 @@ define([
         v3 = Cartesian3.multiplyByScalar(v3, 0.5 * (l3 + u3), v3);
 
         var center = Cartesian3.add(v1, v2, result.center);
-        center = Cartesian3.add(center, v3, center);
+        Cartesian3.add(center, v3, center);
 
         var scale = scratchCartesian3;
         scale.x = u1 - l1;

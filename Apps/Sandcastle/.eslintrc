@@ -1,0 +1,13 @@
+{
+    "extends": "../../.eslintrc",
+    "globals": {
+        "JSON": true,
+        "require": true,
+        "console": true,
+        "Sandcastle": true,
+        "Cesium": true
+    },
+    "rules": {
+        "no-unused-vars": ["off"]
+    }
+}

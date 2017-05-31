@@ -13,13 +13,21 @@ Change Log
 * Fixed translucency bug for certain material types [#5335](https://github.com/AnalyticalGraphicsInc/cesium/pull/5335)
 * Fix picking polylines that use a depth fail appearance. [#5337](https://github.com/AnalyticalGraphicsInc/cesium/pull/5337)
 * Fixed a crash when morphing from Columbus view to 3D. [#5311](https://github.com/AnalyticalGraphicsInc/cesium/issues/5311)
+* Fixed a bug which prevented KML descriptions with relative paths from loading. [#5352](https://github.com/AnalyticalGraphicsInc/cesium/pull/5352)
+* Fixed an issue where camera view could be invalid at the last frame of animation. [#4949](https://github.com/AnalyticalGraphicsInc/cesium/issues/4949)
+* Updated documentation for Quaternion.fromHeadingPitchRoll [#5264](https://github.com/AnalyticalGraphicsInc/cesium/issues/5264)
+* Fixed an issue where using the depth fail material for polylines would cause a crash in Edge. [#5359](https://github.com/AnalyticalGraphicsInc/cesium/pull/5359)
+* Fixed a crash where EllipsoidGeometry and EllipsoidOutlineGeometry were given floating point values when expecting integers. [#5260](https://github.com/AnalyticalGraphicsInc/cesium/issues/5260)
+* Fixed an issue where billboards were not properly aligned. [#2487](https://github.com/AnalyticalGraphicsInc/cesium/issues/2487)
+* Fixed an issue where translucent objects could flicker when picking on mouse move. [#5307](https://github.com/AnalyticalGraphicsInc/cesium/issues/5307)
+* Fixed a bug where billboards with sizeInMeters set to true would move upwards when zooming out. [#5373](https://github.com/AnalyticalGraphicsInc/cesium/issues/5373)
 * Added support for https and http/2 to development web server [#5316](https://github.com/AnalyticalGraphicsInc/cesium/pull/5316)
 
 ### 1.33 - 2017-05-01
 
 * Breaking changes
    * Removed left, right, bottom and top properties from `OrthographicFrustum`. Use `OrthographicOffCenterFrustum` instead. [#5109](https://github.com/AnalyticalGraphicsInc/cesium/issues/5109)
-* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189). 
+* Added `GoogleEarthEnterpriseTerrainProvider` and `GoogleEarthEnterpriseImageryProvider` to read data from Google Earth Enterprise servers. [#5189](https://github.com/AnalyticalGraphicsInc/cesium/pull/5189).
 * Support for dashed polylines [#5159](https://github.com/AnalyticalGraphicsInc/cesium/pull/5159).
    * Added `PolylineDash` Material type.
    * Added `PolylineDashMaterialProperty` to the Entity API.

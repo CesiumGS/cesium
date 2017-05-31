@@ -21,14 +21,18 @@ define([
      * @param {Number} cnodeVersion Version of the request for subtree metadata.
      * @param {Number} imageryVersion Version of the request for imagery tile.
      * @param {Number} terrainVersion Version of the request for terrain tile.
+     * @param {Number} imageryProvider Id of imagery provider.
+     * @param {Number} terrainProvider Id of terrain provider.
      *
      * @private
      */
-    function GoogleEarthEnterpriseTileInformation(bits, cnodeVersion, imageryVersion, terrainVersion) {
+    function GoogleEarthEnterpriseTileInformation(bits, cnodeVersion, imageryVersion, terrainVersion, imageryProvider, terrainProvider) {
         this._bits = bits;
         this.cnodeVersion = cnodeVersion;
         this.imageryVersion = imageryVersion;
         this.terrainVersion = terrainVersion;
+        this.imageryProvider = imageryProvider;
+        this.terrainProvider = terrainProvider;
         this.ancestorHasTerrain = false; // Set it later once we find its parent
         this.terrainState = undefined;
     }
@@ -42,12 +46,15 @@ define([
      */
     GoogleEarthEnterpriseTileInformation.clone = function(info, result) {
         if (!defined(result)) {
-            result = new GoogleEarthEnterpriseTileInformation(info._bits, info.cnodeVersion, info.imageryVersion, info.terrainVersion);
+            result = new GoogleEarthEnterpriseTileInformation(info._bits, info.cnodeVersion, info.imageryVersion, info.terrainVersion,
+                info.imageryProvider, info.terrainProvider);
         } else {
             result._bits = info._bits;
             result.cnodeVersion = info.cnodeVersion;
             result.imageryVersion = info.imageryVersion;
             result.terrainVersion = info.terrainVersion;
+            result.imageryProvider = info.imageryProvider;
+            result.terrainProvider = info.terrainProvider;
         }
         result.ancestorHasTerrain = info.ancestorHasTerrain;
         result.terrainState = info.terrainState;

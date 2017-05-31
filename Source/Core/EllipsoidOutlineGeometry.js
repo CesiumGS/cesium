@@ -61,9 +61,9 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 10);
-        var slicePartitions = defaultValue(options.slicePartitions, 8);
-        var subdivisions = defaultValue(options.subdivisions, 128);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 10));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 8));
+        var subdivisions = Math.round(defaultValue(options.subdivisions, 128));
 
         //>>includeStart('debug', pragmas.debug);
         if (stackPartitions < 1) {

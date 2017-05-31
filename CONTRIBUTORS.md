@@ -38,6 +38,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Austin Eng](https://github.com/austinEng)
    * [Shehzan Mohammed](https://github.com/shehzan10)
    * [Rachel Hwang](https://github.com/rahwang)
+   * [Joseph Klinger](https://github.com/klingerj)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -138,3 +139,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Heiko Thiel](https://github.com/SunBlack)
 * [Sravan Kumar Kilaru](https://github.com/kilarusravankumar)
 * [Ryan King](https://github.com/ryki2658)
+* [Jason Wohlgemuth](https://github.com/jhwohlgemuth)
