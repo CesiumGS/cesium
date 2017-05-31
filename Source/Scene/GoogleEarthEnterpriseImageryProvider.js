@@ -65,7 +65,7 @@ define([
      * Provides tiled imagery using the Google Earth Enterprise REST API.
      *
      * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
-     *        {@link GoogleEarthImageryProvider} should be used with 2D Maps API.
+     *        {@link GoogleEarthEnterpriseMapsProvider} should be used with 2D Maps API.
      *
      * @alias GoogleEarthEnterpriseImageryProvider
      * @constructor
@@ -83,7 +83,7 @@ define([
      *
      * @see GoogleEarthEnterpriseTerrainProvider
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
