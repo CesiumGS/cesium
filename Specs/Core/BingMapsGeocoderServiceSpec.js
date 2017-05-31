@@ -38,7 +38,7 @@ defineSuite([
                 }]
             }]
         });
-        service.geocode(query, function(err, results) {
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].displayName).toEqual('a');
             expect(results[0].destination).toBeInstanceOf(Rectangle);
@@ -51,7 +51,7 @@ defineSuite([
         jasmine.createSpy('testSpy', loadJsonp).and.returnValue({
             resourceSets: []
         });
-        service.geocode(query, function(err, results) {
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
         });
@@ -64,7 +64,7 @@ defineSuite([
                 resources: []
             }]
         });
-        service.geocode(query, function(err, results) {
+        service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
         });
