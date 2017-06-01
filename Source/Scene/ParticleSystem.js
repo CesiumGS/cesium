@@ -341,7 +341,7 @@ define([
         this.currentTime += dt;
 
         if (this.lifeTime !== Number.MAX_VALUE && this.currentTime > this.lifeTime) {
-            if (this.loop) {
+            if (this.loop && this.bursts) {
                 this.currentTime = this.currentTime - this.lifeTime;
                 var burstLength = this.bursts.length;
                 // Reset any bursts
