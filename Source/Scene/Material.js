@@ -1268,7 +1268,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 0.0);
+            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 1.0);
         }
     });
 
@@ -1290,7 +1290,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 1.0);
         }
     });
 
@@ -1312,7 +1312,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 1.0);
         }
     });
 
@@ -1340,7 +1340,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.baseWaterColor.alpha < 1.0) || (uniforms.blendColor.alpha < 0.0);
+            return (uniforms.baseWaterColor.alpha < 1.0) || (uniforms.blendColor.alpha < 1.0);
         }
     });
 
@@ -1362,7 +1362,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.color.alpha < 1.0) || (uniforms.rimColor.alpha < 0.0);
+            return (uniforms.color.alpha < 1.0) || (uniforms.rimColor.alpha < 1.0);
         }
     });
 

@@ -33,6 +33,33 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor rounds floating-point slicePartitions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3.5,
+            stackPartitions: 3,
+            subdivisions: 3
+        });
+        expect(m._slicePartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point stackPartitions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3.5,
+            subdivisions: 3
+        });
+        expect(m._stackPartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point subdivisions', function() {
+        var m = new EllipsoidOutlineGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3,
+            subdivisions: 3.5
+        });
+        expect(m._subdivisions).toEqual(4);
+    });
+
     it('computes positions', function() {
         var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
             stackPartitions : 3,

@@ -8,6 +8,7 @@ defineSuite([
     'Core/GeographicTilingScheme',
     'Core/GoogleEarthEnterpriseMetadata',
     'Core/GoogleEarthEnterpriseTerrainData',
+    'Core/GoogleEarthEnterpriseTileInformation',
     'Core/loadImage',
     'Core/loadWithXhr',
     'Core/Math',
@@ -23,6 +24,7 @@ defineSuite([
     GeographicTilingScheme,
     GoogleEarthEnterpriseMetadata,
     GoogleEarthEnterpriseTerrainData,
+    GoogleEarthEnterpriseTileInformation,
     loadImage,
     loadWithXhr,
     CesiumMath,
@@ -34,19 +36,19 @@ defineSuite([
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            var t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '0'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '1'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '2'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '3'] = t;
 
@@ -152,6 +154,28 @@ defineSuite([
         expect(terrainProvider.getLevelMaximumGeometricError(1)).toEqualEpsilon(terrainProvider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
     });
 
+    it('readyPromise rejects if there isn\'t terrain', function() {
+        installMockGetQuadTreePacket();
+
+        var metadata = new GoogleEarthEnterpriseMetadata({
+            url : 'made/up/url'
+        });
+
+        metadata.terrainPresent = false;
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            metadata : metadata
+        });
+
+        return terrainProvider.readyPromise
+            .then(function() {
+                fail('Server does not have terrain, so we shouldn\'t resolve.');
+            })
+            .otherwise(function() {
+                expect(terrainProvider.ready).toBe(false);
+            });
+    });
+
     it('logo is undefined if credit is not provided', function() {
         installMockGetQuadTreePacket();
 
@@ -250,6 +274,10 @@ defineSuite([
             var deferreds = [];
             var loadRealTile = true;
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                if (url.indexOf('dbRoot.v5') !== -1) {
+                    return deferred.reject(); // Just reject dbRoot file and use defaults.
+                }
+
                 if (loadRealTile) {
                     loadRealTile = false;
                     return loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);

@@ -950,7 +950,6 @@ define([
             return;
         }
 
-        var projected;
         if (imageryProvider.tilingScheme instanceof GeographicTilingScheme) {
             longitudeLatitudeProjectedScratch.x = CesiumMath.toDegrees(longitude);
             longitudeLatitudeProjectedScratch.y = CesiumMath.toDegrees(latitude);
@@ -958,7 +957,7 @@ define([
             var cartographic = cartographicScratch;
             cartographic.longitude = longitude;
             cartographic.latitude = latitude;
-            projected = imageryProvider.tilingScheme.projection.project(cartographic, longitudeLatitudeProjectedScratch);
+            imageryProvider.tilingScheme.projection.project(cartographic, longitudeLatitudeProjectedScratch);
         }
 
         longitudeLatitudeProjectedScratchComputed = true;

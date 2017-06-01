@@ -11,13 +11,14 @@ define([
      *
      * @param {Context} context The rendering context.
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
+     * @param {JobScheduler} jobScheduler The job scheduler
      *
      * @alias FrameState
      * @constructor
      *
      * @private
      */
-    function FrameState(context, creditDisplay) {
+    function FrameState(context, creditDisplay, jobScheduler) {
         /**
          * The rendering context.
          * @type {Context}
@@ -66,6 +67,13 @@ define([
          * @default undefined
          */
         this.time = undefined;
+
+        /**
+         * The job scheduler.
+         *
+         * @type {JobScheduler}
+         */
+        this.jobScheduler = jobScheduler;
 
         /**
          * The map projection to use in 2D and Columbus View modes.
@@ -181,9 +189,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        * @type {Number}
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
@@ -265,6 +274,10 @@ define([
          */
         this.minimumDisableDepthTestDistance = undefined;
     }
+
+    FrameState.prototype.addCommand = function(command) {
+        this.commandList.push(command);
+    };
 
     /**
      * A function that will be called at the end of the frame.

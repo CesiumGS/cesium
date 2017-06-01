@@ -345,7 +345,7 @@ defineSuite([
                 }
             });
 
-            geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
+            GeometryPipeline.reorderForPreVertexCache(geometry);
         }).toThrowDeveloperError();
     });
 
