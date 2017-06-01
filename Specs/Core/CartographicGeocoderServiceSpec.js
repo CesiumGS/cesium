@@ -44,6 +44,22 @@ defineSuite([
         });
     });
 
+    it('returns empty array for input with only longitudinal coordinates', function (done) {
+        var query = ' 1e 1e ';
+        service.geocode(query).then(function(results) {
+            expect(results.length).toEqual(0);
+            done();
+        });
+    });
+
+    it('returns empty array for input with only one NSEW coordinate', function (done) {
+        var query = ' 1e 1 ';
+        service.geocode(query).then(function(results) {
+            expect(results.length).toEqual(0);
+            done();
+        });
+    });
+
     it('returns empty array for input with only one number', function (done) {
         var query = ' 2.0 ';
         service.geocode(query).then(function(results) {
