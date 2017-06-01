@@ -2,13 +2,13 @@
 define([
         './Cartesian2',
         './Cartesian3',
-        './defined',
-        './DeveloperError'
+        './Check',
+        './defined'
     ], function(
         Cartesian2,
         Cartesian3,
-        defined,
-        DeveloperError) {
+        Check,
+        defined ) {
     'use strict';
 
     var scratchCartesian1 = new Cartesian3();
@@ -37,9 +37,10 @@ define([
      */
     function barycentricCoordinates(point, p0, p1, p2, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(point) || !defined(p0) || !defined(p1) || !defined(p2)) {
-            throw new DeveloperError('point, p0, p1, and p2 are required.');
-        }
+        Check.defined('point', point);
+        Check.defined('p0', p0);
+        Check.defined('p1', p1);
+        Check.defined('p2', p2);
         //>>includeEnd('debug');
 
 
