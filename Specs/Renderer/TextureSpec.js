@@ -94,6 +94,24 @@ defineSuite([
         texture = texture && texture.destroy();
     });
 
+    it('has unique id', function() {
+        var t1 = new Texture({
+            context : context,
+            source : blueImage
+        });
+
+        var t2 = new Texture({
+            context : context,
+            source : blueImage
+        });
+
+        expect(t1.id).toBeDefined();
+        expect(t1.id).not.toEqual(t2.id);
+
+        t1.destroy();
+        t2.destroy();
+    });
+
     it('has expected default values for pixel format and datatype', function() {
         texture = new Texture({
             context : context,

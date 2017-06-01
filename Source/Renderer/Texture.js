@@ -33,6 +33,8 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    var currentId = 0;
+
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -196,6 +198,7 @@ define([
             sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
         }
 
+        this._id = 'Texture_' + currentId++;
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -308,6 +311,12 @@ define([
     };
 
     defineProperties(Texture.prototype, {
+
+        id : {
+            get : function() {
+                return this._id;
+            }
+        },
         /**
          * The sampler to use when sampling this texture.
          * Create a sampler by calling {@link Sampler}.  If this

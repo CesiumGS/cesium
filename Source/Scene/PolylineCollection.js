@@ -28,7 +28,6 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Renderer/Texture',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -66,7 +65,6 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArray,
-        Texture,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -1015,17 +1013,12 @@ define([
         }
     }
 
-    var scratchTextureArray = [];
-    function createTextureId(texture) {
-        scratchTextureArray[0] = texture.pixelFormat;
-        scratchTextureArray[1] = texture.pixelDatatype;
-        scratchTextureArray[2] = texture.dimensions;
-        scratchTextureArray[3] = texture.preMultiplyAlpha;
-        scratchTextureArray[4] = texture.flipY;
-        scratchTextureArray[5] = texture.width;
-        scratchTextureArray[6] = texture.sizeInBytes;
+    function replacer(key, value) {
+        if(defined(value) && value.hasOwnProperty('id')) {
+            return value.id;
+        }
 
-        return JSON.stringify(scratchTextureArray);
+        return value;
     }
 
     var scratchUniformArray = [];
@@ -1035,20 +1028,14 @@ define([
         scratchUniformArray.length = 2.0 * length;
 
         var index = 0;
-        var value;
         for (var i = 0; i < length; ++i) {
             var uniform = uniforms[i];
             scratchUniformArray[index] = uniform;
-            value = material._uniforms[uniform]();
-            if(value instanceof Texture){
-                scratchUniformArray[index + 1] = createTextureId(value);
-            } else {
-                scratchUniformArray[index + 1] = value;
-            }
+            scratchUniformArray[index + 1] = material._uniforms[uniform]();
             index += 2;
         }
 
-        return material.type + ':' + JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray, replacer);
     }
 
     function sortPolylinesIntoBuckets(collection) {
