@@ -44,7 +44,7 @@ define([
 
             if (isNaN(longitude) || isNaN(latitude)) {
                 for (var i = 0; i < splitQuery.length; ++i) {
-                    var splitCoord = splitQuery[i].match(/^(\d+)([nsew])/i);
+                    var splitCoord = splitQuery[i].match(/^(\d+.?\d*)([nsew])/i);
                     if (/^[ns]/i.test(splitCoord[2])) {
                         latitude = (/^[n]/i.test(splitCoord[2])) ? +splitCoord[1] : -splitCoord[1];
                     } else if (/^[ew]/i.test(splitCoord[2])) {
