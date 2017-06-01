@@ -29,7 +29,7 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
      * @see WebMapTileServiceImageryProvider
