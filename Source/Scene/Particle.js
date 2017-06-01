@@ -47,16 +47,18 @@ define([
         Cartesian3.add(this.position, deltaScratch, this.position);
 
         // Update any forces.
-        var length = forces.length;
-        for (var i = 0; i < length; ++i) {
-            var force = forces[i];
+        if (forces) {
+            var length = forces.length;
+            for (var i = 0; i < length; ++i) {
+                var force = forces[i];
 
-            if (typeof force === 'function') {
-                // Force is just a simle callback function.
-                force(this, dt);
-            } else {
-                // Call the apply function of the force.
-                force.apply(this, dt);
+                if (typeof force === 'function') {
+                    // Force is just a simle callback function.
+                    force(this, dt);
+                } else {
+                    // Call the apply function of the force.
+                    force.apply(this, dt);
+                }
             }
         }
 
