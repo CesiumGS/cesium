@@ -1,6 +1,6 @@
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
-## [Corporate CLA](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt)
+## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
 * [Analytical Graphics, Inc.](http://www.agi.com/)
    * [Patrick Cozzi](https://github.com/pjcozzi)
@@ -39,6 +39,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Shehzan Mohammed](https://github.com/shehzan10)
    * [Rachel Hwang](https://github.com/rahwang)
    * [Joseph Klinger](https://github.com/klingerj)
+   * [Mohamad Moneimne](https://github.com/moneimne)
+   * [Ottavio Hartman](https://github.com/omh1280)
+   * [William Ho](https://github.com/williamkho)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -82,7 +85,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Flightradar24 AB](https://www.flightradar24.com)
    * [Aleksei Kalmykov](https://github.com/kalmykov)
 
-## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
+## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
 * [Ravi Agrawal](https://github.com/macoda)
