@@ -1,10 +1,8 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties'
     ], function(
-        Color,
         defined,
         defineProperties) {
     'use strict';

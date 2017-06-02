@@ -1,7 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian3',
-        '../../Core/Cartographic',
         '../../Scene/Cesium3DTileFeature',
         '../../Scene/Cesium3DTileset',
         '../../Scene/Cesium3DTileStyle',
@@ -16,8 +14,6 @@ define([
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/ScreenSpaceEventType'
 ], function(
-        Cartesian3,
-        Cartographic,
         Cesium3DTileFeature,
         Cesium3DTileset,
         Cesium3DTileStyle,
