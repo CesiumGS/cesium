@@ -2,9 +2,13 @@ Change Log
 ==========
 
 ### 1.35 - 2017-07-05
+
 * Deprecated
    * `GoogleEarthImageryProvider` has been deprecated and will be removed in Cesium 1.37, use `GoogleEarthEnterpriseMapsProvider` instead. 
 * Fixed bug where if polylines were set to follow the surface of an undefined globe, Cesium would crash [#5413] https://github.com/AnalyticalGraphicsInc/cesium/pull/5413
+* Fixed a bug where picking clusters would return undefined instead of a list of the clustered entities. [#5286](https://github.com/AnalyticalGraphicsInc/cesium/issues/5286)
+* Reduced the amount of Sun bloom post-process effect near the horizon. [#5381](https://github.com/AnalyticalGraphicsInc/cesium/issues/5381)
+>>>>>>> master
 
 ### 1.34 - 2017-06-01
 
@@ -26,6 +30,7 @@ Change Log
 * Fixed an issue where translucent objects could flicker when picking on mouse move. [#5307](https://github.com/AnalyticalGraphicsInc/cesium/issues/5307)
 * Fixed a bug where billboards with `sizeInMeters` set to true would move upwards when zooming out. [#5373](https://github.com/AnalyticalGraphicsInc/cesium/issues/5373)
 * Fixed a bug where `SampledProperty.setInterpolationOptions` does not ignore undefined `options`. [#3575](https://github.com/AnalyticalGraphicsInc/cesium/issues/3575)
+* Added `basePath` option to `Cesium.Model.fromGltf`. [#5320](https://github.com/AnalyticalGraphicsInc/cesium/issues/5320)
 
 ### 1.33 - 2017-05-01
 
