@@ -4,7 +4,7 @@ Change Log
 ### 1.35 - 2017-07-05
 * Deprecated
    * `GoogleEarthImageryProvider` has been deprecated and will be removed in Cesium 1.37, use `GoogleEarthEnterpriseMapsProvider` instead. 
-* 
+* Fixed bug where if polylines were set to follow the surface of an undefined globe, Cesium would crash [#5413] https://github.com/AnalyticalGraphicsInc/cesium/pull/5413
 
 ### 1.34 - 2017-06-01
 
