@@ -273,7 +273,7 @@ defineSuite([
         expect(model._baseUri).toEndWith(params);
     });
 
-    it('fromGltf cache key different when given base path', function() {
+    it('fromGltf takes a base path', function() {
         var url = texturedBoxBasePathUrl;
         var basePath = './Data/Models/Box-Textured-Separate/';
         var model = Model.fromGltf({
