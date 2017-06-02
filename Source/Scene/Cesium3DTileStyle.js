@@ -252,8 +252,19 @@ define([
                 return this._show;
             },
             set : function(value) {
+                if (typeof value === 'boolean') {
+                    this._show = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._show = new Expression(value);
+                } else if (defined(value.conditions)) {
+                    this._show = new ConditionsExpression(value);
+                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
+                    this._show = value;
+                } else {
+                    this._show = undefined;
+                    return;
+                }
                 this._showShaderFunctionReady = false;
-                this._show = value;
             }
         },
 
@@ -297,8 +308,17 @@ define([
                 return this._color;
             },
             set : function(value) {
+                if (typeof value === 'string') {
+                    this._color = new Expression(value);
+                } else if (defined(value.conditions)) {
+                    this._color = new ConditionsExpression(value);
+                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
+                    this._color = value;
+                } else {
+                    this._color = undefined;
+                    return;
+                }
                 this._colorShaderFunctionReady = false;
-                this._color = value;
             }
         },
 
@@ -342,8 +362,19 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
+                if (typeof value === 'number') {
+                    this._pointSize = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._pointSize = new Expression(value);
+                } else if (defined(value.conditions)) {
+                    this._pointSize = new ConditionsExpression(value);
+                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
+                    this._pointSize = value;
+                } else {
+                    this._pointSize = undefined;
+                    return;
+                }
                 this._pointSizeShaderFunctionReady = false;
-                this._pointSize = value;
             }
         },
 
