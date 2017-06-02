@@ -1187,19 +1187,14 @@ define([
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
 
         options = clone(options);
-        var providedBasePath = options.basePath;
-        if (!defined(options.basePath)) {
-            options.basePath = getBaseUri(url, true);
-        }
-        if (!defined(options.cacheKey)) {
-            if (defined(providedBasePath)) {
+        if (defined(options.basePath)) {
+            if (defined(options.cacheKey)) {
+                options.cacheKey = cacheKey;
+            } else {
                 options.cacheKey = cacheKey + options.basePath;
             }
-            else {
-                options.cacheKey = cacheKey;
-            }
-        }
-        else {
+        } else {
+            options.basePath = getBaseUri(url, true);
             options.cacheKey = cacheKey;
         }
         var model = new Model(options);
