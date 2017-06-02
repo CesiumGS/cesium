@@ -28,6 +28,7 @@ Change Log
 * Fixed an issue where translucent objects could flicker when picking on mouse move. [#5307](https://github.com/AnalyticalGraphicsInc/cesium/issues/5307)
 * Fixed a bug where billboards with `sizeInMeters` set to true would move upwards when zooming out. [#5373](https://github.com/AnalyticalGraphicsInc/cesium/issues/5373)
 * Fixed a bug where `SampledProperty.setInterpolationOptions` does not ignore undefined `options`. [#3575](https://github.com/AnalyticalGraphicsInc/cesium/issues/3575)
+* Added `basePath` option to `Cesium.Model.fromGltf`. [#5320](https://github.com/AnalyticalGraphicsInc/cesium/issues/5320)
 
 ### 1.33 - 2017-05-01
 
