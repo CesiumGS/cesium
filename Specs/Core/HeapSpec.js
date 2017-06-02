@@ -116,4 +116,48 @@ defineSuite([
         removed = heap.insert(max + 0.1);
         expect(removed).toBe(max + 0.1);
     });
+
+    it('resort', function() {
+        function comparator(a, b) {
+            return a.distance - b.distance;
+        }
+
+        var i;
+        var heap = new Heap(comparator);
+        for (i = 0; i < length; ++i) {
+            heap.insert({
+                distance : i / (length - 1),
+                id : i
+            });
+        }
+
+        // Check that elements are initially sorted
+        var element;
+        var elements = [];
+        var currentId = 0;
+        while (heap.length > 0) {
+            element = heap.pop();
+            elements.push(element);
+            expect(element.id).toBeGreaterThanOrEqualTo(currentId);
+            currentId = element.id;
+        }
+
+        // Add back into heap
+        for (i = 0; i < length; ++i) {
+            heap.insert(elements[i]);
+        }
+
+        // Invert priority
+        for (i = 0; i < length; ++i) {
+            elements[i].distance = 1.0 - elements[i].distance;
+        }
+
+        // Resort and check the the elements are popped in the opposite order now
+        heap.resort();
+        while (heap.length > 0) {
+            element = heap.pop();
+            expect(element.id).toBeLessThanOrEqualTo(currentId);
+            currentId = element.id;
+        }
+    });
 });

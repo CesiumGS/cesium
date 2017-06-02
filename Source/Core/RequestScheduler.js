@@ -23,6 +23,30 @@ define([
         when) {
     'use strict';
 
+    function sortRequests(a, b) {
+        return a.distance - b.distance;
+    }
+
+    var statistics = {
+        numberOfAttemptedRequests : 0,
+        numberOfActiveRequests : 0,
+        numberOfCancelledRequests : 0,
+        numberOfCancelledActiveRequests : 0,
+        numberOfFailedRequests : 0,
+        numberOfActiveRequestsEver : 0
+    };
+
+    var priorityHeapLength = 20;
+    var requestHeap = new Heap(sortRequests);
+    requestHeap.maximumLength = priorityHeapLength;
+    requestHeap.reserve(priorityHeapLength);
+    var activeRequests = [];
+
+    var numberOfActiveRequestsByServer = {};
+
+    var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
+
+
     /**
      * Tracks the number of active requests and prioritizes incoming requests.
      *
@@ -46,13 +70,6 @@ define([
      * @default 50
      */
     RequestScheduler.maximumRequestsPerServer = 6;
-
-    /**
-     * The maximum size of the priority heap. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
-     * @type {Number}
-     * @default 20
-     */
-    RequestScheduler.priorityHeapSize = 20;
 
     /**
      * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.
@@ -81,30 +98,36 @@ define([
             get : function() {
                 return statistics;
             }
+        },
+
+        /**
+         * The maximum size of the priority heap. This limits the number of requests that are sorted by priority. Only applies to requests that are not yet active.
+         *
+         * @memberof RequestScheduler
+         *
+         * @type {Number}
+         * @default 20
+         */
+        priorityHeapLength : {
+            get : function() {
+                return priorityHeapLength;
+            },
+            set : function(value) {
+                // If the new length shrinks the heap, need to cancel some of the requests.
+                // Since this value is not intended to be tweaked regularly it is fine to just cancel the high priority requests.
+                if (value < priorityHeapLength) {
+                    while (priorityHeapLength.length > value) {
+                        var request = priorityHeapLength.pop();
+                        request.cancel();
+                    }
+                    RequestScheduler.update();
+                }
+                priorityHeapLength = value;
+                requestHeap.maximumLength = value;
+                requestHeap.reserve(value);
+            }
         }
     });
-
-    function sortRequests(a, b) {
-        return a.distance - b.distance;
-    }
-
-    var statistics = {
-        numberOfAttemptedRequests : 0,
-        numberOfActiveRequests : 0,
-        numberOfCancelledRequests : 0,
-        numberOfCancelledActiveRequests : 0,
-        numberOfFailedRequests : 0,
-        numberOfActiveRequestsEver : 0
-    };
-
-    var requestHeap = new Heap(sortRequests);
-    requestHeap.maximumLength = RequestScheduler.priorityHeapSize;
-    requestHeap.reserve(RequestScheduler.priorityHeapSize);
-    var activeRequests = [];
-
-    var numberOfActiveRequestsByServer = {};
-
-    var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
 
     /**
      * Get the server name from a given url.
@@ -265,7 +288,7 @@ define([
         activeRequests.length -= removeCount;
 
         // Resort the heap since priority may have changed. Distance and sse are updated prior to getting here.
-        requestHeap.heapify();
+        requestHeap.resort();
 
         // Get the number of open slots and fill with the highest priority requests.
         // Un-throttled requests are automatically added to activeRequests, so activeRequests.length may exceed maximumRequests
@@ -309,6 +332,7 @@ define([
         //>>includeEnd('debug');
 
         if (isDataUri(request.url) || isBlobUri(request.url)) {
+            request.state = RequestState.RECEIVED;
             return request.requestFunction();
         }
 
@@ -377,6 +401,9 @@ define([
 
         clearStatistics();
     }
+
+    // For testing
+    RequestScheduler._requestHeap = requestHeap;
 
     return RequestScheduler;
 });

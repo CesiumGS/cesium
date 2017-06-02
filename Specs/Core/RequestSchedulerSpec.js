@@ -190,6 +190,43 @@ defineSuite([
         expect(promise6).toBeDefined();
     });
 
+    it('honors priorityHeapLength', function() {
+        var deferreds = [];
+        var requests = [];
+
+        function requestFunction() {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        function createRequest(distance) {
+            var request = new Request({
+                url : 'http://foo.com/1',
+                requestFunction : requestFunction,
+                throttle : true,
+                distance : distance
+            });
+            requests.push(request);
+            return request;
+        }
+
+        RequestScheduler.priorityHeapLength = 1;
+        var firstRequest = createRequest(0.0);
+        var promise = RequestScheduler.request(firstRequest);
+        expect(promise).toBeDefined();
+        promise = RequestScheduler.request(createRequest(1.0));
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.priorityHeapLength = 3;
+        promise = RequestScheduler.request(createRequest(1.0));
+        expect(promise).toBeDefined();
+
+        // A request is cancelled to accommodate the new heap length
+        RequestScheduler.priorityHeapLength = 2;
+        expect(firstRequest.state).toBe(RequestState.CANCELLED);
+    });
+
     function testImmediateRequest(url, dataOrBlobUri) {
         var statistics = RequestScheduler.statistics;
         var deferreds = [];
@@ -344,6 +381,215 @@ defineSuite([
         });
     });
 
+    it('handles request failure', function() {
+        var statistics = RequestScheduler.statistics;
+        var deferreds = [];
+
+        function requestFunction() {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(request.state).toBe(RequestState.ACTIVE);
+        expect(statistics.numberOfActiveRequests).toBe(1);
+
+        deferreds[0].reject('Request failed');
+        RequestScheduler.update();
+        expect(statistics.numberOfActiveRequests).toBe(0);
+
+        return promise.then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBe('Request failed');
+        });
+    });
+
+    it('prioritizes requests by distance', function() {
+        var currentDistance = 0.0;
+
+        function getRequestFunction(distance) {
+            return function() {
+                expect(distance).toBeGreaterThan(currentDistance);
+                currentDistance = distance;
+                return when.resolve();
+            };
+        }
+
+        function createRequest(distance) {
+            return new Request({
+                throttle : true,
+                url : 'https://foo.com/1',
+                requestFunction : getRequestFunction(distance),
+                distance : distance
+            });
+        }
+
+        var length = RequestScheduler.priorityHeapLength;
+        for (var i = 0; i < length; ++i) {
+            var distance = Math.random();
+            RequestScheduler.request(createRequest(distance));
+        }
+
+        RequestScheduler.update();
+        expect(currentDistance).toBeGreaterThan(0.0); // Ensures that the expect in getRequestFunction is actually called
+    });
+
+    it('updates priority', function() {
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        function createRequest(distance) {
+            return new Request({
+                throttle : true,
+                url : 'https://foo.com/1',
+                requestFunction : requestFunction,
+                distance : distance
+            });
+        }
+
+        var i;
+        var request;
+        var length = RequestScheduler.priorityHeapLength;
+        for (i = 0; i < length; ++i) {
+            var distance = i / (length - 1);
+            request = createRequest(distance);
+            request.testId = i;
+            RequestScheduler.request(request);
+        }
+
+        RequestScheduler.maximumRequests = 0;
+        RequestScheduler.update();
+
+        var requestHeap = RequestScheduler._requestHeap;
+        var requests = [];
+        var currentTestId = 0;
+        while (requestHeap.length > 0) {
+            request = requestHeap.pop();
+            requests.push(request);
+            expect(request.testId).toBeGreaterThanOrEqualTo(currentTestId);
+            currentTestId = request.testId;
+        }
+
+        for (i = 0; i < length; ++i) {
+            requestHeap.insert(requests[i]);
+        }
+
+        for (i = 0; i < length; ++i) {
+            requests[i].distance = 1.0 - requests[i].distance; // Invert priority
+        }
+
+        RequestScheduler.update();
+        while (requestHeap.length > 0) {
+            request = requestHeap.pop();
+            expect(request.testId).toBeLessThanOrEqualTo(currentTestId);
+            currentTestId = request.testId;
+        }
+    });
+
+    it('handles low priority requests', function() {
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        function createRequest(distance) {
+            return new Request({
+                throttle : true,
+                url : 'https://foo.com/1',
+                requestFunction : requestFunction,
+                distance : distance
+            });
+        }
+
+        var highPriority = 0.0;
+        var mediumPriority = 0.5;
+        var lowPriority = 1.0;
+
+        var length = RequestScheduler.priorityHeapLength;
+        for (var i = 0; i < length; ++i) {
+            RequestScheduler.request(createRequest(mediumPriority));
+        }
+
+        // Heap is full so low priority request is not even issued
+        var promise = RequestScheduler.request(createRequest(lowPriority));
+        expect(promise).toBeUndefined();
+        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(0);
+
+        // Heap is full so high priority request bumps off lower priority request
+        promise = RequestScheduler.request(createRequest(highPriority));
+        expect(promise).toBeDefined();
+        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(1);
+    });
+
+    it('unthrottled requests starve throttled requests', function() {
+        var deferreds = [];
+
+        function requestFunction() {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        function createRequest(throttle) {
+            return new Request({
+                url : 'http://foo.com/1',
+                requestFunction : requestFunction,
+                throttle : throttle
+            });
+        }
+
+        var throttledRequest = createRequest(true);
+        RequestScheduler.request(throttledRequest);
+
+        for (var i = 0; i < RequestScheduler.maximumRequests; ++i) {
+            RequestScheduler.request(createRequest(false));
+        }
+        RequestScheduler.update();
+
+        expect(throttledRequest.state).toBe(RequestState.ISSUED);
+
+        // Resolve one of the unthrottled requests
+        deferreds[0].resolve();
+        RequestScheduler.update();
+        expect(throttledRequest.state).toBe(RequestState.ACTIVE);
+    });
+
+    it('request throttled by server is cancelled', function() {
+        var deferreds = [];
+
+        function requestFunction() {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        function createRequest(throttleByServer) {
+            return new Request({
+                url : 'http://foo.com/1',
+                requestFunction : requestFunction,
+                throttleByServer : throttleByServer
+            });
+        }
+
+        for (var i = 0; i < RequestScheduler.maximumRequestsPerServer - 1; ++i) {
+            RequestScheduler.request(createRequest(false));
+        }
+
+        var throttledRequest = createRequest(true);
+        RequestScheduler.request(throttledRequest);
+        RequestScheduler.request(createRequest(false));
+
+        RequestScheduler.update();
+        expect(throttledRequest.state).toBe(RequestState.CANCELLED);
+    });
+
     it('debugThrottle', function() {
         RequestScheduler.maximumRequests = 0;
 
@@ -372,66 +618,40 @@ defineSuite([
         RequestScheduler.debugThrottle = true;
     });
 
-    it('prioritizes requests by distance', function() {
-        var currentDistance = 0.0;
+    it('debugShowStatistics', function() {
+        spyOn(console, 'log');
+        RequestScheduler.debugShowStatistics = true;
 
-        function getRequestFunction(distance) {
-            return function() {
-                expect(distance).toBeGreaterThan(currentDistance);
-                currentDistance = distance;
-                return when.resolve();
-            };
-        }
+        var deferreds = [];
 
-        function createRequest(distance) {
-            return new Request({
-                throttle : true,
-                url : 'https://foo.com/1',
-                requestFunction : getRequestFunction(distance),
-                distance : distance
-            });
-        }
-
-        var length = RequestScheduler.priorityHeapSize;
-        for (var i = 0; i < length; ++i) {
-            var distance = Math.random();
-            RequestScheduler.request(createRequest(distance));
-        }
-
-        RequestScheduler.update();
-    });
-
-    it('handles low priority requests', function() {
         function requestFunction() {
-            return when.resolve();
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
         }
 
-        function createRequest(distance) {
+        function createRequest() {
             return new Request({
-                throttle : true,
                 url : 'https://foo.com/1',
-                requestFunction : requestFunction,
-                distance : distance
+                requestFunction : requestFunction
             });
         }
 
-        var highPriority = 0.0;
-        var mediumPriority = 0.5;
-        var lowPriority = 1.0;
+        var requestToCancel = createRequest();
+        RequestScheduler.request(createRequest());
+        RequestScheduler.request(createRequest());
+        RequestScheduler.request(requestToCancel);
+        RequestScheduler.update();
 
-        var length = RequestScheduler.priorityHeapSize;
-        for (var i = 0; i < length; ++i) {
-            RequestScheduler.request(createRequest(mediumPriority));
-        }
+        expect(console.log).toHaveBeenCalledWith('Number of attempted requests: 3');
+        expect(console.log).toHaveBeenCalledWith('Number of active requests: 3');
 
-        // Heap is full so low priority request is not even issued
-        var promise = RequestScheduler.request(createRequest(lowPriority));
-        expect(promise).toBeUndefined();
-        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(0);
+        deferreds[0].reject();
+        requestToCancel.cancel();
+        RequestScheduler.update();
 
-        // Heap is full so high priority request bumps off lower priority request
-        promise = RequestScheduler.request(createRequest(highPriority));
-        expect(promise).toBeDefined();
-        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(1);
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 1');
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 1');
+        expect(console.log).toHaveBeenCalledWith('Number of failed requests: 1');
     });
 });

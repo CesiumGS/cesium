@@ -132,6 +132,16 @@ define([
     };
 
     /**
+     * Resort the heap.
+     */
+    Heap.prototype.resort = function() {
+        var length = this._length;
+        for (var i = Math.ceil(length / 2); i >= 0; --i) {
+            this.heapify(i);
+        }
+    };
+
+    /**
      * Insert an element into the heap. If the length would grow greater than maximumLength
      * of the heap, extra elements are removed.
      *
