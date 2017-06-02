@@ -205,13 +205,7 @@ define([
         };
     }
 
-    function startRequest(request, passthrough) {
-        if (passthrough) {
-            // Data uri or blob uri should always succeed so make the request immediately and don't contribute to statistics.
-            request.state = RequestState.RECEIVED;
-            return request.requestFunction();
-        }
-
+    function startRequest(request) {
         var promise = issueRequest(request);
         request.state = RequestState.ACTIVE;
         activeRequests.push(request);
@@ -224,19 +218,21 @@ define([
     }
 
     function cancelRequest(request) {
-        if (request.state === RequestState.ACTIVE) {
+        var active = request.state === RequestState.ACTIVE;
+        request.state = RequestState.CANCELLED;
+        ++statistics.numberOfCancelledRequests;
+        request.deferred.reject('Cancelled');
+
+        if (active) {
+            // Despite the Request being cancelled, the xhr request is still in flight.
+            // When it resolves getRequestReceivedFunction or getRequestFailedFunction will ignore it.
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.server];
             ++statistics.numberOfCancelledActiveRequests;
             if (defined(request.xhr)) {
-                // TODO : make sure this doesn't trigger a failed promise, if so the deferred can be rejected first
-                // TODO : test this in a test
                 request.xhr.abort();
             }
         }
-        request.state = RequestState.CANCELLED;
-        ++statistics.numberOfCancelledRequests;
-        request.deferred.reject('Cancelled');
     }
 
     /**
@@ -312,15 +308,18 @@ define([
         Check.typeOf.func('request.requestFunction', request.requestFunction);
         //>>includeEnd('debug');
 
+        if (isDataUri(request.url) || isBlobUri(request.url)) {
+            return request.requestFunction();
+        }
+
         ++statistics.numberOfAttemptedRequests;
 
-        var isDataOrBlobUri = isDataUri(request.url) || isBlobUri(request.url);
-        if (!isDataOrBlobUri && !defined(request.server)) {
+        if (!defined(request.server)) {
             request.server = RequestScheduler.getServer(request.url);
         }
 
-        if (!RequestScheduler.debugThrottle || !request.throttle || isDataOrBlobUri) {
-            return startRequest(request, isDataOrBlobUri);
+        if (!RequestScheduler.debugThrottle || !request.throttle) {
+            return startRequest(request);
         }
 
         if (activeRequests.length >= RequestScheduler.maximumRequests) {

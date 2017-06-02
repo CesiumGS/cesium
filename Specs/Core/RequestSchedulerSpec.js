@@ -247,6 +247,103 @@ defineSuite([
         testImmediateRequest(url, false);
     });
 
+    it('makes a throttled request', function() {
+        var deferreds = [];
+
+        function requestFunction() {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            throttle : true,
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+        expect(request.state).toBe(RequestState.UNISSUED);
+
+        var promise = RequestScheduler.request(request);
+        expect(promise).toBeDefined();
+        expect(request.state).toBe(RequestState.ISSUED);
+
+        RequestScheduler.update();
+        expect(request.state).toBe(RequestState.ACTIVE);
+
+        deferreds[0].resolve();
+        expect(request.state).toBe(RequestState.RECEIVED);
+    });
+
+    it('cancels an issued request', function() {
+        var statistics = RequestScheduler.statistics;
+
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        var request = new Request({
+            throttle : true,
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        expect(request.state).toBe(RequestState.ISSUED);
+
+        request.cancel();
+        RequestScheduler.update();
+
+        expect(request.state).toBe(RequestState.CANCELLED);
+        expect(statistics.numberOfCancelledRequests).toBe(1);
+        expect(statistics.numberOfCancelledActiveRequests).toBe(0);
+
+        return promise.then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBe('Cancelled');
+        });
+    });
+
+    it('cancels an active request', function() {
+        var statistics = RequestScheduler.statistics;
+        var aborted = true;
+        var mockXhr = {
+            abort : function() {
+                aborted = true;
+            }
+        };
+
+        function requestFunction() {
+            request.xhr = mockXhr;
+            return when.defer().promise;
+        }
+
+        var request = new Request({
+            throttle : true,
+            url : 'https://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise = RequestScheduler.request(request);
+        RequestScheduler.update();
+        expect(request.state).toBe(RequestState.ACTIVE);
+
+        request.cancel();
+        RequestScheduler.update();
+
+        expect(request.state).toBe(RequestState.CANCELLED);
+        expect(statistics.numberOfCancelledRequests).toBe(1);
+        expect(statistics.numberOfCancelledActiveRequests).toBe(1);
+        expect(RequestScheduler.numberOfActiveRequestsByServer(request.server)).toBe(0);
+        expect(aborted).toBe(true);
+
+        return promise.then(function() {
+            fail('should not be called');
+        }).otherwise(function(error) {
+            expect(error).toBe('Cancelled');
+        });
+    });
+
     it('debugThrottle', function() {
         RequestScheduler.maximumRequests = 0;
 
@@ -271,34 +368,70 @@ defineSuite([
         });
         promise = RequestScheduler.request(request);
         expect(promise).toBeDefined();
+
+        RequestScheduler.debugThrottle = true;
     });
 
-    // it('sorts requests by distance', function() {
-    //     var currentDistance = 0.0;
-    //
-    //     function getRequestFunction(distance) {
-    //         return function() {
-    //             expect(distance).toBeGreaterThan(currentDistance);
-    //             currentDistance = distance;
-    //             return when.resolve();
-    //         };
-    //     }
-    //
-    //     function createRequest(distance) {
-    //         return new Request({
-    //             throttle : true,
-    //             url : 'https://foo.com/1',
-    //             requestFunction : getRequestFunction(distance),
-    //             distance : distance
-    //         });
-    //     }
-    //
-    //     var length = RequestScheduler.priorityHeapSize;
-    //     for (var i = 0; i < length; ++i) {
-    //         var distance = Math.random();
-    //         RequestScheduler.request(createRequest(distance));
-    //     }
-    //
-    //     RequestScheduler.update();
-    // });
+    it('prioritizes requests by distance', function() {
+        var currentDistance = 0.0;
+
+        function getRequestFunction(distance) {
+            return function() {
+                expect(distance).toBeGreaterThan(currentDistance);
+                currentDistance = distance;
+                return when.resolve();
+            };
+        }
+
+        function createRequest(distance) {
+            return new Request({
+                throttle : true,
+                url : 'https://foo.com/1',
+                requestFunction : getRequestFunction(distance),
+                distance : distance
+            });
+        }
+
+        var length = RequestScheduler.priorityHeapSize;
+        for (var i = 0; i < length; ++i) {
+            var distance = Math.random();
+            RequestScheduler.request(createRequest(distance));
+        }
+
+        RequestScheduler.update();
+    });
+
+    it('handles low priority requests', function() {
+        function requestFunction() {
+            return when.resolve();
+        }
+
+        function createRequest(distance) {
+            return new Request({
+                throttle : true,
+                url : 'https://foo.com/1',
+                requestFunction : requestFunction,
+                distance : distance
+            });
+        }
+
+        var highPriority = 0.0;
+        var mediumPriority = 0.5;
+        var lowPriority = 1.0;
+
+        var length = RequestScheduler.priorityHeapSize;
+        for (var i = 0; i < length; ++i) {
+            RequestScheduler.request(createRequest(mediumPriority));
+        }
+
+        // Heap is full so low priority request is not even issued
+        var promise = RequestScheduler.request(createRequest(lowPriority));
+        expect(promise).toBeUndefined();
+        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(0);
+
+        // Heap is full so high priority request bumps off lower priority request
+        promise = RequestScheduler.request(createRequest(highPriority));
+        expect(promise).toBeDefined();
+        expect(RequestScheduler.statistics.numberOfCancelledRequests).toBe(1);
+    });
 });
