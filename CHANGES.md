@@ -2,9 +2,10 @@ Change Log
 ==========
 
 ### 1.35 - 2017-07-05
+
 * Deprecated
-   * `GoogleEarthImageryProvider` has been deprecated and will be removed in Cesium 1.37, use `GoogleEarthEnterpriseMapsProvider` instead. 
-* 
+   * `GoogleEarthImageryProvider` has been deprecated and will be removed in Cesium 1.37, use `GoogleEarthEnterpriseMapsProvider` instead.
+* Reduced the amount of Sun bloom post-process effect near the horizon. [#5381](https://github.com/AnalyticalGraphicsInc/cesium/issues/5381)
 
 ### 1.34 - 2017-06-01
 
