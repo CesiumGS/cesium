@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './GeometryType',
         './PrimitiveType'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -67,10 +69,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.attributes)) {
-            throw new DeveloperError('options.attributes is required.');
-        }
         //>>includeEnd('debug');
+        Check.defined('options.attributes', options.attributes);
 
         /**
          * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
@@ -173,10 +173,8 @@ define([
      */
     Geometry.computeNumberOfVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
         //>>includeEnd('debug');
+        Check.defined('geometry', geometry);
 
         var numberOfVertices = -1;
         for ( var property in geometry.attributes) {
