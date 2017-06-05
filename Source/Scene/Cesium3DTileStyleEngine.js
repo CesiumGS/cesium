@@ -1,13 +1,11 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './LabelStyle'
     ], function(
-        Color,
         defined,
         defineProperties,
         DistanceDisplayCondition,

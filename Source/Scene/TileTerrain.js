@@ -12,8 +12,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
-        './TerrainState',
-        './TileBoundingRegion'
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -27,8 +26,7 @@ define([
         BufferUsage,
         VertexArray,
         when,
-        TerrainState,
-        TileBoundingRegion) {
+        TerrainState) {
     'use strict';
 
     /**

@@ -236,7 +236,7 @@ defineSuite([
     });
 
     it('routes resource request through a proxy if one is specified', function() {
-        /*jshint unused: false*/
+        /*eslint-disable no-unused-vars*/
         var proxy = new DefaultProxy('/proxy/');
         var requestMetadata = when.defer();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -252,10 +252,11 @@ defineSuite([
         return requestMetadata.promise.then(function(url) {
             expect(url.indexOf(proxy.getURL('server.invalid'))).toEqual(0);
         });
+        /*eslint-enable no-unused-vars*/
     });
 
     it('resource request takes a query string', function() {
-        /*jshint unused: false*/
+        /*eslint-disable no-unused-vars*/
         var requestMetadata = when.defer();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestMetadata.resolve(url);
@@ -269,6 +270,7 @@ defineSuite([
         return requestMetadata.promise.then(function(url) {
             expect(/\?query=1$/.test(url)).toEqual(true);
         });
+        /*eslint-enable no-unused-vars*/
     });
 
     it('routes tile requests through a proxy if one is specified', function() {

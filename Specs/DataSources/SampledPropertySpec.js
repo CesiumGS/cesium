@@ -222,6 +222,18 @@ defineSuite([
         expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
+    it('Allows empty options object without failing', function() {
+        var property = new SampledProperty(Number);
+
+        var interpolationAlgorithm = property.interpolationAlgorithm;
+        var interpolationDegree = property.interpolationDegree;
+
+        property.setInterpolationOptions({});
+
+        expect(property.interpolationAlgorithm).toEqual(interpolationAlgorithm);
+        expect(property.interpolationDegree).toEqual(interpolationDegree);
+    });
+
     it('mergeNewSamples works with huge data sets.', function() {
         var times = [];
         var values = [];

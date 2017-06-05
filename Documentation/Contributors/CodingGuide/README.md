@@ -135,6 +135,16 @@ function Model(options) {
 
 * Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
 
+* When [disabling rules with inline comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments), place the comments on new lines and as close to the associated code as possible:
+```js
+/*eslint-disable no-empty*/
+try {
+    lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
+} catch(ex) {
+}
+/*eslint-enable no-empty*/
+```
+
 ## Units
 
 * Cesium uses SI units:
@@ -800,7 +810,7 @@ When using a subscription, always be sure to [dispose the subscription](https://
 ```
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
 // ...then later...
-fullscreenSubscription.dispose(); 
+fullscreenSubscription.dispose();
 ```
 
 ## GLSL

@@ -1,15 +1,15 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Intersect'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         Intersect) {
     'use strict';
 
@@ -170,12 +170,8 @@ define([
      */
     AxisAlignedBoundingBox.intersectPlane = function(box, plane) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
+        Check.defined('box', box);
+        Check.defined('plane', plane);
         //>>includeEnd('debug');
 
         intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);

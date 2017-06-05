@@ -11,12 +11,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getStringFromTypedArray',
-        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
         '../Core/Transforms',
-        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -28,7 +26,6 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileColorBlendMode',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './SceneMode'
@@ -44,12 +41,10 @@ define([
         destroyObject,
         DeveloperError,
         getStringFromTypedArray,
-        Matrix3,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
         Transforms,
-        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -61,7 +56,6 @@ define([
         when,
         BlendingState,
         Cesium3DTileBatchTable,
-        Cesium3DTileColorBlendMode,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         SceneMode) {
@@ -1087,8 +1081,8 @@ define([
             throw new DeveloperError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
             //>>includeEnd('debug');
 
-            // In release silently ignore and recreate the shader without a style. Tell jsHint to ignore this line.
-            createShaders(content, frameState, undefined);  // jshint ignore:line
+            // In release silently ignore and recreate the shader without a style. Tell esLint to ignore this line.
+            createShaders(content, frameState, undefined);  // eslint-disable-line no-unreachable
         }
     }
 

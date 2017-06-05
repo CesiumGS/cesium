@@ -87,7 +87,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         var visualizer = new PathVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
