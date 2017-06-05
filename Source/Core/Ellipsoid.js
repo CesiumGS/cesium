@@ -29,13 +29,10 @@ define([
         z = defaultValue(z, 0.0);
 
         //>>includeStart('debug', pragmas.debug);
-        /*if (x < 0.0 || y < 0.0 || z < 0.0) {
-            throw new DeveloperError('All radii components must be greater than or equal to zero.');
-        }*/
-        //>>includeEnd('debug');
         Check.typeOf.number.greaterThanOrEquals('x', x, 0.0);
         Check.typeOf.number.greaterThanOrEquals('y', y, 0.0);
         Check.typeOf.number.greaterThanOrEquals('z', z, 0.0);
+        //>>includeEnd('debug');
 
         ellipsoid._radii = new Cartesian3(x, y, z);
 
@@ -294,9 +291,11 @@ define([
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }*/
-        //>>includeEnd('debug');
-        Check.defined('value', value);
+        
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
         Check.defined('array', array);
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
 
@@ -350,7 +349,7 @@ define([
             throw new DeveloperError('cartographic is required.');
         }*/
         //>>includeEnd('debug');
-        Check.defined('cartographic', cartographic);
+        Check.typeOf.object('cartographic', cartographic);
 
         var longitude = cartographic.longitude;
         var latitude = cartographic.latitude;
@@ -658,8 +657,6 @@ define([
 
         Check.defined('position', position);
 
-        // While it would be more idiomatic to use a Check.typeOf.number.something here,
-        // the resulting error message is a lot harder to read.
         if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
