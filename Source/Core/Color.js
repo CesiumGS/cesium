@@ -3,7 +3,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './FeatureDetection',
         './freezeObject',
         './Math'
@@ -86,9 +85,7 @@ define([
      */
     Color.fromCartesian4 = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-
         Check.typeOf.object('cartesian', cartesian);
-
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -143,10 +140,8 @@ define([
      */
     Color.fromAlpha = function(color, alpha, result) {
         //>>includeStart('debug', pragmas.debug);
-
-        Check.defined('color', color);
-        Check.defined('alpha', alpha);
-
+        Check.typeOf.object('color', color);
+        Check.typeOf.object('alpha', alpha);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -287,6 +282,7 @@ define([
             var minimumRed = defaultValue(options.minimumRed, 0);
             var maximumRed = defaultValue(options.maximumRed, 1.0);
 
+            //>>includeStart('debug', pragmas.debug);
             Check.typeOf.number.lessThanOrEquals('minimumRed', minimumRed, maximumRed);
             //>>includeEnd('debug');
 
@@ -299,9 +295,8 @@ define([
             var maximumGreen = defaultValue(options.maximumGreen, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            
-            //>>includeEnd('debug');
             Check.typeOf.number.lessThanOrEquals('minimumGreen', minimumGreen, maximumGreen);
+            //>>includeEnd('debug');
             green = minimumGreen + (CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen));
         }
 
@@ -311,8 +306,8 @@ define([
             var maximumBlue = defaultValue(options.maximumBlue, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            //>>includeEnd('debug');
             Check.typeOf.number.lessThanOrEquals('minimumBlue', minimumBlue, maximumBlue);
+            //>>includeEnd('debug');
 
             blue = minimumBlue + (CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue));
         }
@@ -323,8 +318,8 @@ define([
             var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            //>>includeEnd('debug');
             Check.typeOf.number.lessThanOrEquals('minumumAlpha', minimumAlpha, maximumAlpha);
+            //>>includeEnd('debug');
 
             alpha = minimumAlpha + (CesiumMath.nextRandomNumber() * (maximumAlpha - minimumAlpha));
         }
@@ -365,8 +360,8 @@ define([
      */
     Color.fromCssColorString = function(color, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('color', color);
         //>>includeEnd('debug');
-        Check.defined('color', color);
 
         if (!defined(result)) {
             result = new Color();
@@ -434,10 +429,9 @@ define([
      */
     Color.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
-
-        Check.defined('value', value);
-        Check.defined('array', array);
 
         startingIndex = defaultValue(startingIndex, 0);
         array[startingIndex++] = value.red;
@@ -458,8 +452,8 @@ define([
      */
     Color.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
-        Check.defined('array', array);
 
         startingIndex = defaultValue(startingIndex, 0);
         if (!defined(result)) {
@@ -660,10 +654,10 @@ define([
      */
     Color.prototype.brighten = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        //>>includeEnd('debug');
         Check.typeOf.number('magnitude', magnitude);
         Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
-        Check.defined('result', result);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
 
         magnitude = (1.0 - magnitude);
         result.red = 1.0 - ((1.0 - this.red) * magnitude);
@@ -685,10 +679,10 @@ define([
      */
     Color.prototype.darken = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        //>>includeEnd('debug');
         Check.typeOf.number('magnitude', magnitude);
         Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
-        Check.defined('result', result);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
 
         magnitude = (1.0 - magnitude);
         result.red = this.red * magnitude;
@@ -722,10 +716,10 @@ define([
      */
     Color.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-        Check.defined('left', left);
-        Check.defined('right', right);
-        Check.defined('result', result);
 
         result.red = left.red + right.red;
         result.green = left.green + right.green;
@@ -744,10 +738,10 @@ define([
      */
     Color.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-        Check.defined('left', left);
-        Check.defined('right', right);
-        Check.defined('result', result);
 
         result.red = left.red - right.red;
         result.green = left.green - right.green;
@@ -766,10 +760,10 @@ define([
      */
     Color.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-        Check.defined('left', left);
-        Check.defined('right', right);
-        Check.defined('result', result);
 
         result.red = left.red * right.red;
         result.green = left.green * right.green;
@@ -788,10 +782,10 @@ define([
      */
     Color.divide = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-        Check.defined('left', left);
-        Check.defined('right', right);
-        Check.defined('result', result);
 
         result.red = left.red / right.red;
         result.green = left.green / right.green;
@@ -810,10 +804,10 @@ define([
      */
     Color.mod = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
-        Check.defined('left', left);
-        Check.defined('right', right);
-        Check.defined('result', result);
 
         result.red = left.red % right.red;
         result.green = left.green % right.green;
@@ -832,10 +826,10 @@ define([
      */
     Color.multiplyByScalar = function(color, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        //>>includeEnd('debug');
-        Check.defined('color', color);
+        Check.typeOf.object('color', color);
         Check.typeOf.number('scalar', scalar);
-        Check.defined('result', result);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
 
         result.red = color.red * scalar;
         result.green = color.green * scalar;
@@ -854,10 +848,10 @@ define([
      */
     Color.divideByScalar = function(color, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        //>>includeEnd('debug');
-        Check.defined('color', color);
+        Check.typeOf.object('color', color);
         Check.typeOf.number('scalar', scalar);
-        Check.defined('result', result);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
 
         result.red = color.red / scalar;
         result.green = color.green / scalar;
