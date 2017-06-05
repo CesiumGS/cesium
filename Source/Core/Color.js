@@ -10,7 +10,6 @@ define([
         Check,
         defaultValue,
         defined,
-        DeveloperError,
         FeatureDetection,
         freezeObject,
         CesiumMath) {
@@ -141,7 +140,7 @@ define([
     Color.fromAlpha = function(color, alpha, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('color', color);
-        Check.typeOf.object('alpha', alpha);
+        Check.typeOf.number('alpha', alpha);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -360,7 +359,7 @@ define([
      */
     Color.fromCssColorString = function(color, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('color', color);
+        Check.typeOf.string('color', color);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
