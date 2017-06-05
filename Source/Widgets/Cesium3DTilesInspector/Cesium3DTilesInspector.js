@@ -203,16 +203,16 @@ define([
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
 
         optimizationPanelContents.appendChild(makeCheckbox('skipLevelOfDetail', 'Skip Tile LODs'));
-        var optSSEContainer = document.createElement('div');
-        optSSEContainer.appendChild(makeRangeInput('skipScreenSpaceErrorFactor', 1, 50, 1, 'Skip Screen Space Error Factor'));
-        optimizationPanelContents.appendChild(optSSEContainer);
-        var optBaseScreenSpaceError = document.createElement('div');
-        optBaseScreenSpaceError.appendChild(makeRangeInput('baseScreenSpaceError', 0, 4096, 1, 'Screen space error before skipping LOD'));
-        optimizationPanelContents.appendChild(optBaseScreenSpaceError);
-        var optSkipLevelsContainer = document.createElement('div');
-        optSkipLevelsContainer.appendChild(makeRangeInput('skipLevels', 0, 10, 1, 'Min. levels to skip when loading tiles'));
-        optimizationPanelContents.appendChild(optSkipLevelsContainer);
-        optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLOD', 'Load only tiles that meet the max. screen space error.'));
+        var skipScreenSpaceErrorFactorContainer = document.createElement('div');
+        skipScreenSpaceErrorFactorContainer.appendChild(makeRangeInput('skipScreenSpaceErrorFactor', 1, 50, 1, 'Skip SSE Factor'));
+        optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
+        var baseScreenSpaceError = document.createElement('div');
+        baseScreenSpaceError.appendChild(makeRangeInput('baseScreenSpaceError', 0, 4096, 1, 'SSE before skipping LOD'));
+        optimizationPanelContents.appendChild(baseScreenSpaceError);
+        var skipLevelsContainer = document.createElement('div');
+        skipLevelsContainer.appendChild(makeRangeInput('skipLevels', 0, 10, 1, 'Min. levels to skip'));
+        optimizationPanelContents.appendChild(skipLevelsContainer);
+        optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLevelOfDetail', 'Load only tiles that meet the max. SSE.'));
         optimizationPanelContents.appendChild(makeCheckbox('loadSiblings', 'Load siblings of visible tiles.'));
 
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);

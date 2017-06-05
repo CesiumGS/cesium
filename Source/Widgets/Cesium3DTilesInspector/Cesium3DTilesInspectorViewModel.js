@@ -700,7 +700,7 @@ define([
             set : function(value) {
                 skipLevelOfDetail(value);
                 if (defined(that._tileset)) {
-                    that._tileset.skipLevelOfDetail = skipLevelOfDetail;
+                    that._tileset.skipLevelOfDetail = value;
                 }
             }
         });
@@ -778,13 +778,13 @@ define([
          */
         this.skipLevels = 1;
 
-        var immediatelyLoadDesiredLOD = knockout.observable();
-        knockout.defineProperty(this, 'immediatelyLoadDesiredLOD', {
+        var immediatelyLoadDesiredLevelOfDetail = knockout.observable();
+        knockout.defineProperty(this, 'immediatelyLoadDesiredLevelOfDetail', {
             get : function() {
-                return immediatelyLoadDesiredLOD();
+                return immediatelyLoadDesiredLevelOfDetail();
             },
             set : function(value) {
-                immediatelyLoadDesiredLOD(value);
+                immediatelyLoadDesiredLevelOfDetail(value);
                 if (defined(that._tileset)) {
                     that._tileset.immediatelyLoadDesiredLevelOfDetail = value;
                 }
@@ -796,7 +796,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.immediatelyLoadDesiredLOD = false;
+        this.immediatelyLoadDesiredLevelOfDetail = false;
 
         var loadSiblings = knockout.observable();
         knockout.defineProperty(this, 'loadSiblings', {
@@ -822,7 +822,7 @@ define([
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
-                                   'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLOD', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
+                                   'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
                                    'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
@@ -951,7 +951,7 @@ define([
                     this.skipScreenSpaceErrorFactor = tileset.skipScreenSpaceErrorFactor;
                     this.baseScreenSpaceError = tileset.baseScreenSpaceError;
                     this.skipLevels = tileset.skipLevels;
-                    this.immediatelyLoadDesiredLOD = tileset.immediatelyLoadDesiredLevelOfDetail;
+                    this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
                     this.loadSiblings = tileset.loadSiblings;
                 } else {
                     this._properties({});
@@ -1091,17 +1091,17 @@ define([
     };
 
     /**
-     * Toggles the visibility of the optimization section
-     */
-    Cesium3DTilesInspectorViewModel.prototype.toggleOptimization = function() {
-        this.optimizationVisible = !this.optimizationVisible;
-    };
-
-    /**
      * Toggles the visibility of the tile Debug Info section
      */
     Cesium3DTilesInspectorViewModel.prototype.toggleTileDebugLabels = function() {
         this.tileDebugLabelsVisible = !this.tileDebugLabelsVisible;
+    };
+
+    /**
+     * Toggles the visibility of the optimization section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleOptimization = function() {
+        this.optimizationVisible = !this.optimizationVisible;
     };
 
     /**
