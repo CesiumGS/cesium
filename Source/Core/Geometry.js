@@ -69,8 +69,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options.attributes', options.attributes);
         //>>includeEnd('debug');
-        Check.defined('options.attributes', options.attributes);
 
         /**
          * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
@@ -173,8 +173,8 @@ define([
      */
     Geometry.computeNumberOfVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('geometry', geometry);
         //>>includeEnd('debug');
-        Check.defined('geometry', geometry);
 
         var numberOfVertices = -1;
         for ( var property in geometry.attributes) {
