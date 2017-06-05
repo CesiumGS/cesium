@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.35 - 2017-07-05
+
+* Fixed geocoder bug so geocoder can accurately handle NSEW inputs [#5407] (https://github.com/AnalyticalGraphicsInc/cesium/pull/5407)
+
 ### 1.34 - 2017-06-01
 
 * Breaking changes
