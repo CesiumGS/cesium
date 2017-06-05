@@ -429,7 +429,7 @@ define([
     Color.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('value', value);
-        Check.typeOf.object('array', array);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -451,7 +451,7 @@ define([
      */
     Color.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('array', array);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
