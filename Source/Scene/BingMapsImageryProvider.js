@@ -76,7 +76,7 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider

@@ -92,7 +92,7 @@ define([
      *                                        a tiled server.
      *
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -547,7 +547,7 @@ define([
         /**
          * Gets the comma-separated list of layer IDs to show.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * 
+         *
          * @type {String}
          */
         layers : {

@@ -1127,6 +1127,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1184,10 +1185,15 @@ define([
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
+        var basePath = defaultValue(options.basePath, getBaseUri(url, true));
 
         options = clone(options);
-        options.basePath = getBaseUri(url, true);
+        if (defined(options.basePath) && !defined(options.cacheKey)) {
+            cacheKey += basePath;
+        }
+
         options.cacheKey = cacheKey;
+        options.basePath = basePath;
         var model = new Model(options);
 
         options.headers = defined(options.headers) ? clone(options.headers) : {};
