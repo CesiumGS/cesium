@@ -266,7 +266,7 @@ define([
                 billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
                 billboard.disableDepthTestDistance = label._disableDepthTestDistance;
-                billboard._batchIndex = label._index;
+                billboard._batchIndex = label._batchIndex;
             }
         }
 
@@ -624,7 +624,6 @@ define([
      */
     LabelCollection.prototype.add = function(options) {
         var label = new Label(options, this);
-        label._index = this._labels.length;
 
         this._labels.push(label);
         this._labelsToUpdate.push(label);
