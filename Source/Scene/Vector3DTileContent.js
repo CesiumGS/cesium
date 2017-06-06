@@ -11,12 +11,14 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/NearFarScalar',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
@@ -43,12 +45,14 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         Ellipsoid,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
         CesiumMath,
         Matrix4,
+        NearFarScalar,
         Request,
         RequestScheduler,
         RequestType,
@@ -189,8 +193,8 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
+        url : {
+            get : function() {
                 return this._url;
             }
         },
@@ -202,6 +206,8 @@ define([
             get : function() {
                 return this._batchTable;
             }
+        }
+    });
 
     function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
@@ -219,8 +225,6 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchCartesian3 = new Cartesian3();
 
-    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-    var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
     function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
@@ -412,31 +416,15 @@ define([
             });
         }
 
-        var widths = new Array(numberOfPolylines);
-        batchIds = new Array(numberOfPolylines);
-        var polygonBatchOffset = numberOfPoints + numberOfPolygons;
-        for (i = 0; i < numberOfPolylines; ++i) {
-            widths[i] = 2.0;
-            batchIds[i] = i + polygonBatchOffset;
-
-            cartographic.height += 100.0;
-            var offsetPosition = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-
-            labelCollection.add({
-                text : labelText,
-                position : offsetPosition,
-                horizontalOrigin : HorizontalOrigin.CENTER,
-                distanceDisplayCondition : displayCondition
-            });
-            polylineCollection.add({
-                positions : [position, offsetPosition],
-                distanceDisplayCondition : displayCondition
-            });
-
-            content._batchTable.setColor(i, Color.WHITE);
-        }
-
         if (polylinePositions.length > 0) {
+            var widths = new Array(numberOfPolylines);
+            batchIds = new Array(numberOfPolylines);
+            var polygonBatchOffset = numberOfPoints + numberOfPolygons;
+            for (i = 0; i < numberOfPolylines; ++i) {
+                widths[i] = 2.0;
+                batchIds[i] = i + polygonBatchOffset;
+            }
+
             content._polylines = new GroundPolylineBatch({
                 positions : polylinePositions,
                 widths : widths,
@@ -448,6 +436,7 @@ define([
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable
+            });
         }
     }
 
@@ -530,6 +519,8 @@ define([
 
     var scratchColor = new Color();
     var scratchColor2 = new Color();
+    var scratchColor3 = new Color();
+    var scratchColor4 = new Color();
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -545,11 +536,11 @@ define([
             var feature = this.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
             feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
             feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);
-            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature);
+            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor3);
             feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
             feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
             feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
@@ -560,7 +551,7 @@ define([
             }
 
             if (defined(feature.anchorLineColor)) {
-                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature);
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor4);
             }
 
             var scaleByDistanceNearRange = style.scaleByDistanceNearRange;
