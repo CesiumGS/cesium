@@ -2607,7 +2607,6 @@ defineSuite([
                 scene.renderForSpecs();
                 expect(statistics.numberOfCommands).toBe(1); // Still renders expired content
                 return tile.contentReady;
-
             }).then(function() {
                 scene.renderForSpecs();
 
@@ -2713,6 +2712,28 @@ defineSuite([
             expect(tile._contentState).toBe(Cesium3DTileContentState.FAILED);
             expect(statistics.numberOfCommands).toBe(0);
             expect(statistics.numberTotal).toBe(1);
+        });
+    });
+
+    it('tile expiration date', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var tile = tileset._root;
+
+            // Trigger expiration to happen next frame
+            tile.expireDate = JulianDate.addSeconds(JulianDate.now(), -1.0, new JulianDate());
+
+            // Stays in the expired state until the request goes through
+            scene.renderForSpecs();
+            expect(tile.contentExpired).toBe(true);
+            expect(tile.expireDate).toBeUndefined();
+
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return tile.contentReady;
+            }).then(function() {
+                scene.renderForSpecs();
+                expect(tile._expiredContent).toBeUndefined();
+            });
         });
     });
 
