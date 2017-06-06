@@ -43,10 +43,11 @@ define([
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
-    function Cesium3DTileFeature(tileset, content, batchId, billboardCollection, labelCollection) {
+    function Cesium3DTileFeature(tileset, content, batchId, billboardCollection, labelCollection, polylineCollection) {
         this._content = content;
         this._billboardCollection = billboardCollection;
         this._labelCollection = labelCollection;
+        this._polylineCollection = content._polylineCollection;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
         this._billboardImage = undefined;
@@ -125,6 +126,10 @@ define([
                     var label = this._labelCollection.get(this._batchId);
                     label.fillColor = value;
                     setBillboardImage(this);
+                    if (defined(this._polylineCollection)) {
+                        var polyline = this._polylineCollection.get(this._batchId);
+                        polyline.show = value.alpha > 0.0;
+                    }
                 } else {
                     this._content.batchTable.setColor(this._batchId, value);
                 }
@@ -327,6 +332,209 @@ define([
         content : {
             get : function() {
                 return this._content;
+            }
+        },
+
+        /*
+         * Gets and sets the color for the anchor line.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         */
+        anchorLineColor : {
+            get : function() {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    return polyline.material.uniforms.color;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.material.uniforms.color = value;
+                }
+            }
+        },
+
+        font : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.font;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.font = value;
+                }
+            }
+        },
+
+        outlineColor : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.outlineColor;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.outlineColor = value;
+                }
+            }
+        },
+
+        outlineWidth : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.outlineWidth;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.outlineWidth = value;
+                }
+            }
+        },
+
+        labelStyle : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.style;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.style = value;
+                }
+            }
+        },
+
+        backgroundColor : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundColor;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundColor = value;
+                }
+            }
+        },
+
+        backgroundXPadding : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundPadding.x;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundPadding.x = value;
+                }
+            }
+        },
+
+        backgroundYPadding : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.backgroundPadding.y;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.backgroundPadding.y = value;
+                }
+            }
+        },
+
+        backgroundEnabled : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.showBackground;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.showBackground = value;
+                }
+            }
+        },
+
+        scaleByDistance : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.scaleByDistance;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.scaleByDistance = value;
+                }
+            }
+        },
+
+        translucencyByDistance : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.translucencyByDistance;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.translucencyByDistance = value;
+                }
+            }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    return label.distanceDisplayCondition;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._labelCollection)) {
+                    var label = this._labelCollection.get(this._batchId);
+                    label.distanceDisplayCondition = value;
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.distanceDisplayCondition = value;
+                }
             }
         }
     });

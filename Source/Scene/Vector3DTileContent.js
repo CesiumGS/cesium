@@ -80,6 +80,7 @@ define([
         this._polylines = undefined;
         this._billboardCollection = undefined;
         this._labelCollection = undefined;
+        this._polylineCollection = undefined;
 
         this._readyPromise = when.defer();
 
@@ -201,8 +202,6 @@ define([
             get : function() {
                 return this._batchTable;
             }
-        }
-    });
 
     function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
@@ -220,6 +219,8 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchCartesian3 = new Cartesian3();
 
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
     function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
@@ -417,6 +418,22 @@ define([
         for (i = 0; i < numberOfPolylines; ++i) {
             widths[i] = 2.0;
             batchIds[i] = i + polygonBatchOffset;
+
+            cartographic.height += 100.0;
+            var offsetPosition = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
+            labelCollection.add({
+                text : labelText,
+                position : offsetPosition,
+                horizontalOrigin : HorizontalOrigin.CENTER,
+                distanceDisplayCondition : displayCondition
+            });
+            polylineCollection.add({
+                positions : [position, offsetPosition],
+                distanceDisplayCondition : displayCondition
+            });
+
+            content._batchTable.setColor(i, Color.WHITE);
         }
 
         if (polylinePositions.length > 0) {
@@ -431,7 +448,6 @@ define([
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable
-            });
         }
     }
 
@@ -490,15 +506,22 @@ define([
     };
 
     function clearStyle(content) {
-        var length = content.featuresLength;
+        var length = content._featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
             feature.show = true;
             feature.color = Color.WHITE;
             feature.outlineColor = Color.BLACK;
-            feature.outlineWidth = 2.0;
+            feature.outlineWidth = 1.0;
             feature.labelStyle = LabelStyle.FILL;
             feature.font = '30px sans-serif';
+            feature.anchorLineColor = Color.WHITE;
+            feature.backgroundColor = 'rgba(42, 42, 42, 0.8)';
+            feature.backgroundXPadding = 7.0;
+            feature.backgroundYPadding = 5.0;
+            feature.backgroundEnabled = false;
+            feature.scaleByDistance = undefined;
+            feature.translucencyByDistance = undefined;
             feature.pointSize = 8.0;
             feature.text = ' ';
             feature.image = undefined;
@@ -517,19 +540,71 @@ define([
             return;
         }
 
-        var length = this.featuresLength;
+        var length = this._featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = this.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature);
             feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
             feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);
+            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature);
+            feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
+            feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
+            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
             feature.pointSize = style.pointSize.evaluate(frameState, feature);
             feature.text = style.text.evaluate(frameState, feature);
             if (defined(style.image)) {
                 feature.image = style.image.evaluate(frameState, feature);
+            }
+
+            if (defined(feature.anchorLineColor)) {
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature);
+            }
+
+            var scaleByDistanceNearRange = style.scaleByDistanceNearRange;
+            var scaleByDistanceNearValue = style.scaleByDistanceNearValue;
+            var scaleByDistanceFarRange = style.scaleByDistanceFarRange;
+            var scaleByDistanceFarValue = style.scaleByDistanceFarValue;
+
+            if (defined(scaleByDistanceNearRange) && defined(scaleByDistanceNearValue) &&
+                defined(scaleByDistanceFarRange) && defined(scaleByDistanceFarValue)) {
+                var nearRange = scaleByDistanceNearRange.evaluate(frameState, feature);
+                var nearValue = scaleByDistanceNearValue.evaluate(frameState, feature);
+                var farRange = scaleByDistanceFarRange.evaluate(frameState, feature);
+                var farValue = scaleByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.scaleByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            } else {
+                feature.scaleByDistance = undefined;
+            }
+
+            var translucencyByDistanceNearRange = style.translucencyByDistanceNearRange;
+            var translucencyByDistanceNearValue = style.translucencyByDistanceNearValue;
+            var translucencyByDistanceFarRange = style.translucencyByDistanceFarRange;
+            var translucencyByDistanceFarValue = style.translucencyByDistanceFarValue;
+
+            if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
+                defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
+                var tNearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
+                var tNearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
+                var tFarRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
+                var tFarValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+
+                feature.translucencyByDistance = new NearFarScalar(tNearRange, tNearValue, tFarRange, tFarValue);
+            } else {
+                feature.translucencyByDistance = undefined;
+            }
+
+            var distanceDisplayConditionNear = style.distanceDisplayConditionNear;
+            var distanceDisplayConditionFar = style.distanceDisplayConditionFar;
+
+            if (defined(distanceDisplayConditionNear) && defined(distanceDisplayConditionFar)) {
+                var near = distanceDisplayConditionNear.evaluate(frameState, feature);
+                var far = distanceDisplayConditionFar.evaluate(frameState, feature);
+
+                feature.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
             }
         }
     };
@@ -583,6 +658,8 @@ define([
         this._polylines = this._polylines && this._polylines.destroy();
         this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
+        this._polylineCollection = this._polylineCollection && this._polylineCollection.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 

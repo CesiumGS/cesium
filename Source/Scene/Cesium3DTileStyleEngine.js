@@ -2,20 +2,24 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
-        './Cesium3DTileStyle'
+        '../Core/DistanceDisplayCondition',
+        '../Core/NearFarScalar',
+        './LabelStyle'
     ], function(
         defined,
         defineProperties,
-        Cesium3DTileStyle) {
+        DistanceDisplayCondition,
+        NearFarScalar,
+        LabelStyle) {
     'use strict';
 
     /**
      * @private
      */
     function Cesium3DTileStyleEngine() {
-        this._style = new Cesium3DTileStyle(); // The style provided by the user
-        this._styleDirty = true;               // true when the style is reassigned
-        this._lastStyleTime = 0;               // The "time" when the last style was assigned
+        this._style = undefined;      // The style provided by the user
+        this._styleDirty = false;     // true when the style is reassigned
+        this._lastStyleTime = 0;      // The "time" when the last style was assigned
     }
 
     defineProperties(Cesium3DTileStyleEngine.prototype, {

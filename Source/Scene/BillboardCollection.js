@@ -1201,6 +1201,7 @@ define([
             writer(i + 3, near, far, disableDepthTestDistance);
         }
     }
+
     function writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         if (!defined(billboardCollection._batchTable)) {
             return;
@@ -1534,10 +1535,10 @@ define([
 
         this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
 
-        var vs;
-        var fs;
         var vsSource;
         var fsSource;
+        var vs;
+        var fs;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
