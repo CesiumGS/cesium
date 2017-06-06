@@ -39,6 +39,7 @@
     "compressible": "^2.0.9",
     "compression": "^1.6.2",
     "electron": "^1.6.1",
+    "eslint-config-cesium": "^1.0.0",
     "eslint-plugin-html": "^2.0.3",
     "event-stream": "^3.3.4",
     "express": "^4.15.0",
