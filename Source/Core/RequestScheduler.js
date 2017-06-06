@@ -160,16 +160,16 @@ define([
      * @private
      */
     RequestScheduler.clearForSpecs = function() {
-        var length = activeRequests.length;
-        for (var i = 0; i < length; ++i) {
-            cancelRequest(activeRequests[i]);
-        }
-        activeRequests.length = 0;
-
         while (requestHeap.length > 0) {
             var request = requestHeap.pop();
-            cancelRequest(request);
+            startRequest(request);
         }
+        var length = activeRequests.length;
+        for (var i = 0; i < length; ++i) {
+            activeRequests[i].state = RequestState.IGNORED;
+        }
+        activeRequests.length = 0;
+        numberOfActiveRequestsByServer = {};
 
         // Clear stats
         statistics.numberOfAttemptedRequests = 0;
@@ -206,8 +206,12 @@ define([
             if (request.state === RequestState.CANCELLED) {
                 return;
             }
-            --statistics.numberOfActiveRequests;
-            --numberOfActiveRequestsByServer[request.server];
+
+            if (request.state !== RequestState.IGNORED) {
+                --statistics.numberOfActiveRequests;
+                --numberOfActiveRequestsByServer[request.server];
+            }
+
             request.state = RequestState.RECEIVED;
             request.deferred.resolve(results);
         };
@@ -218,9 +222,13 @@ define([
             if (request.state === RequestState.CANCELLED) {
                 return;
             }
-            ++statistics.numberOfFailedRequests;
-            --statistics.numberOfActiveRequests;
-            --numberOfActiveRequestsByServer[request.server];
+
+            if (request.state !== RequestState.IGNORED) {
+                ++statistics.numberOfFailedRequests;
+                --statistics.numberOfActiveRequests;
+                --numberOfActiveRequestsByServer[request.server];
+            }
+
             request.state = RequestState.FAILED;
             request.deferred.reject(error);
         };

@@ -14,7 +14,8 @@ define([
         ACTIVE : 2,     // Actual http request has been sent.
         RECEIVED : 3,   // Request completed successfully.
         CANCELLED : 4,  // Request was cancelled, either explicitly or automatically because of low priority.
-        FAILED : 5      // Request failed.
+        FAILED : 5,     // Request failed.
+        IGNORED : 6     // For RequestScheduler.clearForSpecs - lets requests finish but doesn't contribute to statistics.
     };
 
     return freezeObject(RequestState);
