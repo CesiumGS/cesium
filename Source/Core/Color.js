@@ -1,15 +1,15 @@
 /*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './FeatureDetection',
         './freezeObject',
         './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
-        DeveloperError,
         FeatureDetection,
         freezeObject,
         CesiumMath) {
@@ -84,9 +84,7 @@ define([
      */
     Color.fromCartesian4 = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -141,12 +139,8 @@ define([
      */
     Color.fromAlpha = function(color, alpha, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
-        if (!defined(alpha)) {
-            throw new DeveloperError('alpha is required');
-        }
+        Check.typeOf.object('color', color);
+        Check.typeOf.number('alpha', alpha);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -288,9 +282,7 @@ define([
             var maximumRed = defaultValue(options.maximumRed, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            if (minimumRed > maximumRed) {
-                throw new DeveloperError("minimumRed must be less than or equal to maximumRed");
-            }
+            Check.typeOf.number.lessThanOrEquals('minimumRed', minimumRed, maximumRed);
             //>>includeEnd('debug');
 
             red = minimumRed + (CesiumMath.nextRandomNumber() * (maximumRed - minimumRed));
@@ -302,11 +294,8 @@ define([
             var maximumGreen = defaultValue(options.maximumGreen, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            if (minimumGreen > maximumGreen) {
-                throw new DeveloperError("minimumGreen must be less than or equal to maximumGreen");
-            }
+            Check.typeOf.number.lessThanOrEquals('minimumGreen', minimumGreen, maximumGreen);
             //>>includeEnd('debug');
-
             green = minimumGreen + (CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen));
         }
 
@@ -316,9 +305,7 @@ define([
             var maximumBlue = defaultValue(options.maximumBlue, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            if (minimumBlue > maximumBlue) {
-                throw new DeveloperError("minimumBlue must be less than or equal to maximumBlue");
-            }
+            Check.typeOf.number.lessThanOrEquals('minimumBlue', minimumBlue, maximumBlue);
             //>>includeEnd('debug');
 
             blue = minimumBlue + (CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue));
@@ -330,9 +317,7 @@ define([
             var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
 
             //>>includeStart('debug', pragmas.debug);
-            if (minimumAlpha > maximumAlpha) {
-                throw new DeveloperError("minimumAlpha must be less than or equal to maximumAlpha");
-            }
+            Check.typeOf.number.lessThanOrEquals('minumumAlpha', minimumAlpha, maximumAlpha);
             //>>includeEnd('debug');
 
             alpha = minimumAlpha + (CesiumMath.nextRandomNumber() * (maximumAlpha - minimumAlpha));
@@ -374,9 +359,7 @@ define([
      */
     Color.fromCssColorString = function(color, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required');
-        }
+        Check.typeOf.string('color', color);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -445,12 +428,8 @@ define([
      */
     Color.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -472,9 +451,7 @@ define([
      */
     Color.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -676,15 +653,9 @@ define([
      */
     Color.prototype.brighten = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(magnitude)) {
-            throw new DeveloperError('magnitude is required.');
-        }
-        if (magnitude < 0.0) {
-            throw new DeveloperError('magnitude must be positive.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.number('magnitude', magnitude);
+        Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         magnitude = (1.0 - magnitude);
@@ -707,15 +678,9 @@ define([
      */
     Color.prototype.darken = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(magnitude)) {
-            throw new DeveloperError('magnitude is required.');
-        }
-        if (magnitude < 0.0) {
-            throw new DeveloperError('magnitude must be positive.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.number('magnitude', magnitude);
+        Check.typeOf.number.greaterThanOrEquals('magnitude', magnitude, 0.0);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         magnitude = (1.0 - magnitude);
@@ -750,15 +715,9 @@ define([
      */
     Color.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = left.red + right.red;
@@ -778,15 +737,9 @@ define([
      */
     Color.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = left.red - right.red;
@@ -806,15 +759,9 @@ define([
      */
     Color.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = left.red * right.red;
@@ -834,15 +781,9 @@ define([
      */
     Color.divide = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = left.red / right.red;
@@ -862,15 +803,9 @@ define([
      */
     Color.mod = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('right is required');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = left.red % right.red;
@@ -890,15 +825,9 @@ define([
      */
     Color.multiplyByScalar = function(color, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('color', color);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = color.red * scalar;
@@ -918,15 +847,9 @@ define([
      */
     Color.divideByScalar = function(color, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required');
-        }
+        Check.typeOf.object('color', color);
+        Check.typeOf.number('scalar', scalar);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         result.red = color.red / scalar;
