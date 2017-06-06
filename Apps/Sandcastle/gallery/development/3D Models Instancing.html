@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Create 3D models using glTF.">
+    <meta name="description" content="Create instanced 3D models.">
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -28,15 +28,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var debugShowBoundingVolume = false;
-var debugWireframe = false;
-var globeVisible = true;
-
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    globe : globeVisible ? undefined : false,
-    skyAtmosphere : globeVisible ? undefined : false
-});
-
+var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var context = scene.context;
 var camera = viewer.camera;
@@ -53,21 +45,17 @@ var centerLatitude = 40.042530612;
 var height = 50.0;
 
 function orientCamera(center, radius) {
-    var controller = scene.screenSpaceCameraController;
-    var r = Math.max(radius, camera.frustum.near);
-
+    var range = Math.max(radius, camera.frustum.near) * 2.0;
     var heading = Cesium.Math.toRadians(230.0);
     var pitch = Cesium.Math.toRadians(-20.0);
-    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 2.0));
+    camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, range));
     camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 }
 
 function createCollection(instances) {
     var collection = scene.primitives.add(new Cesium.ModelInstanceCollection({
         url : url,
-        instances : instances,
-        debugShowBoundingVolume : debugShowBoundingVolume,
-        debugWireframe : debugWireframe
+        instances : instances
     }));
 
     collection.readyPromise.then(function(collection) {
@@ -96,9 +84,7 @@ function createModels(instances) {
 
         model = scene.primitives.add(Cesium.Model.fromGltf({
             url : url,
-            modelMatrix : modelMatrix,
-            debugShowBoundingVolume : debugShowBoundingVolume,
-            debugWireframe : debugWireframe
+            modelMatrix : modelMatrix
         }));
 
         model.readyPromise.then(function(model) {

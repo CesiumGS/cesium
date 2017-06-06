@@ -111,7 +111,7 @@ define([
         var data = this._data;
         var candidate = -1;
 
-        while (true) {
+        while (true) { // eslint-disable-line no-constant-condition
             var right = 2 * (index + 1);
             var left = right - 1;
 
@@ -126,7 +126,6 @@ define([
             }
             if (candidate !== index) {
                 swap(data, candidate, index);
-
                 index = candidate;
             } else {
                 break;

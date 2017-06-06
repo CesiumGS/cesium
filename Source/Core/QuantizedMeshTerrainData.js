@@ -77,6 +77,7 @@ define([
      *                  otherwise, false.
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
+     * @param {Credit[]} [options.credits] Array of credits for this tile.
      *
      *
      * @example
@@ -165,6 +166,7 @@ define([
         this._boundingSphere = options.boundingSphere;
         this._orientedBoundingBox = options.orientedBoundingBox;
         this._horizonOcclusionPoint = options.horizonOcclusionPoint;
+        this._credits = options.credits;
 
         var vertexCount = this._quantizedVertices.length / 3;
         var uValues = this._uValues = this._quantizedVertices.subarray(0, vertexCount);
@@ -199,6 +201,16 @@ define([
     }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
+        /**
+         * An array of credits for this tile.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Credit[]}
+         */
+        credits : {
+            get : function() {
+                return this._credits;
+            }
+        },
         /**
          * The water mask included in this terrain data, if any.  A water mask is a rectangular
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.

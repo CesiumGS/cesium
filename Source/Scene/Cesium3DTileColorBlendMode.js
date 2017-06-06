@@ -8,16 +8,11 @@ define([
     /**
      * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
      * the original feature, e.g. glTF material or per-point color in the tile.
-     *
-     * HIGHLIGHT multiplies the source color by the feature color
-     * REPLACE replaces the source color with the feature color
-     * MIX blends the source color and feature color together
-     *
-     * When REPLACE or MIX are used and the source color is a glTF material, the technique must assign the
-     * _3DTILESDIFFUSE semantic to the diffuse color parameter. Otherwise only HIGHLIGHT is supported.
-     *
-     * For example:
-     *
+     * <p>
+     * When <code>REPLACE</code> or <code>MIX</code> are used and the source color is a glTF material, the technique must assign the
+     * <code>_3DTILESDIFFUSE</code> semantic to the diffuse color parameter. Otherwise only <code>HIGHLIGHT</code> is supported.
+     * </p>
+     * <pre><code>
      * "techniques": {
      *   "technique0": {
      *     "parameters": {
@@ -28,12 +23,33 @@ define([
      *     }
      *   }
      * }
+     * </code></pre>
      *
      * @exports Cesium3DTileColorBlendMode
      */
     var Cesium3DTileColorBlendMode = {
+        /**
+         * Multiplies the source color by the feature color.
+         *
+         * @type {Number}
+         * @constant
+         */
         HIGHLIGHT : 0,
+
+        /**
+         * Replaces the source color with the feature color.
+         *
+         * @type {Number}
+         * @constant
+         */
         REPLACE : 1,
+
+        /**
+         * Blends the source color and feature color together.
+         *
+         * @type {Number}
+         * @constant
+         */
         MIX : 2
     };
 

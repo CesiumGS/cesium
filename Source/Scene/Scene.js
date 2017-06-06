@@ -1631,6 +1631,11 @@ define([
             return;
         }
 
+        if (command instanceof ClearCommand) {
+            command.execute(context, passState);
+            return;
+        }
+
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
         var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
@@ -2474,19 +2479,8 @@ define([
             scene._globeDepth.clear(context, passState, clearColor);
         }
 
-        // Determine if there are any translucent surfaces in any of the frustums.
-        var renderTranslucentCommands = false;
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
-                renderTranslucentCommands = true;
-                break;
-            }
-        }
-
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
             scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
@@ -2800,6 +2794,18 @@ define([
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
      * potentially be set depending on the type of primitive.
+     * <p>
+     * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+     * </p>
+     *
+     * @example
+     * // On mouse over, color the feature yellow.
+     * handler.setInputAction(function(movement) {
+     *     var feature = scene.pick(movement.endPosition);
+     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+     *         feature.color = Cesium.Color.YELLOW;
+     *     }
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      * @returns {Object} Object containing the picked primitive.
@@ -3339,6 +3345,28 @@ define([
         }
 
         return destroyObject(this);
+    };
+
+     /**
+     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in cartesian coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.cartesianToCanvasCoordinates(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
     };
 
     return Scene;

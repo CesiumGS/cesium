@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -9,7 +8,6 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -31,14 +29,12 @@ define([
         this._tileset = tileset;
         this._tile = tile;
         this._url = url;
+        this._readyPromise = when.defer();
 
         /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
-
-        this._readyPromise = when.defer();
 
         initialize(this, arrayBuffer, byteOffset);
     }
@@ -74,7 +70,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
                 return 0;
             }
@@ -83,7 +79,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
                 return 0;
             }
@@ -92,7 +88,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
                 return 0;
             }
@@ -117,14 +113,38 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         * @type {String}
-         * @readonly
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return undefined;
             }
         }
     });
@@ -171,8 +191,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Tileset3DTileContent.prototype.applyStyle = function(frameState, style) {
     };
 
     /**

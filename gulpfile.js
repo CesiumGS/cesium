@@ -1,4 +1,5 @@
 /*jslint node: true, latedef: nofunc*/
+/*eslint-env node*/
 'use strict';
 
 var fs = require('fs');
@@ -11,7 +12,7 @@ var readline = require('readline');
 var request = require('request');
 
 var globby = require('globby');
-var jshint = require('gulp-jshint');
+var eslint = require('gulp-eslint');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
@@ -22,7 +23,6 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var os = require('os');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
@@ -66,7 +66,7 @@ var buildFiles = ['Specs/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
 
-var jsHintFiles = ['Source/**/*.js',
+var eslintFiles = ['Source/**/*.js',
                    '!Source/Shaders/**',
                    '!Source/ThirdParty/**',
                    '!Source/Workers/cesiumWorkerBootstrapper.js',
@@ -233,24 +233,21 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
     });
 });
 
-gulp.task('jsHint', ['build'], function() {
-    var stream = gulp.src(jsHintFiles)
-        .pipe(jshint.extract('auto'))
-        .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'));
-
+gulp.task('eslint', ['build'], function() {
+    var stream = gulp.src(eslintFiles)
+        .pipe(eslint())
+        .pipe(eslint.format());
     if (yargs.argv.failTaskOnError) {
-        stream = stream.pipe(jshint.reporter('fail'));
+        stream = stream.pipe(eslint.failAfterError());
     }
     return stream;
 });
 
-gulp.task('jsHint-watch', function() {
-    gulp.watch(jsHintFiles).on('change', function(event) {
+gulp.task('eslint-watch', function() {
+    gulp.watch(eslintFiles).on('change', function(event) {
         gulp.src(event.path)
-            .pipe(jshint.extract('auto'))
-            .pipe(jshint())
-            .pipe(jshint.reporter('jshint-stylish'));
+            .pipe(eslint())
+            .pipe(eslint.format());
     });
 });
 
@@ -677,8 +674,7 @@ gulp.task('generateStubs', ['build'], function(done) {
     var contents = '\
 /*global define,Cesium*/\n\
 (function() {\n\
-\'use strict\';\n\
-/*jshint sub:true*/\n';
+\'use strict\';\n';
     var modulePathMappings = [];
 
     globby.sync(sourceFiles).forEach(function(file) {
@@ -1095,7 +1091,6 @@ function createCesiumJs() {
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
-  /*jshint sub:true*/\n\
   var Cesium = {\n\
     VERSION : "' + version + '",\n\
     _shaders : {}\n\
@@ -1115,7 +1110,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = '/*jshint unused: false*/\nvar specs = [' + specs.join(',') + '];';
+    var contents = '/*eslint-disable no-unused-vars*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -1175,7 +1170,7 @@ var gallery_demos = [' + demoJSONs.join(', ') + '];';
 }
 
 function createJsHintOptions() {
-    var primary = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
+    var primary = JSON.parse(fs.readFileSync(path.join('Apps', '.jshintrc'), 'utf8'));
     var gallery = JSON.parse(fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8'));
     primary.jasmine = false;
     primary.predef = gallery.predef;

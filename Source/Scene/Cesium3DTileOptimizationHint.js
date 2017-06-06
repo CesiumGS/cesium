@@ -6,11 +6,11 @@ define([
     'use strict';
 
     /**
-     * @private
-     * 
-     * @exports Cesium3DTileOptimizationHint
-     * 
      * Hint defining optimization support for a 3D tile
+     *
+     * @exports Cesium3DTileOptimizationHint
+     *
+     * @private
      */
     var Cesium3DTileOptimizationHint = {
         NOT_COMPUTED: -1,

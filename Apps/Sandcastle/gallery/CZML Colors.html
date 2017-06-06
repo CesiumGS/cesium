@@ -34,7 +34,7 @@ var czml = [{
     "version" : "1.0"
 }, {
     "id" : "rgba",
-    "name" : "Rectangle using RGBA Colors",
+    "name" : "Rectangle with outline using RGBA Colors",
     "rectangle" : {
         "coordinates" : {
             "wsenDegrees" : [-120, 40, -110, 50]
@@ -46,6 +46,11 @@ var czml = [{
                     "rgba" : [255, 0, 0, 100]
                 }
             }
+        },
+        "height" : 0, // disables ground clamping, needed for outlines
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
         }
     }
 }, {
@@ -60,6 +65,11 @@ var czml = [{
                     "rgbaf" : [1, 0, 0, 0.39]
                 }
             }
+        },
+        "height" : 0, // disables ground clamping, needed for outlines
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
         }
     }
 }];

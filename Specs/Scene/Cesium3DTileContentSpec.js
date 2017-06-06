@@ -17,19 +17,31 @@ defineSuite([
             return content.trianglesLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.vertexMemorySizeInBytes;
+            return content.geometryByteLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.textureMemorySizeInBytes;
+            return content.texturesByteLength;
         }).toThrowDeveloperError();
         expect(function() {
-            return content.batchTableMemorySizeInBytes;
+            return content.batchTableByteLength;
         }).toThrowDeveloperError();
         expect(function() {
             return content.innerContents;
         }).toThrowDeveloperError();
         expect(function() {
             return content.readyPromise;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.tileset;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.tile;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.url;
+        }).toThrowDeveloperError();
+        expect(function() {
+            return content.batchTable;
         }).toThrowDeveloperError();
         expect(function() {
             return content.hasProperty(0, 'height');
@@ -41,7 +53,7 @@ defineSuite([
             content.applyDebugSettings();
         }).toThrowDeveloperError();
         expect(function() {
-            content.applyStyleWithShader();
+            content.applyStyle();
         }).toThrowDeveloperError();
         expect(function() {
             content.update();

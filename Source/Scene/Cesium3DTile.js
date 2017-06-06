@@ -1,88 +1,60 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/getExtensionFromUri',
         '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
         '../Core/Intersect',
         '../Core/joinUrls',
         '../Core/JulianDate',
         '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
-        '../Core/RectangleOutlineGeometry',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
-        '../Core/SphereOutlineGeometry',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
-        './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
-        './PerInstanceColorAppearance',
-        './Primitive',
         './SceneMode',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
         BoundingSphere,
-        BoxOutlineGeometry,
         Cartesian3,
         Color,
-        ColorGeometryInstanceAttribute,
-        clone,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        getExtensionFromUri,
         getMagic,
-        getStringFromTypedArray,
         Intersect,
         joinUrls,
         JulianDate,
         loadArrayBuffer,
         Matrix3,
         Matrix4,
-        OrientedBoundingBox,
         Rectangle,
-        RectangleOutlineGeometry,
         Request,
         RequestScheduler,
         RequestType,
-        SphereOutlineGeometry,
-        Uri,
         when,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
-        Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Empty3DTileContent,
-        PerInstanceColorAppearance,
-        Primitive,
         SceneMode,
         TileBoundingRegion,
         TileBoundingSphere,
@@ -91,8 +63,7 @@ define([
 
     /**
      * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;
-     * the content is loaded on-demand when needed based on the view using
-     * {@link Cesium3DTile#requestContent}.
+     * the content is loaded on-demand when needed based on the view.
      * <p>
      * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
      * </p>
@@ -100,7 +71,7 @@ define([
      * @alias Cesium3DTile
      * @constructor
      */
-    function Cesium3DTile(tileset, baseUrl, header, parent) {
+    function Cesium3DTile(tileset, basePath, header, parent) {
         this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
@@ -117,6 +88,7 @@ define([
         /**
          * The final computed transform of this tile
          * @type {Matrix4}
+         * @readonly
          */
         this.computedTransform = computedTransform;
 
@@ -126,9 +98,9 @@ define([
         var contentBoundingVolume;
 
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
-            // Non-leaf tiles may have a content-box bounding-volume, which is a tight-fit box
+            // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
             // around only the models in the tile.  This box is useful for culling for rendering,
-            // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
+            // but not for culling for traversing the tree since it does not guarantee spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
             contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
@@ -142,11 +114,9 @@ define([
         }
         this._viewerRequestVolume = viewerRequestVolume;
 
-        this._commandsLength = 0;
-
         /**
          * The error, in meters, introduced if this tile is rendered and its children are not.
-         * This is used to compute Screen-Space Error (SSE), i.e., the error measured in pixels.
+         * This is used to compute screen space error, i.e., the error measured in pixels.
          *
          * @type {Number}
          * @readonly
@@ -159,6 +129,8 @@ define([
         } else if (defined(parent)) {
             // Inherit from parent tile if omitted.
             refine = parent.refine;
+        } else {
+            refine = Cesium3DTileRefine.REPLACE;
         }
 
         /**
@@ -166,8 +138,9 @@ define([
          *
          * @type {Cesium3DTileRefine}
          * @readonly
+         * @private
          */
-        this.refine = defaultValue(refine, Cesium3DTileRefine.REPLACE);
+        this.refine = refine;
 
         /**
          * An array of {@link Cesium3DTile} objects that are this tile's children.
@@ -199,10 +172,10 @@ define([
         if (defined(contentHeader)) {
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
-            contentUrl = joinUrls(baseUrl, contentHeader.url);
+            contentUrl = joinUrls(basePath, contentHeader.url);
             requestServer = RequestScheduler.getRequestServer(contentUrl);
         } else {
-            content = new Empty3DTileContent();
+            content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
             contentState = Cesium3DTileContentState.READY;
         }
@@ -276,6 +249,7 @@ define([
          * The time in seconds after the tile's content is ready when the content expires and new content is requested.
          *
          * @type {Number}
+         * @readonly
          */
         this.expireDuration = expireDuration;
 
@@ -283,19 +257,9 @@ define([
          * The date when the content expires and new content is requested.
          *
          * @type {JulianDate}
+         * @readonly
          */
         this.expireDate = expireDate;
-
-        // Members that are updated every frame for tree traversal and rendering optimizations:
-
-        /**
-         * The (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.distanceToCamera = 0;
 
         /**
          * Marks if the tile is selected this frame.
@@ -306,32 +270,6 @@ define([
          */
         this.selected = false;
 
-        /**
-         * The stored plane mask from the visibility check during tree traversal.
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.visibilityPlaneMask = true;
-
-        /**
-         * Flag to mark children visibility
-         *
-         * @type {Cesium3DTileChildrenVisibility}
-         *
-         * @private
-         */
-        this.childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
-
-        /**
-         * The last frame number the tile was selected in.
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.lastSelectedFrameNumber = 0;
 
         /**
          * The time when a style was last applied to this tile.
@@ -342,19 +280,20 @@ define([
          */
         this.lastStyleTime = 0;
 
-        this._debugBoundingVolume = undefined;
-        this._debugContentBoundingVolume = undefined;
-        this._debugViewerRequestVolume = undefined;
-        this._debugColor = new Color.fromRandom({ alpha : 1.0 });
-        this._debugColorizeTiles = false;
-
         /**
          * Marks whether the tile's children bounds are fully contained within the tile's bounds
          *
          * @type {Cesium3DTileOptimizationHint}
+         *
+         * @private
          */
         this._optimChildrenWithinParent = Cesium3DTileOptimizationHint.NOT_COMPUTED;
 
+        // Members that are updated every frame for tree traversal and rendering optimizations:
+        this._distanceToCamera = 0;
+        this._visibilityPlaneMask = 0;
+        this._childrenVisibility = Cesium3DTileChildrenVisibility.VISIBLE;
+        this._lastSelectedFrameNumber = -1;
         this._screenSpaceError = 0;
         this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
@@ -369,11 +308,36 @@ define([
         this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
+
+        this._debugBoundingVolume = undefined;
+        this._debugContentBoundingVolume = undefined;
+        this._debugViewerRequestVolume = undefined;
+        this._debugColor = Color.fromRandom({ alpha : 1.0 });
+        this._debugColorizeTiles = false;
+
+        this._commandsLength = 0;
+
+        this._color = undefined;
+        this._colorDirty = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {
         /**
-         * The tile's loaded content.  This represents the actual tile's payload,
+         * The tileset containing this tile.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Cesium3DTileset}
+         * @readonly
+         */
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * The tile's content.  This represents the actual tile's payload,
          * not the content's metadata in tileset.json.
          *
          * @memberof Cesium3DTile.prototype
@@ -396,6 +360,7 @@ define([
          *
          * @type {TileBoundingVolume}
          * @readonly
+         * @private
          */
         contentBoundingVolume : {
             get : function() {
@@ -418,6 +383,30 @@ define([
         },
 
         /**
+         * Gets and sets the tile's highlight color.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         *
+         * @private
+         */
+        color : {
+            get : function() {
+                if (!defined(this._color)) {
+                    this._color = new Color();
+                }
+                return Color.clone(this._color);
+            },
+            set : function(value) {
+                this._color = Color.clone(value, this._color);
+                this._colorDirty = true;
+            }
+        },
+
+        /**
          * @readonly
          * @private
          */
@@ -436,6 +425,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentAvailable : {
             get : function() {
@@ -451,6 +442,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentReady : {
             get : function() {
@@ -466,6 +459,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentUnloaded : {
             get : function() {
@@ -481,6 +476,8 @@ define([
          *
          * @type {Boolean}
          * @readonly
+         *
+         * @private
          */
         contentExpired : {
             get : function() {
@@ -525,6 +522,19 @@ define([
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+            }
+        },
+
+        /**
+         * Returns the number of draw commands used by this tile.
+         *
+         * @readonly
+         *
+         * @private
+         */
+        commandsLength : {
+            get : function() {
+                return this._commandsLength;
             }
         }
     });
@@ -576,7 +586,7 @@ define([
             return false;
         }
 
-        if (!this.canRequestContent()) {
+        if (!this._requestServer.hasAvailableRequests()) {
             return false;
         }
 
@@ -587,7 +597,7 @@ define([
             url = joinUrls(url, timestampQuery, false);
         }
 
-        var distance = this.distanceToCamera;
+        var distance = this._distanceToCamera;
         var promise = RequestScheduler.schedule(new Request({
             url : url,
             server : this._requestServer,
@@ -635,7 +645,6 @@ define([
                 updateExpireDate(that);
 
                 // Refresh style for expired content
-                that.lastSelectedFrameNumber = 0;
                 that.lastStyleTime = 0;
 
                 that._contentState = Cesium3DTileContentState.READY;
@@ -654,24 +663,8 @@ define([
     };
 
     /**
-     * Determines if a request for the tile's content can be made based on the priorities of
-     * the request scheduler.
-     *
-     * @returns {Boolean} <code>true</code> when the content request can be made; otherwise, <code>false</false>.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.canRequestContent = function() {
-        if (!defined(this._requestServer)) {
-            // If tile does not have a request server, then it does not have content to load.
-            return true;
-        }
-        return this._requestServer.hasAvailableRequests();
-    };
-
-    /**
      * Unloads the tile's content and returns the tile's state to the state of when
-     * it was first created, before its content were loaded.
+     * it was first created, before its content was loaded.
      *
      * @private
      */
@@ -687,7 +680,6 @@ define([
 
         this.replacementNode = undefined;
 
-        this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
 
         this._debugColorizeTiles = false;
@@ -707,6 +699,15 @@ define([
         }
 
         return frameState.mode !== SceneMode.SCENE3D ? tile._boundingVolume2D : tile._boundingVolume;
+    }
+
+    function getContentBoundingVolume(tile, frameState) {
+        if (frameState.mode !== SceneMode.SCENE3D && !defined(tile._contentBoundingVolume2D)) {
+            var boundingSphere = tile._contentBoundingVolume.boundingSphere;
+            var sphere = BoundingSphere.projectTo2D(boundingSphere, frameState.mapProjection, scratchProjectedBoundingSphere);
+            tile._contentBoundingVolume2D = new TileBoundingSphere(sphere.center, sphere.radius);
+        }
+        return frameState.mode !== SceneMode.SCENE3D ? tile._contentBoundingVolume2D : tile._contentBoundingVolume;
     }
 
     /**
@@ -740,15 +741,10 @@ define([
             return Intersect.INSIDE;
         }
 
-        if (frameState.mode !== SceneMode.SCENE3D && !defined(this._contentBoundingVolume2D)) {
-            var boundingSphere = this._contentBoundingVolume.boundingSphere;
-            this._contentBoundingVolume2D = BoundingSphere.projectTo2D(boundingSphere);
-        }
-
         // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
         // tile's (not the content's) bounding volume intersects the culling volume?
         var cullingVolume = frameState.cullingVolume;
-        var boundingVolume = frameState.mode !== SceneMode.SCENE3D ? this._contentBoundingVolume2D : this._contentBoundingVolume;
+        var boundingVolume = getContentBoundingVolume(this, frameState);
         return cullingVolume.computeVisibility(boundingVolume);
     };
 
@@ -764,7 +760,6 @@ define([
         var boundingVolume = getBoundingVolume(this, frameState);
         return boundingVolume.distanceToCamera(frameState);
     };
-
 
     var scratchCartesian = new Cartesian3();
 
@@ -790,6 +785,8 @@ define([
      *
      * @param {FrameState} frameState The frame state.
      * @returns {Boolean} Whether the camera is inside the volume.
+     *
+     * @private
      */
     Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
         var viewerRequestVolume = this._viewerRequestVolume;
@@ -899,7 +896,6 @@ define([
     };
 
     function applyDebugSettings(tile, tileset, frameState) {
-        // Tiles do not have a content.boundingVolume if it is the same as the tile's boundingVolume.
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
@@ -931,12 +927,24 @@ define([
             tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
         }
 
-        if (tileset.debugColorizeTiles && !tile._debugColorizeTiles) {
+        var debugColorizeTilesOn = tileset.debugColorizeTiles && !tile._debugColorizeTiles;
+        var debugColorizeTilesOff = !tileset.debugColorizeTiles && tile._debugColorizeTiles;
+
+        if (debugColorizeTilesOn) {
             tile._debugColorizeTiles = true;
-            tile._content.applyDebugSettings(true, tile._debugColor);
-        } else if (!tileset.debugColorizeTiles && tile._debugColorizeTiles) {
+            tile.color = tile._debugColor;
+        } else if (debugColorizeTilesOff) {
             tile._debugColorizeTiles = false;
-            tile._content.applyDebugSettings(false, tile._debugColor);
+            tile.color = Color.WHITE;
+        }
+
+        if (tile._colorDirty) {
+            tile._colorDirty = false;
+            tile._content.applyDebugSettings(true, tile._color);
+        }
+
+        if (debugColorizeTilesOff) {
+            tileset.makeStyleDirty(); // Re-apply style now that colorize is switched off
         }
     }
 

@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defaultValue',
-        './defined',
         './defineProperties',
         './Check'
     ], function(
         defaultValue,
-        defined,
         defineProperties,
         Check) {
     'use strict';
@@ -27,7 +25,6 @@ define([
     }
 
     defineProperties(ManagedArray.prototype, {
-
         /**
          * Gets or sets the length of the array.
          * If the set length is greater than the length of the internal array, the internal array is resized.
@@ -38,7 +35,6 @@ define([
             get : function() {
                 return this._length;
             },
-
             set : function(length) {
                 this._length = length;
                 if (length > this._array.length) {

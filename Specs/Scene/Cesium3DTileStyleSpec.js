@@ -561,24 +561,6 @@ defineSuite([
         expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
     });
 
-    it('applies show style with complex conditional', function() {
-        var style = new Cesium3DTileStyle({
-            "show" : {
-                "expression" : "${Height}",
-                "conditions" : [
-                    ["(${expression} >= 1.0)  && (${expression} < 10.0)", "true"],
-                    ["(${expression} >= 10.0) && (${expression} < 30.0)", "false"],
-                    ["(${expression} >= 30.0) && (${expression} < 50.0)", "true"],
-                    ["(${expression} >= 50.0) && (${expression} < 70.0)", "false"],
-                    ["(${expression} >= 70.0) && (${expression} < 100.0)", "true"],
-                    ["(${expression} >= 100.0)", "false"]
-                ]
-            }
-        });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(false);
-        expect(style.show.evaluate(frameState, feature2)).toEqual(true);
-    });
-
     it('applies show style with conditional', function() {
         var style = new Cesium3DTileStyle({
             "show" : {
@@ -616,11 +598,13 @@ defineSuite([
 
     it('applies color style that maps id to color', function() {
         var style = new Cesium3DTileStyle({
+            "expressions" : {
+                "id" : "regExp('^1(\\d)').exec(String(${id}))"
+            },
             "color" : {
-                "expression" : "regExp('^1(\\d)').exec(String(${id}))",
                 "conditions" : [
-                    ["${expression} === '1'", "color('#FF0000')"],
-                    ["${expression} === '2'", "color('#00FF00')"],
+                    ["${id} === '1'", "color('#FF0000')"],
+                    ["${id} === '2'", "color('#00FF00')"],
                     ["true", "color('#FFFFFF')"]
                 ]
             }
@@ -628,25 +612,6 @@ defineSuite([
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.RED);
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.LIME);
-    });
-
-    it('applies color style with complex conditional', function() {
-        var style = new Cesium3DTileStyle({
-            "color" : {
-                "expression" : "${Height}",
-                "conditions" : [
-                    ["(${expression} >= 1.0)  && (${expression} < 10.0)", "color('#FF00FF')"],
-                    ["(${expression} >= 10.0) && (${expression} < 30.0)", "color('#FF0000')"],
-                    ["(${expression} >= 30.0) && (${expression} < 50.0)", "color('#FFFF00')"],
-                    ["(${expression} >= 50.0) && (${expression} < 70.0)", "color('#00FF00')"],
-                    ["(${expression} >= 70.0) && (${expression} < 100.0)", "color('#00FFFF')"],
-                    ["(${expression} >= 100.0)", "color('#0000FF')"]
-                ]
-            }
-        });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
-        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.BLUE);
-        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.YELLOW);
     });
 
     it('applies color style with conditional', function() {
@@ -685,24 +650,6 @@ defineSuite([
         expect(style.pointSize.evaluate(frameState, feature2)).toEqual(1.0);
     });
 
-    it('applies pointSize style with complex conditional', function() {
-        var style = new Cesium3DTileStyle({
-            "pointSize" : {
-                "expression" : "${Height}",
-                "conditions" : [
-                    ["(${expression} >= 1.0)  && (${expression} < 10.0)", "1"],
-                    ["(${expression} >= 10.0) && (${expression} < 30.0)", "2"],
-                    ["(${expression} >= 30.0) && (${expression} < 50.0)", "3"],
-                    ["(${expression} >= 50.0) && (${expression} < 70.0)", "4"],
-                    ["(${expression} >= 70.0) && (${expression} < 100.0)", "5"],
-                    ["(${expression} >= 100.0)", "6"]
-                ]
-            }
-        });
-        expect(style.pointSize.evaluate(frameState, feature1)).toEqual(6);
-        expect(style.pointSize.evaluate(frameState, feature2)).toEqual(3);
-    });
-
     it('applies pointSize style with conditional', function() {
         var style = new Cesium3DTileStyle({
             "pointSize" : {
@@ -718,6 +665,36 @@ defineSuite([
         });
         expect(style.pointSize.evaluate(frameState, feature1)).toEqual(6);
         expect(style.pointSize.evaluate(frameState, feature2)).toEqual(3);
+    });
+
+    it('applies with additional expressions', function() {
+        var style = new Cesium3DTileStyle({
+            "expressions" : {
+                "halfHeight" : "${Height} / 2",
+                "quarterHeight" : "${Height} / 4",
+                "halfVolume" : "${volume} / 2"
+            },
+            "color" : {
+                "conditions" : [
+                    ["(${halfHeight} >= 25.0)", "color('red')"],
+                    ["(${Height} >= 1.0)", "color('blue')"]
+                ]
+            },
+            "show" : "(${quarterHeight} >= 20.0)",
+            "pointSize" : "${halfVolume} + ${halfHeight}",
+            "meta" : {
+                "description" : "'Half height is ' + ${halfHeight}"
+            }
+        });
+
+        expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.RED);
+        expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.BLUE);
+        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
+        expect(style.show.evaluate(frameState, feature2)).toEqual(false);
+        expect(style.pointSize.evaluate(frameState, feature1)).toEqual(114);
+        expect(style.pointSize.evaluate(frameState, feature2)).toEqual(44);
+        expect(style.meta.description.evaluate(frameState, feature1)).toEqual('Half height is 50');
+        expect(style.meta.description.evaluate(frameState, feature2)).toEqual('Half height is 19');
     });
 
     it('return undefined shader functions when the style is empty', function() {

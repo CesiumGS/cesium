@@ -31,12 +31,13 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var greenCircle = viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-111.0, 40.0, 150000.0),
-    name : 'Green circle at height',
+    name : 'Green circle at height with outline',
     ellipse : {
         semiMinorAxis : 300000.0,
         semiMajorAxis : 300000.0,
         height: 200000.0,
-        material : Cesium.Color.GREEN
+        material : Cesium.Color.GREEN,
+        outline : true // height must be set for outline to display
     }
 });
 
@@ -52,13 +53,14 @@ var redEllipse = viewer.entities.add({
 
 var blueEllipse = viewer.entities.add({
     position: Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 100000.0),
-    name : 'Blue translucent, rotated, and extruded ellipse',
+    name : 'Blue translucent, rotated, and extruded ellipse with outline',
     ellipse : {
         semiMinorAxis : 150000.0,
         semiMajorAxis : 300000.0,
         extrudedHeight : 200000.0,
         rotation : Cesium.Math.toRadians(45),
-        material : Cesium.Color.BLUE.withAlpha(0.5)
+        material : Cesium.Color.BLUE.withAlpha(0.5),
+        outline : true
     }
 });
 

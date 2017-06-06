@@ -5,7 +5,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/isArray',
         '../Core/loadJson',
         '../Core/RequestScheduler',
         '../ThirdParty/when',
@@ -18,7 +17,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        isArray,
         loadJson,
         RequestScheduler,
         when,
@@ -59,8 +57,6 @@ define([
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
      * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(data) {
         this._style = undefined;
@@ -104,7 +100,7 @@ define([
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
         if (!defined(styleJson.color)) {
-            // If there is no color style do not create a shader function. Otherwise a function would be created by the default style (white).
+            // If there is no color style do not create a shader function.
             that._colorShaderFunctionReady = true;
         }
 
@@ -114,6 +110,7 @@ define([
         }
 
         if (!defined(styleJson.pointSize)) {
+            // If there is no point size style do not create a shader function.
             that._pointSizeShaderFunctionReady = true;
         }
 
@@ -127,33 +124,35 @@ define([
         var textExpression = defaultValue(styleJson.text, DEFAULT_TEXT_EXPRESSION);
         var imageExpression = styleJson.image;
 
+        var expressions = styleJson.expressions;
+
         var color;
         if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression);
+            color = new Expression(colorExpression, expressions);
         } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression);
+            color = new ConditionsExpression(colorExpression, expressions);
         }
 
         that._color = color;
 
         var show;
         if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression));
+            show = new Expression(String(showExpression), expressions);
         } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression);
+            show = new Expression(showExpression, expressions);
         } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression);
+            show = new ConditionsExpression(showExpression, expressions);
         }
 
         that._show = show;
 
         var pointSize;
         if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression));
+            pointSize = new Expression(String(pointSizeExpression), expressions);
         } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression);
+            pointSize = new Expression(pointSizeExpression, expressions);
         } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression);
+            pointSize = new ConditionsExpression(pointSizeExpression, expressions);
         }
 
         that._pointSize = pointSize;
@@ -221,7 +220,7 @@ define([
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
-                    meta[property] = new Expression(metaJson[property]);
+                    meta[property] = new Expression(metaJson[property], expressions);
                 }
             }
         }

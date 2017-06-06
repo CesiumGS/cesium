@@ -2,12 +2,14 @@
 define([
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
         Cartesian2,
         Cartesian3,
+        Check,
         defined,
         DeveloperError,
         CesiumMath) {
@@ -40,12 +42,8 @@ define([
      */
     AttributeCompression.octEncodeInRange = function(vector, rangeMax, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(vector)) {
-            throw new DeveloperError('vector is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('vector', vector);
+        Check.defined('result', result);
         var magSquared = Cartesian3.magnitudeSquared(vector);
         if (Math.abs(magSquared - 1.0) > CesiumMath.EPSILON6) {
             throw new DeveloperError('vector must be normalized.');
@@ -98,9 +96,7 @@ define([
      */
     AttributeCompression.octDecodeInRange = function(x, y, rangeMax, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('result', result);
         if (x < 0 || x > rangeMax || y < 0 || y > rangeMax) {
             throw new DeveloperError('x and y must be a signed normalized integer between 0 and ' + rangeMax);
         }
@@ -145,9 +141,7 @@ define([
      */
     AttributeCompression.octPackFloat = function(encoded) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(encoded)) {
-            throw new DeveloperError('encoded is required.');
-        }
+        Check.defined('encoded', encoded);
         //>>includeEnd('debug');
         return 256.0 * encoded.x + encoded.y;
     };
@@ -178,9 +172,7 @@ define([
      */
     AttributeCompression.octDecodeFloat = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('value', value);
         //>>includeEnd('debug');
 
         var temp = value / 256.0;
@@ -203,18 +195,10 @@ define([
      */
     AttributeCompression.octPack = function(v1, v2, v3, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(v1)) {
-            throw new DeveloperError('v1 is required.');
-        }
-        if (!defined(v2)) {
-            throw new DeveloperError('v2 is required.');
-        }
-        if (!defined(v3)) {
-            throw new DeveloperError('v3 is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('v1', v1);
+        Check.defined('v2', v2);
+        Check.defined('v3', v3);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var encoded1 = AttributeCompression.octEncodeFloat(v1);
@@ -236,18 +220,10 @@ define([
      */
     AttributeCompression.octUnpack = function(packed, v1, v2, v3) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(packed)) {
-            throw new DeveloperError('packed is required.');
-        }
-        if (!defined(v1)) {
-            throw new DeveloperError('v1 is required.');
-        }
-        if (!defined(v2)) {
-            throw new DeveloperError('v2 is required.');
-        }
-        if (!defined(v3)) {
-            throw new DeveloperError('v3 is required.');
-        }
+        Check.defined('packed', packed);
+        Check.defined('v1', v1);
+        Check.defined('v2', v2);
+        Check.defined('v3', v3);
         //>>includeEnd('debug');
 
         var temp = packed.x / 65536.0;
@@ -272,9 +248,7 @@ define([
      */
     AttributeCompression.compressTextureCoordinates = function(textureCoordinates) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(textureCoordinates)) {
-            throw new DeveloperError('textureCoordinates is required.');
-        }
+        Check.defined('textureCoordinates', textureCoordinates);
         //>>includeEnd('debug');
 
         // Move x and y to the range 0-4095;
@@ -293,12 +267,8 @@ define([
      */
     AttributeCompression.decompressTextureCoordinates = function(compressed, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(compressed)) {
-            throw new DeveloperError('compressed is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('compressed', compressed);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var temp = compressed / 4096.0;

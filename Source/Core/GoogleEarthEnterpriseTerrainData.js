@@ -45,6 +45,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {ArrayBuffer} options.buffer The buffer containing terrain data.
+     * @param {Number} options.negativeAltitudeExponentBias Multiplier for negative terrain heights that are encoded as very small positive values.
+     * @param {Number} options.negativeElevationThreshold Threshold for negative values
      * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
@@ -58,6 +60,7 @@ define([
      *                 </table>
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
+     * @param {Credit[]} [options.credits] Array of credits for this tile.
      *
      *
      * @example
@@ -76,9 +79,14 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options.buffer', options.buffer);
+        Check.typeOf.number('options.negativeAltitudeExponentBias', options.negativeAltitudeExponentBias);
+        Check.typeOf.number('options.negativeElevationThreshold', options.negativeElevationThreshold);
         //>>includeEnd('debug');
 
         this._buffer = options.buffer;
+        this._credits = options.credits;
+        this._negativeAltitudeExponentBias = options.negativeAltitudeExponentBias;
+        this._negativeElevationThreshold = options.negativeElevationThreshold;
 
         // Convert from google layout to layout of other providers
         // 3 2 -> 2 3
@@ -102,6 +110,16 @@ define([
     }
 
     defineProperties(GoogleEarthEnterpriseTerrainData.prototype, {
+        /**
+         * An array of credits for this tile
+         * @memberof GoogleEarthEnterpriseTerrainData.prototype
+         * @type {Credit[]}
+         */
+        credits : {
+            get : function() {
+                return this._credits;
+            }
+        },
         /**
          * The water mask included in this terrain data, if any.  A water mask is a rectangular
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
@@ -163,7 +181,9 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
             exaggeration : exaggeration,
-            includeWebMercatorT : true
+            includeWebMercatorT : true,
+            negativeAltitudeExponentBias: this._negativeAltitudeExponentBias,
+            negativeElevationThreshold: this._negativeElevationThreshold
         });
 
         if (!defined(verticesPromise)) {
@@ -308,7 +328,8 @@ define([
                     eastSkirtHeight : skirtHeight,
                     northSkirtHeight : skirtHeight,
                     childTileMask : 0,
-                    createdByUpsampling : true
+                    createdByUpsampling : true,
+                    credits : that._credits
                 });
             });
     };

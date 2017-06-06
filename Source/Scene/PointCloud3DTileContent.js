@@ -11,12 +11,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getStringFromTypedArray',
-        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
         '../Core/Transforms',
-        '../Core/WebGLConstants',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -28,7 +26,6 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileColorBlendMode',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './SceneMode'
@@ -44,12 +41,10 @@ define([
         destroyObject,
         DeveloperError,
         getStringFromTypedArray,
-        Matrix3,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
         Transforms,
-        WebGLConstants,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -61,7 +56,6 @@ define([
         when,
         BlendingState,
         Cesium3DTileBatchTable,
-        Cesium3DTileColorBlendMode,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         SceneMode) {
@@ -78,9 +72,9 @@ define([
      * @private
      */
     function PointCloud3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
 
         // Hold onto the payload until the render resources are created
         this._parsedContent = undefined;
@@ -92,6 +86,7 @@ define([
         this._styleTranslucent = false;
         this._constantColor = Color.clone(Color.WHITE);
         this._rtcCenter = undefined;
+        this._batchTable = undefined; // Used when feature table contains BATCH_ID semantic
 
         // These values are used to regenerate the shader when the style changes
         this._styleableShaderAttributes = undefined;
@@ -102,7 +97,6 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
-        // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -118,16 +112,16 @@ define([
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._mode = undefined;
 
-        /**
-         * The following properties are part of the {@link Cesium3DTileContent} interface.
-         */
-        this.batchTable = undefined;
-        this.featurePropertiesDirty = false;
-
         this._readyPromise = when.defer();
-        this._features = undefined;
         this._pointsLength = 0;
-        this._vertexMemorySizeInBytes = 0;
+        this._geometryByteLength = 0;
+
+        this._features = undefined;
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        this.featurePropertiesDirty = false;
 
         initialize(this, arrayBuffer, byteOffset);
     }
@@ -138,8 +132,8 @@ define([
          */
         featuresLength : {
             get : function() {
-                if (defined(this.batchTable)) {
-                    return this.batchTable.featuresLength;
+                if (defined(this._batchTable)) {
+                    return this._batchTable.featuresLength;
                 }
                 return 0;
             }
@@ -166,16 +160,16 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
-                return this._vertexMemorySizeInBytes;
+                return this._geometryByteLength;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
                 return 0;
             }
@@ -184,10 +178,10 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        batchTableMemorySizeInBytes : {
+        batchTableByteLength : {
             get : function() {
-                if (defined(this.batchTable)) {
-                    return this.batchTable.memorySizeInBytes;
+                if (defined(this._batchTable)) {
+                    return this._batchTable.memorySizeInBytes;
                 }
                 return 0;
             }
@@ -212,65 +206,41 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         * @type {String}
-         * @readonly
+         * Part of the {@link Cesium3DTileContent} interface.
          */
-        url: {
-            get: function() {
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        url : {
+            get : function() {
                 return this._url;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
             }
         }
     });
-
-    function createFeatures(content) {
-        var tileset = content._tileset;
-        var featuresLength = content.featuresLength;
-        if (!defined(content._features) && (featuresLength > 0)) {
-            var features = new Array(featuresLength);
-            for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content, i);
-            }
-            content._features = features;
-        }
-    }
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
-        if (defined(this.batchTable)) {
-            return this.batchTable.hasProperty(batchId, name);
-        }
-        return false;
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     *
-     * In this context a feature refers to a group of points that share the same BATCH_ID.
-     * For example all the points that represent a door in a house point cloud would be a feature.
-     *
-     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
-     * in b3dm and i3dm.
-     *
-     * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
-     * are not accessible by getFeature. They are only used for dynamic styling.
-     */
-    PointCloud3DTileContent.prototype.getFeature = function(batchId) {
-        if (defined(this.batchTable)) {
-            var featuresLength = this.featuresLength;
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-            }
-            //>>includeEnd('debug');
-            createFeatures(this);
-            return this._features[batchId];
-        }
-        return undefined;
-    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
@@ -284,7 +254,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Points tile version 1 is supported.  Version ' + version + ' is not.');
+            throw new DeveloperError('Only Point Cloud tile version 1 is supported.  Version ' + version + ' is not.');
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
@@ -348,7 +318,7 @@ define([
 
         if (defined(featureTableJson.POSITION)) {
             positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
-            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER');
+            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER', ComponentDatatype.FLOAT, 3);
             if (defined(rtcCenter)) {
                 content._rtcCenter = Cartesian3.unpack(rtcCenter);
             }
@@ -356,7 +326,7 @@ define([
             positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
             isQuantized = true;
 
-            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE');
+            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeScale)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
@@ -364,7 +334,7 @@ define([
             //>>includeEnd('debug');
             content._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
 
-            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET');
+            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeOffset)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
@@ -393,7 +363,7 @@ define([
             colors = featureTable.getPropertyArray('RGB565', ComponentDatatype.UNSIGNED_SHORT, 1);
             isRGB565 = true;
         } else if (defined(featureTableJson.CONSTANT_RGBA)) {
-            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA');
+            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
             content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         } else {
             // Use a default constant color
@@ -416,16 +386,7 @@ define([
         // Get the batchIds and batch table. BATCH_ID does not need to be defined when the point cloud has per-point properties.
         var batchIds;
         if (defined(featureTableJson.BATCH_ID)) {
-            var componentType;
-            var componentTypeName = featureTableJson.BATCH_ID.componentType;
-            if (defined(componentTypeName)) {
-                componentType = ComponentDatatype.fromName(componentTypeName);
-            } else {
-                // If the componentType is omitted, default to UNSIGNED_SHORT
-                componentType = ComponentDatatype.UNSIGNED_SHORT;
-            }
-
-            batchIds = featureTable.getPropertyArray('BATCH_ID', componentType, 1);
+            batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
 
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             //>>includeStart('debug', pragmas.debug);
@@ -438,7 +399,7 @@ define([
                 // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
                 batchTableBinary = new Uint8Array(batchTableBinary);
             }
-            content.batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+            content._batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
         }
 
         // If points are not batched and there are per-point properties, use these properties for styling purposes
@@ -468,7 +429,6 @@ define([
             styleableProperties : styleableProperties
         };
         content._pointsLength = pointsLength;
-
         content._isQuantized = isQuantized;
         content._isOctEncoded16P = isOctEncoded16P;
         content._isRGB565 = isRGB565;
@@ -501,7 +461,7 @@ define([
         var hasNormals = content._hasNormals;
         var hasBatchIds = content._hasBatchIds;
 
-        var batchTable = content.batchTable;
+        var batchTable = content._batchTable;
         var hasBatchTable = defined(batchTable);
 
         var styleableVertexAttributes = [];
@@ -524,7 +484,7 @@ define([
                         usage : BufferUsage.STATIC_DRAW
                     });
 
-                    content._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
+                    content._geometryByteLength += vertexBuffer.sizeInBytes;
 
                     var vertexAttribute = {
                         index : attributeLocation,
@@ -574,7 +534,7 @@ define([
             typedArray : positions,
             usage : BufferUsage.STATIC_DRAW
         });
-        content._vertexMemorySizeInBytes += positionsVertexBuffer.sizeInBytes;
+        content._geometryByteLength += positionsVertexBuffer.sizeInBytes;
 
         var colorsVertexBuffer;
         if (hasColors) {
@@ -583,7 +543,7 @@ define([
                 typedArray : colors,
                 usage : BufferUsage.STATIC_DRAW
             });
-            content._vertexMemorySizeInBytes += colorsVertexBuffer.sizeInBytes;
+            content._geometryByteLength += colorsVertexBuffer.sizeInBytes;
         }
 
         var normalsVertexBuffer;
@@ -593,7 +553,7 @@ define([
                 typedArray : normals,
                 usage : BufferUsage.STATIC_DRAW
             });
-            content._vertexMemorySizeInBytes += normalsVertexBuffer.sizeInBytes;
+            content._geometryByteLength += normalsVertexBuffer.sizeInBytes;
         }
 
         var batchIdsVertexBuffer;
@@ -603,7 +563,7 @@ define([
                 typedArray : batchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
-            content._vertexMemorySizeInBytes += batchIdsVertexBuffer.sizeInBytes;
+            content._geometryByteLength += batchIdsVertexBuffer.sizeInBytes;
         }
 
         var attributes = [];
@@ -712,8 +672,7 @@ define([
         } else {
             content._pickId = context.createPickId({
                 primitive : content._tileset,
-                content : content,
-                tile : content._tile
+                content : content
             });
 
             pickUniformMap = combine(uniformMap, {
@@ -738,8 +697,8 @@ define([
         });
 
         content._drawCommand = new DrawCommand({
-            boundingVolume : content._tile.contentBoundingVolume.boundingSphere,
-            cull : false, // Already culled by 3D tiles
+            boundingVolume : undefined, // Updated in update
+            cull : false, // Already culled by 3D Tiles
             modelMatrix : new Matrix4(),
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
@@ -752,8 +711,8 @@ define([
         });
 
         content._pickCommand = new DrawCommand({
-            boundingVolume : content._tile.contentBoundingVolume.boundingSphere,
-            cull : false, // Already culled by 3D tiles
+            boundingVolume : undefined, // Updated in update
+            cull : false, // Already culled by 3D Tiles
             modelMatrix : new Matrix4(),
             primitiveType : PrimitiveType.POINTS,
             vertexArray : vertexArray,
@@ -811,7 +770,7 @@ define([
         var attribute;
 
         var context = frameState.context;
-        var batchTable = content.batchTable;
+        var batchTable = content._batchTable;
         var hasBatchTable = defined(batchTable);
         var hasStyle = defined(style);
         var isQuantized = content._isQuantized;
@@ -1122,10 +1081,58 @@ define([
             throw new DeveloperError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
             //>>includeEnd('debug');
 
-            // In release silently ignore and recreate the shader without a style. Tell jsHint to ignore this line.
-            createShaders(content, frameState, undefined);  // jshint ignore:line
+            // In release silently ignore and recreate the shader without a style. Tell esLint to ignore this line.
+            createShaders(content, frameState, undefined);  // eslint-disable-line no-unreachable
         }
     }
+
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content.featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
+            }
+            content._features = features;
+        }
+    }
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
+        if (defined(this._batchTable)) {
+            return this._batchTable.hasProperty(batchId, name);
+        }
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     *
+     * In this context a feature refers to a group of points that share the same BATCH_ID.
+     * For example all the points that represent a door in a house point cloud would be a feature.
+     *
+     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
+     * in b3dm and i3dm.
+     *
+     * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
+     * are not accessible by getFeature. They are only used for dynamic styling.
+     */
+    PointCloud3DTileContent.prototype.getFeature = function(batchId) {
+        if (defined(this._batchTable)) {
+            var featuresLength = this.featuresLength;
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+            }
+            //>>includeEnd('debug');
+            createFeatures(this);
+            return this._features[batchId];
+        }
+        return undefined;
+    };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -1137,12 +1144,12 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    PointCloud3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        if (!defined(this.batchTable)) {
+    PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
+        if (defined(this._batchTable)) {
+            this._batchTable.applyStyle(frameState, style);
+        } else {
             createShaders(this, frameState, style);
-            return true;
         }
-        return false;
     };
 
     var scratchComputedTranslation = new Cartesian4();
@@ -1213,8 +1220,8 @@ define([
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
         this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE;
 
-        if (defined(this.batchTable)) {
-            this.batchTable.update(tileset, frameState);
+        if (defined(this._batchTable)) {
+            this._batchTable.update(tileset, frameState);
         }
 
         var commandList = frameState.commandList;
@@ -1246,7 +1253,7 @@ define([
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
             pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
-        this.batchTable = this.batchTable && this.batchTable.destroy();
+        this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
 

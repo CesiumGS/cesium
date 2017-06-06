@@ -1,22 +1,22 @@
 /*global define*/
 define([
-    '../../Core/Check',
-    '../../Core/defaultValue',
-    '../../Core/defined',
-    '../../Core/defineProperties',
-    '../../Core/destroyObject',
-    '../../ThirdParty/knockout',
-    '../getElement',
-    './Cesium3DTilesInspectorViewModel'
+        '../../Core/Check',
+        '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
+        '../../ThirdParty/knockout',
+        '../getElement',
+        './Cesium3DTilesInspectorViewModel'
 ], function(
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    destroyObject,
-    knockout,
-    getElement,
-    Cesium3DTilesInspectorViewModel) {
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        knockout,
+        getElement,
+        Cesium3DTilesInspectorViewModel) {
     'use strict';
 
     function makeSection(name, visibleProp, toggleProp, contents) {
@@ -94,7 +94,7 @@ define([
     }
 
     /**
-     * Inspector widget to aid in debugging 3D tiles
+     * Inspector widget to aid in debugging 3D Tiles
      *
      * @alias Cesium3DTilesInspector
      * @constructor
@@ -131,8 +131,9 @@ define([
         var displayPanelContents = document.createElement('div');
         var updatePanelContents = document.createElement('div');
         var loggingPanelContents = document.createElement('div');
-        var tileInfoPanelContents = document.createElement('div');
+        var tileDebugLabelsPanelContents = document.createElement('div');
         var stylePanelContents = document.createElement('div');
+        var optimizationPanelContents = document.createElement('div');
 
         var properties = document.createElement('div');
         properties.className = 'field-group';
@@ -167,16 +168,16 @@ define([
 
         loggingPanelContents.appendChild(makeCheckbox('performance', 'Performance'));
         loggingPanelContents.appendChild(performanceContainer);
-        loggingPanelContents.appendChild(makeCheckbox('showStats', 'Stats'));
-        var stats = document.createElement('div');
-        stats.className = 'cesium-3dTilesInspector-stats';
-        stats.setAttribute('data-bind', 'html: statsText, visible: showStats');
-        loggingPanelContents.appendChild(stats);
-        loggingPanelContents.appendChild(makeCheckbox('showPickStats', 'Pick Stats'));
-        var pickStats = document.createElement('div');
-        pickStats.className = 'cesium-3dTilesInspector-stats';
-        pickStats.setAttribute('data-bind', 'html: pickStatsText, visible: showPickStats');
-        loggingPanelContents.appendChild(pickStats);
+        loggingPanelContents.appendChild(makeCheckbox('showStatistics', 'Statistics'));
+        var statistics = document.createElement('div');
+        statistics.className = 'cesium-3dTilesInspector-statistics';
+        statistics.setAttribute('data-bind', 'html: statisticsText, visible: showStatistics');
+        loggingPanelContents.appendChild(statistics);
+        loggingPanelContents.appendChild(makeCheckbox('showPickStatistics', 'Pick Statistics'));
+        var pickStatistics = document.createElement('div');
+        pickStatistics.className = 'cesium-3dTilesInspector-statistics';
+        pickStatistics.setAttribute('data-bind', 'html: pickStatisticsText, visible: showPickStatistics');
+        loggingPanelContents.appendChild(pickStatistics);
 
         stylePanelContents.appendChild(document.createTextNode('Color Blend Mode: '));
         var blendDropdown = document.createElement('select');
@@ -196,24 +197,40 @@ define([
         errorBox.setAttribute('data-bind', 'text: editorError');
         stylePanelContents.appendChild(errorBox);
 
-        tileInfoPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
-        tileInfoPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showOnlyPickedTileDebugLabel', 'Show Picked Only'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
+
+        optimizationPanelContents.appendChild(makeCheckbox('skipLevelOfDetail', 'Skip Tile LODs'));
+        var skipScreenSpaceErrorFactorContainer = document.createElement('div');
+        skipScreenSpaceErrorFactorContainer.appendChild(makeRangeInput('skipScreenSpaceErrorFactor', 1, 50, 1, 'Skip SSE Factor'));
+        optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
+        var baseScreenSpaceError = document.createElement('div');
+        baseScreenSpaceError.appendChild(makeRangeInput('baseScreenSpaceError', 0, 4096, 1, 'SSE before skipping LOD'));
+        optimizationPanelContents.appendChild(baseScreenSpaceError);
+        var skipLevelsContainer = document.createElement('div');
+        skipLevelsContainer.appendChild(makeRangeInput('skipLevels', 0, 10, 1, 'Min. levels to skip'));
+        optimizationPanelContents.appendChild(skipLevelsContainer);
+        optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLevelOfDetail', 'Load only tiles that meet the max. SSE.'));
+        optimizationPanelContents.appendChild(makeCheckbox('loadSiblings', 'Load siblings of visible tiles.'));
 
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
-        var tileInfoPanel = makeSection('Tile Info', 'tileInfoVisible', 'toggleTileInfo', tileInfoPanelContents);
+        var tileDebugLabelsPanel = makeSection('Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
         var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
+        var optimizationPanel = makeSection('Optimization', 'optimizationVisible', 'toggleOptimization', optimizationPanelContents);
 
         // first add and bind all the toggleable panels
         element.appendChild(tilesetPanel);
         element.appendChild(displayPanel);
         element.appendChild(updatePanel);
         element.appendChild(loggingPanel);
-        element.appendChild(tileInfoPanel);
+        element.appendChild(tileDebugLabelsPanel);
         element.appendChild(stylePanel);
+        element.appendChild(optimizationPanel);
 
         knockout.applyBindings(viewModel, element);
     }

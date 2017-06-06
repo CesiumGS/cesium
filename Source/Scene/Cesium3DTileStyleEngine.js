@@ -1,12 +1,10 @@
 /*global define*/
 define([
-        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         './Cesium3DTileStyle',
         './LabelStyle'
     ], function(
-        Color,
         defined,
         defineProperties,
         Cesium3DTileStyle,
@@ -60,7 +58,7 @@ define([
         }
 
         var lastStyleTime = this._lastStyleTime;
-        var stats = tileset._statistics;
+        var statistics = tileset._statistics;
 
         // If a new style was assigned, loop through all the visible tiles; otherwise, loop through
         // only the tiles that are newly visible, i.e., they are visible this frame, but were not
@@ -77,82 +75,15 @@ define([
                 //   1) the user assigned a new style to the tileset
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
                 if (tile.lastStyleTime !== lastStyleTime) {
+                    var content = tile.content;
                     tile.lastStyleTime = lastStyleTime;
-                    styleCompositeContent(this, frameState, tile.content, stats);
-                    ++stats.numberOfTilesStyled;
+                    content.applyStyle(frameState, this._style);
+                    statistics.numberOfFeaturesStyled += content.featuresLength;
+                    ++statistics.numberOfTilesStyled;
                 }
             }
         }
     };
-
-    function styleCompositeContent(styleEngine, frameState, content, stats) {
-        var innerContents = content.innerContents;
-        if (defined(innerContents)) {
-            var length = innerContents.length;
-            for (var i = 0; i < length; ++i) {
-                // Recurse for composites of composites
-                styleCompositeContent(styleEngine, frameState, innerContents[i], stats);
-            }
-        } else {
-            // Not a composite tile
-            styleContent(styleEngine, frameState, content, stats);
-        }
-    }
-
-    var scratchColor = new Color();
-    var scratchColor2 = new Color();
-
-    function styleContent(styleEngine, frameState, content, stats) {
-        var style = styleEngine._style;
-
-        if (!content.applyStyleWithShader(frameState, style)) {
-            applyStyleWithBatchTable(frameState, content, stats, style);
-        }
-    }
-
-    function applyStyleWithBatchTable(frameState, content, stats, style) {
-        var length = content.featuresLength;
-        stats.numberOfFeaturesStyled += length;
-
-        if (!defined(style)) {
-            clearStyle(content);
-            return;
-        }
-
-        // PERFORMANCE_IDEA: we can create a slightly faster internal interface by directly
-        // using Cesium3DTileBatchTable.  We might also be able to use less memory
-        // by using reusing a batchValues array across tiles.
-        for (var i = 0; i < length; ++i) {
-            var feature = content.getFeature(i);
-            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
-            feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
-            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
-            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
-            feature.font = style.font.evaluate(frameState, feature);
-            feature.pointSize = style.pointSize.evaluate(frameState, feature);
-            feature.text = style.text.evaluate(frameState, feature);
-            if (defined(style.image)) {
-                feature.image = style.image.evaluate(frameState, feature);
-            }
-        }
-    }
-
-    function clearStyle(content) {
-        var length = content.featuresLength;
-        for (var i = 0; i < length; ++i) {
-            var feature = content.getFeature(i);
-            feature.show = true;
-            feature.color = Color.WHITE;
-            feature.outlineColor = Color.BLACK;
-            feature.outlineWidth = 2.0;
-            feature.labelStyle = LabelStyle.FILL;
-            feature.font = '30px sans-serif';
-            feature.pointSize = 8.0;
-            feature.text = ' ';
-            feature.image = undefined;
-        }
-    }
 
     return Cesium3DTileStyleEngine;
 });

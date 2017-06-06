@@ -700,7 +700,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 

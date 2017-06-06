@@ -68,6 +68,9 @@ define([
     /**
      * Provides tiled imagery using the Google Earth Enterprise REST API.
      *
+     * Notes: This provider is for use with the 3D Earth API of Google Earth Enterprise,
+     *        {@link GoogleEarthEnterpriseMapsProvider} should be used with 2D Maps API.
+     *
      * @alias GoogleEarthEnterpriseImageryProvider
      * @constructor
      *
@@ -84,7 +87,7 @@ define([
      *
      * @see GoogleEarthEnterpriseTerrainProvider
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -110,10 +113,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var metadata;
         if (defined(options.metadata)) {
-            this._metadata = options.metadata;
+            metadata = this._metadata = options.metadata;
         } else {
-            this._metadata = new GoogleEarthEnterpriseMetadata({
+            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
                 url : options.url,
                 proxy : options.proxy
             });
@@ -148,8 +152,14 @@ define([
         this._ready = false;
         var that = this;
         var metadataError;
-        this._readyPromise = this._metadata.readyPromise
+        this._readyPromise = metadata.readyPromise
             .then(function(result) {
+                if (!metadata.imageryPresent) {
+                    var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have imagery');
+                    metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
+                    return when.reject(e);
+                }
+
                 TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
@@ -405,6 +415,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var metadata = this._metadata;
+        var info = metadata.getTileInformation(x, y, level);
+        if (defined(info)) {
+            var credit = metadata.providers[info.imageryProvider];
+            if (defined(credit)) {
+                return [credit];
+            }
+        }
+
         return undefined;
     };
 
@@ -461,10 +480,16 @@ define([
 
         return promise
             .then(function(image) {
-                decodeGoogleEarthEnterpriseData(image);
+                decodeGoogleEarthEnterpriseData(metadata.key, image);
                 var a = new Uint8Array(image);
-                var type = getImageType(a);
-                if (!defined(type)) {
+                var type;
+
+                var protoImagery = metadata.protoImagery;
+                if (!defined(protoImagery) || !protoImagery) {
+                    type = getImageType(a);
+                }
+
+                if (!defined(type) && (!defined(protoImagery) || protoImagery)) {
                     var message = decodeEarthImageryPacket(a);
                     type = message.imageType;
                     a = message.imageData;
@@ -525,6 +550,8 @@ define([
         if (image[1] === png.charCodeAt(0) && image[2] === png.charCodeAt(1) && image[3] === png.charCodeAt(2)) {
             return 'image/png';
         }
+
+        return undefined;
     }
 
     // Decodes an Imagery protobuf into the message

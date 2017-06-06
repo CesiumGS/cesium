@@ -6,13 +6,28 @@ define([
     'use strict';
 
     /**
-     * @private
+     * The refinement approach for a tile.
      *
-     * Additive refinement renders the entire cut of the tree.  Replacement refine renders just the front.
+     * @exports Cesium3DTileRefine
+     *
+     * @private
      */
     var Cesium3DTileRefine = {
-        ADD : 0,      // Render this tile and, if it doesn't meet the SSE, refine to its children
-        REPLACE : 1   // Render this tile or, if it doesn't meet the SSE, refine to its children
+        /**
+         * Render this tile and, if it doesn't meet the screen space error, also refine to its children.
+         *
+         * @type {Number}
+         * @constant
+         */
+        ADD : 0,
+
+        /**
+         * Render this tile or, if it doesn't meet the screen space error, refine to its descendants instead.
+         *
+         * @type {Number}
+         * @constant
+         */
+        REPLACE : 1
     };
 
     return freezeObject(Cesium3DTileRefine);

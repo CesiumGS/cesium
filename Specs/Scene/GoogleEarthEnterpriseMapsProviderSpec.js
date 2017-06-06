@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/GoogleEarthImageryProvider',
+        'Scene/GoogleEarthEnterpriseMapsProvider',
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/loadImage',
@@ -13,18 +13,18 @@ defineSuite([
         'Scene/ImageryState',
         'Specs/pollToPromise'
     ], function(
-        GoogleEarthImageryProvider,
-        DefaultProxy,
-        GeographicTilingScheme,
-        loadImage,
-        loadWithXhr,
-        Rectangle,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise) {
+    GoogleEarthEnterpriseMapsProvider,
+    DefaultProxy,
+    GeographicTilingScheme,
+    loadImage,
+    loadWithXhr,
+    Rectangle,
+    WebMercatorTilingScheme,
+    Imagery,
+    ImageryLayer,
+    ImageryProvider,
+    ImageryState,
+    pollToPromise) {
     'use strict';
 
     afterEach(function() {
@@ -33,12 +33,12 @@ defineSuite([
     });
 
     it('conforms to ImageryProvider interface', function() {
-        expect(GoogleEarthImageryProvider).toConformToInterface(ImageryProvider);
+        expect(GoogleEarthEnterpriseMapsProvider).toConformToInterface(ImageryProvider);
     });
 
     it('constructor throws when url is not specified', function() {
         function constructWithoutServer() {
-            return new GoogleEarthImageryProvider({
+            return new GoogleEarthEnterpriseMapsProvider({
                 channel : 1234
             });
         }
@@ -48,7 +48,7 @@ defineSuite([
 
     it('constructor throws when channel is not specified', function() {
         function constructWithoutChannel() {
-            return new GoogleEarthImageryProvider({
+            return new GoogleEarthEnterpriseMapsProvider({
                 url : 'http://invalid.localhost'
             });
         }
@@ -62,10 +62,10 @@ defineSuite([
         var channel = 1234;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : channel,
             path : path
@@ -79,7 +79,7 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var url = 'invalid.localhost';
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : 1234
         });
@@ -98,10 +98,10 @@ defineSuite([
         var channel = 1234;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : channel,
             path : path
@@ -121,10 +121,10 @@ defineSuite([
         var version = 1;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : channel,
             path : path
@@ -205,7 +205,7 @@ defineSuite([
                                     '}');
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : channel
         });
@@ -226,10 +226,10 @@ defineSuite([
         var proxy = new DefaultProxy('/proxy/');
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : 1234,
             proxy : proxy
@@ -269,7 +269,7 @@ defineSuite([
 
     it('raises error on invalid url', function() {
         var url = 'invalid.localhost';
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : url,
             channel : 1234
         });
@@ -290,10 +290,10 @@ defineSuite([
 
     it('raises error event when image cannot be loaded', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/good.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'example.invalid',
             channel : 1234
         });
@@ -370,7 +370,7 @@ defineSuite([
             }));
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://example.invalid',
             channel : 1234
         });
@@ -401,7 +401,7 @@ defineSuite([
             }));
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://example.invalid',
             channel : 1234
         });
@@ -432,7 +432,7 @@ defineSuite([
             }));
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://example.invalid',
             channel : 1234
         });
@@ -447,10 +447,10 @@ defineSuite([
 
     it('raises error when channel cannot be found', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_channel.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/bad_channel.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://invalid.localhost',
             channel : 1235
         });
@@ -471,10 +471,10 @@ defineSuite([
 
     it('raises error when channel version cannot be found', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_version.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/bad_version.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://invalid.localhost',
             channel : 1234
         });
@@ -495,10 +495,10 @@ defineSuite([
 
     it('raises error when unsupported projection is specified', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_projection.json', responseType, method, data, headers, deferred);
+            loadWithXhr.defaultLoad('Data/GoogleEarthEnterpriseMapsProvider/bad_projection.json', responseType, method, data, headers, deferred);
         };
 
-        var provider = new GoogleEarthImageryProvider({
+        var provider = new GoogleEarthEnterpriseMapsProvider({
             url : 'http://invalid.localhost',
             channel : 1234
         });

@@ -1,7 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian3',
-        '../../Core/Cartographic',
         '../../Scene/Cesium3DTileFeature',
         '../../Scene/Cesium3DTileset',
         '../../Scene/Cesium3DTileStyle',
@@ -16,8 +14,6 @@ define([
         '../../Core/ScreenSpaceEventHandler',
         '../../Core/ScreenSpaceEventType'
 ], function(
-        Cartesian3,
-        Cartographic,
         Cesium3DTileFeature,
         Cesium3DTileset,
         Cesium3DTileStyle,
@@ -56,64 +52,64 @@ define([
         }
     }
 
-    function getStats(tileset, isPick) {
+    function getStatistics(tileset, isPick) {
         if (!defined(tileset)) {
             return '';
         }
 
-        var stats = tileset.statistics;
+        var statistics = tileset.statistics;
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
-        // the stats will be different than the normal render pass.
-        var s = '<ul class="cesium-cesiumInspector-stats">';
+        // the statistics will be different than the normal render pass.
+        var s = '<ul class="cesium-cesiumInspector-statistics">';
         s +=
-            // --- Rendering stats
-            '<li><strong>Visited: </strong>' + stats.visited.toLocaleString() + '</li>' +
+            // --- Rendering statistics
+            '<li><strong>Visited: </strong>' + statistics.visited.toLocaleString() + '</li>' +
             // Number of commands returned is likely to be higher than the number of tiles selected
             // because of tiles that create multiple commands.
             '<li><strong>Selected: </strong>' + tileset._selectedTiles.length.toLocaleString() + '</li>' +
             // Number of commands executed is likely to be higher because of commands overlapping
             // multiple frustums.
-            '<li><strong>Commands: </strong>' + stats.numberOfCommands.toLocaleString() + '</li>';
+            '<li><strong>Commands: </strong>' + statistics.numberOfCommands.toLocaleString() + '</li>';
         s += '</ul>';
         if (!isPick) {
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Cache/loading stats
-                '<li><strong>Requests: </strong>' + stats.numberOfPendingRequests.toLocaleString() + '</li>' +
-                '<li><strong>Attempted: </strong>' + stats.numberOfAttemptedRequests.toLocaleString() + '</li>' +
-                '<li><strong>Processing: </strong>' + stats.numberProcessing.toLocaleString() + '</li>' +
-                '<li><strong>Content Ready: </strong>' + stats.numberContentReady.toLocaleString() + '</li>' +
+                // --- Cache/loading statistics
+                '<li><strong>Requests: </strong>' + statistics.numberOfPendingRequests.toLocaleString() + '</li>' +
+                '<li><strong>Attempted: </strong>' + statistics.numberOfAttemptedRequests.toLocaleString() + '</li>' +
+                '<li><strong>Processing: </strong>' + statistics.numberProcessing.toLocaleString() + '</li>' +
+                '<li><strong>Content Ready: </strong>' + statistics.numberContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + stats.numberTotal.toLocaleString() + '</li>';
+                '<li><strong>Total: </strong>' + statistics.numberTotal.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Features stats
-                '<li><strong>Features Selected: </strong>' + stats.numberOfFeaturesSelected.toLocaleString() + '</li>' +
-                '<li><strong>Features Loaded: </strong>' + stats.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
-                '<li><strong>Points Selected: </strong>' + stats.numberOfPointsSelected.toLocaleString() + '</li>' +
-                '<li><strong>Points Loaded: </strong>' + stats.numberOfPointsLoaded.toLocaleString() + '</li>' +
-                '<li><strong>Triangles Selected: </strong>' + stats.numberOfTrianglesSelected.toLocaleString() + '</li>';
+                // --- Features statistics
+                '<li><strong>Features Selected: </strong>' + statistics.numberOfFeaturesSelected.toLocaleString() + '</li>' +
+                '<li><strong>Features Loaded: </strong>' + statistics.numberOfFeaturesLoaded.toLocaleString() + '</li>' +
+                '<li><strong>Points Selected: </strong>' + statistics.numberOfPointsSelected.toLocaleString() + '</li>' +
+                '<li><strong>Points Loaded: </strong>' + statistics.numberOfPointsLoaded.toLocaleString() + '</li>' +
+                '<li><strong>Triangles Selected: </strong>' + statistics.numberOfTrianglesSelected.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Styling stats
-                '<li><strong>Tiles styled: </strong>' + stats.numberOfTilesStyled.toLocaleString() + '</li>' +
-                '<li><strong>Features styled: </strong>' + stats.numberOfFeaturesStyled.toLocaleString() + '</li>';
+                // --- Styling statistics
+                '<li><strong>Tiles styled: </strong>' + statistics.numberOfTilesStyled.toLocaleString() + '</li>' +
+                '<li><strong>Features styled: </strong>' + statistics.numberOfFeaturesStyled.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Optimization stats
-                '<li><strong>Children Union Culled: </strong>' + stats.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
+                // --- Optimization statistics
+                '<li><strong>Children Union Culled: </strong>' + statistics.numberOfTilesCulledWithChildrenUnion.toLocaleString() + '</li>';
             s += '</ul>';
-            s += '<ul class="cesium-cesiumInspector-stats">';
+            s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
-                // --- Memory stats
-                '<li><strong>Vertex Memory (MB): </strong>' + formatMemoryString(stats.vertexMemorySizeInBytes) + '</li>' +
-                '<li><strong>Texture Memory (MB): </strong>' + formatMemoryString(stats.textureMemorySizeInBytes) + '</li>' +
-                '<li><strong>Batch Table Memory (MB): </strong>' + formatMemoryString(stats.batchTableMemorySizeInBytes) + '</li>';
+                // --- Memory statistics
+                '<li><strong>Geometry Memory (MB): </strong>' + formatMemoryString(statistics.geometryByteLength) + '</li>' +
+                '<li><strong>Texture Memory (MB): </strong>' + formatMemoryString(statistics.texturesByteLength) + '</li>' +
+                '<li><strong>Batch Table Memory (MB): </strong>' + formatMemoryString(statistics.batchTableByteLength) + '</li>';
             s += '</ul>';
         }
         return s;
@@ -159,8 +155,8 @@ define([
             container : performanceContainer
         });
 
-        this._statsText = '';
-        this._pickStatsText = '';
+        this._statisticsText = '';
+        this._pickStatisticsText = '';
         this._editorError = '';
 
         /**
@@ -172,20 +168,20 @@ define([
         this.performance = false;
 
         /**
-         * Gets or sets the flag to show stats.  This property is observable.
+         * Gets or sets the flag to show statistics.  This property is observable.
          *
          * @type {Boolean}
          * @default true
          */
-        this.showStats = true;
+        this.showStatistics = true;
 
         /**
-         * Gets or sets the flag to show pick stats.  This property is observable.
+         * Gets or sets the flag to show pick statistics.  This property is observable.
          *
          * @type {Boolean}
          * @default false
          */
-        this.showPickStats = true;
+        this.showPickStatistics = true;
 
         /**
          * Gets or sets the flag to show the inspector.  This property is observable.
@@ -241,7 +237,15 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.tileInfoVisible = false;
+        this.tileDebugLabelsVisible = false;
+
+        /**
+         * Gets or sets the flag to show the optimization info section. This property is observable.
+         *
+         * @type {Boolean}
+         * @default false;
+         */
+        this.optimizationVisible = false;
 
         /**
          * Gets or sets the JSON for the tileset style.  This property is observable.
@@ -253,9 +257,11 @@ define([
 
         this._tileset = undefined;
         this._feature = undefined;
+        this._tile = undefined;
 
-        knockout.track(this, ['performance', 'inspectorVisible', '_statsText', '_pickStatsText', '_editorError', 'showPickStats', 'showStats',
-                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'tileInfoVisible', 'styleString', '_feature']);
+        knockout.track(this, ['performance', 'inspectorVisible', '_statisticsText', '_pickStatisticsText', '_editorError', 'showPickStatistics', 'showStatistics',
+                              'tilesetVisible', 'displayVisible', 'updateVisible', 'loggingVisible', 'styleVisible', 'optimizationVisible',
+                              'tileDebugLabelsVisible', 'styleString', '_feature', '_tile']);
 
         this._properties = knockout.observable({});
         /**
@@ -326,19 +332,41 @@ define([
                     that._eventHandler.setInputAction(function(e) {
                         var picked = scene.pick(e.endPosition);
                         if (picked instanceof Cesium3DTileFeature) {
+                            // Picked a feature
                             that.feature = picked;
-                            that._pickStatsText = getStats(that._tileset, true);
-                        } else {
+                            that.tile = picked.content.tile;
+                        } else if (defined(picked) && defined(picked.content)) {
+                            // Picked a tile
                             that.feature = undefined;
+                            that.tile = picked.content.tile;
+                        } else {
+                            // Picked nothing
+                            that.feature = undefined;
+                            that.tile = undefined;
+                        }
+                        if (!defined(that._tileset)) {
+                            return;
+                        }
+                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
+                            var position;
+                            if (scene.pickPositionSupported) {
+                                position = scene.pickPosition(e.endPosition);
+                                if (defined(position)) {
+                                    that._tileset.debugPickPosition = position;
+                                }
+                            }
+                            that._tileset.debugPickedTile = picked.content.tile;
+                        } else {
+                            that._tileset.debugPickedTile = undefined;
                         }
                     }, ScreenSpaceEventType.MOUSE_MOVE);
                 } else {
                     that.feature = undefined;
+                    that.tile = undefined;
                     that._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
                 }
             }
         });
-
         /**
          * Gets or sets the flag to enable picking.  This property is observable.
          *
@@ -356,9 +384,6 @@ define([
                 colorize(value);
                 if (defined(that._tileset)) {
                     that._tileset.debugColorizeTiles = value;
-                    if (!value) {
-                        that._shouldStyle = true;
-                    }
                 }
             }
         });
@@ -377,7 +402,7 @@ define([
             },
             set : function(value) {
                 wireframe(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugWireframe = value;
                 }
             }
@@ -397,7 +422,7 @@ define([
             },
             set : function(value) {
                 showBoundingVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowBoundingVolume = value;
                 }
             }
@@ -417,7 +442,7 @@ define([
             },
             set : function(value) {
                 showContentBoundingVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowContentBoundingVolume = value;
                 }
             }
@@ -437,7 +462,7 @@ define([
             },
             set : function(value) {
                 showRequestVolumes(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowViewerRequestVolume = value;
                 }
             }
@@ -457,7 +482,7 @@ define([
             },
             set : function(value) {
                 freezeFrame(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugFreezeFrame = value;
                     that._scene.debugShowFrustumPlanes = value;
                 }
@@ -471,6 +496,26 @@ define([
          */
         this.freezeFrame = false;
 
+        var showOnlyPickedTileDebugLabel = knockout.observable();
+        knockout.defineProperty(this, 'showOnlyPickedTileDebugLabel', {
+            get : function() {
+                return showOnlyPickedTileDebugLabel();
+            },
+            set : function(value) {
+                showOnlyPickedTileDebugLabel(value);
+                if (defined(that._tileset)) {
+                    that._tileset.debugPickedTileLabelOnly = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show debug labels only for the currently picked tile.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showOnlyPickedTileDebugLabel = false;
+
         var showGeometricError = knockout.observable();
         knockout.defineProperty(this, 'showGeometricError', {
             get : function() {
@@ -478,7 +523,7 @@ define([
             },
             set : function(value) {
                 showGeometricError(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowGeometricError = value;
                 }
             }
@@ -498,7 +543,7 @@ define([
             },
             set : function(value) {
                 showRenderingStatistics(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowRenderingStatistics = value;
                 }
             }
@@ -519,7 +564,7 @@ define([
             },
             set : function(value) {
                 showMemoryUsage(value);
-                if (that._tileset) {
+                if (defined(that._tileset)) {
                     that._tileset.debugShowMemoryUsage = value;
                 }
             }
@@ -539,9 +584,12 @@ define([
                 return maximumScreenSpaceError();
             },
             set : function(value) {
-                maximumScreenSpaceError(value);
-                if (that._tileset) {
-                    that._tileset.maximumScreenSpaceError = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    maximumScreenSpaceError(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.maximumScreenSpaceError = value;
+                    }
                 }
             }
         });
@@ -559,9 +607,12 @@ define([
                 return dynamicScreenSpaceErrorDensity();
             },
             set : function(value) {
-                dynamicScreenSpaceErrorDensity(value);
-                if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorDensity = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    dynamicScreenSpaceErrorDensity(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.dynamicScreenSpaceErrorDensity = value;
+                    }
                 }
             }
         });
@@ -597,9 +648,12 @@ define([
                 return dynamicScreenSpaceErrorFactor();
             },
             set : function(value) {
-                dynamicScreenSpaceErrorFactor(value);
-                if (that._tileset) {
-                    that._tileset.dynamicScreenSpaceErrorFactor = value;
+                value = Number(value);
+                if (!isNaN(value)) {
+                    dynamicScreenSpaceErrorFactor(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.dynamicScreenSpaceErrorFactor = value;
+                    }
                 }
             }
         });
@@ -634,12 +688,138 @@ define([
          */
         this.pickActive = false;
 
+        var skipLevelOfDetail = knockout.observable();
+        knockout.defineProperty(this, 'skipLevelOfDetail', {
+            get : function() {
+                return skipLevelOfDetail();
+            },
+            set : function(value) {
+                skipLevelOfDetail(value);
+                if (defined(that._tileset)) {
+                    that._tileset.skipLevelOfDetail = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to determine if level of detail skipping should be applied during the traversal.
+         * This property is observable.
+         * @type {Boolean}
+         * @default true
+         */
+        this.skipLevelOfDetail = true;
+
+        var skipScreenSpaceErrorFactor = knockout.observable();
+        knockout.defineProperty(this, 'skipScreenSpaceErrorFactor', {
+            get : function() {
+                return skipScreenSpaceErrorFactor();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    skipScreenSpaceErrorFactor(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.skipScreenSpaceErrorFactor = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the multiplier defining the minimum screen space error to skip. This property is observable.
+         * @type {Number}
+         * @default 16
+         */
+        this.skipScreenSpaceErrorFactor = 16;
+
+        var baseScreenSpaceError = knockout.observable();
+        knockout.defineProperty(this, 'baseScreenSpaceError', {
+            get : function() {
+                return baseScreenSpaceError();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    baseScreenSpaceError(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.baseScreenSpaceError = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the screen space error that must be reached before skipping levels of detail. This property is observable.
+         * @type {Number}
+         * @default 1024
+         */
+        this.baseScreenSpaceError = 1024;
+
+        var skipLevels = knockout.observable();
+        knockout.defineProperty(this, 'skipLevels', {
+            get : function() {
+                return skipLevels();
+            },
+            set : function(value) {
+                value = Number(value);
+                if (!isNaN(value)) {
+                    skipLevels(value);
+                    if (defined(that._tileset)) {
+                        that._tileset.skipLevels = value;
+                    }
+                }
+            }
+        });
+        /**
+         * Gets or sets the constant defining the minimum number of levels to skip when loading tiles. This property is observable.
+         * @type {Number}
+         * @default 1
+         */
+        this.skipLevels = 1;
+
+        var immediatelyLoadDesiredLevelOfDetail = knockout.observable();
+        knockout.defineProperty(this, 'immediatelyLoadDesiredLevelOfDetail', {
+            get : function() {
+                return immediatelyLoadDesiredLevelOfDetail();
+            },
+            set : function(value) {
+                immediatelyLoadDesiredLevelOfDetail(value);
+                if (defined(that._tileset)) {
+                    that._tileset.immediatelyLoadDesiredLevelOfDetail = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag which, when true, only tiles that meet the maximum screen space error will ever be downloaded.
+         * This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.immediatelyLoadDesiredLevelOfDetail = false;
+
+        var loadSiblings = knockout.observable();
+        knockout.defineProperty(this, 'loadSiblings', {
+            get : function() {
+                loadSiblings();
+            },
+            set : function(value) {
+                loadSiblings(value);
+                if (defined(that._tileset)) {
+                    that._tileset.loadSiblings = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag which determines whether siblings of visible tiles are always downloaded during traversal.
+         * This property is observable
+         * @type {Boolean}
+         * @default false
+         */
+        this.loadSiblings = false;
+
         this._style = undefined;
         this._shouldStyle = false;
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
-                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity',
-                                   'dynamicScreenSpaceErrorDensitySliderValue', 'dynamicScreenSpaceErrorFactor', 'pickActive', 'showGeometricError',
-                                   'showRenderingStatistics', 'showMemoryUsage'];
+                                   'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
+                                   'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
@@ -670,25 +850,25 @@ define([
         },
 
         /**
-         * Gets the stats text.  This property is observable.
+         * Gets the statistics text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {String}
          * @readonly
          */
-        statsText : {
+        statisticsText : {
             get : function() {
-                return this._statsText;
+                return this._statisticsText;
             }
         },
         /**
-         * Gets the pick stats text.  This property is observable.
+         * Gets the pick statistics text.  This property is observable.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {String}
          * @readonly
          */
-        pickStatsText : {
+        pickStatisticsText : {
             get : function() {
-                return this._pickStatsText;
+                return this._pickStatisticsText;
             }
         },
 
@@ -717,7 +897,7 @@ define([
         },
 
         /**
-         * Gets or sets the tileset of the view model
+         * Gets or sets the tileset of the view model.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {Cesium3DTileset}
          */
@@ -730,6 +910,7 @@ define([
                 this._style = undefined;
                 this.styleString = '{}';
                 this.feature = undefined;
+                this.tile = undefined;
 
                 if (defined(tileset)) {
                     var that = this;
@@ -746,6 +927,7 @@ define([
                                     'showContentBoundingVolumes',
                                     'showRequestVolumes',
                                     'freezeFrame',
+                                    'showOnlyPickedTileDebugLabel',
                                     'showGeometricError',
                                     'showRenderingStatistics',
                                     'showMemoryUsage'];
@@ -761,17 +943,23 @@ define([
                     this.dynamicScreenSpaceErrorDensity = tileset.dynamicScreenSpaceErrorDensity;
                     this.dynamicScreenSpaceErrorFactor = tileset.dynamicScreenSpaceErrorFactor;
                     this.colorBlendMode = tileset.colorBlendMode;
+                    this.skipLevelOfDetail = tileset.skipLevelOfDetail;
+                    this.skipScreenSpaceErrorFactor = tileset.skipScreenSpaceErrorFactor;
+                    this.baseScreenSpaceError = tileset.baseScreenSpaceError;
+                    this.skipLevels = tileset.skipLevels;
+                    this.immediatelyLoadDesiredLevelOfDetail = tileset.immediatelyLoadDesiredLevelOfDetail;
+                    this.loadSiblings = tileset.loadSiblings;
                 } else {
                     this._properties({});
                 }
 
-                this._statsText = getStats(tileset, false);
-                this._pickStatsText = getStats(tileset, true);
+                this._statisticsText = getStatistics(tileset, false);
+                this._pickStatisticsText = getStatistics(tileset, true);
             }
         },
 
         /**
-         * Gets the current feature of the view model
+         * Gets the current feature of the view model.
          * @memberof Cesium3DTilesInspectorViewModel.prototype
          * @type {Cesium3DTileFeature}
          */
@@ -784,7 +972,7 @@ define([
                     return;
                 }
                 var currentFeature = this._feature;
-                if (defined(currentFeature) && defined(currentFeature._batchTable) && !currentFeature._batchTable.isDestroyed()) {
+                if (defined(currentFeature)) {
                     // Restore original color to feature that is no longer selected
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
@@ -800,8 +988,54 @@ define([
                 }
                 this._feature = feature;
             }
+        },
+
+        /**
+         * Gets the current tile of the view model
+         * @memberof Cesium3DTilesInspectorViewModel.prototype
+         * @type {Cesium3DTile}
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            },
+            set : function(tile) {
+                if (this._tile === tile) {
+                    return;
+                }
+                var currentTile = this._tile;
+
+                if (defined(currentTile) && !hasFeatures(currentTile.content)) {
+                    // Restore original color to tile that is no longer selected
+                    currentTile.color = oldColor;
+                }
+
+                if (defined(tile) && !hasFeatures(tile.content)) {
+                    // Highlight new tile
+                    Color.clone(tile.color, oldColor);
+                    tile.color = highlightColor;
+                }
+                this._tile = tile;
+            }
         }
     });
+
+    function hasFeatures(content) {
+        if (content.featuresLength > 0) {
+            return true;
+        }
+        var innerContents = content.innerContents;
+        if (defined(innerContents)) {
+            var length = innerContents.length;
+            for (var i = 0; i < length; ++i) {
+                if (!hasFeatures(innerContents[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
 
     /**
      * Toggles the pick tileset mode
@@ -853,10 +1087,17 @@ define([
     };
 
     /**
-     * Toggles the visibility of the tile info section
+     * Toggles the visibility of the tile Debug Info section
      */
-    Cesium3DTilesInspectorViewModel.prototype.toggleTileInfo = function() {
-        this.tileInfoVisible = !this.tileInfoVisible;
+    Cesium3DTilesInspectorViewModel.prototype.toggleTileDebugLabels = function() {
+        this.tileDebugLabelsVisible = !this.tileDebugLabelsVisible;
+    };
+
+    /**
+     * Toggles the visibility of the optimization section
+     */
+    Cesium3DTilesInspectorViewModel.prototype.toggleOptimization = function() {
+        this.optimizationVisible = !this.optimizationVisible;
     };
 
     /**
@@ -869,7 +1110,7 @@ define([
     };
 
     /**
-     * Compiles the style in the style editor
+     * Compiles the style in the style editor.
      */
     Cesium3DTilesInspectorViewModel.prototype.compileStyle = function() {
         var tileset = this._tileset;
@@ -882,16 +1123,18 @@ define([
                 this.styleString = '{}';
             }
             this._style = new Cesium3DTileStyle(JSON.parse(this.styleString));
+            this._shouldStyle = true;
         } catch (err) {
             this._editorError = err.toString();
         }
 
         // set feature again so pick coloring is set
         this.feature = this._feature;
+        this.tile = this._tile;
     };
 
     /**
-     * Handles key press events on the style editor
+     * Handles key press events on the style editor.
      */
     Cesium3DTilesInspectorViewModel.prototype.styleEditorKeyPress = function(sender, event) {
         if (event.keyCode === 9) { //tab
@@ -945,19 +1188,19 @@ define([
 
         if (defined(tileset)) {
             var style = tileset.style;
-            if (defined(style) && !defined(this._style)) {
-                this._style = style;
-                this.styleString = JSON.stringify(style.style, null, '  ');
-            } else if (this._style !== tileset.style) {
-                tileset.style = this._style;
-            }
-            if (this._shouldStyle) {
-                tileset._styleEngine.makeDirty();
-                this._shouldStyle = false;
+            if (this._style !== tileset.style) {
+                if (this._shouldStyle) {
+                    tileset.style = this._style;
+                    this._shouldStyle = false;
+                } else {
+                    this._style = style;
+                    this.styleString = JSON.stringify(style.style, null, '  ');
+                }
             }
         }
-        if (this.showStats) {
-            this._statsText = getStats(tileset, false);
+        if (this.showStatistics) {
+            this._statisticsText = getStatistics(tileset, false);
+            this._pickStatisticsText = getStatistics(tileset, true);
         }
     };
 
@@ -983,6 +1226,14 @@ define([
 
         return destroyObject(this);
     };
+
+    /**
+     * Generates an HTML string of the statistics
+     * @param {Cesium3DTileset} tileset The tileset
+     * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
+     * @returns {String} The formatted statistics
+     */
+    Cesium3DTilesInspectorViewModel.getStatistics = getStatistics;
 
     return Cesium3DTilesInspectorViewModel;
 });
