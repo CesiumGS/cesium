@@ -31,6 +31,10 @@ defineSuite([
         when) {
     'use strict';
 
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });

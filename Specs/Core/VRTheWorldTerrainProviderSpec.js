@@ -28,6 +28,7 @@ defineSuite([
     'use strict';
 
     beforeEach(function() {
+        RequestScheduler.clearForSpecs();
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();

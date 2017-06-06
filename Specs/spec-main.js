@@ -136,8 +136,6 @@
 
         window.it = function(description, f, timeout, categories) {
             originalIt(description, function(done) {
-                // Clear the RequestScheduler before for each test in case requests are still active from previous tests
-                Cesium.RequestScheduler.clearForSpecs();
                 var result = f();
                 when(result, function() {
                     done();

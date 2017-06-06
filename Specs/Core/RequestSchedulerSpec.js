@@ -23,6 +23,10 @@ defineSuite([
         originalPriorityHeapLength = RequestScheduler.priorityHeapLength;
     });
 
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     afterEach(function() {
         RequestScheduler.maximumRequests = originalMaximumRequests;
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
@@ -128,6 +132,11 @@ defineSuite([
 
         expect(statistics.numberOfActiveRequests).toBe(3);
         expect(promise6).toBeDefined();
+
+        var length = deferreds.length;
+        for (var i = 0; i < length; ++i) {
+            deferreds[i].resolve();
+        }
     });
 
     it('honors maximumRequestsPerServer', function() {
@@ -191,6 +200,11 @@ defineSuite([
 
         expect(RequestScheduler.numberOfActiveRequestsByServer(server)).toBe(3);
         expect(promise6).toBeDefined();
+
+        var length = deferreds.length;
+        for (var i = 0; i < length; ++i) {
+            deferreds[i].resolve();
+        }
     });
 
     it('honors priorityHeapLength', function() {
@@ -231,6 +245,11 @@ defineSuite([
         // A request is cancelled to accommodate the new heap length
         RequestScheduler.priorityHeapLength = 2;
         expect(firstRequest.state).toBe(RequestState.CANCELLED);
+
+        var length = deferreds.length;
+        for (var i = 0; i < length; ++i) {
+            deferreds[i].resolve();
+        }
     });
 
     function testImmediateRequest(url, dataOrBlobUri) {
@@ -565,6 +584,11 @@ defineSuite([
         deferreds[0].resolve();
         RequestScheduler.update();
         expect(throttledRequest.state).toBe(RequestState.ACTIVE);
+
+        var length = deferreds.length;
+        for (var j = 0; j < length; ++j) {
+            deferreds[j].resolve();
+        }
     });
 
     it('request throttled by server is cancelled', function() {
@@ -594,6 +618,11 @@ defineSuite([
 
         RequestScheduler.update();
         expect(throttledRequest.state).toBe(RequestState.CANCELLED);
+
+        var length = deferreds.length;
+        for (var j = 0; j < length; ++j) {
+            deferreds[j].resolve();
+        }
     });
 
     it('debugThrottle', function() {
@@ -659,5 +688,10 @@ defineSuite([
         expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 1');
         expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 1');
         expect(console.log).toHaveBeenCalledWith('Number of failed requests: 1');
+
+        var length = deferreds.length;
+        for (var i = 0; i < length; ++i) {
+            deferreds[i].resolve();
+        }
     });
 });

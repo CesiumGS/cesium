@@ -162,11 +162,11 @@ define([
     RequestScheduler.clearForSpecs = function() {
         while (requestHeap.length > 0) {
             var request = requestHeap.pop();
-            startRequest(request);
+            cancelRequest(request);
         }
         var length = activeRequests.length;
         for (var i = 0; i < length; ++i) {
-            activeRequests[i].state = RequestState.IGNORED;
+            cancelRequest(activeRequests[i]);
         }
         activeRequests.length = 0;
         numberOfActiveRequestsByServer = {};
