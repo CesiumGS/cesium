@@ -1,0 +1,17 @@
+{
+  "name": "eslint-config-cesium",
+  "version": "0.1.0",
+  "description": "ESLint shareable configs for Cesium",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "eslint"
+  ],
+  "author": "Ottavio Hartman <omh1280@gmail.com> (https://github.com/omh1280)",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "eslint": ">= 3"
+  }
+}
