@@ -116,11 +116,10 @@ define([
                 // If the new length shrinks the heap, need to cancel some of the requests.
                 // Since this value is not intended to be tweaked regularly it is fine to just cancel the high priority requests.
                 if (value < priorityHeapLength) {
-                    while (priorityHeapLength.length > value) {
-                        var request = priorityHeapLength.pop();
-                        request.cancel();
+                    while (requestHeap.length > value) {
+                        var request = requestHeap.pop();
+                        cancelRequest(request);
                     }
-                    RequestScheduler.update();
                 }
                 priorityHeapLength = value;
                 requestHeap.maximumLength = value;
@@ -161,17 +160,16 @@ define([
      * @private
      */
     RequestScheduler.clearForSpecs = function() {
-        var i;
         var length = activeRequests.length;
-        for (i = 0; i < length; ++i) {
-            activeRequests[i].cancel();
+        for (var i = 0; i < length; ++i) {
+            cancelRequest(activeRequests[i]);
         }
-        length = requestHeap.length;
-        for (i = 0; i < length; ++i) {
-            requestHeap.internalArray[i].cancel();
-        }
+        activeRequests.length = 0;
 
-        RequestScheduler.update();
+        while (requestHeap.length > 0) {
+            var request = requestHeap.pop();
+            cancelRequest(request);
+        }
 
         // Clear stats
         statistics.numberOfAttemptedRequests = 0;

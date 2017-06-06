@@ -15,15 +15,18 @@ defineSuite([
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
+    var originalPriorityHeapLength;
 
-    beforeEach(function() {
+    beforeAll(function() {
         originalMaximumRequests = RequestScheduler.maximumRequests;
         originalMaximumRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
+        originalPriorityHeapLength = RequestScheduler.priorityHeapLength;
     });
 
     afterEach(function() {
         RequestScheduler.maximumRequests = originalMaximumRequests;
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
+        RequestScheduler.priorityHeapLength = originalPriorityHeapLength;
     });
 
     it('request throws when request is undefined', function() {
@@ -219,8 +222,11 @@ defineSuite([
         expect(promise).toBeUndefined();
 
         RequestScheduler.priorityHeapLength = 3;
-        promise = RequestScheduler.request(createRequest(1.0));
+        promise = RequestScheduler.request(createRequest(2.0));
+        promise = RequestScheduler.request(createRequest(3.0));
         expect(promise).toBeDefined();
+        promise = RequestScheduler.request(createRequest(4.0));
+        expect(promise).toBeUndefined();
 
         // A request is cancelled to accommodate the new heap length
         RequestScheduler.priorityHeapLength = 2;
