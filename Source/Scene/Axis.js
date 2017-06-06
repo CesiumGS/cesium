@@ -5,7 +5,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4'
-], function(
+    ], function(
         Check,
         freezeObject,
         CesiumMath,

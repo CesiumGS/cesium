@@ -2,7 +2,7 @@
 define([
         '../Core/freezeObject',
         '../Core/Math'
-], function(
+    ], function(
         freezeObject,
         CesiumMath) {
     'use strict';

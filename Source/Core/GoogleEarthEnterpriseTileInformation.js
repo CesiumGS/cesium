@@ -1,10 +1,10 @@
 /*global define*/
 define([
-    './defined',
-    './isBitSet'
-], function(
-    defined,
-    isBitSet) {
+        './defined',
+        './isBitSet'
+    ], function(
+        defined,
+        isBitSet) {
     'use strict';
 
     // Bitmask for checking tile properties
