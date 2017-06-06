@@ -133,6 +133,7 @@ define([
         var loggingPanelContents = document.createElement('div');
         var tileDebugLabelsPanelContents = document.createElement('div');
         var stylePanelContents = document.createElement('div');
+        var optimizationPanelContents = document.createElement('div');
 
         var properties = document.createElement('div');
         properties.className = 'field-group';
@@ -201,12 +202,26 @@ define([
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
 
+        optimizationPanelContents.appendChild(makeCheckbox('skipLevelOfDetail', 'Skip Tile LODs'));
+        var skipScreenSpaceErrorFactorContainer = document.createElement('div');
+        skipScreenSpaceErrorFactorContainer.appendChild(makeRangeInput('skipScreenSpaceErrorFactor', 1, 50, 1, 'Skip SSE Factor'));
+        optimizationPanelContents.appendChild(skipScreenSpaceErrorFactorContainer);
+        var baseScreenSpaceError = document.createElement('div');
+        baseScreenSpaceError.appendChild(makeRangeInput('baseScreenSpaceError', 0, 4096, 1, 'SSE before skipping LOD'));
+        optimizationPanelContents.appendChild(baseScreenSpaceError);
+        var skipLevelsContainer = document.createElement('div');
+        skipLevelsContainer.appendChild(makeRangeInput('skipLevels', 0, 10, 1, 'Min. levels to skip'));
+        optimizationPanelContents.appendChild(skipLevelsContainer);
+        optimizationPanelContents.appendChild(makeCheckbox('immediatelyLoadDesiredLevelOfDetail', 'Load only tiles that meet the max. SSE.'));
+        optimizationPanelContents.appendChild(makeCheckbox('loadSiblings', 'Load siblings of visible tiles.'));
+
         var tilesetPanel = makeSection('Tileset', 'tilesetVisible', 'toggleTileset', tilesetPanelContents);
         var displayPanel = makeSection('Display', 'displayVisible', 'toggleDisplay', displayPanelContents);
         var updatePanel = makeSection('Update', 'updateVisible', 'toggleUpdate', updatePanelContents);
         var loggingPanel = makeSection('Logging', 'loggingVisible', 'toggleLogging', loggingPanelContents);
         var tileDebugLabelsPanel = makeSection('Tile Debug Labels', 'tileDebugLabelsVisible', 'toggleTileDebugLabels', tileDebugLabelsPanelContents);
         var stylePanel = makeSection('Style', 'styleVisible', 'toggleStyle', stylePanelContents);
+        var optimizationPanel = makeSection('Optimization', 'optimizationVisible', 'toggleOptimization', optimizationPanelContents);
 
         // first add and bind all the toggleable panels
         element.appendChild(tilesetPanel);
@@ -215,6 +230,7 @@ define([
         element.appendChild(loggingPanel);
         element.appendChild(tileDebugLabelsPanel);
         element.appendChild(stylePanel);
+        element.appendChild(optimizationPanel);
 
         knockout.applyBindings(viewModel, element);
     }
