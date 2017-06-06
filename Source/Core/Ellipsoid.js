@@ -644,24 +644,14 @@ define([
      */
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
-        if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
-            throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
-        }
-        if (this._radii.z === 0) {
-            throw new DeveloperError('Ellipsoid.radii.z must be greater than 0');
-        }*/
-        //>>includeEnd('debug');
-
         Check.defined('position', position);
 
         if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
         
-        Check.typeOf.number.greaterThan('_radii.z', this._radii.z, 0);
+        Check.typeOf.number.greaterThan('Ellipsoid.radii.z', this._radii.z, 0);
+        //>>includeEnd('debug');
 
         buffer = defaultValue(buffer, 0.0);
 
