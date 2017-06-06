@@ -17,6 +17,7 @@ define([
     './Math',
     './Rectangle',
     './Request',
+    './RequestState',
     './RequestType',
     './RuntimeError',
     './TaskProcessor',
@@ -39,6 +40,7 @@ define([
     CesiumMath,
     Rectangle,
     Request,
+    RequestState,
     RequestType,
     RuntimeError,
     TaskProcessor,
@@ -156,6 +158,7 @@ define([
 
         this._terrainCache = new TerrainCache();
         this._terrainPromises = {};
+        this._terrainRequests = {};
 
         this._errorEvent = new Event();
 
@@ -436,10 +439,13 @@ define([
 
         // Load that terrain
         var terrainPromises = this._terrainPromises;
+        var terrainRequests = this._terrainRequests;
         var url = buildTerrainUrl(this, q, terrainVersion);
-        var promise;
+        var sharedPromise;
+        var sharedRequest;
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
-            promise = terrainPromises[q];
+            sharedPromise = terrainPromises[q];
+            sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
             if (typeof request === 'boolean') {
                 deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.36.');
@@ -450,13 +456,14 @@ define([
                 });
             }
 
-            var requestPromise = loadArrayBuffer(url, undefined, request);
+            sharedRequest = request;
+            var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
 
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
             }
 
-            promise = requestPromise
+            sharedPromise = requestPromise
                 .then(function(terrain) {
                     if (defined(terrain)) {
                         return taskProcessor.scheduleTask({
@@ -488,22 +495,20 @@ define([
                     }
 
                     return when.reject(new RuntimeError('Failed to load terrain.'));
-                })
-                .otherwise(function(error) {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(error);
                 });
 
-            terrainPromises[q] = promise; // Store promise without delete from terrainPromises
+            terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
+            terrainRequests[q] = sharedRequest;
 
             // Set promise so we remove from terrainPromises just one time
-            promise = promise
+            sharedPromise = sharedPromise
                 .always(function() {
                     delete terrainPromises[q];
+                    delete terrainRequests[q];
                 });
         }
 
-        return promise
+        return sharedPromise
             .then(function() {
                 var buffer = terrainCache.get(quadKey);
                 if (defined(buffer)) {
@@ -515,10 +520,17 @@ define([
                         negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
                         negativeElevationThreshold: metadata.negativeAltitudeThreshold
                     });
-                } else {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(new RuntimeError('Failed to load terrain.'));
                 }
+
+                return when.reject(new RuntimeError('Failed to load terrain.'));
+            })
+            .otherwise(function(error) {
+                if (sharedRequest.state === RequestState.CANCELLED) {
+                    request.state = sharedRequest.state;
+                    return when.reject(error);
+                }
+                info.terrainState = TerrainState.NONE;
+                return when.reject(error);
             });
     };
 
