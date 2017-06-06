@@ -25,6 +25,7 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/NearFarScalar',
+        '../Core/objectToQuery',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Rectangle',
@@ -84,6 +85,7 @@ define([
         loadXML,
         CesiumMath,
         NearFarScalar,
+        objectToQuery,
         PinBuilder,
         PolygonHierarchy,
         Rectangle,
@@ -272,21 +274,24 @@ define([
         }
     }
 
-    function applyBasePath(div, elementType, attributeName, proxy, sourceUri) {
+    function applyBasePath(div, elementType, attributeName, proxy, sourceUri, query) {
         var elements = div.querySelectorAll(elementType);
         for (var i = 0; i < elements.length; i++) {
             var element = elements[i];
             var value = element.getAttribute(attributeName);
-            var uri = resolveHref(value, proxy, sourceUri);
+            var uri = resolveHref(value, proxy, sourceUri, query);
             element.setAttribute(attributeName, uri);
         }
     }
 
-    function proxyUrl(url, proxy) {
+    function proxyUrl(url, proxy, query) {
         if (defined(proxy)) {
             if (new Uri(url).isAbsolute()) {
                 url = proxy.getURL(url);
             }
+        }
+        if (defined(query)) {
+            url = joinUrls(url, '?' + query, false);
         }
         return url;
     }
@@ -467,7 +472,7 @@ define([
         return undefined;
     }
 
-    function resolveHref(href, proxy, sourceUri, uriResolver) {
+    function resolveHref(href, proxy, sourceUri, uriResolver, query) {
         if (!defined(href)) {
             return undefined;
         }
@@ -489,8 +494,8 @@ define([
         }
         if (!hrefResolved && defined(sourceUri)) {
             href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
-            href = proxyUrl(href, proxy);
         }
+        href = proxyUrl(href, proxy, query);
         return href;
     }
 
@@ -630,7 +635,7 @@ define([
         return label;
     }
 
-    function getIconHref(iconNode, dataSource, sourceUri, uriResolver, canRefresh) {
+    function getIconHref(iconNode, dataSource, sourceUri, uriResolver, canRefresh, query) {
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (!defined(href) || (href.length === 0)) {
             return undefined;
@@ -649,7 +654,7 @@ define([
             href = 'https://maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
-        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
+        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver, query);
 
         if (canRefresh) {
             var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
@@ -885,8 +890,8 @@ define([
     }
 
     //Asynchronously processes an external style file.
-    function processExternalStyles(dataSource, uri, styleCollection) {
-        return loadXML(proxyUrl(uri, dataSource._proxy)).then(function(styleKml) {
+    function processExternalStyles(dataSource, uri, styleCollection, query) {
+        return loadXML(proxyUrl(uri, dataSource._proxy, query)).then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -895,7 +900,7 @@ define([
     //their id into the provided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver) {
+    function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver, query) {
         var i;
         var id;
         var styleEntity;
@@ -987,7 +992,7 @@ define([
                         if (defined(sourceUri)) {
                             uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
                         }
-                        promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
+                        promises.push(processExternalStyles(dataSource, uri, styleCollection, query));
                     }
                 }
             }
@@ -1932,7 +1937,7 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         var networkEntity = r.entity;
 
@@ -1945,7 +1950,7 @@ define([
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {
                 var newSourceUri = href;
-                href = resolveHref(href, undefined, sourceUri, uriResolver);
+                href = resolveHref(href, undefined, sourceUri, uriResolver, query);
                 var linkUrl;
 
                 // We need to pass in the original path if resolveHref returns a data uri because the network link
@@ -2079,16 +2084,16 @@ define([
         Tour : processUnsupportedFeature
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
-            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         } else {
             processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         }
     }
 
-    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context) {
+    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query) {
         entityCollection.removeAll();
 
         var promises = [];
@@ -2118,7 +2123,7 @@ define([
                 }
             }
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
             entityCollection.resumeEvents();
 
             return when.all(promises).then(function() {
@@ -2187,10 +2192,11 @@ define([
         var sourceUri = options.sourceUri;
         var uriResolver = options.uriResolver;
         var context = options.context;
+        var query = defined(options.query) ? objectToQuery(options.query) : undefined;
 
         var promise = data;
         if (typeof data === 'string') {
-            promise = loadBlob(proxyUrl(data, dataSource._proxy));
+            promise = loadBlob(proxyUrl(data, dataSource._proxy, query));
             sourceUri = defaultValue(sourceUri, data);
         }
 
@@ -2228,11 +2234,11 @@ define([
                                 //Return the error
                                 throw new RuntimeError(msg);
                             }
-                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context);
+                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query);
                         });
                     });
                 } else {
-                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
+                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
                 }
             })
             .otherwise(function(error) {
