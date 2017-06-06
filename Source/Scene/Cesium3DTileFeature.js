@@ -47,7 +47,7 @@ define([
         this._content = content;
         this._billboardCollection = billboardCollection;
         this._labelCollection = labelCollection;
-        this._polylineCollection = content._polylineCollection;
+        this._polylineCollection = polylineCollection;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
         this._billboardImage = undefined;
@@ -319,23 +319,8 @@ define([
                 }
             }
         },
-        /**
-         * Gets the content of the tile containing the feature.
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Cesium3DTileContent}
-         *
-         * @readonly
-         * @private
-         */
-        content : {
-            get : function() {
-                return this._content;
-            }
-        },
 
-        /*
+        /**
          * Gets and sets the color for the anchor line.
          *
          * @memberof Cesium3DTileFeature.prototype
@@ -356,70 +341,6 @@ define([
                 if (defined(this._polylineCollection)) {
                     var polyline = this._polylineCollection.get(this._batchId);
                     polyline.material.uniforms.color = value;
-                }
-            }
-        },
-
-        font : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.font;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.font = value;
-                }
-            }
-        },
-
-        outlineColor : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.outlineColor;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.outlineColor = value;
-                }
-            }
-        },
-
-        outlineWidth : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.outlineWidth;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.outlineWidth = value;
-                }
-            }
-        },
-
-        labelStyle : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.style;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.style = value;
                 }
             }
         },
@@ -535,6 +456,22 @@ define([
                     var polyline = this._polylineCollection.get(this._batchId);
                     polyline.distanceDisplayCondition = value;
                 }
+            }
+        },
+
+        /**
+         * Gets the content of the tile containing the feature.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileContent}
+         *
+         * @readonly
+         * @private
+         */
+        content : {
+            get : function() {
+                return this._content;
             }
         }
     });

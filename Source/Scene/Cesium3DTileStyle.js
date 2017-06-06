@@ -660,51 +660,6 @@ define([
             }
         },
 
-        outlineWidth : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._outlineWidth;
-            },
-            set : function(value) {
-                this._outlineWidth = value;
-            }
-        },
-
-        labelStyle : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._labelStyle;
-            },
-            set : function(value) {
-                this._labelStyle = value;
-            }
-        },
-
-        font : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._font;
-            },
-            set : function(value) {
-                this._font = value;
-            }
-        },
-
         anchorLineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
