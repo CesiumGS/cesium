@@ -63,7 +63,7 @@ define([
         this._bursts = undefined;
         this._burstsSubscription = undefined;
         this._forces = undefined;
-        this.__forcesSubscription = undefined;
+        this._forcesSubscription = undefined;
 
         this._definitionChanged = new Event();
 
