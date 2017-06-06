@@ -552,6 +552,7 @@ define([
             if (JulianDate.lessThan(this.expireDate, now)) {
                 this._contentState = Cesium3DTileContentState.EXPIRED;
                 this._expiredContent = this._content;
+                this.expireDate = undefined;
             }
         }
     };
