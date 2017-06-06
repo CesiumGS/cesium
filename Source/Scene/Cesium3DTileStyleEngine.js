@@ -1,16 +1,10 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DistanceDisplayCondition',
-        '../Core/NearFarScalar',
-        './LabelStyle'
+        '../Core/defineProperties'
     ], function(
         defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        NearFarScalar,
-        LabelStyle) {
+        defineProperties) {
     'use strict';
 
     /**
