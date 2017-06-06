@@ -662,9 +662,9 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Number} [distance] The distance of the tile from the camera.
+     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, distance) {
+    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -710,7 +710,7 @@ define([
                 throttle : true,
                 throttleByServer : true,
                 type : RequestType.IMAGERY,
-                distance : distance
+                priorityFunction : priorityFunction
             });
             imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;

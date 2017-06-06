@@ -30,7 +30,9 @@ defineSuite([
     }
 
     it('maintains heap property on insert', function() {
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         var pass = true;
         for (var i = 0; i < length; ++i) {
             heap.insert(Math.random());
@@ -41,7 +43,9 @@ defineSuite([
     });
 
     it('maintains heap property on pop', function() {
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         var i;
         for (i = 0; i < length; ++i) {
             heap.insert(Math.random());
@@ -55,7 +59,9 @@ defineSuite([
     });
 
     it('limited by maximum length', function() {
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         heap.maximumLength = length / 2;
         var pass = true;
         for (var i = 0; i < length; ++i) {
@@ -69,7 +75,9 @@ defineSuite([
     });
 
     it('pops in sorted order', function() {
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         var i;
         for (i = 0; i < length; ++i) {
             heap.insert(Math.random());
@@ -85,7 +93,9 @@ defineSuite([
     });
 
     it('insert returns the removed element when maximumLength is set', function() {
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         heap.maximumLength = length;
 
         var i;
@@ -123,7 +133,9 @@ defineSuite([
         }
 
         var i;
-        var heap = new Heap(comparator);
+        var heap = new Heap({
+            comparator : comparator
+        });
         for (i = 0; i < length; ++i) {
             heap.insert({
                 distance : i / (length - 1),

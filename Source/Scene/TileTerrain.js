@@ -93,14 +93,9 @@ define([
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, distance) {
+    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, priorityFunction) {
         if (this.state === TerrainState.UNLOADED) {
-            requestTileGeometry(this, terrainProvider, x, y, level, distance);
-        }
-
-        if (defined(this.request) && this.request.state === RequestState.ISSUED) {
-            // Update distance while loading to prioritize request
-            this.request.distance = distance;
+            requestTileGeometry(this, terrainProvider, x, y, level, priorityFunction);
         }
 
         if (this.state === TerrainState.RECEIVED) {
@@ -112,7 +107,7 @@ define([
         }
     };
 
-    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, distance) {
+    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, priorityFunction) {
         function success(terrainData) {
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
@@ -149,7 +144,7 @@ define([
                 throttle : true,
                 throttleByServer : true,
                 type : RequestType.TERRAIN,
-                distance : distance
+                priorityFunction : priorityFunction
             });
             tileTerrain.request = request;
             tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, request);

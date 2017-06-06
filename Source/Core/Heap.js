@@ -18,14 +18,16 @@ define([
      * @constructor
      * @private
      *
-     * @param {Function} comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+     * @param {Object} options Object with the following properties:
+     * @param {Function} options.comparator The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
      */
-    function Heap(comparator) {
+    function Heap(options) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('comparator', comparator);
+        Check.typeOf.object('options', options);
+        Check.defined('options.comparator', options.comparator);
         //>>includeEnd('debug');
 
-        this._comparator = comparator;
+        this._comparator = options.comparator;
         this._array = [];
         this._length = 0;
         this._maximumLength = undefined;
@@ -77,6 +79,19 @@ define([
                     this._length = value;
                     this._array.length = value;
                 }
+            }
+        },
+
+        /**
+         * The comparator to use for the heap. If comparator(a, b) is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
+         *
+         * @memberof Heap.prototype
+         *
+         * @type (Function}
+         */
+        comparator : {
+            get : function() {
+                return this._comparator;
             }
         }
     });
@@ -156,6 +171,7 @@ define([
 
         var array = this._array;
         var comparator = this._comparator;
+        var maximumLength = this._maximumLength;
 
         var index = this._length++;
         if (index < array.length) {
@@ -176,9 +192,9 @@ define([
 
         var removedElement;
 
-        if (defined(this._maximumLength) && (this._length > this._maximumLength)) {
-            removedElement = array[this.maximumLength];
-            this._length = this._maximumLength;
+        if (defined(maximumLength) && (this._length > maximumLength)) {
+            removedElement = array[maximumLength];
+            this._length = maximumLength;
         }
 
         return removedElement;

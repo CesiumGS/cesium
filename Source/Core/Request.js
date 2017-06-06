@@ -14,7 +14,7 @@ define([
     'use strict';
 
     /**
-     * Stores information for making a request. This should not be constructed directly. Instead, call the appropriate load function, like `loadWithXhr`, `loadImage`, etc.
+     * Stores information for making a request. In general this does not need to be constructed directly.
      *
      * @alias Request
      * @constructor
@@ -22,11 +22,12 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {Boolean} [options.url] The url to request.
      * @param {Function} [options.requestFunction] The actual function that makes the request. The function takes no arguments and returns a promise for the requested data.
+     * @param {Function} [options.cancelFunction] Function to call when a request is cancelled. The function takes no arguments.
+     * @param {Function} [options.priorityFunction] Function that is called when the request is updated. The function takes no arguments and returns the updated priority value.
+     * @param {Number} [options.priority=0.0] The initial priority of the request.
      * @param {Boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
      * @param {Boolean} [options.throttleByServer=false] Whether to throttle the request by server.
      * @param {RequestType} [options.type=RequestType.OTHER] The type of request.
-     * @param {Number} [options.distance=0.0] The distance from the camera, used to prioritize requests.
-     * @param {Number} [options.screenSpaceError=0.0] The screen space error, used to prioritize requests.
      */
     function Request(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -45,10 +46,34 @@ define([
          * The actual function that makes the request. The function takes no arguments and returns a promise for the requested data.
          *
          * @type {Function}
-         *
-         * @private
          */
         this.requestFunction = options.requestFunction;
+
+        /**
+         * Function to call when a request is cancelled. The function takes no arguments.
+         *
+         * @type {Function}
+         */
+        this.cancelFunction = options.cancelFunction;
+
+        /**
+         * Function that is called when the request is updated. The function takes no arguments and returns the updated priority value.
+         *
+         * @type {Function}
+         */
+        this.priorityFunction = options.priorityFunction;
+
+        /**
+         * Priority is a unit-less value where lower values represent higher priority.
+         * For world-based objects, this is usually the distance from the camera.
+         * A request that does not have a priority function defaults to a priority of 0.
+         *
+         * If priorityFunction is defined, this value is updated every frame with the result of that call.
+         *
+         * @type {Number}
+         * @default 0.0
+         */
+        this.priority = defaultValue(options.priority, 0.0);
 
         /**
          * Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the
@@ -84,51 +109,21 @@ define([
         this.type = defaultValue(options.type, RequestType.OTHER);
 
         /**
-         * The distance from the camera, used to prioritize requests. This value may be edited continually to update
-         * the request's priority.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.distance = defaultValue(options.distance, 0.0);
-
-        /**
-         * The screen space error, used to prioritize requests. This value may be edited continually to update
-         * the request's priority.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.screenSpaceError = defaultValue(options.screenSpaceError, 0.0);
-
-        /**
-         * The request server, derived from the url.
+         * A key used to identify the server that a request is going to. It is derived from the url's authority and scheme.
          *
          * @type {String}
          *
          * @private
          */
-        this.server = undefined;
+        this.serverKey = undefined;
 
         /**
          * The current state of the request.
          *
          * @type {RequestState}
-         *
-         * @private
+         * @readonly
          */
         this.state = RequestState.UNISSUED;
-
-        /**
-         * Reference to the underlying XMLHttpRequest so that it may be aborted in RequestScheduler.
-         *
-         * @type {Object}
-         *
-         * @private
-         */
-        this.xhr = undefined;
 
         /**
          * The requests's deferred promise.

@@ -15,7 +15,7 @@ define([
      *
      * @param {String} url The URL to request.
      * @param {Object} [headers] HTTP headers to send with the request.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<XMLDocument>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *

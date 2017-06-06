@@ -28,7 +28,7 @@ define([
      * @exports loadImageViaBlob
      *
      * @param {String} url The source URL of the image.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *

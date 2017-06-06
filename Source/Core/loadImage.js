@@ -35,7 +35,7 @@ define([
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -65,7 +65,7 @@ define([
         if (typeof url !== 'string') {
             // Returning a promise here is okay because it is unlikely that anyone using the deprecated functionality is also
             // providing a Request object marked as throttled.
-            deprecationWarning('url promise', 'url as a Promise is deprecated and will be removed in Cesium 1.36');
+            deprecationWarning('url promise', 'url as a Promise is deprecated and will be removed in 1.37');
             return url.then(function(url) {
                 return makeRequest(url, allowCrossOrigin, request);
             });

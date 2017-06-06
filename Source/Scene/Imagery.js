@@ -87,15 +87,10 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, distance) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this, distance);
-        }
-
-        if (defined(this.request) && this.request.state === RequestState.ISSUED) {
-            // Update distance while loading to prioritize request
-            this.request.distance = distance;
+            this.imageryLayer._requestImagery(this, priorityFunction);
         }
 
         if (this.state === ImageryState.RECEIVED) {

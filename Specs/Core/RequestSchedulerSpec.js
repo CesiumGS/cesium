@@ -59,17 +59,17 @@ defineSuite([
 
     it('getServer throws if url is undefined', function() {
         expect(function() {
-            RequestScheduler.getServer();
+            RequestScheduler.getServerKey();
         }).toThrowDeveloperError();
     });
 
     it('getServer with https', function() {
-        var server = RequestScheduler.getServer('https://foo.com/1');
+        var server = RequestScheduler.getServerKey('https://foo.com/1');
         expect(server).toEqual('foo.com:443');
     });
 
     it('getServer with http', function() {
-        var server = RequestScheduler.getServer('http://foo.com/1');
+        var server = RequestScheduler.getServerKey('http://foo.com/1');
         expect(server).toEqual('foo.com:80');
     });
 
@@ -151,7 +151,7 @@ defineSuite([
         }
 
         var url = 'http://foo.com/1';
-        var server = RequestScheduler.getServer(url);
+        var server = RequestScheduler.getServerKey(url);
 
         function createRequest() {
             return new Request({
@@ -217,12 +217,12 @@ defineSuite([
             return deferred.promise;
         }
 
-        function createRequest(distance) {
+        function createRequest(priority) {
             var request = new Request({
                 url : 'http://foo.com/1',
                 requestFunction : requestFunction,
                 throttle : true,
-                distance : distance
+                priority : priority
             });
             requests.push(request);
             return request;
@@ -271,11 +271,11 @@ defineSuite([
         expect(promise).toBeDefined();
 
         if (dataOrBlobUri) {
-            expect(request.server).toBeUndefined();
+            expect(request.serverKey).toBeUndefined();
             expect(statistics.numberOfActiveRequests).toBe(0);
         } else {
             expect(statistics.numberOfActiveRequests).toBe(1);
-            expect(RequestScheduler.numberOfActiveRequestsByServer(request.server)).toBe(1);
+            expect(RequestScheduler.numberOfActiveRequestsByServer(request.serverKey)).toBe(1);
         }
 
         deferreds[0].resolve();
@@ -284,7 +284,7 @@ defineSuite([
             expect(request.state).toBe(RequestState.RECEIVED);
             expect(statistics.numberOfActiveRequests).toBe(0);
             if (!dataOrBlobUri) {
-                expect(RequestScheduler.numberOfActiveRequestsByServer(request.server)).toBe(0);
+                expect(RequestScheduler.numberOfActiveRequestsByServer(request.serverKey)).toBe(0);
             }
         });
     }
@@ -362,28 +362,23 @@ defineSuite([
         return promise.then(function() {
             fail('should not be called');
         }).otherwise(function(error) {
-            expect(error).toBe('Cancelled');
+            expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
 
     it('cancels an active request', function() {
         var statistics = RequestScheduler.statistics;
-        var aborted = true;
-        var mockXhr = {
-            abort : function() {
-                aborted = true;
-            }
-        };
+        var cancelFunction = jasmine.createSpy('cancelFunction');
 
         function requestFunction() {
-            request.xhr = mockXhr;
             return when.defer().promise;
         }
 
         var request = new Request({
             throttle : true,
             url : 'https://foo.com/1',
-            requestFunction : requestFunction
+            requestFunction : requestFunction,
+            cancelFunction : cancelFunction
         });
 
         var promise = RequestScheduler.request(request);
@@ -396,13 +391,13 @@ defineSuite([
         expect(request.state).toBe(RequestState.CANCELLED);
         expect(statistics.numberOfCancelledRequests).toBe(1);
         expect(statistics.numberOfCancelledActiveRequests).toBe(1);
-        expect(RequestScheduler.numberOfActiveRequestsByServer(request.server)).toBe(0);
-        expect(aborted).toBe(true);
+        expect(RequestScheduler.numberOfActiveRequestsByServer(request.serverKey)).toBe(0);
+        expect(cancelFunction).toHaveBeenCalled();
 
         return promise.then(function() {
             fail('should not be called');
         }).otherwise(function(error) {
-            expect(error).toBe('Cancelled');
+            expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
 
@@ -436,47 +431,58 @@ defineSuite([
         });
     });
 
-    it('prioritizes requests by distance', function() {
-        var currentDistance = 0.0;
+    it('prioritizes requests', function() {
+        var currentPriority = 0.0;
 
-        function getRequestFunction(distance) {
+        function getRequestFunction(priority) {
             return function() {
-                expect(distance).toBeGreaterThan(currentDistance);
-                currentDistance = distance;
+                expect(priority).toBeGreaterThan(currentPriority);
+                currentPriority = priority;
                 return when.resolve();
             };
         }
 
-        function createRequest(distance) {
+        function createRequest(priority) {
             return new Request({
                 throttle : true,
                 url : 'https://foo.com/1',
-                requestFunction : getRequestFunction(distance),
-                distance : distance
+                requestFunction : getRequestFunction(priority),
+                priority : priority
             });
         }
 
         var length = RequestScheduler.priorityHeapLength;
         for (var i = 0; i < length; ++i) {
-            var distance = Math.random();
-            RequestScheduler.request(createRequest(distance));
+            var priority = Math.random();
+            RequestScheduler.request(createRequest(priority));
         }
 
         RequestScheduler.update();
-        expect(currentDistance).toBeGreaterThan(0.0); // Ensures that the expect in getRequestFunction is actually called
+        expect(currentPriority).toBeGreaterThan(0.0); // Ensures that the expect in getRequestFunction is actually called
     });
 
     it('updates priority', function() {
+        var invertPriority = false;
+
+        function getPriorityFunction(priority) {
+            return function() {
+                if (invertPriority) {
+                    return 1.0 - priority;
+                }
+                return priority;
+            };
+        }
+
         function requestFunction() {
             return when.resolve();
         }
 
-        function createRequest(distance) {
+        function createRequest(priority) {
             return new Request({
                 throttle : true,
                 url : 'https://foo.com/1',
                 requestFunction : requestFunction,
-                distance : distance
+                priorityFunction : getPriorityFunction(priority)
             });
         }
 
@@ -484,16 +490,17 @@ defineSuite([
         var request;
         var length = RequestScheduler.priorityHeapLength;
         for (i = 0; i < length; ++i) {
-            var distance = i / (length - 1);
-            request = createRequest(distance);
+            var priority = i / (length - 1);
+            request = createRequest(priority);
             request.testId = i;
             RequestScheduler.request(request);
         }
 
+        // Update priorities while not letting any requests go through
         RequestScheduler.maximumRequests = 0;
         RequestScheduler.update();
 
-        var requestHeap = RequestScheduler._requestHeap;
+        var requestHeap = RequestScheduler.requestHeap;
         var requests = [];
         var currentTestId = 0;
         while (requestHeap.length > 0) {
@@ -507,11 +514,9 @@ defineSuite([
             requestHeap.insert(requests[i]);
         }
 
-        for (i = 0; i < length; ++i) {
-            requests[i].distance = 1.0 - requests[i].distance; // Invert priority
-        }
-
+        invertPriority = true;
         RequestScheduler.update();
+
         while (requestHeap.length > 0) {
             request = requestHeap.pop();
             expect(request.testId).toBeLessThanOrEqualTo(currentTestId);
@@ -524,12 +529,12 @@ defineSuite([
             return when.resolve();
         }
 
-        function createRequest(distance) {
+        function createRequest(priority) {
             return new Request({
                 throttle : true,
                 url : 'https://foo.com/1',
                 requestFunction : requestFunction,
-                distance : distance
+                priority : priority
             });
         }
 
@@ -625,14 +630,14 @@ defineSuite([
         }
     });
 
-    it('debugThrottle', function() {
+    it('throttleRequests', function() {
         RequestScheduler.maximumRequests = 0;
 
         function requestFunction() {
             return when.resolve();
         }
 
-        RequestScheduler.debugThrottle = true;
+        RequestScheduler.throttleRequests = true;
         var request = new Request({
             throttle : true,
             url : 'https://foo.com/1',
@@ -641,7 +646,7 @@ defineSuite([
         var promise = RequestScheduler.request(request);
         expect(promise).toBeUndefined();
 
-        RequestScheduler.debugThrottle = false;
+        RequestScheduler.throttleRequests = false;
         request = new Request({
             throttle : true,
             url : 'https://foo.com/1',
@@ -650,7 +655,7 @@ defineSuite([
         promise = RequestScheduler.request(request);
         expect(promise).toBeDefined();
 
-        RequestScheduler.debugThrottle = true;
+        RequestScheduler.throttleRequests = true;
     });
 
     it('debugShowStatistics', function() {
@@ -693,5 +698,7 @@ defineSuite([
         for (var i = 0; i < length; ++i) {
             deferreds[i].resolve();
         }
+
+        RequestScheduler.debugShowStatistics = false;
     });
 });

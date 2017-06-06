@@ -74,7 +74,7 @@ define([
         if (typeof url !== 'string') {
             // Returning a promise here is okay because it is unlikely that anyone using the deprecated functionality is also
             // providing a Request object marked as throttled.
-            deprecationWarning('url promise', 'options.url as a Promise is deprecated and will be removed in Cesium 1.36');
+            deprecationWarning('url promise', 'options.url as a Promise is deprecated and will be removed in Cesium 1.37');
             return url.then(function(url) {
                 return makeRequest(options, url);
             });
@@ -95,7 +95,12 @@ define([
         request.url = url;
         request.requestFunction = function() {
             var deferred = when.defer();
-            request.xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            if (defined(xhr)) {
+                request.cancelFunction = function() {
+                    xhr.abort();
+                };
+            }
             return deferred.promise;
         };
 

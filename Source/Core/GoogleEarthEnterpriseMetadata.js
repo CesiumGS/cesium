@@ -294,7 +294,7 @@ define([
      *
      * @param {String} [quadKey=''] The quadkey to retrieve the packet for.
      * @param {Number} [version=1] The cnode version to be used in the request.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      *
      * @private
      */
@@ -373,7 +373,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      *
      * @returns {Promise<GoogleEarthEnterpriseTileInformation>} A promise that resolves to the tile info for the requested quad key
      *
@@ -409,7 +409,7 @@ define([
                         throttle : request.throttle,
                         throttleByServer : request.throttleByServer,
                         type : request.type,
-                        distance : request.distance
+                        priorityFunction : request.priorityFunction
                     });
                     return populateSubtree(that, quadKey, subtreeRequest);
                 });
@@ -439,7 +439,7 @@ define([
                     throttle : request.throttle,
                     throttleByServer : request.throttleByServer,
                     type : request.type,
-                    distance : request.distance
+                    priorityFunction : request.priorityFunction
                 });
                 return populateSubtree(that, quadKey, subtreeRequest);
             })
