@@ -29,6 +29,7 @@ define([
         './GroundPolylineBatch',
         './GroundPrimitiveBatch',
         './LabelCollection',
+        './LabelStyle',
         './VerticalOrigin'
     ], function(
         AttributeCompression,
@@ -60,6 +61,7 @@ define([
         GroundPolylineBatch,
         GroundPrimitiveBatch,
         LabelCollection,
+        LabelStyle,
         VerticalOrigin) {
     'use strict';
 
@@ -70,21 +72,24 @@ define([
      * @private
      */
     function Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset) {
-        this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._url = url;
 
         this._polygons = undefined;
         this._polylines = undefined;
-        this._outlines = undefined;
-
         this._billboardCollection = undefined;
         this._labelCollection = undefined;
 
-        this.batchTable = undefined;
-        this.featurePropertiesDirty = false;
-
         this._readyPromise = when.defer();
+
+        this._batchTable = undefined;
+        this._features = undefined;
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        this.featurePropertiesDirty = false;
 
         initialize(this, arrayBuffer, byteOffset);
     }
@@ -95,7 +100,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                return defined(this.batchTable) ? this.batchTable.featuresLength : 0;
+                return defined(this._batchTable) ? this._batchTable.featuresLength : 0;
             }
         },
 
@@ -113,7 +118,6 @@ define([
          */
         trianglesLength : {
             get : function() {
-                // TODO
                 return 0;
             }
         },
@@ -121,17 +125,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        vertexMemorySizeInBytes : {
-            get : function() {
-                // TODO
-                return 0;
-            }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
-        textureMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
                 return 0;
             }
@@ -140,10 +134,18 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
-        batchTableMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
-                // TODO
                 return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTableByteLength : {
+            get : function() {
+                return defined(this._batchTable) ? this._batchTable.memorySizeInBytes : 0;
             }
         },
 
@@ -166,57 +168,41 @@ define([
         },
 
         /**
-         * Gets the url of the tile's content.
-         * @memberof Cesium3DTileContent.prototype
-         * @type {String}
-         * @readonly
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tileset : {
+            get : function() {
+                return this._tileset;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        tile : {
+            get : function() {
+                return this._tile;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         url: {
             get: function() {
                 return this._url;
             }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        batchTable : {
+            get : function() {
+                return this._batchTable;
+            }
         }
     });
-
-    function createFeatures(content) {
-        var tileset = content._tileset;
-        var featuresLength = content.featuresLength;
-        if (!defined(content._features) && (featuresLength > 0)) {
-            var features = new Array(featuresLength);
-            for (var i = 0; i < featuresLength; ++i) {
-                if (defined(content._billboardCollection) && i < content._billboardCollection.length) {
-                    var billboardCollection = content._billboardCollection;
-                    var labelCollection = content._labelCollection;
-                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection);
-                } else {
-                    features[i] = new Cesium3DTileFeature(tileset, content, i);
-                }
-            }
-            content._features = features;
-        }
-    }
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
-        return this.batchTable.hasProperty(batchId, name);
-    };
-
-    /**
-     * Part of the {@link Cesium3DTileContent} interface.
-     */
-    Vector3DTileContent.prototype.getFeature = function(batchId) {
-        //>>includeStart('debug', pragmas.debug);
-        var featuresLength = this.featuresLength;
-        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-        }
-        //>>includeEnd('debug');
-
-        createFeatures(this);
-        return this._features[batchId];
-    };
 
     function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
@@ -337,7 +323,7 @@ define([
 
         var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content, numberOfPolygons));
-        content.batchTable = batchTable;
+        content._batchTable = batchTable;
 
         var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
@@ -420,7 +406,7 @@ define([
                 center : center,
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
-                batchTable : content.batchTable,
+                batchTable : batchTable,
                 batchIds : batchIds
             });
         }
@@ -444,10 +430,50 @@ define([
                 center : center,
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
-                batchTable : content.batchTable
+                batchTable : batchTable
             });
         }
     }
+
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content.featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                if (defined(content._billboardCollection) && i < content._billboardCollection.length) {
+                    var billboardCollection = content._billboardCollection;
+                    var labelCollection = content._labelCollection;
+                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection);
+                } else {
+                    features[i] = new Cesium3DTileFeature(tileset, content, i);
+                }
+            }
+            content._features = features;
+        }
+    }
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
+        return this._batchTable.hasProperty(batchId, name);
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
+    Vector3DTileContent.prototype.getFeature = function(batchId) {
+        //>>includeStart('debug', pragmas.debug);
+        var featuresLength = this.featuresLength;
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        createFeatures(this);
+        return this._features[batchId];
+    };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -456,11 +482,6 @@ define([
         if (defined(this._polygons)) {
             this._polygons.applyDebugSettings(enabled, color);
         }
-
-        if (defined(this._outlines)) {
-            this._outlines.applyDebugSettings(enabled, color);
-        }
-
         if (defined(this._polylines)) {
             this._polylines.applyDebugSettings(enabled, color);
         }
@@ -468,27 +489,61 @@ define([
         //TODO: debug settings for points/billboards/labels
     };
 
+    function clearStyle(content) {
+        var length = content.featuresLength;
+        for (var i = 0; i < length; ++i) {
+            var feature = content.getFeature(i);
+            feature.show = true;
+            feature.color = Color.WHITE;
+            feature.outlineColor = Color.BLACK;
+            feature.outlineWidth = 2.0;
+            feature.labelStyle = LabelStyle.FILL;
+            feature.font = '30px sans-serif';
+            feature.pointSize = 8.0;
+            feature.text = ' ';
+            feature.image = undefined;
+        }
+    }
+
+    var scratchColor = new Color();
+    var scratchColor2 = new Color();
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Vector3DTileContent.prototype.applyStyleWithShader = function(frameState, style) {
-        return false;
+    Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
+        if (!defined(style)) {
+            clearStyle(this);
+            return;
+        }
+
+        var length = this.featuresLength;
+        for (var i = 0; i < length; ++i) {
+            var feature = this.getFeature(i);
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
+            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
+            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
+            feature.pointSize = style.pointSize.evaluate(frameState, feature);
+            feature.text = style.text.evaluate(frameState, feature);
+            if (defined(style.image)) {
+                feature.image = style.image.evaluate(frameState, feature);
+            }
+        }
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this.batchTable)) {
-            this.batchTable.update(tileset, frameState);
+        if (defined(this._batchTable)) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (defined(this._polygons)) {
             this._polygons.update(frameState);
-        }
-
-        if (defined(this._outlines)) {
-            this._outlines.update(frameState);
         }
 
         if (defined(this._polylines)) {
@@ -526,7 +581,6 @@ define([
     Vector3DTileContent.prototype.destroy = function() {
         this._polygons = this._polygons && this._polygons.destroy();
         this._polylines = this._polylines && this._polylines.destroy();
-        this._outlines = this._outlines && this._outlines.destroy();
         this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
         return destroyObject(this);

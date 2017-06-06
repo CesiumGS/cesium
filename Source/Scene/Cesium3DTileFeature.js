@@ -327,6 +327,8 @@ define([
         content : {
             get : function() {
                 return this._content;
+            }
+        }
     });
 
     function setBillboardImage(feature) {
@@ -408,20 +410,6 @@ define([
             return canvas;
         };
     }
-
-    /**
-     * Returns an array of property names for the feature.
-     * <p>
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color} are not equivalent to
-     * <code>'show'</code> and <code>'color'</code> properties; the former are runtime-specific properties
-     * that are not part of the feature's properties in the stored 3D Tileset.
-     * </p>
-     *
-     * @returns {String[]} The names of the feature's properties.
-     */
-    Cesium3DTileFeature.prototype.getPropertyNames = function() {
-        return this._batchTable.getPropertyNames();
-    };
 
     /**
      * Returns whether the feature contains this property. This includes properties from this feature's
