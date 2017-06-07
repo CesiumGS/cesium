@@ -1,9 +1,12 @@
+/*eslint-env node*/
+'use strict';
+
 module.exports = {
     "extends": "cesium",
     "env": {
         "node": true
     },
     "rules": {
-        "strict": ["off"]
+        "strict": [2, "safe"]
     }
 };

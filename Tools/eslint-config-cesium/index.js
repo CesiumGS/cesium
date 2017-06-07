@@ -1,3 +1,6 @@
+/*eslint-env node*/
+'use strict';
+
 module.exports = {
     "extends": "eslint:recommended",
     "env": {
@@ -16,9 +19,6 @@ module.exports = {
         "Uint8Array": false,
         "Uint8ClampedArray": false
     },
-    "plugins": [
-        "html"
-    ],
     "rules": {
         "curly": ["error"],
         "eqeqeq": ["error"],

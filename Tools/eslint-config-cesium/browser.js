@@ -1,3 +1,6 @@
+/*eslint-env node*/
+'use strict';
+
 module.exports = {
     "extends": "eslint-config-cesium",
     "globals": {
@@ -7,6 +10,9 @@ module.exports = {
         "Sandcastle": true,
         "Cesium": true
     },
+    "plugins": [
+        "html"
+    ],
     "rules": {
         "no-unused-vars": ["off"]
     }
