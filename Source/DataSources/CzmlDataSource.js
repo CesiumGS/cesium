@@ -1905,7 +1905,6 @@ define([
 
         // If the czml is a URL
         if (typeof czml === 'string') {
-            promise = loadJson(czml);
             if (defined(query)) {
                 czml = joinUrls(czml, '?' + query, false);
             }
