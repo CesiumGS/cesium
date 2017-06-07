@@ -485,7 +485,7 @@ define([
     };
 
     function clearStyle(content) {
-        var length = content._featuresLength;
+        var length = content._features.length;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
             feature.show = true;
@@ -516,12 +516,14 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
+        createFeatures(this);
+
         if (!defined(style)) {
             clearStyle(this);
             return;
         }
 
-        var length = this._featuresLength;
+        var length = this._features.length;
         for (var i = 0; i < length; ++i) {
             var feature = this.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);

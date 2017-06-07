@@ -453,8 +453,10 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.distanceDisplayCondition = value;
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.distanceDisplayCondition = value;
+                    if (defined(this._polylineCollection)) {
+                        var polyline = this._polylineCollection.get(this._batchId);
+                        polyline.distanceDisplayCondition = value;
+                    }
                 }
             }
         },
