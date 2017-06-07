@@ -9,13 +9,12 @@
   },
   "contributors": [
     {
-      "name": "Ottavio Hartman <omh1280@gmail.com> (https://github.com/omh1280)",
+      "name": "Cesium community",
       "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
     }
   ],
   "keywords": [
     "eslint",
-    "config",
     "cesium"
   ],
   "peerDependencies": {

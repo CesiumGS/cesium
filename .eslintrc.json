@@ -1,6 +1,3 @@
 {
-    "extends": "cesium",
-    "rules": {
-        "no-unused-vars": ["off"]
-    }
+    "extends": "cesium/browser"
 }

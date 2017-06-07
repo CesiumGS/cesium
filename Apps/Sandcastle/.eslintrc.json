@@ -1,5 +1,12 @@
 {
-    "extends": "cesium/browser",
+    "extends": "../../.eslintrc.json",
+    "globals": {
+        "JSON": true,
+        "require": true,
+        "console": true,
+        "Sandcastle": true,
+        "Cesium": true
+    },
     "rules": {
         "no-unused-vars": ["off"]
     }

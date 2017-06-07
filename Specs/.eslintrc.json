@@ -1,5 +1,5 @@
 {
-    "extends": "cesium/browser",
+    "extends": "../.eslintrc.json",
     "env": {
         "jasmine": true
     }
