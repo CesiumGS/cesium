@@ -286,7 +286,7 @@ define([
                 var byteOffset = property.byteOffset;
                 if (defined(byteOffset)) {
                     // This is a binary property
-                    var componentType = ComponentDatatype.fromName(property.componentType);
+                    var componentType = property.componentType;
                     var type = property.type;
                     if (!defined(componentType)) {
                         throw new RuntimeError('componentType is required.');

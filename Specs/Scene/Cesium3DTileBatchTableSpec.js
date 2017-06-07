@@ -200,6 +200,20 @@ defineSuite([
         expect(batchTable.getColor(1, result)).toEqual(Color.YELLOW);
     });
 
+    it('setAllShow throws with undefined value', function() {
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+        expect(function() {
+            batchTable.setAllShow();
+        }).toThrowDeveloperError();
+    });
+
+    it('setAllShow', function() {
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+        batchTable.setAllShow(false);
+        expect(batchTable.getShow(0)).toBe(false);
+        expect(batchTable.getShow(1)).toBe(false);
+    });
+
     it('getColor throws with invalid batchId', function() {
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {

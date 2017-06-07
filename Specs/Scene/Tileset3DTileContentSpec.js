@@ -45,4 +45,25 @@ defineSuite([
         return Cesium3DTilesTester.tileDestroys(scene, tilesetOfTilesetsUrl);
     });
 
+    it('gets properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+            expect(content.featuresLength).toBe(0);
+            expect(content.pointsLength).toBe(0);
+            expect(content.trianglesLength).toBe(0);
+            expect(content.geometryByteLength).toBe(0);
+            expect(content.texturesByteLength).toBe(0);
+            expect(content.batchTableByteLength).toBe(0);
+            expect(content.innerContents).toBe(undefined);
+            expect(content.readyPromise).toBe(undefined);
+            expect(content.tileset).toBe(tileset);
+            expect(content.tile).toBe(tile);
+            expect(content.url).toBeDefined();
+            expect(content.batchTable).toBe(undefined);
+            expect(content.hasProperty(0, 'name')).toBe(false);
+            expect(content.getFeature(0).toBeUndefined());
+        });
+    });
+
 }, 'WebGL');
