@@ -2850,4 +2850,12 @@ defineSuite([
         camera.switchToPerspectiveFrustum();
         expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
     });
+
+    it('normalizes WC members', function() {
+        var transform = Matrix4.fromScale(new Cartesian3(2, 2, 2));
+        camera.lookAtTransform(transform);
+        expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+    });
 });
