@@ -608,14 +608,17 @@ define([
 
         if (directionChanged || transformChanged) {
             camera._directionWC = Matrix4.multiplyByPointAsVector(transform, direction, camera._directionWC);
+            Cartesian3.normalize(camera._directionWC, camera._directionWC);
         }
 
         if (upChanged || transformChanged) {
             camera._upWC = Matrix4.multiplyByPointAsVector(transform, up, camera._upWC);
+            Cartesian3.normalize(camera._upWC, camera._upWC);
         }
 
         if (rightChanged || transformChanged) {
             camera._rightWC = Matrix4.multiplyByPointAsVector(transform, right, camera._rightWC);
+            Cartesian3.normalize(camera._rightWC, camera._rightWC);
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
