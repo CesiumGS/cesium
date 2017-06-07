@@ -249,7 +249,6 @@ define([
          * The time in seconds after the tile's content is ready when the content expires and new content is requested.
          *
          * @type {Number}
-         * @readonly
          */
         this.expireDuration = expireDuration;
 
@@ -257,7 +256,6 @@ define([
          * The date when the content expires and new content is requested.
          *
          * @type {JulianDate}
-         * @readonly
          */
         this.expireDate = expireDate;
 
