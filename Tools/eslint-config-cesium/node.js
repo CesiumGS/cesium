@@ -1,8 +1,8 @@
 'use strict';
 
 module.exports = {
-    'extends': 'cesium',
-    'env': {
-        'node': true
+    extends: 'cesium',
+    env: {
+        node: true
     }
 };

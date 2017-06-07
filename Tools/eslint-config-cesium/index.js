@@ -19,7 +19,7 @@ module.exports = {
         curly: ['error'],
         eqeqeq: ['error'],
         'guard-for-in': ['error'],
-        'new-cap': ['error', {'properties': false}],
+        'new-cap': ['error', {properties: false}],
         'no-caller': ['error'],
         'no-console': 'off',
         'no-empty': ['error'],
@@ -28,7 +28,7 @@ module.exports = {
         'no-irregular-whitespace': ['error'],
         'no-new': ['error'],
         'no-undef': ['error'],
-        'no-unused-vars': ['error', {'vars': 'all', 'args': 'none'}],
+        'no-unused-vars': ['error', {vars: 'all', args: 'none'}],
         semi: ['error'],
         strict: ['error'],
         'wrap-iife': ['error', 'any']

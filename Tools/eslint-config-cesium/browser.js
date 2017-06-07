@@ -1,11 +1,11 @@
 'use strict';
 
 module.exports = {
-    'extends': 'cesium',
-    'env': {
-        'browser': true
+    extends: 'cesium',
+    env: {
+        browser: true
     },
-    'plugins': [
+    plugins: [
         'html'
     ]
 };
