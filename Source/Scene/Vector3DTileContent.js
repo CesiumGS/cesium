@@ -305,65 +305,101 @@ define([
             }
         }
 
-        var numberOfPolygons = featureTableJson.POLYGONS_LENGTH;
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfPolygons)) {
-            throw new DeveloperError('Global property: POLYGONS_LENGTH must be defined.');
-        }
-        //>>includeEnd('debug');
-
-        var numberOfPolylines = featureTableJson.POLYLINES_LENGTH;
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfPolylines)) {
-            throw new DeveloperError('Global property: POLYLINES_LENGTH must be defined.');
-        }
-        //>>includeEnd('debug');
-
-        var numberOfPoints = featureTableJson.POINTS_LENGTH;
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfPoints)) {
-            throw new DeveloperError('Global property: POINTS_LENGTH must be defined.');
-        }
-        //>>includeEnd('debug');
+        var numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
+        var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
+        var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
 
         var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content, numberOfPolygons));
         content._batchTable = batchTable;
 
+        if (totalPrimitives === 0) {
+            return;
+        }
+
         var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
         var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
 
-        var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
-        byteOffset += indicesByteLength;
-
-        var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
-        byteOffset += positionByteLength;
-        var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
-        byteOffset += polylinePositionByteLength;
-        var pointsPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
-        var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
-        var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
-
-        byteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
-        var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
-
         var i;
+        var batchId;
+        var batchIds;
 
         // TODO: must have rectangle
         var rectangle = content._tile.contentBoundingVolume.rectangle;
 
+        if (numberOfPolygons > 0) {
+            var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
+            byteOffset += indicesByteLength;
+
+            var polygonPositions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+            byteOffset += positionByteLength;
+
+            var polygonCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_COUNT.byteOffset;
+            var counts = new Uint32Array(featureTableBinary.buffer, polygonCountByteOffset, numberOfPolygons);
+
+            var polygonIndexCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
+            var indexCounts = new Uint32Array(featureTableBinary.buffer, polygonIndexCountByteOffset, numberOfPolygons);
+
+            batchIds = new Array(numberOfPolygons);
+            for (i = 0; i < numberOfPolygons; ++i) {
+                batchId = i + numberOfPoints;
+                batchIds[i] = batchId;
+            }
+
+            content._polygons = new GroundPrimitiveBatch({
+                positions : polygonPositions,
+                counts : counts,
+                indexCounts : indexCounts,
+                indices : indices,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
+                center : center,
+                rectangle : rectangle,
+                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                batchTable : batchTable,
+                batchIds : batchIds
+            });
+        }
+
+        if (numberOfPolylines > 0) {
+            var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
+            byteOffset += polylinePositionByteLength;
+
+            var polylineCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
+            var polylineCounts = new Uint32Array(featureTableBinary.buffer, polylineCountByteOffset, numberOfPolylines);
+
+            var widths = new Array(numberOfPolylines);
+            batchIds = new Array(numberOfPolylines);
+            var polygonBatchOffset = numberOfPoints + numberOfPolygons;
+            for (i = 0; i < numberOfPolylines; ++i) {
+                widths[i] = 2.0;
+                batchIds[i] = i + polygonBatchOffset;
+            }
+
+            content._polylines = new GroundPolylineBatch({
+                positions : polylinePositions,
+                widths : widths,
+                counts : polylineCounts,
+                batchIds : batchIds,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
+                center : center,
+                rectangle : rectangle,
+                boundingVolume : content._tile._boundingVolume.boundingVolume,
+                batchTable : batchTable
+            });
+        }
+
         if (numberOfPoints > 0) {
+            var pointPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
+
             content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
             content._labelCollection = new LabelCollection({ batchTable : batchTable });
 
-            var uBuffer = pointsPositions.subarray(0, numberOfPoints);
-            var vBuffer = pointsPositions.subarray(numberOfPoints, 2 * numberOfPoints);
-            var heightBuffer = pointsPositions.subarray(2 * numberOfPoints, 3 * numberOfPoints);
+            var uBuffer = pointPositions.subarray(0, numberOfPoints);
+            var vBuffer = pointPositions.subarray(numberOfPoints, 2 * numberOfPoints);
+            var heightBuffer = pointPositions.subarray(2 * numberOfPoints, 3 * numberOfPoints);
             AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
             for (i = 0; i < numberOfPoints; ++i) {
@@ -391,52 +427,6 @@ define([
                 l.verticalOrigin = VerticalOrigin.BOTTOM;
                 l._batchIndex = i;
             }
-        }
-
-        var batchId;
-        var batchIds = new Array(numberOfPolygons);
-        for (i = 0; i < numberOfPolygons; ++i) {
-            batchId = i + numberOfPoints;
-            batchIds[i] = batchId;
-        }
-
-        if (positions.length > 0) {
-            content._polygons = new GroundPrimitiveBatch({
-                positions : positions,
-                counts : counts,
-                indexCounts : indexCounts,
-                indices : indices,
-                minimumHeight : minHeight,
-                maximumHeight : maxHeight,
-                center : center,
-                rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
-                batchTable : batchTable,
-                batchIds : batchIds
-            });
-        }
-
-        if (polylinePositions.length > 0) {
-            var widths = new Array(numberOfPolylines);
-            batchIds = new Array(numberOfPolylines);
-            var polygonBatchOffset = numberOfPoints + numberOfPolygons;
-            for (i = 0; i < numberOfPolylines; ++i) {
-                widths[i] = 2.0;
-                batchIds[i] = i + polygonBatchOffset;
-            }
-
-            content._polylines = new GroundPolylineBatch({
-                positions : polylinePositions,
-                widths : widths,
-                counts : polylineCounts,
-                batchIds : batchIds,
-                minimumHeight : minHeight,
-                maximumHeight : maxHeight,
-                center : center,
-                rectangle : rectangle,
-                boundingVolume : content._tile._boundingVolume.boundingVolume,
-                batchTable : batchTable
-            });
         }
     }
 
