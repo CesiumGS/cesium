@@ -314,11 +314,8 @@ define([
      */
     Ellipsoid.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }*/
-        //>>includeEnd('debug');
         Check.defined('array', array);
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
 
@@ -345,11 +342,8 @@ define([
      */
     Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required.');
-        }*/
-        //>>includeEnd('debug');
         Check.typeOf.object('cartographic', cartographic);
+        //>>includeEnd('debug');
 
         var longitude = cartographic.longitude;
         var latitude = cartographic.latitude;
@@ -430,11 +424,8 @@ define([
      */
     Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(cartographics)) {
-            throw new DeveloperError('cartographics is required.');
-        }*/
-        //>>includeEnd('debug')
         Check.defined('cartographics', cartographics);
+        //>>includeEnd('debug')
 
         var length = cartographics.length;
         if (!defined(result)) {
@@ -505,11 +496,8 @@ define([
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }*/
-        //>>includeEnd('debug');
         Check.defined('cartesians', cartesians);
+        //>>includeEnd('debug');
 
         var length = cartesians.length;
         if (!defined(result)) {
@@ -546,11 +534,8 @@ define([
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }*/
-        //>>includeEnd('debug');
         Check.defined('cartesian', cartesian);
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian3();
