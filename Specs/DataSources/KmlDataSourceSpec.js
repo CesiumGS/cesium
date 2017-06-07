@@ -1566,7 +1566,7 @@ defineSuite([
                   </IconStyle>\
               </Style>\
           </Placemark>';
-        debugger;
+
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
             camera : options.camera,
             canvas : options.canvas,
