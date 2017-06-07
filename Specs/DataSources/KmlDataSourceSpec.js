@@ -1555,6 +1555,32 @@ defineSuite([
         });
     });
 
+    it('IconStyle: Sets billboard image with query', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <Icon>\
+                          <href>image.png</href>\
+                      </Icon>\
+                  </IconStyle>\
+              </Style>\
+          </Placemark>';
+        debugger;
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
+            camera : options.camera,
+            canvas : options.canvas,
+            sourceUri : 'http://test.invalid',
+            query : {
+                "test": true
+            }
+        }).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            var billboard = entities[0].billboard;
+            expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png?test=true');
+        });
+    });
+
     it('IconStyle: Sets billboard image with subregion', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark xmlns="http://www.opengis.net/kml/2.2"\

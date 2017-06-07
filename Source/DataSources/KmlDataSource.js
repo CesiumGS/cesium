@@ -492,10 +492,12 @@ define([
                 }
             }
         }
-        if (!hrefResolved && defined(sourceUri)) {
-            href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
+        if (!hrefResolved) {
+            if (defined(sourceUri)) {
+                href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
+            }
+            href = proxyUrl(href, proxy, query);
         }
-        href = proxyUrl(href, proxy, query);
         return href;
     }
 
@@ -678,13 +680,13 @@ define([
         return href;
     }
 
-    function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
+    function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver, query) {
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
-        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
+        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -753,11 +755,11 @@ define([
         }
     }
 
-    function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
+    function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver, query) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             if (node.localName === 'IconStyle') {
-                processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
+                processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver, query);
             } else if (node.localName === 'LabelStyle') {
                 var label = targetEntity.label;
                 if (!defined(label)) {
@@ -819,7 +821,7 @@ define([
     }
 
     //Processes and merges any inline styles for the provided node into the provided entity.
-    function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
+    function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver, query) {
         var result = new Entity();
         var styleEntity;
 
@@ -837,7 +839,7 @@ define([
         if (styleIndex !== -1) {
             var inlineStyleNode = childNodes[styleIndex];
             if (inlineStyleNode.localName === 'Style') {
-                applyStyle(dataSource, inlineStyleNode, result, sourceUri, uriResolver);
+                applyStyle(dataSource, inlineStyleNode, result, sourceUri, uriResolver, query);
             } else { // StyleMap
                 var pairs = queryChildNodes(inlineStyleNode, 'Pair', namespaces.kml);
                 for (var p = 0; p < pairs.length; p++) {
@@ -855,7 +857,7 @@ define([
                             }
                         } else {
                             var node = queryFirstNode(pair, 'Style', namespaces.kml);
-                            applyStyle(dataSource, node, result, sourceUri, uriResolver);
+                            applyStyle(dataSource, node, result, sourceUri, uriResolver, query);
                         }
                     } else {
                         console.log('KML - Unsupported StyleMap key: ' + key);
@@ -922,7 +924,7 @@ define([
                             id : id
                         });
                         styleCollection.add(styleEntity);
-                        applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                        applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver, query);
                     }
                 }
             }
@@ -963,7 +965,7 @@ define([
                                     }
                                 } else {
                                     node = queryFirstNode(pair, 'Style', namespaces.kml);
-                                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver, query);
                                 }
                             }
                         } else {
@@ -1552,10 +1554,10 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var entity = createEntity(featureNode, entityCollection, context);
         var kmlData = entity.kml;
-        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
+        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver, query);
 
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
         entity.name = name;
@@ -1630,7 +1632,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1644,19 +1646,19 @@ define([
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1679,8 +1681,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var entity = r.entity;
 
         var geometry;
@@ -1725,7 +1727,7 @@ define([
         }
 
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
-        var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true);
+        var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true, query);
         if (defined(href)) {
             if (isLatLonQuad) {
                 console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
@@ -1938,7 +1940,7 @@ define([
     }
 
     function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -2110,7 +2112,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context)).then(function() {
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, query)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
