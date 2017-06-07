@@ -1,3 +1,6 @@
 {
-    "extends": "cesium"
+    "extends": "cesium",
+    "rules": {
+        "no-unused-vars": ["off"]
+    }
 }
