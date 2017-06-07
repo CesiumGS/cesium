@@ -1,3 +1,7 @@
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
+
 varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
@@ -39,6 +43,11 @@ void main()
         discard;
     }
 #endif
+#endif
+
+#ifdef GL_EXT_frag_depth
+    float z = gl_FragCoord.z;
+    gl_FragDepthEXT = z + ((1.0 - z) * (1.0 - wholeAlpha));
 #endif
 
 #ifdef RENDER_FOR_PICK
