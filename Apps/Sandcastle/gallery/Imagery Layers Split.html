@@ -49,6 +49,7 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Show different imagery layers on either side of a draggable slider.
 var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
         url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
@@ -62,14 +63,15 @@ var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryPr
     credit : 'Black Marble imagery courtesy NASA Earth Observatory',
     flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
 }));
-blackMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show to the left of the slider.
+blackMarble.splitDirection = Cesium.ImagerySplitDirection.LEFT; // Only show this layer to the left of the slider.
 
-// Sync the position of the slider with the split position
+// Sync the position of the slider with the split position.
 var slider = document.getElementById('slider');
 viewer.scene.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.offsetWidth;
 
 var dragStartX = 0;
 
+// Make the slider draggable by adding a mouse event listener.
 document.getElementById('slider').addEventListener('mousedown', mouseDown, false);
 window.addEventListener('mouseup', mouseUp, false);
 
@@ -89,8 +91,6 @@ function sliderMove(e) {
   slider.style.left = 100.0 * splitPosition + "%";
   viewer.scene.imagerySplitPosition = splitPosition;
 }
-
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

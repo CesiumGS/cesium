@@ -27,6 +27,8 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Add several imagery layers and blend between them.
+// Imagery Layers tutorial: http://cesiumjs.org/tutorials/Imagery-Layers-Tutorial/
 var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
         url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
@@ -34,6 +36,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
 });
 
+// Add another imagery layer with transparency and increased brightness.
 var layers = viewer.imageryLayers;
 var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
     url : 'https://cesiumjs.org/blackmarble',
@@ -43,6 +46,7 @@ var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryPr
 blackMarble.alpha = 0.5;
 blackMarble.brightness = 2.0;
 
+// Add another imagery layer consisting of a single tile containing the Cesum logo overlay.
 layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
     url : '../images/Cesium_Logo_overlay.png',
     rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)

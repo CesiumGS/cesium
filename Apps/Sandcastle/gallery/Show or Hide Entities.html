@@ -27,9 +27,7 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-//Set the random seed for reproducible random colors.
-Cesium.Math.setRandomNumberSeed(1234);
-
+// Toggle the visiblity of groups of entities.
 var viewer = new Cesium.Viewer('cesiumContainer', { infoBox : false });
 var entities = viewer.entities;
 
@@ -37,6 +35,9 @@ var entities = viewer.entities;
 var spheres = entities.add(new Cesium.Entity());
 var boxes = entities.add(new Cesium.Entity());
 var ellipsoids = entities.add(new Cesium.Entity());
+
+//Set the random seed for reproducible random colors.
+Cesium.Math.setRandomNumberSeed(1234);
 
 //Create the entities and assign each entity's parent to the group to which it belongs.
 for (var i = 0; i < 5; ++i) {
@@ -58,7 +59,7 @@ for (var i = 0; i < 5; ++i) {
             material : Cesium.Color.fromRandom({alpha : 1.0})
         }
     });
-    
+
     entities.add({
         parent : spheres,
         position : Cesium.Cartesian3.fromDegrees(-98.0, 45.0, height),
@@ -71,6 +72,7 @@ for (var i = 0; i < 5; ++i) {
 
 viewer.zoomTo(viewer.entities);
 
+// Create toggle buttons.
 Sandcastle.addToolbarButton('Toggle Boxes', function(){
     boxes.show = !boxes.show;
 });
