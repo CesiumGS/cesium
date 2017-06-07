@@ -2725,7 +2725,6 @@ defineSuite([
             // Stays in the expired state until the request goes through
             scene.renderForSpecs();
             expect(tile.contentExpired).toBe(true);
-            expect(tile.expireDate).toBeUndefined();
 
             return pollToPromise(function() {
                 scene.renderForSpecs();
@@ -2733,6 +2732,7 @@ defineSuite([
             }).then(function() {
                 scene.renderForSpecs();
                 expect(tile._expiredContent).toBeUndefined();
+                expect(tile.expireDate).toBeUndefined();
             });
         });
     });
