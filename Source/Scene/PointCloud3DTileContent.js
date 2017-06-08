@@ -28,7 +28,8 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         Cartesian3,
         Cartesian4,
@@ -58,7 +59,8 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -707,7 +709,9 @@ define([
             uniformMap : drawUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
-            owner : content
+            owner : content,
+            castShadows : false,
+            receiveShadows : false
         });
 
         content._pickCommand = new DrawCommand({
@@ -1209,6 +1213,9 @@ define([
             this._drawCommand.boundingVolume = boundingVolume;
             this._pickCommand.boundingVolume = boundingVolume;
         }
+
+        this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);
+        this._drawCommand.receiveShadows = ShadowMode.receiveShadows(tileset.shadows);
 
         if (this.backFaceCulling !== this._backFaceCulling) {
             this._backFaceCulling = this.backFaceCulling;
