@@ -53,10 +53,11 @@ define([
     function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
+        var canvas = options.canvas;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(url) && !defined(canvas)) {
+            throw new DeveloperError('Either url or canvas is required.');
         }
         //>>includeEnd('debug');
 
@@ -124,7 +125,11 @@ define([
             when(loadImage(imageUrl), success, failure);
         }
 
-        doRequest();
+        if (defined(canvas)) {
+            success(canvas);
+        } else {
+            doRequest();
+        }
     }
 
     defineProperties(SingleTileImageryProvider.prototype, {
@@ -348,6 +353,12 @@ define([
             }
         }
     });
+
+    SingleTileImageryProvider.prototype.reload = function() {
+        if (defined(this._reload)) {
+            this._reload();
+        }
+    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.

@@ -615,6 +615,48 @@ define([
         if (layer.show) {
             var terrainProvider = this._terrainProvider;
 
+            var that = this;
+            var imageryProvider = layer.imageryProvider;
+            imageryProvider._reload = function() {
+                that._quadtree.forEachLoadedTile(function(tile) {
+                    // Remove all TileImagery for this layer
+                    var tileImageryCollection = tile.data.imagery;
+
+                    var startIndex = -1;
+                    var numDestroyed = 0;
+                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                        var tileImagery = tileImageryCollection[i];
+                        var imagery = tileImagery.loadingImagery;
+                        if (!defined(imagery)) {
+                            imagery = tileImagery.readyImagery;
+                        }
+                        if (imagery.imageryLayer === layer) {
+                            if (startIndex === -1) {
+                                startIndex = i;
+                            }
+
+                            tileImagery.freeResources();
+                            ++numDestroyed;
+                        } else if (startIndex !== -1) {
+                            // iterated past the section of TileImagerys belonging to this layer, no need to continue.
+                            break;
+                        }
+                    }
+
+                    if (startIndex !== -1) {
+                        tileImageryCollection.splice(startIndex, numDestroyed);
+                    }
+
+                    // Clear the layer's cache
+                    layer._imageryCache = {};
+
+                    // Create new TileImagerys for all loaded tiles
+                    if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
+                        tile.state = QuadtreeTileLoadState.LOADING;
+                    }
+                });
+            };
+
             // create TileImagerys for this layer for all previously loaded tiles
             this._quadtree.forEachLoadedTile(function(tile) {
                 if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
@@ -656,6 +698,10 @@ define([
                 tileImageryCollection.splice(startIndex, numDestroyed);
             }
         });
+
+        if (defined(layer.imageryProvider)) {
+            layer.imageryProvider._reload = undefined;
+        }
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
