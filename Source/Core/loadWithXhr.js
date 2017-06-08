@@ -96,7 +96,7 @@ define([
         request.requestFunction = function() {
             var deferred = when.defer();
             var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
-            if (defined(xhr)) {
+            if (defined(xhr) && defined(xhr.abort)) {
                 request.cancelFunction = function() {
                     xhr.abort();
                 };
