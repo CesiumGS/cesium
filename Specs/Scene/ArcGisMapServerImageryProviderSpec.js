@@ -49,6 +49,10 @@ defineSuite([
         Uri) {
     'use strict';
 
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     afterEach(function() {
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;

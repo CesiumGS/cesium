@@ -41,6 +41,10 @@ defineSuite([
     when) {
     'use strict';
 
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
     });

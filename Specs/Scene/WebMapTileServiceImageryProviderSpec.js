@@ -31,6 +31,10 @@ defineSuite([
         Uri) {
     'use strict';
 
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
     });
