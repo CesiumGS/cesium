@@ -123,8 +123,9 @@ define([
         var comparator = this._comparator;
         var array = this._array;
         var candidate = -1;
+        var inserting = true;
 
-        while (true) {
+        while (inserting) {
             var right = 2 * (index + 1);
             var left = right - 1;
 
@@ -141,7 +142,7 @@ define([
                 swap(array, candidate, index);
                 index = candidate;
             } else {
-                break;
+                inserting = false;
             }
         }
     };
