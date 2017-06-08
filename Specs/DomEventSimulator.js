@@ -215,8 +215,18 @@ define([
         var gamma = defaultValue(options.gamma, 0.0);
         var absolute = defaultValue(options.absolute, false);
 
-        var event = document.createEvent('DeviceOrientationEvent');
-        event.initDeviceOrientationEvent(type, canBubble, cancelable, alpha, beta, gamma, absolute);
+        var event;
+        event = document.createEvent('DeviceOrientationEvent');
+        if (typeof event.initDeviceOrientationEvent === 'function') {
+            event.initDeviceOrientationEvent(type, canBubble, cancelable, alpha, beta, gamma, absolute);
+        } else {
+            event = new DeviceOrientationEvent('deviceorientation', {
+                alpha : alpha,
+                beta : beta,
+                gamma : gamma,
+                absolute : absolute
+            });
+        }
         return event;
     }
 
