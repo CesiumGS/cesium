@@ -21,9 +21,9 @@ define([
      *
      * @param {Object} [options] An object with the following properties:
      * @param {Boolean} [options.url] The url to request.
-     * @param {Function} [options.requestFunction] The actual function that makes the request. The function takes no arguments and returns a promise for the requested data.
-     * @param {Function} [options.cancelFunction] Function to call when a request is cancelled. The function takes no arguments.
-     * @param {Function} [options.priorityFunction] Function that is called when the request is updated. The function takes no arguments and returns the updated priority value.
+     * @param {Request~RequestCallback} [options.requestFunction] The function that makes the actual data request.
+     * @param {Request~CancelCallback} [options.cancelFunction] The function that is called when the request is cancelled.
+     * @param {Request~PriorityCallback} [options.priorityFunction] The function that is called to update the request's priority, which occurs once per frame.
      * @param {Number} [options.priority=0.0] The initial priority of the request.
      * @param {Boolean} [options.throttle=false] Whether to throttle and prioritize the request. If false, the request will be sent immediately. If true, the request will be throttled and sent based on priority.
      * @param {Boolean} [options.throttleByServer=false] Whether to throttle the request by server.
@@ -43,23 +43,23 @@ define([
         this.url = options.url;
 
         /**
-         * The actual function that makes the request. The function takes no arguments and returns a promise for the requested data.
+         * The function that makes the actual data request.
          *
-         * @type {Function}
+         * @type {Request~RequestCallback}
          */
         this.requestFunction = options.requestFunction;
 
         /**
-         * Function to call when a request is cancelled. The function takes no arguments.
+         * The function that is called when the request is cancelled.
          *
-         * @type {Function}
+         * @type {Request~CancelCallback}
          */
         this.cancelFunction = options.cancelFunction;
 
         /**
-         * Function that is called when the request is updated. The function takes no arguments and returns the updated priority value.
+         * The function that is called to update the request's priority, which occurs once per frame.
          *
-         * @type {Function}
+         * @type {Request~PriorityCallback}
          */
         this.priorityFunction = options.priorityFunction;
 
@@ -152,6 +152,23 @@ define([
     Request.prototype.cancel = function() {
         this.cancelled = true;
     };
+
+    /**
+     * The function that makes the actual data request.
+     * @callback Request~RequestCallback
+     * @returns {Promise} A promise for the requested data.
+     */
+
+    /**
+     * The function that is called when the request is cancelled.
+     * @callback Request~CancelCallback
+     */
+
+    /**
+     * The function that is called to update the request's priority, which occurs once per frame.
+     * @callback Request~PriorityCallback
+     * @returns {Number} The updated priority value.
+     */
 
     return Request;
 });
