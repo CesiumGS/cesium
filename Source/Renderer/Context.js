@@ -1077,7 +1077,8 @@ define([
             }),
             uniformMap : overrides.uniformMap,
             owner : overrides.owner,
-            framebuffer : overrides.framebuffer
+            framebuffer : overrides.framebuffer,
+            pass : overrides.pass
         });
     };
 

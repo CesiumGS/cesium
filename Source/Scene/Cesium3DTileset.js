@@ -35,6 +35,7 @@ define([
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './LabelCollection',
+        './PointCloudPostProcessor',
         './ShadowMode',
         './TileBoundingRegion',
         './TileBoundingSphere',
@@ -75,6 +76,7 @@ define([
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         LabelCollection,
+        PointCloudPostProcessor,
         ShadowMode,
         TileBoundingRegion,
         TileBoundingSphere,
@@ -205,6 +207,7 @@ define([
         });
 
         this._backfaceCommands = new ManagedArray();
+        this._pointCloudPostProcessor = new PointCloudPostProcessor();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
@@ -1541,7 +1544,7 @@ define([
                 ++statistics.selected;
             }
         }
-        var lengthAfterUpdate = commandList.length;
+        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1571,7 +1574,6 @@ define([
              */
 
             var backfaceCommands = tileset._backfaceCommands.internalArray;
-            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
             commandList.length += backfaceCommands.length;
@@ -1589,6 +1591,13 @@ define([
 
         // Number of commands added by each update above
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+
+        if (addedCommandsLength > 0) {
+            // TODO : only do this if the tileset is purely point clouds.
+            // TODO : this may not work well if point cloud spans multiple frustums
+            // TODO : make the processor a static class so it can be used by multiple tilesets?
+            tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands);
+        }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
             if (!defined(tileset._tileDebugLabels)) {
