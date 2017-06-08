@@ -39,7 +39,7 @@ define([
     function PointCloudPostProcessor() {
         this._framebuffers = undefined;
         this._colorTextures = undefined;
-        this._depthTexture = undefined;
+        this._depthTextures = undefined;
         this._drawCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommand = undefined;
@@ -55,13 +55,14 @@ define([
     }
 
     function destroyFramebuffers(processor) {
-        processor._depthTexture.destroy();
+        processor._depthTextures[0].destroy();
+        processor._depthTextures[1].destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
         processor._framebuffers[0].destroy();
         processor._framebuffers[1].destroy();
 
-        processor._depthTexture = undefined;
+        processor._depthTextures = undefined;
         processor._colorTextures = undefined;
         processor._framebuffers = undefined;
     }
@@ -71,16 +72,9 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
 
-        var depthTexture = new Texture({
-            context : context,
-            width : screenWidth,
-            height : screenHeight,
-            pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
-            sampler : createSampler()
-        });
 
         var colorTextures = new Array(2);
+        var depthTextures = new Array(2);
         var framebuffers = new Array(2);
 
         for (i = 0; i < 2; ++i) {
@@ -93,16 +87,26 @@ define([
                 sampler : createSampler()
             });
 
-            // TODO : for now assume than any pass can write depth, possibly through EXT_frag_depth. Definitely needed for the initial render into the FBO, possibly also the ping-pong processing.
+            depthTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+                sampler : createSampler()
+            });
+
+            // TODO : for now assume than any pass can write depth, possibly through EXT_frag_depth.
+            // Definitely needed for the initial render into the FBO, possibly also the ping-pong processing.
             framebuffers[i] = new Framebuffer({
                 context : context,
-                depthStencilTexture : depthTexture,
+                depthStencilTexture : depthTextures[i],
                 colorTextures : [colorTextures[i]],
                 destroyAttachments : false
             });
         }
 
-        processor._depthTexture = depthTexture;
+        processor._depthTextures = depthTextures;
         processor._colorTextures = colorTextures;
         processor._framebuffers = framebuffers;
     }
@@ -114,8 +118,7 @@ define([
                 return processor._colorTextures[1 - index];
             },
             pointCloud_depthTexture : function() {
-                // TODO : depth texture is both shader input and output - don't read and write in the same shader. If needed may need to ping-pong depth too.
-                return processor._depthTexture;
+                return processor._depthTextures[1 - index];
             }
         };
     }
@@ -136,7 +139,7 @@ define([
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
-            '    color.rgb = color.rgb * 0.5 + vec3(depth); \n' +
+            '    color.rgb = color.rgb * 0.5 + vec3(depth) * 0.5; \n' +
             '    gl_FragColor = color; \n' +
             '} \n';
 
@@ -203,11 +206,13 @@ define([
     function createResources(processor, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
-        var depthTexture = processor._depthTexture;
+        var depthTextures = processor._depthTextures;
         var drawCommands = processor._drawCommands;
-        var resized = defined(depthTexture) && ((depthTexture.width !== screenWidth) || (depthTexture.height !== screenHeight));
+        var resized = defined(depthTextures) &&
+            ((depthTextures[0].width !== screenWidth) ||
+             (depthTextures[0].height !== screenHeight));
 
-        if (!defined(depthTexture)) {
+        if (!defined(depthTextures)) {
             createFramebuffers(processor, context);
         }
 
