@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/GoogleEarthEnterpriseTileInformation',
-    'Core/decodeGoogleEarthEnterpriseData',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/loadWithXhr',
-    'Core/Math',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTileInformation,
-    decodeGoogleEarthEnterpriseData,
-    DefaultProxy,
-    defaultValue,
-    loadWithXhr,
-    CesiumMath,
-    when) {
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/decodeGoogleEarthEnterpriseData',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseMetadata,
+        decodeGoogleEarthEnterpriseData,
+        DefaultProxy,
+        defaultValue,
+        GoogleEarthEnterpriseTileInformation,
+        loadWithXhr,
+        CesiumMath,
+        when) {
     'use strict';
 
     it('tileXYToQuadKey', function() {

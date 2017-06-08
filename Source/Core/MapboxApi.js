@@ -1,10 +1,10 @@
 /*global define*/
 define([
-    './defined',
-    './Credit'
-], function(
-    defined,
-    Credit) {
+        './Credit',
+        './defined'
+    ], function(
+        Credit,
+        defined) {
     'use strict';
 
     var MapboxApi = {
