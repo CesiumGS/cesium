@@ -136,7 +136,7 @@ define([
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
-            '    color.rgb = color.rgb * 0.5 + vec3(depth); \n' +
+            '    color.rgb = color.rgb * 0.5 + vec3(depth) * 0.5; \n' +
             '    gl_FragColor = color; \n' +
             '} \n';
 
