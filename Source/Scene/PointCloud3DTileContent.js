@@ -1009,7 +1009,7 @@ define([
 
         vs += '    color = color * u_highlightColor; \n';
 
-        if (normalsEnabled) {
+        if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
@@ -1019,7 +1019,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (normalsEnabled && backFaceCulling) {
+        if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n';
         }
