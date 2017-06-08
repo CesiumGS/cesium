@@ -611,6 +611,34 @@ define([
         return destroyObject(this);
     };
 
+    function getTileReadyCallback(tileImageriesToFree, layer) {
+        return function(tile) {
+            var startIndex = -1;
+            var tileImageryCollection = tile.data.imagery;
+            var length = tileImageryCollection.length;
+            for (var i = 0; i < length; ++i) {
+                var tileImagery = tileImageryCollection[i];
+                var imagery = tileImagery.loadingImagery;
+                if (!defined(imagery)) {
+                    imagery = tileImagery.readyImagery;
+                }
+                if (imagery.imageryLayer === layer) {
+                    startIndex = i;
+                    break;
+                }
+            }
+
+            if (startIndex !== -1) {
+                var endIndex = startIndex + tileImageriesToFree;
+                for (i = startIndex; i < endIndex; ++i) {
+                    tileImageryCollection[i].freeResources();
+                }
+
+                tileImageryCollection.splice(startIndex, tileImageriesToFree);
+            }
+        };
+    }
+
     GlobeSurfaceTileProvider.prototype._onLayerAdded = function(layer, index) {
         if (layer.show) {
             var terrainProvider = this._terrainProvider;
@@ -619,12 +647,14 @@ define([
             var imageryProvider = layer.imageryProvider;
             imageryProvider._reload = function() {
                 that._quadtree.forEachLoadedTile(function(tile) {
-                    // Remove all TileImagery for this layer
-                    var tileImageryCollection = tile.data.imagery;
+                    var i;
 
+                    // Figure out how many TileImageries we will need to remove and where to insert new ones
+                    var tileImageryCollection = tile.data.imagery;
+                    var length = tileImageryCollection.length;
                     var startIndex = -1;
-                    var numDestroyed = 0;
-                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                    var tileImageriesToFree = 0;
+                    for (i = 0; i < length; ++i) {
                         var tileImagery = tileImageryCollection[i];
                         var imagery = tileImagery.loadingImagery;
                         if (!defined(imagery)) {
@@ -635,29 +665,33 @@ define([
                                 startIndex = i;
                             }
 
-                            tileImagery.freeResources();
-                            ++numDestroyed;
+                            ++tileImageriesToFree;
                         } else if (startIndex !== -1) {
-                            // iterated past the section of TileImagerys belonging to this layer, no need to continue.
+                            // iterated past the section of TileImageries belonging to this layer, no need to continue.
                             break;
                         }
                     }
 
+                    var insertionPoint;
                     if (startIndex !== -1) {
-                        tileImageryCollection.splice(startIndex, numDestroyed);
+                        // Insert immediately after existing TileImageries
+                        insertionPoint = startIndex+tileImageriesToFree;
+
+                        // Add callback to remove old TileImageries when the new TileImageries are ready
+                        tile._renderableCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer));
                     }
 
                     // Clear the layer's cache
                     layer._imageryCache = {};
 
-                    // Create new TileImagerys for all loaded tiles
-                    if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
+                    // Create new TileImageries for all loaded tiles
+                    if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
                 });
             };
 
-            // create TileImagerys for this layer for all previously loaded tiles
+            // create TileImageries for this layer for all previously loaded tiles
             this._quadtree.forEachLoadedTile(function(tile) {
                 if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
                     tile.state = QuadtreeTileLoadState.LOADING;

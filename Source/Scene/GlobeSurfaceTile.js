@@ -303,6 +303,11 @@ define([
         if (i === len) {
             if (isRenderable) {
                 tile.renderable = true;
+
+                tile._renderableCallbacks.forEach(function(cb) {
+                    cb(tile);
+                });
+                tile._renderableCallbacks = [];
             }
 
             if (isDoneLoading) {
