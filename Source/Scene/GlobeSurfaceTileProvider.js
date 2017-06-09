@@ -611,17 +611,15 @@ define([
         return destroyObject(this);
     };
 
-    function getTileReadyCallback(tileImageriesToFree, layer) {
+    function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
         return function(tile) {
+            var tileImagery, imagery;
             var startIndex = -1;
             var tileImageryCollection = tile.data.imagery;
             var length = tileImageryCollection.length;
             for (var i = 0; i < length; ++i) {
-                var tileImagery = tileImageryCollection[i];
-                var imagery = tileImagery.loadingImagery;
-                if (!defined(imagery)) {
-                    imagery = tileImagery.readyImagery;
-                }
+                tileImagery = tileImageryCollection[i];
+                imagery = defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery);
                 if (imagery.imageryLayer === layer) {
                     startIndex = i;
                     break;
@@ -630,12 +628,24 @@ define([
 
             if (startIndex !== -1) {
                 var endIndex = startIndex + tileImageriesToFree;
+                tileImagery = tileImageryCollection[endIndex];
+                imagery = defined(tileImagery) ? defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery) : undefined;
+                if (!defined(imagery) || imagery.imageryLayer !== layer) {
+                    if (layer._createTileImagerySkeletons(tile, terrainProvider, endIndex)) {
+                        return false; // Don't remove the callback
+                    } else {
+                        return true; // Something went wrong, so remove the callback
+                    }
+                }
+
                 for (i = startIndex; i < endIndex; ++i) {
                     tileImageryCollection[i].freeResources();
                 }
 
                 tileImageryCollection.splice(startIndex, tileImageriesToFree);
             }
+
+            return true; // Everything is done, so remove the callback
         };
     }
 
@@ -646,7 +656,14 @@ define([
             var that = this;
             var imageryProvider = layer.imageryProvider;
             imageryProvider._reload = function() {
+                // Clear the layer's cache
+                layer._imageryCache = {};
+
                 that._quadtree.forEachLoadedTile(function(tile) {
+                    if (tile.state !== QuadtreeTileLoadState.DONE) {
+                        return;
+                    }
+
                     var i;
 
                     // Figure out how many TileImageries we will need to remove and where to insert new ones
@@ -656,10 +673,7 @@ define([
                     var tileImageriesToFree = 0;
                     for (i = 0; i < length; ++i) {
                         var tileImagery = tileImageryCollection[i];
-                        var imagery = tileImagery.loadingImagery;
-                        if (!defined(imagery)) {
-                            imagery = tileImagery.readyImagery;
-                        }
+                        var imagery = defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery);
                         if (imagery.imageryLayer === layer) {
                             if (startIndex === -1) {
                                 startIndex = i;
@@ -672,22 +686,21 @@ define([
                         }
                     }
 
-                    var insertionPoint;
-                    if (startIndex !== -1) {
-                        // Insert immediately after existing TileImageries
-                        insertionPoint = startIndex+tileImageriesToFree;
-
-                        // Add callback to remove old TileImageries when the new TileImageries are ready
-                        tile._renderableCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer));
+                    if (startIndex === -1) {
+                        return;
                     }
 
-                    // Clear the layer's cache
-                    layer._imageryCache = {};
+                    // Insert immediately after existing TileImageries
+                    var insertionPoint = startIndex+tileImageriesToFree;
 
                     // Create new TileImageries for all loaded tiles
                     if (layer._createTileImagerySkeletons(tile, terrainProvider, insertionPoint)) {
+                        // Add callback to remove old TileImageries when the new TileImageries are ready
+                        tile._loadedCallbacks.push(getTileReadyCallback(tileImageriesToFree, layer, terrainProvider));
+
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
+                    --tile._count;
                 });
             };
 

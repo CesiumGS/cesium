@@ -20,9 +20,18 @@
 <style>
     @import url(../templates/bucket.css);
 </style>
+
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
+
+<video id="trailer" style="display: none;" autoplay loop crossorigin controls>
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.webm" type="video/webm">
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mp4" type="video/mp4">
+    <source src="http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mov" type="video/quicktime">
+    Your browser does not support the <code>video</code> element.
+</video>
+
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -34,22 +43,37 @@ canvas.width  = 1;
 canvas.height = 1;
 var ctx = canvas.getContext("2d");
 
-var p = new Cesium.SingleTileImageryProvider({
+var colorProvider = new Cesium.SingleTileImageryProvider({
     rectangle: Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75),
     canvas: canvas,
     url: 'test'
 });
 
-viewer.imageryLayers.addImageryProvider(p);
+viewer.imageryLayers.addImageryProvider(colorProvider);
 
 var colors = ['red', 'blue', 'green'];
 var index = 0;
-Sandcastle.addDefaultToolbarButton('Change', function() {
+Sandcastle.addDefaultToolbarButton('Change Color', function() {
     ctx.fillStyle = colors[++index % 3];
     ctx.fillRect(0, 0, 1, 1);
     
-    p.reload();
+    colorProvider.reload();
 });
+
+var videoElement = document.getElementById('trailer');
+
+var videoProvider = new Cesium.SingleTileImageryProvider({
+    rectangle: Cesium.Rectangle.fromDegrees(-100.0, 28.0, -80, 38.8),
+    canvas: videoElement,
+    url: 'test'
+});
+
+viewer.imageryLayers.addImageryProvider(videoProvider);
+
+viewer.scene.preRender.addEventListener(function() {
+    videoProvider.reload();
+});
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

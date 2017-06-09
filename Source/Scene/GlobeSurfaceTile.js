@@ -303,14 +303,17 @@ define([
         if (i === len) {
             if (isRenderable) {
                 tile.renderable = true;
-
-                tile._renderableCallbacks.forEach(function(cb) {
-                    cb(tile);
-                });
-                tile._renderableCallbacks = [];
             }
 
             if (isDoneLoading) {
+                var newCallbacks = [];
+                tile._loadedCallbacks.forEach(function(cb) {
+                    if (!cb(tile)) {
+                        newCallbacks.push(cb);
+                    }
+                });
+                tile._loadedCallbacks = newCallbacks;
+
                 tile.state = QuadtreeTileLoadState.DONE;
             }
         }
