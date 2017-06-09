@@ -1223,6 +1223,25 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-1.25, CesiumMath.EPSILON10);
     });
 
+    it('zooms out 2D when frustrum has greater height than width', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -1.0;
+        frustum.right = 1.0;
+        frustum.top = 2.0;
+        frustum.bottom = -2.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+
+        camera.zoomOut(zoomAmount);
+        expect(camera.frustum.right).toEqualEpsilon(1.25, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-1.25, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(2.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-2.5, CesiumMath.EPSILON10);
+    });
+
     it('zooms in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
@@ -1240,6 +1259,25 @@ defineSuite([
         expect(camera.frustum.left).toEqual(-1.5, CesiumMath.EPSILON10);
         expect(camera.frustum.top).toEqual(0.75, CesiumMath.EPSILON10);
         expect(camera.frustum.bottom).toEqual(-0.75, CesiumMath.EPSILON10);
+    });
+
+    it('zooms in 2D when frustrum has greater height than width', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -1.0;
+        frustum.right = 1.0;
+        frustum.top = 2.0;
+        frustum.bottom = -2.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+
+        camera.zoomIn(zoomAmount);
+        expect(camera.frustum.right).toEqualEpsilon(0.75, CesiumMath.EPSILON10);
+        expect(camera.frustum.left).toEqual(-0.75, CesiumMath.EPSILON10);
+        expect(camera.frustum.top).toEqual(1.5, CesiumMath.EPSILON10);
+        expect(camera.frustum.bottom).toEqual(-1.5, CesiumMath.EPSILON10);
     });
 
     it('clamps zoom out in 2D', function() {
@@ -2849,5 +2887,13 @@ defineSuite([
         expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
         camera.switchToPerspectiveFrustum();
         expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+    });
+
+    it('normalizes WC members', function() {
+        var transform = Matrix4.fromScale(new Cartesian3(2, 2, 2));
+        camera.lookAtTransform(transform);
+        expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
     });
 });

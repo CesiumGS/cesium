@@ -608,14 +608,17 @@ define([
 
         if (directionChanged || transformChanged) {
             camera._directionWC = Matrix4.multiplyByPointAsVector(transform, direction, camera._directionWC);
+            Cartesian3.normalize(camera._directionWC, camera._directionWC);
         }
 
         if (upChanged || transformChanged) {
             camera._upWC = Matrix4.multiplyByPointAsVector(transform, up, camera._upWC);
+            Cartesian3.normalize(camera._upWC, camera._upWC);
         }
 
         if (rightChanged || transformChanged) {
             camera._rightWC = Matrix4.multiplyByPointAsVector(transform, right, camera._rightWC);
+            Cartesian3.normalize(camera._rightWC, camera._rightWC);
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
@@ -1817,30 +1820,57 @@ define([
         }
         //>>includeEnd('debug');
 
+        var ratio;
         amount = amount * 0.5;
-        var newRight = frustum.right - amount;
-        var newLeft = frustum.left + amount;
 
-        var maxRight = camera._maxCoord.x;
-        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            maxRight *= camera.maximumZoomFactor;
+        if((Math.abs(frustum.top) + Math.abs(frustum.bottom)) > (Math.abs(frustum.left) + Math.abs(frustum.right))) {
+            var newTop = frustum.top - amount;
+            var newBottom = frustum.bottom + amount;
+
+            var maxBottom = camera._maxCoord.y;
+            if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+                maxBottom *= camera.maximumZoomFactor;
+            }
+
+            if (newBottom > maxBottom) {
+                newBottom = maxBottom;
+                newTop = -maxBottom;
+            }
+
+            if (newTop <= newBottom) {
+                newTop = 1.0;
+                newBottom = -1.0;
+            }
+
+            ratio = frustum.right / frustum.top;
+            frustum.top = newTop;
+            frustum.bottom = newBottom;
+            frustum.right = frustum.top * ratio;
+            frustum.left = -frustum.right;
+        } else {
+            var newRight = frustum.right - amount;
+            var newLeft = frustum.left + amount;
+
+            var maxRight = camera._maxCoord.x;
+            if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+                maxRight *= camera.maximumZoomFactor;
+            }
+
+            if (newRight > maxRight) {
+                newRight = maxRight;
+                newLeft = -maxRight;
+            }
+
+            if (newRight <= newLeft) {
+                newRight = 1.0;
+                newLeft = -1.0;
+            }
+            ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
         }
-
-        if (newRight > maxRight) {
-            newRight = maxRight;
-            newLeft = -maxRight;
-        }
-
-        if (newRight <= newLeft) {
-            newRight = 1.0;
-            newLeft = -1.0;
-        }
-
-        var ratio = frustum.top / frustum.right;
-        frustum.right = newRight;
-        frustum.left = newLeft;
-        frustum.top = frustum.right * ratio;
-        frustum.bottom = -frustum.top;
     }
 
     function zoom3D(camera, amount) {

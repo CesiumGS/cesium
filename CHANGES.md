@@ -9,7 +9,10 @@ Change Log
 * Fixed a bug where picking clusters would return undefined instead of a list of the clustered entities. [#5286](https://github.com/AnalyticalGraphicsInc/cesium/issues/5286)
 * Reduced the amount of Sun bloom post-process effect near the horizon. [#5381](https://github.com/AnalyticalGraphicsInc/cesium/issues/5381)
 * Updated glTF/glb MIME types. [#5420](https://github.com/AnalyticalGraphicsInc/cesium/issues/5420)
+* Fixed a bug where camera zooming worked incorrectly when the display height was greater than the display width [#5421] (https://github.com/AnalyticalGraphicsInc/cesium/pull/5421)
 * Added Sandcastle demo for ArcticDEM data. [#5224](https://github.com/AnalyticalGraphicsInc/cesium/issues/5224)
+* `CzmlDataSource` and `KmlDataSource` load functions now take an optional `query` object, which will append query parameters to all network requests. [#5419](https://github.com/AnalyticalGraphicsInc/cesium/pull/5419), [#5434](https://github.com/AnalyticalGraphicsInc/cesium/pull/5434)
+* Fixed geocoder bug so geocoder can accurately handle NSEW inputs [#5407] (https://github.com/AnalyticalGraphicsInc/cesium/pull/5407)
 
 ### 1.34 - 2017-06-01
 
