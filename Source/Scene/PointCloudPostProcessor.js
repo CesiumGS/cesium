@@ -39,6 +39,7 @@ define([
     function PointCloudPostProcessor() {
         this._framebuffers = undefined;
         this._colorTextures = undefined;
+        this._ecTextures = undefined;
         this._depthTextures = undefined;
         this._drawCommands = undefined;
         this._blendCommand = undefined;
@@ -59,6 +60,8 @@ define([
         processor._depthTextures[1].destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
+        processor._ecTextures[0].destroy();
+        processor._ecTextures[1].destroy();
         processor._framebuffers[0].destroy();
         processor._framebuffers[1].destroy();
 
@@ -74,8 +77,12 @@ define([
 
 
         var colorTextures = new Array(2);
+        var ecTextures = new Array(2);
         var depthTextures = new Array(2);
         var framebuffers = new Array(2);
+
+        if (!context.floatingPointTexture)
+            throw new DeveloperError('Context must support floating point textures!');
 
         for (i = 0; i < 2; ++i) {
             colorTextures[i] = new Texture({
@@ -84,6 +91,15 @@ define([
                 height : screenHeight,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
+
+            ecTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT,
                 sampler : createSampler()
             });
 
@@ -101,13 +117,14 @@ define([
             framebuffers[i] = new Framebuffer({
                 context : context,
                 depthStencilTexture : depthTextures[i],
-                colorTextures : [colorTextures[i]],
+                colorTextures : [colorTextures[i], ecTextures[i]],
                 destroyAttachments : false
             });
         }
 
         processor._depthTextures = depthTextures;
         processor._colorTextures = colorTextures;
+        processor._ecTextures = ecTextures;
         processor._framebuffers = framebuffers;
     }
 
@@ -116,6 +133,10 @@ define([
             pointCloud_colorTexture : function() {
                 // Use the other color texture as input
                 return processor._colorTextures[1 - index];
+            },
+            pointCloud_ecTexture : function() {
+                // Use the other color texture as input
+                return processor._ecTextures[1 - index];
             },
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[1 - index];
