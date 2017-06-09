@@ -6,8 +6,7 @@ define([
         '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/loadKTX',
-        '../Core/throttleRequestByServer'
+        '../Core/loadKTX'
     ], function(
         defined,
         defineProperties,
@@ -15,8 +14,7 @@ define([
         loadCRN,
         loadImage,
         loadImageViaBlob,
-        loadKTX,
-        throttleRequestByServer) {
+        loadKTX) {
     'use strict';
 
     /**
@@ -268,6 +266,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -308,20 +307,22 @@ define([
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
      * @param {String} url The URL of the image.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url) {
+    ImageryProvider.loadImage = function(imageryProvider, url, request) {
         if (ktxRegex.test(url)) {
-            return throttleRequestByServer(url, loadKTX);
+            return loadKTX(url, undefined, request);
         } else if (crnRegex.test(url)) {
-            return throttleRequestByServer(url, loadCRN);
+            return loadCRN(url, undefined, request);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+            return loadImageViaBlob(url, request);
         }
-        return throttleRequestByServer(url, loadImage);
+
+        return loadImage(url, undefined, request);
     };
 
     return ImageryProvider;

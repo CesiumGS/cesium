@@ -8,6 +8,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -19,8 +20,9 @@ define([
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Request',
+        './RequestType',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileAvailability',
         './TileProviderError'
     ], function(
@@ -32,6 +34,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -43,14 +46,15 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Request,
+        RequestType,
         TerrainProvider,
-        throttleRequestByServer,
         TileAvailability,
         TileProviderError) {
     'use strict';
 
     /**
-     * A {@link TerrainProvider} that access terrain data in a Cesium terrain format.
+     * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
      * The format is described on the
      * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
      *
@@ -489,9 +493,8 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -499,7 +502,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -522,8 +525,6 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-
         var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
             extensionList.push(this._littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
@@ -532,17 +533,19 @@ define([
             extensionList.push('watermask');
         }
 
-        function tileLoader(tileUrl) {
-            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
+        if (typeof request === 'boolean') {
+            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
+            request = new Request({
+                throttle : request,
+                throttleByServer : request,
+                type : RequestType.TERRAIN
+            });
         }
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = throttleRequestByServer(url, tileLoader);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = tileLoader(url);
+
+        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
+
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;

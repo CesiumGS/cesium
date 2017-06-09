@@ -5,25 +5,25 @@ define([
         Check) {
     'use strict';
 
-    var dataUriRegex = /^data:/i;
+    var blobUriRegex = /^blob:/i;
 
     /**
-     * Determines if the specified uri is a data uri.
+     * Determines if the specified uri is a blob uri.
      *
-     * @exports isDataUri
+     * @exports isBlobUri
      *
      * @param {String} uri The uri to test.
-     * @returns {Boolean} true when the uri is a data uri; otherwise, false.
+     * @returns {Boolean} true when the uri is a blob uri; otherwise, false.
      *
      * @private
      */
-    function isDataUri(uri) {
+    function isBlobUri(uri) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('uri', uri);
         //>>includeEnd('debug');
 
-        return dataUriRegex.test(uri);
+        return blobUriRegex.test(uri);
     }
 
-    return isDataUri;
+    return isBlobUri;
 });
