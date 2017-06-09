@@ -788,7 +788,7 @@ define([
         var normalShading = content._normalShading;
         var vertexArray = content._drawCommand.vertexArray;
 
-        var normalsEnabled = hasNormals && normalShading;
+        var normalsEnabled = (hasNormals && normalShading) || backFaceCulling;
 
         var colorStyleFunction;
         var showStyleFunction;
@@ -1009,7 +1009,7 @@ define([
 
         vs += '    color = color * u_highlightColor; \n';
 
-        if (hasNormals) {
+        if (normalsEnabled) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
@@ -1019,7 +1019,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (hasNormals && backFaceCulling) {
+        if (normalsEnabled) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n';
         }
