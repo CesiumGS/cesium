@@ -55,6 +55,7 @@ define([
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
         '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
@@ -127,6 +128,7 @@ define([
         numberOfComponentsForType,
         parseBinaryGltf,
         processModelMaterialsCommon,
+        processPbrMetallicRoughness,
         removePipelineExtras,
         updateVersion,
         Uri,
@@ -2863,7 +2865,13 @@ define([
         for (var materialId in materials) {
             if (materials.hasOwnProperty(materialId)) {
                 var material = materials[materialId];
-                var instanceParameters = material.values;
+                var instanceParameters;
+                if (defined(material.pbrMetallicRoughness)) {
+                    instanceParameters = material.pbrMetallicRoughness;
+                }
+                else {
+                    instanceParameters = material.values;
+                }
                 var technique = techniques[material.technique];
                 var parameters = technique.parameters;
                 var uniforms = technique.uniforms;
@@ -4225,6 +4233,7 @@ define([
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
                     processModelMaterialsCommon(this.gltf);
+                    processPbrMetallicRoughness(this.gltf);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
                     this._animationIds = getAnimationIds(this.gltf);
