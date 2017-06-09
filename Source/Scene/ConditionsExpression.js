@@ -156,12 +156,9 @@ define([
         var length = conditions.length;
         for (var i = 0; i < length; ++i) {
             var statement = conditions[i];
+
             var condition = statement.condition.getShaderExpression(attributePrefix, shaderState);
             var expression = statement.expression.getShaderExpression(attributePrefix, shaderState);
-
-            if (!defined(condition) || !defined(expression)) {
-                return undefined;
-            }
 
             // Build the if/else chain from the list of conditions
             shaderFunction +=

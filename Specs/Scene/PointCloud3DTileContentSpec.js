@@ -588,7 +588,7 @@ defineSuite([
                 content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     color : '${NORMAL}[0] > 0.5'
                 }));
-            }).toThrowDeveloperError();
+            }).toThrowRuntimeError();
         });
     });
 
@@ -599,7 +599,7 @@ defineSuite([
                 content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     color : 'color() * ${non_existent_property}'
                 }));
-            }).toThrowDeveloperError();
+            }).toThrowRuntimeError();
         });
     });
 
@@ -624,7 +624,7 @@ defineSuite([
                 content.applyStyle(scene.frameState, new Cesium3DTileStyle({
                     show : '1 < "2"'
                 }));
-            }).toThrowDeveloperError();
+            }).toThrowRuntimeError();
         });
     });
 

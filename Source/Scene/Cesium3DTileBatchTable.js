@@ -14,6 +14,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        '../Core/RuntimeError',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
@@ -24,6 +25,7 @@ define([
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
+        './AttributeType',
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
@@ -45,6 +47,7 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        RuntimeError,
         ContextLimits,
         DrawCommand,
         Pass,
@@ -55,6 +58,7 @@ define([
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        AttributeType,
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
@@ -164,8 +168,8 @@ define([
         var parentIdsLength = instancesLength;
 
         if (defined(classIds.byteOffset)) {
-            classIds.componentType = defaultValue(classIds.componentType, 'UNSIGNED_SHORT');
-            classIds.type = 'SCALAR';
+            classIds.componentType = defaultValue(classIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
+            classIds.type = AttributeType.SCALAR;
             binaryAccessor = getBinaryAccessor(classIds);
             classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
         }
@@ -173,8 +177,8 @@ define([
         var parentIndexes;
         if (defined(parentCounts)) {
             if (defined(parentCounts.byteOffset)) {
-                parentCounts.componentType = defaultValue(parentCounts.componentType, 'UNSIGNED_SHORT');
-                parentCounts.type = 'SCALAR';
+                parentCounts.componentType = defaultValue(parentCounts.componentType, ComponentDatatype.UNSIGNED_SHORT);
+                parentCounts.type = AttributeType.SCALAR;
                 binaryAccessor = getBinaryAccessor(parentCounts);
                 parentCounts = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentCounts.byteOffset, instancesLength);
             }
@@ -186,13 +190,11 @@ define([
             }
         }
 
-        if (defined(parentIds)) {
-            if (defined(parentIds.byteOffset)) {
-                parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
-                parentIds.type = 'SCALAR';
-                binaryAccessor = getBinaryAccessor(parentIds);
-                parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
-            }
+        if (defined(parentIds) && defined(parentIds.byteOffset)) {
+            parentIds.componentType = defaultValue(parentIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
+            parentIds.type = AttributeType.SCALAR;
+            binaryAccessor = getBinaryAccessor(parentIds);
+            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
         }
 
         var classesLength = classes.length;
@@ -276,48 +278,43 @@ define([
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
         var binaryProperties;
-        if (defined(json)) {
-            for (var name in json) {
-                if (json.hasOwnProperty(name)) {
-                    var property = json[name];
-                    var byteOffset = property.byteOffset;
-                    if (defined(byteOffset)) {
-                        // This is a binary property
-                        var componentType = ComponentDatatype.fromName(property.componentType);
-                        var type = property.type;
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(componentType)) {
-                            throw new DeveloperError('componentType is required.');
-                        }
-                        if (!defined(type)) {
-                            throw new DeveloperError('type is required.');
-                        }
-                        if (!defined(binary)) {
-                            throw new DeveloperError('Property ' + name + ' requires a batch table binary.');
-                        }
-                        //>>includeEnd('debug');
-
-                        var binaryAccessor = getBinaryAccessor(property);
-                        var componentCount = binaryAccessor.componentsPerAttribute;
-                        var classType = binaryAccessor.classType;
-                        var typedArray = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + byteOffset, featuresLength);
-
-                        if (!defined(binaryProperties)) {
-                            binaryProperties = {};
-                        }
-
-                        // Store any information needed to access the binary data, including the typed array,
-                        // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
-                        binaryProperties[name] = {
-                            typedArray : typedArray,
-                            componentCount : componentCount,
-                            type : classType
-                        };
+        for (var name in json) {
+            if (json.hasOwnProperty(name)) {
+                var property = json[name];
+                var byteOffset = property.byteOffset;
+                if (defined(byteOffset)) {
+                    // This is a binary property
+                    var componentType = ComponentDatatype.fromName(property.componentType);
+                    var type = property.type;
+                    if (!defined(componentType)) {
+                        throw new RuntimeError('componentType is required.');
                     }
+                    if (!defined(type)) {
+                        throw new RuntimeError('type is required.');
+                    }
+                    if (!defined(binary)) {
+                        throw new RuntimeError('Property ' + name + ' requires a batch table binary.');
+                    }
+
+                    var binaryAccessor = getBinaryAccessor(property);
+                    var componentCount = binaryAccessor.componentsPerAttribute;
+                    var classType = binaryAccessor.classType;
+                    var typedArray = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + byteOffset, featuresLength);
+
+                    if (!defined(binaryProperties)) {
+                        binaryProperties = {};
+                    }
+
+                    // Store any information needed to access the binary data, including the typed array,
+                    // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
+                    binaryProperties[name] = {
+                        typedArray : typedArray,
+                        componentCount : componentCount,
+                        type : classType
+                    };
                 }
             }
         }
-        return binaryProperties;
     };
 
     function getByteLength(batchTable) {
@@ -391,7 +388,6 @@ define([
 
         var featuresLength = this.featuresLength;
         for (var i = 0; i < featuresLength; ++i) {
-            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
             this.setShow(i, show);
         }
     };
@@ -479,7 +475,6 @@ define([
 
         var featuresLength = this.featuresLength;
         for (var i = 0; i < featuresLength; ++i) {
-            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
             this.setColor(i, color);
         }
     };
@@ -600,23 +595,17 @@ define([
     }
 
     function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
-        while (true) { // eslint-disable-line no-constant-condition
+        var hasParent = true;
+        while (hasParent) {
             var result = endConditionCallback(hierarchy, instanceIndex);
             if (defined(result)) {
                 // The end condition was met, stop the traversal and return the result
                 return result;
             }
             var parentId = hierarchy.parentIds[instanceIndex];
-            if (parentId === instanceIndex) {
-                // Stop the traversal when the instance has no parent (its parentId equals itself)
-                break;
-            }
+            hasParent = parentId !== instanceIndex;
             instanceIndex = parentId;
         }
-    }
-
-    function traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback) {
-        return endConditionCallback(hierarchy, instanceIndex);
     }
 
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
@@ -625,7 +614,7 @@ define([
         var parentCounts = hierarchy.parentCounts;
         var parentIds = hierarchy.parentIds;
         if (!defined(parentIds)) {
-            return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
+            return endConditionCallback(hierarchy, instanceIndex);
         } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         }

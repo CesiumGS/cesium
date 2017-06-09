@@ -231,7 +231,7 @@ define([
 
     function selectTile(tileset, tile, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
-        // zoomed into a neighborhood and can cull the skyscrapers in the root node.
+        // zoomed into a neighborhood and can cull the skyscrapers in the root tile.
         if (tile.contentAvailable && (
                 (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
                 (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
@@ -670,7 +670,7 @@ define([
 
     function getScreenSpaceError(tileset, geometricError, tile, frameState) {
         if (geometricError === 0.0) {
-            // Leaf nodes do not have any error so save the computation
+            // Leaf tiles do not have any error so save the computation
             return 0.0;
         }
 
@@ -745,9 +745,9 @@ define([
         while (stack.length > 0) {
             maxLength = Math.max(maxLength, stack.length);
 
-            var node = stack.pop();
-            options.visitStart(node);
-            var children = options.getChildren(node);
+            var tile = stack.pop();
+            options.visitStart(tile);
+            var children = options.getChildren(tile);
             var isNativeArray = !defined(children.get);
             var length = children.length;
             for (var i = 0; i < length; ++i) {
@@ -759,9 +759,9 @@ define([
             }
 
             if (length === 0 && defined(options.leafHandler)) {
-                options.leafHandler(node);
+                options.leafHandler(tile);
             }
-            options.visitEnd(node);
+            options.visitEnd(tile);
         }
 
         stack.trim(maxLength);
@@ -781,9 +781,9 @@ define([
             maxLength = Math.max(maxLength, length);
 
             for (var i = 0; i < length; ++i) {
-                var node = queue1.get(i);
-                options.visitStart(node);
-                var children = options.getChildren(node);
+                var tile = queue1.get(i);
+                options.visitStart(tile);
+                var children = options.getChildren(tile);
                 var isNativeArray = !defined(children.get);
                 var childrenLength = children.length;
                 for (var j = 0; j < childrenLength; ++j) {
@@ -795,9 +795,9 @@ define([
                 }
 
                 if (childrenLength === 0 && defined(options.leafHandler)) {
-                    options.leafHandler(node);
+                    options.leafHandler(tile);
                 }
-                options.visitEnd(node);
+                options.visitEnd(tile);
             }
 
             queue1.length = 0;

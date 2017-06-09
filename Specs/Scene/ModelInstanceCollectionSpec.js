@@ -669,6 +669,21 @@ defineSuite([
         });
     });
 
+    it('does not render during morph', function() {
+        return loadCollection({
+            gltf : boxGltf,
+            instances : createInstances(4),
+            cull : false
+        }).then(function() {
+            var commandList = scene.frameState.commandList;
+            scene.renderForSpecs();
+            expect(commandList.length).toBeGreaterThan(0);
+            scene.morphToColumbusView(1.0);
+            scene.renderForSpecs();
+            expect(commandList.length).toBe(0);
+        });
+    });
+
     it('destroys', function() {
         return loadCollection({
             gltf : boxGltf,

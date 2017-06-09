@@ -45,15 +45,6 @@ define([
         this._content = content;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-
-        /**
-         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
-         *
-         * @type {Cesium3DTileset}
-         *
-         * @private
-         */
-        this.primitive = tileset;
     }
 
     defineProperties(Cesium3DTileFeature.prototype, {
@@ -112,6 +103,17 @@ define([
         content : {
             get : function() {
                 return this._content;
+            }
+        },
+
+        /**
+         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
+         *
+         * @type {Cesium3DTileset}
+         */
+        primitive : {
+            get : function() {
+                return this._content.tileset;
             }
         }
     });

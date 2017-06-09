@@ -50,6 +50,13 @@ define([
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
      * });
+     *
+     * @example
+     * tileset.style = new Cesium.Cesium3DTileStyle({
+     *     color : 'vec4(${Temperature})',
+     *     pointSize : '${Temperature} * 2.0'
+     * });
+
      */
     function Cesium3DTileStyle(data) {
         this._style = undefined;

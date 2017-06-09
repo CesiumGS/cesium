@@ -87,6 +87,17 @@ define([
     };
 
     /**
+     * Calculates the distance between the tile's center and the camera.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @return {Number} The distance between the tile's center and the camera, in meters.
+     */
+    TileOrientedBoundingBox.prototype.distanceFromCenterToCamera = function(frameState) {
+        DeveloperError.throwInstantiationError();
+    };
+
+
+    /**
      * Determines which side of a plane this box is located.
      *
      * @param {Plane} plane The plane to test against.
@@ -109,8 +120,6 @@ define([
      * @param {Matrix3} halfAxes The three orthogonal half-axes of the bounding box.
      *                           Equivalently, the transformation matrix, to rotate and scale a 2x2x2
      *                           cube centered at the origin.
-     *
-     * @private
      */
     TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
         Cartesian3.clone(center, this._orientedBoundingBox.center);
@@ -123,8 +132,6 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
-     *
-     * @private
      */
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);

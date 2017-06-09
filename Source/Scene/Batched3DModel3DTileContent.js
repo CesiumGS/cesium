@@ -7,10 +7,12 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
         '../Core/RequestType',
+        '../Core/RuntimeError',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -24,10 +26,12 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,
         RequestType,
+        RuntimeError,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -35,10 +39,19 @@ define([
         Model) {
     'use strict';
 
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
+
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md|Batched 3D Model}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Implements the {@link Cesium3DTileContent} interface.
+     * </p>
      *
      * @alias Batched3DModel3DTileContent
      * @constructor
@@ -54,7 +67,7 @@ define([
         this._features = undefined;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         this.featurePropertiesDirty = false;
 
@@ -66,7 +79,7 @@ define([
 
     defineProperties(Batched3DModel3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featuresLength
          */
         featuresLength : {
             get : function() {
@@ -75,7 +88,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#pointsLength
          */
         pointsLength : {
             get : function() {
@@ -84,7 +97,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#trianglesLength
          */
         trianglesLength : {
             get : function() {
@@ -93,7 +106,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#geometryByteLength
          */
         geometryByteLength : {
             get : function() {
@@ -102,7 +115,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#texturesByteLength
          */
         texturesByteLength : {
             get : function() {
@@ -111,7 +124,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTableByteLength
          */
         batchTableByteLength : {
             get : function() {
@@ -120,7 +133,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#innerContents
          */
         innerContents : {
             get : function() {
@@ -129,7 +142,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#readyPromise
          */
         readyPromise : {
             get : function() {
@@ -138,7 +151,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tileset
          */
         tileset : {
             get : function() {
@@ -147,7 +160,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tile
          */
         tile : {
             get : function() {
@@ -156,7 +169,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#url
          */
         url: {
             get: function() {
@@ -165,7 +178,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTable
          */
         batchTable : {
             get : function() {
@@ -229,12 +242,10 @@ define([
         var view = new DataView(arrayBuffer);
         byteOffset += sizeOfUint32;  // Skip magic
 
-        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Batched 3D Model version 1 is supported.  Version ' + version + ' is not.');
+            throw new RuntimeError('Only Batched 3D Model version 1 is supported.  Version ' + version + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var byteLength = view.getUint32(byteOffset, true);
@@ -324,11 +335,9 @@ define([
         content._batchTable = batchTable;
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
-        //>>includeStart('debug', pragmas.debug);
         if (gltfByteLength === 0) {
-            throw new DeveloperError('glTF byte length is zero, i3dm must have a glTF to instance.');
+            throw new RuntimeError('glTF byte length is zero, i3dm must have a glTF to instance.');
         }
-        //>>includeEnd('debug');
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
 
         var pickObject = {
@@ -373,14 +382,14 @@ define([
     }
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#hasProperty
      */
     Batched3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#getFeature
      */
     Batched3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this.featuresLength;
@@ -395,7 +404,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
      */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
@@ -407,14 +416,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyStyle
      */
     Batched3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
         this._batchTable.applyStyle(frameState, style);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#update
      */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var commandStart = frameState.commandList.length;
@@ -436,14 +445,14 @@ define([
    };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     Batched3DModel3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();

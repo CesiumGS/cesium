@@ -54,6 +54,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeType',
         './Axis',
         './BlendingState',
         './ColorBlendMode',
@@ -124,6 +125,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        AttributeType,
         Axis,
         BlendingState,
         ColorBlendMode,
@@ -3265,19 +3267,19 @@ define([
                         var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
-                            case 'SCALAR':
+                            case AttributeType.SCALAR:
                                 uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC2':
+                            case AttributeType.VEC2:
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC3':
+                            case AttributeType.VEC3:
                                 uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC4':
+                            case AttributeType.VEC4:
                                 // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
                                 var uniformVariableScale = uniformVariable + '_scale';
                                 var uniformVariableTranslate = uniformVariable + '_translate';

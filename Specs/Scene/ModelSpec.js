@@ -350,6 +350,23 @@ defineSuite([
         });
     });
 
+    it('does not render during morph', function() {
+        var commandList = scene.frameState.commandList;
+        var model = texturedBoxModel;
+        model.show = true;
+        model.cull = false;
+        expect(model.ready).toBe(true);
+
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBe(0);
+        scene.completeMorph();
+        model.show = false;
+    });
+
     it('Renders x-up model', function() {
         return loadJson(boxEcefUrl).then(function(gltf) {
             // Model data is z-up. Edit the transform to be z-up to x-up.

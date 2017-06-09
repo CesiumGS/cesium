@@ -388,7 +388,7 @@ defineSuite([
         var batchTableBinary = new Float64Array([0, 1]);
         expect(function() {
             return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson, batchTableBinary);
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('throws if the binary property does not specify a type', function() {
@@ -401,7 +401,7 @@ defineSuite([
         var batchTableBinary = new Float64Array([0, 1]);
         expect(function() {
             return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson, batchTableBinary);
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     it('throws if a binary property exists but there is no batchTableBinary', function() {

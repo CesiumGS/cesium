@@ -18,6 +18,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/RuntimeError',
         '../ThirdParty/when',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
@@ -48,6 +49,7 @@ define([
         Request,
         RequestScheduler,
         RequestType,
+        RuntimeError,
         when,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
@@ -99,9 +101,9 @@ define([
 
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {
             // Non-leaf tiles may have a content bounding-volume, which is a tight-fit bounding volume
-            // around only the models in the tile.  This box is useful for culling for rendering,
+            // around only the features in the tile.  This box is useful for culling for rendering,
             // but not for culling for traversing the tree since it does not guarantee spatial coherence, i.e.,
-            // since it only bounds models in the tile, not the entire tile, children may be
+            // since it only bounds features in the tile, not the entire tile, children may be
             // outside of this box.
             contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
         }
@@ -123,6 +125,10 @@ define([
          */
         this.geometricError = header.geometricError;
 
+        if (!defined(this.geometricError)) {
+            throw new RuntimeError('geometricError must be defined');
+        }
+
         var refine;
         if (defined(header.refine)) {
             refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
@@ -134,7 +140,7 @@ define([
         }
 
         /**
-         * Specifies if additive or replacement refinement is used when traversing this tile for rendering.
+         * Specifies the type of refinment that is used when traversing this tile for rendering.
          *
          * @type {Cesium3DTileRefine}
          * @readonly
@@ -143,9 +149,9 @@ define([
         this.refine = refine;
 
         /**
-         * An array of {@link Cesium3DTile} objects that are this tile's children.
+         * Gets the tile's children.
          *
-         * @type {Array}
+         * @type {Cesium3DTile[]}
          * @readonly
          */
         this.children = [];
@@ -267,7 +273,6 @@ define([
          * @private
          */
         this.selected = false;
-
 
         /**
          * The time when a style was last applied to this tile.
@@ -405,6 +410,8 @@ define([
         },
 
         /**
+         * The server that will take the request for the tile's content.
+         *
          * @readonly
          * @private
          */
@@ -569,6 +576,14 @@ define([
         }
     }
 
+    function getContentFailedFunction(tile) {
+        return function(error) {
+            tile._contentState = Cesium3DTileContentState.FAILED;
+            tile._contentReadyPromise.reject(error);
+            tile._contentReadyToProcessPromise.reject(error);
+        };
+    }
+
     /**
      * Requests the tile's content.
      * <p>
@@ -617,10 +632,13 @@ define([
             this.expireDate = undefined;
         }
 
+        var contentFailedFunction = getContentFailedFunction(this);
+
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
-                return when.reject('tile is destroyed');
+                contentFailedFunction();
+                return;
             }
             var uint8Array = new Uint8Array(arrayBuffer);
             var magic = getMagic(uint8Array);
@@ -640,10 +658,11 @@ define([
             that._contentState = Cesium3DTileContentState.PROCESSING;
             that._contentReadyToProcessPromise.resolve(content);
 
-            content.readyPromise.then(function(content) {
+            return content.readyPromise.then(function(content) {
                 if (that.isDestroyed()) {
                     // Tile is unloaded before the content finishes processing
-                    return when.reject('tile is destroyed');
+                    contentFailedFunction();
+                    return;
                 }
                 updateExpireDate(that);
 
@@ -652,22 +671,14 @@ define([
 
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
-            }).otherwise(function(error) {
-                that._contentState = Cesium3DTileContentState.FAILED;
-                that._contentReadyPromise.reject(error);
             });
-        }).otherwise(function(error) {
-            that._contentState = Cesium3DTileContentState.FAILED;
-            that._contentReadyPromise.reject(error);
-            that._contentReadyToProcessPromise.reject(error);
-        });
+        }).otherwise(contentFailedFunction);
 
         return true;
     };
 
     /**
-     * Unloads the tile's content and returns the tile's state to the state of when
-     * it was first created, before its content was loaded.
+     * Unloads the tile's content.
      *
      * @private
      */
@@ -764,7 +775,7 @@ define([
         return boundingVolume.distanceToCamera(frameState);
     };
 
-    var scratchCartesian = new Cartesian3();
+    var scratchToTileCenter = new Cartesian3();
 
     /**
      * Computes the distance from the center of the tile's bounding volume to the camera.
@@ -775,8 +786,9 @@ define([
      * @private
      */
     Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
-        var boundingVolume = getBoundingVolume(this, frameState).boundingVolume;
-        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+        var tileBoundingVolume = getBoundingVolume(this, frameState);
+        var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
+        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
         var distance = Cartesian3.magnitude(toCenter);
         Cartesian3.divideByScalar(toCenter, distance, toCenter);
         var dot = Cartesian3.dot(frameState.camera.directionWC, toCenter);
@@ -793,11 +805,7 @@ define([
      */
     Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
         var viewerRequestVolume = this._viewerRequestVolume;
-        if (!defined(viewerRequestVolume)) {
-            return true;
-        }
-
-        return (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
+        return !defined(viewerRequestVolume) || (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
     };
 
     var scratchMatrix = new Matrix3();
@@ -805,6 +813,53 @@ define([
     var scratchHalfAxes = new Matrix3();
     var scratchCenter = new Cartesian3();
     var scratchRectangle = new Rectangle();
+
+    function createBox(box, transform, result) {
+        var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
+        var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
+
+        // Find the transformed center and halfAxes
+        center = Matrix4.multiplyByPoint(transform, center, center);
+        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
+
+        if (defined(result)) {
+            result.update(center, halfAxes);
+            return result;
+        }
+        return new TileOrientedBoundingBox(center, halfAxes);
+    }
+
+    function createRegion(region, result) {
+        var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
+
+        if (defined(result)) {
+            // Don't update regions when the transform changes
+            return result;
+        }
+        return new TileBoundingRegion({
+            rectangle : rectangleRegion,
+            minimumHeight : region[4],
+            maximumHeight : region[5]
+        });
+    }
+
+    function createSphere(sphere, transform, result) {
+        var center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
+        var radius = sphere[3];
+
+        // Find the transformed center and radius
+        center = Matrix4.multiplyByPoint(transform, center, center);
+        var scale = Matrix4.getScale(transform, scratchScale);
+        var uniformScale = Cartesian3.maximumComponent(scale);
+        radius *= uniformScale;
+
+        if (defined(result)) {
+            result.update(center, radius);
+            return result;
+        }
+        return new TileBoundingSphere(center, radius);
+    }
 
     /**
      * Create a bounding volume from the tile's bounding volume header.
@@ -818,52 +873,19 @@ define([
      * @private
      */
     Cesium3DTile.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
-        var center;
-        if (defined(boundingVolumeHeader.box)) {
-            var box = boundingVolumeHeader.box;
-            center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
-            var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
-
-            // Find the transformed center and halfAxes
-            center = Matrix4.multiplyByPoint(transform, center, center);
-            var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
-            halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
-
-            if (defined(result)) {
-                result.update(center, halfAxes);
-                return result;
-            }
-            return new TileOrientedBoundingBox(center, halfAxes);
-        } else if (defined(boundingVolumeHeader.region)) {
-            var region = boundingVolumeHeader.region;
-            var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
-
-            if (defined(result)) {
-                // Don't update regions when the transform changes
-                return result;
-            }
-            return new TileBoundingRegion({
-                rectangle : rectangleRegion,
-                minimumHeight : region[4],
-                maximumHeight : region[5]
-            });
-        } else if (defined(boundingVolumeHeader.sphere)) {
-            var sphere = boundingVolumeHeader.sphere;
-            center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
-            var radius = sphere[3];
-
-            // Find the transformed center and radius
-            center = Matrix4.multiplyByPoint(transform, center, center);
-            var scale = Matrix4.getScale(transform, scratchScale);
-            var uniformScale = Cartesian3.maximumComponent(scale);
-            radius *= uniformScale;
-
-            if (defined(result)) {
-                result.update(center, radius);
-                return result;
-            }
-            return new TileBoundingSphere(center, radius);
+        if (!defined(boundingVolumeHeader)) {
+            throw new RuntimeError('boundingVolume must be defined');
         }
+        if (defined(boundingVolumeHeader.box)) {
+            return createBox(boundingVolumeHeader.box, transform, result);
+        }
+        if (defined(boundingVolumeHeader.region)) {
+            return createRegion(boundingVolumeHeader.region, transform, result);
+        }
+        if (defined(boundingVolumeHeader.sphere)) {
+            return createSphere(boundingVolumeHeader.sphere, transform, result);
+        }
+        throw new RuntimeError('boundingVolume must contain a sphere, region, or box');
     };
 
     var scratchTransform = new Matrix4();
@@ -877,25 +899,28 @@ define([
         parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
         var transformChanged = !Matrix4.equals(computedTransform, this.computedTransform);
-        if (transformChanged) {
-            Matrix4.clone(computedTransform, this.computedTransform);
 
-            // Update the bounding volumes
-            var header = this._header;
-            var content = this._header.content;
-            this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
-            if (defined(this._contentBoundingVolume)) {
-                this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
-            }
-            if (defined(this._viewerRequestVolume)) {
-                this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform, this._viewerRequestVolume);
-            }
-
-            // Destroy the debug bounding volumes. They will be generated fresh.
-            this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
-            this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
-            this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
+        if (!transformChanged) {
+            return;
         }
+
+        Matrix4.clone(computedTransform, this.computedTransform);
+
+        // Update the bounding volumes
+        var header = this._header;
+        var content = this._header.content;
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
+        if (defined(this._contentBoundingVolume)) {
+            this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
+        }
+        if (defined(this._viewerRequestVolume)) {
+            this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, computedTransform, this._viewerRequestVolume);
+        }
+
+        // Destroy the debug bounding volumes. They will be generated fresh.
+        this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
+        this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
+        this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
     };
 
     function applyDebugSettings(tile, tileset, frameState) {
@@ -955,13 +980,18 @@ define([
         var content = tile._content;
         var expiredContent = tile._expiredContent;
 
-        if (defined(expiredContent) && !tile.contentReady) {
-            // Render the expired content while the content loads
-            expiredContent.update(tileset, frameState);
-            return;
+        if (defined(expiredContent)) {
+            if (!tile.contentReady) {
+                // Render the expired content while the content loads
+                expiredContent.update(tileset, frameState);
+                return;
+            } else {
+                // New content is ready, destroy expired content
+                tile._expiredContent.destroy();
+                tile._expiredContent = undefined;
+            }
         }
 
-        tile._expiredContent = tile._expiredContent && tile._expiredContent.destroy();
         content.update(tileset, frameState);
     }
 

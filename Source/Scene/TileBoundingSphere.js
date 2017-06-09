@@ -130,8 +130,6 @@ define([
      *
      * @param {Cartesian3} center The center of the bounding sphere.
      * @param {Number} radius The radius of the bounding sphere.
-     *
-     * @private
      */
     TileBoundingSphere.prototype.update = function(center, radius) {
         Cartesian3.clone(center, this._boundingSphere.center);
@@ -143,8 +141,6 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
-     *
-     * @private
      */
     TileBoundingSphere.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);

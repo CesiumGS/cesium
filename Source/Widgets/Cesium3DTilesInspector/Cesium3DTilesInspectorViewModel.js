@@ -78,11 +78,11 @@ define([
                 // --- Cache/loading statistics
                 '<li><strong>Requests: </strong>' + statistics.numberOfPendingRequests.toLocaleString() + '</li>' +
                 '<li><strong>Attempted: </strong>' + statistics.numberOfAttemptedRequests.toLocaleString() + '</li>' +
-                '<li><strong>Processing: </strong>' + statistics.numberProcessing.toLocaleString() + '</li>' +
-                '<li><strong>Content Ready: </strong>' + statistics.numberContentReady.toLocaleString() + '</li>' +
+                '<li><strong>Processing: </strong>' + statistics.numberOfTilesProcessing.toLocaleString() + '</li>' +
+                '<li><strong>Content Ready: </strong>' + statistics.numberOfTilesWithContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + statistics.numberTotal.toLocaleString() + '</li>';
+                '<li><strong>Total: </strong>' + statistics.numberOfTilesTotal.toLocaleString() + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=

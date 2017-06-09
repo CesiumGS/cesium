@@ -140,6 +140,30 @@ defineSuite([
         expect(tile.isDestroyed()).toEqual(true);
     });
 
+    it('throws if geometricError is undefined', function() {
+        var tileWithoutGeometricError = clone(tileWithBoundingSphere);
+        delete tileWithoutGeometricError.geometricError;
+        expect(function() {
+            return new Cesium3DTile(mockTileset, '/some_url', tileWithoutGeometricError, undefined);
+        }).toThrowRuntimeError();
+    });
+
+    it('throws if boundingVolume is undefined', function() {
+        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere);
+        delete tileWithoutBoundingVolume.boundingVolume;
+        expect(function() {
+            return new Cesium3DTile(mockTileset, '/some_url', tileWithoutBoundingVolume, undefined);
+        }).toThrowRuntimeError();
+    });
+
+    it('throws if boundingVolume does not contain a sphere, region, or box', function() {
+        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere);
+        delete tileWithoutBoundingVolume.boundingVolume.sphere;
+        expect(function() {
+            return new Cesium3DTile(mockTileset, '/some_url', tileWithoutBoundingVolume, undefined);
+        }).toThrowRuntimeError();
+    });
+
     describe('bounding volumes', function() {
         it('can have a bounding sphere', function() {
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);

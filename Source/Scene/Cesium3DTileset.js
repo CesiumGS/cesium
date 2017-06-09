@@ -23,6 +23,7 @@ define([
         '../Core/Matrix4',
         '../Core/RequestScheduler',
         '../Core/RequestType',
+        '../Core/RuntimeError',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
         '../ThirdParty/when',
@@ -35,6 +36,7 @@ define([
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
         './LabelCollection',
+        './SceneMode',
         './ShadowMode',
         './TileBoundingRegion',
         './TileBoundingSphere',
@@ -63,6 +65,7 @@ define([
         Matrix4,
         RequestScheduler,
         RequestType,
+        RuntimeError,
         ClearCommand,
         Pass,
         when,
@@ -75,6 +78,7 @@ define([
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
         LabelCollection,
+        SceneMode,
         ShadowMode,
         TileBoundingRegion,
         TileBoundingSphere,
@@ -442,7 +446,7 @@ define([
          * processed and is ready to render.
          * <p>
          * The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tiles
-         * processing, <code>numberProcessing</code> are passed to the event listener.
+         * processing, <code>numberOfTilesProcessing</code> are passed to the event listener.
          * </p>
          * <p>
          * This event is fired at the end of the frame after the scene is rendered.
@@ -452,13 +456,13 @@ define([
          * @default new Event()
          *
          * @example
-         * tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
-         *     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
+         * tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberOfTilesProcessing) {
+         *     if ((numberOfPendingRequests === 0) && (numberOfTilesProcessing === 0)) {
          *         console.log('Stopped loading');
          *         return;
          *     }
          *
-         *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+         *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberOfTilesProcessing);
          * });
          */
         this.loadProgress = new Event();
@@ -1128,12 +1132,10 @@ define([
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
-        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('tilesetJson.asset', asset);
         if (asset.version !== '0.0' && asset.version !== '1.0') {
-            throw new DeveloperError('The tileset must be 3D Tiles version 0.0 or 1.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+            throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
         }
-        //>>includeEnd('debug');
 
         var statistics = this._statistics;
 
@@ -1157,7 +1159,7 @@ define([
             rootTile._depth = parentTile._depth + 1;
         }
 
-        ++statistics.numberTotal;
+        ++statistics.numberOfTilesTotal;
 
         var stack = [];
         stack.push({
@@ -1176,7 +1178,7 @@ define([
                     var childTile = new Cesium3DTile(this, basePath, childHeader, tile3D);
                     tile3D.children.push(childTile);
                     childTile._depth = tile3D._depth + 1;
-                    ++statistics.numberTotal;
+                    ++statistics.numberOfTilesTotal;
                     stack.push({
                         header : childHeader,
                         tile3D : childTile
@@ -1330,7 +1332,7 @@ define([
         if (expired) {
             if (tile.hasRenderableContent) {
                 statistics.decrementLoadCounts(tile.content);
-                --tileset._statistics.numberContentReady;
+                --tileset._statistics.numberOfTilesWithContentReady;
             } else if (tile.hasTilesetContent) {
                 destroySubtree(tileset, tile);
             }
@@ -1360,7 +1362,7 @@ define([
             tileset._processingQueue.push(tile);
 
             --tileset._statistics.numberOfPendingRequests;
-            ++tileset._statistics.numberProcessing;
+            ++tileset._statistics.numberOfTilesProcessing;
         };
     }
 
@@ -1370,13 +1372,13 @@ define([
             if (index >= 0) {
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
-                --tileset._statistics.numberProcessing;
+                --tileset._statistics.numberOfTilesProcessing;
 
                 if (tile.hasRenderableContent) {
                     // RESEARCH_IDEA: ability to unload tiles (without content) for an
                     // external tileset when all the tiles are unloaded.
                     tileset._statistics.incrementLoadCounts(tile.content);
-                    ++tileset._statistics.numberContentReady;
+                    ++tileset._statistics.numberOfTilesWithContentReady;
 
                     // Add to the tile cache. Previously expired tiles are already in the cache.
                     if (!defined(tile.replacementNode)) {
@@ -1570,7 +1572,7 @@ define([
              * of an object, they will always be drawn while loading, even if backface culling is enabled.
              */
 
-            var backfaceCommands = tileset._backfaceCommands.internalArray;
+            var backfaceCommands = tileset._backfaceCommands.values;
             var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
@@ -1615,7 +1617,7 @@ define([
             if (tile !== root) {
                 unloadTileFromCache(tileset, tile);
                 tile.destroy();
-                --statistics.numberTotal;
+                --statistics.numberOfTilesTotal;
             }
         }
         root.children = [];
@@ -1634,7 +1636,7 @@ define([
         tileUnload.raiseEvent(tile);
         replacementList.remove(node);
         statistics.decrementLoadCounts(tile.content);
-        --statistics.numberContentReady;
+        --statistics.numberOfTilesWithContentReady;
     }
 
     function unloadTiles(tileset) {
@@ -1681,19 +1683,19 @@ define([
         var statistics = tileset._statistics;
         var statisticsLast = tileset._statisticsLastColor;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
-        var numberProcessing = statistics.numberProcessing;
+        var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
-        var lastNumberProcessing = statisticsLast.numberProcessing;
+        var lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
 
-        var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing);
+        var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberOfTilesProcessing !== lastNumberOfTilesProcessing);
 
         if (progressChanged) {
             frameState.afterRender.push(function() {
-                tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
+                tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberOfTilesProcessing);
             });
         }
 
-        tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
+        tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
@@ -1714,6 +1716,10 @@ define([
      *
      */
     Cesium3DTileset.prototype.update = function(frameState) {
+        if (frameState.mode === SceneMode.MORPHING) {
+            return;
+        }
+
         if (!this.show || !this.ready) {
             return;
         }
