@@ -3,6 +3,7 @@
 module.exports = {
     extends: 'cesium',
     env: {
+        amd: true,
         browser: true
     },
     plugins: [

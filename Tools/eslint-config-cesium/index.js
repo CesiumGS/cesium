@@ -28,7 +28,7 @@ module.exports = {
         'no-irregular-whitespace': ['error'],
         'no-new': ['error'],
         'no-undef': ['error'],
-        'no-unused-vars': ['error', {vars: 'all', args: 'none'}],
+        'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
         semi: ['error'],
         strict: ['error'],
         'wrap-iife': ['error', 'any']
