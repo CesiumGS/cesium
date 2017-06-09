@@ -285,14 +285,6 @@ define([
      */
     Ellipsoid.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        /*if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }*/
-        
-        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('value', value);
         Check.defined('array', array);
         //>>includeEnd('debug');
@@ -534,7 +526,7 @@ define([
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('cartesian', cartesian);
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -629,7 +621,7 @@ define([
      */
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('position', position);
+        Check.typeOf.object('position', position);
 
         if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
