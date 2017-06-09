@@ -1,7 +1,6 @@
 /*eslint-env node*/
+'use strict';
 (function() {
-    'use strict';
-
     var express = require('express');
     var compression = require('compression');
     var url = require('url');
@@ -43,7 +42,7 @@
         'image/crn' : ['crn'],
         'image/ktx' : ['ktx'],
         'model/gltf+json' : ['gltf'],
-        'model/gltf.binary' : ['bgltf', 'glb'],
+        'model/gltf-binary' : ['bgltf', 'glb'],
         'text/plain' : ['glsl']
     });
 
