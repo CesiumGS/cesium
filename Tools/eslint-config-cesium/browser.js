@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-    extends: 'cesium',
+    extends: './index.js',
     env: {
         amd: true,
         browser: true
