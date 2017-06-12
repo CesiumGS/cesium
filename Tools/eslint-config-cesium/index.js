@@ -29,6 +29,7 @@ module.exports = {
         'no-new': ['error'],
         'no-undef': ['error'],
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
+        'no-useless-escape': 'off',
         semi: ['error'],
         strict: ['error'],
         'wrap-iife': ['error', 'any']
