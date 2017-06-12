@@ -249,7 +249,6 @@ define([
          * The time in seconds after the tile's content is ready when the content expires and new content is requested.
          *
          * @type {Number}
-         * @readonly
          */
         this.expireDuration = expireDuration;
 
@@ -257,7 +256,6 @@ define([
          * The date when the content expires and new content is requested.
          *
          * @type {JulianDate}
-         * @readonly
          */
         this.expireDate = expireDate;
 
@@ -591,7 +589,8 @@ define([
         }
 
         var url = this._contentUrl;
-        if (defined(this.expireDate)) {
+        var expired = this.contentExpired;
+        if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
             var timestampQuery = '?expired=' + this.expireDate.toString();
             url = joinUrls(url, timestampQuery, false);
@@ -613,6 +612,10 @@ define([
         this._contentState = Cesium3DTileContentState.LOADING;
         this._contentReadyToProcessPromise = when.defer();
         this._contentReadyPromise = when.defer();
+
+        if (expired) {
+            this.expireDate = undefined;
+        }
 
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
