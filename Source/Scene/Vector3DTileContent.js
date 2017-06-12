@@ -394,6 +394,9 @@ define([
         }
 
         if (numberOfPoints > 0) {
+            // TODO: ellipsoid
+            var ellipsoid = Ellipsoid.WGS84;
+
             var pointPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
 
             content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
@@ -415,9 +418,7 @@ define([
                 var alt = CesiumMath.lerp(minHeight, maxHeight, height / maxShort);
 
                 var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchCartographic);
-
-                // TODO: ellipsoid
-                var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic, scratchCartesian3);
+                var position = ellipsoid.cartographicToCartesian(cartographic, scratchCartesian3);
 
                 var b = content._billboardCollection.add();
                 b.position = position;
@@ -431,7 +432,7 @@ define([
                 l._batchIndex = i;
 
                 var p = content._polylineCollection.add();
-                p.positions = [position, Cartesian3.clone(position)];
+                p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
             }
         }
     }
@@ -513,7 +514,7 @@ define([
             feature.scaleByDistance = undefined;
             feature.translucencyByDistance = undefined;
             feature.distanceDisplayCondition = undefined;
-            feature.positionOffset = Cartesian3.ZERO;
+            feature.heightOffset = 0.0;
             feature.anchorLineEnabled = false;
             feature.anchorLineColor = Color.WHITE;
             feature.image = undefined;
@@ -591,7 +592,7 @@ define([
                 feature.distanceDisplayCondition = undefined;
             }
 
-            feature.positionOffset = style.positionOffset.evaluate(frameState, feature);
+            feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
             feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
             feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
 
@@ -624,6 +625,7 @@ define([
         if (defined(this._billboardCollection)) {
             this._billboardCollection.update(frameState);
             this._labelCollection.update(frameState);
+            this._polylineCollection.update(frameState);
         }
 
         if (!defined(this._polygonReadyPromise)) {

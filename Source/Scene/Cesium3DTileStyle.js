@@ -36,7 +36,7 @@ define([
     var DEFAULT_JSON_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
     var DEFAULT_JSON_FONT_EXPRESSION = '"30px sans-serif"';
     var DEFAULT_JSON_BACKGROUND_ENABLED_EXPRESSION = false;
-    var DEFAULT_JSON_POSITION_OFFSET_EXPRESSION = 'vec3(0.0, 0.0, 0.0)';
+    var DEFAULT_JSON_HEIGHT_OFFSET_EXPRESSION = 0.0;
     var DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION = false;
     var DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
 
@@ -86,7 +86,7 @@ define([
         this._scaleByDistance = undefined;
         this._translucencyByDistance = undefined;
         this._distanceDisplayCondition = undefined;
-        this._positionOffset = undefined;
+        this._heightOffset = undefined;
         this._anchorLineEnabled = undefined;
         this._anchorLineColor = undefined;
         this._image = undefined;
@@ -150,7 +150,7 @@ define([
         var scaleByDistanceExpression = styleJson.scaleByDistance;
         var translucencyByDistanceExpression = styleJson.translucencyByDistance;
         var distanceDisplayConditionExpression = styleJson.distanceDisplayCondition;
-        var positionOffsetExpression = defaultValue(styleJson.positionOffset, DEFAULT_JSON_POSITION_OFFSET_EXPRESSION);
+        var heightOffsetExpression = defaultValue(styleJson.heightOffset, DEFAULT_JSON_HEIGHT_OFFSET_EXPRESSION);
         var anchorLineEnabledExpression = defaultValue(styleJson.anchorLineEnabled, DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION);
         var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION);
         var imageExpression = styleJson.image;
@@ -322,14 +322,16 @@ define([
 
         that._distanceDisplayCondition = distanceDisplayCondition;
 
-        var positionOffset;
-        if (typeof positionOffsetExpression === 'string') {
-            positionOffset = new Expression(positionOffsetExpression, expressions);
-        } else if (defined(positionOffsetExpression.conditions)) {
-            positionOffset  = new ConditionsExpression(positionOffsetExpression, expressions);
+        var heightOffset;
+        if (typeof heightOffsetExpression === 'number') {
+            heightOffset = new Expression(String(heightOffsetExpression), expressions);
+        } else if (typeof heightOffsetExpression === 'string') {
+            heightOffset = new Expression(heightOffsetExpression, expressions);
+        } else if (defined(heightOffsetExpression.conditions)) {
+            heightOffset  = new ConditionsExpression(heightOffsetExpression, expressions);
         }
 
-        that._positionOffset = positionOffset;
+        that._heightOffset = heightOffset;
 
         var anchorLineEnabled;
         if (typeof anchorLineEnabledExpression === 'boolean') {
@@ -864,7 +866,7 @@ define([
             }
         },
 
-        positionOffset : {
+        heightOffset : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -872,10 +874,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._positionOffset;
+                return this._heightOffset;
             },
             set : function(value) {
-                this._positionOffset = value;
+                this._heightOffset = value;
             }
         },
 

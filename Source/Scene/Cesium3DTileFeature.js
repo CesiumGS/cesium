@@ -1,17 +1,21 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/Ellipsoid',
         './HorizontalOrigin'
     ], function(
         Cartesian3,
+        Cartographic,
         Color,
         defaultValue,
         defined,
         defineProperties,
+        Ellipsoid,
         HorizontalOrigin) {
     'use strict';
 
@@ -65,7 +69,7 @@ define([
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
-        this._positionOffset = undefined;
+        this._heightOffset = undefined;
 
         /**
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
@@ -76,6 +80,8 @@ define([
          */
         this.primitive = tileset;
     }
+
+    var scratchCartographic = new Cartographic();
 
     defineProperties(Cesium3DTileFeature.prototype, {
         /**
@@ -432,9 +438,9 @@ define([
             }
         },
 
-        positionOffset : {
+        heightOffset : {
             get : function() {
-                return this._positionOffset;
+                return this._heightOffset;
             },
             set : function(value) {
                 if (defined(this._billboardCollection)) {
@@ -442,15 +448,19 @@ define([
                     var label = this._labelCollection.get(this._batchId);
                     var line = this._polylineCollection.get(this._batchId);
 
-                    var offset = defaultValue(this._positionOffset, Cartesian3.ZERO);
-                    var newPosition = Cartesian3.subtract(billboard.position, offset, new Cartesian3());
-                    Cartesian3.add(newPosition, value, newPosition);
+                    var offset = defaultValue(this._heightOffset, 0.0);
+
+                    // TODO: ellipsoid
+                    var ellipsoid = Ellipsoid.WGS84;
+                    var cart = ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
+                    cart.height = cart.height - offset + value;
+                    var newPosition = ellipsoid.cartographicToCartesian(cart);
 
                     billboard.position = newPosition;
                     label.position = billboard.position;
-                    line.positions[1] = billboard.position;
+                    line.positions = [line.positions[0], newPosition];
                 }
-                this._positionOffset = Cartesian3.clone(value, this._positionOffset);
+                this._heightOffset = value;
             }
         },
 
