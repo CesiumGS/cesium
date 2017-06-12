@@ -213,7 +213,7 @@ define([
             //generate shader parameters for KHR_materials_common attributes
             //(including a check, because some boolean flags should not be used as shader parameters)
             if (parameterValues.hasOwnProperty(name)) {
-                var valType = getKHRMaterialsCommonValueType(name, parameterValues[name]);
+                var valType = getPBRValueType(name, parameterValues[name]);
                 if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
@@ -349,8 +349,15 @@ define([
         else {
             fragmentShaderMain += '  vec3 baseColor = vec3(1.0, 0.0, 0.0);\n';
         }
-        fragmentShaderMain += '  float metalness = 0.0;\n';
-        fragmentShaderMain += '  float roughness = 0.9;\n'; // clamp to min of 0.04
+        if (defined(parameterValues.metallicRoughnessTexture)) {
+            fragmentShaderMain += '  vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentShaderMain += '  float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
+            fragmentShaderMain += '  float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
+        }
+        else {
+            fragmentShaderMain += '  float metalness = 0.5;\n';
+            fragmentShaderMain += '  float roughness = 0.5;\n'; // clamp to min of 0.04
+        }
         fragmentShaderMain += '  vec3 v = -normalize(v_positionEC);\n';
         fragmentShaderMain += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
 
@@ -359,11 +366,11 @@ define([
         fragmentLightingBlock += '  vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
         fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
         fragmentLightingBlock += '  vec3 h = normalize(v + l);\n';
-        fragmentLightingBlock += '  float NdotL = clamp(dot(n, l), 0.01, 1.0);\n';
-        fragmentLightingBlock += '  float NdotV = clamp(dot(n, v), 0.01, 1.0);\n';
-        fragmentLightingBlock += '  float NdotH = clamp(dot(n, h), 0.01, 1.0);\n';
-        fragmentLightingBlock += '  float LdotH = clamp(dot(l, h), 0.01, 1.0);\n';
-        fragmentLightingBlock += '  float VdotH = clamp(dot(v, h), 0.01, 1.0);\n';
+        fragmentLightingBlock += '  float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
+        fragmentLightingBlock += '  float NdotV = abs(dot(n, v)) + 0.001;\n';
+        fragmentLightingBlock += '  float NdotH = clamp(dot(n, h), 0.0, 1.0);\n';
+        fragmentLightingBlock += '  float LdotH = clamp(dot(l, h), 0.0, 1.0);\n';
+        fragmentLightingBlock += '  float VdotH = clamp(dot(v, h), 0.0, 1.0);\n';
 
         fragmentLightingBlock += '  vec3 f0 = vec3(0.04);\n';
         fragmentLightingBlock += '  vec3 diffuseColor = baseColor * (1.0 - metalness);\n';
@@ -376,9 +383,9 @@ define([
         fragmentLightingBlock += '  float G = smithVisibilityGGX(roughness, NdotL, NdotV);\n';
         fragmentLightingBlock += '  float D = GGX(roughness, NdotH);\n';
 
-        fragmentLightingBlock += '  vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor) * NdotL * lightColor;\n';
-        fragmentLightingBlock += '  vec3 specularContribution = M_PI * lightColor * F * G * D / (4.0 * NdotL * NdotV);\n';
-        fragmentLightingBlock += '  vec3 color = diffuseContribution + specularContribution;\n';
+        fragmentLightingBlock += '  vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor);\n';
+        fragmentLightingBlock += '  vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
+        fragmentLightingBlock += '  vec3 color = M_PI * NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
@@ -398,14 +405,13 @@ define([
         }
 
         var finalColorComputation;
-        finalColorComputation = '  gl_FragColor = vec4(baseColor, 1.0);\n';
+        finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
 
         fragmentShaderMain += fragmentLightingBlock;
         fragmentShaderMain += finalColorComputation;
         fragmentShaderMain += '}\n';
 
         fragmentShader += fragmentShaderMain;
-        console.log(fragmentShader);
 
         var techniqueStates = {
             enable: [
@@ -454,7 +460,7 @@ define([
         return techniqueId;
     }
 
-    function getKHRMaterialsCommonValueType(paramName, paramValue) {
+    function getPBRValueType(paramName, paramValue) {
         var value;
 
         // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
@@ -489,7 +495,7 @@ define([
         for (var i = 0; i < keysCount; ++i) {
             var name = keys[i];
             if (values.hasOwnProperty(name)) {
-                techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name, values[name]);
+                techniqueKey += name + ':' + getPBRValueType(name, values[name]);
                 techniqueKey += ';';
             }
         }
@@ -712,11 +718,12 @@ define([
                 if (material.hasOwnProperty('pbrMetallicRoughness')) {
                     var pbrMetallicRoughness = material.pbrMetallicRoughness;
                     var technique = generateTechnique(gltf, material, lightParameters, options.optimizeForCesium);
-
+                    // var techniqueKey = 'test';
+                    // techniques[techniqueKey] = technique;
                     // Take advantage of the fact that we generate techniques that use the
                     // same parameter names as the extension values.
                     material.values = {};
-                    var values = pbrMetallicRoughness.values;
+                    var values = pbrMetallicRoughness;
                     for (var valueName in values) {
                         if (values.hasOwnProperty(valueName)) {
                             var value = values[valueName];

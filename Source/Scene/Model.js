@@ -2681,7 +2681,7 @@ define([
 
     function DelayLoadedTextureUniform(value, model) {
         this._value = undefined;
-        this._textureId = value;
+        this._textureId = value.index;
         this._model = model;
     }
 
@@ -2866,12 +2866,7 @@ define([
             if (materials.hasOwnProperty(materialId)) {
                 var material = materials[materialId];
                 var instanceParameters;
-                if (defined(material.pbrMetallicRoughness)) {
-                    instanceParameters = material.pbrMetallicRoughness;
-                }
-                else {
-                    instanceParameters = material.values;
-                }
+                instanceParameters = material.values;
                 var technique = techniques[material.technique];
                 var parameters = technique.parameters;
                 var uniforms = technique.uniforms;
@@ -4232,7 +4227,7 @@ define([
                     checkSupportedExtensions(this);
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf);
+                    //processModelMaterialsCommon(this.gltf);
                     processPbrMetallicRoughness(this.gltf);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
