@@ -9,9 +9,13 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/isArray',
+        '../Core/Iso8601',
+        '../Core/JulianDate',
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
+        '../Core/TimeInterval',
+        '../Core/TimeIntervalCollection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -26,9 +30,13 @@ define([
         Event,
         freezeObject,
         isArray,
+        Iso8601,
+        JulianDate,
         objectToQuery,
         queryToObject,
         Rectangle,
+        TimeInterval,
+        TimeIntervalCollection,
         WebMercatorTilingScheme,
         Uri,
         when,
@@ -135,6 +143,38 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
+        this._timeDimensionName = defaultValue(options.timeDimensionName, 'TIME');
+        this._timeDimensionIntervals = undefined;
+        this._timeDimensionValue = undefined;
+        var clock = options.clock;
+        var timeDimensionValues = options.timeDimensionValues;
+        if (defined(clock) && defined(timeDimensionValues) && timeDimensionValues.length > 0) {
+            this._clock = clock;
+
+            var timeDimensionIntervals = this._timeDimensionIntervals = new TimeIntervalCollection();
+            var valueCount = timeDimensionValues.length;
+            timeDimensionIntervals.addInterval(Iso8601.MAXIMUM_INTERVAL);
+
+            var startDate = JulianDate.fromIso8601(timeDimensionValues[0]);
+            for (var i = 0; i < valueCount; ++i) {
+                var v = timeDimensionValues[i];
+                var endDate = (i < valueCount - 1) ? JulianDate.fromIso8601(timeDimensionValues[i + 1]) : Iso8601.MAXIMUM_VALUE;
+
+                timeDimensionIntervals.addInterval(new TimeInterval({
+                    start : startDate,
+                    stop : endDate,
+                    isStartIncluded : true,
+                    isStopIncluded : false,
+                    data : v // String must be exact
+                }));
+
+                startDate = endDate;
+            }
+
+            clock.onTick.addEventListener(this._clockOnTick, this);
+            this._clockOnTick(clock);
+        }
+
         this._readyPromise = when.resolve(true);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
@@ -186,6 +226,10 @@ define([
                 .replace('{TileRow}', row.toString())
                 .replace('{TileCol}', col.toString())
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
+
+            if (defined(imageryProvider._timeDimensionValue)) {
+                url = url.replace('{'+imageryProvider._timeDimensionName+'}', imageryProvider._timeDimensionValue);
+            }
         }
         else {
             // build KVP request
@@ -201,6 +245,10 @@ define([
             queryOptions.tilecol = col;
             queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
             queryOptions.format = imageryProvider._format;
+
+            if (defined(imageryProvider._timeDimensionValue)) {
+                queryOptions[imageryProvider._timeDimensionName] = imageryProvider._timeDimensionValue;
+            }
 
             uri.query = objectToQuery(queryOptions);
 
@@ -410,6 +458,23 @@ define([
             }
         }
     });
+
+    /**
+     * @private
+     */
+    WebMapTileServiceImageryProvider.prototype._clockOnTick = function(clock) {
+        var time = clock.currentTime;
+        var interval = this._timeDimensionIntervals.findIntervalContainingDate(time);
+        if (defined(interval.data)) {
+            var data = interval.data;
+            if (data !== this._timeDimensionValue) {
+                this._timeDimensionValue = data;
+                if (defined(this._reload)) {
+                    this._reload();
+                }
+            }
+        }
+    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.

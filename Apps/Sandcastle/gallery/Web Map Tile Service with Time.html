@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Add imagery from a Web Map Service (WMS) server.">
+    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+// Add a WMTS imagery layer
+var imageryLayers = viewer.imageryLayers;
+imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+    url : 'http://c0007424-00.stk.com:8080/geowebcache/service/wmts',
+    layer : '3_Hourly_Satellite_Derived_Precip',
+    style : 'default',
+    tileMatrixSetID : 'EPSG:4326',
+    tileMatrixLabels : ['EPSG:4326:0','EPSG:4326:1',
+                        'EPSG:4326:2','EPSG:4326:3',
+                        'EPSG:4326:4','EPSG:4326:5',
+                        'EPSG:4326:6','EPSG:4326:7',
+                        'EPSG:4326:8','EPSG:4326:9',
+                        'EPSG:4326:10','EPSG:4326:11',
+                        'EPSG:4326:12','EPSG:4326:13',
+                        'EPSG:4326:14','EPSG:4326:15',
+                        'EPSG:4326:16','EPSG:4326:17',
+                        'EPSG:4326:18','EPSG:4326:19',
+                        'EPSG:4326:20','EPSG:4326:21'],
+    format : 'image/png',
+    clock: viewer.clock,
+    timeDimensionValues: ['2017-06-11T00:00:00Z', '2017-06-11T03:00:00Z',
+                          '2017-06-11T06:00:00Z', '2017-06-11T09:00:00Z',
+                          '2017-06-11T12:00:00Z', '2017-06-11T15:00:00Z',
+                          '2017-06-11T18:00:00Z', '2017-06-11T21:00:00Z',
+                          '2017-06-12T00:00:00Z', '2017-06-12T03:00:00Z',
+                          '2017-06-12T06:00:00Z', '2017-06-12T09:00:00Z']
+}));
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
