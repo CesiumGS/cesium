@@ -297,9 +297,9 @@ define([
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
         var drawCommands = processor._drawCommands;
-        var resized = defined(depthTextures[2]) &&
-            ((depthTextures[2].width !== screenWidth) ||
-             (depthTextures[2].height !== screenHeight));
+        var resized = defined(colorTextures) &&
+            ((colorTextures[0].width !== screenWidth) ||
+             (colorTextures[0].height !== screenHeight));
 
         if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
