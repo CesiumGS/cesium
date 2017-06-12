@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/defined',

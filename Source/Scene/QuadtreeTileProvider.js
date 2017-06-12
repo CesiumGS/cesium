@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
@@ -205,7 +204,7 @@ define([
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',

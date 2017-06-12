@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -515,7 +514,7 @@ define([
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
-     * 
+     *
      * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {

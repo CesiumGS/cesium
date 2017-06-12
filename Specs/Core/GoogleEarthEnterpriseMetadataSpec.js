@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
     'Core/GoogleEarthEnterpriseMetadata',
     'Core/GoogleEarthEnterpriseTileInformation',

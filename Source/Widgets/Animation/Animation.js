@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Color',
         '../../Core/defined',
@@ -327,7 +326,7 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
-     * 
+     *
      * @see AnimationViewModel
      * @see Clock
      */

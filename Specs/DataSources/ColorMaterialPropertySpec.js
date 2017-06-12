@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/ColorMaterialProperty',
         'Core/Color',
