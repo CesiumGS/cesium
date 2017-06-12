@@ -1115,17 +1115,17 @@ define([
      * are not accessible by getFeature. They are only used for dynamic styling.
      */
     PointCloud3DTileContent.prototype.getFeature = function(batchId) {
-        if (defined(this._batchTable)) {
-            var featuresLength = this.featuresLength;
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-            }
-            //>>includeEnd('debug');
-            createFeatures(this);
-            return this._features[batchId];
+        if (!defined(this._batchTable)) {
+            return undefined;
         }
-        return undefined;
+        var featuresLength = this.featuresLength;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     /**

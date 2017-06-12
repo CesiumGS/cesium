@@ -124,9 +124,8 @@ define([
         var tileset = {};
         var url = '';
         expect(function() {
-            Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, type);
-            //content.update(tileset, scene.frameState);
-        }).toThrowDeveloperError();
+            return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, type);
+        }).toThrowRuntimeError();
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {

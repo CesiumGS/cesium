@@ -59,7 +59,7 @@ define([
         },
 
         /**
-         * Gets and sets the maximum size of the heap.
+         * Gets or sets the maximum size of the heap.
          *
          * @memberof Heap.prototype
          *

@@ -3,6 +3,7 @@ define([
         '../Core/arrayFill',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -36,6 +37,7 @@ define([
         arrayFill,
         Cartesian2,
         Cartesian4,
+        Check,
         clone,
         Color,
         combine,
@@ -315,6 +317,7 @@ define([
                 }
             }
         }
+        return binaryProperties;
     };
 
     function getByteLength(batchTable) {
@@ -345,16 +348,16 @@ define([
         return batchTable._showAlphaProperties;
     }
 
-    Cesium3DTileBatchTable.prototype.setShow = function(batchId, show) {
-        var featuresLength = this.featuresLength;
-        //>>includeStart('debug', pragmas.debug);
+    function checkBatchId(batchId, featuresLength) {
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
+    }
 
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
+    Cesium3DTileBatchTable.prototype.setShow = function(batchId, show) {
+        //>>includeStart('debug', pragmas.debug);
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.bool('show', show);
         //>>includeEnd('debug');
 
         if (show && !defined(this._showAlphaProperties)) {
@@ -381,9 +384,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.setAllShow = function(show) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
+        Check.typeOf.bool('show', show);
         //>>includeEnd('debug');
 
         var featuresLength = this.featuresLength;
@@ -393,11 +394,8 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
         if (!defined(this._showAlphaProperties)) {
@@ -412,15 +410,9 @@ define([
     var scratchColorBytes = new Array(4);
 
     Cesium3DTileBatchTable.prototype.setColor = function(batchId, color) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.object('color', color);
         //>>includeEnd('debug');
 
         if (Color.equals(color, Color.WHITE) && !defined(this._batchValues)) {
@@ -468,9 +460,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.setAllColor = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        Check.typeOf.object('color', color);
         //>>includeEnd('debug');
 
         var featuresLength = this.featuresLength;
@@ -480,15 +470,9 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getColor = function(batchId, result) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
@@ -687,14 +671,9 @@ define([
     }
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(className)) {
-            throw new DeveloperError('className is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('className', className);
         //>>includeEnd('debug');
 
         // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
@@ -716,20 +695,15 @@ define([
 
     Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(className)) {
-            throw new DeveloperError('className is required.');
-        }
+        Check.typeOf.string('className', className);
         //>>includeEnd('debug');
 
         return (this.getExactClassName(batchId) === className);
     };
 
     Cesium3DTileBatchTable.prototype.getExactClassName = function(batchId) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
         var hierarchy = this._batchTableHierarchy;
@@ -742,14 +716,9 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         var json = this.batchTableJson;
@@ -757,11 +726,8 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
         var json = this.batchTableJson;
@@ -788,14 +754,9 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         if (!defined(this.batchTableJson)) {
@@ -827,13 +788,8 @@ define([
     Cesium3DTileBatchTable.prototype.setProperty = function(batchId, name, value) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         if (defined(this._batchTableBinaryProperties)) {
@@ -967,7 +923,9 @@ define([
             return getHighlightOnlyShader(source);
         }
 
-        // Find the diffuse uniform
+        // Find the diffuse uniform. Examples matches:
+        //   uniform vec3 u_diffuseColor;
+        //   uniform sampler2D diffuseTexture;
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);
 
@@ -1093,12 +1051,17 @@ define([
         var colorBlendAmount = tileset.colorBlendAmount;
         if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
             return 0.0;
-        } else if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
+        }
+        if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
             return 1.0;
-        } else if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
+        }
+        if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
             // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Invalid color blend mode "' + colorBlendMode + '".');
+        //>>includeEnd('debug');
     }
 
     Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {

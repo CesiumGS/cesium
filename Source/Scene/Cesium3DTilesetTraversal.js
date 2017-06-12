@@ -23,6 +23,9 @@ define([
         SceneMode) {
     'use strict';
 
+    /**
+     * @private
+     */
     var Cesium3DTilesetTraversal = {};
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -394,20 +397,21 @@ define([
     };
 
     InternalBaseTraversal.prototype.getChildren = function(tile) {
-        if (baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
-            var children = tile.children;
-            var childrenLength = children.length;
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                loadTile(child, this.frameState);
-                touch(this.tileset, child, this.outOfCore);
-                if (!tile.contentAvailable) {
-                    this.allLoaded = false;
-                }
-            }
-            return children;
+        if (!baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
+            return emptyArray;
         }
-        return emptyArray;
+
+        var children = tile.children;
+        var childrenLength = children.length;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            loadTile(child, this.frameState);
+            touch(this.tileset, child, this.outOfCore);
+            if (!tile.contentAvailable) {
+                this.allLoaded = false;
+            }
+        }
+        return children;
     };
 
     InternalBaseTraversal.prototype.updateAndCheckChildren = BaseTraversal.prototype.updateAndCheckChildren;

@@ -96,26 +96,32 @@ define([
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
-     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned.
+     * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
+     * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
      *
      * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
-     * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4} The result of evaluating the expression.
+     * @param {Object} [result] The object onto which to store the result.
+     * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
      */
-    Expression.prototype.evaluate = function(frameState, feature) {
+    Expression.prototype.evaluate = function(frameState, feature, result) {
         scratchStorage.reset();
-        var result = this._runtimeAst.evaluate(frameState, feature);
-        if ((result instanceof Cartesian2) || (result instanceof Cartesian3) || (result instanceof Cartesian4)) {
-            return result.clone();
+        var value = this._runtimeAst.evaluate(frameState, feature);
+        if ((result instanceof Color) && (value instanceof Cartesian4)) {
+            return Color.fromCartesian4(value, result);
         }
-        return result;
+        if ((value instanceof Cartesian2) || (value instanceof Cartesian3) || (value instanceof Cartesian4)) {
+            return value.clone(result);
+        }
+        return value;
     };
 
     /**
-     * Evaluates the result of a Color expression, using the values defined by a feature.
+     * Evaluates the result of a Color expression, optionally using the provided feature's properties.
      * <p>
-     * This is equivalent to {@link StyleExpression#evaluate} but avoids allocating memory by accepting a result argument.
+     * This is equivalent to {@link Expression#evaluate} but always returns a {@link Color} object.
      * </p>
+     *
      * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
@@ -169,13 +175,15 @@ define([
     var unaryOperators = ['!', '-', '+'];
     var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
-    var variableRegex = /\${(.*?)}/g;
+    var variableRegex = /\${(.*?)}/g; // Matches ${variable_name}
     var backslashRegex = /\\/g;
     var backslashReplacement = '@#%';
     var replacementRegex = /@#%/g;
 
     var scratchColor = new Color();
 
+    // Scratch storage manager while evaluating deep expressions.
+    // For example, an expression like dot(vec4(${red}), vec4(${green}) * vec4(${blue}) requires 3 scratch Cartesian4's
     var scratchStorage = {
         arrayIndex : 0,
         arrayArray : [[]],

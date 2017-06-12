@@ -236,8 +236,6 @@ define([
          *
          * @type {Boolean}
          * @default false
-         *
-         * @see Fog
          */
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
@@ -258,8 +256,6 @@ define([
          *
          * @type {Number}
          * @default 0.00278
-         *
-         * @see Fog#density
          */
         this.dynamicScreenSpaceErrorDensity = 0.00278;
 
@@ -269,8 +265,6 @@ define([
          *
          * @type {Number}
          * @default 4.0
-         *
-         * @see Fog#screenSpaceErrorFactor
          */
         this.dynamicScreenSpaceErrorFactor = 4.0;
 
@@ -548,7 +542,13 @@ define([
         this.tileVisible = new Event();
 
         /**
-         * Optimization option. Determines if level of detail skipping should be applied during the traversal
+         * Optimization option. Determines if level of detail skipping should be applied during the traversal.
+         * <p>
+         * The common strategy for replacement-refinement traversal is to store all levels of the tree in memory and require
+         * all children to be loaded before the parent can refine. With this optimization levels of the tree can be skipped
+         * entirely and children can be rendered alongside their parents. The tileset requires significantly less memory when
+         * using this optimization.
+         * </p>
          *
          * @type {Boolean}
          * @default true
@@ -725,11 +725,7 @@ define([
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
         RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
             that._root = that.loadTileset(tilesetUrl, tilesetJson);
-
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
             that._properties = tilesetJson.properties;
@@ -755,9 +751,6 @@ define([
          * @readonly
          *
          * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
-         *
-         * @example
-         * console.log('3D Tiles version: ' + tileset.asset.version);
          */
         asset : {
             get : function() {
@@ -947,6 +940,11 @@ define([
          * The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tile
          * refines to its descendants, and therefore plays a major role in balancing performance with visual quality.
          * <p>
+         * A tile's screen space error is roughly equivalent to the number of pixels that would be drawn if a sphere with a
+         * radius equal to the tile's <b>geometric error</b> were rendered at the tile's position. If this value exceeds
+         * <code>maximumScreenSpaceError</code> the tile refines to its descendants.
+         * </p>
+         * <p>
          * Depending on the tileset, <code>maximumScreenSpaceError</code> may need to be tweaked to achieve the right balance.
          * Higher values provide better performance but lower visual quality.
          * </p>
@@ -972,7 +970,7 @@ define([
         },
 
         /**
-         * The maximum amount of GPU memory (in MB) that may be used by the tileset. This value is estimated from
+         * The maximum amount of GPU memory (in MB) that may be used to cache tiles. This value is estimated from
          * geometry, textures, and batch table textures of loaded tiles. For point clouds, this value also
          * includes per-point metadata.
          * <p>
@@ -1050,6 +1048,16 @@ define([
          *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
+         *
+         * @example
+         * // Adjust a tileset's height from the globe's surface.
+         * var heightOffset = 20.0;
+         * var boundingSphere = tileset.boundingSphere;
+         * var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+         * var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
+         * var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, heightOffset);
+         * var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
+         * tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
          */
         modelMatrix : {
             get : function() {
@@ -1139,7 +1147,7 @@ define([
 
         var statistics = this._statistics;
 
-        // Append the version to the basePath
+        // Append the tileset version to the basePath
         var hasVersionQuery = /[?&]v=/.test(tilesetUrl);
         if (!hasVersionQuery) {
             var versionQuery = '?v=' + defaultValue(asset.tilesetVersion, '0.0');
@@ -1312,11 +1320,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function requestContent(tileset, tile, outOfCore) {
-        if (!outOfCore) {
-            return;
-        }
-
-        if (tile.hasEmptyContent) {
+        if (!outOfCore || tile.hasEmptyContent) {
             return;
         }
 
@@ -1369,26 +1373,27 @@ define([
     function removeFromProcessingQueue(tileset, tile) {
         return function() {
             var index = tileset._processingQueue.indexOf(tile);
-            if (index >= 0) {
-                // Remove from processing queue
-                tileset._processingQueue.splice(index, 1);
-                --tileset._statistics.numberOfTilesProcessing;
-
-                if (tile.hasRenderableContent) {
-                    // RESEARCH_IDEA: ability to unload tiles (without content) for an
-                    // external tileset when all the tiles are unloaded.
-                    tileset._statistics.incrementLoadCounts(tile.content);
-                    ++tileset._statistics.numberOfTilesWithContentReady;
-
-                    // Add to the tile cache. Previously expired tiles are already in the cache.
-                    if (!defined(tile.replacementNode)) {
-                        tile.replacementNode = tileset._replacementList.add(tile);
-                    }
-                }
-            } else {
+            if (index === -1) {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
                 --tileset._statistics.numberOfPendingRequests;
+                return;
+            }
+
+            // Remove from processing queue
+            tileset._processingQueue.splice(index, 1);
+            --tileset._statistics.numberOfTilesProcessing;
+
+            if (tile.hasRenderableContent) {
+                // RESEARCH_IDEA: ability to unload tiles (without content) for an
+                // external tileset when all the tiles are unloaded.
+                tileset._statistics.incrementLoadCounts(tile.content);
+                ++tileset._statistics.numberOfTilesWithContentReady;
+
+                // Add to the tile cache. Previously expired tiles are already in the cache.
+                if (!defined(tile.replacementNode)) {
+                    tile.replacementNode = tileset._replacementList.add(tile);
+                }
             }
         };
     }
@@ -1535,8 +1540,8 @@ define([
             var tile = selectedTiles[i];
             // tiles may get unloaded and destroyed between selection and update
             if (tile.selected) {
-                // Raise visible event before update in case the visible event
-                // makes changes that update needs to apply to WebGL resources
+                // Raise the tileVisible event before update in case the tileVisible event
+                // handler makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
                 statistics.incrementSelectionCounts(tile.content);
@@ -1557,7 +1562,7 @@ define([
              * 1. Render just the backfaces of unresolved tiles in order to lay down z
              * 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
              *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
-             *    Because children are always drawn before ancestors (@see {@link Cesium3DTilesetTraversal#traverseAndSelect}),
+             *    Because children are always drawn before ancestors {@link Cesium3DTilesetTraversal#traverseAndSelect},
              *    this effectively draws children first and does not draw ancestors if a descendant has already
              *    been drawn at that pixel.
              *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.

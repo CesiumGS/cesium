@@ -414,7 +414,7 @@ defineSuite([
         };
         expect(function() {
             return new Cesium3DTileBatchTable(mockTileset, 2, batchTableJson);
-        }).toThrowDeveloperError();
+        }).toThrowRuntimeError();
     });
 
     function concatTypedArrays(arrays) {

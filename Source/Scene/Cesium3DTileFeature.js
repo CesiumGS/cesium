@@ -49,7 +49,7 @@ define([
 
     defineProperties(Cesium3DTileFeature.prototype, {
         /**
-         * Gets and sets if the feature will be shown. This is set for all features
+         * Gets or sets if the feature will be shown. This is set for all features
          * when a style's show is evaluated.
          *
          * @memberof Cesium3DTileFeature.prototype
@@ -68,7 +68,7 @@ define([
         },
 
         /**
-         * Gets and sets the highlight color multiplied with the feature's color.  When
+         * Gets or sets the highlight color multiplied with the feature's color.  When
          * this is white, the feature's color is not changed. This is set for all features
          * when a style's color is evaluated.
          *
@@ -107,9 +107,29 @@ define([
         },
 
         /**
-         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
+         * Gets the tileset containing the feature.
+         *
+         * @memberof Cesium3DTileFeature.prototype
          *
          * @type {Cesium3DTileset}
+         *
+         * @readonly
+         */
+        tileset : {
+            get : function() {
+                return this._content.tileset;
+            }
+        },
+
+        /**
+         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
+         * the tileset containing the feature.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileset}
+         *
+         * @readonly
          */
         primitive : {
             get : function() {
@@ -144,11 +164,8 @@ define([
     };
 
     /**
-     * Returns the value of the feature's property with the given name. This includes properties from this feature's
+     * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
-     * <p>
-     * The value is copied before being returned.
-     * </p>
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *

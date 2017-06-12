@@ -359,39 +359,39 @@ defineSuite([
         var color = new Color();
 
         var expression = new Expression('color(\'#0000ff\')');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.BLUE);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.BLUE);
         expect(color).toEqual(Color.BLUE);
 
         expression = new Expression('color(\'#f00\')');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.RED);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.RED);
         expect(color).toEqual(Color.RED);
 
         expression = new Expression('color(\'cyan\')');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.CYAN);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.CYAN);
         expect(color).toEqual(Color.CYAN);
 
         expression = new Expression('color(\'white\', 0.5)');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
         expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
         expression = new Expression('rgb(0, 0, 0)');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.BLACK);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.BLACK);
         expect(color).toEqual(Color.BLACK);
 
         expression = new Expression('hsl(0, 0, 1)');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.WHITE);
         expect(color).toEqual(Color.WHITE);
 
         expression = new Expression('rgba(255, 0, 255, 0.5)');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(new Color(1.0, 0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(new Color(1.0, 0, 1.0, 0.5));
         expect(color).toEqual(new Color(1.0, 0, 1.0, 0.5));
 
         expression = new Expression('hsla(0, 0, 1, 0.5)');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
         expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
         expression = new Expression('color()');
-        expect(expression.evaluateColor(frameState, undefined, color)).toEqual(Color.WHITE);
+        expect(expression.evaluate(frameState, undefined, color)).toEqual(Color.WHITE);
         expect(color).toEqual(Color.WHITE);
     });
 

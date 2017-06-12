@@ -386,7 +386,7 @@ define([
         },
 
         /**
-         * Gets and sets the tile's highlight color.
+         * Gets or sets the tile's highlight color.
          *
          * @memberof Cesium3DTile.prototype
          *
@@ -880,7 +880,7 @@ define([
             return createBox(boundingVolumeHeader.box, transform, result);
         }
         if (defined(boundingVolumeHeader.region)) {
-            return createRegion(boundingVolumeHeader.region, transform, result);
+            return createRegion(boundingVolumeHeader.region, result);
         }
         if (defined(boundingVolumeHeader.sphere)) {
             return createSphere(boundingVolumeHeader.sphere, transform, result);

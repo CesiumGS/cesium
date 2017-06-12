@@ -1637,19 +1637,6 @@ defineSuite([
         });
     });
 
-    it('destroys before loadTileset finishes', function() {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : tilesetUrl
-        }));
-        scene.renderForSpecs();
-        scene.primitives.remove(tileset);
-        return tileset.readyPromise.then(function(tileset) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(error).toEqual('tileset is destroyed');
-        });
-    });
-
     it('destroys before external tileset.json finishes loading', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {

@@ -141,7 +141,7 @@ defineSuite([
     });
 
     it('throws if geometricError is undefined', function() {
-        var tileWithoutGeometricError = clone(tileWithBoundingSphere);
+        var tileWithoutGeometricError = clone(tileWithBoundingSphere, true);
         delete tileWithoutGeometricError.geometricError;
         expect(function() {
             return new Cesium3DTile(mockTileset, '/some_url', tileWithoutGeometricError, undefined);
@@ -149,7 +149,7 @@ defineSuite([
     });
 
     it('throws if boundingVolume is undefined', function() {
-        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere);
+        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere, true);
         delete tileWithoutBoundingVolume.boundingVolume;
         expect(function() {
             return new Cesium3DTile(mockTileset, '/some_url', tileWithoutBoundingVolume, undefined);
@@ -157,7 +157,7 @@ defineSuite([
     });
 
     it('throws if boundingVolume does not contain a sphere, region, or box', function() {
-        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere);
+        var tileWithoutBoundingVolume = clone(tileWithBoundingSphere, true);
         delete tileWithoutBoundingVolume.boundingVolume.sphere;
         expect(function() {
             return new Cesium3DTile(mockTileset, '/some_url', tileWithoutBoundingVolume, undefined);
