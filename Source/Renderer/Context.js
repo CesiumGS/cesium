@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/createGuid',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -34,6 +35,7 @@ define([
         Color,
         ComponentDatatype,
         createGuid,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -179,9 +181,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
-        }
+        Check.defined('canvas', canvas);
         //>>includeEnd('debug');
 
         this._canvas = canvas;

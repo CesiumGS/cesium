@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/WebGLConstants',
+        '../Core/Check',
         './BufferUsage'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         IndexDatatype,
         WebGLConstants,
+        Check,
         BufferUsage) {
     'use strict';
 
@@ -26,9 +28,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
 
         if (!defined(options.typedArray) && !defined(options.sizeInBytes)) {
             throw new DeveloperError('Either options.sizeInBytes or options.typedArray is required.');

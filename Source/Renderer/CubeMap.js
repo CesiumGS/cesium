@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -15,6 +16,7 @@ define([
         './TextureMagnificationFilter',
         './TextureMinificationFilter'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -36,9 +38,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
