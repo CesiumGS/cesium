@@ -4228,7 +4228,7 @@ define([
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
                     //processModelMaterialsCommon(this.gltf);
-                    processPbrMetallicRoughness(this.gltf);
+                    processPbrMetallicRoughness(this.gltf, frameState);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
                     this._animationIds = getAnimationIds(this.gltf);

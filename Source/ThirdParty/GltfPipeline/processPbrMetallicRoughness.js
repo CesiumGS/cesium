@@ -175,7 +175,7 @@ define([
         return result;
     }
 
-    function generateTechnique(gltf, material, lightParameters, optimizeForCesium) {
+    function generateTechnique(gltf, material, lightParameters, frameState, optimizeForCesium) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -431,18 +431,25 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
-            // if not provided tangents
-            fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
-            fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
-            fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
-            fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
-            fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
-            fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
-            fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
-            fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
-            fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
-            fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
-            fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
+            if (defined(parameterValues.normalTexture)) {
+                if (frameState.context._standardDerivatives) {
+                    // if not provided tangents
+                    fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
+                    fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
+                    fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
+                    fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
+                    fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
+                    fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
+                    fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
+                    fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
+                    fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
+                    fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+                    fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
+                }
+            }
+            else {
+                fragmentShaderMain += '  vec3 n = ng;\n';
+            }
         }
 
         var finalColorComputation;
@@ -732,7 +739,7 @@ define([
     /**
      * @private
      */
-    function processPbrMetallicRoughness(gltf, options) {
+    function processPbrMetallicRoughness(gltf, frameState, options) {
         options = defaultValue(options, {});
 
         if (!defined(gltf)) {
@@ -767,7 +774,7 @@ define([
             ForEach.material(gltf, function(material) {
                 if (material.hasOwnProperty('pbrMetallicRoughness')) {
                     var pbrMetallicRoughness = material.pbrMetallicRoughness;
-                    var technique = generateTechnique(gltf, material, lightParameters, options.optimizeForCesium);
+                    var technique = generateTechnique(gltf, material, lightParameters, frameState, options.optimizeForCesium);
                     // var techniqueKey = 'test';
                     // techniques[techniqueKey] = technique;
                     // Take advantage of the fact that we generate techniques that use the
