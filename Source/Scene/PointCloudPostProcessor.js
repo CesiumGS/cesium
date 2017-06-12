@@ -39,11 +39,11 @@ define([
     function PointCloudPostProcessor() {
         this._framebuffers = undefined;
         this._colorTextures = undefined;
-        this._ecTextures = undefined;
+        this._ecTexture = undefined;
         this._depthTextures = undefined;
         this._drawCommands = undefined;
         this._blendCommand = undefined;
-        this._clearCommand = undefined;
+        this._clearCommands = undefined;
     }
 
     function createSampler() {
@@ -60,8 +60,7 @@ define([
         processor._depthTextures[1].destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
-        processor._ecTextures[0].destroy();
-        processor._ecTextures[1].destroy();
+        processor._ecTexture.destroy();
         processor._framebuffers[0].destroy();
         processor._framebuffers[1].destroy();
 
@@ -75,33 +74,29 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
 
-
         var colorTextures = new Array(2);
-        var ecTextures = new Array(2);
-        var depthTextures = new Array(2);
-        var framebuffers = new Array(2);
+        var depthTextures = new Array(3);
 
-        if (!context.floatingPointTexture)
-            throw new DeveloperError('Context must support floating point textures!');
+        var ecTexture = new Texture({
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT,
+            sampler : createSampler()
+        });
 
-        for (i = 0; i < 2; ++i) {
-            colorTextures[i] = new Texture({
-                context : context,
-                width : screenWidth,
-                height : screenHeight,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                sampler : createSampler()
-            });
-
-            ecTextures[i] = new Texture({
-                context : context,
-                width : screenWidth,
-                height : screenHeight,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT,
-                sampler : createSampler()
-            });
+        for (i = 0; i < 3; ++i) {
+            if (i < 2) {
+                colorTextures[i] = new Texture({
+                    context : context,
+                    width : screenWidth,
+                    height : screenHeight,
+                    pixelFormat : PixelFormat.RGBA,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                    sampler : createSampler()
+                });
+            }
 
             depthTextures[i] = new Texture({
                 context : context,
@@ -111,48 +106,94 @@ define([
                 pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
                 sampler : createSampler()
             });
-
-            // TODO : for now assume than any pass can write depth, possibly through EXT_frag_depth.
-            // Definitely needed for the initial render into the FBO, possibly also the ping-pong processing.
-            framebuffers[i] = new Framebuffer({
-                context : context,
-                depthStencilTexture : depthTextures[i],
-                colorTextures : [colorTextures[i], ecTextures[i]],
-                destroyAttachments : false
-            });
         }
 
+        /* We want to reuse textures as much as possible, so here's the order
+         * of events:
+         *
+         * 1.  We render normally to our prior:
+         *     * Color -> 0
+         *     * Depth -> 2 ("dirty depth")
+         *     * EC -> 0
+         * 2.  Then we perform the screen-space point occlusion stage with color[0] and EC:
+         *     * No color
+         *     * Depth -> 0
+         *     * No EC
+         * 3a. Then we perform the region growing stage with color[0] and depth[0]:
+         *     * Color -> 1
+         *     * Depth -> 1
+         * 3b. We do the region growing stage again with color[1] and depth[1]:
+         *     * Color -> 0
+         *     * Depth -> 0
+         * 3c. Repeat steps 3a and 3b until all holes are filled and/or we run
+         *     out of time.
+         */
+
+        processor._framebuffers = {
+            "prior": new Framebuffer({
+                context : context,
+                colorTextures : [
+                    colorTextures[0],
+                    ecTexture
+                ],
+                depthStencilTexture : depthTextures[2],
+                destroyAttachments : false
+            }),
+            "screenSpacePass": new Framebuffer({
+                context : context,
+                depthStencilTexture : depthTextures[0],
+                destroyAttachments : false
+            }),
+            "regionGrowingPassA": new Framebuffer({
+                context : context,
+                depthStencilTexture : depthTextures[1],
+                colorTextures : [colorTextures[1]],
+                destroyAttachments : false
+            }),
+            "regionGrowingPassB": new Framebuffer({
+                context: context,
+                depthStencilTexture: depthTextures[0],
+                colorTextures: [colorTextures[0]],
+                destroyAttachments: false
+            })
+        };
         processor._depthTextures = depthTextures;
         processor._colorTextures = colorTextures;
-        processor._ecTextures = ecTextures;
-        processor._framebuffers = framebuffers;
+        processor._ecTexture = ecTexture;
     }
 
-    function createUniformMap(processor, index) {
-        return {
-            pointCloud_colorTexture : function() {
-                // Use the other color texture as input
-                return processor._colorTextures[1 - index];
+    function pointOcclusionStage(processor, context) {
+        var pointOcclusionFS =
+            'uniform sampler2D pointCloud_colorTexture; \n' +
+            'uniform sampler2D pointCloud_ECTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
+            '    vec4 EC = texture2D(pointCloud_ECTexture, v_textureCoordinates); \n' +
+            '    color.rgb = color.rgb * 0.5 + vec3(normalize(EC.xyz)) * 0.1; \n' +
+            '    gl_FragColor = color; \n' +
+            '} \n';
+
+        var uniformMap = {
+            pointCloud_colorTexture: function() {
+                return processor._colorTextures[0];
             },
-            pointCloud_ecTexture : function() {
-                // Use the other color texture as input
-                return processor._ecTextures[1 - index];
-            },
-            pointCloud_depthTexture : function() {
-                return processor._depthTextures[1 - index];
+            pointCloud_ECTexture: function() {
+                return processor._ecTexture;
             }
         };
+        return context.createViewportQuadCommand(pointOcclusionFS, {
+            uniformMap : uniformMap,
+            framebuffer : processor._framebuffers.screenSpacePass,
+            renderState : RenderState.fromCache(),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
     }
 
-    function createCommands(processor, context) {
-        var i;
-        var framebuffers = processor._framebuffers;
-        var uniformMaps = [
-            createUniformMap(processor, 0),
-            createUniformMap(processor, 1)
-        ];
-
-        var stageFS =
+    function regionGrowingStage(processor, context, iteration) {
+        var regionGrowingFS =
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -160,21 +201,43 @@ define([
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
-            '    color.rgb = color.rgb * 0.5 + vec3(depth) * 0.5; \n' +
+            '    color.rgb = color.rgb * 0.5 + vec3(depth) * 0.1; \n' +
             '    gl_FragColor = color; \n' +
             '} \n';
 
-        // TODO : faking post-processing stages for testing
-        var stagesLength = 3;
-        var drawCommands = new Array(stagesLength);
-        for (i = 0; i < stagesLength; ++i) {
-            drawCommands[i] = context.createViewportQuadCommand(stageFS, {
-                uniformMap : uniformMaps[i % 2],
-                framebuffer : framebuffers[i % 2],
-                renderState : RenderState.fromCache(),
-                pass : Pass.CESIUM_3D_TILE,
-                owner : processor
-            });
+        var i = iteration % 2;
+
+        var uniformMap = {
+            pointCloud_colorTexture: function() {
+                return processor._colorTextures[i];
+            },
+            pointCloud_depthTexture: function() {
+                return processor._depthTextures[i];
+            }
+        };
+
+        var framebuffer = (i === 0) ?
+            processor._framebuffers.regionGrowingPassA :
+            processor._framebuffers.regionGrowingPassB;
+
+        return context.createViewportQuadCommand(regionGrowingFS, {
+            uniformMap : uniformMap,
+            framebuffer : framebuffer,
+            renderState : RenderState.fromCache(),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
+    function createCommands(processor, context) {
+        var numRegionGrowingPasses = 4;
+        var drawCommands = new Array(numRegionGrowingPasses + 1);
+
+        var i;
+        drawCommands[0] = pointOcclusionStage(processor, context);
+
+        for (i = 0; i < numRegionGrowingPasses; i++) {
+            drawCommands[i + 1] = regionGrowingStage(processor, context, i);
         }
 
         // TODO : point cloud depth information is lost
@@ -191,49 +254,54 @@ define([
             blending : BlendingState.ALPHA_BLEND
         });
 
+        var blendUniformMap = {
+            pointCloud_colorTexture: function() {
+                return processor._colorTextures[1 - drawCommands.length % 2];
+            },
+            pointCloud_depthTexture: function() {
+                return processor._depthTextures[1 - drawCommands.length % 2];
+            }
+        };
+
         var blendCommand = context.createViewportQuadCommand(blendFS, {
-            uniformMap : uniformMaps[stagesLength % 2],
+            uniformMap : blendUniformMap,
             renderState : blendRenderState,
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
         });
 
-        // TODO : may need to clear FBOs between each stage instead of just clearing the main FBO.
-        var clearCommand = new ClearCommand({
-            framebuffer : framebuffers[1],
-            color : new Color(0.0, 0.0, 0.0, 0.0),
-            depth : 1.0,
-            renderState : RenderState.fromCache(),
-            pass : Pass.CESIUM_3D_TILE,
-            owner : processor
-        });
+        var framebuffers = processor._framebuffers;
+        var clearCommands = new Array(4);
+        i = 0;
+        for (var name in framebuffers) {
+            if (framebuffers.hasOwnProperty(name)) {
+                clearCommands[i] = new ClearCommand({
+                    framebuffer : framebuffers[name],
+                    color : new Color(0.0, 0.0, 0.0, 0.0),
+                    depth : 1.0,
+                    renderState : RenderState.fromCache(),
+                    pass : Pass.CESIUM_3D_TILE,
+                    owner : processor
+                });
+                i++;
+            }
+        }
 
         processor._drawCommands = drawCommands;
         processor._blendCommand = blendCommand;
-        processor._clearCommand = clearCommand;
-    }
-
-    function updateCommandFramebuffers(processor) {
-        var framebuffers = processor._framebuffers;
-        var drawCommands = processor._drawCommands;
-        var clearCommand = processor._clearCommand;
-        var length = drawCommands.length;
-        for (var i = 0; i < length; ++i) {
-            drawCommands[i].framebuffer = framebuffers[i % 2];
-        }
-        clearCommand.framebuffer = framebuffers[1];
+        processor._clearCommands = clearCommands;
     }
 
     function createResources(processor, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
-        var depthTextures = processor._depthTextures;
+        var colorTextures = processor._colorTextures;
         var drawCommands = processor._drawCommands;
-        var resized = defined(depthTextures) &&
-            ((depthTextures[0].width !== screenWidth) ||
-             (depthTextures[0].height !== screenHeight));
+        var resized = defined(depthTextures[2]) &&
+            ((depthTextures[2].width !== screenWidth) ||
+             (depthTextures[2].height !== screenHeight));
 
-        if (!defined(depthTextures)) {
+        if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
         }
 
@@ -243,8 +311,9 @@ define([
 
         if (resized) {
             destroyFramebuffers(processor);
-            createFramebuffers(processor, context);
-            updateCommandFramebuffers(processor);
+            //createFramebuffers(processor, context);
+            //updateCommandFramebuffers(processor);
+            createCommands(processor, context);
         }
     }
 
@@ -265,7 +334,7 @@ define([
         var commandEnd = commandList.length;
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
-            command.framebuffer = this._framebuffers[1];
+            command.framebuffer = this._framebuffers.prior;
             command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
         }
 
@@ -280,7 +349,9 @@ define([
         commandList.push(this._blendCommand);
 
         // TODO: technically should apply the clear sooner since the FBO's color texture is undefined on the first frame. Related to TODO above. This may also explain some black flashes during resizing.
-        commandList.push(this._clearCommand);
+        for (i = 0; i < this._clearCommands.length; ++i) {
+            commandList.push(this._clearCommands[i]);
+        }
     };
 
     /**
