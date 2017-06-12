@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoxGeometry',
         '../Core/BoxOutlineGeometry',
@@ -231,7 +230,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof BoxGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */

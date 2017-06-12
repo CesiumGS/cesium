@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayerCollection',
         'Core/Cartesian3',

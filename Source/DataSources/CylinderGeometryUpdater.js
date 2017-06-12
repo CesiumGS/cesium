@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -236,7 +235,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof CylinderGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -593,7 +592,7 @@ define([
         var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
         var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
-        
+
         if (Property.getValueOrDefault(cylinder.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;

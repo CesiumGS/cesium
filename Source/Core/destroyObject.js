@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './DeveloperError'
@@ -35,7 +34,7 @@ define([
      *     _gl.deleteTexture(_texture);
      *     return Cesium.destroyObject(this);
      * };
-     * 
+     *
      * @see DeveloperError
      */
     function destroyObject(object, message) {

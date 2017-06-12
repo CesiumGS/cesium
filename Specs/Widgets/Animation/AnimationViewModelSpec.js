@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Animation/AnimationViewModel',
         'Core/ClockRange',

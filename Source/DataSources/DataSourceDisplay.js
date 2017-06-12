@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/defaultValue',
@@ -79,7 +78,7 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
-        
+
         GroundPrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
@@ -239,7 +238,7 @@ define([
             this._ready = false;
             return false;
         }
-        
+
         var result = true;
 
         var i;

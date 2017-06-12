@@ -249,7 +249,6 @@ if (defined(u)) {
 ```
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
