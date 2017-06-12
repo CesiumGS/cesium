@@ -10,6 +10,8 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/Sampler',
+        '../Renderer/ShaderSource',
+        '../Renderer/ShaderProgram',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
@@ -26,6 +28,8 @@ define([
         PixelDatatype,
         RenderState,
         Sampler,
+        ShaderSource,
+        ShaderProgram,
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
@@ -321,6 +325,49 @@ define([
         return context.depthTexture;
     }
 
+    function forwardECForShaders(context, shaderProgram) {
+        var vsShader = shaderProgram.vertexShaderSource;
+        var fsShader = shaderProgram.fragmentShaderSource;
+
+        var vsShaderDefines = vsShader.defines.slice(0);
+        var fsShaderDefines = fsShader.defines.slice(0);
+
+        var vsShaderSources = vsShader.sources.slice(0);
+        var fsShaderSources = fsShader.sources.slice(0);
+
+        var oldMainVS = ShaderSource.replaceMain(vsShaderSources[0], 'czm_point_cloud_post_process_main');
+        var oldMainFS = ShaderSource.replaceMain(fsShaderSources[0], 'czm_point_cloud_post_process_main');
+
+        oldMainFS = oldMainFS.replace(new RegExp('gl_FragColor', 'g'), 'gl_FragData[0]');
+        console.log(oldMainFS);
+        
+        var forwardVS =
+            'varying vec3 v_positionECPS; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_point_cloud_post_process_main(); \n' +
+            '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
+            '}';
+        var forwardFS =
+            'varying vec3 v_positionECPS; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_point_cloud_post_process_main(); \n' +
+            //'    gl_FragData[0] = gl_FragColor;' +
+            '    gl_FragData[1] = v_positionECPS;' +
+            '}';
+
+        forwardVS = oldMainVS + forwardVS;
+        forwardFS = oldMainFS + forwardFS;
+
+        return ShaderProgram.fromCache({
+            vertexShaderSource : forwardVS,
+            fragmentShaderSource : forwardFS,
+            attributeLocations : shaderProgram._attributeLocations,
+            context : context
+        });
+    }
+
     PointCloudPostProcessor.prototype.update = function(frameState, commandStart) {
         if (!processingSupported(frameState.context)) {
             return;
@@ -335,6 +382,7 @@ define([
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             command.framebuffer = this._framebuffers.prior;
+            command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
             command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
         }
 
