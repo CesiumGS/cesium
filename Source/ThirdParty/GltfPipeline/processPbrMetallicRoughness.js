@@ -181,6 +181,11 @@ define([
         var programs = gltf.programs;
 
         var parameterValues = material.pbrMetallicRoughness;
+        for (var additional in material) {
+            if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || (additional.indexOf('Factor') >= 0))) {
+                parameterValues[additional] = material[additional];
+            }
+        }
 
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
@@ -208,7 +213,7 @@ define([
         }
 
         // Add material parameters
-        var hasTexCoords = true;
+        var hasTexCoords = false;
         for (var name in parameterValues) {
             //generate shader parameters for KHR_materials_common attributes
             //(including a check, because some boolean flags should not be used as shader parameters)
@@ -343,25 +348,51 @@ define([
 
         var fragmentShaderMain = '';
         fragmentShaderMain += 'void main(void) {\n';
+        // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
             fragmentShaderMain += '  vec3 baseColor = texture2D(u_baseColorTexture, ' + v_texcoord + ').rgb;\n';
+            if (defined(parameterValues.baseColorFactor)) {
+                fragmentShaderMain += '  baseColor *= u_baseColorFactor;\n';
+            }
         }
         else {
-            fragmentShaderMain += '  vec3 baseColor = vec3(1.0, 0.0, 0.0);\n';
+            if (defined(parameterValues.baseColorFactor)) {
+                fragmentShaderMain += '  vec3 baseColor = u_baseColorFactor;\n';
+            }
+            else {
+                fragmentShaderMain += '  vec3 baseColor = vec3(1.0);\n';
+            }
         }
+        // Add metallic-roughness to fragment shader
         if (defined(parameterValues.metallicRoughnessTexture)) {
             fragmentShaderMain += '  vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
             fragmentShaderMain += '  float metalness = clamp(metallicRoughness.b, 0.0, 1.0);\n';
             fragmentShaderMain += '  float roughness = clamp(metallicRoughness.g, 0.04, 1.0);\n';
+            if (defined(parameterValues.metallicFactor)) {
+                fragmentShaderMain += '  metalness *= u_metallicFactor;\n';
+            }
+            if (defined(parameterValues.roughnessFactor)) {
+                fragmentShaderMain += '  roughness *= u_roughnessFactor;\n';
+            }
         }
         else {
-            fragmentShaderMain += '  float metalness = 0.5;\n';
-            fragmentShaderMain += '  float roughness = 0.5;\n'; // clamp to min of 0.04
+            if (defined(parameterValues.metallicFactor)) {
+                fragmentShaderMain += '  float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
+            }
+            else {
+                fragmentShaderMain += '  float metalness = 1.0;\n';
+            }
+            if (defined(parameterValues.roughnessFactor)) {
+                fragmentShaderMain += '  float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
+            }
+            else {
+                fragmentShaderMain += '  float roughness = 1.0;\n';
+            }
         }
         fragmentShaderMain += '  vec3 v = -normalize(v_positionEC);\n';
         fragmentShaderMain += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
 
-        // Generate lighting code blocks
+        // Generate fragment shader's lighting block
         var fragmentLightingBlock = '';
         fragmentLightingBlock += '  vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
         fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
@@ -387,21 +418,31 @@ define([
         fragmentLightingBlock += '  vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
         fragmentLightingBlock += '  vec3 color = M_PI * NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
+        if (defined(parameterValues.occlusionTexture)) {
+            fragmentLightingBlock += '  color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').rgb;\n';
+        }
+        if (defined(parameterValues.emissiveTexture)) {
+            fragmentLightingBlock += '  color += texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
+        }
+        if (defined(parameterValues.emissiveFactor)) {
+            fragmentLightingBlock += '  color += u_emissiveFactor;\n';
+        }
+
+        // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
             // if not provided tangents
-            // fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
-            // fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
-            // fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
-            // fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
-            // fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
-            // fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
-            // fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
-            // fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
-            // fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
-            //fragmentShaderMain += '  vec3 n = texture2D(u_normalmap, ' + v_texcoord + ').rgb;\n';
-            //fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
-            fragmentShaderMain += '  vec3 n = ng;\n';
+            fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
+            fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
+            fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
+            fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
+            fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
+            fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
+            fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
+            fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
+            fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
+            fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
         }
 
         var finalColorComputation;
@@ -412,6 +453,7 @@ define([
         fragmentShaderMain += '}\n';
 
         fragmentShader += fragmentShaderMain;
+        console.log(fragmentShader);
 
         var techniqueStates = {
             enable: [
@@ -482,6 +524,14 @@ define([
                 return WebGLConstants.SAMPLER_2D;
             case 'metallicRoughnessTexture':
                 return WebGLConstants.SAMPLER_2D;
+            case 'normalTexture':
+                return WebGLConstants.SAMPLER_2D;
+            case 'occlusionTexture':
+                return WebGLConstants.SAMPLER_2D;
+            case 'emissiveTexture':
+                return WebGLConstants.SAMPLER_2D;
+            case 'emissiveFactor':
+                return WebGLConstants.FLOAT_VEC3;
         }
     }
 
