@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defaultValue',
-        './defined',
         './defineProperties',
         './Check'
     ], function(
         defaultValue,
-        defined,
         defineProperties,
         Check) {
     'use strict';

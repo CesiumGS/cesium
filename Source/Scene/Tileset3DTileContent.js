@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -9,7 +8,6 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        defined,
         defineProperties,
         destroyObject,
         DeveloperError,

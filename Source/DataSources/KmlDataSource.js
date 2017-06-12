@@ -25,6 +25,7 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/NearFarScalar',
+        '../Core/objectToQuery',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Rectangle',
@@ -85,6 +86,7 @@ define([
         loadXML,
         CesiumMath,
         NearFarScalar,
+        objectToQuery,
         PinBuilder,
         PolygonHierarchy,
         Rectangle,
@@ -274,21 +276,24 @@ define([
         }
     }
 
-    function applyBasePath(div, elementType, attributeName, proxy, sourceUri) {
+    function applyBasePath(div, elementType, attributeName, proxy, sourceUri, query) {
         var elements = div.querySelectorAll(elementType);
         for (var i = 0; i < elements.length; i++) {
             var element = elements[i];
             var value = element.getAttribute(attributeName);
-            var uri = resolveHref(value, proxy, sourceUri);
+            var uri = resolveHref(value, proxy, sourceUri, query);
             element.setAttribute(attributeName, uri);
         }
     }
 
-    function proxyUrl(url, proxy) {
+    function proxyUrl(url, proxy, query) {
         if (defined(proxy)) {
             if (new Uri(url).isAbsolute()) {
                 url = proxy.getURL(url);
             }
+        }
+        if (defined(query)) {
+            url = joinUrls(url, '?' + query, false);
         }
         return url;
     }
@@ -469,7 +474,7 @@ define([
         return undefined;
     }
 
-    function resolveHref(href, proxy, sourceUri, uriResolver) {
+    function resolveHref(href, proxy, sourceUri, uriResolver, query) {
         if (!defined(href)) {
             return undefined;
         }
@@ -489,9 +494,11 @@ define([
                 }
             }
         }
-        if (!hrefResolved && defined(sourceUri)) {
-            href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
-            href = proxyUrl(href, proxy);
+        if (!hrefResolved) {
+            if (defined(sourceUri)) {
+                href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
+            }
+            href = proxyUrl(href, proxy, query);
         }
         return href;
     }
@@ -632,7 +639,7 @@ define([
         return label;
     }
 
-    function getIconHref(iconNode, dataSource, sourceUri, uriResolver, canRefresh) {
+    function getIconHref(iconNode, dataSource, sourceUri, uriResolver, canRefresh, query) {
         var href = queryStringValue(iconNode, 'href', namespaces.kml);
         if (!defined(href) || (href.length === 0)) {
             return undefined;
@@ -651,7 +658,7 @@ define([
             href = 'https://maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
-        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
+        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver, query);
 
         if (canRefresh) {
             var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
@@ -675,13 +682,13 @@ define([
         return href;
     }
 
-    function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
+    function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver, query) {
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
-        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
+        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -750,11 +757,11 @@ define([
         }
     }
 
-    function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver) {
+    function applyStyle(dataSource, styleNode, targetEntity, sourceUri, uriResolver, query) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             if (node.localName === 'IconStyle') {
-                processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver);
+                processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver, query);
             } else if (node.localName === 'LabelStyle') {
                 var label = targetEntity.label;
                 if (!defined(label)) {
@@ -816,7 +823,7 @@ define([
     }
 
     //Processes and merges any inline styles for the provided node into the provided entity.
-    function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
+    function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver, query) {
         var result = new Entity();
         var styleEntity;
 
@@ -834,7 +841,7 @@ define([
         if (styleIndex !== -1) {
             var inlineStyleNode = childNodes[styleIndex];
             if (inlineStyleNode.localName === 'Style') {
-                applyStyle(dataSource, inlineStyleNode, result, sourceUri, uriResolver);
+                applyStyle(dataSource, inlineStyleNode, result, sourceUri, uriResolver, query);
             } else { // StyleMap
                 var pairs = queryChildNodes(inlineStyleNode, 'Pair', namespaces.kml);
                 for (var p = 0; p < pairs.length; p++) {
@@ -852,7 +859,7 @@ define([
                             }
                         } else {
                             var node = queryFirstNode(pair, 'Style', namespaces.kml);
-                            applyStyle(dataSource, node, result, sourceUri, uriResolver);
+                            applyStyle(dataSource, node, result, sourceUri, uriResolver, query);
                         }
                     } else {
                         console.log('KML - Unsupported StyleMap key: ' + key);
@@ -887,8 +894,8 @@ define([
     }
 
     //Asynchronously processes an external style file.
-    function processExternalStyles(dataSource, uri, styleCollection) {
-        return when(RequestScheduler.request(proxyUrl(uri, dataSource._proxy), loadXML), function(styleKml) {
+    function processExternalStyles(dataSource, uri, styleCollection, query) {
+        return when(RequestScheduler.request(proxyUrl(uri, dataSource._proxy, query), loadXML), function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -897,7 +904,7 @@ define([
     //their id into the provided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver) {
+    function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver, query) {
         var i;
         var id;
         var styleEntity;
@@ -919,7 +926,7 @@ define([
                             id : id
                         });
                         styleCollection.add(styleEntity);
-                        applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                        applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver, query);
                     }
                 }
             }
@@ -960,7 +967,7 @@ define([
                                     }
                                 } else {
                                     node = queryFirstNode(pair, 'Style', namespaces.kml);
-                                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
+                                    applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver, query);
                                 }
                             }
                         } else {
@@ -989,7 +996,7 @@ define([
                         if (defined(sourceUri)) {
                             uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
                         }
-                        promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
+                        promises.push(processExternalStyles(dataSource, uri, styleCollection, query));
                     }
                 }
             }
@@ -1549,10 +1556,10 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var entity = createEntity(featureNode, entityCollection, context);
         var kmlData = entity.kml;
-        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
+        var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver, query);
 
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
         entity.name = name;
@@ -1627,7 +1634,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1641,19 +1648,19 @@ define([
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1676,8 +1683,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var entity = r.entity;
 
         var geometry;
@@ -1722,7 +1729,7 @@ define([
         }
 
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
-        var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true);
+        var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true, query);
         if (defined(href)) {
             if (isLatLonQuad) {
                 console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
@@ -1934,8 +1941,8 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -1947,7 +1954,7 @@ define([
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {
                 var newSourceUri = href;
-                href = resolveHref(href, undefined, sourceUri, uriResolver);
+                href = resolveHref(href, undefined, sourceUri, uriResolver, query);
                 var linkUrl;
 
                 // We need to pass in the original path if resolveHref returns a data uri because the network link
@@ -2081,16 +2088,16 @@ define([
         Tour : processUnsupportedFeature
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
-            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         } else {
             processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
         }
     }
 
-    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context) {
+    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query) {
         entityCollection.removeAll();
 
         var promises = [];
@@ -2107,7 +2114,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, context)).then(function() {
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver, query)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -2120,7 +2127,7 @@ define([
                 }
             }
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
             entityCollection.resumeEvents();
 
             return when.all(promises).then(function() {
@@ -2189,10 +2196,11 @@ define([
         var sourceUri = options.sourceUri;
         var uriResolver = options.uriResolver;
         var context = options.context;
+        var query = defined(options.query) ? objectToQuery(options.query) : undefined;
 
         var promise = data;
         if (typeof data === 'string') {
-            promise = RequestScheduler.request(proxyUrl(data, dataSource._proxy), loadBlob);
+            promise = RequestScheduler.request(proxyUrl(data, dataSource._proxy, query), loadBlob);
             sourceUri = defaultValue(sourceUri, data);
         }
 
@@ -2230,11 +2238,11 @@ define([
                                 //Return the error
                                 throw new RuntimeError(msg);
                             }
-                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context);
+                            return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query);
                         });
                     });
                 } else {
-                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
+                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
                 }
             })
             .otherwise(function(error) {
@@ -2329,6 +2337,7 @@ define([
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2475,6 +2484,7 @@ define([
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+     * @param {Object} [options.query] Key-value pairs which are appended to all URIs in the CZML.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);

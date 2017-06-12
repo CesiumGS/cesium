@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/freezeObject',
         '../Core/Intersect',
         '../Core/ManagedArray',
@@ -13,7 +12,6 @@ define([
         './SceneMode'
     ], function(
         defined,
-        defineProperties,
         freezeObject,
         Intersect,
         ManagedArray,
@@ -341,11 +339,11 @@ define([
         // stop traversal when we've attained the desired level of error
         if (tile._screenSpaceError <= baseScreenSpaceError && !tile.hasTilesetContent) {
             // update children so the leaf handler can check if any are visible for the children union bound optimization
-            updateChildren(tileset, tile, frameState);
+            updateChildren(tile, frameState);
             return false;
         }
 
-        var childrenVisibility = updateChildren(tileset, tile, frameState);
+        var childrenVisibility = updateChildren(tile, frameState);
         var showAdditive = tile.refine === Cesium3DTileRefine.ADD;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
@@ -367,7 +365,7 @@ define([
         }
     };
 
-    function InternalBaseTraversal(options) {
+    function InternalBaseTraversal() {
         this.tileset = undefined;
         this.frameState = undefined;
         this.outOfCore = undefined;
@@ -503,7 +501,7 @@ define([
 
             // stop traversal when we've attained the desired level of error
             if (tile._screenSpaceError <= maximumScreenSpaceError) {
-                updateChildren(this.tileset, tile, this.frameState);
+                updateChildren(tile, this.frameState);
                 return emptyArray;
             }
 
@@ -512,12 +510,12 @@ define([
                 (!tile.hasEmptyContent && tile.contentUnloaded) &&
                 defined(tile._ancestorWithLoadedContent) &&
                 this.selectionHeuristic(tileset, tile._ancestorWithLoadedContent, tile)) {
-                updateChildren(this.tileset, tile, this.frameState);
+                updateChildren(tile, this.frameState);
                 return emptyArray;
             }
         }
 
-        var childrenVisibility = updateChildren(tileset, tile, this.frameState);
+        var childrenVisibility = updateChildren(tile, this.frameState);
         var showAdditive = tile.refine === Cesium3DTileRefine.ADD && tile._screenSpaceError > maximumScreenSpaceError;
         var showReplacement = tile.refine === Cesium3DTileRefine.REPLACE && (childrenVisibility & Cesium3DTileChildrenVisibility.VISIBLE_IN_REQUEST_VOLUME) !== 0;
 
@@ -576,7 +574,7 @@ define([
         }
     };
 
-    function updateChildren(tileset, tile, frameState) {
+    function updateChildren(tile, frameState) {
         if (isVisited(tile, frameState)) {
             return tile._childrenVisibility;
         }

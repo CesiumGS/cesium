@@ -516,7 +516,6 @@ define([
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
 
-        generateCartesianArcOptions.ellipsoid = geometryUpdater._scene.globe.ellipsoid;
     }
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
@@ -537,10 +536,12 @@ define([
         }
 
         var followSurface = Property.getValueOrDefault(polyline._followSurface, time, true);
-        if (followSurface) {
+        var globe = geometryUpdater._scene.globe;
+        if (followSurface && defined(globe)) {
+            generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
-            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, this._geometryUpdater._scene.globe.ellipsoid);
+            generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, globe.ellipsoid);
             positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
         }
 

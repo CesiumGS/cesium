@@ -1,20 +1,13 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/getExtensionFromUri',
         '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
         '../Core/Intersect',
         '../Core/joinUrls',
         '../Core/JulianDate',
@@ -22,42 +15,29 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Rectangle',
-        '../Core/RectangleOutlineGeometry',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
-        '../Core/SphereOutlineGeometry',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
-        './Cesium3DTileOptimizations',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
-        './PerInstanceColorAppearance',
-        './Primitive',
         './SceneMode',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
     ], function(
         BoundingSphere,
-        BoxOutlineGeometry,
         Cartesian3,
         Color,
-        ColorGeometryInstanceAttribute,
-        clone,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        getExtensionFromUri,
         getMagic,
-        getStringFromTypedArray,
         Intersect,
         joinUrls,
         JulianDate,
@@ -65,22 +45,16 @@ define([
         Matrix3,
         Matrix4,
         Rectangle,
-        RectangleOutlineGeometry,
         Request,
         RequestScheduler,
         RequestType,
-        SphereOutlineGeometry,
-        Uri,
         when,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
-        Cesium3DTileOptimizations,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine,
         Empty3DTileContent,
-        PerInstanceColorAppearance,
-        Primitive,
         SceneMode,
         TileBoundingRegion,
         TileBoundingSphere,
@@ -275,7 +249,6 @@ define([
          * The time in seconds after the tile's content is ready when the content expires and new content is requested.
          *
          * @type {Number}
-         * @readonly
          */
         this.expireDuration = expireDuration;
 
@@ -283,7 +256,6 @@ define([
          * The date when the content expires and new content is requested.
          *
          * @type {JulianDate}
-         * @readonly
          */
         this.expireDate = expireDate;
 
@@ -617,7 +589,8 @@ define([
         }
 
         var url = this._contentUrl;
-        if (defined(this.expireDate)) {
+        var expired = this.contentExpired;
+        if (expired) {
             // Append a query parameter of the tile expiration date to prevent caching
             var timestampQuery = '?expired=' + this.expireDate.toString();
             url = joinUrls(url, timestampQuery, false);
@@ -639,6 +612,10 @@ define([
         this._contentState = Cesium3DTileContentState.LOADING;
         this._contentReadyToProcessPromise = when.defer();
         this._contentReadyPromise = when.defer();
+
+        if (expired) {
+            this.expireDate = undefined;
+        }
 
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
