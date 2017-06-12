@@ -1,40 +1,42 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EasingFunction',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Ray',
-        '../Core/ScreenSpaceEventHandler',
-        '../Core/ScreenSpaceEventType',
-        '../Core/Transforms',
-        './Camera',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
-        './SceneMode'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defined,
-        destroyObject,
-        DeveloperError,
-        EasingFunction,
-        CesiumMath,
-        Matrix4,
-        Ray,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        Transforms,
-        Camera,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        SceneMode) {
+    '../Core/Check',
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/defined',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/EasingFunction',
+    '../Core/Math',
+    '../Core/Matrix4',
+    '../Core/Ray',
+    '../Core/ScreenSpaceEventHandler',
+    '../Core/ScreenSpaceEventType',
+    '../Core/Transforms',
+    './Camera',
+    './OrthographicFrustum',
+    './OrthographicOffCenterFrustum',
+    './PerspectiveFrustum',
+    './SceneMode'
+], function(
+    Check,
+    Cartesian3,
+    Cartographic,
+    defined,
+    destroyObject,
+    DeveloperError,
+    EasingFunction,
+    CesiumMath,
+    Matrix4,
+    Ray,
+    ScreenSpaceEventHandler,
+    ScreenSpaceEventType,
+    Transforms,
+    Camera,
+    OrthographicFrustum,
+    OrthographicOffCenterFrustum,
+    PerspectiveFrustum,
+    SceneMode) {
     'use strict';
 
     /**
@@ -42,9 +44,7 @@ define([
      */
     function SceneTransitioner(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
+        Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
         this._scene = scene;
@@ -292,7 +292,7 @@ define([
 
     function destroyMorphHandler(transitioner) {
         var tweens = transitioner._currentTweens;
-        for ( var i = 0; i < tweens.length; ++i) {
+        for (var i = 0; i < tweens.length; ++i) {
             tweens[i].cancelTween();
         }
         transitioner._currentTweens.length = 0;
@@ -499,6 +499,7 @@ define([
             var height = d / Math.tan(camera.frustum.fov * 0.5);
             updateHeight(camera, height);
         }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -699,6 +700,7 @@ define([
         function completeCallback() {
             morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
         }
+
         morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
     }
 
@@ -719,6 +721,7 @@ define([
             camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
             camera.position.z = d / Math.tan(camera.frustum.fov * 0.5);
         }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -763,6 +766,7 @@ define([
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.normalize(camera.right, camera.right);
             }
+
             var tween = scene.tweens.add({
                 duration : duration,
                 easingFunction : EasingFunction.QUARTIC_OUT,
@@ -814,6 +818,7 @@ define([
             Cartesian3.normalize(camera.right, camera.right);
             camera._adjustOrthographicFrustum(true);
         }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
