@@ -1,11 +1,15 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         './HorizontalOrigin'
     ], function(
+        Cartesian3,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         HorizontalOrigin) {
@@ -48,6 +52,7 @@ define([
         this._billboardCollection = billboardCollection;
         this._labelCollection = labelCollection;
         this._polylineCollection = polylineCollection;
+
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
         this._billboardImage = undefined;
@@ -56,6 +61,11 @@ define([
         this._billboardOutlineWidth = undefined;
         this._billboardSize = undefined;
         this._pointSize = undefined;
+        this._pointColor = undefined;
+        this._pointSize = undefined;
+        this._pointOutlineColor = undefined;
+        this._pointOutlineWidth = undefined;
+        this._positionOffset = undefined;
 
         /**
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
@@ -125,7 +135,6 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.fillColor = value;
-                    setBillboardImage(this);
                     if (defined(this._polylineCollection)) {
                         var polyline = this._polylineCollection.get(this._batchId);
                         polyline.show = value.alpha > 0.0;
@@ -133,6 +142,15 @@ define([
                 } else {
                     this._content.batchTable.setColor(this._batchId, value);
                 }
+            }
+        },
+
+        pointColor : {
+            get : function() {
+                return this._pointColor;
+            },
+            set : function(value) {
+                this._pointColor = Color.clone(value, this._pointColor);
             }
         },
 
@@ -150,11 +168,26 @@ define([
             get : function() {
                 return this._pointSize;
             },
-            set :function(value) {
+            set : function(value) {
                 this._pointSize = value;
-                if (defined(this._billboardCollection)) {
-                    setBillboardImage(this);
-                }
+            }
+        },
+
+        pointOutlineColor : {
+            get : function() {
+                return this._pointOutlineColor;
+            },
+            set : function(value) {
+                this._pointOutlineColor = Color.clone(value, this._pointColor);
+            }
+        },
+
+        pointOutlineWidth : {
+            get : function() {
+                return this._pointOutlineWidth;
+            },
+            set : function(value) {
+                this._pointOutlineWidth = value;
             }
         },
 
@@ -169,7 +202,7 @@ define([
          *
          * @type {Color}
          */
-        outlineColor : {
+        labelOutlineColor : {
             get : function() {
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
@@ -181,7 +214,6 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.outlineColor = value;
-                    setBillboardImage(this);
                 }
             }
         },
@@ -197,7 +229,7 @@ define([
          *
          * @type {Color}
          */
-        outlineWidth : {
+        labelOutlineWidth : {
             get : function() {
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
@@ -209,29 +241,6 @@ define([
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
                     label.outlineWidth = value;
-                    setBillboardImage(this);
-                }
-            }
-        },
-
-        /**
-         * Gets and sets the image of this feature.
-         * <p>
-         * Only applied when the feature is a point feature.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {String}
-         */
-        image : {
-            get : function() {
-                return this._billboardImage;
-            },
-            set : function(value) {
-                this._billboardImage = value;
-                if (defined(this._billboardCollection)) {
-                    setBillboardImage(this);
                 }
             }
         },
@@ -298,7 +307,7 @@ define([
          *
          * @type {String}
          */
-        text : {
+        labelText : {
             get : function() {
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
@@ -308,6 +317,9 @@ define([
             },
             set : function(value) {
                 if (defined(this._labelCollection)) {
+                    if (!defined(value)) {
+                        value = '';
+                    }
                     var label = this._labelCollection.get(this._batchId);
                     label.text = value;
 
@@ -316,31 +328,6 @@ define([
                         billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
                         label.horizontalOrigin = HorizontalOrigin.LEFT;
                     }
-                }
-            }
-        },
-
-        /**
-         * Gets and sets the color for the anchor line.
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Color}
-         *
-         * @default {@link Color.WHITE}
-         */
-        anchorLineColor : {
-            get : function() {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    return polyline.material.uniforms.color;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.material.uniforms.color = value;
                 }
             }
         },
@@ -361,34 +348,18 @@ define([
             }
         },
 
-        backgroundXPadding : {
+        backgroundPadding : {
             get : function() {
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
-                    return label.backgroundPadding.x;
+                    return label.backgroundPadding;
                 }
                 return undefined;
             },
             set : function(value) {
                 if (defined(this._labelCollection)) {
                     var label = this._labelCollection.get(this._batchId);
-                    label.backgroundPadding.x = value;
-                }
-            }
-        },
-
-        backgroundYPadding : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.backgroundPadding.y;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.backgroundPadding.y = value;
+                    label.backgroundPadding = value;
                 }
             }
         },
@@ -461,6 +432,88 @@ define([
             }
         },
 
+        positionOffset : {
+            get : function() {
+                return this._positionOffset;
+            },
+            set : function(value) {
+                if (defined(this._billboardCollection)) {
+                    var billboard = this._billboardCollection.get(this._batchId);
+                    var label = this._labelCollection.get(this._batchId);
+                    var line = this._polylineCollection.get(this._batchId);
+
+                    var offset = defaultValue(this._positionOffset, Cartesian3.ZERO);
+                    var newPosition = Cartesian3.subtract(billboard.position, offset, new Cartesian3());
+                    Cartesian3.add(newPosition, value, newPosition);
+
+                    billboard.position = newPosition;
+                    label.position = billboard.position;
+                    line.positions[1] = billboard.position;
+                }
+                this._positionOffset = Cartesian3.clone(value, this._positionOffset);
+            }
+        },
+
+        anchorLineEnabled : {
+            get : function() {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    return polyline.show;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.show = value;
+                }
+            }
+        },
+
+        /**
+         * Gets and sets the color for the anchor line.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Color}
+         *
+         * @default {@link Color.WHITE}
+         */
+        anchorLineColor : {
+            get : function() {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    return polyline.material.uniforms.color;
+                }
+                return undefined;
+            },
+            set : function(value) {
+                if (defined(this._polylineCollection)) {
+                    var polyline = this._polylineCollection.get(this._batchId);
+                    polyline.material.uniforms.color = value;
+                }
+            }
+        },
+
+        /**
+         * Gets and sets the image of this feature.
+         * <p>
+         * Only applied when the feature is a point feature.
+         * </p>
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {String}
+         */
+        image : {
+            get : function() {
+                return this._billboardImage;
+            },
+            set : function(value) {
+                this._billboardImage = value;
+            }
+        },
+
         /**
          * Gets the content of the tile containing the feature.
          *
@@ -478,38 +531,37 @@ define([
         }
     });
 
-    function setBillboardImage(feature) {
-        var b = feature._billboardCollection.get(feature._batchId);
+    Cesium3DTileFeature.prototype._setBillboardImage = function() {
+        var b = this._billboardCollection.get(this._batchId);
 
-        if (defined(feature._billboardImage) && feature._billboardImage !== b.image) {
-            b.image = feature._billboardImage;
+        if (defined(this._billboardImage) && this._billboardImage !== b.image) {
+            b.image = this._billboardImage;
             return;
         }
 
-        if (defined(feature._billboardImage)) {
+        if (defined(this._billboardImage)) {
             return;
         }
 
-        var label = feature._labelCollection.get(feature._batchId);
-        var newColor = label.fillColor;
-        var newOutlineColor = label.outlineColor;
-        var newOutlineWidth = label.outlineWidth;
-        var newPointSize = feature._pointSize;
+        var newColor = this._pointColor;
+        var newOutlineColor = this._pointOutlineColor;
+        var newOutlineWidth = this._pointOutlineWidth;
+        var newPointSize = this._pointSize;
 
-        var currentColor = feature._billboardColor;
-        var currentOutlineColor = feature._billboardOutlineColor;
-        var currentOutlineWidth = feature._billboardOutlineWidth;
-        var currentPointSize = feature._billboardSize;
+        var currentColor = this._billboardColor;
+        var currentOutlineColor = this._billboardOutlineColor;
+        var currentOutlineWidth = this._billboardOutlineWidth;
+        var currentPointSize = this._billboardSize;
 
         if (Color.equals(newColor, currentColor) && Color.equals(newOutlineColor, currentOutlineColor) &&
             newOutlineWidth === currentOutlineWidth && newPointSize === currentPointSize) {
             return;
         }
 
-        feature._billboardColor = Color.clone(newColor, feature._billboardColor);
-        feature._billboardOutlineColor = Color.clone(newOutlineColor, feature._billboardOutlineColor);
-        feature._billboardOutlineWidth = newOutlineWidth;
-        feature._billboardSize = newPointSize;
+        this._billboardColor = Color.clone(newColor, this._billboardColor);
+        this._billboardOutlineColor = Color.clone(newOutlineColor, this._billboardOutlineColor);
+        this._billboardOutlineWidth = newOutlineWidth;
+        this._billboardSize = newPointSize;
 
         var centerAlpha = newColor.alpha;
         var cssColor = newColor.toCssColorString();
@@ -517,7 +569,7 @@ define([
         var textureId = JSON.stringify([cssColor, newPointSize, cssOutlineColor, newOutlineWidth]);
 
         b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPointSize));
-    }
+    };
 
     function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
         return function() {

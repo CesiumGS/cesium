@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,6 +13,7 @@ define([
         './Expression',
         './LabelStyle'
     ], function(
+        Cartesian3,
         clone,
         defaultValue,
         defined,
@@ -25,19 +27,18 @@ define([
         LabelStyle) {
     'use strict';
 
+    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
     var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
     var DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION = 'color("#000000")';
-    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
-    var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
-    var DEFAULT_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
-    var DEFAULT_FONT_EXPRESSION = '"30px sans-serif"';
-    var DEFAULT_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
-    var DEFAULT_BACKGROUND_COLOR_EXPRESSION = 'rgba(42, 42, 42, 0.8)';
-    var DEFAULT_BACKGROUND_X_PADDING_EXPRESSION = 7.0;
-    var DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION = 5.0;
-    var DEFAULT_BACKGROUND_ENABLED = false;
     var DEFAULT_POINT_SIZE_EXPRESSION = 8.0;
-    var DEFAULT_TEXT_EXPRESSION = '" "';
+    var DEFAULT_JSON_POINT_OUTLINE_WIDTH_EXPRESSION = 0.0;
+    var DEFAULT_JSON_LABEL_OUTLINE_WIDTH_EXPRESSION = 2.0;
+    var DEFAULT_JSON_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
+    var DEFAULT_JSON_FONT_EXPRESSION = '"30px sans-serif"';
+    var DEFAULT_JSON_BACKGROUND_ENABLED_EXPRESSION = false;
+    var DEFAULT_JSON_POSITION_OFFSET_EXPRESSION = 'vec3(0.0, 0.0, 0.0)';
+    var DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION = false;
+    var DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
 
     /**
      * Evaluates an expression defined using the
@@ -67,27 +68,27 @@ define([
         this._style = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
-        this._color = undefined;
+
         this._show = undefined;
+        this._color = undefined;
+        this._pointColor = undefined;
         this._pointSize = undefined;
-        this._outlineColor = undefined;
-        this._outlineWidth = undefined;
-        this._labelStyle = undefined;
+        this._pointOutlineColor = undefined;
+        this._pointOutlineWidth = undefined;
+        this._labelOutlineColor = undefined;
+        this._labelOutlineWidth = undefined;
         this._font = undefined;
-        this._anchorLineColor = undefined;
+        this._labelStyle = undefined;
+        this._labelText = undefined;
         this._backgroundColor = undefined;
-        this._backgroundXPadding = undefined;
-        this._backgroundYPadding = undefined;
+        this._backgroundPadding = undefined;
         this._backgroundEnabled = undefined;
-        this._scaleByDistanceNearRange = undefined;
-        this._scaleByDistanceNearValue = undefined;
-        this._scaleByDistanceFarRange = undefined;
-        this._scaleByDistanceFarValue = undefined;
-        this._translucencyByDistanceNearRange = undefined;
-        this._translucencyByDistanceNearValue = undefined;
-        this._translucencyByDistanceFarRange = undefined;
-        this._translucencyByDistanceFarValue = undefined;
-        this._text = undefined;
+        this._scaleByDistance = undefined;
+        this._translucencyByDistance = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._positionOffset = undefined;
+        this._anchorLineEnabled = undefined;
+        this._anchorLineColor = undefined;
         this._image = undefined;
         this._meta = undefined;
 
@@ -132,41 +133,29 @@ define([
             that._pointSizeShaderFunctionReady = true;
         }
 
-        var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
+        var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
+        var pointColorExpression = defaultValue(styleJson.pointColor, DEFAULT_JSON_COLOR_EXPRESSION);
         var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_POINT_SIZE_EXPRESSION);
-        var outlineColorExpression = defaultValue(styleJson.outlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
-        var outlineWidthExpression = defaultValue(styleJson.outlineWidth, DEFAULT_JSON_NUMBER_EXPRESSION);
-        var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_LABEL_STYLE_EXPRESSION);
-        var fontExpression = defaultValue(styleJson.font, DEFAULT_FONT_EXPRESSION);
-        var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_ANCHOR_LINE_COLOR_EXPRESSION);
-        var backgroundColorExpression = defaultValue(styleJson.backgroundColor, DEFAULT_BACKGROUND_COLOR_EXPRESSION);
-        var backgroundXPaddingExpression = defaultValue(styleJson.backgroundXPadding, DEFAULT_BACKGROUND_X_PADDING_EXPRESSION);
-        var backgroundYPaddingExpression = defaultValue(styleJson.backgroundYPadding, DEFAULT_BACKGROUND_Y_PADDING_EXPRESSION);
-        var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_BACKGROUND_ENABLED);
-        var scaleByDistanceNearRangeExpression = styleJson.scaleByDistanceNearRange;
-        var scaleByDistanceNearValueExpression = styleJson.scaleByDistanceNearValue;
-        var scaleByDistanceFarRangeExpression = styleJson.scaleByDistanceFarRange;
-        var scaleByDistanceFarValueExpression = styleJson.scaleByDistanceFarValue;
-        var translucencyByDistanceNearRangeExpression = styleJson.translucencyByDistanceNearRange;
-        var translucencyByDistanceNearValueExpression = styleJson.translucencyByDistanceNearValue;
-        var translucencyByDistanceFarRangeExpression = styleJson.translucencyByDistanceFarRange;
-        var translucencyByDistanceFarValueExpression = styleJson.translucencyByDistanceFarValue;
-        var distanceDisplayConditionNearExpression = styleJson.distanceDisplayConditionNear;
-        var distanceDisplayConditionFarExpression = styleJson.distanceDisplayConditionFar;
-        var textExpression = defaultValue(styleJson.text, DEFAULT_TEXT_EXPRESSION);
+        var pointOutlineColorExpression = defaultValue(styleJson.pointOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
+        var pointOutlineWidthExpression = defaultValue(styleJson.pointOutlineWidth, DEFAULT_JSON_POINT_OUTLINE_WIDTH_EXPRESSION);
+        var labelOutlineColorExpression = defaultValue(styleJson.labelOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
+        var labelOutlineWidthExpression = defaultValue(styleJson.labelOutlineWidth, DEFAULT_JSON_LABEL_OUTLINE_WIDTH_EXPRESSION);
+        var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_JSON_LABEL_STYLE_EXPRESSION);
+        var fontExpression = defaultValue(styleJson.font, DEFAULT_JSON_FONT_EXPRESSION);
+        var labelTextExpression = styleJson.labelText;
+        var backgroundColorExpression = styleJson.backgroundColorExpression;
+        var backgroundPaddingExpression = styleJson.backgroundPadding;
+        var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_JSON_BACKGROUND_ENABLED_EXPRESSION);
+        var scaleByDistanceExpression = styleJson.scaleByDistance;
+        var translucencyByDistanceExpression = styleJson.translucencyByDistance;
+        var distanceDisplayConditionExpression = styleJson.distanceDisplayCondition;
+        var positionOffsetExpression = defaultValue(styleJson.positionOffset, DEFAULT_JSON_POSITION_OFFSET_EXPRESSION);
+        var anchorLineEnabledExpression = defaultValue(styleJson.anchorLineEnabled, DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION);
+        var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION);
         var imageExpression = styleJson.image;
 
         var expressions = styleJson.expressions;
-
-        var color;
-        if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, expressions);
-        } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, expressions);
-        }
-
-        that._color = color;
 
         var show;
         if (typeof showExpression === 'boolean') {
@@ -179,6 +168,24 @@ define([
 
         that._show = show;
 
+        var color;
+        if (typeof colorExpression === 'string') {
+            color = new Expression(colorExpression, expressions);
+        } else if (defined(colorExpression.conditions)) {
+            color = new ConditionsExpression(colorExpression, expressions);
+        }
+
+        that._color = color;
+
+        var pointColor;
+        if (typeof pointColorExpression === 'string') {
+            pointColor = new Expression(pointColorExpression, expressions);
+        } else if (defined(pointColorExpression.conditions)) {
+            pointColor = new ConditionsExpression(pointColorExpression, expressions);
+        }
+
+        that._pointColor = pointColor;
+
         var pointSize;
         if (typeof pointSizeExpression === 'number') {
             pointSize = new Expression(String(pointSizeExpression), expressions);
@@ -190,221 +197,165 @@ define([
 
         that._pointSize = pointSize;
 
-        var outlineColor;
-        if (typeof outlineColorExpression === 'string') {
-            outlineColor = new Expression(outlineColorExpression);
-        } else if (defined(outlineColorExpression.conditions)) {
-            outlineColor = new ConditionsExpression(outlineColorExpression);
+        var pointOutlineColor;
+        if (typeof pointOutlineColorExpression === 'string') {
+            pointOutlineColor = new Expression(pointOutlineColorExpression, expressions);
+        } else if (defined(pointOutlineColorExpression.conditions)) {
+            pointOutlineColor = new ConditionsExpression(pointOutlineColorExpression, expressions);
         }
 
-        that._outlineColor = outlineColor;
+        that._pointOutlineColor = pointOutlineColor;
 
-        var outlineWidth;
-        if (typeof outlineWidthExpression === 'number') {
-            outlineWidth = new Expression(String(outlineWidthExpression));
-        } else if (typeof outlineWidthExpression === 'string') {
-            outlineWidth = new Expression(outlineWidthExpression);
-        } else if (defined(outlineWidthExpression.conditions)) {
-            outlineWidth = new ConditionsExpression(outlineWidthExpression);
+        var pointOutlineWidth;
+        if (typeof pointOutlineWidthExpression === 'number') {
+            pointOutlineWidth = new Expression(String(pointOutlineWidthExpression), expressions);
+        } else if (typeof pointOutlineWidthExpression === 'string') {
+            pointOutlineWidth = new Expression(pointOutlineWidthExpression, expressions);
+        } else if (defined(pointOutlineWidthExpression.conditions)) {
+            pointOutlineWidth = new ConditionsExpression(pointOutlineWidthExpression, expressions);
         }
 
-        that._outlineWidth = outlineWidth;
+        that._pointOutlineWidth = pointOutlineWidth;
+
+        var labelOutlineColor;
+        if (typeof labelOutlineColorExpression === 'string') {
+            labelOutlineColor = new Expression(labelOutlineColorExpression, expressions);
+        } else if (defined(labelOutlineColorExpression.conditions)) {
+            labelOutlineColor = new ConditionsExpression(labelOutlineColorExpression, expressions);
+        }
+
+        that._labelOutlineColor = labelOutlineColor;
+
+        var labelOutlineWidth;
+        if (typeof labelOutlineWidthExpression === 'number') {
+            labelOutlineWidth = new Expression(String(labelOutlineWidthExpression), expressions);
+        } else if (typeof labelOutlineWidthExpression === 'string') {
+            labelOutlineWidth = new Expression(labelOutlineWidthExpression, expressions);
+        } else if (defined(labelOutlineWidthExpression.conditions)) {
+            labelOutlineWidth = new ConditionsExpression(labelOutlineWidthExpression, expressions);
+        }
+
+        that._labelOutlineWidth = labelOutlineWidth;
 
         var labelStyle;
         if (typeof labelStyleExpression === 'number') {
-            labelStyle = new Expression(String(labelStyleExpression));
+            labelStyle = new Expression(String(labelStyleExpression), expressions);
         } else if (typeof labelStyleExpression === 'string') {
-            labelStyle = new Expression(labelStyleExpression);
+            labelStyle = new Expression(labelStyleExpression, expressions);
         } else if (defined(labelStyleExpression.conditions)) {
-            labelStyle = new ConditionsExpression(labelStyleExpression);
+            labelStyle = new ConditionsExpression(labelStyleExpression, expressions);
         }
 
         that._labelStyle = labelStyle;
 
         var font;
         if (typeof fontExpression === 'string') {
-            font = new Expression(fontExpression);
+            font = new Expression(fontExpression, expressions);
         } else if (defined(fontExpression.conditions)) {
-            font = new ConditionsExpression(fontExpression);
+            font = new ConditionsExpression(fontExpression, expressions);
         }
 
         that._font = font;
 
-        var anchorLineColor;
-        if (typeof anchorLineColorExpression === 'string') {
-            anchorLineColor = new Expression(anchorLineColorExpression);
-        } else if (defined(anchorLineColorExpression.conditions)) {
-            anchorLineColor = new ConditionsExpression(anchorLineColorExpression);
+        var labelText;
+        if (typeof(labelTextExpression) === 'string') {
+            labelText = new Expression(labelTextExpression, expressions);
+        } else if (defined(labelTextExpression) && defined(labelTextExpression.conditions)) {
+            labelText = new ConditionsExpression(labelTextExpression, expressions);
         }
 
-        that._anchorLineColor = anchorLineColor;
+        that._labelText = labelText;
 
         var backgroundColor;
         if (typeof backgroundColorExpression === 'string') {
-            backgroundColor = new Expression(backgroundColorExpression);
-        } else if (defined(backgroundColorExpression.conditions)) {
-            backgroundColor = new ConditionsExpression(backgroundColorExpression);
+            backgroundColor = new Expression(backgroundColorExpression, expressions);
+        } else if (defined(backgroundColorExpression) && defined(backgroundColorExpression.conditions)) {
+            backgroundColor = new ConditionsExpression(backgroundColorExpression, expressions);
         }
 
         that._backgroundColor = backgroundColor;
 
-        var backgroundXPadding;
-        if (typeof backgroundXPaddingExpression === 'number') {
-            backgroundXPadding = new Expression(String(backgroundXPaddingExpression));
-        } else if (typeof backgroundXPaddingExpression === 'string') {
-            backgroundXPadding = new Expression(backgroundXPaddingExpression);
-        } else if (defined(backgroundXPaddingExpression.conditions)) {
-            backgroundXPadding = new ConditionsExpression(backgroundXPaddingExpression);
+        var backgroundPadding;
+        if (typeof backgroundPaddingExpression === 'string') {
+            backgroundPadding = new Expression(backgroundPaddingExpression, expressions);
+        } else if (defined(backgroundPaddingExpression) && defined(backgroundPaddingExpression.conditions)) {
+            backgroundPadding = new ConditionsExpression(backgroundPaddingExpression, expressions);
         }
 
-        that._backgroundXPadding = backgroundXPadding;
-
-        var backgroundYPadding;
-        if (typeof backgroundYPaddingExpression === 'number') {
-            backgroundYPadding = new Expression(String(backgroundYPaddingExpression));
-        } else if (typeof backgroundYPaddingExpression === 'string') {
-            backgroundYPadding = new Expression(backgroundYPaddingExpression);
-        } else if (defined(backgroundYPaddingExpression.conditions)) {
-            backgroundYPadding = new ConditionsExpression(backgroundYPaddingExpression);
-        }
-
-        that._backgroundYPadding = backgroundYPadding;
+        that._backgroundPadding = backgroundPadding;
 
         var backgroundEnabled;
         if (typeof backgroundEnabledExpression === 'boolean') {
-            backgroundEnabled = new Expression(String(backgroundEnabledExpression));
+            backgroundEnabled = new Expression(String(backgroundEnabledExpression), expressions);
         } else if (typeof backgroundEnabledExpression === 'string') {
-            backgroundEnabled = new Expression(backgroundEnabledExpression);
+            backgroundEnabled = new Expression(backgroundEnabledExpression, expressions);
         } else if (defined(backgroundEnabledExpression.conditions)) {
-            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression);
+            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression, expressions);
         }
 
         that._backgroundEnabled = backgroundEnabled;
 
-        var scaleByDistanceNearRange;
-        if (typeof scaleByDistanceNearRangeExpression === 'number') {
-            scaleByDistanceNearRange = new Expression(String(scaleByDistanceNearRangeExpression));
-        } else if (typeof scaleByDistanceNearRangeExpression === 'string') {
-            scaleByDistanceNearRange = new Expression(scaleByDistanceNearRangeExpression);
-        } else if (defined(scaleByDistanceNearRangeExpression) && defined(scaleByDistanceNearRangeExpression.conditions)) {
-            scaleByDistanceNearRange = new ConditionsExpression(scaleByDistanceNearRangeExpression);
+        var scaleByDistance;
+        if (typeof scaleByDistanceExpression === 'string') {
+            scaleByDistance = new Expression(scaleByDistanceExpression, expressions);
+        } else if (defined(scaleByDistanceExpression) && defined(scaleByDistanceExpression.conditions)) {
+            scaleByDistance = new ConditionsExpression(scaleByDistanceExpression, expressions);
         }
 
-        that._scaleByDistanceNearRange = scaleByDistanceNearRange;
+        that._scaleByDistance = scaleByDistance;
 
-        var scaleByDistanceNearValue;
-        if (typeof scaleByDistanceNearValueExpression === 'number') {
-            scaleByDistanceNearValue = new Expression(String(scaleByDistanceNearValueExpression));
-        } else if (typeof scaleByDistanceNearValueExpression === 'string') {
-            scaleByDistanceNearValue = new Expression(scaleByDistanceNearValueExpression);
-        } else if (defined(scaleByDistanceNearValueExpression) && defined(scaleByDistanceNearValueExpression.conditions)) {
-            scaleByDistanceNearValue = new ConditionsExpression(scaleByDistanceNearValueExpression);
+        var translucencyByDistance;
+        if (typeof translucencyByDistanceExpression === 'string') {
+            translucencyByDistance = new Expression(translucencyByDistanceExpression, expressions);
+        } else if (defined(translucencyByDistanceExpression) && defined(translucencyByDistanceExpression.conditions)) {
+            translucencyByDistance = new ConditionsExpression(translucencyByDistanceExpression, expressions);
         }
 
-        that._scaleByDistanceNearValue = scaleByDistanceNearValue;
+        that._translucencyByDistance = translucencyByDistance;
 
-        var scaleByDistanceFarRange;
-        if (typeof scaleByDistanceFarRangeExpression === 'number') {
-            scaleByDistanceFarRange = new Expression(String(scaleByDistanceFarRangeExpression));
-        } else if (typeof scaleByDistanceFarRangeExpression === 'string') {
-            scaleByDistanceFarRange = new Expression(scaleByDistanceFarRangeExpression);
-        } else if (defined(scaleByDistanceFarRangeExpression) && defined(scaleByDistanceFarRangeExpression.conditions)) {
-            scaleByDistanceFarRange = new ConditionsExpression(scaleByDistanceFarRangeExpression);
+        var distanceDisplayCondition;
+        if (typeof distanceDisplayConditionExpression === 'string') {
+            distanceDisplayCondition = new Expression(distanceDisplayConditionExpression, expressions);
+        } else if (defined(distanceDisplayConditionExpression) && defined(distanceDisplayConditionExpression.conditions)) {
+            distanceDisplayCondition = new ConditionsExpression(distanceDisplayConditionExpression, expressions);
         }
 
-        that._scaleByDistanceFarRange = scaleByDistanceFarRange;
+        that._distanceDisplayCondition = distanceDisplayCondition;
 
-        var scaleByDistanceFarValue;
-        if (typeof scaleByDistanceFarValueExpression === 'number') {
-            scaleByDistanceFarValue = new Expression(String(scaleByDistanceFarValueExpression));
-        } else if (typeof scaleByDistanceFarValueExpression === 'string') {
-            scaleByDistanceFarValue = new Expression(scaleByDistanceFarValueExpression);
-        } else if (defined(scaleByDistanceFarValueExpression) && defined(scaleByDistanceFarValueExpression.conditions)) {
-            scaleByDistanceFarValue = new ConditionsExpression(scaleByDistanceFarValueExpression);
+        var positionOffset;
+        if (typeof positionOffsetExpression === 'string') {
+            positionOffset = new Expression(positionOffsetExpression, expressions);
+        } else if (defined(positionOffsetExpression.conditions)) {
+            positionOffset  = new ConditionsExpression(positionOffsetExpression, expressions);
         }
 
-        that._scaleByDistanceFarValue = scaleByDistanceFarValue;
+        that._positionOffset = positionOffset;
 
-        var translucencyByDistanceNearRange;
-        if (typeof translucencyByDistanceNearRangeExpression === 'number') {
-            translucencyByDistanceNearRange = new Expression(String(translucencyByDistanceNearRangeExpression));
-        } else if (typeof translucencyByDistanceNearRangeExpression === 'string') {
-            translucencyByDistanceNearRange = new Expression(translucencyByDistanceNearRangeExpression);
-        } else if (defined(translucencyByDistanceNearRangeExpression) && defined(translucencyByDistanceNearRangeExpression.conditions)) {
-            translucencyByDistanceNearRange = new ConditionsExpression(translucencyByDistanceNearRangeExpression);
+        var anchorLineEnabled;
+        if (typeof anchorLineEnabledExpression === 'boolean') {
+            anchorLineEnabled = new Expression(String(anchorLineEnabledExpression), expressions);
+        } else if (typeof anchorLineEnabledExpression === 'string') {
+            anchorLineEnabled = new Expression(anchorLineEnabledExpression, expressions);
+        } else if (defined(anchorLineEnabledExpression.conditions)) {
+            anchorLineEnabled = new ConditionsExpression(anchorLineEnabledExpression, expressions);
         }
 
-        that._translucencyByDistanceNearRange = translucencyByDistanceNearRange;
+        that._anchorLineEnabled = anchorLineEnabled;
 
-        var translucencyByDistanceNearValue;
-        if (typeof translucencyByDistanceNearValueExpression === 'number') {
-            translucencyByDistanceNearValue = new Expression(String(translucencyByDistanceNearValueExpression));
-        } else if (typeof translucencyByDistanceNearValueExpression === 'string') {
-            translucencyByDistanceNearValue = new Expression(translucencyByDistanceNearValueExpression);
-        } else if (defined(translucencyByDistanceNearValueExpression) && defined(translucencyByDistanceNearValueExpression.conditions)) {
-            translucencyByDistanceNearValue = new ConditionsExpression(translucencyByDistanceNearValueExpression);
+        var anchorLineColor;
+        if (typeof anchorLineColorExpression === 'string') {
+            anchorLineColor = new Expression(anchorLineColorExpression, expressions);
+        } else if (defined(anchorLineColorExpression.conditions)) {
+            anchorLineColor = new ConditionsExpression(anchorLineColorExpression, expressions);
         }
 
-        that._translucencyByDistanceNearValue = translucencyByDistanceNearValue;
-
-        var translucencyByDistanceFarRange;
-        if (typeof translucencyByDistanceFarRangeExpression === 'number') {
-            translucencyByDistanceFarRange = new Expression(String(translucencyByDistanceFarRangeExpression));
-        } else if (typeof translucencyByDistanceFarRangeExpression === 'string') {
-            translucencyByDistanceFarRange = new Expression(translucencyByDistanceFarRangeExpression);
-        } else if (defined(translucencyByDistanceFarRangeExpression) && defined(translucencyByDistanceFarRangeExpression.conditions)) {
-            translucencyByDistanceFarRange = new ConditionsExpression(translucencyByDistanceFarRangeExpression);
-        }
-
-        that._translucencyByDistanceFarRange = translucencyByDistanceFarRange;
-
-        var translucencyByDistanceFarValue;
-        if (typeof translucencyByDistanceFarValueExpression === 'number') {
-            translucencyByDistanceFarValue = new Expression(String(translucencyByDistanceFarValueExpression));
-        } else if (typeof translucencyByDistanceFarValueExpression === 'string') {
-            translucencyByDistanceFarValue = new Expression(translucencyByDistanceFarValueExpression);
-        } else if (defined(translucencyByDistanceFarValueExpression) && defined(translucencyByDistanceFarValueExpression.conditions)) {
-            translucencyByDistanceFarValue = new ConditionsExpression(translucencyByDistanceFarValueExpression);
-        }
-
-        that._translucencyByDistanceFarValue = translucencyByDistanceFarValue;
-
-        var distanceDisplayConditionNear;
-        if (typeof distanceDisplayConditionNearExpression === 'number') {
-            distanceDisplayConditionNear = new Expression(String(distanceDisplayConditionNearExpression));
-        } else if (typeof distanceDisplayConditionNearExpression === 'string') {
-            distanceDisplayConditionNear = new Expression(distanceDisplayConditionNearExpression);
-        } else if (defined(distanceDisplayConditionNearExpression) && defined(distanceDisplayConditionNearExpression.conditions)) {
-            distanceDisplayConditionNear = new ConditionsExpression(distanceDisplayConditionNearExpression);
-        }
-
-        that._distanceDisplayConditionNear = distanceDisplayConditionNear;
-
-        var distanceDisplayConditionFar;
-        if (typeof distanceDisplayConditionFarExpression === 'number') {
-            distanceDisplayConditionFar = new Expression(String(distanceDisplayConditionFarExpression));
-        } else if (typeof distanceDisplayConditionFarExpression === 'string') {
-            distanceDisplayConditionFar = new Expression(distanceDisplayConditionFarExpression);
-        } else if (defined(distanceDisplayConditionFarExpression) && defined(distanceDisplayConditionFarExpression.conditions)) {
-            distanceDisplayConditionFar = new ConditionsExpression(distanceDisplayConditionFarExpression);
-        }
-
-        that._distanceDisplayConditionFar = distanceDisplayConditionFar;
-
-        var text;
-        if (typeof(textExpression) === 'string') {
-            text = new Expression(textExpression);
-        } else if (defined(textExpression.conditions)) {
-            text = new ConditionsExpression(textExpression);
-        }
-
-        that._text = text;
+        that._anchorLineColor = anchorLineColor;
 
         var image;
         if (typeof(imageExpression) === 'string') {
-            image = new Expression(imageExpression);
+            image = new Expression(imageExpression, expressions);
         } else if (defined(imageExpression) && defined(imageExpression.conditions)) {
-            image = new ConditionsExpression(imageExpression);
+            image = new ConditionsExpression(imageExpression, expressions);
         }
 
         that._image = image;
@@ -571,6 +522,21 @@ define([
             }
         },
 
+        pointColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._pointColor;
+            },
+            set : function(value) {
+                this._pointColor = value;
+            }
+        },
+
         /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property.
          * <p>
@@ -616,36 +582,7 @@ define([
             }
         },
 
-        /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineColor</code> property.
-         * <p>
-         * The expression must return a <code>Color</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileStyle.prototype
-         *
-         * @type {StyleExpression}
-         *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
-         *
-         * @example
-         * var style = new Cesium3DTileStyle({
-         *     outlineColor : '(${Temperature} > 90) ? color('red') : color('white')'
-         * });
-         * style.outlineColor.evaluate(frameState, feature); // returns a Cesium.Color
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override outlineColor expression with a custom function
-         * style.outlineColor = {
-         *     evaluate : function(frameState, feature) {
-         *         return Color.WHITE;
-         *     }
-         * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-         */
-        outlineColor : {
+        pointOutlineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -653,14 +590,14 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._outlineColor;
+                return this._pointOutlineColor;
             },
             set : function(value) {
-                this._outlineColor = value;
+                this._pointOutlineColor = value;
             }
         },
 
-        anchorLineColor : {
+        pointOutlineWidth : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -668,14 +605,14 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._anchorLineColor;
+                return this._pointOutlineWidth;
             },
             set : function(value) {
-                this._anchorLineColor = value;
+                this._pointOutlineWidth = value;
             }
         },
 
-        backgroundColor : {
+        labelOutlineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -683,14 +620,14 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._backgroundColor;
+                return this._labelOutlineColor;
             },
             set : function(value) {
-                this._backgroundColor = value;
+                this._labelOutlineColor = value;
             }
         },
 
-        backgroundXPadding : {
+        labelOutlineWidth : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -698,278 +635,10 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._backgroundXPadding;
+                return this._labelOutlineWidth;
             },
             set : function(value) {
-                this._backgroundXPadding = value;
-            }
-        },
-
-        backgroundYPadding : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._backgroundYPadding;
-            },
-            set : function(value) {
-                this._backgroundYPadding = value;
-            }
-        },
-
-        backgroundEnabled : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._backgroundEnabled;
-            },
-            set : function(value) {
-                this._backgroundEnabled = value;
-            }
-        },
-
-        scaleByDistanceNearRange : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._scaleByDistanceNearRange;
-            },
-            set : function(value) {
-                this._scaleByDistanceNearRange = value;
-            }
-        },
-
-        scaleByDistanceNearValue : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._scaleByDistanceNearValue;
-            },
-            set : function(value) {
-                this._scaleByDistanceNearValue = value;
-            }
-        },
-
-        scaleByDistanceFarRange : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._scaleByDistanceFarRange;
-            },
-            set : function(value) {
-                this._scaleByDistanceFarRange = value;
-            }
-        },
-
-        scaleByDistanceFarValue : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._scaleByDistanceFarValue;
-            },
-            set : function(value) {
-                this._scaleByDistanceFarValue = value;
-            }
-        },
-
-        translucencyByDistanceNearRange : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._translucencyByDistanceNearRange;
-            },
-            set : function(value) {
-                this._translucencyByDistanceNearRange = value;
-            }
-        },
-
-        translucencyByDistanceNearValue : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._translucencyByDistanceNearValue;
-            },
-            set : function(value) {
-                this._translucencyByDistanceNearValue = value;
-            }
-        },
-
-        translucencyByDistanceFarRange : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._translucencyByDistanceFarRange;
-            },
-            set : function(value) {
-                this._translucencyByDistanceFarRange = value;
-            }
-        },
-
-        translucencyByDistanceFarValue : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._translucencyByDistanceFarValue;
-            },
-            set : function(value) {
-                this._translucencyByDistanceFarValue = value;
-            }
-        },
-
-        distanceDisplayConditionNear : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._distanceDisplayConditionNear;
-            },
-            set : function(value) {
-                this._distanceDisplayConditionNear = value;
-            }
-        },
-
-        distanceDisplayConditionFar : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._distanceDisplayConditionFar;
-            },
-            set : function(value) {
-                this._distanceDisplayConditionFar = value;
-            }
-        },
-
-        /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>outlineWidth</code> property.
-         * <p>
-         * The expression must return or convert to a <code>Number</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileStyle.prototype
-         *
-         * @type {StyleExpression}
-         *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
-         *
-         * @example
-         * var style = new Cesium3DTileStyle({
-         *     outlineWidth : '(${Temperature} > 90) ? 4.0 : 2.0'
-         * });
-         * style.outlineWidth.evaluate(frameState, feature); // returns a Number
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override outlineWidth expression with a custom function
-         * style.outlineWidth = {
-         *     evaluate : function(frameState, feature) {
-         *         return 2.0;
-         *     }
-         * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-         */
-        outlineWidth : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._outlineWidth;
-            },
-            set : function(value) {
-                this._outlineWidth = value;
-            }
-        },
-
-        /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelStyle</code> property.
-         * <p>
-         * The expression must return or convert to a <code>LabelStyle</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileStyle.prototype
-         *
-         * @type {StyleExpression}
-         *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
-         *
-         * @example
-         * var style = new Cesium3DTileStyle({
-         *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
-         * });
-         * style.labelStyle.evaluate(frameState, feature); // returns a Cesium.LabelStyle
-         *
-         * @example
-         * var style = new Cesium.Cesium3DTileStyle();
-         * // Override labelStyle expression with a custom function
-         * style.labelStyle = {
-         *     evaluate : function(frameState, feature) {
-         *         return LabelStyle.FILL;
-         *     }
-         * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
-         */
-        labelStyle : {
-            get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
-                }
-                //>>includeEnd('debug');
-
-                return this._labelStyle;
-            },
-            set : function(value) {
-                this._labelStyle = value;
+                this._labelOutlineWidth = value;
             }
         },
 
@@ -1018,6 +687,50 @@ define([
         },
 
         /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelStyle</code> property.
+         * <p>
+         * The expression must return or convert to a <code>LabelStyle</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
+         * });
+         * style.labelStyle.evaluate(frameState, feature); // returns a Cesium.LabelStyle
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelStyle expression with a custom function
+         * style.labelStyle = {
+         *     evaluate : function(frameState, feature) {
+         *         return LabelStyle.FILL;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        labelStyle : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelStyle;
+            },
+            set : function(value) {
+                this._labelStyle = value;
+            }
+        },
+
+        /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>text</code> property.
          * <p>
          * The expression must return a <code>String</code>.
@@ -1046,7 +759,7 @@ define([
          *
          * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
-        text : {
+        labelText : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -1054,10 +767,145 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._text;
+                return this._labelText;
             },
             set : function(value) {
-                this._text = value;
+                this._labelText = value;
+            }
+        },
+
+        backgroundColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundColor;
+            },
+            set : function(value) {
+                this._backgroundColor = value;
+            }
+        },
+
+        backgroundPadding : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundPadding;
+            },
+            set : function(value) {
+                this._backgroundPadding = value;
+            }
+        },
+
+        backgroundEnabled : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._backgroundEnabled;
+            },
+            set : function(value) {
+                this._backgroundEnabled = value;
+            }
+        },
+
+        scaleByDistance : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._scaleByDistance;
+            },
+            set : function(value) {
+                this._scaleByDistance = value;
+            }
+        },
+
+        translucencyByDistancee : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._translucencyByDistance;
+            },
+            set : function(value) {
+                this._translucencyByDistance = value;
+            }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                this._distanceDisplayCondition = value;
+            }
+        },
+
+        positionOffset : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._positionOffset;
+            },
+            set : function(value) {
+                this._positionOffset = value;
+            }
+        },
+
+        anchorLineEnabled : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._anchorLineEnabled;
+            },
+            set : function(value) {
+                this._anchorLineEnabled = value;
+            }
+        },
+
+        anchorLineColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._anchorLineColor;
+            },
+            set : function(value) {
+                this._anchorLineColor = value;
             }
         },
 

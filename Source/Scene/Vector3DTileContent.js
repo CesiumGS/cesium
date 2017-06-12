@@ -32,6 +32,7 @@ define([
         './GroundPrimitiveBatch',
         './LabelCollection',
         './LabelStyle',
+        './PolylineCollection',
         './VerticalOrigin'
     ], function(
         AttributeCompression,
@@ -66,6 +67,7 @@ define([
         GroundPrimitiveBatch,
         LabelCollection,
         LabelStyle,
+        PolylineCollection,
         VerticalOrigin) {
     'use strict';
 
@@ -396,6 +398,7 @@ define([
 
             content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
             content._labelCollection = new LabelCollection({ batchTable : batchTable });
+            content._polylineCollection = new PolylineCollection();
 
             var uBuffer = pointPositions.subarray(0, numberOfPoints);
             var vBuffer = pointPositions.subarray(numberOfPoints, 2 * numberOfPoints);
@@ -426,6 +429,9 @@ define([
                 l.position = position;
                 l.verticalOrigin = VerticalOrigin.BOTTOM;
                 l._batchIndex = i;
+
+                var p = content._polylineCollection.add();
+                p.positions = [position, Cartesian3.clone(position)];
             }
         }
     }
@@ -439,7 +445,8 @@ define([
                 if (defined(content._billboardCollection) && i < content._billboardCollection.length) {
                     var billboardCollection = content._billboardCollection;
                     var labelCollection = content._labelCollection;
-                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection);
+                    var polylineCollection = content._polylineCollection;
+                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection, polylineCollection);
                 } else {
                     features[i] = new Cesium3DTileFeature(tileset, content, i);
                 }
@@ -488,22 +495,30 @@ define([
         var length = content._features.length;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
+
             feature.show = true;
             feature.color = Color.WHITE;
-            feature.outlineColor = Color.BLACK;
-            feature.outlineWidth = 1.0;
-            feature.labelStyle = LabelStyle.FILL;
+            feature.pointSize = 8.0;
+            feature.pointColor = Color.WHITE;
+            feature.pointOutlineColor = Color.BLACK;
+            feature.pointOutlineWidth = 0.0;
+            feature.labelOutlineColor = Color.WHITE;
+            feature.labelOutlineWidth = 1.0;
             feature.font = '30px sans-serif';
-            feature.anchorLineColor = Color.WHITE;
-            feature.backgroundColor = 'rgba(42, 42, 42, 0.8)';
-            feature.backgroundXPadding = 7.0;
-            feature.backgroundYPadding = 5.0;
+            feature.labelStyle = LabelStyle.FILL;
+            feature.labelText = undefined;
+            feature.backgroundColor = undefined;
+            feature.backgroundPadding = undefined;
             feature.backgroundEnabled = false;
             feature.scaleByDistance = undefined;
             feature.translucencyByDistance = undefined;
-            feature.pointSize = 8.0;
-            feature.text = ' ';
+            feature.distanceDisplayCondition = undefined;
+            feature.positionOffset = Cartesian3.ZERO;
+            feature.anchorLineEnabled = false;
+            feature.anchorLineColor = Color.WHITE;
             feature.image = undefined;
+
+            feature._setBillboardImage();
         }
     }
 
@@ -511,6 +526,8 @@ define([
     var scratchColor2 = new Color();
     var scratchColor3 = new Color();
     var scratchColor4 = new Color();
+    var scratchColor5 = new Color();
+    var scratchColor6 = new Color();
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -528,67 +545,63 @@ define([
             var feature = this.getFeature(i);
             feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
-            feature.outlineColor = style.outlineColor.evaluateColor(frameState, feature, scratchColor2);
-            feature.outlineWidth = style.outlineWidth.evaluate(frameState, feature);
-            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
-            feature.font = style.font.evaluate(frameState, feature);
-            feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor3);
-            feature.backgroundXPadding = style.backgroundXPadding.evaluate(frameState, feature);
-            feature.backgroundYPadding = style.backgroundYPadding.evaluate(frameState, feature);
-            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
             feature.pointSize = style.pointSize.evaluate(frameState, feature);
-            feature.text = style.text.evaluate(frameState, feature);
-            if (defined(style.image)) {
-                feature.image = style.image.evaluate(frameState, feature);
-            }
+            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor2);
+            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor3);
+            feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
+            feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
+            feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
 
-            if (defined(feature.anchorLineColor)) {
-                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor4);
-            }
-
-            var scaleByDistanceNearRange = style.scaleByDistanceNearRange;
-            var scaleByDistanceNearValue = style.scaleByDistanceNearValue;
-            var scaleByDistanceFarRange = style.scaleByDistanceFarRange;
-            var scaleByDistanceFarValue = style.scaleByDistanceFarValue;
-
-            if (defined(scaleByDistanceNearRange) && defined(scaleByDistanceNearValue) &&
-                defined(scaleByDistanceFarRange) && defined(scaleByDistanceFarValue)) {
-                var nearRange = scaleByDistanceNearRange.evaluate(frameState, feature);
-                var nearValue = scaleByDistanceNearValue.evaluate(frameState, feature);
-                var farRange = scaleByDistanceFarRange.evaluate(frameState, feature);
-                var farValue = scaleByDistanceFarValue.evaluate(frameState, feature);
-
-                feature.scaleByDistance = new NearFarScalar(nearRange, nearValue, farRange, farValue);
+            if (defined(style.labelText)) {
+                feature.labelText = style.labelText.evaluate(frameState, feature);
             } else {
-                feature.scaleByDistance = undefined;
+                feature.labelText = undefined;
             }
 
-            var translucencyByDistanceNearRange = style.translucencyByDistanceNearRange;
-            var translucencyByDistanceNearValue = style.translucencyByDistanceNearValue;
-            var translucencyByDistanceFarRange = style.translucencyByDistanceFarRange;
-            var translucencyByDistanceFarValue = style.translucencyByDistanceFarValue;
+            if (defined(style.backgroundColor)) {
+                feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor5);
+            }
 
-            if (defined(translucencyByDistanceNearRange) && defined(translucencyByDistanceNearValue) &&
-                defined(translucencyByDistanceFarRange) && defined(translucencyByDistanceFarValue)) {
-                var tNearRange = translucencyByDistanceNearRange.evaluate(frameState, feature);
-                var tNearValue = translucencyByDistanceNearValue.evaluate(frameState, feature);
-                var tFarRange = translucencyByDistanceFarRange.evaluate(frameState, feature);
-                var tFarValue = translucencyByDistanceFarValue.evaluate(frameState, feature);
+            if (defined(style.backgroundPadding)) {
+                feature.backgroundPadding = style.backgroundPadding.evaluate(frameState, feature);
+            }
 
-                feature.translucencyByDistance = new NearFarScalar(tNearRange, tNearValue, tFarRange, tFarValue);
+            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+
+            if (defined(style.scaleByDistance)) {
+                var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
+                feature.scaleByDistance = new NearFarScalar(scaleByDistanceCart4.x, scaleByDistanceCart4.y, scaleByDistanceCart4.z, scaleByDistanceCart4.w);
+            } else {
+                feature.scaleBydistance = undefined;
+            }
+
+            if (defined(style.translucencyByDistance)) {
+                var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(frameState, feature);
+                feature.translucencyByDistance = new NearFarScalar(translucencyByDistanceCart4.x, translucencyByDistanceCart4.y, translucencyByDistanceCart4.z, translucencyByDistanceCart4.w);
             } else {
                 feature.translucencyByDistance = undefined;
             }
 
-            var distanceDisplayConditionNear = style.distanceDisplayConditionNear;
-            var distanceDisplayConditionFar = style.distanceDisplayConditionFar;
-
-            if (defined(distanceDisplayConditionNear) && defined(distanceDisplayConditionFar)) {
-                var near = distanceDisplayConditionNear.evaluate(frameState, feature);
-                var far = distanceDisplayConditionFar.evaluate(frameState, feature);
-
-                feature.distanceDisplayCondition = new DistanceDisplayCondition(near, far);
+            if (defined(style.distanceDisplayCondition)) {
+                var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
+                feature.distanceDisplatCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
+            } else {
+                feature.distanceDisplayCondition = undefined;
             }
+
+            feature.positionOffset = style.positionOffset.evaluate(frameState, feature);
+            feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
+            feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
+
+            if (defined(style.image)) {
+                feature.image = style.image.evaluate(frameState, feature);
+            } else {
+                feature.image = undefined;
+            }
+
+            feature._setBillboardImage();
         }
     };
 
