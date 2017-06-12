@@ -700,7 +700,6 @@ define([
 
                         tile.state = QuadtreeTileLoadState.LOADING;
                     }
-                    --tile._count;
                 });
             };
 
