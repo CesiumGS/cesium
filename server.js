@@ -3,8 +3,11 @@
 (function() {
     var express = require('express');
     var compression = require('compression');
+    var fs = require('fs');
     var url = require('url');
     var request = require('request');
+
+    var gzipHeader = Buffer.from("1F8B08", "hex");
 
     var yargs = require('yargs').options({
         'port' : {
@@ -39,6 +42,7 @@
     var mime = express.static.mime;
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
+        'application/octet-stream' : ['b3dm', 'i3dm', 'pnts', 'cmpt'],
         'image/crn' : ['crn'],
         'image/ktx' : ['ktx'],
         'model/gltf+json' : ['gltf'],
@@ -54,6 +58,27 @@
         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
         next();
     });
+
+    function checkGzipAndNext(req, res, next) {
+        var reqUrl = url.parse(req.url, true);
+        var filePath = reqUrl.pathname.substring(1);
+
+        var readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+        readStream.on('error', function(err) {
+            next();
+        });
+
+        readStream.on('data', function(chunk) {
+            if (chunk.equals(gzipHeader)) {
+                res.header('Content-Encoding', 'gzip');
+            }
+            next();
+        });
+    }
+
+    var knownTilesetFormats = [/\.b3dm/, /\.pnts/, /\.i3dm/, /\.cmpt/, /\.glb/, /tileset.*\.json$/];
+    app.get(knownTilesetFormats, checkGzipAndNext);
+
     app.use(express.static(__dirname));
 
     function getRemoteUrlFromParam(req) {
