@@ -135,6 +135,25 @@ function Model(options) {
 
 * Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
 
+## Code Linting
+
+We use [ESLint](http://eslint.org/) to check that our code adheres to syntax and style guidelines. In order to keep our ESLint guidelines
+the same across repositories, we use a [shareable config](http://eslint.org/docs/developer-guide/shareable-configs):
+[`eslint-config-cesium`](https://www.npmjs.com/package/eslint-config-cesium).
+
+The two common configurations defined in `eslint-config-cesium` are `browser` (used for Javascript and HTML which will run in the browser) and `node` (used
+for Node.js packages.) If we look inside [obj2gltf](https://github.com/AnalyticalGraphicsInc/obj2gltf)'s `.eslintrc.json`, we see:
+```json
+{
+    "extends": "cesium/node"
+}
+```
+`extends` tells ESLint that we inherit the `node` configuration from our shareable config. Now we can run
+ ```bash
+ $ npm run eslint
+ ```
+ to check if our changes adhere to the Cesium style and syntax guidelines.
+
 * When [disabling rules with inline comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments), place the comments on new lines and as close to the associated code as possible:
 ```js
 /*eslint-disable no-empty*/
@@ -143,6 +162,14 @@ try {
 } catch(ex) {
 }
 /*eslint-enable no-empty*/
+```
+
+* If possible, use `//eslint-disable-line` to disable specific rules for one line.
+```js
+fn multiplyByThree(foo) {
+    var unusedVar = 5; //eslint-disable-line no-unused-vars
+    return foo * 3;
+}
 ```
 
 ## Units
