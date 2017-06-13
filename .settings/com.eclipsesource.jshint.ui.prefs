@@ -1,4 +1,0 @@
-eclipse.preferences.version=1
-excluded=Apps/Sandcastle/ThirdParty//*\:Source/ThirdParty//*\:Source/Workers/cesiumWorkerBootstrapper.js\:ThirdParty//*\:Tools/build.js\:Tools/jsdoc//*
-included=//*.js
-projectSpecificOptions=true
