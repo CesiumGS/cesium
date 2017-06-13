@@ -65,7 +65,6 @@ define([
     function Cesium3DTileStyle(style) {
         this._style = undefined;
         this._ready = false;
-        this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
         this._pointSize = undefined;
@@ -78,7 +77,6 @@ define([
         this._showShaderFunctionReady = false;
         this._pointSizeShaderFunctionReady = false;
 
-        var that = this;
         var promise;
         if (typeof style === 'string') {
             promise = RequestScheduler.request(style, loadJson);
@@ -86,11 +84,10 @@ define([
             promise = when.resolve(style);
         }
 
-        promise.then(function(styleJson) {
+        var that = this;
+        this._readyPromise = promise.then(function(styleJson) {
             setup(that, styleJson);
-            that._readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that._readyPromise.reject(error);
+            return that;
         });
     }
 

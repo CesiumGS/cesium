@@ -67,10 +67,6 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    it ('gets properties', function() {
-
-    });
-
     it('throws with invalid format', function() {
         var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             gltfFormat : 2
