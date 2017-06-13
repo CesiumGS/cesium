@@ -265,7 +265,6 @@ define([
             }
         },
 
-
         /**
          * Gets the URL template to use to use to pick features.  If this property is not specified,
          * {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
@@ -602,19 +601,20 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
+    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, url, request);
     };
 
     /**
@@ -669,8 +669,8 @@ define([
                 return loadText(url).then(format.callback).otherwise(doRequest);
             } else {
                 return loadWithXhr({
-                    url: url,
-                    responseType: format.format
+                    url : url,
+                    responseType : format.format
                 }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
             }
         }

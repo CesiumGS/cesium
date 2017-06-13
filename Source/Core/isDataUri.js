@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        './defined'
+        './Check'
     ], function(
-        defined) {
+        Check) {
     'use strict';
 
     var dataUriRegex = /^data:/i;
@@ -18,11 +18,11 @@ define([
      * @private
      */
     function isDataUri(uri) {
-        if (defined(uri)) {
-            return dataUriRegex.test(uri);
-        }
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.string('uri', uri);
+        //>>includeEnd('debug');
 
-        return false;
+        return dataUriRegex.test(uri);
     }
 
     return isDataUri;
