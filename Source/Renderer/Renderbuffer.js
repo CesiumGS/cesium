@@ -26,7 +26,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined(options.context);
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
