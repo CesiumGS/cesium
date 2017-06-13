@@ -12,7 +12,7 @@ var readline = require('readline');
 var request = require('request');
 
 var globby = require('globby');
-var eslint = require('gulp-eslint');
+var eslint = require('eslint');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
@@ -39,6 +39,7 @@ if (/\.0$/.test(version)) {
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
 var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+var EslintCli = eslint.CLIEngine;
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -66,16 +67,17 @@ var buildFiles = ['Specs/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
 
-var eslintFiles = ['Source/**/*.js',
-                   '!Source/Shaders/**',
-                   '!Source/ThirdParty/**',
-                   '!Source/Workers/cesiumWorkerBootstrapper.js',
-                   'Apps/**/*.js',
-                   'Apps/Sandcastle/gallery/*.html',
-                   '!Apps/Sandcastle/ThirdParty/**',
-                   'Specs/**/*.js',
-                   'Tools/buildTasks/**/*.js',
-                   'gulpfile.js'];
+var eslintIncludeFiles = ['Source/**/*.js',
+                          'Apps/**/*.js',
+                          'Apps/Sandcastle/gallery/*.html',
+                          'Specs/**/*.js',
+                          'Tools/buildTasks/**/*.js',
+                          'gulpfile.js'];
+
+var eslintExcludeFiles = ['Apps/Sandcastle/ThirdParty/**',
+                          'Source/Shaders/**',
+                          'Source/ThirdParty/**',
+                          'Source/Workers/cesiumWorkerBootstrapper.js'];
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
@@ -234,20 +236,29 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
 });
 
 gulp.task('eslint', ['build'], function() {
-    var stream = gulp.src(eslintFiles)
-        .pipe(eslint())
-        .pipe(eslint.format());
-    if (yargs.argv.failTaskOnError) {
-        stream = stream.pipe(eslint.failAfterError());
+    var cli = new EslintCli({
+        cache: true,
+        ignorePattern: eslintExcludeFiles
+    });
+    var formatter = cli.getFormatter();
+    var report = cli.executeOnFiles(eslintIncludeFiles);
+    console.log(formatter(report.results));
+
+    if (yargs.argv.failTaskOnError && report.errorCount) {
+        throw new Error("Errors in ESLint!");
     }
-    return stream;
 });
 
 gulp.task('eslint-watch', function() {
-    gulp.watch(eslintFiles).on('change', function(event) {
-        gulp.src(event.path)
-            .pipe(eslint())
-            .pipe(eslint.format());
+    var cli = new EslintCli({
+        cache: true,
+        ignorePattern: eslintExcludeFiles
+    });
+    var formatter = cli.getFormatter();
+
+    gulp.watch(eslintIncludeFiles).on('change', function(event) {
+        var report = cli.executeOnFiles([event.path]);
+        console.log(formatter(report.results));
     });
 });
 
