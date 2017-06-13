@@ -12,7 +12,6 @@ define([
         '../Core/loadJson',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
@@ -42,7 +41,6 @@ define([
         loadJson,
         PinBuilder,
         PolygonHierarchy,
-        RequestScheduler,
         RuntimeError,
         HeightReference,
         VerticalOrigin,
@@ -823,7 +821,7 @@ define([
             if (!defined(sourceUri)) {
                 sourceUri = data;
             }
-            promise = RequestScheduler.request(data, loadJson);
+            promise = loadJson(data);
         }
 
         options = {

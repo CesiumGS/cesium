@@ -7,7 +7,6 @@ defineSuite([
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
-        'Core/Request',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -19,7 +18,6 @@ defineSuite([
         loadImage,
         loadWithXhr,
         CesiumMath,
-        Request,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -272,20 +270,18 @@ defineSuite([
                 url : baseUrl
             });
 
-            var request = new Request();
-
             return pollToPromise(function() {
                return terrainProvider.ready;
             }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeDefined();
 
                 var i;
                 for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 }
 
-                promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeUndefined();
 
                 for (i = 0; i < deferreds.length; ++i) {

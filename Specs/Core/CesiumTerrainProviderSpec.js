@@ -9,8 +9,6 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
-        'Core/Request',
-        'Core/RequestScheduler',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -24,8 +22,6 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         QuantizedMeshTerrainData,
-        Request,
-        RequestScheduler,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -362,8 +358,6 @@ defineSuite([
     describe('requestTileGeometry', function() {
 
         it('uses multiple urls specified in layer.json', function() {
-            RequestScheduler.throttle = false;
-
             returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
 
             var provider = new CesiumTerrainProvider({
@@ -382,13 +376,10 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
                 provider.requestTileGeometry(1, 0, 1);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
-                RequestScheduler.throttle = true;
             });
         });
 
         it('supports scheme-less template URLs in layer.json resolved with absolute URL', function() {
-            RequestScheduler.throttle = false;
-
             returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
 
             var url = getAbsoluteUri('Data/CesiumTerrainTileJson');
@@ -409,7 +400,6 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
                 provider.requestTileGeometry(1, 0, 1);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
-                RequestScheduler.throttle = true;
             });
         });
 
@@ -582,20 +572,18 @@ defineSuite([
                 url : baseUrl
             });
 
-            var request = new Request();
-
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeDefined();
 
                 var i;
                 for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 }
 
-                promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0);
                 expect(promise).toBeUndefined();
 
                 for (i = 0; i < deferreds.length; ++i) {

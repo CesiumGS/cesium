@@ -29,7 +29,6 @@ define([
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Rectangle',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
@@ -90,7 +89,6 @@ define([
         PinBuilder,
         PolygonHierarchy,
         Rectangle,
-        RequestScheduler,
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
@@ -895,7 +893,7 @@ define([
 
     //Asynchronously processes an external style file.
     function processExternalStyles(dataSource, uri, styleCollection, query) {
-        return when(RequestScheduler.request(proxyUrl(uri, dataSource._proxy, query), loadXML), function(styleKml) {
+        return loadXML(proxyUrl(uri, dataSource._proxy, query)).then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -2200,7 +2198,7 @@ define([
 
         var promise = data;
         if (typeof data === 'string') {
-            promise = RequestScheduler.request(proxyUrl(data, dataSource._proxy, query), loadBlob);
+            promise = loadBlob(proxyUrl(data, dataSource._proxy, query));
             sourceUri = defaultValue(sourceUri, data);
         }
 

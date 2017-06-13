@@ -15,11 +15,9 @@ define([
     './loadArrayBuffer',
     './Math',
     './Rectangle',
-    './Request',
-    './RequestScheduler',
-    './RequestType',
     './RuntimeError',
     './TaskProcessor',
+    './throttleRequestByServer',
     './TileProviderError'
 ], function(
     when,
@@ -37,11 +35,9 @@ define([
     loadArrayBuffer,
     CesiumMath,
     Rectangle,
-    Request,
-    RequestScheduler,
-    RequestType,
     RuntimeError,
     TaskProcessor,
+    throttleRequestByServer,
     TileProviderError) {
     'use strict';
 
@@ -343,7 +339,9 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object.
+     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
+     *                  or false if the request should be initiated regardless of the number of requests
+     *                  already in progress.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -351,7 +349,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseProvider#ready}
      *            returns true.
      */
-    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
+    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -441,20 +439,15 @@ define([
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
             promise = terrainPromises[q];
         } else { // Create new request for terrain
-            if (!defined(request) || (request === false)) {
-                // If a request object isn't provided, perform an immediate request
-                request = new Request({
-                    defer : true
-                });
-            }
-
-            request.url = url;
-            request.requestFunction = loadArrayBuffer;
-            request.type = RequestType.TERRAIN;
-
-            var requestPromise = RequestScheduler.schedule(request);
-            if (!defined(requestPromise)) {
-                return undefined; // Throttled
+            var requestPromise;
+            throttleRequests = defaultValue(throttleRequests, true);
+            if (throttleRequests) {
+                requestPromise = throttleRequestByServer(url, loadArrayBuffer);
+                if (!defined(requestPromise)) {
+                    return undefined; // Throttled
+                }
+            } else {
+                requestPromise = loadArrayBuffer(url);
             }
 
             promise = requestPromise

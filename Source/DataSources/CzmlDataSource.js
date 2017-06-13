@@ -32,7 +32,6 @@ define([
         '../Core/Quaternion',
         '../Core/Rectangle',
         '../Core/ReferenceFrame',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
@@ -121,7 +120,6 @@ define([
         Quaternion,
         Rectangle,
         ReferenceFrame,
-        RequestScheduler,
         RuntimeError,
         Spherical,
         TimeInterval,
@@ -1908,7 +1906,7 @@ define([
             if (defined(query)) {
                 czml = joinUrls(czml, '?' + query, false);
             }
-            promise = RequestScheduler.request(czml, loadJson);
+            promise = loadJson(czml);
             sourceUri = defaultValue(sourceUri, czml);
         }
 

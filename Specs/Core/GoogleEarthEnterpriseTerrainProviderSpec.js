@@ -12,7 +12,6 @@ defineSuite([
     'Core/loadImage',
     'Core/loadWithXhr',
     'Core/Math',
-    'Core/Request',
     'Core/TerrainProvider',
     'Specs/pollToPromise',
     'ThirdParty/when'
@@ -29,7 +28,6 @@ defineSuite([
     loadImage,
     loadWithXhr,
     CesiumMath,
-    Request,
     TerrainProvider,
     pollToPromise,
     when) {
@@ -292,8 +290,6 @@ defineSuite([
                 url : baseUrl
             });
 
-            var request = new Request();
-
             var promises = [];
             return pollToPromise(function() {
                 return terrainProvider.ready;
@@ -308,17 +304,17 @@ defineSuite([
                     });
                 })
                 .then(function() {
-                    var promise = terrainProvider.requestTileGeometry(1, 2, 3, request);
+                    var promise = terrainProvider.requestTileGeometry(1, 2, 3);
                     expect(promise).toBeDefined();
                     return promise;
                 })
                 .then(function(terrainData) {
                     expect(terrainData).toBeDefined();
                     for (var i = 0; i < 10; ++i) {
-                        promises.push(terrainProvider.requestTileGeometry(i, i, i, request));
+                        promises.push(terrainProvider.requestTileGeometry(i, i, i));
                     }
 
-                    return terrainProvider.requestTileGeometry(1, 2, 3, request);
+                    return terrainProvider.requestTileGeometry(1, 2, 3);
                 })
                 .then(function(terrainData) {
                     expect(terrainData).toBeUndefined();
@@ -330,7 +326,7 @@ defineSuite([
                     return when.all(promises)
                         .otherwise(function() {
                             loadRealTile = true;
-                            return terrainProvider.requestTileGeometry(1, 2, 3, request);
+                            return terrainProvider.requestTileGeometry(1, 2, 3);
                         });
                 })
                 .then(function(terrainData) {

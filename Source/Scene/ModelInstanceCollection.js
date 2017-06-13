@@ -73,7 +73,7 @@ define([
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
-     * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
+     * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.

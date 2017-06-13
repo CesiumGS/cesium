@@ -656,9 +656,8 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Number} [distance] The distance of the tile from the camera.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, distance) {
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -692,7 +691,7 @@ define([
 
         function doRequest() {
             imagery.state = ImageryState.TRANSITIONING;
-            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level, distance);
+            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
 
             if (!defined(imagePromise)) {
                 // Too many parallel requests, so postpone loading tile.

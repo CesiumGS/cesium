@@ -6,13 +6,13 @@ define([
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
-        '../Core/Request',
         '../Core/TileProviderError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
-        './TerrainState'
+        './TerrainState',
+        './TileBoundingRegion'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -20,13 +20,13 @@ define([
         DeveloperError,
         IndexDatatype,
         OrientedBoundingBox,
-        Request,
         TileProviderError,
         Buffer,
         BufferUsage,
         VertexArray,
         when,
-        TerrainState) {
+        TerrainState,
+        TileBoundingRegion) {
     'use strict';
 
     /**
@@ -83,14 +83,18 @@ define([
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
         surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
-        surfaceTile.tileBoundingRegion.minimumHeight = mesh.minimumHeight;
-        surfaceTile.tileBoundingRegion.maximumHeight = mesh.maximumHeight;
+        surfaceTile.tileBoundingRegion = new TileBoundingRegion({
+            rectangle : tile.rectangle,
+            minimumHeight : mesh.minimumHeight,
+            maximumHeight : mesh.maximumHeight,
+            ellipsoid : tile.tilingScheme.ellipsoid
+        });
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, distance) {
+    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
-            requestTileGeometry(this, terrainProvider, x, y, level, distance);
+            requestTileGeometry(this, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.RECEIVED) {
@@ -102,7 +106,7 @@ define([
         }
     };
 
-    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, distance) {
+    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level) {
         function success(terrainData) {
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
@@ -125,10 +129,7 @@ define([
 
         function doRequest() {
             // Request the terrain from the terrain provider.
-            var request = new Request({
-                distance : distance
-            });
-            tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, request);
+            tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level);
 
             // If the request method returns undefined (instead of a promise), the request
             // has been deferred.

@@ -84,10 +84,10 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, distance) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection) {
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this, distance);
+            this.imageryLayer._requestImagery(this);
         }
 
         if (this.state === ImageryState.RECEIVED) {
