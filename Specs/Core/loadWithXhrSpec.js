@@ -2,17 +2,39 @@
 defineSuite([
         'Core/loadWithXhr',
         'Core/loadImage',
-        'Core/RequestErrorEvent'
+        'Core/Request',
+        'Core/RequestErrorEvent',
+        'Core/RequestScheduler'
     ], function(
         loadWithXhr,
         loadImage,
-        RequestErrorEvent) {
+        Request,
+        RequestErrorEvent,
+        RequestScheduler) {
     'use strict';
 
     it('throws with no url', function() {
         expect(function() {
             loadWithXhr();
         }).toThrowDeveloperError();
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadWithXhr({
+            url : testUrl,
+            request : request
+        });
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 
     describe('data URI loading', function() {

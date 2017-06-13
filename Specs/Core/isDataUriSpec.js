@@ -5,8 +5,13 @@ defineSuite([
         isDataUri) {
     'use strict';
 
+    it('Throws if url is undefined', function() {
+        expect(function() {
+            isDataUri(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('Determines that a uri is not a data uri', function() {
-        expect(isDataUri(undefined)).toEqual(false);
         expect(isDataUri('http://cesiumjs.org/')).toEqual(false);
     });
 

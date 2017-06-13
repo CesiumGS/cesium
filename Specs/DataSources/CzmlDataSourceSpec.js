@@ -15,6 +15,7 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Quaternion',
@@ -51,6 +52,7 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadJson,
+        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -258,13 +260,13 @@ defineSuite([
 
     it('process loads expected data', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length).toEqual(10);
     });
 
     it('process loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length === 10);
 
         dataSource.process(vehicle, vehicleUrl);
@@ -273,7 +275,7 @@ defineSuite([
 
     it('load replaces data', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length).toEqual(10);
 
         dataSource.load(vehicle, vehicleUrl);
@@ -552,6 +554,52 @@ defineSuite([
         var imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+    });
+
+    it('appends query to all uri', function() {
+        var source = 'http://some.url.invalid/';
+        var packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    uri : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    uri : 'image2.png'
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet), {
+            sourceUri : source,
+            query : {
+                token : 34570,
+                password : "Passw0rd"
+            }
+        });
+        var entity = dataSource.entities.values[0];
+        var imageProperty = entity.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png' + '?token=34570&password=Passw0rd');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png' + '?token=34570&password=Passw0rd');
+    });
+
+    it('appends query tokens to source URL', function() {
+        var dataSource = new CzmlDataSource();
+        var requestNetworkLink = when.defer();
+
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        dataSource.process(simpleUrl, { query : {
+                                            "token" : 30203,
+                                            "pass" : "passw0rd"
+                                        }});
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual(simpleUrl + '?token=30203&pass=passw0rd');
+        });
     });
 
     it('CZML adds data for constrained billboard.', function() {

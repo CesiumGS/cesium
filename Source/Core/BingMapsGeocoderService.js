@@ -1,18 +1,18 @@
 /*global define*/
 define([
     './BingMapsApi',
+    './Check',
     './defaultValue',
     './defined',
     './defineProperties',
-    './DeveloperError',
     './loadJsonp',
     './Rectangle'
 ], function(
     BingMapsApi,
+    Check,
     defaultValue,
     defined,
     defineProperties,
-    DeveloperError,
     loadJsonp,
     Rectangle) {
     'use strict';
@@ -25,15 +25,13 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.scene The scene
+     * @param {Scene} options.scene The scene
      * @param {String} [options.key] A key to use with the Bing Maps geocoding service
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.scene)) {
-            throw new DeveloperError('options.scene is required.');
-        }
+        Check.typeOf.object('options.scene', options.scene);
         //>>includeEnd('debug');
 
         var key = options.key;
@@ -81,9 +79,7 @@ define([
      */
     BingMapsGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(query)) {
-            throw new DeveloperError('query must be defined');
-        }
+        Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
         var key = this.key;

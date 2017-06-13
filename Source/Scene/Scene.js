@@ -29,6 +29,7 @@ define([
         '../Core/mergeSort',
         '../Core/Occluder',
         '../Core/PixelFormat',
+        '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
@@ -104,6 +105,7 @@ define([
         mergeSort,
         Occluder,
         PixelFormat,
+        RequestScheduler,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -2639,6 +2641,7 @@ define([
         }
 
         context.endFrame();
+        RequestScheduler.update();
         callAfterRenderFunctions(frameState);
 
         scene._postRender.raiseEvent(scene, time);
