@@ -17,6 +17,7 @@ define([
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestState',
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../ThirdParty/when',
@@ -48,6 +49,7 @@ define([
         Rectangle,
         Request,
         RequestScheduler,
+        RequestState,
         RequestType,
         RuntimeError,
         when,
@@ -173,13 +175,13 @@ define([
         var hasEmptyContent;
         var contentState;
         var contentUrl;
-        var requestServer;
+        var serverKey;
 
         if (defined(contentHeader)) {
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
             contentUrl = joinUrls(basePath, contentHeader.url);
-            requestServer = RequestScheduler.getRequestServer(contentUrl);
+            serverKey = RequestScheduler.getServerKey(contentUrl);
         } else {
             content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
@@ -193,7 +195,7 @@ define([
         this._contentReadyPromise = undefined;
         this._expiredContent = undefined;
 
-        this._requestServer = requestServer;
+        this._serverKey = serverKey;
 
         /**
          * When <code>true</code>, the tile has no content.
@@ -300,7 +302,6 @@ define([
         this._screenSpaceError = 0;
         this._screenSpaceErrorComputedFrame = -1;
         this._finalResolution = true;
-        this._requestHeap = undefined;
         this._depth = 0;
         this._centerZDepth = 0;
         this._stackLength = 0;
@@ -415,9 +416,9 @@ define([
          * @readonly
          * @private
          */
-        requestServer : {
+        serverKey : {
             get : function() {
-                return this._requestServer;
+                return this._serverKey;
             }
         },
 
@@ -584,6 +585,12 @@ define([
         };
     }
 
+    function createPriorityFunction(tile) {
+        return function() {
+            return tile._distanceToCamera;
+        };
+    }
+
     /**
      * Requests the tile's content.
      * <p>
@@ -599,10 +606,6 @@ define([
             return false;
         }
 
-        if (!this._requestServer.hasAvailableRequests()) {
-            return false;
-        }
-
         var url = this._contentUrl;
         var expired = this.contentExpired;
         if (expired) {
@@ -611,19 +614,20 @@ define([
             url = joinUrls(url, timestampQuery, false);
         }
 
-        var distance = this._distanceToCamera;
-        var promise = RequestScheduler.schedule(new Request({
-            url : url,
-            server : this._requestServer,
-            requestFunction : loadArrayBuffer,
+        var request = new Request({
+            throttle : true,
+            throttleByServer : true,
             type : RequestType.TILES3D,
-            distance : distance
-        }));
+            priorityFunction : createPriorityFunction(this)
+        });
+
+        var promise = loadArrayBuffer(url, undefined, request);
 
         if (!defined(promise)) {
             return false;
         }
 
+        var contentState = this._contentState;
         this._contentState = Cesium3DTileContentState.LOADING;
         this._contentReadyToProcessPromise = when.defer();
         this._contentReadyPromise = when.defer();
@@ -672,7 +676,14 @@ define([
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });
-        }).otherwise(contentFailedFunction);
+        }).otherwise(function(error) {
+            if (request.state === RequestState.CANCELLED) {
+                // Cancelled due to low priority - try again later.
+                that._contentState = contentState;
+                return;
+            }
+            contentFailedFunction(error);
+        });
 
         return true;
     };

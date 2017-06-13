@@ -37,6 +37,7 @@ define([
 
         tileset._desiredTiles.length = 0;
         tileset._selectedTiles.length = 0;
+        tileset._requestedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._hasMixedContent = false;
 
@@ -65,7 +66,7 @@ define([
             return;
         }
 
-        loadTile(root, frameState);
+        loadTile(tileset, root, frameState);
 
         if (!tileset.skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -302,30 +303,36 @@ define([
     };
 
     BaseTraversal.prototype.getChildren = function(tile) {
-        if (baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
-            var children = tile.children;
-            var childrenLength = children.length;
-            var allReady = true;
-            var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                loadTile(child, this.frameState);
-                touch(this.tileset, child, this.outOfCore);
+        var tileset = this.tileset;
+        var outOfCore = this.outOfCore;
+        var frameState = this.frameState;
+        if (!baseUpdateAndCheckChildren(tileset, tile, this.baseScreenSpaceError, frameState)) {
+            return emptyArray;
+        }
 
-                // content cannot be replaced until all of the nearest descendants with content are all loaded
-                if (replacementWithContent) {
-                    if (!child.hasEmptyContent) {
-                        allReady = allReady && child.contentAvailable;
-                    } else {
-                        allReady = allReady && this.internalDFS.execute(child);
-                    }
+        var children = tile.children;
+        var childrenLength = children.length;
+        var allReady = true;
+        var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            loadTile(tileset, child, frameState);
+            touch(tileset, child, outOfCore);
+
+            // content cannot be replaced until all of the nearest descendants with content are all loaded
+            if (replacementWithContent) {
+                if (!child.hasEmptyContent) {
+                    allReady = allReady && child.contentAvailable;
+                } else {
+                    allReady = allReady && this.internalDFS.execute(child);
                 }
             }
-
-            if (allReady) {
-                return children;
-            }
         }
+
+        if (allReady) {
+            return children;
+        }
+
         return emptyArray;
     };
 
@@ -397,7 +404,11 @@ define([
     };
 
     InternalBaseTraversal.prototype.getChildren = function(tile) {
-        if (!baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
+        var tileset = this.tileset;
+        var frameState = this.frameState;
+        var outOfCore = this.outOfCore;
+
+        if (!baseUpdateAndCheckChildren(tileset, tile, this.baseScreenSpaceError, frameState)) {
             return emptyArray;
         }
 
@@ -405,8 +416,8 @@ define([
         var childrenLength = children.length;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
-            loadTile(child, this.frameState);
-            touch(this.tileset, child, this.outOfCore);
+            loadTile(tileset, child, frameState);
+            touch(tileset, child, outOfCore);
             if (!tile.contentAvailable) {
                 this.allLoaded = false;
             }
@@ -563,11 +574,11 @@ define([
                     var tiles = parent.children;
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
-                        loadTile(tiles[i], this.frameState);
+                        loadTile(this.tileset, tiles[i], this.frameState);
                         touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
-                    loadTile(tile, this.frameState);
+                    loadTile(this.tileset, tile, this.frameState);
                     touch(this.tileset, tile, this.outOfCore);
                 }
             }
@@ -630,11 +641,10 @@ define([
         }
     }
 
-    function loadTile(tile, frameState) {
+    function loadTile(tileset, tile, frameState) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
             tile._requestedFrame = frameState.frameNumber;
-            computeSSE(tile, frameState);
-            tile._requestHeap.insert(tile);
+            tileset._requestedTiles.push(tile);
         }
     }
 

@@ -21,8 +21,6 @@ define([
         '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/RequestScheduler',
-        '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
@@ -63,8 +61,6 @@ define([
         ManagedArray,
         CesiumMath,
         Matrix4,
-        RequestScheduler,
-        RequestType,
         RuntimeError,
         ClearCommand,
         Pass,
@@ -185,6 +181,7 @@ define([
         this._gltfUpAxis = undefined;
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._requestedTiles = [];
         this._desiredTiles = new ManagedArray();
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
@@ -200,7 +197,6 @@ define([
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
-        this._requestHeaps = {};
         this._hasMixedContent = false;
 
         this._baseTraversal = new Cesium3DTilesetTraversal.BaseTraversal();
@@ -724,7 +720,7 @@ define([
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
+        loadJson(tilesetUrl).then(function(tilesetJson) {
             that._root = that.loadTileset(tilesetUrl, tilesetJson);
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
@@ -1199,23 +1195,6 @@ define([
             if (this._cullWithChildrenBounds) {
                 Cesium3DTileOptimizations.checkChildrenWithinParent(tile3D);
             }
-
-            // Create a load heap, one for each unique server. We can only make limited requests to a given
-            // server so it is unnecessary to keep a queue of all tiles needed to be loaded.
-            // Instead of creating a list of all tiles to load and then sorting it entirely to find the best ones,
-            // we keep just a heap so we have the best `maximumRequestsPerServer` to load. The order of these does
-            // not matter much as we will try to load them all.
-            // The heap approach is a O(n log k) to find the best tiles for loading.
-            var requestServer = tile3D.requestServer;
-            if (defined(requestServer)) {
-                if (!defined(this._requestHeaps[requestServer])) {
-                    var heap = new Heap(sortForLoad);
-                    this._requestHeaps[requestServer] = heap;
-                    heap.maximumSize = RequestScheduler.maximumRequestsPerServer;
-                    heap.reserve(heap.maximumSize);
-                }
-                tile3D._requestHeap = this._requestHeaps[requestServer];
-            }
         }
 
         return rootTile;
@@ -1309,20 +1288,10 @@ define([
                (tile._depth > ancestor._depth + skipLevels);
     }
 
-    function sortForLoad(a, b) {
-        var distanceDifference = a._distanceToCamera - b._distanceToCamera;
-        if (a.refine === Cesium3DTileRefine.ADD || b.refine === Cesium3DTileRefine.ADD) {
-            return distanceDifference;
-        }
-
-        var screenSpaceErrorDifference = b._screenSpaceError - a._screenSpaceError;
-        return screenSpaceErrorDifference === 0 ? distanceDifference : screenSpaceErrorDifference;
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
-    function requestContent(tileset, tile, outOfCore) {
-        if (!outOfCore || tile.hasEmptyContent) {
+    function requestContent(tileset, tile) {
+        if (tile.hasEmptyContent) {
             return;
         }
 
@@ -1351,15 +1320,14 @@ define([
         tile.contentReadyPromise.then(removeFunction).otherwise(removeFunction);
     }
 
-    function requestTiles(tileset, requestHeaps, outOfCore) {
-        for (var name in requestHeaps) {
-            if (requestHeaps.hasOwnProperty(name)) {
-                var heap = requestHeaps[name];
-                var tile;
-                while (defined(tile = heap.pop())) {
-                    requestContent(tileset, tile, outOfCore);
-                }
-            }
+    function requestTiles(tileset, outOfCore) {
+        if (!outOfCore) {
+            return;
+        }
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            requestContent(tileset, requestedTiles[i]);
         }
     }
 
@@ -1754,7 +1722,7 @@ define([
         }
 
         Cesium3DTilesetTraversal.selectTiles(this, frameState, outOfCore);
-        requestTiles(this, this._requestHeaps, outOfCore);
+        requestTiles(this, outOfCore);
         updateTiles(this, frameState);
 
         if (outOfCore) {
