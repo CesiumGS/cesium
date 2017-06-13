@@ -940,7 +940,7 @@ define([
          * The maximum screen space error used to drive level of detail refinement.  This value helps determine when a tile
          * refines to its descendants, and therefore plays a major role in balancing performance with visual quality.
          * <p>
-         * A tile's screen space error is roughly equivalent to the number of pixels that would be drawn if a sphere with a
+         * A tile's screen space error is roughly equivalent to the number of pixels wide that would be drawn if a sphere with a
          * radius equal to the tile's <b>geometric error</b> were rendered at the tile's position. If this value exceeds
          * <code>maximumScreenSpaceError</code> the tile refines to its descendants.
          * </p>
@@ -1140,7 +1140,9 @@ define([
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
-        Check.typeOf.object('tilesetJson.asset', asset);
+        if (!defined(asset)) {
+            throw new RuntimeError('Tileset must have an asset property.');
+        }
         if (asset.version !== '0.0' && asset.version !== '1.0') {
             throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
         }
@@ -1718,7 +1720,6 @@ define([
      * Do not call this function directly.  This is documented just to
      * list the exceptions that may be propagated when the scene is rendered:
      * </p>
-     *
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {

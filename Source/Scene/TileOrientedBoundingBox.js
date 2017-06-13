@@ -87,17 +87,6 @@ define([
     };
 
     /**
-     * Calculates the distance between the tile's center and the camera.
-     *
-     * @param {FrameState} frameState The frame state.
-     * @return {Number} The distance between the tile's center and the camera, in meters.
-     */
-    TileOrientedBoundingBox.prototype.distanceFromCenterToCamera = function(frameState) {
-        DeveloperError.throwInstantiationError();
-    };
-
-
-    /**
      * Determines which side of a plane this box is located.
      *
      * @param {Plane} plane The plane to test against.

@@ -55,14 +55,14 @@ defineSuite([
             expect(content.geometryByteLength).toBe(0);
             expect(content.texturesByteLength).toBe(0);
             expect(content.batchTableByteLength).toBe(0);
-            expect(content.innerContents).toBe(undefined);
-            expect(content.readyPromise).toBe(undefined);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.readyPromise).toBeDefined();
             expect(content.tileset).toBe(tileset);
             expect(content.tile).toBe(tile);
             expect(content.url).toBeDefined();
-            expect(content.batchTable).toBe(undefined);
+            expect(content.batchTable).toBeUndefined();
             expect(content.hasProperty(0, 'name')).toBe(false);
-            expect(content.getFeature(0).toBeUndefined());
+            expect(content.getFeature(0)).toBeUndefined();
         });
     });
 

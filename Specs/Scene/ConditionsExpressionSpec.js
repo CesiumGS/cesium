@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/ConditionsExpression',
+        'Core/Cartesian4',
         'Core/Color'
     ], function(
         ConditionsExpression,
+        Cartesian4,
         Color) {
     'use strict';
 
@@ -55,6 +57,22 @@ defineSuite([
         expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
         expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
         expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
+    });
+
+    it('evaluate takes result argument', function() {
+        var result = new Cartesian4();
+        var expression = new ConditionsExpression(jsonExpWithAdditionalExpressions, additionalExpressions, result);
+        var value = expression.evaluate(frameState, new MockFeature(101), result);
+        expect(value).toEqual(new Cartesian4(0.0, 0.0, 1.0, 1.0));
+        expect(value).toBe(result);
+    });
+
+    it('evaluate takes a color result argument', function() {
+        var result = new Color();
+        var expression = new ConditionsExpression(jsonExpWithAdditionalExpressions, additionalExpressions, result);
+        var value = expression.evaluate(frameState, new MockFeature(101), result);
+        expect(value).toEqual(Color.BLUE);
+        expect(value).toBe(result);
     });
 
     it('constructs and evaluates empty conditional', function() {

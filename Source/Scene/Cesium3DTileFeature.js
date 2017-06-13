@@ -10,9 +10,12 @@ define([
     'use strict';
 
     /**
+     * A feature of a {@link Cesium3DTileset}.
+     * <p>
      * Provides access to a feature's properties stored in the tile's batch table, as well
      * as the ability to show/hide a feature and change its highlight color via
      * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color}, respectively.
+     * </p>
      * <p>
      * Modifications to a <code>Cesium3DTileFeature</code> object have the lifetime of the tile's
      * content.  If the tile's content is unloaded, e.g., due to it going out of view and needing
@@ -157,10 +160,11 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *
+     * @param {String[]} results An array into which to store the results.
      * @returns {String[]} The names of the feature's properties.
      */
-    Cesium3DTileFeature.prototype.getPropertyNames = function() {
-        return this._content.batchTable.getPropertyNames(this._batchId);
+    Cesium3DTileFeature.prototype.getPropertyNames = function(results) {
+        return this._content.batchTable.getPropertyNames(this._batchId, results);
     };
 
     /**

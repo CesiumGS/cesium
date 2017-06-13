@@ -12,8 +12,11 @@ define([
     'use strict';
 
     /**
+     * An expression for a style applied to a {@link Cesium3DTileset}.
+     * <p>
      * Evaluates a conditions expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
      * <p>
      * Implements the {@link StyleExpression} interface.
      * </p>

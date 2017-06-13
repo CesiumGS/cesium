@@ -617,14 +617,16 @@ define([
         return defined(result);
     }
 
-    function getPropertyNamesInHierarchy(batchTable, batchId, names) {
+    function getPropertyNamesInHierarchy(batchTable, batchId, results) {
         var hierarchy = batchTable._batchTableHierarchy;
         traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
             var classId = hierarchy.classIds[instanceIndex];
             var instances = hierarchy.classes[classId].instances;
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
-                    names[name] = true;
+                    if (results.indexOf(name) === -1) {
+                        results.push(name);
+                    }
                 }
             }
         });
@@ -725,32 +727,26 @@ define([
         return (defined(json) && defined(json[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
     };
 
-    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {
+    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId, results) {
         //>>includeStart('debug', pragmas.debug);
         checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
+        results = defined(results) ? results : [];
+        results.length = 0;
+
         var json = this.batchTableJson;
-
-        if (!defined(json)) {
-            return [];
-        }
-
-        if (!defined(this._batchTableHierarchy)) {
-            return Object.keys(json);
-        }
-
-        // Has a batch table hierarchy. Build a hash map of property names to avoid duplicates.
-        // Different classes in the hierarchy may have identical property names.
-        var names = {};
         for (var name in json) {
             if (json.hasOwnProperty(name)) {
-                names[name] = true;
+                results.push(name);
             }
         }
-        getPropertyNamesInHierarchy(this, batchId, names);
 
-        return Object.keys(names);
+        if (defined(this._batchTableHierarchy)) {
+            getPropertyNamesInHierarchy(this, batchId, results);
+        }
+
+        return results;
     };
 
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {

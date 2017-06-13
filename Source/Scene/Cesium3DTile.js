@@ -64,7 +64,7 @@ define([
     'use strict';
 
     /**
-     * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;
+     * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
      * the content is loaded on-demand when needed based on the view.
      * <p>
      * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.

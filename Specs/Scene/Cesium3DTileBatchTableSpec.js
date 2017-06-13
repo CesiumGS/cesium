@@ -296,6 +296,18 @@ defineSuite([
         expect(batchTable.getPropertyNames(0)).toEqual(['height', 'id']);
     });
 
+    it('getPropertyNames works with results argument', function() {
+        var batchTableJson = {
+            height: [0.0],
+            id : [0]
+        };
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1, batchTableJson);
+        var results = [];
+        var names = batchTable.getPropertyNames(0, results);
+        expect(names).toBe(results);
+        expect(names).toEqual(['height', 'id']);
+    });
+
     it('getProperty throws with invalid batchId', function() {
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
         expect(function() {

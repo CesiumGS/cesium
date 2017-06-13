@@ -137,6 +137,22 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(5);
     });
 
+    it('evaluate takes result argument', function() {
+        var expression = new Expression('vec3(1.0)');
+        var result = new Cartesian3();
+        var value = expression.evaluate(frameState, undefined, result);
+        expect(value).toEqual(new Cartesian3(1.0, 1.0, 1.0));
+        expect(value).toBe(result);
+    });
+
+    it('evaluate takes a color result argument', function() {
+        var expression = new Expression('color("red")');
+        var result = new Color();
+        var value = expression.evaluate(frameState, undefined, result);
+        expect(value).toEqual(Color.RED);
+        expect(value).toBe(result);
+    });
+
     it('gets expressions', function() {
         var expressionString = "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)";
         var expression = new Expression(expressionString);

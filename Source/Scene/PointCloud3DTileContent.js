@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
@@ -33,6 +34,7 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
@@ -438,6 +440,8 @@ define([
         content._hasBatchIds = defined(batchIds);
     }
 
+    var scratchPointSizeAndTilesetTime = new Cartesian2();
+
     var positionLocation = 0;
     var colorLocation = 1;
     var normalLocation = 2;
@@ -508,17 +512,16 @@ define([
         }
 
         var uniformMap = {
-            u_pointSize : function() {
-                return content._pointSize;
+            u_pointSizeAndTilesetTime : function() {
+                scratchPointSizeAndTilesetTime.x = content._pointSize;
+                scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
+                return scratchPointSizeAndTilesetTime;
             },
             u_highlightColor : function() {
                 return content._highlightColor;
             },
             u_constantColor : function() {
                 return content._constantColor;
-            },
-            u_tilesetTime : function() {
-                return content._tileset.timeSinceLoad;
             }
         };
 
@@ -896,10 +899,11 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
+                 'uniform vec2 u_pointSizeAndTilesetTime; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
-                 'uniform float u_tilesetTime; \n';
+                 'float u_pointSize; \n' +
+                 'float u_tilesetTime; \n';
 
         vs += attributeDeclarations;
 
@@ -947,7 +951,9 @@ define([
         }
 
         vs += 'void main() \n' +
-              '{ \n';
+              '{ \n' +
+              '    u_pointSize = u_pointSizeAndTilesetTime.x; \n' +
+              '    u_tilesetTime = u_pointSizeAndTilesetTime.y; \n';
 
         if (usesColors) {
             if (isTranslucent) {
@@ -1075,7 +1081,7 @@ define([
             // Check if the shader compiles correctly. If not there is likely a syntax error with the style.
             drawCommand.shaderProgram._bind();
         } catch (error) {
-            // Turn the RuntimeError into a DeveloperError and rephrase it.
+            // Rephrase the error.
             throw new RuntimeError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
         }
     }

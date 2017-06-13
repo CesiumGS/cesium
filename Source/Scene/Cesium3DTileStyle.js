@@ -28,8 +28,11 @@ define([
     var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
 
     /**
+     * A style that is applied to a {@link Cesium3DTileset}.
+     * <p>
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
      *
      * @alias Cesium3DTileStyle
      * @constructor
