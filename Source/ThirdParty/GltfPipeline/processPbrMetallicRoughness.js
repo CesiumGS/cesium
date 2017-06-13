@@ -37,6 +37,8 @@ define([
                 return 'mat4';
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
+            case WebGLConstants.BOOL:
+                return 'bool';
         }
     }
 
@@ -182,7 +184,7 @@ define([
 
         var parameterValues = material.pbrMetallicRoughness;
         for (var additional in material) {
-            if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || (additional.indexOf('Factor') >= 0))) {
+            if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || additional.indexOf('Factor') >= 0) || additional === 'doubleSided') {
                 parameterValues[additional] = material[additional];
             }
         }
@@ -191,6 +193,21 @@ define([
         var fragmentShader = 'precision highp float;\n';
 
         var hasNormals = true;
+        var hasTangents = false;
+        for (var entry in gltf.meshes) {
+            if (defined(entry)) {
+                var mesh = gltf.meshes[entry];
+                var primitives = mesh.primitives;
+                for (var primitive in primitives) {
+                    if (defined(primitive)) {
+                        var attributes = primitives[primitive].attributes;
+                        if (defined(attributes)) {
+                            hasTangents = defined(attributes.TANGENT);
+                        }
+                    }
+                }
+            }
+        }
 
         // Add techniques
         var techniqueParameters = {
@@ -286,6 +303,19 @@ define([
             fragmentShader += 'varying vec3 v_normal;\n';
         }
 
+        if (hasTangents) {
+            techniqueAttributes.a_tangent = 'tangent';
+            techniqueParameters.tangent = {
+                semantic: 'TANGENT',
+                type: WebGLConstants.FLOAT_VEC3
+            };
+            vertexShader += 'attribute vec3 a_tangent;\n';
+            vertexShader += 'varying vec3 v_tangent;\n';
+            vertexShaderMain += '  v_tangent = (u_modelViewMatrix * vec4(a_tangent, 1.0)).xyz;\n';
+
+            fragmentShader += 'varying vec3 v_tangent;\n';
+        }
+
         // Add texture coordinates if the material uses them
         var v_texcoord;
         if (hasTexCoords) {
@@ -354,12 +384,10 @@ define([
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShaderMain += '  baseColor *= u_baseColorFactor;\n';
             }
-        }
-        else {
+        } else {
             if (defined(parameterValues.baseColorFactor)) {
                 fragmentShaderMain += '  vec3 baseColor = u_baseColorFactor;\n';
-            }
-            else {
+            } else {
                 fragmentShaderMain += '  vec3 baseColor = vec3(1.0);\n';
             }
         }
@@ -374,18 +402,15 @@ define([
             if (defined(parameterValues.roughnessFactor)) {
                 fragmentShaderMain += '  roughness *= u_roughnessFactor;\n';
             }
-        }
-        else {
+        } else {
             if (defined(parameterValues.metallicFactor)) {
                 fragmentShaderMain += '  float metalness = clamp(u_metallicFactor, 0.0, 1.0);\n';
-            }
-            else {
+            } else {
                 fragmentShaderMain += '  float metalness = 1.0;\n';
             }
             if (defined(parameterValues.roughnessFactor)) {
                 fragmentShaderMain += '  float roughness = clamp(u_roughnessFactor, 0.04, 1.0);\n';
-            }
-            else {
+            } else {
                 fragmentShaderMain += '  float roughness = 1.0;\n';
             }
         }
@@ -419,7 +444,7 @@ define([
         fragmentLightingBlock += '  vec3 color = M_PI * NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
         if (defined(parameterValues.occlusionTexture)) {
-            fragmentLightingBlock += '  color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentLightingBlock += '  color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
         if (defined(parameterValues.emissiveTexture)) {
             fragmentLightingBlock += '  color += texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
@@ -431,9 +456,18 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
-            if (defined(parameterValues.normalTexture)) {
-                if (frameState.context._standardDerivatives) {
-                    // if not provided tangents
+            if (parameterValues.doubleSided) {
+                fragmentShaderMain += '  if (!gl_FrontFacing)\n';
+                fragmentShaderMain += '  {\n';
+                fragmentShaderMain += '    ng = -ng;\n';
+                fragmentShaderMain += '  }\n';
+            }
+            if (defined(parameterValues.normalTexture) && (hasTangents || frameState.context._standardDerivatives)) {
+                if (hasTangents) {
+                    // Read tangents from varying
+                    fragmentShaderMain += '  vec3 t = normalize(v_tangent);\n';
+                } else {
+                    // Compute tangents
                     fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
                     fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
                     fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
@@ -441,13 +475,12 @@ define([
                     fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
                     fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
                     fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
-                    fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
-                    fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
-                    fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
-                    fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
                 }
-            }
-            else {
+                fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
+                fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
+                fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+                fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
+            } else {
                 fragmentShaderMain += '  vec3 n = ng;\n';
             }
         }
@@ -460,14 +493,22 @@ define([
         fragmentShaderMain += '}\n';
 
         fragmentShader += fragmentShaderMain;
-        console.log(fragmentShader);
 
-        var techniqueStates = {
-            enable: [
-                WebGLConstants.CULL_FACE,
-                WebGLConstants.DEPTH_TEST
-            ]
-        };
+        var techniqueStates;
+        if (parameterValues.doubleSided) {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.DEPTH_TEST
+                ]
+            };
+        } else {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.CULL_FACE,
+                    WebGLConstants.DEPTH_TEST
+                ]
+            };
+        }
 
         // Add shaders
         var vertexShaderId = addToArray(shaders, {
@@ -539,6 +580,8 @@ define([
                 return WebGLConstants.SAMPLER_2D;
             case 'emissiveFactor':
                 return WebGLConstants.FLOAT_VEC3;
+            case 'doubleSided':
+                return WebGLConstants.BOOL;
         }
     }
 
