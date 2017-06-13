@@ -79,7 +79,7 @@ define([
 
         var promise;
         if (typeof style === 'string') {
-            promise = RequestScheduler.request(style, loadJson);
+            promise = loadJson(style);
         } else {
             promise = when.resolve(style);
         }

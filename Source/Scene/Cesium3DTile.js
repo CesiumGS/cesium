@@ -411,18 +411,6 @@ define([
         },
 
         /**
-         * The server that will take the request for the tile's content.
-         *
-         * @readonly
-         * @private
-         */
-        serverKey : {
-            get : function() {
-                return this._serverKey;
-            }
-        },
-
-        /**
          * Determines if the tile has available content to render.  <code>true</code> if the tile's
          * content is ready or if it has expired content that renders while new content loads; otherwise,
          * <code>false</code>.
@@ -601,6 +589,7 @@ define([
      */
     Cesium3DTile.prototype.requestContent = function() {
         var that = this;
+        var tileset = this._tileset;
 
         if (this.hasEmptyContent) {
             return false;
@@ -618,7 +607,8 @@ define([
             throttle : true,
             throttleByServer : true,
             type : RequestType.TILES3D,
-            priorityFunction : createPriorityFunction(this)
+            priorityFunction : createPriorityFunction(this),
+            serverKey : this._serverKey
         });
 
         var promise = loadArrayBuffer(url, undefined, request);
@@ -650,11 +640,11 @@ define([
             var content;
 
             if (defined(contentFactory)) {
-                content = contentFactory(that._tileset, that, that._contentUrl, arrayBuffer, 0);
+                content = contentFactory(tileset, that, that._contentUrl, arrayBuffer, 0);
                 that.hasRenderableContent = true;
             } else {
                 // The content may be json instead
-                content = Cesium3DTileContentFactory.json(that._tileset, that, that._contentUrl, arrayBuffer, 0);
+                content = Cesium3DTileContentFactory.json(tileset, that, that._contentUrl, arrayBuffer, 0);
                 that.hasTilesetContent = true;
             }
 
@@ -680,6 +670,8 @@ define([
             if (request.state === RequestState.CANCELLED) {
                 // Cancelled due to low priority - try again later.
                 that._contentState = contentState;
+                --tileset.statistics.numberOfPendingRequests;
+                ++tileset.statistics.numberOfAttemptedRequests;
                 return;
             }
             contentFailedFunction(error);

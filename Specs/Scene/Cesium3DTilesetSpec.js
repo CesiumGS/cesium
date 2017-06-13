@@ -135,6 +135,7 @@ defineSuite([
     });
 
     beforeEach(function() {
+        RequestScheduler.clearForSpecs();
         scene.morphTo3D(0.0);
 
         var camera = scene.camera;
@@ -147,11 +148,6 @@ defineSuite([
 
     afterEach(function() {
         scene.primitives.removeAll();
-
-        // Wait for any pending requests to complete before ending each test
-        return pollToPromise(function() {
-            return RequestScheduler.getNumberOfAvailableRequests() === RequestScheduler.maximumRequests;
-        });
     });
 
     function setZoom(distance) {
@@ -302,12 +298,13 @@ defineSuite([
     });
 
     it('passes version in query string to all external resources', function() {
-        //Spy on loadWithXhr so we can verify requested urls
+        // Spy on loadWithXhr so we can verify requested urls
         spyOn(loadWithXhr, 'load').and.callThrough();
 
         var queryParams = '?a=1&b=boy';
         var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl + queryParams).then(function(tileset) {
+            console.log('loaded tileset');
             var calls = loadWithXhr.load.calls.all();
             var callsLength = calls.length;
             for (var i = 0; i < callsLength; ++i) {
@@ -1127,18 +1124,6 @@ defineSuite([
         });
     });
 
-    it('replacement and additive refinement', function() {
-        //          A
-        //      A       R (not rendered)
-        //    R   A   R   A
-        //
-        return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
-            var statistics = tileset._statistics;
-            expect(statistics.visited).toEqual(7);
-            expect(statistics.numberOfCommands).toEqual(6);
-        });
-    });
-
     it('loads tileset with external tileset.json', function() {
         // Set view so that no tiles are loaded initially
         viewNothing();
@@ -1539,23 +1524,21 @@ defineSuite([
 
     it('does not request tiles when the request scheduler is full', function() {
         viewRootOnly(); // Root tiles are loaded initially
+        var options = {
+            skipLevelOfDetail : false
+        };
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl, options).then(function(tileset) {
+            // Try to load 4 children. Only 3 requests will go through, 1 will be attempted.
+            var oldMaximumRequestsPerServer = RequestScheduler.maximumRequestsPerServer;
+            RequestScheduler.maximumRequestsPerServer = 3;
 
-        var promises = [
-            // skipLevelOfDetails loads a base level of content first
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {skipLevelOfDetail: false}),
-            Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {skipLevelOfDetail: false})
-        ];
-
-        return when.all(promises, function(tilesets) {
-            // Root tiles are ready, now zoom in to request child tiles
             viewAllTiles();
             scene.renderForSpecs();
 
-            // Maximum of 6 requests allowed. Expect the first tileset to use four,
-            // and the second tileset to use the remaining two
-            expect(tilesets[0]._statistics.numberOfPendingRequests).toEqual(4);
-            expect(tilesets[1]._statistics.numberOfPendingRequests).toEqual(2);
-            expect(RequestScheduler.hasAvailableRequestsByServer(tilesets[0]._url)).toEqual(false);
+            expect(tileset._statistics.numberOfPendingRequests).toEqual(3);
+            expect(tileset._statistics.numberOfAttemptedRequests).toEqual(1);
+
+            RequestScheduler.maximumRequestsPerServer = oldMaximumRequestsPerServer;
         });
     });
 
@@ -1654,7 +1637,6 @@ defineSuite([
             }).otherwise(function(error) {
                 // Expect the root to not have added any children from the external tileset.json
                 expect(root.children.length).toEqual(0);
-                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });
         });
     });
@@ -1673,7 +1655,6 @@ defineSuite([
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
-                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });
         });
     });
