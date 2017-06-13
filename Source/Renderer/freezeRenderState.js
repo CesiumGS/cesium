@@ -22,17 +22,16 @@ define([
                 return renderState;
             }
 
-            var i, propName, propNames = Object.keys(renderState);
+            var propName;
+            var propNames = Object.keys(renderState);
 
-            for (i = 0; i < propNames.length; i++) {
+            for (var i = 0; i < propNames.length; i++) {
                 propName = propNames[i];
                 if (renderState.hasOwnProperty(propName) && propName !== '_applyFunctions') {
                     renderState[propName] = freezeRenderState(renderState[propName]);
                 }
             }
-
             return freezeObject(renderState);
         }
-
         return freezeRenderState;
     });
