@@ -128,7 +128,6 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        scene.
     });
 
     afterAll(function() {
