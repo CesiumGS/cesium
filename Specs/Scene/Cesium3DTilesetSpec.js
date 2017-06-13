@@ -2583,8 +2583,8 @@ defineSuite([
             expect(statistics.numberOfTilesTotal).toBe(1);
 
             return pollToPromise(function() {
-                scene.renderForSpecs();
                 expect(statistics.numberOfCommands).toBe(1); // Still renders expired content
+                scene.renderForSpecs();
                 return tile.contentReady;
             }).then(function() {
                 scene.renderForSpecs();
