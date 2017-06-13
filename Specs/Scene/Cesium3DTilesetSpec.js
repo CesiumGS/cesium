@@ -304,7 +304,6 @@ defineSuite([
         var queryParams = '?a=1&b=boy';
         var queryParamsWithVersion = '?a=1&b=boy&v=1.2.3';
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl + queryParams).then(function(tileset) {
-            console.log('loaded tileset');
             var calls = loadWithXhr.load.calls.all();
             var callsLength = calls.length;
             for (var i = 0; i < callsLength; ++i) {
