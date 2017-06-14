@@ -382,7 +382,7 @@ define([
         if (defined(parameterValues.baseColorTexture)) {
             fragmentShaderMain += '  vec3 baseColor = texture2D(u_baseColorTexture, ' + v_texcoord + ').rgb;\n';
             if (defined(parameterValues.baseColorFactor)) {
-                fragmentShaderMain += '  baseColor *= u_baseColorFactor;\n';
+                fragmentShaderMain += '  baseColor *= u_baseColorFactor.rgb;\n';
             }
         } else {
             if (defined(parameterValues.baseColorFactor)) {
@@ -422,6 +422,7 @@ define([
         fragmentLightingBlock += '  vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
         fragmentLightingBlock += '  vec3 l = normalize(czm_sunDirectionEC);\n';
         fragmentLightingBlock += '  vec3 h = normalize(v + l);\n';
+        fragmentLightingBlock += '  vec3 r = normalize(reflect(v, n));\n';
         fragmentLightingBlock += '  float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
         fragmentLightingBlock += '  float NdotV = abs(dot(n, v)) + 0.001;\n';
         fragmentLightingBlock += '  float NdotH = clamp(dot(n, h), 0.0, 1.0);\n';
@@ -447,12 +448,17 @@ define([
             fragmentLightingBlock += '  color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
         }
         if (defined(parameterValues.emissiveTexture)) {
-            fragmentLightingBlock += '  color += texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentLightingBlock += '  vec3 emissive = texture2D(u_emissiveTexture, ' + v_texcoord + ').rgb;\n';
+            if (defined(parameterValues.emissiveFactor)) {
+                fragmentLightingBlock += '  emissive *= u_emissiveFactor;\n';
+            }
+            fragmentLightingBlock += '  color += emissive;\n';
         }
-        if (defined(parameterValues.emissiveFactor)) {
-            fragmentLightingBlock += '  color += u_emissiveFactor;\n';
+        else {
+            if (defined(parameterValues.emissiveFactor)) {
+                fragmentLightingBlock += '  color += u_emissiveFactor;\n';
+            }
         }
-
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';

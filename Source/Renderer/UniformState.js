@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './Sampler',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -17,6 +18,7 @@ define([
         '../Scene/OrthographicFrustum',
         '../Scene/SceneMode'
     ], function(
+        Sampler,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -150,6 +152,8 @@ define([
         this._resolutionScale = 1.0;
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
+
+        this._cubeMap = new Sampler();
 
         this._fogDensity = undefined;
 
@@ -795,6 +799,13 @@ define([
             }
         },
 
+        // TODO: Docs
+        cubeMap : {
+            get : function() {
+                return this._cubeMap;
+            }
+        },
+
         /**
          * @memberof UniformState.prototype
          * @type {Number}
@@ -959,6 +970,8 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+
+        this._cubeMap = frameState.cubeMap;
 
         this._fogDensity = frameState.fog.density;
 

@@ -3,6 +3,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
+        '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -37,6 +38,7 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/loadCubeMap',
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
@@ -77,6 +79,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
+        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -111,6 +114,7 @@ define([
         ContextLimits,
         DrawCommand,
         Framebuffer,
+        loadCubeMap,
         Pass,
         PassState,
         PixelDatatype,
@@ -612,6 +616,22 @@ define([
             context : context,
             lightCamera : this._sunCamera,
             enabled : defaultValue(options.shadows, false)
+        });
+
+        this._cubeMap = context.defaultCubeMap;
+        var that = this;
+        // buildModuleURL
+        var texturePath = buildModuleUrl('Assets/Textures/Yokohama/');
+        var paths = {
+            positiveX : texturePath + 'PositiveX.jpg',
+            negativeX : texturePath + 'NegativeX.jpg',
+            positiveY : texturePath + 'PositiveY.jpg',
+            negativeY : texturePath + 'NegativeY.jpg',
+            positiveZ : texturePath + 'PositiveZ.jpg',
+            negativeZ : texturePath + 'NegativeZ.jpg'
+        };
+        loadCubeMap(context, paths).then(function(cubeMap) {
+            that._cubeMap = cubeMap;
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1248,6 +1268,7 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
+        frameState.cubeMap = scene._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
