@@ -21,6 +21,7 @@
     "map",
     "globe"
   ],
+  "main": "Build/Cesium/Cesium.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
