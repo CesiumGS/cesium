@@ -1,10 +1,10 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/createGuid',
-        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -31,11 +31,11 @@ define([
         './UniformState',
         './VertexArray'
     ], function(
+        Check,
         clone,
         Color,
         ComponentDatatype,
         createGuid,
-        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -892,25 +892,10 @@ define([
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
 
-        if (!defined(va)) {
-            throw new DeveloperError('drawCommand.vertexArray is required.');
-        }
-
-        if (offset < 0) {
-            throw new DeveloperError('drawCommand.offset must be greater than or equal to zero.');
-        }
-
-        if (count < 0) {
-            throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
-        }
-
-        if (instanceCount < 0) {
-            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to zero.');
-        }
-
-        if (instanceCount > 0 && !context.instancedArrays) {
-            throw new DeveloperError('Instanced arrays extension is not supported');
-        }
+        Check.defined('drawCommand.vertexArray', va);
+        Check.typeOf.numgreaterThanOrEquals('drawCommand.offset', offset, 0);
+        Check.typeOf.numgreaterThanOrEquals('drawCommand.count', count, 0);
+        Check.typeOf.numgreaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
@@ -941,13 +926,8 @@ define([
 
     Context.prototype.draw = function(drawCommand, passState) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawCommand)) {
-            throw new DeveloperError('drawCommand is required.');
-        }
-
-        if (!defined(drawCommand._shaderProgram)) {
-            throw new DeveloperError('drawCommand.shaderProgram is required.');
-        }
+        Check.defined('drawCommand', drawCommand);
+        Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
         //>>includeEnd('debug');
 
         passState = defaultValue(passState, this._defaultPassState);
@@ -991,13 +971,8 @@ define([
         var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
-        if (width <= 0) {
-            throw new DeveloperError('readState.width must be greater than zero.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('readState.height must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('readState.width', width, 0);
+        Check.typeOf.number.greaterThan('readState.height', height, 0);
         //>>includeEnd('debug');
 
         var pixels = new Uint8Array(4 * width * height);
@@ -1098,9 +1073,7 @@ define([
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(pickColor)) {
-            throw new DeveloperError('pickColor is required.');
-        }
+        Check.defined('pickColor', pickColor);
         //>>includeEnd('debug');
 
         return this._pickObjects[pickColor.toRgba()];
@@ -1149,9 +1122,7 @@ define([
      */
     Context.prototype.createPickId = function(object) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(object)) {
-            throw new DeveloperError('object is required.');
-        }
+        Check.defined('object', object);
         //>>includeEnd('debug');
 
         // the increment and assignment have to be separate statements to

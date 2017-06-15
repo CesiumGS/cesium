@@ -79,17 +79,13 @@ define([
             throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
 
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('width', width, 0);
 
         if (width > ContextLimits.maximumTextureSize) {
             throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('height', height, 0);
 
         if (height > ContextLimits.maximumTextureSize) {
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
@@ -251,9 +247,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -267,21 +261,16 @@ define([
         var framebuffer = options.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('context is required.');
-        }
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
         if (PixelFormat.isDepthFormat(pixelFormat) || PixelFormat.isCompressedFormat(pixelFormat)) {
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.');
         }
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
+
+        Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
+
         if (framebufferXOffset + width > gl.drawingBufferWidth) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
         }
@@ -433,21 +422,17 @@ define([
         yOffset = defaultValue(yOffset, 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
+        Check.defined('source', source);
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
+
+        Check.typeOf.number.greaterThanOrEquals('xOffset', xOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
+
         if (xOffset + source.width > this._width) {
             throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
         }
@@ -511,18 +496,12 @@ define([
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
+
+        Check.typeOf.number.greaterThanOrEquals('xOffset', xOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
+
         if (xOffset + width > this._width) {
             throw new DeveloperError('xOffset + width must be less than or equal to width.');
         }
