@@ -88,7 +88,6 @@ define([
      * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
      * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
      *
-     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
      */
     function ParticleSystem(options) {
@@ -344,8 +343,8 @@ define([
         particle.size = Cartesian2.fromElements(width, height, particle.size);
 
         // Reset the normalizedAge and age in case the particle was reused.
-        particle.normalizedAge = 0.0;
-        particle.age = 0.0;
+        particle._normalizedAge = 0.0;
+        particle._age = 0.0;
 
         var speed = CesiumMath.randomBetween(system.minimumSpeed, system.maximumSpeed);
         Cartesian3.multiplyByScalar(particle.velocity, speed, particle.velocity);
