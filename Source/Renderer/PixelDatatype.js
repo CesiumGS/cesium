@@ -40,6 +40,7 @@ define([
                 case PixelDatatype.FLOAT:
                 case PixelDatatype.UNSIGNED_INT_24_8:
                     return 4;
+                // no default
             }
         },
 

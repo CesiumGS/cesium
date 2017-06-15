@@ -27,6 +27,7 @@ define([
                 return 'mat4';
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
+            // no default
         }
     }
 
@@ -144,6 +145,7 @@ define([
                                 value: [spot.fallOffAngle, spot.fallOffExponent]
                             };
                             break;
+                        // no default
                     }
                     ++lightCount;
                 }
@@ -643,6 +645,7 @@ define([
                 return WebGLConstants.BOOL;
             case 'doubleSided':
                 return WebGLConstants.BOOL;
+            // no default
         }
     }
 

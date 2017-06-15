@@ -769,6 +769,7 @@ define([
                 case gl.FRAMEBUFFER_UNSUPPORTED:
                     message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
                     break;
+                // no default
                 }
 
                 throw new DeveloperError(message);

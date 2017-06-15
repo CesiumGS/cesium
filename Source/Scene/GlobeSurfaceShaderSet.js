@@ -51,6 +51,7 @@ define([
         case SceneMode.MORPHING:
             positionMode = getPositionMorphingMode;
             break;
+        // no default
         }
 
         return positionMode;

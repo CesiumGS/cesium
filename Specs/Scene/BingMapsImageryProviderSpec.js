@@ -98,6 +98,7 @@ defineSuite([
         case BingMapsStyle.ROAD:
             stylePrefix = 'r';
             break;
+        // no default
         }
 
         return {

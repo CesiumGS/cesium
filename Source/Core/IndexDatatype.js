@@ -66,6 +66,7 @@ define([
                 return Uint16Array.BYTES_PER_ELEMENT;
             case IndexDatatype.UNSIGNED_INT:
                 return Uint32Array.BYTES_PER_ELEMENT;
+            // no default
         }
 
         //>>includeStart('debug', pragmas.debug);

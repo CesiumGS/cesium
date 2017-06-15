@@ -53,6 +53,7 @@ define([
                 return {
                     buffer : buffer
                 };
+            // no default
         }
 
     }

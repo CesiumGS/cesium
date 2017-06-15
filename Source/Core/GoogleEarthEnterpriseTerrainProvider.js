@@ -430,6 +430,7 @@ define([
                     }
                 }
                 break;
+            // no default
         }
 
         // We can't figure out where to get the terrain

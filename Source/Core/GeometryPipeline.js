@@ -1678,6 +1678,7 @@ define([
             return indexLineLoop(geometry);
         case PrimitiveType.LINES:
             return indexLines(geometry);
+        // no default
         }
 
         return geometry;
@@ -2546,6 +2547,7 @@ define([
             case GeometryType.LINES:
                 splitLongitudeLines(instance);
                 break;
+            // no default
             }
         } else {
             indexPrimitive(geometry);

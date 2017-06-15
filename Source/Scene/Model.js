@@ -3277,6 +3277,7 @@ define([
                                 setUniforms[uniformVariableScale] = true;
                                 setUniforms[uniformVariableTranslate] = true;
                                 break;
+                            // no default
                         }
                     }
                 }
