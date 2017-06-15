@@ -66,6 +66,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './PickDepth',
+        './PostProcessorScene',
         './Primitive',
         './PrimitiveCollection',
         './SceneMode',
@@ -142,6 +143,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PickDepth,
+        PostProcessorScene,
         Primitive,
         PrimitiveCollection,
         SceneMode,
@@ -663,6 +665,8 @@ define([
         this._useWebVR = false;
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
+
+        this._postProcessor = new PostProcessorScene();
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -2509,6 +2513,8 @@ define([
                 passState.framebuffer = scene._fxaa.getColorFramebuffer();
                 scene._globeDepth.executeCopyColor(context, passState);
             }
+
+            scene._postProcessor.update(scene._frameState, passState.framebuffer, passState.framebuffer);
 
             passState.framebuffer = environmentState.originalFramebuffer;
             scene._fxaa.execute(context, passState);
