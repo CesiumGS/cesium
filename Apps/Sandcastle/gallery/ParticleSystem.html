@@ -244,9 +244,9 @@ var entity = viewer.entities.add({
         rate : viewModel.rate,
 
         bursts : [
-            {time : 5.0, min : 300, max : 500},
-            {time : 10.0, min : 50, max : 100},
-            {time : 15.0, min : 200, max : 300}
+            new Cesium.ParticleBurst({time : 5.0, minimum : 300, maximum : 500}),
+            new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
+            new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
         ],
 
         lifeTime : 16.0,

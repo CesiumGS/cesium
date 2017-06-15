@@ -373,10 +373,10 @@ define([
             var length = system.bursts.length;
             for (var i = 0; i < length; i++) {
                 var burst = system.bursts[i];
-                if (defined(burst) && !burst.complete && system._currentTime > burst.time) {
-                    var count = burst.min + CesiumMath.nextRandomNumber() * burst.max;
+                if (defined(burst) && !burst._complete && system._currentTime > burst.time) {
+                    var count = CesiumMath.randomBetween(burst.minimum, burst.maximum);
                     numToEmit += count;
-                    burst.complete = true;
+                    burst._complete = true;
                 }
             }
         }
@@ -469,7 +469,7 @@ define([
 
         this._billboardCollection.update(frameState);
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
-        this.currentTime += dt;
+        this._currentTime += dt;
 
         if (this.lifeTime !== Number.MAX_VALUE && this._currentTime > this.lifeTime) {
             if (this.loop) {
@@ -478,7 +478,7 @@ define([
                     var burstLength = this.bursts.length;
                     // Reset any bursts
                     for (i = 0; i < burstLength; i++) {
-                        this.bursts[i].complete = false;
+                        this.bursts[i]._complete = false;
                     }
                 }
             } else {
