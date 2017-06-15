@@ -112,7 +112,7 @@ defineSuite([
 
         var cache = new ShaderCache(context);
         var sp = cache.replaceShaderProgram({
-            shaderProgram : sp,
+            shaderProgram : sp, //eslint-disable-line no-use-before-define
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
             attributeLocations : attributeLocations

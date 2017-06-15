@@ -69,7 +69,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
-     * 
+     *
      * @see Scene#skyBox
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
@@ -113,6 +113,8 @@ define([
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
     SkyBox.prototype.update = function(frameState) {
+        var that = this;
+
         if (!this.show) {
             return undefined;
         }
@@ -170,8 +172,6 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var that = this;
-
             command.uniformMap = {
                 u_cubeMap: function() {
                     return that._cubeMap;
@@ -239,7 +239,7 @@ define([
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
-     * 
+     *
      * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {

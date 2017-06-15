@@ -595,6 +595,10 @@ define([
         }
     }
 
+    var iso8601Scratch = {
+        iso8601 : undefined
+    };
+
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, query) {
         var combinedInterval;
         var packetInterval = packetData.interval;
@@ -1222,10 +1226,6 @@ define([
         }
         entity.availability = intervals;
     }
-
-    var iso8601Scratch = {
-        iso8601 : undefined
-    };
 
     function processAlignedAxis(billboard, packetData, interval, sourceUri, entityCollection, query) {
         if (!defined(packetData)) {

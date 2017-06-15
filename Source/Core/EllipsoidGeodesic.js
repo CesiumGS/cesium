@@ -173,6 +173,8 @@ define([
     }
 
     function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
+        var scratchCart1 = new Cartesian3();
+        var scratchCart2 = new Cartesian3();
         var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
         var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
 
@@ -193,8 +195,6 @@ define([
         setConstants(ellipsoidGeodesic);
     }
 
-    var scratchCart1 = new Cartesian3();
-    var scratchCart2 = new Cartesian3();
     /**
      * Initializes a geodesic on the ellipsoid connecting the two provided planetodetic points.
      *

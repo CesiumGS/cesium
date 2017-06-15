@@ -406,7 +406,7 @@ define([
 
     function updateItems(batch, items, time, isUpdated) {
         var length = items.length;
-        for (i = length - 1; i >= 0; i--) {
+        for (var i = length - 1; i >= 0; i--) {
             var item = items[i];
             if (item.invalidated) {
                 items.splice(i, 1);
@@ -420,7 +420,7 @@ define([
         }
 
         length = items.length;
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

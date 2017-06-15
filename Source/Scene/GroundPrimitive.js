@@ -240,7 +240,7 @@ define([
 
         var readOnlyAttributes;
         if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
-            readOnlyAttributes = readOnlyInstanceAttributesScratch;
+            readOnlyAttributes = ['color'];
         }
 
         this._primitiveOptions = {
@@ -259,9 +259,7 @@ define([
             _createPickOffsets : true
         };
     }
-
-    var readOnlyInstanceAttributesScratch = ['color'];
-
+    
     defineProperties(GroundPrimitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.

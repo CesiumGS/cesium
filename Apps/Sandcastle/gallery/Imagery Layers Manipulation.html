@@ -68,6 +68,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
 });
 var imageryLayers = viewer.imageryLayers;
+var baseLayers = viewModel.baseLayers; //eslint-disable-line no-use-before-define
 
 var viewModel = {
     layers : [],
@@ -100,8 +101,6 @@ var viewModel = {
     }
 };
 Cesium.knockout.track(viewModel);
-
-var baseLayers = viewModel.baseLayers;
 
 function setupLayers() {
     // Create all the base layers that this example will support.

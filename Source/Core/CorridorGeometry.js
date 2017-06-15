@@ -597,7 +597,7 @@ define([
             length = topNormals.length;
 
             var extrudeNormals = new Float32Array(length * 6);
-            for (i = 0; i < length; i ++) {
+            for (var i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
             }
             //only get normals for bottom layer that's going to be pushed down
@@ -613,7 +613,6 @@ define([
             }
         }
 
-        var i;
         var iLength = indices.length;
         var twoSize = size + size;
         var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, iLength * 2 + twoSize * 3);
