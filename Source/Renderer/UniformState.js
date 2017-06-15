@@ -153,6 +153,7 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
+        this._brdfLUT = new Sampler();
         this._cubeMap = new Sampler();
 
         this._fogDensity = undefined;
@@ -800,6 +801,13 @@ define([
         },
 
         // TODO: Docs
+        brdfLUT : {
+            get : function() {
+                return this._brdfLUT;
+            }
+        },
+
+        // TODO: Docs
         cubeMap : {
             get : function() {
                 return this._cubeMap;
@@ -970,6 +978,8 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+
+        this._brdfLUT = frameState.brdfLUT;
 
         this._cubeMap = frameState.cubeMap;
 

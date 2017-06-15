@@ -1437,6 +1437,14 @@ define([
             }
         }),
 
+        czm_brdfLUT : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.brdfLUT;
+            }
+        }),
+
         // TODO: Docs
         czm_cubeMap : new AutomaticUniform({
             size : 1,

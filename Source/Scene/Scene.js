@@ -1272,6 +1272,7 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
+        frameState.brdfLUT = scene._brdfLUT._colorTexture;
         frameState.cubeMap = scene._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
@@ -2592,14 +2593,6 @@ define([
         }
 
         scene._brdfLUT.update(frameState);
-        var readState = {
-            x : 0,
-            y : 0,
-            width : 256,
-            height : 256,
-            framebuffer : scene._brdfLUT._framebuffer
-        };
-        var pixels = context.readPixels(readState);
         // this._brdfLUT._colorTexture
 
         scene._computeCommandList.length = 0;

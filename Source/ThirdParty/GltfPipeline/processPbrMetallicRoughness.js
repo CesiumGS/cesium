@@ -442,7 +442,12 @@ define([
 
         fragmentLightingBlock += '  vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor);\n';
         fragmentLightingBlock += '  vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
-        fragmentLightingBlock += '  vec3 color = M_PI * NdotL * lightColor * (diffuseContribution + specularContribution);\n';
+        fragmentLightingBlock += '  vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
+
+        fragmentLightingBlock += '  vec3 specularIrradiance = textureCube(czm_cubeMap, r).rgb;\n';
+        fragmentLightingBlock += '  vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(roughness, NdotV)).rg;\n';
+        fragmentLightingBlock += '  vec3 IBLColor = specularIrradiance * (specularColor * brdfLUT.x + brdfLUT.y);\n';
+        fragmentLightingBlock += '  color += IBLColor;\n';
 
         if (defined(parameterValues.occlusionTexture)) {
             fragmentLightingBlock += '  color *= texture2D(u_occlusionTexture, ' + v_texcoord + ').r;\n';
@@ -492,7 +497,7 @@ define([
         }
 
         var finalColorComputation;
-        finalColorComputation = '  gl_FragColor = vec4(textureCube(czm_cubeMap, r).rgb, 1.0);\n';
+        finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
 
         fragmentShaderMain += fragmentLightingBlock;
         fragmentShaderMain += finalColorComputation;

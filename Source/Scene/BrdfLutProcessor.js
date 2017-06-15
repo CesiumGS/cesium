@@ -40,23 +40,31 @@ define([
         var framebuffer = processor._framebuffer;
 
         var fragmentShader =
-            '#version 300 es\n' +
             'precision mediump float;\n' +
+            'varying vec2 v_textureCoordinates;\n' +
             'const float M_PI = 3.141592653589793;\n';
 
-        // Taken from Holger Dammertz's notes on Hammersley Points
-        var radicalInverse =
-            'float vdcRadicalInverse(uint bits) {\n' +
-            '  bits = (bits << 16u) | (bits >> 16u);\n' +
-            '  bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);\n' +
-            '  bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);\n' +
-            '  bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);\n' +
-            '  bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);\n' +
-            '  return float(bits) * 2.3283064365386963e-10;\n' +
+        var vdcRadicalInverse =
+            'float vdcRadicalInverse(int i) {\n' +
+            '  float r;' +
+            '  float base = 2.0;\n' +
+            '  float value = 0.0;\n' +
+            '  float invBase = 1.0 / base;\n' +
+            '  float invBi = invBase;\n' +
+            '  for (int x = 0; x < 100; x++) {\n' +
+            '    if (i <= 0) {\n' +
+            '      break;\n' +
+            '    }\n' +
+            '    r = mod(float(i), base);\n' +
+            '    value += r * invBi;\n' +
+            '    invBi *= invBase;\n' +
+            '    i = int(float(i) * invBase);\n' +
+            '  }\n' +
+            '  return value;\n' +
             '}\n';
 
         var hammersley =
-            'vec2 hammersley2D(uint i, uint N) {\n' +
+            'vec2 hammersley2D(int i, int N) {\n' +
             '  return vec2(float(i) / float(N), vdcRadicalInverse(i));\n' +
             '}\n';
 
@@ -65,8 +73,8 @@ define([
             'vec3 importanceSampleGGX(vec2 xi, float roughness, vec3 N) {\n' +
             '  float a = roughness * roughness;\n' +
             '  float phi = 2.0 * M_PI * xi.x;\n' +
-            '  cosTheta = sqrt((1.0 - xi.y) / (1.0 + (a * a - 1.0) * xi.y));\n' +
-            '  sinTheta = sqrt(1.0 - cosTheta * cosTheta);\n' +
+            '  float cosTheta = sqrt((1.0 - xi.y) / (1.0 + (a * a - 1.0) * xi.y));\n' +
+            '  float sinTheta = sqrt(1.0 - cosTheta * cosTheta);\n' +
             '  vec3 H = vec3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);\n' +
             '  vec3 upVector = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);\n' +
             '  vec3 tangentX = normalize(cross(upVector, N));\n' +
@@ -74,16 +82,15 @@ define([
             '  return tangentX * H.x + tangentY * H.y + N * H.z;\n' +
             '}\n';
 
-        var GGX =
-            'float GGX(float NdotV, float a) {\n' +
-            '  float k = a / 2.0;\n' +
+        var G1_Smith =
+            'float G1_Smith(float NdotV, float k) {\n' +
             '  return NdotV / (NdotV * (1.0 - k) + k);\n' +
             '}\n';
 
         var G_Smith =
             'float G_Smith(float roughness, float NdotV, float NdotL) {\n' +
-            '  float a = roughness * roughness;\n' +
-            '  return GGX(NdotL, a) * GGX(NdotV, a);\n' +
+            '  float k = roughness * roughness / 2.0;\n' +
+            '  return G1_Smith(NdotV, k) * G1_Smith(NdotL, k);\n' +
             '}\n';
 
         var integrateBRDF =
@@ -91,8 +98,8 @@ define([
             '  vec3 V = vec3(sqrt(1.0 - NdotV * NdotV), 0.0, NdotV);\n' +
             '  float A = 0.0;\n' +
             '  float B = 0.0;\n' +
-            '  const uint NumSamples = 1024;\n' +
-            '  for (uint i = 0; i < NumSamples; i++) {\n' +
+            '  const int NumSamples = 1024;\n' +
+            '  for (int i = 0; i < NumSamples; i++) {\n' +
             '    vec2 xi = hammersley2D(i, NumSamples);\n' +
             '    vec3 H = importanceSampleGGX(xi, roughness, vec3(0.0, 0.0, 1.0));\n' +
             '    vec3 L = 2.0 * dot(V, H) * H - V;\n' +
@@ -107,15 +114,15 @@ define([
             '      B += Fc * G_Vis;\n' +
             '    }\n' +
             '  }\n' +
-            '  return vec2(A, B) / NumSamples;\n' +
+            '  return vec2(A, B) / float(NumSamples);\n' +
             '}\n';
 
         var fragmentShaderMain =
             'void main() {\n' +
-            '  gl_FragColor = vec4(integrateBRDF(gl_FragCoord.x, gl_FragCoord.y), 0.0, 1.0);\n' +
+            '  gl_FragColor = vec4(integrateBRDF(1.0 - v_textureCoordinates.y, v_textureCoordinates.x), 0.0, 1.0);\n' +
             '}\n';
 
-        fragmentShader += radicalInverse + hammersley + importanceSampleGGX + GGX + G_Smith + integrateBRDF + fragmentShaderMain;
+        fragmentShader += vdcRadicalInverse + hammersley + importanceSampleGGX + G1_Smith + G_Smith + integrateBRDF + fragmentShaderMain;
 
         var drawCommand = context.createViewportQuadCommand(fragmentShader, {
             framebuffer : framebuffer,
