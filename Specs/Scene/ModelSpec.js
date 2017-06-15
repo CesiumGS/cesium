@@ -1929,7 +1929,7 @@ defineSuite([
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(scene).toRenderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 expect(rgba).not.toEqual(oldPixelColor);
                 oldPixelColor = rgba;
