@@ -39,6 +39,7 @@ define([
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
+        this._postProcess = defaultValue(options.postProcess, false);
 
         this.dirty = true;
         this.lastDirtyTime = 0;
@@ -294,6 +295,25 @@ define([
         },
 
         /**
+         * Whether this command should receive shadows when shadowing is enabled.
+         *
+         * @memberof DrawCommand.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        postProcess : {
+            get : function() {
+                return this._postProcess;
+            },
+            set : function(value) {
+                if (this._postProcess !== value) {
+                    this._postProcess = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
          * An object with functions whose names match the uniforms in the shader program
          * and return values to set those uniforms.
          *
@@ -486,6 +506,7 @@ define([
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
         result._castShadows = command._castShadows;
         result._receiveShadows = command._receiveShadows;
+        result._postProcess = command._postProcess;
 
         result.dirty = true;
         result.lastDirtyTime = 0;

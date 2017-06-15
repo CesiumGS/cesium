@@ -9,7 +9,11 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
+        '../Renderer/TextureWrap',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
         '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         BoundingRectangle,
@@ -21,7 +25,11 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
+        Sampler,
         Texture,
+        TextureWrap,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         PassThrough) {
     'use strict';
 
@@ -94,7 +102,13 @@ define([
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
         });
 
         globeDepth._depthStencilTexture = new Texture({

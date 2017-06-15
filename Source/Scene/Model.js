@@ -67,6 +67,8 @@ define([
         './modelMaterialsCommon',
         './ModelMesh',
         './ModelNode',
+        './PostProcess',
+        './PostProcessStage',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -137,6 +139,8 @@ define([
         modelMaterialsCommon,
         ModelMesh,
         ModelNode,
+        PostProcess,
+        PostProcessStage,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -701,6 +705,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._postProcess = options.postProcess;
     }
 
     defineProperties(Model.prototype, {
@@ -3484,7 +3490,8 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+                    postProcess : model._postProcess
                 });
 
                 var pickCommand;
