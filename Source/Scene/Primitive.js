@@ -993,16 +993,15 @@ define([
 
     function depthClampVS(vertexShaderSource) {
         var modifiedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_depth_clamp_main');
+        // The varying should be surround by #ifdef GL_EXT_frag_depth as an optimization.
+        // It is not to workaround an issue with Edge:
+        //     https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/12120362/
         modifiedVS +=
-            '#ifdef GL_EXT_frag_depth\n' +
             'varying float v_WindowZ;\n' +
-            '#endif\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
             '    vec4 position = gl_Position;\n' +
-            '#ifdef GL_EXT_frag_depth\n' +
             '    v_WindowZ = (0.5 * (position.z / position.w) + 0.5) * position.w;\n' +
-            '#endif\n' +
             '    position.z = min(position.z, position.w);\n' +
             '    gl_Position = position;' +
             '}\n';
@@ -1012,9 +1011,7 @@ define([
     function depthClampFS(fragmentShaderSource) {
         var modifiedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_depth_clamp_main');
         modifiedFS +=
-            '#ifdef GL_EXT_frag_depth\n' +
             'varying float v_WindowZ;\n' +
-            '#endif\n' +
             'void main() {\n' +
             '    czm_non_depth_clamp_main();\n' +
             '#ifdef GL_EXT_frag_depth\n' +
@@ -1369,18 +1366,21 @@ define([
             primitive._backFaceRS = primitive._frontFaceRS;
         }
 
+        rs = clone(renderState, false);
+        if (defined(primitive._depthFailAppearance)) {
+            rs.depthTest.enabled = false;
+        }
+
         if (primitive.allowPicking) {
             if (twoPasses) {
-                rs = clone(renderState, false);
                 rs.cull = {
                     enabled : false
                 };
                 primitive._pickRS = RenderState.fromCache(rs);
             } else {
-                primitive._pickRS = primitive._frontFaceRS;
+                primitive._pickRS = RenderState.fromCache(rs);
             }
         } else {
-            rs = clone(renderState, false);
             rs.colorMask = {
                 red : false,
                 green : false,
@@ -1545,40 +1545,6 @@ define([
         for (var i = 0; i < length; ++i) {
             var colorCommand;
 
-            if (defined(primitive._depthFailAppearance)) {
-                if (twoPasses) {
-                    colorCommand = colorCommands[i];
-                    if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand({
-                            owner : primitive,
-                            primitiveType : primitive._primitiveType
-                        });
-                    }
-                    colorCommand.vertexArray = primitive._va[vaIndex];
-                    colorCommand.renderState = primitive._backFaceDepthFailRS;
-                    colorCommand.shaderProgram = primitive._spDepthFail;
-                    colorCommand.uniformMap = depthFailUniforms;
-                    colorCommand.pass = pass;
-
-                    ++i;
-                }
-
-                colorCommand = colorCommands[i];
-                if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand({
-                        owner : primitive,
-                        primitiveType : primitive._primitiveType
-                    });
-                }
-                colorCommand.vertexArray = primitive._va[vaIndex];
-                colorCommand.renderState = primitive._frontFaceDepthFailRS;
-                colorCommand.shaderProgram = primitive._spDepthFail;
-                colorCommand.uniformMap = depthFailUniforms;
-                colorCommand.pass = pass;
-
-                ++i;
-            }
-
             if (twoPasses) {
                 colorCommand = colorCommands[i];
                 if (!defined(colorCommand)) {
@@ -1608,6 +1574,40 @@ define([
             colorCommand.shaderProgram = primitive._sp;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
+
+            if (defined(primitive._depthFailAppearance)) {
+                if (twoPasses) {
+                    ++i;
+
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : primitive,
+                            primitiveType : primitive._primitiveType
+                        });
+                    }
+                    colorCommand.vertexArray = primitive._va[vaIndex];
+                    colorCommand.renderState = primitive._backFaceDepthFailRS;
+                    colorCommand.shaderProgram = primitive._spDepthFail;
+                    colorCommand.uniformMap = depthFailUniforms;
+                    colorCommand.pass = pass;
+                }
+
+                ++i;
+
+                colorCommand = colorCommands[i];
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : primitive,
+                        primitiveType : primitive._primitiveType
+                    });
+                }
+                colorCommand.vertexArray = primitive._va[vaIndex];
+                colorCommand.renderState = primitive._frontFaceDepthFailRS;
+                colorCommand.shaderProgram = primitive._spDepthFail;
+                colorCommand.uniformMap = depthFailUniforms;
+                colorCommand.pass = pass;
+            }
 
             var pickCommand = pickCommands[m];
             if (!defined(pickCommand)) {

@@ -1,10 +1,14 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadJsonp',
-        'Core/DefaultProxy'
+        'Core/DefaultProxy',
+        'Core/Request',
+        'Core/RequestScheduler'
     ], function(
         loadJsonp,
-        DefaultProxy) {
+        DefaultProxy,
+        Request,
+        RequestScheduler) {
     'use strict';
 
     it('throws with no url', function() {
@@ -65,5 +69,20 @@ defineSuite([
             expect(url).toStartWith(options.proxy.getURL(testUrl));
         });
         loadJsonp(testUrl, options);
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadJsonp(testUrl, undefined, request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 });

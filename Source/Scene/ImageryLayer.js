@@ -12,6 +12,9 @@ define([
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/Rectangle',
+        '../Core/Request',
+        '../Core/RequestState',
+        '../Core/RequestType',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
@@ -49,6 +52,9 @@ define([
         CesiumMath,
         PixelFormat,
         Rectangle,
+        Request,
+        RequestState,
+        RequestType,
         TerrainProvider,
         TileProviderError,
         WebMercatorProjection,
@@ -656,8 +662,9 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
+     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery) {
+    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -669,14 +676,23 @@ define([
 
             imagery.image = image;
             imagery.state = ImageryState.RECEIVED;
+            imagery.request = undefined;
 
             TileProviderError.handleSuccess(that._requestImageError);
         }
 
         function failure(e) {
+            if (imagery.request.state === RequestState.CANCELLED) {
+                // Cancelled due to low priority - try again later.
+                imagery.state = ImageryState.UNLOADED;
+                imagery.request = undefined;
+                return;
+            }
+
             // Initially assume failure.  handleError may retry, in which case the state will
             // change to TRANSITIONING.
             imagery.state = ImageryState.FAILED;
+            imagery.request = undefined;
 
             var message = 'Failed to obtain image tile X: ' + imagery.x + ' Y: ' + imagery.y + ' Level: ' + imagery.level + '.';
             that._requestImageError = TileProviderError.handleError(
@@ -690,12 +706,20 @@ define([
         }
 
         function doRequest() {
+            var request = new Request({
+                throttle : true,
+                throttleByServer : true,
+                type : RequestType.IMAGERY,
+                priorityFunction : priorityFunction
+            });
+            imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;
-            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
+            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level, request);
 
             if (!defined(imagePromise)) {
                 // Too many parallel requests, so postpone loading tile.
                 imagery.state = ImageryState.UNLOADED;
+                imagery.request = undefined;
                 return;
             }
 

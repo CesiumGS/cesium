@@ -13,6 +13,22 @@ defineSuite([
         createPackableSpecs) {
     'use strict';
 
+    it('constructor rounds floating-point slicePartitions', function() {
+        var m = new EllipsoidGeometry({
+            slicePartitions: 3.5,
+            stackPartitions: 3
+        });
+        expect(m._slicePartitions).toEqual(4);
+    });
+
+    it('constructor rounds floating-point stackPartitions', function() {
+        var m = new EllipsoidGeometry({
+            slicePartitions: 3,
+            stackPartitions: 3.5
+        });
+        expect(m._stackPartitions).toEqual(4);
+    });
+
     it('constructor throws with invalid slicePartitions', function() {
         expect(function() {
             return new EllipsoidGeometry({

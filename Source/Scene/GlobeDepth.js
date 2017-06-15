@@ -43,6 +43,9 @@ define([
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
 
+        this._useScissorTest = false;
+        this._scissorRectangle = undefined;
+
         this._debugGlobeDepthViewportCommand = undefined;
     }
 
@@ -111,7 +114,7 @@ define([
         });
     }
 
-    function createFramebuffers(globeDepth, context, width, height) {
+    function createFramebuffers(globeDepth, context) {
         globeDepth.framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._colorTexture],
@@ -133,17 +136,30 @@ define([
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
             createTextures(globeDepth, context, width, height);
-            createFramebuffers(globeDepth, context, width, height);
+            createFramebuffers(globeDepth, context);
         }
     }
 
-    function updateCopyCommands(globeDepth, context, width, height) {
+    function updateCopyCommands(globeDepth, context, width, height, passState) {
         globeDepth._viewport.width = width;
         globeDepth._viewport.height = height;
 
-        if (!defined(globeDepth._rs) || !BoundingRectangle.equals(globeDepth._viewport, globeDepth._rs.viewport)) {
+        var useScissorTest = !BoundingRectangle.equals(globeDepth._viewport, passState.viewport);
+        var updateScissor = useScissorTest !== globeDepth._useScissorTest;
+        globeDepth._useScissorTest = useScissorTest;
+
+        if (!BoundingRectangle.equals(globeDepth._scissorRectangle, passState.viewport)) {
+            globeDepth._scissorRectangle = BoundingRectangle.clone(passState.viewport, globeDepth._scissorRectangle);
+            updateScissor = true;
+        }
+
+        if (!defined(globeDepth._rs) || !BoundingRectangle.equals(globeDepth._viewport, globeDepth._rs.viewport) || updateScissor) {
             globeDepth._rs = RenderState.fromCache({
-                viewport : globeDepth._viewport
+                viewport : globeDepth._viewport,
+                scissorTest : {
+                    enabled : globeDepth._useScissorTest,
+                    rectangle : globeDepth._scissorRectangle
+                }
             });
         }
 
@@ -196,12 +212,12 @@ define([
         executeDebugGlobeDepth(this, context, passState);
     };
 
-    GlobeDepth.prototype.update = function(context) {
+    GlobeDepth.prototype.update = function(context, passState) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
         updateFramebuffers(this, context, width, height);
-        updateCopyCommands(this, context, width, height);
+        updateCopyCommands(this, context, width, height, passState);
         context.uniformState.globeDepthTexture = undefined;
     };
 

@@ -1,21 +1,29 @@
 /*global define*/
 define([
         '../ThirdParty/when',
+        './Check',
         './defaultValue',
         './defined',
+        './deprecationWarning',
         './DeveloperError',
         './isCrossOriginUrl',
+        './isDataUri',
+        './Request',
+        './RequestScheduler',
         './TrustedServers'
     ], function(
         when,
+        Check,
         defaultValue,
         defined,
+        deprecationWarning,
         DeveloperError,
         isCrossOriginUrl,
+        isDataUri,
+        Request,
+        RequestScheduler,
         TrustedServers) {
     'use strict';
-
-    var dataUriRegex = /^data:/;
 
     /**
      * Asynchronously loads the given image URL.  Returns a promise that will resolve to
@@ -23,11 +31,12 @@ define([
      *
      * @exports loadImage
      *
-     * @param {String|Promise.<String>} url The source of the image, or a promise for the URL.
+     * @param {String} url The source URL of the image.
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
-     * @returns {Promise.<Image>} a promise that will resolve to the requested data when loaded.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -42,24 +51,37 @@ define([
      * when.all([loadImage('image1.png'), loadImage('image2.png')]).then(function(images) {
      *     // images is an array containing all the loaded images
      * });
-     * 
+     *
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImage(url, allowCrossOrigin) {
+    function loadImage(url, allowCrossOrigin, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
+        Check.defined('url', url);
         //>>includeEnd('debug');
 
         allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
-        return when(url, function(url) {
+        if (typeof url !== 'string') {
+            // Returning a promise here is okay because it is unlikely that anyone using the deprecated functionality is also
+            // providing a Request object marked as throttled.
+            deprecationWarning('url promise', 'url as a Promise is deprecated and will be removed in 1.37');
+            return url.then(function(url) {
+                return makeRequest(url, allowCrossOrigin, request);
+            });
+        }
+
+        return makeRequest(url, allowCrossOrigin, request);
+    }
+
+    function makeRequest(url, allowCrossOrigin, request) {
+        request = defined(request) ? request : new Request();
+        request.url = url;
+        request.requestFunction = function() {
             var crossOrigin;
 
             // data URIs can't have allowCrossOrigin set.
-            if (dataUriRegex.test(url) || !allowCrossOrigin) {
+            if (isDataUri(url) || !allowCrossOrigin) {
                 crossOrigin = false;
             } else {
                 crossOrigin = isCrossOriginUrl(url);
@@ -70,7 +92,9 @@ define([
             loadImage.createImage(url, crossOrigin, deferred);
 
             return deferred.promise;
-        });
+        };
+
+        return RequestScheduler.request(request);
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.

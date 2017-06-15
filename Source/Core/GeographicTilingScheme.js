@@ -104,7 +104,7 @@ define([
     };
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      *
      * @param {Rectangle} rectangle The rectangle to transform.
@@ -137,7 +137,7 @@ define([
     };
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      *
      * @param {Number} x The integer x coordinate of the tile.
