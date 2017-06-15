@@ -68,7 +68,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('context', context);
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return options.context.shaderCache.getShaderProgram(options);
@@ -78,7 +78,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('context', context);
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return options.context.shaderCache.replaceShaderProgram(options);
