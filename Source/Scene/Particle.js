@@ -24,11 +24,11 @@ define([
         this.age = 0.0;
         this.normalizedAge = 0.0;
 
-        this.startColor = defaultValue(options.startColor, Color.WHITE);
-        this.endColor = defaultValue(options.endColor, Color.WHITE);
+        this.startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
+        this.endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
 
-        this.startScale = defaultValue(options.startScale);
-        this.endScale = defaultValue(options.endScale);
+        this.startScale = defaultValue(options.startScale, 1.0);
+        this.endScale = defaultValue(options.endScale, 1.0);
 
         var size = Cartesian2.clone(options.size);
         if (!defined(size)) {
@@ -41,13 +41,12 @@ define([
     var deltaScratch = new Cartesian3();
 
     Particle.prototype.update = function(forces, dt) {
-
         // Apply the velocity
         Cartesian3.multiplyByScalar(this.velocity, dt, deltaScratch);
         Cartesian3.add(this.position, deltaScratch, this.position);
 
         // Update any forces.
-        if (forces) {
+        if (defined(forces)) {
             var length = forces.length;
             for (var i = 0; i < length; ++i) {
                 var force = forces[i];
