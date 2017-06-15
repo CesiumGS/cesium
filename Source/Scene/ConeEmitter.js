@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Math',
         './Particle'
     ], function(
         defaultValue,
+        defineProperties,
         Cartesian3,
         CesiumMath,
         Particle) {
@@ -20,19 +22,37 @@ define([
      * @param {Number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
      */
     function ConeEmitter(height, angle) {
-        /**
-         * The height of the cone in meters.
-         * @type {Number}
-         * @default 1.0
-         */
-        this.height = defaultValue(height, 5.0);
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThan('height', height, 0.0);
+        //>>includeEnd('debug');
         /**
          * The angle of the cone in radians.
          * @type {Number}
          * @default Cesium.Math.toRadians(30.0)
          */
         this.angle = defaultValue(angle, CesiumMath.toRadians(30.0));
+        this._height = defaultValue(height, 5.0);
     }
+
+    defineProperties(ConeEmitter.prototype, {
+        /**
+         * The height of the cone in meters.
+         * @memberof ConeEmitter.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        height : {
+            get : function() {
+                return this._height;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThan('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._height = value;
+            }
+        }
+    });
 
     /**
      * Initializes the given {Particle} by setting it's position and velocity.
@@ -41,7 +61,7 @@ define([
      * @param {Particle} particle The particle to initialize
      */
     ConeEmitter.prototype.emit = function(particle) {
-        var height = this.height;
+        var height = this._height;
         var radius = height * Math.tan(this.angle);
 
         // Compute a random point on the cone's base

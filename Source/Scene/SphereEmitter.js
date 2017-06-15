@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Math',
         './Particle'
     ], function(
         defaultValue,
+        defineProperties,
         Cartesian3,
         CesiumMath,
         Particle) {
@@ -19,13 +21,31 @@ define([
      * @param {Number} [radius=1.0] The radius of the sphere in meters.
      */
     function SphereEmitter(radius) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number.greaterThan('radius', radius, 0.0);
+        //>>includeEnd('debug');
+        this._radius = defaultValue(radius, 1.0);
+    }
+
+    defineProperties(SphereEmitter.prototype, {
         /**
          * The radius of the sphere in meters.
+         * @memberof SphereEmitter.prototype
          * @type {Number}
          * @default 1.0
          */
-        this.radius = defaultValue(radius, 1.0);
-    }
+        radius : {
+            get : function() {
+                return this._radius;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThan('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._radius = value;
+            }
+        }
+    });
 
     /**
      * Initializes the given {Particle} by setting it's position and velocity.
@@ -36,7 +56,7 @@ define([
     SphereEmitter.prototype.emit = function(particle) {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
         var phi = CesiumMath.randomBetween(0.0, CesiumMath.PI);
-        var rad = CesiumMath.randomBetween(0.0, this.radius);
+        var rad = CesiumMath.randomBetween(0.0, this._radius);
 
         var x = rad * Math.cos(theta) * Math.sin(phi);
         var y = rad * Math.sin(theta) * Math.sin(phi);

@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Math',
         './Particle'
     ], function(
         defaultValue,
+        defineProperties,
         Cartesian3,
         CesiumMath,
         Particle) {
@@ -21,13 +23,39 @@ define([
      * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
      */
     function BoxEmitter(dimensions) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('dimensions', dimensions);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.x', dimensions.x, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.y', dimensions.y, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('dimensions.z', dimensions.z, 0.0);
+        //>>includeEnd('debug');
+
+        this._dimensions = Cartesian3.clone(defaultValue(dimensions, defaultDimensions));
+    }
+
+    defineProperties(BoxEmitter.prototype, {
         /**
          * The width, height and depth dimensions of the box in meters.
+         * @memberof BoxEmitter.prototype
          * @type {Cartesian3}
          * @default new Cartesian3(1.0, 1.0, 1.0)
          */
-        this.dimensions = defaultValue(dimensions, defaultDimensions);
-    }
+        dimensions : {
+            get : function() {
+                return this._dimansions;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.defined('value', value);
+                Check.typeOf.number.greaterThanOrEquals('value.x', value.x, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value.y', value.y, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value.z', value.z, 0.0);
+                //>>includeEnd('debug');
+                Cartesian3.clone(value, this._dimensions);
+            }
+        }
+
+    });
 
     var scratchHalfDim = new Cartesian3();
 
@@ -35,10 +63,10 @@ define([
      * Initializes the given {Particle} by setting it's position and velocity.
      *
      * @private
-     * @param {Particle} particle The particle to initialize
+     * @param {Particle} particle The particle to initialize.
      */
     BoxEmitter.prototype.emit = function(particle) {
-        var dim = this.dimensions;
+        var dim = this._dimensions;
         var halfDim = Cartesian3.multiplyByScalar(dim, 0.5, scratchHalfDim);
 
         var x = CesiumMath.randomBetween(-halfDim.x, halfDim.x);
