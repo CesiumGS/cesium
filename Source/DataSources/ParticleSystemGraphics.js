@@ -18,10 +18,36 @@ define([
     'use strict';
 
     /**
-     * @alias ParticleSystemGraphics
+     * A ParticleSystemGraphics manages the updating and display of a collection of particles.
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property that determines whether to display the particle system.
+     * @param {Property} [options.forces] A Property that is an array of force callbacks, {@link ParticleSystem~applyForce}.
+     * @param {Property} [options.emitter=new CircleEmitter(0.5)] A Property that is the particle emitter for this system.
+     * @param {Property} [options.modelMatrix=Matrix4.IDENTITY] A Property that is the 4x4 transformation matrix that transforms the particle system from model to world coordinates.
+     * @param {Property} [options.emitterModelMatrix=Matrix4.IDENTITY] A Property that is the 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
+     * @param {Property} [options.startColor=Color.WHITE] A Property that is the {@link Color} of a particle when it is born.
+     * @param {Property} [options.endColor=Color.WHITE] A Property that is the {@link Color} of a particle when it dies.
+     * @param {Property} [options.startScale=1.0] A Property that is the scale of the particle when it is born.
+     * @param {Property} [options.endScale=1.0] A Property that is the scale of the particle when it dies.
+     * @param {Property} [options.rate=5] A Property that is the number of particles to emit per second.
+     * @param {Property} [options.bursts] A Property that is an array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
+     * @param {Property} [options.loop=true] A Property that determines whether the particle system should loop it's bursts when it is complete.
+     * @param {Property} [options.minimumSpeed=1.0] A Property that sets the minimum speed in meters per second.
+     * @param {Property} [options.maximumSpeed=1.0] A Property that sets the maximum speed in meters per second.
+     * @param {Property} [options.minimumLife=5.0] A Property that sets the minimum life of particles in seconds.
+     * @param {Property} [options.maximumLife=5.0] A Property that sets the maximum life of particles in seconds.
+     * @param {Property} [options.minimumMass=1.0] A Property that sets the minimum mass of particles in kilograms.
+     * @param {Property} [options.maximumMass=1.0] A Property that sets the maximum mass of particles in kilograms.
+     * @param {Property} [options.image] A Property that is the URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
+     * @param {Property} [options.minimumWidth=1.0] A Property that sets the minimum width of particles in pixels.
+     * @param {Property} [options.maximumWidth=1.0] A Property that sets the maximum width of particles in pixels.
+     * @param {Property} [options.minimumHeight=1.0] A Propertyt that sets the minimum height of particles in pixels.
+     * @param {Property} [options.maximumHeight=1.0] A Property that sets the maximum height of particles in pixels.
+     * @param {Property} [options.lifeTime=Number.MAX_VALUE] A Property that sets how long the particle system will emit particles, in seconds.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
      */
     function ParticleSystemGraphics(options) {
         this._show = undefined;

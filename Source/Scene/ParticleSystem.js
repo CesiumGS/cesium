@@ -60,7 +60,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
      * @param {ParticleSystem~applyForce[]} [options.forces] An array of force callbacks.
-     * @param {ParticleEmitter} [options.emitter=new CircleEmitter({radius: 0.5})] The particle emitter for this system.
+     * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
      * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
