@@ -492,7 +492,7 @@ define([
         }
 
         var finalColorComputation;
-        finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
+        finalColorComputation = '  gl_FragColor = vec4(textureCube(czm_cubeMap, r).rgb, 1.0);\n';
 
         fragmentShaderMain += fragmentLightingBlock;
         fragmentShaderMain += finalColorComputation;

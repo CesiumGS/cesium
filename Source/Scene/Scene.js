@@ -46,6 +46,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        './BrdfLutProcessor',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -122,6 +123,7 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
+        BrdfLutProcessor,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -618,17 +620,19 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
+        this._brdfLUT = new BrdfLutProcessor();
+
         this._cubeMap = context.defaultCubeMap;
         var that = this;
         // buildModuleURL
-        var texturePath = buildModuleUrl('Assets/Textures/Yokohama/');
+        var texturePath = buildModuleUrl('Assets/Textures/GeneratedSkyBox/');
         var paths = {
-            positiveX : texturePath + 'PositiveX.jpg',
-            negativeX : texturePath + 'NegativeX.jpg',
-            positiveY : texturePath + 'PositiveY.jpg',
-            negativeY : texturePath + 'NegativeY.jpg',
-            positiveZ : texturePath + 'PositiveZ.jpg',
-            negativeZ : texturePath + 'NegativeZ.jpg'
+            positiveX : texturePath + 'PositiveX.png',
+            negativeX : texturePath + 'NegativeX.png',
+            positiveY : texturePath + 'NegativeY.png',
+            negativeY : texturePath + 'PositiveY.png',
+            positiveZ : texturePath + 'PositiveZ.png',
+            negativeZ : texturePath + 'NegativeZ.png'
         };
         loadCubeMap(context, paths).then(function(cubeMap) {
             that._cubeMap = cubeMap;
@@ -2586,6 +2590,17 @@ define([
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
             frameState.shadowMaps.push(shadowMap);
         }
+
+        scene._brdfLUT.update(frameState);
+        var readState = {
+            x : 0,
+            y : 0,
+            width : 256,
+            height : 256,
+            framebuffer : scene._brdfLUT._framebuffer
+        };
+        var pixels = context.readPixels(readState);
+        // this._brdfLUT._colorTexture
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;

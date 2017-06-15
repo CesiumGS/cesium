@@ -202,7 +202,7 @@ define([
         // #version must be first
         // defaults to #version 100 if not specified
         if (defined(version)) {
-            result = '#version ' + version;
+            result = '#version ' + version + '\n';
         }
 
         if (isFragmentShader) {
@@ -280,7 +280,7 @@ define([
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
     }
-    
+
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,
