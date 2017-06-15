@@ -3,12 +3,14 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/Math',
         './Particle'
     ], function(
         defaultValue,
         defineProperties,
         Cartesian3,
+        Check,
         CesiumMath,
         Particle) {
     "use strict";

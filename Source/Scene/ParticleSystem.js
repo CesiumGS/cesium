@@ -109,9 +109,7 @@ define([
 
         var emitter = options.emitter;
         if (!defined(emitter)) {
-            emitter = new CircleEmitter({
-                radius : 0.5
-            });
+            emitter = new CircleEmitter(0.5);
         }
         /**
          * The particle emitter for this system.

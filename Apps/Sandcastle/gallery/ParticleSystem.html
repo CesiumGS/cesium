@@ -264,9 +264,7 @@ var entity = viewer.entities.add({
 
         lifeTime : 16.0,
 
-        emitter : new Cesium.CircleEmitter({
-            radius : 0.5
-        }),
+        emitter : new Cesium.CircleEmitter(0.5),
 
         emitterModelMatrix : computeEmitterModelMatrix(),
 
