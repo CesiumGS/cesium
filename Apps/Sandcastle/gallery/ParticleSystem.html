@@ -188,6 +188,19 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
 var emitterModelMatrix = new Cesium.Matrix4();
+var translation = new Cesium.Cartesian3();
+var rotation = new Cesium.Quaternion();
+var hpr = new Cesium.HeadingPitchRoll();
+var trs = new Cesium.TranslationRotationScale();
+
+function computeEmitterModelMatrix() {
+    hpr = Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll, hpr);
+
+    trs.translation = Cesium.Cartesian3.fromElements(viewModel.transX, viewModel.transY, viewModel.transZ);
+    trs.rotations = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
+
+    return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix);
+}
 
 //Generate a random circular pattern with varying heights.
 function computeCirclularFlight(lon, lat, radius) {
@@ -255,13 +268,7 @@ var entity = viewer.entities.add({
             radius : 0.5
         }),
 
-        emitterModelMatrix : Cesium.Matrix4.fromTranslationRotationScale(
-            new Cesium.TranslationRotationScale(
-                new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
-                Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
-            ),
-            emitterModelMatrix
-        ),
+        emitterModelMatrix : computeEmitterModelMatrix(),
 
         forces : [applyGravity]
     },
@@ -287,13 +294,7 @@ function applyGravity(p, dt) {
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
     // Account for any changes to the emitter model matrix.
-    entity.particleSystem.emitterModelMatrix = Cesium.Matrix4.fromTranslationRotationScale(
-        new Cesium.TranslationRotationScale(
-            new Cesium.Cartesian3(viewModel.transX, viewModel.transY, viewModel.transZ),
-            Cesium.Quaternion.fromHeadingPitchRoll(Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll))
-        ),
-        emitterModelMatrix
-    );
+    entity.particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
 
     // Spin the emitter if enabled.
     if (viewModel.spin) {
@@ -384,33 +385,22 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 var options = [{
     text : 'Circle',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.CircleEmitter({
-            radius : 0.5
-        });
+        entity.particleSystem.emitter = new Cesium.CircleEmitter(0.5);
     }
 }, {
     text : 'Cone',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.ConeEmitter({
-            height : 10.0,
-            angle : Cesium.Math.toRadians(45.0)
-        });
+        entity.particleSystem.emitter = new Cesium.ConeEmitter(10.0, Cesium.Math.toRadians(45.0));
     }
 }, {
     text : 'Box',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.BoxEmitter({
-            width : 10.0,
-            height : 10.0,
-            depth : 10.0
-        });
+        entity.particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
     }
 }, {
     text : 'Sphere',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.SphereEmitter({
-            radius : 5.0
-        });
+        entity.particleSystem.emitter = new Cesium.SphereEmitter(5.0);
     }
 }];
 

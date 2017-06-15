@@ -14,27 +14,35 @@ define([
     /**
      * A ParticleEmitter that emits particles within a cone.
      * Particles will be positioned at the tip of the cone and have initial velocities going towards the base.
-     *
-     * @alias ConeEmitter
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.height=5.0] The height of the cone in meters.
-     * @param {Number} [options.angle=CesiumMath.toRadians(30.0)] The angle of the cone in radians.
+     * @param {Number} [height=5.0] The height of the cone in meters.
+     * @param {Number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
      */
-    function ConeEmitter(options) {
-        this.height = defaultValue(options.height, 5.0);
-        this.angle = defaultValue(options.angle, CesiumMath.toRadians(30.0));
+    function ConeEmitter(height, angle) {
+        /**
+         * The height of the cone in meters.
+         * @type {Number}
+         * @default 1.0
+         */
+        this.height = defaultValue(height, 5.0);
+        /**
+         * The angle of the cone in radians.
+         * @type {Number}
+         * @default Cesium.Math.toRadians(30.0)
+         */
+        this.angle = defaultValue(angle, CesiumMath.toRadians(30.0));
     }
 
     /**
      * Initializes the given {Particle} by setting it's position and velocity.
      *
      * @private
-     * @param {Particle} The particle to initialize
+     * @param {Particle} particle The particle to initialize
      */
     ConeEmitter.prototype.emit = function(particle) {
-        var radius = this.height * Math.tan(this.angle);
+        var height = this.height;
+        var radius = height * Math.tan(this.angle);
 
         // Compute a random point on the cone's base
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
@@ -42,19 +50,11 @@ define([
 
         var x = rad * Math.cos(theta);
         var y = rad * Math.sin(theta);
-        var z = this.height;
+        var z = height;
 
-        var circlePosition = new Cartesian3(x, y, z);
-
-        // Position the particle at the tip.
-        var position = new Cartesian3();
-
-        // Also set the velocity vector.
-        var velocity = new Cartesian3();
-        Cartesian3.normalize(circlePosition, velocity);
-
-        particle.position = position;
-        particle.velocity = velocity;
+        particle.velocity = Cartesian3.fromElements(x, y, z, particle.velocity);
+        Cartesian3.normalize(particle.velocity, particle.velocity);
+        particle.position = Cartesian3.clone(Cartesian3.ZERO, particle.position);
     };
 
     return ConeEmitter;

@@ -14,22 +14,24 @@ define([
     /**
      * A ParticleEmitter that emits particles within a sphere.
      * Particles will be positioned randomly within the sphere and have initial velocities emanating from the center of the sphere.
-     *
-     * @alias SphereEmitter
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.radius=1.0] The radius of the sphere in meters.
+     * @param {Number} [radius=1.0] The radius of the sphere in meters.
      */
-    function SphereEmitter(options) {
-        this.radius = defaultValue(options.radius, 1.0);
+    function SphereEmitter(radius) {
+        /**
+         * The radius of the sphere in meters.
+         * @type {Number}
+         * @default 1.0
+         */
+        this.radius = defaultValue(radius, 1.0);
     }
 
     /**
      * Initializes the given {Particle} by setting it's position and velocity.
      *
      * @private
-     * @param {Particle} The particle to initialize
+     * @param {Particle} particle The particle to initialize
      */
     SphereEmitter.prototype.emit = function(particle) {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
@@ -40,14 +42,8 @@ define([
         var y = rad * Math.sin(theta) * Math.sin(phi);
         var z = rad * Math.cos(phi);
 
-        var position = new Cartesian3(x, y, z);
-
-         // Modify the velocity to shoot out from the center
-        var velocity = new Cartesian3();
-        Cartesian3.normalize(position, velocity);
-
-        particle.position = position;
-        particle.velocity = velocity;
+        particle.position = Cartesian3.fromElements(x, y, z, particle.position);
+        particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
     };
 
     return SphereEmitter;

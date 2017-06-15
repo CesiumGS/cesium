@@ -11,46 +11,42 @@ define([
         Particle) {
     "use strict";
 
+    var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
+
     /**
      * A ParticleEmitter that emits particles within a box.
      * Particles will be positioned randomly within the box and have initial velocities emanating from the center of the box.
-     *
-     * @alias BoxEmitter
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.width=1.0] The width of the box in meters.
-     * @param {Number} [options.height=1.0] The height of the box in meters.
-     * @param {Number} [options.depth=1.0] The depth of the box in meters.
+     * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
      */
-    function BoxEmitter(options) {
-        this.width = defaultValue(options.width, 1.0);
-        this.height = defaultValue(options.height, 1.0);
-        this.depth = defaultValue(options.depth, 1.0);
-
-        this._halfWidth = this.width / 2.0;
-        this._halfHeight = this.height / 2.0;
-        this._halfDepth = this.depth / 2.0;
+    function BoxEmitter(dimensions) {
+        /**
+         * The width, height and depth dimensions of the box in meters.
+         * @type {Cartesian3}
+         * @default new Cartesian3(1.0, 1.0, 1.0)
+         */
+        this.dimensions = defaultValue(dimensions, defaultDimensions);
     }
+
+    var scratchHalfDim = new Cartesian3();
 
     /**
      * Initializes the given {Particle} by setting it's position and velocity.
      *
      * @private
-     * @param {Particle} The particle to initialize
+     * @param {Particle} particle The particle to initialize
      */
     BoxEmitter.prototype.emit = function(particle) {
-        var x = CesiumMath.randomBetween(-this._halfWidth, this._halfWidth);
-        var y = CesiumMath.randomBetween(-this._halfDepth, this._halfDepth);
-        var z = CesiumMath.randomBetween(-this._halfHeight, this._halfHeight);
-        var position = new Cartesian3(x, y, z);
+        var dim = this.dimensions;
+        var halfDim = Cartesian3.multiplyByScalar(dim, 0.5, scratchHalfDim);
 
-        // Modify the velocity to shoot out from the center
-        var velocity = new Cartesian3();
-        Cartesian3.normalize(position, velocity);
+        var x = CesiumMath.randomBetween(-halfDim.x, halfDim.x);
+        var y = CesiumMath.randomBetween(-halfDim.y, halfDim.y);
+        var z = CesiumMath.randomBetween(-halfDim.z, halfDim.z);
 
-        particle.position = position;
-        particle.velocity = velocity;
+        particle.position = Cartesian3.fromElements(x, y, z, particle.position);
+        particle.velocity = Cartesian3.normalize(particle.position, particle.velocity);
     };
 
     return BoxEmitter;

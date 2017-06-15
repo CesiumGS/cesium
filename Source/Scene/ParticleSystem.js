@@ -59,7 +59,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
-     * @param {Array} [options.forces] An array of force callbacks.
+     * @param {ParticleSystem~applyForce[]} [options.forces] An array of force callbacks.
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter({radius: 0.5})] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
@@ -68,7 +68,7 @@ define([
      * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
      * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
      * @param {Number} [options.rate=5] The number of particles to emit per second.
-     * @param {Array} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
+     * @param {ParticleBurst[]} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
      * @param {Boolean} [options.loop=true] Whether the particle system should loop it's bursts when it is complete.
      * @param {Number} [options.speed] Sets the minimum and maximum speed in meters per second
      * @param {Number} [options.minimumSpeed=1.0] Sets the minimum speed in meters per second.
@@ -102,7 +102,7 @@ define([
 
         /**
          * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
-         * @type {Array}
+         * @type {ParticleSystem~applyForce[]}
          * @default undefined
          */
         this.forces = options.forces;
@@ -151,7 +151,6 @@ define([
 
         /**
          * The scale of the particle when it is born.
-         * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
          * @type {Number}
          * @default 1.0
          */
@@ -165,14 +164,13 @@ define([
 
         /**
          * The number of particles to emit per second.
-         * @param {Array} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
          * @type {Number}
          * @default 5
          */
         this.rate = defaultValue(options.rate, 5);
         /**
          * An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
-         * @type {Array}
+         * @type {ParticleBurst[]}
          * @default undefined
          */
         this.bursts = options.bursts;
@@ -245,8 +243,6 @@ define([
 
         /**
          * Sets the minimum height of particles in pixels.
-         * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
-         * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
          * @type {Number}
          * @default 1.0
          */
@@ -302,7 +298,9 @@ define([
     });
 
     function removeBillboard(system, particle) {
-        particle._billboard.show = false;
+        if (defined(particle._billboard)) {
+            particle._billboard.show = false;
+        }
     }
 
     function updateBillboard(system, particle) {
@@ -520,6 +518,22 @@ define([
         this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
         return destroyObject(this);
     };
+
+    /**
+     * A function used to apply a force to the particle on each time step.
+     * @callback ParticleSystem~applyForce
+     *
+     * @param {Particle} particle The particle to apply the force to.
+     * @param {Number} dt The time since the last update.
+     *
+     * @example
+     * function applyGravity(particle, dt) {
+     *    var position = particle.position;
+     *    var gravityVector = Cesium.Cartesian3.normalize(position, new Cesium.Cartesian3());
+     *    Cesium.Cartesian3.multiplyByScalar(gravityVector, GRAVITATIONAL_CONSTANT * dt, gravityVector);
+     *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
+     * }
+     */
 
     return ParticleSystem;
 });

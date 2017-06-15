@@ -14,22 +14,24 @@ define([
     /**
      * A ParticleEmitter that emits particles from a circle.
      * Particles will be positioned within a circle and have initial velocities going along the z vector.
-     *
-     * @alias CircleEmitter
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.radius=1.0] The radius of the circle in meters.
+     * @param {Number} [radius=1.0] The radius of the circle in meters.
      */
-    function CircleEmitter(options) {
-        this.radius = defaultValue(options.radius, 1.0);
+    function CircleEmitter(radius) {
+        /**
+         * The radius of the circle in meters.
+         * @type {Number}
+         * @default 1.0
+         */
+        this.radius = defaultValue(radius, 1.0);
     }
 
     /**
-     * Initializes the given {Particle} by setting it's position and velocity.
+     * Initializes the given {@link Particle} by setting it's position and velocity.
      *
      * @private
-     * @param {Particle} The particle to initialize
+     * @param {Particle} particle The particle to initialize.
      */
     CircleEmitter.prototype.emit = function(particle) {
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
@@ -39,12 +41,8 @@ define([
         var y = rad * Math.sin(theta);
         var z = 0.0;
 
-        var position = new Cartesian3(x, y, z);
-
-        // Set the velocity to shoot up
-        var velocity = Cartesian3.clone(Cartesian3.UNIT_Z);
-        particle.position = position;
-        particle.velocity = velocity;
+        particle.position = Cartesian3.fromElements(x, y, z, particle.position);
+        particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z, particle.velocity);
     };
 
     return CircleEmitter;
