@@ -893,9 +893,9 @@ define([
         }
 
         Check.defined('drawCommand.vertexArray', va);
-        Check.typeOf.numgreaterThanOrEquals('drawCommand.offset', offset, 0);
-        Check.typeOf.numgreaterThanOrEquals('drawCommand.count', count, 0);
-        Check.typeOf.numgreaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
+        Check.typeOf.number.greaterThanOrEquals('drawCommand.offset', offset, 0);
+        Check.typeOf.number.greaterThanOrEquals('drawCommand.count', count, 0);
+        Check.typeOf.number.greaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
