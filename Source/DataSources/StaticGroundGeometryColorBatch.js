@@ -19,7 +19,7 @@ define([
         GroundPrimitive,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();

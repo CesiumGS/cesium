@@ -111,13 +111,13 @@ define([
                 }
 
                 if (defined(oldValue)) {
-                    oldValue.removeEventListener("seeked", this._seekFunction, false);
+                    oldValue.removeEventListener('seeked', this._seekFunction, false);
                 }
 
                 if (defined(value)) {
                     this._seeking = false;
                     this._seekFunction = createSeekFunction(this);
-                    value.addEventListener("seeked", this._seekFunction, false);
+                    value.addEventListener('seeked', this._seekFunction, false);
                 }
 
                 this._element = value;
