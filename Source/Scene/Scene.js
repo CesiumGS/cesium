@@ -2593,7 +2593,6 @@ define([
         }
 
         scene._brdfLUT.update(frameState);
-        // this._brdfLUT._colorTexture
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;

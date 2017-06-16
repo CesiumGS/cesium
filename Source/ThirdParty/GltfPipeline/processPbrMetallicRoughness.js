@@ -201,8 +201,10 @@ define([
                 for (var primitive in primitives) {
                     if (defined(primitive)) {
                         var attributes = primitives[primitive].attributes;
-                        if (defined(attributes)) {
-                            hasTangents = defined(attributes.TANGENT);
+                        for (var attribute in attributes) {
+                            if (attribute.indexOf('TANGENT') >= 0) {
+                                hasTangents = true;
+                            }
                         }
                     }
                 }
@@ -444,9 +446,10 @@ define([
         fragmentLightingBlock += '  vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
         fragmentLightingBlock += '  vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
+        fragmentLightingBlock += '  vec3 diffuseIrradiance = vec3(0.5);\n';
         fragmentLightingBlock += '  vec3 specularIrradiance = textureCube(czm_cubeMap, r).rgb;\n';
-        fragmentLightingBlock += '  vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(roughness, NdotV)).rg;\n';
-        fragmentLightingBlock += '  vec3 IBLColor = specularIrradiance * (specularColor * brdfLUT.x + brdfLUT.y);\n';
+        fragmentLightingBlock += '  vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(NdotV, 1.0 - roughness)).rg;\n';
+        fragmentLightingBlock += '  vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * (specularColor * brdfLUT.x + brdfLUT.y));\n';
         fragmentLightingBlock += '  color += IBLColor;\n';
 
         if (defined(parameterValues.occlusionTexture)) {
@@ -467,12 +470,6 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
-            if (parameterValues.doubleSided) {
-                fragmentShaderMain += '  if (!gl_FrontFacing)\n';
-                fragmentShaderMain += '  {\n';
-                fragmentShaderMain += '    ng = -ng;\n';
-                fragmentShaderMain += '  }\n';
-            }
             if (defined(parameterValues.normalTexture) && (hasTangents || frameState.context._standardDerivatives)) {
                 if (hasTangents) {
                     // Read tangents from varying
@@ -493,6 +490,12 @@ define([
                 fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
             } else {
                 fragmentShaderMain += '  vec3 n = ng;\n';
+            }
+            if (parameterValues.doubleSided) {
+                fragmentShaderMain += '  if (!gl_FrontFacing)\n';
+                fragmentShaderMain += '  {\n';
+                fragmentShaderMain += '    n = -n;\n';
+                fragmentShaderMain += '  }\n';
             }
         }
 
