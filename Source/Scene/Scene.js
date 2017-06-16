@@ -2468,7 +2468,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
+        if (environmentState.isSunVisible && scene.sunBloom && !useWebVR && !picking) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
