@@ -69,7 +69,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
-     * 
+     *
      * @see Scene#skyBox
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
@@ -128,6 +128,7 @@ define([
         }
 
         var context = frameState.context;
+        var that = this;
 
         if (this._sources !== this.sources) {
             this._sources = this.sources;
@@ -170,7 +171,6 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var that = this;
 
             command.uniformMap = {
                 u_cubeMap: function() {
@@ -239,7 +239,7 @@ define([
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
-     * 
+     *
      * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {

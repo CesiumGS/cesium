@@ -547,7 +547,8 @@ require({
         var headNodes = bucketDoc.head.childNodes;
         var node;
         var nodes = [];
-        for (var i = 0, len = headNodes.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = headNodes.length; i < len; ++i) {
             node = headNodes[i];
             // header is included in blank frame.
             if (node.tagName === 'SCRIPT' && node.src.indexOf('Sandcastle-header.js') < 0) {

@@ -147,7 +147,8 @@ define([
         var size = 0;
         var indicesSize = 0;
         var quadSize;
-        for (var quad = 0; quad < 4; ++quad) {
+        var quad;
+        for (quad = 0; quad < 4; ++quad) {
             var o = offset;
             quadSize = dv.getUint32(o, true);
             o += sizeOfUint32;
@@ -309,7 +310,7 @@ define([
             }
 
             var facesElementCount = numFaces * 3;
-            for (i = 0; i < facesElementCount; ++i, ++indicesOffset) {
+            for (var j = 0; j < facesElementCount; ++j, ++indicesOffset) {
                 indices[indicesOffset] = indicesMapping[dv.getUint16(offset, true)];
                 offset += sizeOfUint16;
             }
@@ -394,8 +395,8 @@ define([
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
-        for (var j = 0; j < size; ++j) {
-            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
+        for (var k = 0; k < size; ++k) {
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[k], uvs[k], heights[k], undefined, webMercatorTs[k]);
         }
 
         return {

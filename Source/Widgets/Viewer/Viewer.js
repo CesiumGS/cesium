@@ -607,8 +607,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Fullscreen
         var fullscreenButton;
         var fullscreenSubscription;
+        var fullscreenContainer;
         if (!defined(options.fullscreenButton) || options.fullscreenButton !== false) {
-            var fullscreenContainer = document.createElement('div');
+            fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, options.fullscreenElement);
