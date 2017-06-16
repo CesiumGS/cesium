@@ -597,7 +597,8 @@ define([
             length = topNormals.length;
 
             var extrudeNormals = new Float32Array(length * 6);
-            for (var i = 0; i < length; i ++) {
+            var i;
+            for (i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
             }
             //only get normals for bottom layer that's going to be pushed down

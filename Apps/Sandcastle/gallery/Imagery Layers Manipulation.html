@@ -68,7 +68,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
 });
 var imageryLayers = viewer.imageryLayers;
-var baseLayers = viewModel.baseLayers; //eslint-disable-line no-use-before-define
 
 var viewModel = {
     layers : [],
@@ -77,7 +76,7 @@ var viewModel = {
     downLayer : null,
     selectedLayer : null,
     isSelectableLayer : function(layer) {
-        return baseLayers.indexOf(layer) >= 0;
+        return this.baseLayers.indexOf(layer) >= 0;
     },
     raise : function(layer, index) {
         imageryLayers.raise(layer);
@@ -100,6 +99,8 @@ var viewModel = {
         return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
     }
 };
+var baseLayers = viewModel.baseLayers;
+
 Cesium.knockout.track(viewModel);
 
 function setupLayers() {
