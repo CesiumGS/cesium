@@ -155,11 +155,12 @@ gulp.task('cloc', ['build'], function() {
         child_process.exec(cmdLine, function(error, stdout, stderr) {
             if (error) {
                 console.log(stderr);
-                return reject(error);
+                reject(error);
+            } else {
+                console.log('Source:');
+                console.log(stdout);
+                resolve();
             }
-            console.log('Source:');
-            console.log(stdout);
-            resolve();
         });
     });
 
@@ -170,11 +171,12 @@ gulp.task('cloc', ['build'], function() {
             child_process.exec(cmdLine, function(error, stdout, stderr) {
                 if (error) {
                     console.log(stderr);
-                    return reject(error);
+                    reject(error);
+                } else {
+                    console.log('Specs:');
+                    console.log(stdout);
+                    resolve();
                 }
-                console.log('Specs:');
-                console.log(stdout);
-                resolve();
             });
         });
     });
@@ -226,10 +228,11 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
     child_process.exec(cmdLine, function(error, stdout, stderr) {
         if (error) {
             console.log(stderr);
-            return done(error);
+            done(error);
+        } else {
+            console.log(stdout);
+            done();
         }
-        console.log(stdout);
-        done();
     });
 });
 
@@ -466,7 +469,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         CacheControl : cacheControl
                     };
 
-                    return s3.putObjectAsync(params).then(function() {
+                    return s3.putObjectAsync(params).then(function() { //eslint-disable-line consistent-return
                         uploaded++;
                     })
                     .catch(function(error) {
@@ -491,7 +494,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
             if (objectToDelete.length > 0) {
                 console.log('Cleaning up old files...');
-                return s3.deleteObjectsAsync({
+                return s3.deleteObjectsAsync({ //eslint-disable-line consistent-return
                                                  Bucket : bucketName,
                                                  Delete : {
                                                      Objects : objectToDelete
@@ -553,7 +556,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
         Prefix : prefix,
         Marker : marker
     })
-    .then(function(data) {
+    .then(function(data) { //eslint-disable-line consistent-return
         var items = data.Contents;
         for (var i = 0; i < items.length; i++) {
             files.push(items[i].Key);
@@ -588,7 +591,7 @@ gulp.task('deploy-status', function() {
     var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
     var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
 
-    return Promise.join(
+    return Promise.join( //eslint-disable-line consistent-return
         setStatus(status, deployUrl, message, 'deployment'),
         setStatus(status, zipUrl, message, 'zip file'),
         setStatus(status, npmUrl, message, 'npm package')
@@ -602,7 +605,7 @@ function setStatus(state, targetUrl, description, context) {
     }
 
     var requestPost = Promise.promisify(request.post);
-    return requestPost({
+    return requestPost({ //eslint-disable-line consistent-return
          url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
          json: true,
          headers: {
@@ -822,7 +825,7 @@ gulp.task('sortRequires', function() {
                        ') {' +
                        result[6];
 
-            return fsWriteFile(file, contents);
+            return fsWriteFile(file, contents); //eslint-disable-line consistent-return
         });
     });
 });

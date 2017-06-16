@@ -682,5 +682,5 @@ define([
      * @returns {String} The new vertex shader source with the functions for retrieving batch table values injected.
      */
 
-    return BatchTable;
+    return BatchTable; //eslint-disable-line consistent-return
 });

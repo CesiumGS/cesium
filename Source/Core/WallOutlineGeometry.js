@@ -406,7 +406,7 @@ define([
         indices[edgeIndex++] = numVertices - 2;
         indices[edgeIndex++] = numVertices - 1;
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,

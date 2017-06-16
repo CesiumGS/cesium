@@ -895,7 +895,7 @@ define([
             delete attributes.position;
         }
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : geometry.indices,
             primitiveType : geometry.primitiveType,

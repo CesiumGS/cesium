@@ -554,7 +554,7 @@ define([
     var scratchGetAttributeCartesian3 = new Cartesian3();
     var scratchGetAttributeCartesian4 = new Cartesian4();
 
-    function getAttributeValue(value) {
+    function getAttributeValue(value) { //eslint-disable-line consistent-return
         var componentsPerAttribute = value.length;
         if (componentsPerAttribute === 1) {
             return value[0];

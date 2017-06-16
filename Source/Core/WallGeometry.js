@@ -560,7 +560,7 @@ define([
             indices[edgeIndex++] = LR;
         }
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,

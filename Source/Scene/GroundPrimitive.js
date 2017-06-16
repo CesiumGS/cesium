@@ -729,7 +729,7 @@ define([
         groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
-    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+    function modifyForEncodedNormals(primitive, vertexShaderSource) { //eslint-disable-line consistent-return
         if (!primitive.compressVertices) {
             return vertexShaderSource;
         }

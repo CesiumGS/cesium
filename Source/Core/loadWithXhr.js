@@ -223,7 +223,7 @@ define([
 
         xhr.send(data);
 
-        return xhr;
+        return xhr; //eslint-disable-line consistent-return
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;

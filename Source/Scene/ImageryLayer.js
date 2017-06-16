@@ -669,7 +669,7 @@ define([
 
         var that = this;
 
-        function success(image) {
+        function success(image) { //eslint-disable-line consistent-return
             if (!defined(image)) {
                 return failure();
             }

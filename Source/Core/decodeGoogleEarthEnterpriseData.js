@@ -20,7 +20,7 @@ define([
      *
      * @private
      */
-    function decodeGoogleEarthEnterpriseData(key, data) {
+    function decodeGoogleEarthEnterpriseData(key, data) { //eslint-disable-line consistent-return
         if (decodeGoogleEarthEnterpriseData.passThroughDataForTesting) {
             return data;
         }

@@ -158,7 +158,7 @@ define([
      * @param {TypedArray} array The typed array.
      * @returns {ComponentDatatype} The ComponentDatatype for the provided array, or undefined if the array is not a TypedArray.
      */
-    ComponentDatatype.fromTypedArray = function(array) {
+    ComponentDatatype.fromTypedArray = function(array) { //eslint-disable-line consistent-return
         if (array instanceof Int8Array) {
             return ComponentDatatype.BYTE;
         }

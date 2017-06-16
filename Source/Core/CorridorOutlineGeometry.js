@@ -495,7 +495,7 @@ define([
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.LINES,

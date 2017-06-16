@@ -80,7 +80,7 @@ define([
             return suggestionsNotEmpty && showSuggestions;
         });
 
-        this._searchCommand = createCommand(function() {
+        this._searchCommand = createCommand(function() { //eslint-disable-line consistent-return
             that.hideSuggestions();
             that._focusTextbox = false;
             if (defined(that._selectedSuggestion)) {

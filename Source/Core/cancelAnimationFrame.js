@@ -47,5 +47,5 @@ define([
         implementation(requestID);
     }
 
-    return cancelAnimationFrame;
+    return cancelAnimationFrame; //eslint-disable-line consistent-return
 });

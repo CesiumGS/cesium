@@ -9,7 +9,7 @@ define([
         WebGLConstants) {
     'use strict';
 
-    function webGLConstantToGlslType(webGLValue) {
+    function webGLConstantToGlslType(webGLValue) { //eslint-disable-line consistent-return
         switch(webGLValue) {
             case WebGLConstants.FLOAT:
                 return 'float';
@@ -611,7 +611,7 @@ define([
         return techniqueId;
     }
 
-    function getKHRMaterialsCommonValueType(paramName, paramValue)
+    function getKHRMaterialsCommonValueType(paramName, paramValue) //eslint-disable-line consistent-return
     {
         var value;
 

@@ -101,7 +101,7 @@ define([
         clock.shouldAnimate = false;
     }
 
-    function pickEntity(viewer, e) {
+    function pickEntity(viewer, e) { //eslint-disable-line consistent-return
         var picked = viewer.scene.pick(e.position);
         if (defined(picked)) {
             var id = defaultValue(picked.id, picked.primitive.id);
@@ -178,7 +178,7 @@ define([
             viewer.selectedEntity = createNoFeaturesEntity();
         });
 
-        return loadingMessage;
+        return loadingMessage; //eslint-disable-line consistent-return
     }
 
     function createNoFeaturesEntity() {

@@ -94,7 +94,7 @@ define([
         cleanedTopHeights.length = index;
         cleanedBottomHeights.length = index;
 
-        return {
+        return { //eslint-disable-line consistent-return
             positions: cleanedPositions,
             topHeights: cleanedTopHeights,
             bottomHeights: cleanedBottomHeights
@@ -190,7 +190,7 @@ define([
             bottomPositions = new Float64Array(PolylinePipeline.generateArc(generateArcOptions));
         }
 
-        return {
+        return { //eslint-disable-line consistent-return
             bottomPositions: bottomPositions,
             topPositions: topPositions,
             numCorners: numCorners

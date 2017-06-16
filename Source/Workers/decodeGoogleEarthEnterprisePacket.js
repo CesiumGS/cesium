@@ -24,7 +24,7 @@ define([
         DBROOT : 2
     };
 
-    Types.fromString = function(s) {
+    Types.fromString = function(s) { //eslint-disable-line consistent-return
         if (s === 'Metadata') {
             return Types.METADATA;
         } else if (s === 'Terrain') {
@@ -34,7 +34,7 @@ define([
         }
     };
 
-    function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
+    function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) { //eslint-disable-line consistent-return
         var type = Types.fromString(parameters.type);
         var buffer = parameters.buffer;
         decodeGoogleEarthEnterpriseData(parameters.key, buffer);

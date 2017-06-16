@@ -62,7 +62,7 @@ define([
      *   Cesium.requestAnimationFrame(tick);
      * }
      * tick();
-     * 
+     *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */
     function requestAnimationFrame(callback) {
@@ -79,5 +79,5 @@ define([
      * @param {Number} timestamp A timestamp for the frame, in milliseconds.
      */
 
-    return requestAnimationFrame;
+    return requestAnimationFrame; //eslint-disable-line consistent-return
 });

@@ -3994,7 +3994,7 @@ define([
         }
     }
 
-    function getProgramId(model, program) {
+    function getProgramId(model, program) { //eslint-disable-line consistent-return
         var programs = model._rendererResources.programs;
         for (var id in programs) {
             if (programs.hasOwnProperty(id)) {

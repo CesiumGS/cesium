@@ -1002,7 +1002,7 @@ define([
             attr.attributes.position.values = undefined;
         }
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,

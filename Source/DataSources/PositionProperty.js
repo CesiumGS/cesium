@@ -104,7 +104,7 @@ define([
     /**
      * @private
      */
-    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
+    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) { //eslint-disable-line consistent-return
         if (!defined(value)) {
             return value;
         }

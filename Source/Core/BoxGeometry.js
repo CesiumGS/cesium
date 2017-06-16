@@ -819,7 +819,7 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = Cartesian3.magnitude(diff) * 0.5;
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,

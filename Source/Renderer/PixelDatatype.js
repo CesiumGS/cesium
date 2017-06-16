@@ -27,7 +27,7 @@ define([
                    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5;
         },
 
-        sizeInBytes : function(pixelDatatype) {
+        sizeInBytes : function(pixelDatatype) { //eslint-disable-line consistent-return
             switch (pixelDatatype) {
                 case PixelDatatype.UNSIGNED_BYTE:
                     return 1;

@@ -203,6 +203,7 @@ define([
                 //i.e. foo.id won't match but http://foo.id will
                 return false;
             }
+            return true;
         }
     });
 
@@ -1418,7 +1419,7 @@ define([
         var extendedDataNode = queryFirstNode(node, 'ExtendedData', namespaces.kml);
 
         if (!defined(extendedDataNode)) {
-            return undefined;
+            return;
         }
 
         if (defined(queryFirstNode(extendedDataNode, 'SchemaData', namespaces.kml))) {
@@ -2176,7 +2177,7 @@ define([
                     reader.close();
                     if (!defined(uriResolver.kml)) {
                         deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
-                        return;
+                        return when.reject('KMZ file does not contain a KML document.');
                     }
                     uriResolver.keys = Object.keys(uriResolver);
                     return loadKml(dataSource, entityCollection, uriResolver.kml, sourceUri, uriResolver);

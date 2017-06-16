@@ -27,7 +27,7 @@ define([
     /**
      * @private
      */
-    ColorBlendMode.getColorBlend = function(colorBlendMode, colorBlendAmount) {
+    ColorBlendMode.getColorBlend = function(colorBlendMode, colorBlendAmount) { //eslint-disable-line consistent-return
         if (colorBlendMode === ColorBlendMode.HIGHLIGHT) {
             return 0.0;
         } else if (colorBlendMode === ColorBlendMode.REPLACE) {

@@ -1916,7 +1916,7 @@ define([
      *
      * @returns {Number} The magnitude of the position.
      */
-    Camera.prototype.getMagnitude = function() {
+    Camera.prototype.getMagnitude = function() { //eslint-disable-line consistent-return
         if (this._mode === SceneMode.SCENE3D) {
             return Cartesian3.magnitude(this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {

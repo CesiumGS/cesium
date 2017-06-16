@@ -45,7 +45,7 @@ define([
      *
      * @example
      * scene.moon = new Cesium.Moon();
-     * 
+     *
      * @see Scene#moon
      */
     function Moon(options) {
@@ -145,7 +145,7 @@ define([
         scratchCommandList.length = 0;
         ellipsoidPrimitive.update(frameState);
         frameState.commandList = savedCommandList;
-        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
+        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined; //eslint-disable-line consistent-return
     };
 
     /**
@@ -177,7 +177,7 @@ define([
      *
      * @example
      * moon = moon && moon.destroy();
-     * 
+     *
      * @see Moon#isDestroyed
      */
     Moon.prototype.destroy = function() {

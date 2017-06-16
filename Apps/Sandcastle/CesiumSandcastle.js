@@ -120,7 +120,7 @@ require({
 
     var URL = window.URL || window.webkitURL;
 
-    function findCssStyle(selectorText) {
+    function findCssStyle(selectorText) { //eslint-disable-line consistent-return
         for (var iSheets = 0, lenSheets = document.styleSheets.length; iSheets < lenSheets; ++iSheets) {
             var rules = document.styleSheets[iSheets].cssRules;
             for (var iRules = 0, lenRules = rules.length; iRules < lenRules; ++iRules) {
@@ -509,7 +509,7 @@ require({
         }
     });
 
-    window.onbeforeunload = function (e) {
+    window.onbeforeunload = function (e) { //eslint-disable-line consistent-return
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
         if (demoHtml !== htmlText || demoCode !== jsText) {
@@ -709,7 +709,7 @@ require({
             CodeMirror.commands.runCesium(jsEditor);
             return;
         }
-        return requestDemo(demo.name).then(function(value) {
+        return requestDemo(demo.name).then(function(value) { //eslint-disable-line consistent-return
             demo.code = value;
 
             var parser = new DOMParser();
@@ -922,7 +922,7 @@ require({
                 }
             }
         };
-        return Cesium.loadWithXhr({
+        return Cesium.loadWithXhr({ //eslint-disable-line consistent-return
             url : 'https://api.github.com/gists',
             data : JSON.stringify(data),
             method : 'POST'
@@ -1253,7 +1253,7 @@ require({
             promises.push(addFileToGallery(gallery_demos[i]));
         }
 
-        promise = all(promises).then(function(results) {
+        promise = all(promises).then(function(results) { //eslint-disable-line consistent-return
             var resultsLength = results.length;
             for (i = 0; i < resultsLength; ++i) {
                 if (results[i].name === queryName) {

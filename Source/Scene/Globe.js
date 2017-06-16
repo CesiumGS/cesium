@@ -405,7 +405,7 @@ define([
         }
 
         if (!defined(tile) || !Rectangle.contains(tile.rectangle, cartographic)) {
-            return undefined;
+            return; //eslint-disable-line consistent-return
         }
 
         while (tile.renderable) {
@@ -420,7 +420,7 @@ define([
         }
 
         if (!defined(tile)) {
-            return undefined;
+            return; //eslint-disable-line consistent-return
         }
 
         var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
@@ -448,10 +448,10 @@ define([
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
-            return undefined;
+            return; //eslint-disable-line consistent-return
         }
 
-        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
+        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height; //eslint-disable-line consistent-return
     };
 
     /**

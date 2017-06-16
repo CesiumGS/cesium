@@ -941,7 +941,7 @@ define([
             geometry = computeEllipse(options);
         }
 
-        return new Geometry({
+        return new Geometry({ //eslint-disable-line consistent-return
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.TRIANGLES,
