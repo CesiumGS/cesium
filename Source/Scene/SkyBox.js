@@ -69,7 +69,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
-     * 
+     *
      * @see Scene#skyBox
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
@@ -239,7 +239,7 @@ define([
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
-     * 
+     *
      * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {

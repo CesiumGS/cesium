@@ -100,7 +100,7 @@ define([
      *     globe : cesiumWidget.scene.globe,
      *     imageryProviderViewModels : imageryViewModels
      * });
-     * 
+     *
      * @see TerrainProvider
      * @see ImageryProvider
      * @see ImageryLayerCollection
