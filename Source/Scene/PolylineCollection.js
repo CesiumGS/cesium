@@ -758,14 +758,12 @@ define([
             } else {
                 bufferUsage.frameCount = 100;
             }
-        } else {
-            if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
-                if (bufferUsage.frameCount === 0) {
-                    usageChanged = true;
-                    bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
-                } else {
-                    bufferUsage.frameCount--;
-                }
+        } else if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
+            if (bufferUsage.frameCount === 0) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+            } else {
+                bufferUsage.frameCount--;
             }
         }
 

@@ -260,13 +260,11 @@ define([
                             }
                             positions.push(Cartesian3.clone(positions[0]));
                         }
-                    } else {
-                        if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
-                            if (positions.length - 1 === this._positions.length) {
-                                this._actualPositions = this._positions;
-                            } else {
-                                positions.pop();
-                            }
+                    } else if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                        if (positions.length - 1 === this._positions.length) {
+                            this._actualPositions = this._positions;
+                        } else {
+                            positions.pop();
                         }
                     }
 

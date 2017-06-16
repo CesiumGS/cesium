@@ -1184,25 +1184,23 @@ define([
             } else if (defined(polygon)) {
                 wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
-        } else {
-            if (dataSource._clampToGround && !canExtrude && tessellate) {
-                var corridor = new CorridorGraphics();
-                entity.corridor = corridor;
-                corridor.positions = coordinates;
-                if (defined(polyline)) {
-                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
-                    corridor.width = defaultValue(polyline.width, 1.0);
-                } else {
-                    corridor.material = Color.WHITE;
-                    corridor.width = 1.0;
-                }
+        } else if (dataSource._clampToGround && !canExtrude && tessellate) {
+            var corridor = new CorridorGraphics();
+            entity.corridor = corridor;
+            corridor.positions = coordinates;
+            if (defined(polyline)) {
+                corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                corridor.width = defaultValue(polyline.width, 1.0);
             } else {
-                polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-                entity.polyline = polyline;
-                polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-                if (!tessellate || canExtrude) {
-                    polyline.followSurface = false;
-                }
+                corridor.material = Color.WHITE;
+                corridor.width = 1.0;
+            }
+        } else {
+            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+            entity.polyline = polyline;
+            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+            if (!tessellate || canExtrude) {
+                polyline.followSurface = false;
             }
         }
 
@@ -2052,13 +2050,11 @@ define([
                             } else {
                                 console.log('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                             }
+                        } else if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
+                            networkLinkInfo.refreshMode = RefreshMode.STOP;
+                            networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
                         } else {
-                            if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
-                                networkLinkInfo.refreshMode = RefreshMode.STOP;
-                                networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
-                            } else {
-                                console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
-                            }
+                            console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
                         }
 
                         if (defined(networkLinkInfo.refreshMode)) {

@@ -1065,10 +1065,8 @@ define([
                 var instanceRectangle = getRectangle(frameState, geometry);
                 if (!defined(rectangle)) {
                     rectangle = instanceRectangle;
-                } else {
-                    if (defined(instanceRectangle)) {
-                        Rectangle.union(rectangle, instanceRectangle, rectangle);
-                    }
+                } else if (defined(instanceRectangle)) {
+                    Rectangle.union(rectangle, instanceRectangle, rectangle);
                 }
 
                 var id = instance.id;

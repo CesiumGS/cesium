@@ -496,13 +496,11 @@ define([
                 finalColorComputation = '  gl_FragColor = vec4(color * diffuse.a, diffuse.a);\n';
             }
         }
+        else if (defined(techniqueParameters.transparency)) {
+            finalColorComputation = '  gl_FragColor = vec4(color, u_transparency);\n';
+        }
         else {
-            if (defined(techniqueParameters.transparency)) {
-                finalColorComputation = '  gl_FragColor = vec4(color, u_transparency);\n';
-            }
-            else {
-                finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
-            }
+            finalColorComputation = '  gl_FragColor = vec4(color, 1.0);\n';
         }
 
         if (defined(techniqueParameters.emission)) {
