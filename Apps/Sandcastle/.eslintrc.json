@@ -8,6 +8,7 @@
         "Cesium": true
     },
     "rules": {
+        "no-implicit-globals": "off",
         "no-unused-vars": ["off"]
     }
 }
