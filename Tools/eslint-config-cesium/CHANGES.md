@@ -5,6 +5,7 @@ Change Log
 
 * Enable [no-floating-decimal](http://eslint.org/docs/rules/no-floating-decimal).
 * Enable [no-else-return](http://eslint.org/docs/rules/no-else-return)
+* Enable [no-use-before-define](http://eslint.org/docs/rules/no-use-before-define)
 
 ### 1.0.0 - 2017-06-12
 
