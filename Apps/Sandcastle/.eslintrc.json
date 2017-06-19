@@ -1,5 +1,5 @@
 {
-    "extends": "../../.eslintrc",
+    "extends": "../../.eslintrc.json",
     "globals": {
         "JSON": true,
         "require": true,
