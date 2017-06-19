@@ -2,10 +2,12 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/RuntimeError',
         '../Core/WebGLConstants'
     ], function(
         defaultValue,
         defined,
+        RuntimeError,
         WebGLConstants) {
     'use strict';
 
@@ -27,7 +29,10 @@ define([
                 return 'mat4';
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
-            // no default
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new RuntimeError('Unknown webGLValue: ' + webGLValue);
+            //>>includeEnd('debug');
         }
     }
 
@@ -145,7 +150,10 @@ define([
                                 value: [spot.fallOffAngle, spot.fallOffExponent]
                             };
                             break;
-                        // no default
+                        //>>includeStart('debug', pragmas.debug);
+                        default:
+                            throw new RuntimeError('Unknown lightType: ' + lightType);
+                        //>>includeEnd('debug');
                     }
                     ++lightCount;
                 }
@@ -659,7 +667,10 @@ define([
                 return WebGLConstants.BOOL;
             case 'doubleSided':
                 return WebGLConstants.BOOL;
-            // no default
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new RuntimeError('Unknown paramName: ' + paramName);
+            //>>includeEnd('debug');
         }
     }
 

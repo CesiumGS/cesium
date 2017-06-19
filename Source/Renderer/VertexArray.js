@@ -129,7 +129,10 @@ define([
                     gl.vertexAttrib4fv(this.index, this.value);
                 };
                 break;
-            // no default
+            default:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Unknown attr.componentsPerAttribute: ' + attr.componentsPerAttribute);
+                //>>includeEnd('debug');
             }
 
             attr.disableVertexAttribArray = function(gl) {

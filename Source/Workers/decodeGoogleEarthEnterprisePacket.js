@@ -53,7 +53,8 @@ define([
                 return {
                     buffer : buffer
                 };
-            // no default
+            default:
+                throw new RuntimeError('Unknown type: ' + type);
         }
 
     }

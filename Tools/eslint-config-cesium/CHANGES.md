@@ -8,6 +8,7 @@ Change Log
 * Enable [no-alert](http://eslint.org/docs/rules/no-alert).
 * Enable [no-loop-func](http://eslint.org/docs/rules/no-loop-func).
 * Enable [no-undef-init](http://eslint.org/docs/rules/no-undef-init).
+* Enable [default-case](http://eslint.org/docs/rules/default-case).
 
 ### 1.0.0 - 2017-06-12
 

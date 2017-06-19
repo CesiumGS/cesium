@@ -3284,7 +3284,10 @@ define([
                                 setUniforms[uniformVariableScale] = true;
                                 setUniforms[uniformVariableTranslate] = true;
                                 break;
-                            // no default
+                            default:
+                                //>>includeStart('debug', pragmas.debug);
+                                throw new RuntimeError('Unknown type: ' + a.type);
+                                //>>includeEnd('debug');
                         }
                     }
                 }

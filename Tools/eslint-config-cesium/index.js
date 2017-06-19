@@ -17,6 +17,7 @@ module.exports = {
     },
     rules: {
         curly: 'error',
+        'default-case': 'error',
         eqeqeq: 'error',
         'guard-for-in': 'error',
         'new-cap': ['error', {properties: false}],

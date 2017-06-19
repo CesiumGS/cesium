@@ -3,6 +3,7 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/DeveloperError',
         'Core/loadImage',
         'Core/loadJsonp',
         'Core/loadWithXhr',
@@ -19,6 +20,7 @@ defineSuite([
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
+        DeveloperError,
         loadImage,
         loadJsonp,
         loadWithXhr,
@@ -98,7 +100,10 @@ defineSuite([
         case BingMapsStyle.ROAD:
             stylePrefix = 'r';
             break;
-        // no default
+        default:
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Unknown mapStyle ' + mapStyle);
+            //>>includeEnd('debug');
         }
 
         return {

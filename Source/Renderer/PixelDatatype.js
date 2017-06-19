@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/freezeObject',
+        '../Core/DeveloperError',
         '../Core/WebGLConstants'
     ], function(
         freezeObject,
+        DeveloperError,
         WebGLConstants) {
     'use strict';
 
@@ -40,7 +42,10 @@ define([
                 case PixelDatatype.FLOAT:
                 case PixelDatatype.UNSIGNED_INT_24_8:
                     return 4;
-                // no default
+                default:
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError('Unknown pixelDatatype: ' + pixelDatatype);
+                    //>>includeEnd('debug');
             }
         },
 

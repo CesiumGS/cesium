@@ -430,7 +430,10 @@ define([
                     }
                 }
                 break;
-            // no default
+            default:
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Unknown terrainState: ' + terrainState);
+                //>>includeEnd('debug');
         }
 
         // We can't figure out where to get the terrain
