@@ -166,7 +166,8 @@ define([
         }
     }
 
-    function saveCamera(camera) {
+    var camera = viewer.camera;
+    function saveCamera() {
         var position = camera.positionCartographic;
         var hpr = '';
         if (defined(camera.heading)) {
@@ -178,10 +179,9 @@ define([
 
     var updateTimer;
     if (endUserOptions.saveCamera !== 'false') {
-        var camera = viewer.camera;
         camera.moveStart.addEventListener(function() {
             if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, camera, 1000);
+                updateTimer = window.setInterval(saveCamera, 1000);
             }
         });
         camera.moveEnd.addEventListener(function() {
@@ -189,7 +189,7 @@ define([
                 window.clearInterval(updateTimer);
                 updateTimer = undefined;
             }
-            saveCamera(camera);
+            saveCamera();
         });
     }
 

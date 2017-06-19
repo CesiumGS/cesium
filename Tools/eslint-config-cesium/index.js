@@ -35,6 +35,7 @@ module.exports = {
         'no-undef-init': 'error',
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
         'no-useless-escape': 'off',
+        'no-use-before-define': ['error', 'nofunc'],
         semi: 'error',
         strict: 'error',
         'wrap-iife': ['error', 'any']

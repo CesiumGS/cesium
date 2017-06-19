@@ -591,13 +591,13 @@ define([
         attributes.position.values = newPositions;
 
         attributes = extrudedAttributes(attributes, vertexFormat);
+        var i;
         var size = length / 3;
         if (params.shadowVolume) {
             var topNormals = attributes.normal.values;
             length = topNormals.length;
 
             var extrudeNormals = new Float32Array(length * 6);
-            var i;
             for (i = 0; i < length; i ++) {
                 topNormals[i] = -topNormals[i];
             }
