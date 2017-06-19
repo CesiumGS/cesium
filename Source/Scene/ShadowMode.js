@@ -74,9 +74,8 @@ define([
             return ShadowMode.CAST_ONLY;
         } else if (receiveShadows) {
             return ShadowMode.RECEIVE_ONLY;
-        } else {
-            return ShadowMode.DISABLED;
         }
+        return ShadowMode.DISABLED;
     };
 
     return freezeObject(ShadowMode);

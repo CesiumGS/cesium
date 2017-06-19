@@ -190,9 +190,9 @@ define([
         var velocity = Cartesian3.subtract(position2, position1, velocityResult);
         if (this._normalize) {
             return Cartesian3.normalize(velocity, velocityResult);
-        } else {
-            return Cartesian3.divideByScalar(velocity, step, velocityResult);
         }
+
+        return Cartesian3.divideByScalar(velocity, step, velocityResult);
     };
 
     /**

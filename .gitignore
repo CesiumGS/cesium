@@ -5,6 +5,7 @@
 /cesium-*.tgz
 .DS_Store
 Thumbs.db
+.eslintcache
 
 /Apps/CesiumViewer/Gallery/gallery-index.js
 

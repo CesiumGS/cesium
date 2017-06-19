@@ -12,7 +12,6 @@ var readline = require('readline');
 var request = require('request');
 
 var globby = require('globby');
-var eslint = require('gulp-eslint');
 var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
@@ -65,17 +64,6 @@ var sourceFiles = ['Source/**/*.js',
 var buildFiles = ['Specs/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
-
-var eslintFiles = ['Source/**/*.js',
-                   '!Source/Shaders/**',
-                   '!Source/ThirdParty/**',
-                   '!Source/Workers/cesiumWorkerBootstrapper.js',
-                   'Apps/**/*.js',
-                   'Apps/Sandcastle/gallery/*.html',
-                   '!Apps/Sandcastle/ThirdParty/**',
-                   'Specs/**/*.js',
-                   'Tools/buildTasks/**/*.js',
-                   'gulpfile.js'];
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
@@ -230,24 +218,6 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
         }
         console.log(stdout);
         done();
-    });
-});
-
-gulp.task('eslint', ['build'], function() {
-    var stream = gulp.src(eslintFiles)
-        .pipe(eslint())
-        .pipe(eslint.format());
-    if (yargs.argv.failTaskOnError) {
-        stream = stream.pipe(eslint.failAfterError());
-    }
-    return stream;
-});
-
-gulp.task('eslint-watch', function() {
-    gulp.watch(eslintFiles).on('change', function(event) {
-        gulp.src(event.path)
-            .pipe(eslint())
-            .pipe(eslint.format());
     });
 });
 
@@ -774,9 +744,8 @@ gulp.task('sortRequires', function() {
                     return -1;
                 } else if (aName > bName) {
                     return 1;
-                } else {
-                    return 0;
                 }
+                return 0;
             });
 
             if (preserveFirst) {
@@ -1149,9 +1118,8 @@ function createGalleryList() {
         return -1;
       } else if (a.name > b.name) {
         return 1;
-      } else {
-        return 0;
       }
+      return 0;
     });
 
     var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
