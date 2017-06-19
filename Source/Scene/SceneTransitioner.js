@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
@@ -18,6 +19,7 @@ define([
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
+        Check,
         Cartesian3,
         Cartographic,
         defined,
@@ -42,9 +44,7 @@ define([
      */
     function SceneTransitioner(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
+        Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
         this._scene = scene;

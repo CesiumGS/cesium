@@ -667,12 +667,11 @@ define([
                 return loadXML(url).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
                 return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url : url,
-                    responseType : format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
             }
+            return loadWithXhr({
+                url : url,
+                responseType : format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();

@@ -1335,11 +1335,10 @@ define([
                 pan3D(controller, startPosition, movement, ellipsoid);
             }
             return;
-        } else {
-            controller._looking = false;
-            controller._rotating = false;
-            controller._strafing = false;
         }
+        controller._looking = false;
+        controller._rotating = false;
+        controller._strafing = false;
 
         if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
             if (defined(mousePos)) {
