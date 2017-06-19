@@ -325,6 +325,63 @@ define([
         return context.depthTexture;
     }
 
+    function getECShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+
+            var vs = shaderProgram.vertexShaderSource.clone();
+            var fs = shaderProgram.fragmentShaderSource.clone();
+
+            vs.sources = vs.sources.map(function(source) {
+                source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
+                return source;
+            });
+            
+            fs.sources = fs.sources.map(function(source) {
+                source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
+                source = source.replace(/gl_FragColor/g, 'gl_FragData[0]');
+                return source;
+            });
+
+            vs.sources.push(
+                'varying vec3 v_positionECPS; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_point_cloud_post_process_main(); \n' +
+                '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
+                '}');
+            fs.sources.splice(0, 0,
+                             '#extension GL_EXT_draw_buffers : enable \n');
+            fs.sources.push(
+                'varying vec3 v_positionECPS; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_point_cloud_post_process_main(); \n' +
+                //'    gl_FragData[0] = gl_FragColor;' +
+                '    gl_FragData[1] = vec4(v_positionECPS, 0);' +
+                    '}');
+            
+            for (var i = 0; i < vs.sources.length; i++) {
+                console.log(vs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
+                console.log(shaderProgram.vertexShaderSource.sources[i] + "\n\n\n\n\n\n");
+            }
+            
+            for (i = 0; i < fs.sources.length; i++) {
+                console.log(fs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
+                console.log(shaderProgram.fragmentShaderSource.sources[i] + "\n\n\n\n\n\n");
+            }
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+        
+        return shader;
+    }
+
     function forwardECForShaders(context, shaderProgram) {
         var vsShader = shaderProgram.vertexShaderSource;
         var fsShader = shaderProgram.fragmentShaderSource;
@@ -386,7 +443,8 @@ define([
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             command.framebuffer = this._framebuffers.prior;
-            command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
+            //command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
+            command.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
             command.castShadows = false;
             command.receiveShadows = false;
             command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
