@@ -969,7 +969,7 @@ define([
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
-            return;
+            return undefined;
         }
 
         var ellipsoid = corridorGeometry._ellipsoid;
@@ -1002,7 +1002,7 @@ define([
             attr.attributes.position.values = undefined;
         }
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,

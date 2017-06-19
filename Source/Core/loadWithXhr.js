@@ -161,7 +161,7 @@ define([
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
-            return;
+            return undefined;
         }
 
         var xhr = new XMLHttpRequest();
@@ -223,7 +223,7 @@ define([
 
         xhr.send(data);
 
-        return xhr; //eslint-disable-line consistent-return
+        return xhr;
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;

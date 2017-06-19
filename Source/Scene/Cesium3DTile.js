@@ -497,6 +497,7 @@ define([
                 if (defined(this._contentReadyToProcessPromise)) {
                     return this._contentReadyToProcessPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -516,6 +517,7 @@ define([
                 if (defined(this._contentReadyPromise)) {
                     return this._contentReadyPromise.promise;
                 }
+                return undefined;
             }
         },
 
@@ -632,7 +634,7 @@ define([
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
                 contentFailedFunction();
-                return;
+                return undefined;
             }
             var uint8Array = new Uint8Array(arrayBuffer);
             var magic = getMagic(uint8Array);

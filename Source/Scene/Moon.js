@@ -119,7 +119,7 @@ define([
      */
     Moon.prototype.update = function(frameState) {
         if (!this.show) {
-            return;
+            return undefined;
         }
 
         var ellipsoidPrimitive = this._ellipsoidPrimitive;
@@ -145,7 +145,7 @@ define([
         scratchCommandList.length = 0;
         ellipsoidPrimitive.update(frameState);
         frameState.commandList = savedCommandList;
-        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined; //eslint-disable-line consistent-return
+        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
     };
 
     /**

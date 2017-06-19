@@ -27,7 +27,7 @@ define([
     /**
      * @private
      */
-    ColorBlendMode.getColorBlend = function(colorBlendMode, colorBlendAmount) { //eslint-disable-line consistent-return
+    ColorBlendMode.getColorBlend = function(colorBlendMode, colorBlendAmount) {
         if (colorBlendMode === ColorBlendMode.HIGHLIGHT) {
             return 0.0;
         } else if (colorBlendMode === ColorBlendMode.REPLACE) {
@@ -36,6 +36,7 @@ define([
             // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
+        return undefined;
     };
 
     return freezeObject(ColorBlendMode);

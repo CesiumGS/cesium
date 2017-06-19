@@ -189,7 +189,7 @@ define([
         var radii = ellipsoidGeometry._radii;
 
         if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
-            return;
+            return undefined;
         }
 
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
@@ -393,7 +393,7 @@ define([
             indices[index++] = topOffset + j;
         }
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,

@@ -576,6 +576,7 @@ define([
                 }
             }
         }
+        return undefined;
     }
 
     function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
@@ -590,6 +591,7 @@ define([
             hasParent = parentId !== instanceIndex;
             instanceIndex = parentId;
         }
+        return undefined;
     }
 
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
@@ -613,6 +615,7 @@ define([
             if (defined(instances[name])) {
                 return true;
             }
+            return undefined;
         });
         return defined(result);
     }
@@ -645,6 +648,7 @@ define([
                 }
                 return clone(propertyValues[indexInClass], true);
             }
+            return undefined;
         });
     }
 
@@ -668,6 +672,7 @@ define([
                 }
                 return true;
             }
+            return undefined;
         });
         return defined(result);
     }
@@ -691,6 +696,7 @@ define([
             if (instanceClass.name === className) {
                 return true;
             }
+            return undefined;
         });
         return defined(result);
     };
@@ -846,7 +852,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getVertexShaderCallback = function(handleTranslucent, batchIdAttributeName) {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
 
         var that = this;
@@ -990,7 +996,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getFragmentShaderCallback = function(handleTranslucent, diffuseUniformName) {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
         return function(source) {
             source = modifyDiffuse(source, diffuseUniformName);
@@ -1062,7 +1068,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
 
         var that = this;
@@ -1089,7 +1095,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getPickVertexShaderCallback = function(batchIdAttributeName) {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
 
         var that = this;
@@ -1127,7 +1133,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallback = function() {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
 
         return function(source) {
@@ -1175,7 +1181,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
-            return;
+            return undefined;
         }
 
         var that = this;

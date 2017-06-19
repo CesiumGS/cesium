@@ -364,7 +364,7 @@ define([
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         if (!defined(pos)) {
-            return;
+            return undefined;
         }
 
         var bottomPositions = pos.bottomPositions;
@@ -560,7 +560,7 @@ define([
             indices[edgeIndex++] = LR;
         }
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,

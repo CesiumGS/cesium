@@ -550,7 +550,7 @@ define([
     var scratchGetAttributeCartesian3 = new Cartesian3();
     var scratchGetAttributeCartesian4 = new Cartesian4();
 
-    function getAttributeValue(value) { //eslint-disable-line consistent-return
+    function getAttributeValue(value) {
         var componentsPerAttribute = value.length;
         if (componentsPerAttribute === 1) {
             return value[0];
@@ -561,6 +561,7 @@ define([
         } else if (componentsPerAttribute === 4) {
             return Cartesian4.unpack(value, 0, scratchGetAttributeCartesian4);
         }
+        return undefined;
     }
 
     function createBatchTable(primitive, context) {

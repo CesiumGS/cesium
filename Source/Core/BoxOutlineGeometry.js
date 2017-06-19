@@ -204,7 +204,7 @@ define([
         var max = boxGeometry._max;
 
         if (Cartesian3.equals(min, max)) {
-            return;
+            return undefined;
         }
 
         var attributes = new GeometryAttributes();
@@ -278,7 +278,7 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = Cartesian3.magnitude(diff) * 0.5;
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,

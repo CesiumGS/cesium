@@ -4005,7 +4005,7 @@ define([
         }
     }
 
-    function getProgramId(model, program) { //eslint-disable-line consistent-return
+    function getProgramId(model, program) {
         var programs = model._rendererResources.programs;
         for (var id in programs) {
             if (programs.hasOwnProperty(id)) {
@@ -4014,6 +4014,7 @@ define([
                 }
             }
         }
+        return undefined;
     }
 
     function createSilhouetteProgram(model, program, frameState) {

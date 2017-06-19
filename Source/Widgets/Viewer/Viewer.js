@@ -101,7 +101,7 @@ define([
         clock.shouldAnimate = false;
     }
 
-    function pickEntity(viewer, e) { //eslint-disable-line consistent-return
+    function pickEntity(viewer, e) {
         var picked = viewer.scene.pick(e.position);
         if (defined(picked)) {
             var id = defaultValue(picked.id, picked.primitive.id);
@@ -114,6 +114,7 @@ define([
         if (defined(viewer.scene.globe)) {
             return pickImageryLayerFeature(viewer, e.position);
         }
+        return undefined;
     }
 
     function trackDataSourceClock(timeline, clock, dataSource) {
@@ -136,7 +137,7 @@ define([
         var pickRay = scene.camera.getPickRay(windowPosition);
         var imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
         if (!defined(imageryLayerFeaturePromise)) {
-            return;
+            return undefined;
         }
 
         // Imagery layer feature picking is asynchronous, so put up a message while loading.
@@ -178,7 +179,7 @@ define([
             viewer.selectedEntity = createNoFeaturesEntity();
         });
 
-        return loadingMessage; //eslint-disable-line consistent-return
+        return loadingMessage;
     }
 
     function createNoFeaturesEntity() {

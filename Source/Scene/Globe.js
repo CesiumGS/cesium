@@ -390,7 +390,7 @@ define([
 
         var levelZeroTiles = this._surface._levelZeroTiles;
         if (!defined(levelZeroTiles)) {
-            return;
+            return undefined;
         }
 
         var tile;
@@ -405,7 +405,7 @@ define([
         }
 
         if (!defined(tile) || !Rectangle.contains(tile.rectangle, cartographic)) {
-            return; //eslint-disable-line consistent-return
+            return undefined;
         }
 
         while (tile.renderable) {
@@ -420,7 +420,7 @@ define([
         }
 
         if (!defined(tile)) {
-            return; //eslint-disable-line consistent-return
+            return undefined;
         }
 
         var ellipsoid = this._surface._tileProvider.tilingScheme.ellipsoid;
@@ -448,10 +448,10 @@ define([
 
         var intersection = tile.data.pick(ray, undefined, undefined, false, scratchGetHeightIntersection);
         if (!defined(intersection)) {
-            return; //eslint-disable-line consistent-return
+            return undefined;
         }
 
-        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height; //eslint-disable-line consistent-return
+        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
     };
 
     /**

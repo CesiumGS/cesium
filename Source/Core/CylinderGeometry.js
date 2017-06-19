@@ -205,7 +205,7 @@ define([
         var slices = cylinderGeometry._slices;
 
         if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
-            return;
+            return undefined;
         }
 
         var twoSlices = slices + slices;
@@ -404,7 +404,7 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,

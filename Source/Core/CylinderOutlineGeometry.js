@@ -193,7 +193,7 @@ define([
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
 
         if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
-            return;
+            return undefined;
         }
 
         var numVertices = slices * 2;
@@ -240,7 +240,7 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,

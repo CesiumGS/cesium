@@ -120,7 +120,7 @@ require({
 
     var URL = window.URL || window.webkitURL;
 
-    function findCssStyle(selectorText) { //eslint-disable-line consistent-return
+    function findCssStyle(selectorText) {
         for (var iSheets = 0, lenSheets = document.styleSheets.length; iSheets < lenSheets; ++iSheets) {
             var rules = document.styleSheets[iSheets].cssRules;
             for (var iRules = 0, lenRules = rules.length; iRules < lenRules; ++iRules) {
@@ -129,6 +129,7 @@ require({
                 }
             }
         }
+        return undefined;
     }
 
     var jsEditor;
@@ -509,12 +510,13 @@ require({
         }
     });
 
-    window.onbeforeunload = function (e) { //eslint-disable-line consistent-return
+    window.onbeforeunload = function (e) {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
         if (demoHtml !== htmlText || demoCode !== jsText) {
             return 'Be sure to save a copy of any important edits before leaving this page.';
         }
+        return undefined;
     };
 
     registry.byId('codeContainer').watch('selectedChildWidget', function(name, oldPane, newPane) {
@@ -707,9 +709,9 @@ require({
             htmlEditor.setValue(gistHtml);
             document.title = 'Gist Import - Cesium Sandcastle';
             CodeMirror.commands.runCesium(jsEditor);
-            return;
+            return undefined;
         }
-        return requestDemo(demo.name).then(function(value) { //eslint-disable-line consistent-return
+        return requestDemo(demo.name).then(function(value) {
             demo.code = value;
 
             var parser = new DOMParser();
@@ -907,7 +909,7 @@ require({
         if (code === previousCode && html === previousHtml) {
             textArea.value = sandcastleUrl;
             textArea.select();
-            return;
+            return undefined;
         }
         previousCode = code;
         previousHtml = html;
@@ -922,7 +924,7 @@ require({
                 }
             }
         };
-        return Cesium.loadWithXhr({ //eslint-disable-line consistent-return
+        return Cesium.loadWithXhr({
             url : 'https://api.github.com/gists',
             data : JSON.stringify(data),
             method : 'POST'
@@ -1253,7 +1255,7 @@ require({
             promises.push(addFileToGallery(gallery_demos[i]));
         }
 
-        promise = all(promises).then(function(results) { //eslint-disable-line consistent-return
+        promise = all(promises).then(function(results) {
             var resultsLength = results.length;
             for (i = 0; i < resultsLength; ++i) {
                 if (results[i].name === queryName) {
@@ -1288,6 +1290,7 @@ require({
                 gallery_demos.push(emptyDemo);
                 return addFileToGallery(emptyDemo);
             }
+            return undefined;
         });
     }
 

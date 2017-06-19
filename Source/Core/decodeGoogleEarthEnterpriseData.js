@@ -20,7 +20,7 @@ define([
      *
      * @private
      */
-    function decodeGoogleEarthEnterpriseData(key, data) { //eslint-disable-line consistent-return
+    function decodeGoogleEarthEnterpriseData(key, data) {
         if (decodeGoogleEarthEnterpriseData.passThroughDataForTesting) {
             return data;
         }
@@ -85,6 +85,7 @@ define([
                 kp++;
             }
         }
+        return undefined;
     }
 
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;

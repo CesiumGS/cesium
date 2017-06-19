@@ -669,7 +669,7 @@ define([
 
         var that = this;
 
-        function success(image) { //eslint-disable-line consistent-return
+        function success(image) {
             if (!defined(image)) {
                 return failure();
             }
@@ -679,6 +679,7 @@ define([
             imagery.request = undefined;
 
             TileProviderError.handleSuccess(that._requestImageError);
+            return undefined;
         }
 
         function failure(e) {

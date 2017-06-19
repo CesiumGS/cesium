@@ -80,7 +80,7 @@ define([
             return suggestionsNotEmpty && showSuggestions;
         });
 
-        this._searchCommand = createCommand(function() { //eslint-disable-line consistent-return
+        this._searchCommand = createCommand(function() {
             that.hideSuggestions();
             that._focusTextbox = false;
             if (defined(that._selectedSuggestion)) {
@@ -92,6 +92,7 @@ define([
             } else {
                 geocode(that, that._geocoderServices);
             }
+            return undefined;
         });
 
         this.deselectSuggestion = function () {

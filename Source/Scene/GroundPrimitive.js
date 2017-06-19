@@ -729,7 +729,7 @@ define([
         groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
-    function modifyForEncodedNormals(primitive, vertexShaderSource) { //eslint-disable-line consistent-return
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
             return vertexShaderSource;
         }
@@ -755,6 +755,7 @@ define([
 
             return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
         }
+        return undefined;
     }
 
     function createShaderProgram(groundPrimitive, frameState, appearance) {

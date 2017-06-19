@@ -68,10 +68,11 @@ define([
                 atLevel.push(position);
             }
 
-            return when.all(byLevel.map(function(positionsAtLevel, index) { //eslint-disable-line consistent-return
+            return when.all(byLevel.map(function(positionsAtLevel, index) {
                 if (defined(positionsAtLevel)) {
                     return sampleTerrain(terrainProvider, index, positionsAtLevel);
                 }
+                return undefined;
             })).then(function() {
                 return positions;
             });

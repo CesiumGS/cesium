@@ -27,7 +27,7 @@ define([
                    pixelDatatype === PixelDatatype.UNSIGNED_SHORT_5_6_5;
         },
 
-        sizeInBytes : function(pixelDatatype) { //eslint-disable-line consistent-return
+        sizeInBytes : function(pixelDatatype) {
             switch (pixelDatatype) {
                 case PixelDatatype.UNSIGNED_BYTE:
                     return 1;
@@ -41,6 +41,7 @@ define([
                 case PixelDatatype.UNSIGNED_INT_24_8:
                     return 4;
             }
+            return undefined;
         },
 
         validate : function(pixelDatatype) {

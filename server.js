@@ -132,6 +132,7 @@
 
             res.status(code).send(body);
         });
+        return undefined;
     });
 
     var server = app.listen(argv.port, argv.public ? undefined : 'localhost', function() {
@@ -173,5 +174,5 @@
             process.exit(1);
         }
     });
-
+    return undefined;
 })();

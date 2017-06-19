@@ -274,7 +274,7 @@ define([
     }
 
     if (!FeatureDetection.supportsTypedArrays()) {
-        return;
+        return undefined;
     }
     var scratchFloatArray = new Float32Array(1);
 
@@ -682,5 +682,5 @@ define([
      * @returns {String} The new vertex shader source with the functions for retrieving batch table values injected.
      */
 
-    return BatchTable; //eslint-disable-line consistent-return
+    return BatchTable;
 });

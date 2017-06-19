@@ -1916,7 +1916,7 @@ define([
      *
      * @returns {Number} The magnitude of the position.
      */
-    Camera.prototype.getMagnitude = function() { //eslint-disable-line consistent-return
+    Camera.prototype.getMagnitude = function() {
         if (this._mode === SceneMode.SCENE3D) {
             return Cartesian3.magnitude(this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
@@ -1924,6 +1924,7 @@ define([
         } else if (this._mode === SceneMode.SCENE2D) {
             return Math.max(this.frustum.right - this.frustum.left, this.frustum.top - this.frustum.bottom);
         }
+        return undefined;
     };
 
     var scratchLookAtMatrix4 = new Matrix4();

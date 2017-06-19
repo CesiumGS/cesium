@@ -68,13 +68,14 @@ define([
         };
     };
 
-    TerrainCache.prototype.get = function(quadKey) { //eslint-disable-line consistent-return
+    TerrainCache.prototype.get = function(quadKey) {
         var terrainCache = this._terrainCache;
         var result = terrainCache[quadKey];
         if (defined(result)) {
             delete this._terrainCache[quadKey];
             return result.buffer;
         }
+        return undefined;
     };
 
     TerrainCache.prototype.tidy = function() {

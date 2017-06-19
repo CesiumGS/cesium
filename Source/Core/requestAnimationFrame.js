@@ -8,7 +8,7 @@ define([
     'use strict';
 
     if (typeof window === 'undefined') {
-        return;
+        return undefined;
     }
 
     var implementation = window.requestAnimationFrame;
@@ -79,5 +79,5 @@ define([
      * @param {Number} timestamp A timestamp for the frame, in milliseconds.
      */
 
-    return requestAnimationFrame; //eslint-disable-line consistent-return
+    return requestAnimationFrame;
 });

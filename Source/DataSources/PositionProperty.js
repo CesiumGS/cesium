@@ -104,7 +104,7 @@ define([
     /**
      * @private
      */
-    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) { //eslint-disable-line consistent-return
+    PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
         if (!defined(value)) {
             return value;
         }
@@ -126,6 +126,7 @@ define([
         if (inputFrame === ReferenceFrame.FIXED) {
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
+        return undefined;
     };
 
     return PositionProperty;

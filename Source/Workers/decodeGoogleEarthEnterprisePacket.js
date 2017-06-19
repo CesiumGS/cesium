@@ -24,7 +24,7 @@ define([
         DBROOT : 2
     };
 
-    Types.fromString = function(s) { //eslint-disable-line consistent-return
+    Types.fromString = function(s) {
         if (s === 'Metadata') {
             return Types.METADATA;
         } else if (s === 'Terrain') {
@@ -32,9 +32,10 @@ define([
         } else if (s === 'DbRoot') {
             return Types.DBROOT;
         }
+        return undefined;
     };
 
-    function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) { //eslint-disable-line consistent-return
+    function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
         var type = Types.fromString(parameters.type);
         var buffer = parameters.buffer;
         decodeGoogleEarthEnterpriseData(parameters.key, buffer);
@@ -54,7 +55,7 @@ define([
                     buffer : buffer
                 };
         }
-
+        return undefined;
     }
 
     var qtMagic = 32301;

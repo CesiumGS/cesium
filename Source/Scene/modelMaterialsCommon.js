@@ -9,7 +9,7 @@ define([
         WebGLConstants) {
     'use strict';
 
-    function webGLConstantToGlslType(webGLValue) { //eslint-disable-line consistent-return
+    function webGLConstantToGlslType(webGLValue) {
         switch(webGLValue) {
             case WebGLConstants.FLOAT:
                 return 'float';
@@ -28,6 +28,7 @@ define([
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
         }
+        return undefined;
     }
 
     function generateLightParameters(gltf) {
@@ -625,7 +626,7 @@ define([
         return techniqueId;
     }
 
-    function getKHRMaterialsCommonValueType(paramName, paramValue) //eslint-disable-line consistent-return
+    function getKHRMaterialsCommonValueType(paramName, paramValue)
     {
         var value;
 
@@ -658,6 +659,7 @@ define([
             case 'doubleSided':
                 return WebGLConstants.BOOL;
         }
+        return undefined;
     }
 
     function getTechniqueKey(khrMaterialsCommon) {

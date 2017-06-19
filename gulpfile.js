@@ -425,7 +425,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 })
                 .then(function(content) {
                     if (!content) {
-                        return;
+                        return undefined;
                     }
 
                     console.log('Uploading ' + blobName + '...');
@@ -439,7 +439,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         CacheControl : cacheControl
                     };
 
-                    return s3.putObjectAsync(params).then(function() { //eslint-disable-line consistent-return
+                    return s3.putObjectAsync(params).then(function() {
                         uploaded++;
                     })
                     .catch(function(error) {
@@ -451,7 +451,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
         .then(function() {
             console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
             if (existingBlobs.length === 0) {
-                return;
+                return undefined;
             }
 
             var objectToDelete = [];
@@ -464,7 +464,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
             if (objectToDelete.length > 0) {
                 console.log('Cleaning up old files...');
-                return s3.deleteObjectsAsync({ //eslint-disable-line consistent-return
+                return s3.deleteObjectsAsync({
                                                  Bucket : bucketName,
                                                  Delete : {
                                                      Objects : objectToDelete
@@ -474,6 +474,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         console.log('Cleaned ' + existingBlobs.length + ' files.');
                     });
             }
+            return undefined;
         })
         .catch(function(error) {
             errors.push(error);
@@ -526,7 +527,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
         Prefix : prefix,
         Marker : marker
     })
-    .then(function(data) { //eslint-disable-line consistent-return
+    .then(function(data) {
         var items = data.Contents;
         for (var i = 0; i < items.length; i++) {
             files.push(items[i].Key);
@@ -536,6 +537,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
             // get next page of results
             return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
         }
+        return undefined;
     });
 }
 
@@ -551,7 +553,7 @@ gulp.task('deploy-set-version', function() {
 gulp.task('deploy-status', function() {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment status for non-pull request.');
-        return;
+        return undefined;
     }
 
     var status = yargs.argv.status;
@@ -561,7 +563,7 @@ gulp.task('deploy-status', function() {
     var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
     var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
 
-    return Promise.join( //eslint-disable-line consistent-return
+    return Promise.join(
         setStatus(status, deployUrl, message, 'deployment'),
         setStatus(status, zipUrl, message, 'zip file'),
         setStatus(status, npmUrl, message, 'npm package')
@@ -571,11 +573,11 @@ gulp.task('deploy-status', function() {
 function setStatus(state, targetUrl, description, context) {
     // skip if the environment does not have the token
     if (!process.env.TOKEN) {
-        return;
+        return undefined;
     }
 
     var requestPost = Promise.promisify(request.post);
-    return requestPost({ //eslint-disable-line consistent-return
+    return requestPost({
          url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
          json: true,
          headers: {
@@ -696,7 +698,7 @@ gulp.task('sortRequires', function() {
                 if (!noModulesRegex.test(contents)) {
                     console.log(file + ' does not have the expected syntax.');
                 }
-                return;
+                return undefined;
             }
 
             // In specs, the first require is significant,
@@ -715,7 +717,7 @@ gulp.task('sortRequires', function() {
             for (i = 0; i < names.length; ++i) {
                 if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
                     console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
+                    return undefined;
                 }
             }
 
@@ -727,7 +729,7 @@ gulp.task('sortRequires', function() {
             for (i = 0; i < identifiers.length; ++i) {
                 if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
                     console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
+                    return undefined;
                 }
             }
 
@@ -794,7 +796,7 @@ gulp.task('sortRequires', function() {
                        ') {' +
                        result[6];
 
-            return fsWriteFile(file, contents); //eslint-disable-line consistent-return
+            return fsWriteFile(file, contents);
         });
     });
 });

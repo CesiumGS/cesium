@@ -325,7 +325,7 @@ define([
      */
     EllipseOutlineGeometry.createGeometry = function(ellipseGeometry) {
         if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
-            return;
+            return undefined;
         }
 
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
@@ -349,7 +349,7 @@ define([
             geometry = computeEllipse(options);
         }
 
-        return new Geometry({ //eslint-disable-line consistent-return
+        return new Geometry({
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.LINES,
