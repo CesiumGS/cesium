@@ -12,10 +12,11 @@ script:
   - echo -en 'travis_fold:end:script.deployPending\\r'
 
   - echo 'eslint' && echo -en 'travis_fold:start:script.eslint\\r'
-  - npm run eslint -- --failTaskOnError
+  - npm run eslint
   - echo -en 'travis_fold:end:script.eslint\\r'
 
   - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run build
   - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 
