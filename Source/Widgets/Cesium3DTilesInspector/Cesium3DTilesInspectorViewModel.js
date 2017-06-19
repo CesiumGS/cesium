@@ -47,9 +47,8 @@ define([
         var memoryInMegabytes = memorySizeInBytes / 1048576;
         if (memoryInMegabytes < 1.0) {
             return memoryInMegabytes.toLocaleString(undefined, stringOptions);
-        } else {
-            return Math.round(memoryInMegabytes).toLocaleString();
         }
+        return Math.round(memoryInMegabytes).toLocaleString();
     }
 
     function getStatistics(tileset, isPick) {

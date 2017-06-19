@@ -988,11 +988,11 @@ define([
                 // Render the expired content while the content loads
                 expiredContent.update(tileset, frameState);
                 return;
-            } else {
-                // New content is ready, destroy expired content
-                tile._expiredContent.destroy();
-                tile._expiredContent = undefined;
             }
+
+            // New content is ready, destroy expired content
+            tile._expiredContent.destroy();
+            tile._expiredContent = undefined;
         }
 
         content.update(tileset, frameState);

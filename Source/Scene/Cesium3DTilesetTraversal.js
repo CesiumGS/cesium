@@ -546,9 +546,9 @@ define([
                 touch(tileset, children[i], this.outOfCore);
             }
             return children;
-        } else {
-            return emptyArray;
         }
+
+        return emptyArray;
     };
 
     InternalSkipTraversal.prototype.shouldVisit = function(tile) {

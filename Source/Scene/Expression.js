@@ -519,9 +519,8 @@ define([
                 if (argsLength === 0) {
                     if (call === 'test') {
                         return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
-                    } else {
-                        return new Node(ExpressionNodeType.LITERAL_NULL, null);
                     }
+                    return new Node(ExpressionNodeType.LITERAL_NULL, null);
                 }
                 left = createRuntimeAst(expression, object);
                 right = createRuntimeAst(expression, args[0]);
@@ -578,9 +577,8 @@ define([
             if (argsLength === 0) {
                 if (call === 'isNaN') {
                     return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
-                } else {
-                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
                 }
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
@@ -682,9 +680,8 @@ define([
             var name = getPropertyName(ast.name);
             if (name.substr(0, 8) === 'tiles3d_') {
                 return new Node(ExpressionNodeType.BUILTIN_VARIABLE, name);
-            } else {
-                return new Node(ExpressionNodeType.VARIABLE, name);
             }
+            return new Node(ExpressionNodeType.VARIABLE, name);
         } else if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
@@ -715,10 +712,10 @@ define([
         if (ast.computed) {
             val = createRuntimeAst(expression, ast.property);
             return new Node(ExpressionNodeType.MEMBER, 'brackets', obj, val);
-        } else {
-            val = new Node(ExpressionNodeType.LITERAL_STRING, ast.property.name);
-            return new Node(ExpressionNodeType.MEMBER, 'dot', obj, val);
         }
+
+        val = new Node(ExpressionNodeType.LITERAL_STRING, ast.property.name);
+        return new Node(ExpressionNodeType.MEMBER, 'dot', obj, val);
     }
 
     function isLiteralType(node) {
@@ -1141,9 +1138,9 @@ define([
             return Cartesian4.negate(left, scratchStorage.getCartesian4());
         } else if (typeof left === 'number') {
             return -left;
-        } else {
-            throw new RuntimeError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
         }
+
+        throw new RuntimeError('Operator "-" requires a vector or number argument. Argument is ' + left + '.');
     };
 
     Node.prototype._evaluatePositive = function(frameState, feature) {
@@ -1523,9 +1520,9 @@ define([
         if (number % 1 === 0) {
             // Add a .0 to whole numbers
             return number.toFixed(1);
-        } else {
-            return number.toString();
         }
+
+        return number.toString();
     }
 
     function colorToVec3(color) {
@@ -1682,16 +1679,14 @@ define([
                             shaderState.translucent = true;
                         }
                         return 'vec4(' + rgb + ', ' + alpha + ')';
-                    } else {
-                        return 'vec4(' + args[0] + ', 1.0)';
                     }
+                    return 'vec4(' + args[0] + ', 1.0)';
                 } else if (value === 'rgb') {
                     color = convertRGBToColor(this);
                     if (defined(color)) {
                         return colorToVec4(color);
-                    } else {
-                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
                     }
+                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, 1.0)';
                 } else if (value === 'rgba') {
                     if (args[3] !== '1.0') {
                         shaderState.translucent = true;
@@ -1699,16 +1694,14 @@ define([
                     color = convertRGBToColor(this);
                     if (defined(color)) {
                         return colorToVec4(color);
-                    } else {
-                        return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
                     }
+                    return 'vec4(' + args[0] + ' / 255.0, ' + args[1] + ' / 255.0, ' + args[2] + ' / 255.0, ' + args[3] + ')';
                 } else if (value === 'hsl') {
                     color = convertHSLToRGB(this);
                     if (defined(color)) {
                         return colorToVec4(color);
-                    } else {
-                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), 1.0)';
                     }
+                    return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), 1.0)';
                 } else if (value === 'hsla') {
                     color = convertHSLToRGB(this);
                     if (defined(color)) {
@@ -1716,12 +1709,11 @@ define([
                             shaderState.translucent = true;
                         }
                         return colorToVec4(color);
-                    } else {
-                        if (args[3] !== '1.0') {
-                            shaderState.translucent = true;
-                        }
-                        return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), ' + args[3] + ')';
                     }
+                    if (args[3] !== '1.0') {
+                        shaderState.translucent = true;
+                    }
+                    return 'vec4(czm_HSLToRGB(vec3(' + args[0] + ', ' + args[1] + ', ' + args[2] + ')), ' + args[3] + ')';
                 }
                 break;
             case ExpressionNodeType.LITERAL_VECTOR:
