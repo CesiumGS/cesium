@@ -143,6 +143,7 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
+        this._tilesRequestedForInterval = [];
         this._timeDimensionName = defaultValue(options.timeDimensionName, 'TIME');
         this._timeDimensionIntervals = undefined;
         this._timeDimensionValue = undefined;
@@ -210,7 +211,7 @@ define([
         request : 'GetTile'
     });
 
-    function buildImageUrl(imageryProvider, col, row, level) {
+    function buildImageUrl(imageryProvider, col, row, level, timeDimensionValue) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
@@ -227,8 +228,8 @@ define([
                 .replace('{TileCol}', col.toString())
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
 
-            if (defined(imageryProvider._timeDimensionValue)) {
-                url = url.replace('{'+imageryProvider._timeDimensionName+'}', imageryProvider._timeDimensionValue);
+            if (defined(timeDimensionValue)) {
+                url = url.replace('{'+imageryProvider._timeDimensionName+'}', timeDimensionValue);
             }
         }
         else {
@@ -246,8 +247,8 @@ define([
             queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
             queryOptions.format = imageryProvider._format;
 
-            if (defined(imageryProvider._timeDimensionValue)) {
-                queryOptions[imageryProvider._timeDimensionName] = imageryProvider._timeDimensionValue;
+            if (defined(timeDimensionValue)) {
+                queryOptions[imageryProvider._timeDimensionName] = timeDimensionValue;
             }
 
             uri.query = objectToQuery(queryOptions);
@@ -463,11 +464,18 @@ define([
      * @private
      */
     WebMapTileServiceImageryProvider.prototype._clockOnTick = function(clock) {
+        var approachingInterval = getApproachingInterval(this);
+        if (defined(approachingInterval)) {
+            // TODO: Start loading recent tiles from this._tilesRequestedForInterval
+        }
+
         var time = clock.currentTime;
         var interval = this._timeDimensionIntervals.findIntervalContainingDate(time);
         if (defined(interval.data)) {
             var data = interval.data;
             if (data !== this._timeDimensionValue) {
+                // TODO: Clear out caches not from current time interval
+
                 this._timeDimensionValue = data;
                 if (defined(this._reload)) {
                     this._reload();
@@ -490,6 +498,40 @@ define([
         return undefined;
     };
 
+    function getKey(x, y, level) {
+        return x + '-' + y + '-' + level;
+    }
+
+    function getApproachingInterval(that) {
+        var intervals = this._timeDimensionIntervals;
+        if (!defined(intervals)) {
+            return undefined;
+        }
+        var clock = that._clock;
+        var time = clock.currentTime;
+        var isAnimating = clock.canAnimate && clock.shouldAnimate;
+        var multiplier = clock.multiplier;
+
+        if (!isAnimating && multiplier !== 0) {
+            return undefined;
+        }
+
+        var seconds;
+        var interval = intervals.findIntervalContainingDate(time);
+        var index = intervals.indexOf(interval);
+        if (multiplier > 0) { // animating forward
+            seconds = JulianDate.secondsDifference(time, interval.stop, time);
+            ++index;
+        } else { //backwards
+            seconds = JulianDate.secondsDifference(time, interval.start, time); // Will be negative
+            --index;
+        }
+        seconds /= multiplier; // Will always be positive
+
+        // Less than 5 wall time seconds
+        return (seconds <= 5.0) ? intervals.get(index) : undefined;
+    }
+
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
@@ -506,8 +548,27 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url, request);
+        var url = buildImageUrl(this, x, y, level, this._timeDimensionValue);
+        var result = ImageryProvider.loadImage(this, url, request);
+
+        // Add to recent request list in case we need to preload for next time interval
+        var key = getKey(x, y, level);
+        this._tilesRequestedForInterval.push(key);
+
+        var approachingInterval = getApproachingInterval(this);
+        if (defined(approachingInterval)) {
+            // TODO: Check cache to make sure we didn't already request it
+
+            // Request tile for next interval as well
+            url = buildImageUrl(this, x, y, level, approachingInterval.data);
+            // TODO: Add promise to cache using key
+            ImageryProvider.loadImage(this, url, request)
+                .then(function(image) {
+                    // TODO: Not sure if I have to do anything here
+                });
+        }
+
+        return result;
     };
 
     /**
