@@ -80,15 +80,15 @@ define([
 
         var debugShowFrustums = document.createElement('div');
         generalSection.appendChild(debugShowFrustums);
-        var frustumStats = document.createElement('div');
-        frustumStats.className = 'cesium-cesiumInspector-frustumStats';
-        frustumStats.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" :  !frustums}, html: frustumStatisticText');
+        var frustumStatistics = document.createElement('div');
+        frustumStatistics.className = 'cesium-cesiumInspector-frustumStatistics';
+        frustumStatistics.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" :  !frustums}, html: frustumStatisticText');
         var frustumsCheckbox = document.createElement('input');
         frustumsCheckbox.type = 'checkbox';
         frustumsCheckbox.setAttribute('data-bind', 'checked: frustums');
         debugShowFrustums.appendChild(frustumsCheckbox);
         debugShowFrustums.appendChild(document.createTextNode('Show Frustums'));
-        debugShowFrustums.appendChild(frustumStats);
+        debugShowFrustums.appendChild(frustumStatistics);
 
         var debugShowFrustumPlanes = document.createElement('div');
         generalSection.appendChild(debugShowFrustumPlanes);
@@ -268,7 +268,7 @@ define([
 
         var tileText = document.createElement('div');
         tileText.className = 'cesium-cesiumInspector-tileText';
-        tileInfo.className = 'cesium-cesiumInspector-frustumStats';
+        tileInfo.className = 'cesium-cesiumInspector-frustumStatistics';
         tileInfo.appendChild(tileText);
         tileInfo.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : hasPickedTile, "cesium-cesiumInspector-hide" :  !hasPickedTile}');
         tileText.setAttribute('data-bind', 'html: tileText');

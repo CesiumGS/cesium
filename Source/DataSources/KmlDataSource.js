@@ -2239,9 +2239,8 @@ define([
                             return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query);
                         });
                     });
-                } else {
-                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
                 }
+                return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
             })
             .otherwise(function(error) {
                 dataSource._error.raiseEvent(dataSource, error);
