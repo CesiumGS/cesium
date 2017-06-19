@@ -187,6 +187,17 @@ define([
             return '\n';
         });
 
+        // Extract existing shader version from sources
+        var extensions = [];
+        combinedSources = combinedSources.replace(/#extension\s+(.*?)\n/gm, function(match, group1) {
+            // Extract extension to put at the top
+            extensions.push(match);
+
+            // Replace original #extension directive with a new line so the line numbers
+            // are not off by one.
+            return '\n';
+        });
+
         // Remove precision qualifier
         combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
 
@@ -203,6 +214,10 @@ define([
         // defaults to #version 100 if not specified
         if (defined(version)) {
             result = '#version ' + version;
+        }
+
+        for (i = 0; i < extensions.length; i++) {
+            result += extensions[i];
         }
 
         if (isFragmentShader) {
