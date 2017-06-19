@@ -20,6 +20,7 @@ module.exports = {
         eqeqeq: ['error'],
         'guard-for-in': ['error'],
         'new-cap': ['error', {properties: false}],
+        'no-alert': 'error',
         'no-caller': ['error'],
         'no-console': 'off',
         'no-empty': ['error'],
