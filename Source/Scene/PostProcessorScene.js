@@ -105,10 +105,10 @@ define([
 
             //For Chromatic effect
             'vec4 textureDistorted( \n' +
-	        '    in sampler2D tex, \n' +
-	        '    in vec2 texcoord, \n' +
-	        '    in vec2 direction, \n' +
-	        '    in vec3 distortion, \n' +
+            '    in sampler2D tex, \n' +
+            '    in vec2 texcoord, \n' +
+            '    in vec2 direction, \n' +
+            '    in vec3 distortion, \n' +
             '    in bool bSpace \n' +
            ' ) {                    \n' +
 
@@ -212,7 +212,7 @@ define([
             '    cos(camrot), -sin(camrot), 0.0,  \n' +
             '    sin(camrot), cos(camrot), 0.0,  \n' +
             '    0.0, 0.0, 1.0  \n' +
-		    ');  \n' +
+            ');  \n' +
 
             ' vec3 st1 = vec3(v_textureCoordinates, 1.0) * 2.0  - vec3(1.0); \n' +
             ' st1.z = 1.0; \n' +
