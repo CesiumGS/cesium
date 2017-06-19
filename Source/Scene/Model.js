@@ -53,6 +53,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeType',
         './Axis',
         './BlendingState',
         './ColorBlendMode',
@@ -122,6 +123,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        AttributeType,
         Axis,
         BlendingState,
         ColorBlendMode,
@@ -242,7 +244,9 @@ define([
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
     function CachedGltf(options) {
-        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
+        this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf), {
+            addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
+        });
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
@@ -341,6 +345,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+     * @param {Boolean} [options.addBatchIdToGeneratedShaders=false] Determines if shaders generated for materials using the KHR_materials_common extension should include a batchId attribute. For models contained in b3dm tiles.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
@@ -390,13 +395,15 @@ define([
                     cachedGltf = new CachedGltf({
                         gltf : result.glTF,
                         bgltf : gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 } else {
                     // Normal glTF (JSON)
                     cachedGltf = new CachedGltf({
                         gltf : options.gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 }
 
@@ -533,8 +540,7 @@ define([
          *
          * @private
          */
-        this.pickPrimitive = options.pickPrimitive;
-
+        this._pickObject = options.pickObject;
         this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._ready = false;
@@ -630,6 +636,7 @@ define([
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+        this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
@@ -680,10 +687,10 @@ define([
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
 
-        this._cachedVertexMemorySizeInBytes = 0;
-        this._cachedTextureMemorySizeInBytes = 0;
-        this._vertexMemorySizeInBytes = 0;
-        this._textureMemorySizeInBytes = 0;
+        this._cachedGeometryByteLength = 0;
+        this._cachedTexturesByteLength = 0;
+        this._geometryByteLength = 0;
+        this._texturesByteLength = 0;
         this._trianglesLength = 0;
 
         this._nodeCommands = [];
@@ -1001,13 +1008,13 @@ define([
         },
 
         /**
-         * Gets the model's vertex memory in bytes. This includes all vertex and index buffers.
+         * Gets the model's geometry memory in bytes. This includes all vertex and index buffers.
          *
          * @private
          */
-        vertexMemorySizeInBytes : {
+        geometryByteLength : {
             get : function() {
-                return this._vertexMemorySizeInBytes;
+                return this._geometryByteLength;
             }
         },
 
@@ -1016,20 +1023,20 @@ define([
          *
          * @private
          */
-        textureMemorySizeInBytes : {
+        texturesByteLength : {
             get : function() {
-                return this._textureMemorySizeInBytes;
+                return this._texturesByteLength;
             }
         },
 
         /**
-         * Gets the model's cached vertex memory in bytes. This includes all vertex and index buffers.
+         * Gets the model's cached geometry memory in bytes. This includes all vertex and index buffers.
          *
          * @private
          */
-        cachedVertexMemorySizeInBytes : {
+        cachedGeometryByteLength : {
             get : function() {
-                return this._cachedVertexMemorySizeInBytes;
+                return this._cachedGeometryByteLength;
             }
         },
 
@@ -1038,9 +1045,9 @@ define([
          *
          * @private
          */
-        cachedTextureMemorySizeInBytes : {
+        cachedTexturesByteLength : {
             get : function() {
-                return this._cachedTextureMemorySizeInBytes;
+                return this._cachedTexturesByteLength;
             }
         }
     });
@@ -1811,7 +1818,7 @@ define([
         });
         vertexBuffer.vertexArrayDestroyable = false;
         model._rendererResources.buffers[bufferViewId] = vertexBuffer;
-        model._vertexMemorySizeInBytes += vertexBuffer.sizeInBytes;
+        model._geometryByteLength += vertexBuffer.sizeInBytes;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1849,7 +1856,7 @@ define([
         });
         indexBuffer.vertexArrayDestroyable = false;
         model._rendererResources.buffers[bufferViewId] = indexBuffer;
-        model._vertexMemorySizeInBytes += indexBuffer.sizeInBytes;
+        model._geometryByteLength += indexBuffer.sizeInBytes;
     }
 
     var scratchVertexBufferJob = new CreateVertexBufferJob();
@@ -2359,7 +2366,7 @@ define([
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
-        model._textureMemorySizeInBytes += tx.sizeInBytes;
+        model._texturesByteLength += tx.sizeInBytes;
     }
 
     var scratchCreateTextureJob = new CreateTextureJob();
@@ -3256,19 +3263,19 @@ define([
                         var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
-                            case 'SCALAR':
+                            case AttributeType.SCALAR:
                                 uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC2':
+                            case AttributeType.VEC2:
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC3':
+                            case AttributeType.VEC3:
                                 uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC4':
+                            case AttributeType.VEC4:
                                 // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
                                 var uniformVariableScale = uniformVariable + '_scale';
                                 var uniformVariableTranslate = uniformVariable + '_translate';
@@ -3447,12 +3454,16 @@ define([
 
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
                 var isTranslucent = rs.blending.enabled;
-                var owner = {
-                    primitive : defaultValue(model.pickPrimitive, model),
-                    id : model.id,
-                    node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesByName[mesh.name]
-                };
+
+                var owner = model._pickObject;
+                if (!defined(owner)) {
+                    owner = {
+                        primitive : model,
+                        id : model.id,
+                        node : runtimeNode.publicNode,
+                        mesh : runtimeMeshesByName[mesh.name]
+                    };
+                }
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
@@ -3627,7 +3638,7 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
-    function getVertexMemorySizeInBytes(buffers) {
+    function getGeometryByteLength(buffers) {
         var memory = 0;
         for (var id in buffers) {
             if (buffers.hasOwnProperty(id)) {
@@ -3637,7 +3648,7 @@ define([
         return memory;
     }
 
-    function getTextureMemorySizeInBytes(textures) {
+    function getTexturesByteLength(textures) {
         var memory = 0;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
@@ -3669,8 +3680,8 @@ define([
                 createVertexArrays(model, context);
             }
 
-            model._cachedVertexMemorySizeInBytes += getVertexMemorySizeInBytes(cachedResources.buffers);
-            model._cachedTextureMemorySizeInBytes += getTextureMemorySizeInBytes(cachedResources.textures);
+            model._cachedGeometryByteLength += getGeometryByteLength(cachedResources.buffers);
+            model._cachedTexturesByteLength += getTexturesByteLength(cachedResources.textures);
         } else {
             createBuffers(model, frameState); // using glTF bufferViews
             createPrograms(model, frameState);
@@ -4653,6 +4664,7 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
             // PERFORMANCE_IDEA: This is terrible
+            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
@@ -4668,13 +4680,13 @@ define([
                     if (nc.show) {
                         var command = translucent ? nc.translucentCommand : nc.command;
                         command = silhouette ? nc.silhouetteModelCommand : command;
-                        frameState.addCommand(command);
+                        commandList.push(command);
                         boundingVolume = nc.command.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
                             var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
                             command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
-                            frameState.addCommand(command2D);
+                            commandList.push(command2D);
                         }
                     }
                 }
@@ -4684,11 +4696,11 @@ define([
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
                         if (nc.show) {
-                            frameState.addCommand(nc.silhouetteColorCommand);
+                            commandList.push(nc.silhouetteColorCommand);
                             boundingVolume = nc.command.boundingVolume;
                             if (frameState.mode === SceneMode.SCENE2D &&
                                 (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                frameState.addCommand(nc.silhouetteColorCommand2D);
+                                commandList.push(nc.silhouetteColorCommand2D);
                             }
                         }
                     }
@@ -4700,12 +4712,12 @@ define([
                     nc = nodeCommands[i];
                     if (nc.show) {
                         var pickCommand = nc.pickCommand;
-                        frameState.addCommand(pickCommand);
+                        commandList.push(pickCommand);
 
                         boundingVolume = pickCommand.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            frameState.addCommand(nc.pickCommand2D);
+                            commandList.push(nc.pickCommand2D);
                         }
                     }
                 }
