@@ -335,11 +335,12 @@ define([
         var vsShaderSources = vsShader.sources.slice(0);
         var fsShaderSources = fsShader.sources.slice(0);
 
+        //fsShaderSources.splice(0, 0, '#extension GL_EXT_draw_buffers : enable \n');
+
         var oldMainVS = ShaderSource.replaceMain(vsShaderSources[0], 'czm_point_cloud_post_process_main');
         var oldMainFS = ShaderSource.replaceMain(fsShaderSources[0], 'czm_point_cloud_post_process_main');
 
         oldMainFS = oldMainFS.replace(new RegExp('gl_FragColor', 'g'), 'gl_FragData[0]');
-        console.log(oldMainFS);
         
         var forwardVS =
             'varying vec3 v_positionECPS; \n' +
@@ -354,11 +355,14 @@ define([
             '{ \n' +
             '    czm_point_cloud_post_process_main(); \n' +
             //'    gl_FragData[0] = gl_FragColor;' +
-            '    gl_FragData[1] = v_positionECPS;' +
+            '    gl_FragData[1] = vec4(v_positionECPS, 0);' +
             '}';
 
         forwardVS = oldMainVS + forwardVS;
-        forwardFS = oldMainFS + forwardFS;
+        forwardFS = '#extension GL_EXT_draw_buffers : enable \n' +
+            oldMainFS + forwardFS;
+
+        console.log(forwardFS + "\n\n\n\n\n\n\nBLORG\n\n\n\n\n\n\n");
 
         return ShaderProgram.fromCache({
             vertexShaderSource : forwardVS,
@@ -383,6 +387,8 @@ define([
             var command = commandList[i];
             command.framebuffer = this._framebuffers.prior;
             command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
+            command.castShadows = false;
+            command.receiveShadows = false;
             command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
         }
 
