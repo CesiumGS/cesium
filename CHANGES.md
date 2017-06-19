@@ -16,6 +16,15 @@ Change Log
 * Added Sandcastle demo for ArcticDEM data. [#5224](https://github.com/AnalyticalGraphicsInc/cesium/issues/5224)
 * `CzmlDataSource` and `KmlDataSource` load functions now take an optional `query` object, which will append query parameters to all network requests. [#5419](https://github.com/AnalyticalGraphicsInc/cesium/pull/5419), [#5434](https://github.com/AnalyticalGraphicsInc/cesium/pull/5434)
 * Fixed geocoder bug so geocoder can accurately handle NSEW inputs [#5407] (https://github.com/AnalyticalGraphicsInc/cesium/pull/5407)
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
+   * `Cesium3DTileset`
+   * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
+   * `Cesium3DTile`
+   * `Cesium3DTileContent`
+   * `Cesium3DTileFeature`
+   * `Cesium3DTilesInspector`, `Cesium3DTilesInspectorViewModel`, and `viewerCesium3DTilesInspectorMixin`
+   * `Cesium3DTileColorBlendMode`
+* Added a Sandcastle demo for setting time with the Clock API [#5457](https://github.com/AnalyticalGraphicsInc/cesium/pull/5457);
 
 ### 1.34 - 2017-06-01
 

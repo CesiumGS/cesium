@@ -105,7 +105,7 @@ define([
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link QuadtreeTileProvider#ready} returns true.
      *
-     * @see {QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError}
+     * @see QuadtreeTileProvider#computeDefaultLevelZeroMaximumGeometricError
      *
      * @memberof QuadtreeTileProvider
      * @function
