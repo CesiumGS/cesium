@@ -461,9 +461,8 @@ define([
                 });
                 metadata.populateSubtree(x, y, level, metadataRequest);
                 return undefined; // No metadata so return undefined so we can be loaded later
-            } else {
-                return invalidImage; // Image doesn't exist
             }
+            return invalidImage; // Image doesn't exist
         }
 
         if (!info.hasImagery()) {
