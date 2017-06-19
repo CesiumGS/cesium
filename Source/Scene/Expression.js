@@ -92,6 +92,51 @@ define([
         }
     });
 
+    // Scratch storage manager while evaluating deep expressions.
+    // For example, an expression like dot(vec4(${red}), vec4(${green}) * vec4(${blue}) requires 3 scratch Cartesian4's
+    var scratchStorage = {
+        arrayIndex : 0,
+        arrayArray : [[]],
+        cartesian2Index : 0,
+        cartesian3Index : 0,
+        cartesian4Index : 0,
+        cartesian2Array : [new Cartesian2()],
+        cartesian3Array : [new Cartesian3()],
+        cartesian4Array : [new Cartesian4()],
+        reset : function() {
+            this.arrayIndex = 0;
+            this.cartesian2Index = 0;
+            this.cartesian3Index = 0;
+            this.cartesian4Index = 0;
+        },
+        getArray : function() {
+            if (this.arrayIndex >= this.arrayArray.length) {
+                this.arrayArray.push([]);
+            }
+            var array = this.arrayArray[this.arrayIndex++];
+            array.length = 0;
+            return array;
+        },
+        getCartesian2 : function() {
+            if (this.cartesian2Index >= this.cartesian2Array.length) {
+                this.cartesian2Array.push(new Cartesian2());
+            }
+            return this.cartesian2Array[this.cartesian2Index++];
+        },
+        getCartesian3 : function() {
+            if (this.cartesian3Index >= this.cartesian3Array.length) {
+                this.cartesian3Array.push(new Cartesian3());
+            }
+            return this.cartesian3Array[this.cartesian3Index++];
+        },
+        getCartesian4 : function() {
+            if (this.cartesian4Index >= this.cartesian4Array.length) {
+                this.cartesian4Array.push(new Cartesian4());
+            }
+            return this.cartesian4Array[this.cartesian4Index++];
+        }
+    };
+
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
@@ -184,51 +229,6 @@ define([
     var replacementRegex = /@#%/g;
 
     var scratchColor = new Color();
-
-    // Scratch storage manager while evaluating deep expressions.
-    // For example, an expression like dot(vec4(${red}), vec4(${green}) * vec4(${blue}) requires 3 scratch Cartesian4's
-    var scratchStorage = {
-        arrayIndex : 0,
-        arrayArray : [[]],
-        cartesian2Index : 0,
-        cartesian3Index : 0,
-        cartesian4Index : 0,
-        cartesian2Array : [new Cartesian2()],
-        cartesian3Array : [new Cartesian3()],
-        cartesian4Array : [new Cartesian4()],
-        reset : function() {
-            this.arrayIndex = 0;
-            this.cartesian2Index = 0;
-            this.cartesian3Index = 0;
-            this.cartesian4Index = 0;
-        },
-        getArray : function() {
-            if (this.arrayIndex >= this.arrayArray.length) {
-                this.arrayArray.push([]);
-            }
-            var array = this.arrayArray[this.arrayIndex++];
-            array.length = 0;
-            return array;
-        },
-        getCartesian2 : function() {
-            if (this.cartesian2Index >= this.cartesian2Array.length) {
-                this.cartesian2Array.push(new Cartesian2());
-            }
-            return this.cartesian2Array[this.cartesian2Index++];
-        },
-        getCartesian3 : function() {
-            if (this.cartesian3Index >= this.cartesian3Array.length) {
-                this.cartesian3Array.push(new Cartesian3());
-            }
-            return this.cartesian3Array[this.cartesian3Index++];
-        },
-        getCartesian4 : function() {
-            if (this.cartesian4Index >= this.cartesian4Array.length) {
-                this.cartesian4Array.push(new Cartesian4());
-            }
-            return this.cartesian4Array[this.cartesian4Index++];
-        }
-    };
 
     var unaryFunctions = {
         abs : getEvaluateUnaryComponentwise(Math.abs),

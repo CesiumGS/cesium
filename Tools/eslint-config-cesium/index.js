@@ -22,7 +22,7 @@ module.exports = {
         'new-cap': ['error', {properties: false}],
         'no-caller': ['error'],
         'no-console': 'off',
-        "no-else-return": "error",
+        'no-else-return': 'error',
         'no-empty': ['error'],
         'no-extend-native': ['error'],
         'no-extra-boolean-cast': 'off',
@@ -32,6 +32,7 @@ module.exports = {
         'no-undef': ['error'],
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
         'no-useless-escape': 'off',
+        'no-use-before-define': ['error', 'nofunc'],
         semi: ['error'],
         strict: ['error'],
         'wrap-iife': ['error', 'any']
