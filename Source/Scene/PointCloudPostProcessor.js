@@ -275,11 +275,11 @@ define([
         });
 
         var framebuffers = processor._framebuffers;
-        var clearCommands = new Array(4);
+        var clearCommands = {};
         i = 0;
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
-                clearCommands[i] = new ClearCommand({
+                clearCommands[name] = new ClearCommand({
                     framebuffer : framebuffers[name],
                     color : new Color(0.0, 0.0, 0.0, 0.0),
                     depth : 1.0,
@@ -444,7 +444,7 @@ define([
             var command = commandList[i];
             command.framebuffer = this._framebuffers.prior;
             //command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
-            command.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
+            //command.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
             command.castShadows = false;
             command.receiveShadows = false;
             command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
@@ -452,18 +452,27 @@ define([
 
         // Apply processing commands
         var drawCommands = this._drawCommands;
+        var clearCommands = this._clearCommands;
         var length = drawCommands.length;
         for (i = 0; i < length; ++i) {
+            // So before each draw call, we should clean up the dirty
+            // framebuffers that we left behind on the *previous* pass
+            if (i == 0) {
+                commandList.push(clearCommands['screenSpacePass']);
+            } else {
+                if (i % 2 == 1)
+                    commandList.push(clearCommands['regionGrowingPassA']);
+                else
+                    commandList.push(clearCommands['regionGrowingPassB']);
+            }
+            
             commandList.push(drawCommands[i]);
         }
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-
-        // TODO: technically should apply the clear sooner since the FBO's color texture is undefined on the first frame. Related to TODO above. This may also explain some black flashes during resizing.
-        for (i = 0; i < this._clearCommands.length; ++i) {
-            commandList.push(this._clearCommands[i]);
-        }
+        
+        commandList.push(clearCommands['prior']);
     };
 
     /**
