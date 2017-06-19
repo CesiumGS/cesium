@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/Pass',
         '../Renderer/PixelDatatype',
@@ -23,6 +24,7 @@ define([
         destroyObject,
         PixelFormat,
         ClearCommand,
+        DrawCommand,
         Framebuffer,
         Pass,
         PixelDatatype,
@@ -168,6 +170,7 @@ define([
 
     function pointOcclusionStage(processor, context) {
         var pointOcclusionFS =
+            '#extension GL_EXT_frag_depth : enable \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_ECTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -175,9 +178,8 @@ define([
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    vec4 EC = texture2D(pointCloud_ECTexture, v_textureCoordinates); \n' +
-            '    color.rgb = color.rgb * 0.5 + vec3(normalize(EC.xyz)) * 0.1; \n' +
-            '    gl_FragColor = color; \n' +
-            '} \n';
+            '    gl_FragDepthEXT = 0.5; \n' +
+            '} \n'; // TODO: Fix gl_FragDepthEXT for WebGL2
 
         var uniformMap = {
             pointCloud_colorTexture: function() {
@@ -198,6 +200,7 @@ define([
 
     function regionGrowingStage(processor, context, iteration) {
         var regionGrowingFS =
+            '#extension GL_EXT_frag_depth : enable \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -205,8 +208,9 @@ define([
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
-            '    color.rgb = color.rgb * 0.5 + vec3(depth) * 0.1; \n' +
-            '    gl_FragColor = color; \n' +
+            '    vec3 newColor = color.rgb * 0.5; \n' +
+            '    gl_FragColor = vec4(newColor, color.a); \n' +
+            '    gl_FragDepthEXT = depth; \n' +
             '} \n';
 
         var i = iteration % 2;
@@ -276,7 +280,6 @@ define([
 
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
-        i = 0;
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
                 clearCommands[name] = new ClearCommand({
@@ -287,7 +290,6 @@ define([
                     pass : Pass.CESIUM_3D_TILE,
                     owner : processor
                 });
-                i++;
             }
         }
 
@@ -352,7 +354,7 @@ define([
                 '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
                 '}');
             fs.sources.splice(0, 0,
-                             '#extension GL_EXT_draw_buffers : enable \n');
+                              '#extension GL_EXT_draw_buffers : enable \n');
             fs.sources.push(
                 'varying vec3 v_positionECPS; \n' +
                 'void main() \n' +
@@ -361,14 +363,15 @@ define([
                 //'    gl_FragData[0] = gl_FragColor;' +
                 '    gl_FragData[1] = vec4(v_positionECPS, 0);' +
                     '}');
-            
+
+            console.log(context.fragmentDepth);
             for (var i = 0; i < vs.sources.length; i++) {
-                console.log(vs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
+                //console.log(vs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
                 console.log(shaderProgram.vertexShaderSource.sources[i] + "\n\n\n\n\n\n");
             }
             
             for (i = 0; i < fs.sources.length; i++) {
-                console.log(fs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
+                //console.log(fs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
                 console.log(shaderProgram.fragmentShaderSource.sources[i] + "\n\n\n\n\n\n");
             }
 
@@ -380,53 +383,6 @@ define([
         }
         
         return shader;
-    }
-
-    function forwardECForShaders(context, shaderProgram) {
-        var vsShader = shaderProgram.vertexShaderSource;
-        var fsShader = shaderProgram.fragmentShaderSource;
-
-        var vsShaderDefines = vsShader.defines.slice(0);
-        var fsShaderDefines = fsShader.defines.slice(0);
-
-        var vsShaderSources = vsShader.sources.slice(0);
-        var fsShaderSources = fsShader.sources.slice(0);
-
-        //fsShaderSources.splice(0, 0, '#extension GL_EXT_draw_buffers : enable \n');
-
-        var oldMainVS = ShaderSource.replaceMain(vsShaderSources[0], 'czm_point_cloud_post_process_main');
-        var oldMainFS = ShaderSource.replaceMain(fsShaderSources[0], 'czm_point_cloud_post_process_main');
-
-        oldMainFS = oldMainFS.replace(new RegExp('gl_FragColor', 'g'), 'gl_FragData[0]');
-        
-        var forwardVS =
-            'varying vec3 v_positionECPS; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_point_cloud_post_process_main(); \n' +
-            '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
-            '}';
-        var forwardFS =
-            'varying vec3 v_positionECPS; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_point_cloud_post_process_main(); \n' +
-            //'    gl_FragData[0] = gl_FragColor;' +
-            '    gl_FragData[1] = vec4(v_positionECPS, 0);' +
-            '}';
-
-        forwardVS = oldMainVS + forwardVS;
-        forwardFS = '#extension GL_EXT_draw_buffers : enable \n' +
-            oldMainFS + forwardFS;
-
-        console.log(forwardFS + "\n\n\n\n\n\n\nBLORG\n\n\n\n\n\n\n");
-
-        return ShaderProgram.fromCache({
-            vertexShaderSource : forwardVS,
-            fragmentShaderSource : forwardFS,
-            attributeLocations : shaderProgram._attributeLocations,
-            context : context
-        });
     }
 
     PointCloudPostProcessor.prototype.update = function(frameState, commandStart) {
@@ -442,12 +398,19 @@ define([
         var commandEnd = commandList.length;
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
-            command.framebuffer = this._framebuffers.prior;
-            //command.shaderProgram = forwardECForShaders(frameState.context, command.shaderProgram);
-            //command.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
-            command.castShadows = false;
-            command.receiveShadows = false;
-            command.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
+
+            var derivedCommand = command.derivedCommands.pointCloudProcessor;
+            if (!defined(derivedCommand)) {
+                derivedCommand = DrawCommand.shallowClone(command);
+                command.derivedCommands.pointCloudProcessor = derivedCommand;
+
+                derivedCommand.framebuffer = this._framebuffers.prior;
+                derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
+                derivedCommand.castShadows = false;
+                derivedCommand.receiveShadows = false;
+                derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
+                commandList[i] = derivedCommand;
+            }
         }
 
         // Apply processing commands
