@@ -27,11 +27,11 @@ define([
         createCommand) {
     'use strict';
 
-    function frustumStatsToString(stats) {
+    function frustumStatisticsToString(statistics) {
         var str;
-        if (defined(stats)) {
+        if (defined(statistics)) {
             str = 'Command Statistics';
-            var com = stats.commandsInFrustums;
+            var com = statistics.commandsInFrustums;
             for (var n in com) {
                 if (com.hasOwnProperty(n)) {
                     var num = parseInt(n, 10);
@@ -52,7 +52,7 @@ define([
                     str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + com[n] + ' in frustum ' + s;
                 }
             }
-            str += '<br>Total: ' + stats.totalCommands;
+            str += '<br>Total: ' + statistics.totalCommands;
         }
 
         return str;
@@ -921,7 +921,7 @@ define([
      */
     CesiumInspectorViewModel.prototype._update = function() {
         if (this.frustums) {
-            this.frustumStatisticText = frustumStatsToString(this._scene.debugFrustumStatistics);
+            this.frustumStatisticText = frustumStatisticsToString(this._scene.debugFrustumStatistics);
         }
 
         // Determine the number of frustums being used.
