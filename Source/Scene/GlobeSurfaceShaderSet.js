@@ -53,10 +53,10 @@ define([
         case SceneMode.MORPHING:
             positionMode = getPositionMorphingMode;
             break;
+        //>>includeStart('debug', pragmas.debug);
         default:
-            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Unknown sceneMode: ' + sceneMode);
-            //>>includeEnd('debug');
+        //>>includeEnd('debug');
         }
 
         return positionMode;

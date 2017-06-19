@@ -29,10 +29,8 @@ define([
                 return 'mat4';
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
-            //>>includeStart('debug', pragmas.debug);
             default:
                 throw new RuntimeError('Unknown webGLValue: ' + webGLValue);
-            //>>includeEnd('debug');
         }
     }
 
@@ -150,10 +148,8 @@ define([
                                 value: [spot.fallOffAngle, spot.fallOffExponent]
                             };
                             break;
-                        //>>includeStart('debug', pragmas.debug);
                         default:
                             throw new RuntimeError('Unknown lightType: ' + lightType);
-                        //>>includeEnd('debug');
                     }
                     ++lightCount;
                 }
@@ -667,10 +663,8 @@ define([
                 return WebGLConstants.BOOL;
             case 'doubleSided':
                 return WebGLConstants.BOOL;
-            //>>includeStart('debug', pragmas.debug);
             default:
                 throw new RuntimeError('Unknown paramName: ' + paramName);
-            //>>includeEnd('debug');
         }
     }
 

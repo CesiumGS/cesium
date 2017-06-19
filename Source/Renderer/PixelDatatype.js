@@ -42,10 +42,10 @@ define([
                 case PixelDatatype.FLOAT:
                 case PixelDatatype.UNSIGNED_INT_24_8:
                     return 4;
+                //>>includeStart('debug', pragmas.debug);
                 default:
-                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Unknown pixelDatatype: ' + pixelDatatype);
-                    //>>includeEnd('debug');
+                //>>includeEnd('debug');
             }
         },
 

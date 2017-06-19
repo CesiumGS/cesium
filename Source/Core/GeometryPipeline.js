@@ -2546,10 +2546,10 @@ define([
             case GeometryType.LINES:
                 splitLongitudeLines(instance);
                 break;
+            //>>includeStart('debug', pragmas.debug);
             default:
-                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Unknown geometryType: ' + geometry.geometryType);
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
             }
         } else {
             indexPrimitive(geometry);
