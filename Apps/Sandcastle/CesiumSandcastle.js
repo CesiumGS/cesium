@@ -951,7 +951,7 @@ require({
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
         var confirmChange = true;
         if (demoHtml !== htmlText || demoCode !== jsText) {
-            confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?'); //eslint-disable-line no-alert
+            confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
         }
         if (confirmChange) {
             loadFromGallery(newDemo).then(function() {
@@ -1196,7 +1196,7 @@ require({
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
                 if (demoHtml !== htmlText || demoCode !== jsText) {
-                    confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?'); //eslint-disable-line no-alert
+                    confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
                 }
                 if (confirmChange) {
                     loadFromGallery(demo).then(function() {
