@@ -774,9 +774,8 @@ gulp.task('sortRequires', function() {
                     return -1;
                 } else if (aName > bName) {
                     return 1;
-                } else {
-                    return 0;
                 }
+                return 0;
             });
 
             if (preserveFirst) {
@@ -1149,9 +1148,8 @@ function createGalleryList() {
         return -1;
       } else if (a.name > b.name) {
         return 1;
-      } else {
-        return 0;
       }
+      return 0;
     });
 
     var helloWorldIndex = Math.max(demoObjects.indexOf(helloWorld), 0);
