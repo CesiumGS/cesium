@@ -148,3 +148,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Jason Wohlgemuth](https://github.com/jhwohlgemuth)
 * [Hülya Yurtman](https://github.com/hulyayurtman)
 * [Esra ERİK](https://github.com/esraerik)
+* [Byumjin Kim](https://github.com/byumjin)
