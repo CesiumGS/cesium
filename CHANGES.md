@@ -24,6 +24,7 @@ Change Log
    * `Cesium3DTileFeature`
    * `Cesium3DTilesInspector`, `Cesium3DTilesInspectorViewModel`, and `viewerCesium3DTilesInspectorMixin`
    * `Cesium3DTileColorBlendMode`
+* Added a Sandcastle demo for setting time with the Clock API [#5457](https://github.com/AnalyticalGraphicsInc/cesium/pull/5457);
 
 ### 1.34 - 2017-06-01
 
