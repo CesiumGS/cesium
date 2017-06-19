@@ -25,6 +25,7 @@ module.exports = {
         'no-empty': ['error'],
         'no-extend-native': ['error'],
         'no-extra-boolean-cast': 'off',
+        'no-floating-decimal': ['error'],
         'no-irregular-whitespace': ['error'],
         'no-new': ['error'],
         'no-undef': ['error'],
