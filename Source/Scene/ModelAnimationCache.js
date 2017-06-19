@@ -1,23 +1,23 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/LinearSpline',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Core/WebGLConstants',
+        './AttributeType',
         './getBinaryAccessor'
     ], function(
         Cartesian3,
-        defaultValue,
         defined,
         LinearSpline,
         Matrix4,
         Quaternion,
         QuaternionSpline,
         WebGLConstants,
+        AttributeType,
         getBinaryAccessor) {
     'use strict';
 
@@ -72,15 +72,15 @@ define([
             var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             var i;
 
-            if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.SCALAR)) {
                 values = typedArray;
             }
-            else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
+            else if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.VEC3)) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
+            } else if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.VEC4)) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
@@ -137,12 +137,12 @@ define([
                 var type = accessor.type;
 
                 if (sampler.interpolation === 'LINEAR') {
-                    if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
+                    if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.VEC3)) {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
+                    } else if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.VEC4)) {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints
@@ -185,7 +185,7 @@ define([
             var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             matrices =  new Array(count);
 
-            if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.MAT4)) {
                 for (var i = 0; i < count; ++i) {
                     matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                 }
