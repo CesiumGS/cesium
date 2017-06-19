@@ -20,8 +20,11 @@ define([
      */
     function PostProcessorScene() {
         this.blackAndWhiteStage = createBlackAndWhiteStage();
+        this.blackAndWhiteStage.show = false;
         this.brightnessStage = createBrightnessStage();
+        this.brightnessStage.show = false;
         this.eightBitStage = createEightBitStage();
+        this.eightBitStage.show = false;
         this.compositeTextureStage = createCompositeTextureStage();
         this.compositeTextureStage.show = false;
         this.LensFlareStage = createLensFlareStage();
@@ -40,8 +43,8 @@ define([
     }
 
     function createLensFlareStage() {
-        var url_Dirt = buildModuleUrl('Assets/Textures/LensFlare/DirtMaskTextureExample.png');
-        var url_Star = buildModuleUrl('Assets/Textures/LensFlare/StarBurst.png');
+        var url_Dirt = buildModuleUrl('Assets/Textures/LensFlare/DirtMask.jpg');
+        var url_Star = buildModuleUrl('Assets/Textures/LensFlare/StarBurst.jpg');
 
         var uniformValues = {
 
