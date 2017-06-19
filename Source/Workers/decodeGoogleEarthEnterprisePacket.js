@@ -32,6 +32,7 @@ define([
         } else if (s === 'DbRoot') {
             return Types.DBROOT;
         }
+        return undefined;
     };
 
     function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
@@ -54,7 +55,7 @@ define([
                     buffer : buffer
                 };
         }
-
+        return undefined;
     }
 
     var qtMagic = 32301;

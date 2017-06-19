@@ -1736,7 +1736,7 @@ util.oneOfGetter = function getOneOf(fieldNames) {
      * @this Object
      * @ignore
      */
-    return function() { // eslint-disable-line consistent-return
+    return function() {
         for (var keys = Object.keys(this), i = keys.length - 1; i > -1; --i)
             if (fieldMap[keys[i]] === 1 && this[keys[i]] !== undefined && this[keys[i]] !== null)
                 return keys[i];

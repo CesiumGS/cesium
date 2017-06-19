@@ -114,6 +114,7 @@ define([
                 return statement.expression.evaluate(frameState, feature, result);
             }
         }
+        return undefined;
     };
 
     /**
@@ -138,6 +139,7 @@ define([
                 return statement.expression.evaluateColor(frameState, feature, result);
             }
         }
+        return undefined;
     };
 
     /**

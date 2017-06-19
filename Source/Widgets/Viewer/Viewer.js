@@ -114,6 +114,7 @@ define([
         if (defined(viewer.scene.globe)) {
             return pickImageryLayerFeature(viewer, e.position);
         }
+        return undefined;
     }
 
     function trackDataSourceClock(timeline, clock, dataSource) {
@@ -136,7 +137,7 @@ define([
         var pickRay = scene.camera.getPickRay(windowPosition);
         var imageryLayerFeaturePromise = scene.imageryLayers.pickImageryLayerFeatures(pickRay, scene);
         if (!defined(imageryLayerFeaturePromise)) {
-            return;
+            return undefined;
         }
 
         // Imagery layer feature picking is asynchronous, so put up a message while loading.

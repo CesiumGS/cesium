@@ -28,6 +28,7 @@ define([
             case WebGLConstants.SAMPLER_2D:
                 return 'sampler2D';
         }
+        return undefined;
     }
 
     function generateLightParameters(gltf) {
@@ -658,6 +659,7 @@ define([
             case 'doubleSided':
                 return WebGLConstants.BOOL;
         }
+        return undefined;
     }
 
     function getTechniqueKey(khrMaterialsCommon) {

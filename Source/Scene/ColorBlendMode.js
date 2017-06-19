@@ -36,6 +36,7 @@ define([
             // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
+        return undefined;
     };
 
     return freezeObject(ColorBlendMode);

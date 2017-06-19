@@ -679,6 +679,7 @@ define([
             imagery.request = undefined;
 
             TileProviderError.handleSuccess(that._requestImageError);
+            return undefined;
         }
 
         function failure(e) {

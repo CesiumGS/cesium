@@ -31,7 +31,7 @@ define([
     function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
         var length = positions.length;
         if (length < 2) {
-            return;
+            return undefined;
         }
 
         var hasBottomHeights = defined(bottomHeights);
@@ -87,7 +87,7 @@ define([
         }
 
         if (hasAllZeroHeights || index < 2) {
-            return;
+            return undefined;
         }
 
         cleanedPositions.length = index;
@@ -117,7 +117,7 @@ define([
         var o = removeDuplicates(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
         if (!defined(o)) {
-            return;
+            return undefined;
         }
 
         wallPositions = o.positions;

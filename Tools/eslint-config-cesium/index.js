@@ -16,6 +16,7 @@ module.exports = {
         Uint8ClampedArray: false
     },
     rules: {
+        'consistent-return': 'error',
         curly: 'error',
         eqeqeq: 'error',
         'guard-for-in': 'error',

@@ -969,7 +969,7 @@ define([
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
-            return;
+            return undefined;
         }
 
         var ellipsoid = corridorGeometry._ellipsoid;

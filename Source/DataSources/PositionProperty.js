@@ -126,6 +126,7 @@ define([
         if (inputFrame === ReferenceFrame.FIXED) {
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
+        return undefined;
     };
 
     return PositionProperty;

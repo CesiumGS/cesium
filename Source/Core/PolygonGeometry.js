@@ -803,7 +803,7 @@ define([
 
         var outerPositions = polygonHierarchy.positions;
         if (outerPositions.length < 3) {
-            return;
+            return undefined;
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
@@ -813,7 +813,7 @@ define([
         var polygons = results.polygons;
 
         if (hierarchy.length === 0) {
-            return;
+            return undefined;
         }
 
         outerPositions = hierarchy[0].outerRing;

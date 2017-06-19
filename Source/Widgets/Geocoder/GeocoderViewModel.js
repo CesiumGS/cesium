@@ -92,6 +92,7 @@ define([
             } else {
                 geocode(that, that._geocoderServices);
             }
+            return undefined;
         });
 
         this.deselectSuggestion = function () {

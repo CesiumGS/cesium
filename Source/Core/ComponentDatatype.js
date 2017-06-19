@@ -183,6 +183,8 @@ define([
         if (array instanceof Float64Array) {
             return ComponentDatatype.DOUBLE;
         }
+        return undefined;
+
     };
 
     /**

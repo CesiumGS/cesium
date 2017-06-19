@@ -143,11 +143,12 @@ gulp.task('cloc', ['build'], function() {
         child_process.exec(cmdLine, function(error, stdout, stderr) {
             if (error) {
                 console.log(stderr);
-                return reject(error);
+                reject(error);
+            } else {
+                console.log('Source:');
+                console.log(stdout);
+                resolve();
             }
-            console.log('Source:');
-            console.log(stdout);
-            resolve();
         });
     });
 
@@ -158,11 +159,12 @@ gulp.task('cloc', ['build'], function() {
             child_process.exec(cmdLine, function(error, stdout, stderr) {
                 if (error) {
                     console.log(stderr);
-                    return reject(error);
+                    reject(error);
+                } else {
+                    console.log('Specs:');
+                    console.log(stdout);
+                    resolve();
                 }
-                console.log('Specs:');
-                console.log(stdout);
-                resolve();
             });
         });
     });
@@ -214,10 +216,11 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
     child_process.exec(cmdLine, function(error, stdout, stderr) {
         if (error) {
             console.log(stderr);
-            return done(error);
+            done(error);
+        } else {
+            console.log(stdout);
+            done();
         }
-        console.log(stdout);
-        done();
     });
 });
 
@@ -422,7 +425,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 })
                 .then(function(content) {
                     if (!content) {
-                        return;
+                        return undefined;
                     }
 
                     console.log('Uploading ' + blobName + '...');
@@ -448,7 +451,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
         .then(function() {
             console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
             if (existingBlobs.length === 0) {
-                return;
+                return undefined;
             }
 
             var objectToDelete = [];
@@ -471,6 +474,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                         console.log('Cleaned ' + existingBlobs.length + ' files.');
                     });
             }
+            return undefined;
         })
         .catch(function(error) {
             errors.push(error);
@@ -533,6 +537,7 @@ function listAll(s3, bucketName, prefix, files, marker) {
             // get next page of results
             return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
         }
+        return undefined;
     });
 }
 
@@ -548,7 +553,7 @@ gulp.task('deploy-set-version', function() {
 gulp.task('deploy-status', function() {
     if (isTravisPullRequest()) {
         console.log('Skipping deployment status for non-pull request.');
-        return;
+        return undefined;
     }
 
     var status = yargs.argv.status;
@@ -568,7 +573,7 @@ gulp.task('deploy-status', function() {
 function setStatus(state, targetUrl, description, context) {
     // skip if the environment does not have the token
     if (!process.env.TOKEN) {
-        return;
+        return undefined;
     }
 
     var requestPost = Promise.promisify(request.post);
@@ -693,7 +698,7 @@ gulp.task('sortRequires', function() {
                 if (!noModulesRegex.test(contents)) {
                     console.log(file + ' does not have the expected syntax.');
                 }
-                return;
+                return undefined;
             }
 
             // In specs, the first require is significant,
@@ -712,7 +717,7 @@ gulp.task('sortRequires', function() {
             for (i = 0; i < names.length; ++i) {
                 if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
                     console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
+                    return undefined;
                 }
             }
 
@@ -724,7 +729,7 @@ gulp.task('sortRequires', function() {
             for (i = 0; i < identifiers.length; ++i) {
                 if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
                     console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
+                    return undefined;
                 }
             }
 

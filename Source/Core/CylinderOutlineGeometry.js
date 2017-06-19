@@ -193,7 +193,7 @@ define([
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
 
         if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
-            return;
+            return undefined;
         }
 
         var numVertices = slices * 2;

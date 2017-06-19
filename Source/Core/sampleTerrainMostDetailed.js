@@ -72,6 +72,7 @@ define([
                 if (defined(positionsAtLevel)) {
                     return sampleTerrain(terrainProvider, index, positionsAtLevel);
                 }
+                return undefined;
             })).then(function() {
                 return positions;
             });

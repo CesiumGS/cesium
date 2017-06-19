@@ -4014,6 +4014,7 @@ define([
                 }
             }
         }
+        return undefined;
     }
 
     function createSilhouetteProgram(model, program, frameState) {

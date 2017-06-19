@@ -561,6 +561,7 @@ define([
         } else if (componentsPerAttribute === 4) {
             return Cartesian4.unpack(value, 0, scratchGetAttributeCartesian4);
         }
+        return undefined;
     }
 
     function createBatchTable(primitive, context) {

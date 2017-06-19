@@ -204,7 +204,7 @@ define([
         var max = boxGeometry._max;
 
         if (Cartesian3.equals(min, max)) {
-            return;
+            return undefined;
         }
 
         var attributes = new GeometryAttributes();

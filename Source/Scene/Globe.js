@@ -390,7 +390,7 @@ define([
 
         var levelZeroTiles = this._surface._levelZeroTiles;
         if (!defined(levelZeroTiles)) {
-            return;
+            return undefined;
         }
 
         var tile;

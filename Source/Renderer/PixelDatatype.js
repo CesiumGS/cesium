@@ -41,6 +41,7 @@ define([
                 case PixelDatatype.UNSIGNED_INT_24_8:
                     return 4;
             }
+            return undefined;
         },
 
         validate : function(pixelDatatype) {

@@ -8,7 +8,7 @@ define([
     'use strict';
 
     if (typeof window === 'undefined') {
-        return;
+        return undefined;
     }
 
     var implementation = window.requestAnimationFrame;
@@ -62,7 +62,7 @@ define([
      *   Cesium.requestAnimationFrame(tick);
      * }
      * tick();
-     * 
+     *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */
     function requestAnimationFrame(callback) {

@@ -129,6 +129,7 @@ require({
                 }
             }
         }
+        return undefined;
     }
 
     var jsEditor;
@@ -515,6 +516,7 @@ require({
         if (demoHtml !== htmlText || demoCode !== jsText) {
             return 'Be sure to save a copy of any important edits before leaving this page.';
         }
+        return undefined;
     };
 
     registry.byId('codeContainer').watch('selectedChildWidget', function(name, oldPane, newPane) {
@@ -707,7 +709,7 @@ require({
             htmlEditor.setValue(gistHtml);
             document.title = 'Gist Import - Cesium Sandcastle';
             CodeMirror.commands.runCesium(jsEditor);
-            return;
+            return undefined;
         }
         return requestDemo(demo.name).then(function(value) {
             demo.code = value;
@@ -907,7 +909,7 @@ require({
         if (code === previousCode && html === previousHtml) {
             textArea.value = sandcastleUrl;
             textArea.select();
-            return;
+            return undefined;
         }
         previousCode = code;
         previousHtml = html;
@@ -1288,6 +1290,7 @@ require({
                 gallery_demos.push(emptyDemo);
                 return addFileToGallery(emptyDemo);
             }
+            return undefined;
         });
     }
 

@@ -754,6 +754,7 @@ define([
                 return attribute;
             }
         }
+        return undefined;
     }
 
     function modifyStyleFunction(source) {

@@ -85,6 +85,7 @@ define([
                 kp++;
             }
         }
+        return undefined;
     }
 
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;

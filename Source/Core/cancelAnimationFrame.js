@@ -6,7 +6,7 @@ define([
     'use strict';
 
     if (typeof window === 'undefined') {
-        return;
+        return undefined;
     }
 
     var implementation = window.cancelAnimationFrame;

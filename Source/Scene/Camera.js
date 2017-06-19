@@ -1924,6 +1924,7 @@ define([
         } else if (this._mode === SceneMode.SCENE2D) {
             return Math.max(this.frustum.right - this.frustum.left, this.frustum.top - this.frustum.bottom);
         }
+        return undefined;
     };
 
     var scratchLookAtMatrix4 = new Matrix4();

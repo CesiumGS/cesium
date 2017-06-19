@@ -274,7 +274,7 @@ define([
     }
 
     if (!FeatureDetection.supportsTypedArrays()) {
-        return;
+        return undefined;
     }
     var scratchFloatArray = new Float32Array(1);
 

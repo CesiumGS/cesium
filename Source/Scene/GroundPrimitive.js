@@ -755,6 +755,7 @@ define([
 
             return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
         }
+        return undefined;
     }
 
     function createShaderProgram(groundPrimitive, frameState, appearance) {

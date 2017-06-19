@@ -75,6 +75,7 @@ define([
             delete this._terrainCache[quadKey];
             return result.buffer;
         }
+        return undefined;
     };
 
     TerrainCache.prototype.tidy = function() {

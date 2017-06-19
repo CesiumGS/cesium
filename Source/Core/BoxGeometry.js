@@ -223,7 +223,7 @@ define([
         var vertexFormat = boxGeometry._vertexFormat;
 
         if (Cartesian3.equals(min, max)) {
-            return;
+            return undefined;
         }
 
         var attributes = new GeometryAttributes();

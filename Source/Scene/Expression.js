@@ -499,6 +499,7 @@ define([
             }
             return new Node(ExpressionNodeType.LITERAL_STRING, replaceBackslashes(ast.value));
         }
+        return undefined;
     }
 
     function parseCall(expression, ast) {
@@ -700,6 +701,7 @@ define([
         } else if (name === 'E') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Math.E);
         }
+        return undefined;
     }
 
     function parseMemberExpression(expression, ast) {
@@ -1026,6 +1028,7 @@ define([
         } else if (call === 'vec4') {
             return Cartesian4.fromArray(components, 0, scratchStorage.getCartesian4());
         }
+        return undefined;
     };
 
     Node.prototype._evaluateLiteralString = function(frameState, feature) {
@@ -1736,6 +1739,7 @@ define([
                     return 'u_tilesetTime';
                 }
         }
+        return undefined;
     };
 
     return Expression;
