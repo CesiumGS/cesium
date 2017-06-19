@@ -31,7 +31,6 @@ define([
         CircleEmitter) {
     "use strict";
 
-
     // An array of available particles that we can reuse instead of allocating new.
     var particlePool = [];
 

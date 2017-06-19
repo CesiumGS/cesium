@@ -196,8 +196,8 @@ var trs = new Cesium.TranslationRotationScale();
 function computeEmitterModelMatrix() {
     hpr = Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll, hpr);
 
-    trs.translation = Cesium.Cartesian3.fromElements(viewModel.transX, viewModel.transY, viewModel.transZ);
-    trs.rotations = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
+    trs.translation = Cesium.Cartesian3.fromElements(viewModel.transX, viewModel.transY, viewModel.transZ, translation);
+    trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
 
     return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix);
 }
