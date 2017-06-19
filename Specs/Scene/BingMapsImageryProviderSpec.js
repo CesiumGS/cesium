@@ -92,7 +92,7 @@ defineSuite([
     });
 
     function createFakeMetadataResponse(mapStyle) {
-        var stylePrefix = 'a';
+        var stylePrefix;
         switch (mapStyle) {
         case BingMapsStyle.AERIAL_WITH_LABELS:
             stylePrefix = 'h';
@@ -101,9 +101,7 @@ defineSuite([
             stylePrefix = 'r';
             break;
         default:
-            //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Unknown mapStyle ' + mapStyle);
-            //>>includeEnd('debug');
+           stylePrefix = 'a';
         }
 
         return {
