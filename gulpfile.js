@@ -1079,7 +1079,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = '/*eslint-disable no-unused-vars*/\nvar specs = [' + specs.join(',') + '];';
+    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
