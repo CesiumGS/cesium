@@ -625,7 +625,7 @@ define([
         this._cubeMap = context.defaultCubeMap;
         var that = this;
         // buildModuleURL
-        var texturePath = buildModuleUrl('Assets/Textures/GeneratedSkyBox/');
+        var texturePath = buildModuleUrl('Assets/Textures/BlueSkyBox/');
         var paths = {
             positiveX : texturePath + 'PositiveX.png',
             negativeX : texturePath + 'NegativeX.png',
