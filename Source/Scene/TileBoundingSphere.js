@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
         '../Core/defineProperties',
         '../Core/GeometryInstance',
         '../Core/Matrix4',
@@ -16,7 +15,6 @@ define([
         Cartesian3,
         Check,
         ColorGeometryInstanceAttribute,
-        defined,
         defineProperties,
         GeometryInstance,
         Matrix4,
@@ -107,8 +105,8 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('frameState', frameState);
         //>>includeEnd('debug');
-        var bs = this._boundingSphere;
-        return Math.max(0.0, Cartesian3.distance(bs.center, frameState.camera.positionWC) - bs.radius);
+        var boundingSphere = this._boundingSphere;
+        return Math.max(0.0, Cartesian3.distance(boundingSphere.center, frameState.camera.positionWC) - boundingSphere.radius);
     };
 
     /**
@@ -129,6 +127,9 @@ define([
 
     /**
      * Update the bounding sphere after the tile is transformed.
+     *
+     * @param {Cartesian3} center The center of the bounding sphere.
+     * @param {Number} radius The radius of the bounding sphere.
      */
     TileBoundingSphere.prototype.update = function(center, radius) {
         Cartesian3.clone(center, this._boundingSphere.center);
