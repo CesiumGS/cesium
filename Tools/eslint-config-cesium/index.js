@@ -22,6 +22,7 @@ module.exports = {
         'new-cap': ['error', {properties: false}],
         'no-caller': ['error'],
         'no-console': 'off',
+        "no-else-return": "error",
         'no-empty': ['error'],
         'no-extend-native': ['error'],
         'no-extra-boolean-cast': 'off',
