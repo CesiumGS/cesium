@@ -299,6 +299,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var west = Number.MAX_VALUE;
         var east = -Number.MAX_VALUE;
