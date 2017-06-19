@@ -1553,8 +1553,8 @@ define([
                 var gltfImage = images[textures[id].source];
                 var extras = gltfImage.extras;
 
-                var binary = undefined;
-                var uri = undefined;
+                var binary;
+                var uri;
 
                 // First check for a compressed texture
                 if (defined(extras) && defined(extras.compressedImage3DTiles)) {

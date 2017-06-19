@@ -32,6 +32,7 @@ module.exports = {
         'no-loop-func': 'error',
         'no-new': 'error',
         'no-undef': 'error',
+        'no-undef-init': 'error',
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
         'no-useless-escape': 'off',
         semi: 'error',
