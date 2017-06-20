@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Add imagery from a Web Map Service (WMS) server.">
-    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -32,7 +32,8 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 // Add a WMTS imagery layer
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url : 'http://c0007424-00.stk.com:8080/geowebcache/service/wmts',
+    url : 'http://localhost:9001/geowebcache/service/wmts',
+    proxy: new Cesium.DefaultProxy('/proxy/'),
     layer : '3_Hourly_Satellite_Derived_Precip',
     style : 'default',
     tileMatrixSetID : 'EPSG:4326',
@@ -54,9 +55,11 @@ imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
                           '2017-06-11T12:00:00Z', '2017-06-11T15:00:00Z',
                           '2017-06-11T18:00:00Z', '2017-06-11T21:00:00Z',
                           '2017-06-12T00:00:00Z', '2017-06-12T03:00:00Z',
-                          '2017-06-12T06:00:00Z', '2017-06-12T09:00:00Z']
+                          '2017-06-12T06:00:00Z', '2017-06-12T09:00:00Z',
+                          '2017-06-12T12:00:00Z', '2017-06-12T15:00:00Z']
 }));
-//Sandcastle_End
+
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-06-11T02:59:40Z');//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
