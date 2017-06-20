@@ -176,9 +176,11 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
+            '    float near = czm_currentFrustum.x; \n' +
+            '    float far = czm_currentFrustum.y; \n' + 
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    vec4 EC = texture2D(pointCloud_ECTexture, v_textureCoordinates); \n' +
-            '    gl_FragDepthEXT = 0.5; \n' +
+            '        gl_FragDepthEXT = (-EC.z - near) / (far - near); \n' +
             '} \n'; // TODO: Fix gl_FragDepthEXT for WebGL2
 
         var uniformMap = {
@@ -192,7 +194,12 @@ define([
         return context.createViewportQuadCommand(pointOcclusionFS, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
-            renderState : RenderState.fromCache(),
+            renderState : RenderState.fromCache({
+                depthMask : true,
+                depthTest : {
+                    enabled : true
+                }
+            }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
         });
@@ -209,7 +216,7 @@ define([
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
             '    vec3 newColor = color.rgb * 0.5; \n' +
-            '    gl_FragColor = vec4(newColor, color.a); \n' +
+            '    gl_FragColor = vec4(vec3(depth), color.a); \n' +
             '    gl_FragDepthEXT = depth; \n' +
             '} \n';
 
@@ -231,7 +238,12 @@ define([
         return context.createViewportQuadCommand(regionGrowingFS, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
-            renderState : RenderState.fromCache(),
+            renderState : RenderState.fromCache({
+                depthMask : true,
+                depthTest : {
+                    enabled : true
+                }
+            }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
         });
@@ -331,7 +343,7 @@ define([
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
-
+ 
             var vs = shaderProgram.vertexShaderSource.clone();
             var fs = shaderProgram.fragmentShaderSource.clone();
 
@@ -360,9 +372,8 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
-                //'    gl_FragData[0] = gl_FragColor;' +
-                '    gl_FragData[1] = vec4(v_positionECPS, 0);' +
-                    '}');
+                '    gl_FragData[1] = vec4(v_positionECPS, 0); \n' +
+                '}');
 
             console.log(context.fragmentDepth);
             for (var i = 0; i < vs.sources.length; i++) {
@@ -409,8 +420,8 @@ define([
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
-                commandList[i] = derivedCommand;
             }
+            commandList[i] = derivedCommand;
         }
 
         // Apply processing commands
