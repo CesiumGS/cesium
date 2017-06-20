@@ -643,5 +643,81 @@ define([
         return result;
     };
 
+    function parseDuration(iso8601) {
+        if (!defined(iso8601) || iso8601.length === 0) {
+            return 0;
+        }
+
+        var start = new JulianDate();
+        var stop;
+
+        if (iso8601[0] === 'P') {
+            // TODO: Parse duration string
+            stop = new JulianDate();
+        } else {
+            stop = JulianDate.fromIso8601(iso8601);
+        }
+
+        return JulianDate.secondsDifference(stop, start);
+    }
+
+    /**
+     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.iso8601 An ISO 8601 interval.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+     * @param {TimeInterval} [result] An existing instance to use for the result.
+     * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601 = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601)) {
+            throw new DeveloperError('options.iso8601 is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new TimeIntervalCollection();
+        }
+
+        var dates = options.iso8601.split('/');
+        var start = JulianDate.fromIso8601(dates[0]);
+        var stop = JulianDate.fromIso8601(dates[1]);
+        var duration = parseDuration(dates[2]);
+        var isStartIncluded = defaultValue(options.isStartIncluded, true);
+        var isStopIncluded = defaultValue(options.isStopIncluded, true);
+
+        // Not duration so just return collection with one interval
+        if (duration === 0) {
+            result.addInterval(new TimeInterval({
+                start: start,
+                stop: stop,
+                isStartIncluded: isStartIncluded,
+                isStopIncluded: isStopIncluded
+            }));
+            return result;
+        }
+
+        var intervalStop = new JulianDate();
+        while(JulianDate.compare(stop, start) < 0) {
+            JulianDate.addSeconds(start, duration, intervalStop);
+            result.addInterval(new TimeInterval({
+                start: start,
+                stop: stop,
+                isStartIncluded: (result.length === 0) ? true : isStartIncluded,
+                isStopIncluded: (JulianDate.compare(stop, intervalStop) < 0) ? false : isStopIncluded
+            }));
+
+            JulianDate.clone(intervalStop, start);
+        }
+
+        return result;
+    };
+
     return TimeIntervalCollection;
 });
