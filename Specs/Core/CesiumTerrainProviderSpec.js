@@ -417,7 +417,6 @@ defineSuite([
             });
         });
 
-
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 

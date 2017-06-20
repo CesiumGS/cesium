@@ -63,7 +63,7 @@ define([
         var message = formatError(exception);
         console.error(message);
         if (!document.querySelector('.cesium-widget-errorPanel')) {
-            window.alert(message);
+            window.alert(message); //eslint-disable-line no-alert
         }
         return;
     }
