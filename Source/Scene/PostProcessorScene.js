@@ -93,7 +93,7 @@ define([
 
                 'vec2 NDC = texcoord * 2.0 - 1.0; \n' +
                 'vec4 EarthPosSC = GetNDCFromWC(vec3(0.0,0.0,0.0), 0.0); \n' +
-                'vec4 EarthPosSC2 = GetNDCFromWC(vec3( 0.0,0.0,0.0), u_EarthRadius *1.5); \n' +
+                'vec4 EarthPosSCEdge = GetNDCFromWC(vec3( 0.0,0.0,0.0), u_EarthRadius *1.5); \n' +
 
                 'NDC.xy -= EarthPosSC.xy; \n' +
                 'float X =  abs(NDC.x)*SceneSize.x;   \n' +
@@ -101,7 +101,7 @@ define([
                 'float Y =  abs(NDC.y)*SceneSize.y;   \n' +
                 'Y *= Y;                            \n' +
 
-                'return clamp(0.0, 1.0, max( sqrt(X + Y) / max(abs(EarthPosSC2.x*SceneSize.x), 1.0) - 0.8 , 0.0)); \n' +
+                'return clamp(0.0, 1.0, max( sqrt(X + Y) / max(abs(EarthPosSCEdge.x*SceneSize.x), 1.0) - 0.8 , 0.0)); \n' +
 
             '} \n' +
 
@@ -153,21 +153,21 @@ define([
             '   bSpace = false; \n' +
 
             //Sun position
-            'vec4 position; \n' +
+            'vec4 SunPos; \n' +
             'if (czm_morphTime == 1.0) \n' +
             '{                         \n' +
-            '    position = vec4(czm_sunPositionWC, 1.0);   \n' +
+            '    SunPos = vec4(czm_sunPositionWC, 1.0);   \n' +
             '}                                              \n' +
             'else \n' +
             '{ \n' +
-            '    position = vec4(czm_sunPositionColumbusView.zxy, 1.0); \n' +
+            '    SunPos = vec4(czm_sunPositionColumbusView.zxy, 1.0); \n' +
             '} \n' +
 
-            'vec4 positionEC = czm_view * position; \n' +
-            'vec4 positionWC = czm_eyeToWindowCoordinates(positionEC); \n' +
+            'vec4 SunPositionEC = czm_view * SunPos; \n' +
+            'vec4 SunPositionWC = czm_eyeToWindowCoordinates(SunPositionEC); \n' +
 
 
-            'vec4 lastPosition = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0); \n' +
+            'SunPos = czm_viewportOrthographic * vec4(SunPositionWC.xy, -SunPositionWC.z, 1.0); \n' +
             'vec2 texcoord = -v_textureCoordinates + vec2(1.0);   \n' +
 
             'vec2 texelSize = 1.0 / czm_viewport.zw;    \n' +
@@ -184,8 +184,8 @@ define([
            '     vec2 offset = fract(texcoord + ghostVec * float(i));  \n' +
 
                 //Only bright spots from the centre of the source image
-           '     float weight = length(vec2(0.5) - offset) / length(vec2(0.5));  \n' +
-           '     weight = pow(1.0 - clamp(weight,0.0,1.0) , 10.0);  \n' +
+           //'     float weight = length(vec2(0.5) - offset) / length(vec2(0.5));  \n' +
+           //'     weight = pow(1.0 - clamp(weight,0.0,1.0) , 10.0);  \n' +
 
             '    ghost += textureDistorted(u_colorTexture, offset, direction.xy, distortion, bSpace);  \n' +
 
@@ -196,14 +196,14 @@ define([
             // sample halo:
             'vec4 halo;  \n' +
             ' vec2 haloVec = normalize(ghostVec) * u_HaloWidth;  \n' +
-            ' float weight = length(vec2(0.5) - fract(texcoord + haloVec)) / length(vec2(0.5));  \n' +
-            ' weight = pow(1.0 - weight, 5.0);  \n' +
-            ' halo = textureDistorted(u_colorTexture, texcoord + haloVec, direction.xy, distortion, bSpace) * weight * 1.5;  \n' +
+            ' float WeightForHalo = length(vec2(0.5) - fract(texcoord + haloVec)) / length(vec2(0.5));  \n' +
+            ' WeightForHalo = pow(1.0 - WeightForHalo, 5.0);  \n' +
+            ' halo = textureDistorted(u_colorTexture, texcoord + haloVec, direction.xy, distortion, bSpace) * WeightForHalo * 1.5;  \n' +
 
             ' result += halo; \n' +
             ' result += texture2D(u_DirtTexture, v_textureCoordinates);  \n' +
-            ' float weight2 = length(vec3(lastPosition.xy, 0.0)); \n' +
-             ' float oneminusweight2 = max(1.0 - weight2, 0.0); \n' +
+
+          
 
 
             //Rotating starburst texture's coordinate
@@ -223,24 +223,25 @@ define([
             ' st2.z = 1.0; \n' +
 
             ' vec3 st3 = st2 * 0.5 + vec3(0.5); \n' +
-
             ' vec2 lensStarTexcoord = st3.xy; \n' +
+           
 
-            ' float weight3 = length(vec3(st1.xy, 0.0)); \n' +
+            ' float WeightForLensFlare = length(vec3(SunPos.xy, 0.0)); \n' +
+            ' float OneminusWeightForLensFlare = max(1.0 - WeightForLensFlare, 0.0); \n' +
 
              'if (!bSpace) \n' +
             '{                         \n' +
-            ' result *= oneminusweight2 * u_Intensity * 0.2;  \n' +
+            ' result *= OneminusWeightForLensFlare * u_Intensity * 0.2;  \n' +
             '}                          \n' +
             'else \n' +
             '{ \n' +
-                'result *= oneminusweight2 * u_Intensity;  \n' +
-                ' result *= texture2D(u_StarTexture, lensStarTexcoord) * pow(weight2,1.0) * max((1.0 - weight3), 0.0) * 2.0;  \n' +
+                'result *= OneminusWeightForLensFlare * u_Intensity;  \n' +
+                'result *= texture2D(u_StarTexture, lensStarTexcoord) * pow(WeightForLensFlare,1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;  \n' +
             '} \n' +
 
             //If sun is in the screen space, add lens flare effect
-            'if( (  lastPosition.x >= -1.1 && lastPosition.x <= 1.1) &&  \n' +
-            '    (lastPosition.y >= -1.1 && lastPosition.y <= 1.1)  \n' +
+            'if( (SunPos.x >= -1.1 && SunPos.x <= 1.1) &&  \n' +
+            '    (SunPos.y >= -1.1 && SunPos.y <= 1.1)  \n' +
             ')  \n' +
             '{  \n' +
             '    result += texture2D(u_colorTexture, v_textureCoordinates); \n' +
