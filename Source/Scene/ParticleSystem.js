@@ -56,6 +56,16 @@ define([
         particlePool.push(particle);
     }
 
+    function freeParticlePool(system) {
+        var billboardCollection = system._billboardCollection;
+        var length = particlePool.length;
+        for (var i = 0; i < length; ++i) {
+            var p = particlePool[i];
+            billboardCollection.remove(p._billboard);
+        }
+        particlePool.length = 0;
+    }
+
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
      * @constructor
@@ -711,6 +721,11 @@ define([
                 this._isComplete = true;
                 this._complete.raiseEvent(this);
             }
+        }
+
+        // free particles in the pool and release billboard GPU memory
+        if (frameState.frameNumber % 120 === 0) {
+            freeParticlePool(this);
         }
     };
 
