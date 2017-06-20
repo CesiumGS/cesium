@@ -187,6 +187,25 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
+var entityPosition = new Cesium.Cartesian3();
+var entityOrientation = new Cesium.Quaternion();
+var rotationMatrix = new Cesium.Matrix3();
+var modelMatrix = new Cesium.Matrix4();
+
+function computeModelMatrix(entity, time) {
+    var position = Cesium.Property.getValueOrUndefined(entity.position, time, entityPosition);
+    if (!Cesium.defined(position)) {
+        return undefined;
+    }
+    var orientation = Cesium.Property.getValueOrUndefined(entity.orientation, time, entityOrientation);
+    if (!Cesium.defined(orientation)) {
+        modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position, undefined, modelMatrix);
+    } else {
+        modelMatrix = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromQuaternion(orientation, rotationMatrix), position, modelMatrix);
+    }
+    return modelMatrix;
+}
+
 var emitterModelMatrix = new Cesium.Matrix4();
 var translation = new Cesium.Cartesian3();
 var rotation = new Cesium.Quaternion();
@@ -232,51 +251,51 @@ var entity = viewer.entities.add({
         minimumPixelSize : 64
     },
 
-    particleSystem : {
-        image : '../../SampleData/fire.png',
-
-        startColor : Cesium.Color.RED.withAlpha(0.7),
-        endColor : Cesium.Color.YELLOW.withAlpha(0.3),
-
-        startScale : viewModel.startScale,
-        endScale : viewModel.endScale,
-
-        minimumLife : viewModel.minimumLife,
-        maximumLife : viewModel.maximumLife,
-
-        minimumSpeed : viewModel.minimumSpeed,
-        maximumSpeed : viewModel.maximumSpeed,
-
-        minimumWidth : viewModel.particleSize,
-        minimumHeight : viewModel.particleSize,
-
-        maximumWidth : viewModel.particleSize,
-        maximumHeight : viewModel.particleSize,
-
-        // Particles per second.
-        rate : viewModel.rate,
-
-        bursts : [
-            new Cesium.ParticleBurst({time : 5.0, minimum : 300, maximum : 500}),
-            new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
-            new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
-        ],
-
-        lifeTime : 16.0,
-
-        emitter : new Cesium.CircleEmitter(0.5),
-
-        emitterModelMatrix : computeEmitterModelMatrix(),
-
-        forces : [applyGravity]
-    },
-
     position : staticPosition
 });
 viewer.trackedEntity = entity;
 
 var scene = viewer.scene;
 scene.debugShowFramesPerSecond = true;
+
+var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
+    image : '../../SampleData/fire.png',
+
+    startColor : Cesium.Color.RED.withAlpha(0.7),
+    endColor : Cesium.Color.YELLOW.withAlpha(0.3),
+
+    startScale : viewModel.startScale,
+    endScale : viewModel.endScale,
+
+    minimumLife : viewModel.minimumLife,
+    maximumLife : viewModel.maximumLife,
+
+    minimumSpeed : viewModel.minimumSpeed,
+    maximumSpeed : viewModel.maximumSpeed,
+
+    minimumWidth : viewModel.particleSize,
+    minimumHeight : viewModel.particleSize,
+
+    maximumWidth : viewModel.particleSize,
+    maximumHeight : viewModel.particleSize,
+
+    // Particles per second.
+    rate : viewModel.rate,
+
+    bursts : [
+        new Cesium.ParticleBurst({time : 5.0, minimum : 300, maximum : 500}),
+        new Cesium.ParticleBurst({time : 10.0, minimum : 50, maximum : 100}),
+        new Cesium.ParticleBurst({time : 15.0, minimum : 200, maximum : 300})
+    ],
+
+    lifeTime : 16.0,
+
+    emitter : new Cesium.CircleEmitter(0.5),
+
+    emitterModelMatrix : computeEmitterModelMatrix(),
+
+    forces : [applyGravity]
+}));
 
 var gravityScratch = new Cesium.Cartesian3();
 
@@ -291,8 +310,10 @@ function applyGravity(p, dt) {
 }
 
 viewer.scene.preRender.addEventListener(function(scene, time) {
+    particleSystem.modelMatrix = computeModelMatrix(entity, time);
+
     // Account for any changes to the emitter model matrix.
-    entity.particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
+    particleSystem.emitterModelMatrix = computeEmitterModelMatrix();
 
     // Spin the emitter if enabled.
     if (viewModel.spin) {
@@ -304,53 +325,53 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
 
 Cesium.knockout.getObservable(viewModel, 'rate').subscribe(
     function(newValue) {
-        entity.particleSystem.rate = parseFloat(newValue);
+        particleSystem.rate = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'particleSize').subscribe(
     function(newValue) {
         var particleSize = parseFloat(newValue);
-        entity.particleSystem.minimumWidth = particleSize;
-        entity.particleSystem.maximumWidth = particleSize;
-        entity.particleSystem.minimumHeight = particleSize;
-        entity.particleSystem.maximumHeight = particleSize;
+        particleSystem.minimumWidth = particleSize;
+        particleSystem.maximumWidth = particleSize;
+        particleSystem.minimumHeight = particleSize;
+        particleSystem.maximumHeight = particleSize;
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'minimumLife').subscribe(
     function(newValue) {
-        entity.particleSystem.minimumLife = parseFloat(newValue);
+        particleSystem.minimumLife = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'maximumLife').subscribe(
     function(newValue) {
-        entity.particleSystem.maximumLife = parseFloat(newValue);
+        particleSystem.maximumLife = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'minimumSpeed').subscribe(
     function(newValue) {
-        entity.particleSystem.minimumSpeed = parseFloat(newValue);
+        particleSystem.minimumSpeed = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'maximumSpeed').subscribe(
     function(newValue) {
-        entity.particleSystem.maximumSpeed = parseFloat(newValue);
+        particleSystem.maximumSpeed = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'startScale').subscribe(
     function(newValue) {
-        entity.particleSystem.startScale = parseFloat(newValue);
+        particleSystem.startScale = parseFloat(newValue);
     }
 );
 
 Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
     function(newValue) {
-        entity.particleSystem.endScale = parseFloat(newValue);
+        particleSystem.endScale = parseFloat(newValue);
     }
 );
 
@@ -383,22 +404,22 @@ Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
 var options = [{
     text : 'Circle',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.CircleEmitter(0.5);
+        particleSystem.emitter = new Cesium.CircleEmitter(0.5);
     }
 }, {
     text : 'Cone',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.ConeEmitter(Cesium.Math.toRadians(45.0));
+        particleSystem.emitter = new Cesium.ConeEmitter(Cesium.Math.toRadians(45.0));
     }
 }, {
     text : 'Box',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
+        particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
     }
 }, {
     text : 'Sphere',
     onselect : function() {
-        entity.particleSystem.emitter = new Cesium.SphereEmitter(5.0);
+        particleSystem.emitter = new Cesium.SphereEmitter(5.0);
     }
 }];
 
