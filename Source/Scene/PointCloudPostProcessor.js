@@ -174,11 +174,14 @@ define([
 
     function pointOcclusionStage(processor, context) {
         var uniformMap = {
-            pointCloud_colorTexture: function() {
+            pointCloud_colorTexture : function() {
                 return processor._colorTextures[0];
             },
-            pointCloud_ECTexture: function() {
+            pointCloud_ECTexture : function() {
                 return processor._ecTexture;
+            },
+            occlusionAngle : function() {
+                return 0.1;
             }
         };
         return context.createViewportQuadCommand(PointOcclusionPass, {
@@ -199,10 +202,10 @@ define([
         var i = iteration % 2;
 
         var uniformMap = {
-            pointCloud_colorTexture: function() {
+            pointCloud_colorTexture : function() {
                 return processor._colorTextures[i];
             },
-            pointCloud_depthTexture: function() {
+            pointCloud_depthTexture : function() {
                 return processor._depthTextures[i];
             }
         };
