@@ -20,11 +20,12 @@ defineSuite([
     });
 
     it('constructor throws with invalid radius', function() {
+        var c;
         expect(function() {
-            new CircleEmitter(0.0);
+            c = new CircleEmitter(0.0);
         }).toThrowDeveloperError();
         expect(function() {
-            new CircleEmitter(-1.0);
+            c = new CircleEmitter(-1.0);
         }).toThrowDeveloperError();
     });
 

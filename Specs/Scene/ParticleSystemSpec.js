@@ -120,7 +120,7 @@ defineSuite([
     });
 
     it('renders', function() {
-        var p = scene.primitives.add(new ParticleSystem({
+        scene.primitives.add(new ParticleSystem({
             image : greenImage,
             emitter : new CircleEmitter(1.0),
             rate : 10000,

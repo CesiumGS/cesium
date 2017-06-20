@@ -21,14 +21,15 @@ defineSuite([
     });
 
     it('constructor throws with invalid dimensions', function() {
+        var b;
         expect(function() {
-            new BoxEmitter(new Cartesian3(-1.0, 1.0, 1.0));
+            b = new BoxEmitter(new Cartesian3(-1.0, 1.0, 1.0));
         }).toThrowDeveloperError();
         expect(function() {
-            new BoxEmitter(new Cartesian3(1.0, -1.0, 1.0));
+            b = new BoxEmitter(new Cartesian3(1.0, -1.0, 1.0));
         }).toThrowDeveloperError();
         expect(function() {
-            new BoxEmitter(new Cartesian3(1.0, 1.0, -1.0));
+            b = new BoxEmitter(new Cartesian3(1.0, 1.0, -1.0));
         }).toThrowDeveloperError();
     });
 
