@@ -41,7 +41,7 @@ define([
      * @constructor
      *
      * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
-     * @param {Object} [expressions] Additional expressions defined in the style.
+     * @param {Object} [defines] Defines in the style.
      *
      * @example
      * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
@@ -51,13 +51,13 @@ define([
      * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
      * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      */
-    function Expression(expression, expressions) {
+    function Expression(expression, defines) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('expression', expression);
         //>>includeEnd('debug');
 
         this._expression = expression;
-        expression = replaceExpressions(expression, expressions);
+        expression = replaceDefines(expression, defines);
         expression = replaceVariables(removeBackslashes(expression));
 
         // customize jsep operators
@@ -427,16 +427,16 @@ define([
         setEvaluateFunction(this);
     }
 
-    function replaceExpressions(expression, expressions) {
-        if (!defined(expressions)) {
+    function replaceDefines(expression, defines) {
+        if (!defined(defines)) {
             return expression;
         }
-        for (var key in expressions) {
-            if (expressions.hasOwnProperty(key)) {
-                var expressionPlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
-                var expressionReplace = expressions[key];
-                if (defined(expressionReplace)) {
-                    expression = expression.replace(expressionPlaceholder, expressionReplace);
+        for (var key in defines) {
+            if (defines.hasOwnProperty(key)) {
+                var definePlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
+                var defineReplace = defines[key];
+                if (defined(defineReplace)) {
+                    expression = expression.replace(definePlaceholder, defineReplace);
                 }
             }
         }

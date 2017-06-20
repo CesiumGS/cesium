@@ -25,7 +25,7 @@ define([
      * @constructor
      *
      * @param {Object} [conditionsExpression] The conditions expression defined using the 3D Tiles Styling language.
-     * @param {Object} [expressions] Additional expressions defined in the style.
+     * @param {Object} [defines] Defines in the style.
      *
      * @example
      * var expression = new Cesium.ConditionsExpression({
@@ -37,12 +37,12 @@ define([
      * });
      * expression.evaluateColor(frameState, feature, result); // returns a Cesium.Color object
      */
-    function ConditionsExpression(conditionsExpression, expressions) {
+    function ConditionsExpression(conditionsExpression, defines) {
         this._conditionsExpression = clone(conditionsExpression, true);
         this._conditions = conditionsExpression.conditions;
         this._runtimeConditions = undefined;
 
-        setRuntime(this, expressions);
+        setRuntime(this, defines);
     }
 
     defineProperties(ConditionsExpression.prototype, {
@@ -68,7 +68,7 @@ define([
         this.expression = expression;
     }
 
-    function setRuntime(expression, expressions) {
+    function setRuntime(expression, defines) {
         var runtimeConditions = [];
         var conditions = expression._conditions;
         if (!defined(conditions)) {
@@ -80,8 +80,8 @@ define([
             var cond = String(statement[0]);
             var condExpression = String(statement[1]);
             runtimeConditions.push(new Statement(
-                new Expression(cond, expressions),
-                new Expression(condExpression, expressions)
+                new Expression(cond, defines),
+                new Expression(condExpression, defines)
             ));
         }
         expression._runtimeConditions = runtimeConditions;
