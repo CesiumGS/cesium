@@ -2084,6 +2084,8 @@ define([
         }
     }
 
+    var scratchEyeTranslation = new Cartesian3();
+
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
 
@@ -2562,8 +2564,6 @@ define([
         this._camera.update(this._mode);
         this._camera._updateCameraChanged();
     };
-
-    var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time) {
         scene._pickPositionCacheDirty = true;
