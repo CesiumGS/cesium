@@ -132,7 +132,7 @@ define([
     /**
      * @private
      */
-    Particle.prototype.update = function(forces, dt) {
+    Particle.prototype.update = function(dt, forces) {
         // Apply the velocity
         Cartesian3.multiplyByScalar(this.velocity, dt, deltaScratch);
         Cartesian3.add(this.position, deltaScratch, this.position);
@@ -143,7 +143,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 var force = forces[i];
                 if (typeof force === 'function') {
-                    // Force is just a simle callback function.
+                    // Force is just a simple callback function.
                     force(this, dt);
                 }
             }

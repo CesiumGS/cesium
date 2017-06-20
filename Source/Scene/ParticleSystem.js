@@ -416,7 +416,7 @@ define([
         var length = particles.length;
         for (i = 0; i < length; ++i) {
             particle = particles[i];
-            if (!particle.update(forces, dt)) {
+            if (!particle.update(dt, forces)) {
                 removeBillboard(this, particle);
                 // Add the particle back to the pool so it can be reused.
                 addParticleToPool(particle);

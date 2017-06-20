@@ -4,54 +4,44 @@ define([
         '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Check',
-        '../Core/Math',
-        './Particle'
+        '../Core/Math'
     ], function(
         defaultValue,
         defineProperties,
         Cartesian3,
         Check,
-        CesiumMath,
-        Particle) {
+        CesiumMath) {
     "use strict";
+
+    var defaultAngle = CesiumMath.toRadians(30.0);
 
     /**
      * A ParticleEmitter that emits particles within a cone.
      * Particles will be positioned at the tip of the cone and have initial velocities going towards the base.
      * @constructor
      *
-     * @param {Number} [height=5.0] The height of the cone in meters.
      * @param {Number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.
      */
-    function ConeEmitter(height, angle) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThan('height', height, 0.0);
-        //>>includeEnd('debug');
-        /**
-         * The angle of the cone in radians.
-         * @type {Number}
-         * @default Cesium.Math.toRadians(30.0)
-         */
-        this.angle = defaultValue(angle, CesiumMath.toRadians(30.0));
-        this._height = defaultValue(height, 5.0);
+    function ConeEmitter(angle) {
+        this._angle = defaultValue(angle, defaultAngle);
     }
 
     defineProperties(ConeEmitter.prototype, {
         /**
-         * The height of the cone in meters.
-         * @memberof ConeEmitter.prototype
+         * The angle of the cone in radians.
+         * @memberof CircleEmitter.prototype
          * @type {Number}
-         * @default 1.0
+         * @default Cesium.Math.toRadians(30.0)
          */
-        height : {
+        angle : {
             get : function() {
-                return this._height;
+                return this._angle;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThan('value', value, 0.0);
+                Check.typeOf.number('value', value);
                 //>>includeEnd('debug');
-                this._height = value;
+                this._angle = value;
             }
         }
     });
@@ -63,8 +53,7 @@ define([
      * @param {Particle} particle The particle to initialize
      */
     ConeEmitter.prototype.emit = function(particle) {
-        var height = this._height;
-        var radius = height * Math.tan(this.angle);
+        var radius = Math.tan(this._angle);
 
         // Compute a random point on the cone's base
         var theta = CesiumMath.randomBetween(0.0, CesiumMath.TWO_PI);
@@ -72,7 +61,7 @@ define([
 
         var x = rad * Math.cos(theta);
         var y = rad * Math.sin(theta);
-        var z = height;
+        var z = 1.0;
 
         particle.velocity = Cartesian3.fromElements(x, y, z, particle.velocity);
         Cartesian3.normalize(particle.velocity, particle.velocity);

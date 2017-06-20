@@ -4,15 +4,13 @@ define([
         '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Check',
-        '../Core/Math',
-        './Particle'
+        '../Core/Math'
     ], function(
         defaultValue,
         defineProperties,
         Cartesian3,
         Check,
-        CesiumMath,
-        Particle) {
+        CesiumMath) {
     "use strict";
 
     var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
@@ -25,6 +23,8 @@ define([
      * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
      */
     function BoxEmitter(dimensions) {
+        dimensions = defaultValue(dimensions, defaultDimensions);
+
         //>>includeStart('debug', pragmas.debug);
         Check.defined('dimensions', dimensions);
         Check.typeOf.number.greaterThanOrEquals('dimensions.x', dimensions.x, 0.0);
@@ -32,7 +32,7 @@ define([
         Check.typeOf.number.greaterThanOrEquals('dimensions.z', dimensions.z, 0.0);
         //>>includeEnd('debug');
 
-        this._dimensions = Cartesian3.clone(defaultValue(dimensions, defaultDimensions));
+        this._dimensions = Cartesian3.clone(dimensions);
     }
 
     defineProperties(BoxEmitter.prototype, {
@@ -44,7 +44,7 @@ define([
          */
         dimensions : {
             get : function() {
-                return this._dimansions;
+                return this._dimensions;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);

@@ -4,15 +4,13 @@ define([
         '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Check',
-        '../Core/Math',
-        './Particle'
+        '../Core/Math'
     ], function(
         defaultValue,
         defineProperties,
         Cartesian3,
         Check,
-        CesiumMath,
-        Particle) {
+        CesiumMath) {
     "use strict";
 
     /**
@@ -23,9 +21,12 @@ define([
      * @param {Number} [radius=1.0] The radius of the circle in meters.
      */
     function CircleEmitter(radius) {
+        radius = defaultValue(radius, 1.0);
+
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number.greaterThan('radius', radius, 0.0);
         //>>includeEnd('debug');
+
         this._radius = defaultValue(radius, 1.0);
     }
 
