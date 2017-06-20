@@ -434,7 +434,7 @@ define([
         for (var key in defines) {
             if (defines.hasOwnProperty(key)) {
                 var definePlaceholder = new RegExp('\\$\\{' + key + '\\}', 'g');
-                var defineReplace = defines[key];
+                var defineReplace = '(' + defines[key] + ')';
                 if (defined(defineReplace)) {
                     expression = expression.replace(definePlaceholder, defineReplace);
                 }
