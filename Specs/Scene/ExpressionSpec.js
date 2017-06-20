@@ -137,6 +137,14 @@ defineSuite([
         expect(expression.evaluate(frameState, feature)).toEqual(5);
     });
 
+    it('evaluates with defines, honoring order of operations', function() {
+        var defines = {
+            value: '1 + 2'
+        };
+        var expression = new Expression('5.0 * ${value}', defines);
+        expect(expression.evaluate(frameState, undefined)).toEqual(15);
+    });
+
     it('evaluate takes result argument', function() {
         var expression = new Expression('vec3(1.0)');
         var result = new Cartesian3();
