@@ -436,7 +436,7 @@ define([
          * @type {Number}
          * @default 1000.0
          */
-        this.farToNearRatio = 1000.0;
+        this.farToNearRatio = 1e8;
 
         /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
