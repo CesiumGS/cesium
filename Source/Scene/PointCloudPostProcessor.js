@@ -17,7 +17,9 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Scene/BlendingState'
+        '../Scene/BlendingState',
+        '../Shaders/PostProcessFilters/PointOcclusionPass',
+        '../Shaders/PostProcessFilters/RegionGrowingPass'
     ], function(
         Color,
         defined,
@@ -36,7 +38,9 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        BlendingState) {
+        BlendingState,
+        PointOcclusionPass,
+        RegionGrowingPass) {
     'use strict';
 
      /**
@@ -169,20 +173,6 @@ define([
     }
 
     function pointOcclusionStage(processor, context) {
-        var pointOcclusionFS =
-            '#extension GL_EXT_frag_depth : enable \n' +
-            'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_ECTexture; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    float near = czm_currentFrustum.x; \n' +
-            '    float far = czm_currentFrustum.y; \n' + 
-            '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    vec4 EC = texture2D(pointCloud_ECTexture, v_textureCoordinates); \n' +
-            '        gl_FragDepthEXT = (-EC.z - near) / (far - near); \n' +
-            '} \n'; // TODO: Fix gl_FragDepthEXT for WebGL2
-
         var uniformMap = {
             pointCloud_colorTexture: function() {
                 return processor._colorTextures[0];
@@ -191,7 +181,7 @@ define([
                 return processor._ecTexture;
             }
         };
-        return context.createViewportQuadCommand(pointOcclusionFS, {
+        return context.createViewportQuadCommand(PointOcclusionPass, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
@@ -206,20 +196,6 @@ define([
     }
 
     function regionGrowingStage(processor, context, iteration) {
-        var regionGrowingFS =
-            '#extension GL_EXT_frag_depth : enable \n' +
-            'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_depthTexture; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r; \n' +
-            '    vec3 newColor = color.rgb * 0.5; \n' +
-            '    gl_FragColor = vec4(vec3(depth), color.a); \n' +
-            '    gl_FragDepthEXT = depth; \n' +
-            '} \n';
-
         var i = iteration % 2;
 
         var uniformMap = {
@@ -235,7 +211,7 @@ define([
             processor._framebuffers.regionGrowingPassA :
             processor._framebuffers.regionGrowingPassB;
 
-        return context.createViewportQuadCommand(regionGrowingFS, {
+        return context.createViewportQuadCommand(RegionGrowingPass, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
