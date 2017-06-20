@@ -10,14 +10,12 @@
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-
     <script type="text/javascript">
         require.config({
             baseUrl : '../../../Source',
             waitSeconds : 60
         });
     </script>
-
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -39,7 +37,6 @@
         font-weight: bold;
     }
 </style>
-
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
@@ -256,8 +253,6 @@ var entity = viewer.entities.add({
 viewer.trackedEntity = entity;
 
 var scene = viewer.scene;
-scene.debugShowFramesPerSecond = true;
-
 var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
     image : '../../SampleData/fire.png',
 
