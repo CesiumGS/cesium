@@ -9,39 +9,40 @@ defineSuite([
         Particle) {
     'use strict';
 
+    var emitter;
+
     it('default constructor', function() {
-        var emitter = new BoxEmitter();
+        emitter = new BoxEmitter();
         expect(emitter.dimensions).toEqual(new Cartesian3(1.0, 1.0, 1.0));
     });
 
     it('constructor', function() {
         var dimensions = new Cartesian3(2.0, 3.0, 4.0);
-        var emitter = new BoxEmitter(dimensions);
+        emitter = new BoxEmitter(dimensions);
         expect(emitter.dimensions).toEqual(dimensions);
     });
 
     it('constructor throws with invalid dimensions', function() {
-        var b;
         expect(function() {
-            b = new BoxEmitter(new Cartesian3(-1.0, 1.0, 1.0));
+            emitter = new BoxEmitter(new Cartesian3(-1.0, 1.0, 1.0));
         }).toThrowDeveloperError();
         expect(function() {
-            b = new BoxEmitter(new Cartesian3(1.0, -1.0, 1.0));
+            emitter = new BoxEmitter(new Cartesian3(1.0, -1.0, 1.0));
         }).toThrowDeveloperError();
         expect(function() {
-            b = new BoxEmitter(new Cartesian3(1.0, 1.0, -1.0));
+            emitter = new BoxEmitter(new Cartesian3(1.0, 1.0, -1.0));
         }).toThrowDeveloperError();
     });
 
     it('dimensions setter', function() {
-        var emitter = new BoxEmitter();
+        emitter = new BoxEmitter();
         var dimensions = new Cartesian3(2.0, 3.0, 4.0);
         emitter.dimensions = dimensions;
         expect(emitter.dimensions).toEqual(dimensions);
     });
 
     it('dimensions setter throws with invalid value', function() {
-        var emitter = new BoxEmitter();
+        emitter = new BoxEmitter();
         expect(function() {
             emitter.dimensions = undefined;
         }).toThrowDeveloperError();
@@ -57,7 +58,7 @@ defineSuite([
     });
 
     it('emits', function() {
-        var emitter = new BoxEmitter(new Cartesian3(2.0, 3.0, 4.0));
+        emitter = new BoxEmitter(new Cartesian3(2.0, 3.0, 4.0));
         var particle = new Particle();
 
         for (var i = 0; i < 1000; ++i) {

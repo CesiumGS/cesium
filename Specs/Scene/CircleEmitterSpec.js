@@ -9,34 +9,35 @@ defineSuite([
         Particle) {
     'use strict';
 
+    var emitter;
+
     it('default constructor', function() {
-        var emitter = new CircleEmitter();
+        emitter = new CircleEmitter();
         expect(emitter.radius).toEqual(1.0);
     });
 
     it('constructor', function() {
-        var emitter = new CircleEmitter(5.0);
+        emitter = new CircleEmitter(5.0);
         expect(emitter.radius).toEqual(5.0);
     });
 
     it('constructor throws with invalid radius', function() {
-        var c;
         expect(function() {
-            c = new CircleEmitter(0.0);
+            emitter = new CircleEmitter(0.0);
         }).toThrowDeveloperError();
         expect(function() {
-            c = new CircleEmitter(-1.0);
+            emitter = new CircleEmitter(-1.0);
         }).toThrowDeveloperError();
     });
 
     it('radius setter', function() {
-        var emitter = new CircleEmitter();
+        emitter = new CircleEmitter();
         emitter.radius = 5.0;
         expect(emitter.radius).toEqual(5.0);
     });
 
     it('radius setter throws with invalid value', function() {
-        var emitter = new CircleEmitter();
+        emitter = new CircleEmitter();
         expect(function() {
             emitter.radius = undefined;
         }).toThrowDeveloperError();
@@ -49,7 +50,7 @@ defineSuite([
     });
 
     it('emits', function() {
-        var emitter = new CircleEmitter(5.0);
+        emitter = new CircleEmitter(5.0);
         var particle = new Particle();
 
         for (var i = 0; i < 1000; ++i) {
