@@ -6,6 +6,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Event',
+        './GregorianDate',
+        './isLeapYear',
         './JulianDate',
         './TimeInterval'
     ], function(
@@ -15,6 +17,8 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GregorianDate,
+        isLeapYear,
         JulianDate,
         TimeInterval) {
     'use strict';
@@ -643,24 +647,151 @@ define([
         return result;
     };
 
-    function parseDuration(iso8601) {
-        if (!defined(iso8601) || iso8601.length === 0) {
-            return 0;
+    var scratchGregorianDate = new GregorianDate();
+    var monthLengths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    /**
+     * Adds duration represented as a GregorianDate to a JulianDate
+     *
+     * @param {JulianDate} julianDate The date.
+     * @param {GregorianDate} duration An duration represented as a GregorianDate.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
+     *
+     * @private
+     */
+    function addToDate(julianDate, duration, result) {
+        JulianDate.toGregorianDate(julianDate, scratchGregorianDate);
+
+        var millisecond = scratchGregorianDate.millisecond;
+        millisecond += duration.millisecond;
+        if (millisecond >= 1000) {
+            millisecond = millisecond % 1000;
+            scratchGregorianDate.second += Math.floor(millisecond/1000);
+        }
+        scratchGregorianDate.millisecond = millisecond;
+
+        var second = scratchGregorianDate.second;
+        second += duration.second;
+        if (second >= 60) {
+            second = second % 60;
+            scratchGregorianDate.minute += Math.floor(second/60);
+        }
+        scratchGregorianDate.second = second;
+
+        var minute = scratchGregorianDate.minute;
+        minute += duration.minute;
+        if (minute >= 60) {
+            minute = minute % 60;
+            scratchGregorianDate.hour += Math.floor(minute/60);
+        }
+        scratchGregorianDate.minute = minute;
+
+        var hour = scratchGregorianDate.hour;
+        hour += duration.hour;
+        if (hour >= 60) {
+            hour = hour % 24;
+            scratchGregorianDate.day += Math.floor(hour/24);
+        }
+        scratchGregorianDate.hour = hour;
+
+        var day = scratchGregorianDate.day;
+        day += duration.day;
+
+        var month = scratchGregorianDate.month;
+        month += duration.month;
+
+        var year = scratchGregorianDate.year;
+        year += duration.year;
+
+        // If days is greater than the month's length we need to remove those number of days,
+        //  readjust month and year and repeat until days is less than the month's length.
+        monthLengths[2] = isLeapYear(year) ? 29 : 28;
+        while ((day > monthLengths[month]) || (month >= 13)) {
+            if (day > monthLengths[month]) {
+                day -= monthLengths[month];
+                ++month;
+            }
+
+            if (month >= 13) {
+                --month;
+                month = month % 12;
+                year += Math.floor(month/12);
+                ++month;
+            }
+
+            monthLengths[2] = isLeapYear(year) ? 29 : 28;
         }
 
-        var start = new JulianDate();
-        var stop;
+        scratchGregorianDate.day = day;
+        scratchGregorianDate.month = month;
+        scratchGregorianDate.year = year;
 
-        if (iso8601[0] === 'P') {
-            // TODO: Parse duration string
-            stop = new JulianDate();
-        } else {
-            stop = JulianDate.fromIso8601(iso8601);
-        }
-
-        return JulianDate.secondsDifference(stop, start);
+        // TODO: Return JulianDate
     }
 
+    var scratchJulianDate1 = new JulianDate();
+    var scratchJulianDate2 = new JulianDate();
+    var durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
+    /**
+     * Parses ISO8601 duration string
+     *
+     * @param {String} iso8601 An ISO 8601 duration.
+     * @param {GregorianDate} result An existing instance to use for the result.
+     * @returns {Boolean} True is parsing succeeded, false otherwise
+     *
+     * @private
+     */
+    function parseDuration(iso8601, result) {
+        if (!defined(iso8601) || iso8601.length === 0) {
+            return false;
+        }
+
+        // Reset object
+        result.year = 0;
+        result.month = 0;
+        result.day = 0;
+        result.hour = 0;
+        result.minute = 0;
+        result.second = 0;
+        result.millisecond = 0;
+
+        if (iso8601[0] === 'P') {
+            var matches = iso8601.match(durationRegex);
+            if (!defined(matches)) {
+                return false;
+            }
+            if (defined(matches[1])) { // Years
+                result.years = Number(matches[1].replace(',', '.'));
+            }
+            if (defined(matches[2])) { // Months
+                result.months = Number(matches[2].replace(',', '.'));
+            }
+            if (defined(matches[3])) { // Weeks
+                result.days = Number(matches[3].replace(',', '.')) * 7;
+            }
+            if (defined(matches[4])) { // Days
+                result.days += Number(matches[4].replace(',', '.'));
+            }
+            if (defined(matches[5])) { // Hours
+                result.hours = Number(matches[5].replace(',', '.'));
+            }
+            if (defined(matches[6])) { // Weeks
+                result.minutes = Number(matches[6].replace(',', '.'));
+            }
+            if (defined(matches[7])) { // Seconds
+                var seconds = Number(matches[7].replace(',', '.'));
+                result.seconds = Math.floor(seconds);
+                result.milliseconds = seconds % 1;
+            }
+        } else {
+            JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate1), result);
+        }
+
+        return true;
+    }
+
+
+    var scratchDuration = new GregorianDate();
     /**
      * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration.
      *
@@ -688,12 +819,12 @@ define([
         var dates = options.iso8601.split('/');
         var start = JulianDate.fromIso8601(dates[0]);
         var stop = JulianDate.fromIso8601(dates[1]);
-        var duration = parseDuration(dates[2]);
+
         var isStartIncluded = defaultValue(options.isStartIncluded, true);
         var isStopIncluded = defaultValue(options.isStopIncluded, true);
 
         // Not duration so just return collection with one interval
-        if (duration === 0) {
+        if (!parseDuration(dates[2], scratchDuration)) {
             result.addInterval(new TimeInterval({
                 start: start,
                 stop: stop,
@@ -703,17 +834,17 @@ define([
             return result;
         }
 
-        var intervalStop = new JulianDate();
-        while(JulianDate.compare(stop, start) < 0) {
-            JulianDate.addSeconds(start, duration, intervalStop);
+        JulianDate.clone(start, scratchJulianDate1);
+        while(JulianDate.compare(stop, scratchJulianDate1) < 0) {
+            addToDate(scratchJulianDate1, scratchDuration, scratchJulianDate2);
             result.addInterval(new TimeInterval({
-                start: start,
-                stop: stop,
-                isStartIncluded: (result.length === 0) ? true : isStartIncluded,
-                isStopIncluded: (JulianDate.compare(stop, intervalStop) < 0) ? false : isStopIncluded
+                start: scratchJulianDate1,
+                stop: scratchJulianDate2,
+                isStartIncluded: (result.length === 0) ? isStartIncluded : true,
+                isStopIncluded: (JulianDate.compare(scratchJulianDate2, stop) < 0) ? false : isStopIncluded
             }));
 
-            JulianDate.clone(intervalStop, start);
+            JulianDate.clone(scratchJulianDate2, scratchJulianDate1);
         }
 
         return result;
