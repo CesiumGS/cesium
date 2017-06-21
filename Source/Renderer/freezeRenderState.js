@@ -11,7 +11,7 @@ define([
          * Returns frozen renderState as well as all of the object literal properties. This function is deep object freeze
          * function ignoring properties named "_applyFunctions".
          *
-         * @exports freezeRenderState
+         * @private
          *
          * @param {Object} renderState
          * @returns {Object} Returns frozen renderState.
@@ -34,4 +34,4 @@ define([
             return freezeObject(renderState);
         }
         return freezeRenderState;
-    });
+});

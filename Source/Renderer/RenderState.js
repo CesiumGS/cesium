@@ -7,7 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/WebGLConstants',
         '../Core/WindingOrder',
-        './ContextLimits'
+        './ContextLimits',
+        './freezeRenderState'
     ], function(
         BoundingRectangle,
         Color,
@@ -16,7 +17,8 @@ define([
         DeveloperError,
         WebGLConstants,
         WindingOrder,
-        ContextLimits) {
+        ContextLimits,
+        freezeRenderState) {
     'use strict';
 
     function validateBlendEquation(blendEquation) {
@@ -406,6 +408,9 @@ define([
 
         // Cache miss.  Fully define render state and try again.
         var states = new RenderState(renderState);
+        //>>includeStart('debug', pragmas.debug);
+        states = freezeRenderState(states);
+        //>>includeEnd('debug');
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (!defined(cachedState)) {
