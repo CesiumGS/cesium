@@ -54,6 +54,8 @@ define([
         this._drawCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommands = undefined;
+
+        this.occlusionAngle = 0.1;
     }
 
     function createSampler() {
@@ -71,8 +73,12 @@ define([
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
         processor._ecTexture.destroy();
-        processor._framebuffers[0].destroy();
-        processor._framebuffers[1].destroy();
+        var framebuffers = processor._framebuffers;
+        for (var name in framebuffers) {
+            if (framebuffers.hasOwnProperty(name)) {
+                framebuffers[name].destroy();
+            }
+        }
 
         processor._depthTextures = undefined;
         processor._colorTextures = undefined;
@@ -181,7 +187,7 @@ define([
                 return processor._ecTexture;
             },
             occlusionAngle : function() {
-                return 0.1;
+                return processor.occlusionAngle;
             }
         };
         return context.createViewportQuadCommand(PointOcclusionPass, {
@@ -289,7 +295,7 @@ define([
         processor._clearCommands = clearCommands;
     }
 
-    function createResources(processor, context) {
+    function createResources(processor, context, dirty) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
@@ -302,14 +308,13 @@ define([
             createFramebuffers(processor, context);
         }
 
-        if (!defined(drawCommands)) {
+        if (!defined(drawCommands) || dirty) {
             createCommands(processor, context);
         }
 
         if (resized) {
             destroyFramebuffers(processor);
-            //createFramebuffers(processor, context);
-            //updateCommandFramebuffers(processor);
+            createFramebuffers(processor, context);
             createCommands(processor, context);
         }
     }
@@ -354,17 +359,6 @@ define([
                 '    gl_FragData[1] = vec4(v_positionECPS, 0); \n' +
                 '}');
 
-            console.log(context.fragmentDepth);
-            for (var i = 0; i < vs.sources.length; i++) {
-                //console.log(vs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
-                console.log(shaderProgram.vertexShaderSource.sources[i] + "\n\n\n\n\n\n");
-            }
-            
-            for (i = 0; i < fs.sources.length; i++) {
-                //console.log(fs.sources[i] + "\n\n\nORIGINAL:\n\n\n");
-                console.log(shaderProgram.fragmentShaderSource.sources[i] + "\n\n\n\n\n\n");
-            }
-
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
@@ -375,12 +369,19 @@ define([
         return shader;
     }
 
-    PointCloudPostProcessor.prototype.update = function(frameState, commandStart) {
+    PointCloudPostProcessor.prototype.update = function(frameState, commandStart, options) {
         if (!processingSupported(frameState.context)) {
             return;
         }
 
-        createResources(this, frameState.context);
+        var dirty = false;
+        // Set options here
+        if (options.occlusionAngle != this.occlusionAngle) {
+            this.occlusionAngle = options.occlusionAngle;
+            dirty = true;
+        }
+        
+        createResources(this, frameState.context, dirty);
 
         // Render point cloud commands into an offscreen FBO.
         var i;
@@ -390,7 +391,7 @@ define([
             var command = commandList[i];
 
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
-            if (!defined(derivedCommand)) {
+            if (!defined(derivedCommand) || command.dirty) {
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 

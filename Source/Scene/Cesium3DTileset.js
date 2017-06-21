@@ -720,6 +720,20 @@ define([
          */
         this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
+        /**
+         * This property handles options for the point cloud post processor
+         * <p>
+         * TODO: Write documentation for these properties
+         * </p>
+         *
+         * @type {Event}
+         * @default {enabled : true, occlusionAngle : 0.1}
+         */
+        this.pointCloudPostProcessorOptions = {
+            enabled : defaultValue(options.enabled, true),
+            occlusionAngle : defaultValue(options.occlusionAngle, 0.1)
+        };
+
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
@@ -1596,7 +1610,10 @@ define([
             // TODO : only do this if the tileset is purely point clouds.
             // TODO : this may not work well if point cloud spans multiple frustums
             // TODO : make the processor a static class so it can be used by multiple tilesets?
-            tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands);
+            tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, {
+                enabled : tileset.pointCloudPostProcessorOptions.enabled,
+                occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle
+            });
         }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
