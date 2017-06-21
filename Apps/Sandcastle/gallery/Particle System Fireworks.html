@@ -60,6 +60,7 @@ var maximumExplosionSize = 100.0;
 var particlePixelSize = 7.0;
 var burstSize = 400.0;
 var lifetime = 10.0;
+var numberOfFireworks = 20.0;
 
 var emitterModelMatrixScratch = new Cesium.Matrix4();
 
@@ -125,7 +126,6 @@ var colorOptions = [{
     alpha : 1.0
 }];
 
-var numberOfFireworks = 15.0;
 for (var i = 0; i < numberOfFireworks; ++i) {
     var x = Cesium.Math.randomBetween(xMin, xMax);
     var y = Cesium.Math.randomBetween(yMin, yMax);

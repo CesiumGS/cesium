@@ -612,7 +612,7 @@ define([
             var length = system.bursts.length;
             for (var i = 0; i < length; i++) {
                 var burst = system.bursts[i];
-                var currentTime = system._currentTime;//CesiumMath.mod(system._currentTime, system._lifeTime);
+                var currentTime = system._currentTime;
                 if (defined(burst) && !burst._complete && currentTime > burst.time) {
                     numToEmit += CesiumMath.randomBetween(burst.minimum, burst.maximum);
                     burst._complete = true;
