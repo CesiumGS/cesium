@@ -158,11 +158,11 @@ define([
 
         var show;
         if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression), expressions);
+            show = new Expression(String(showExpression), defines);
         } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression, expressions);
+            show = new Expression(showExpression, defines);
         } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression, expressions);
+            show = new ConditionsExpression(showExpression, defines);
         }
 
         that._show = show;
@@ -178,9 +178,9 @@ define([
 
         var pointColor;
         if (typeof pointColorExpression === 'string') {
-            pointColor = new Expression(pointColorExpression, expressions);
+            pointColor = new Expression(pointColorExpression, defines);
         } else if (defined(pointColorExpression.conditions)) {
-            pointColor = new ConditionsExpression(pointColorExpression, expressions);
+            pointColor = new ConditionsExpression(pointColorExpression, defines);
         }
 
         that._pointColor = pointColor;
@@ -198,165 +198,165 @@ define([
 
         var pointOutlineColor;
         if (typeof pointOutlineColorExpression === 'string') {
-            pointOutlineColor = new Expression(pointOutlineColorExpression, expressions);
+            pointOutlineColor = new Expression(pointOutlineColorExpression, defines);
         } else if (defined(pointOutlineColorExpression.conditions)) {
-            pointOutlineColor = new ConditionsExpression(pointOutlineColorExpression, expressions);
+            pointOutlineColor = new ConditionsExpression(pointOutlineColorExpression, defines);
         }
 
         that._pointOutlineColor = pointOutlineColor;
 
         var pointOutlineWidth;
         if (typeof pointOutlineWidthExpression === 'number') {
-            pointOutlineWidth = new Expression(String(pointOutlineWidthExpression), expressions);
+            pointOutlineWidth = new Expression(String(pointOutlineWidthExpression), defines);
         } else if (typeof pointOutlineWidthExpression === 'string') {
-            pointOutlineWidth = new Expression(pointOutlineWidthExpression, expressions);
+            pointOutlineWidth = new Expression(pointOutlineWidthExpression, defines);
         } else if (defined(pointOutlineWidthExpression.conditions)) {
-            pointOutlineWidth = new ConditionsExpression(pointOutlineWidthExpression, expressions);
+            pointOutlineWidth = new ConditionsExpression(pointOutlineWidthExpression, defines);
         }
 
         that._pointOutlineWidth = pointOutlineWidth;
 
         var labelOutlineColor;
         if (typeof labelOutlineColorExpression === 'string') {
-            labelOutlineColor = new Expression(labelOutlineColorExpression, expressions);
+            labelOutlineColor = new Expression(labelOutlineColorExpression, defines);
         } else if (defined(labelOutlineColorExpression.conditions)) {
-            labelOutlineColor = new ConditionsExpression(labelOutlineColorExpression, expressions);
+            labelOutlineColor = new ConditionsExpression(labelOutlineColorExpression, defines);
         }
 
         that._labelOutlineColor = labelOutlineColor;
 
         var labelOutlineWidth;
         if (typeof labelOutlineWidthExpression === 'number') {
-            labelOutlineWidth = new Expression(String(labelOutlineWidthExpression), expressions);
+            labelOutlineWidth = new Expression(String(labelOutlineWidthExpression), defines);
         } else if (typeof labelOutlineWidthExpression === 'string') {
-            labelOutlineWidth = new Expression(labelOutlineWidthExpression, expressions);
+            labelOutlineWidth = new Expression(labelOutlineWidthExpression, defines);
         } else if (defined(labelOutlineWidthExpression.conditions)) {
-            labelOutlineWidth = new ConditionsExpression(labelOutlineWidthExpression, expressions);
+            labelOutlineWidth = new ConditionsExpression(labelOutlineWidthExpression, defines);
         }
 
         that._labelOutlineWidth = labelOutlineWidth;
 
         var labelStyle;
         if (typeof labelStyleExpression === 'number') {
-            labelStyle = new Expression(String(labelStyleExpression), expressions);
+            labelStyle = new Expression(String(labelStyleExpression), defines);
         } else if (typeof labelStyleExpression === 'string') {
-            labelStyle = new Expression(labelStyleExpression, expressions);
+            labelStyle = new Expression(labelStyleExpression, defines);
         } else if (defined(labelStyleExpression.conditions)) {
-            labelStyle = new ConditionsExpression(labelStyleExpression, expressions);
+            labelStyle = new ConditionsExpression(labelStyleExpression, defines);
         }
 
         that._labelStyle = labelStyle;
 
         var font;
         if (typeof fontExpression === 'string') {
-            font = new Expression(fontExpression, expressions);
+            font = new Expression(fontExpression, defines);
         } else if (defined(fontExpression.conditions)) {
-            font = new ConditionsExpression(fontExpression, expressions);
+            font = new ConditionsExpression(fontExpression, defines);
         }
 
         that._font = font;
 
         var labelText;
         if (typeof(labelTextExpression) === 'string') {
-            labelText = new Expression(labelTextExpression, expressions);
+            labelText = new Expression(labelTextExpression, defines);
         } else if (defined(labelTextExpression) && defined(labelTextExpression.conditions)) {
-            labelText = new ConditionsExpression(labelTextExpression, expressions);
+            labelText = new ConditionsExpression(labelTextExpression, defines);
         }
 
         that._labelText = labelText;
 
         var backgroundColor;
         if (typeof backgroundColorExpression === 'string') {
-            backgroundColor = new Expression(backgroundColorExpression, expressions);
+            backgroundColor = new Expression(backgroundColorExpression, defines);
         } else if (defined(backgroundColorExpression) && defined(backgroundColorExpression.conditions)) {
-            backgroundColor = new ConditionsExpression(backgroundColorExpression, expressions);
+            backgroundColor = new ConditionsExpression(backgroundColorExpression, defines);
         }
 
         that._backgroundColor = backgroundColor;
 
         var backgroundPadding;
         if (typeof backgroundPaddingExpression === 'string') {
-            backgroundPadding = new Expression(backgroundPaddingExpression, expressions);
+            backgroundPadding = new Expression(backgroundPaddingExpression, defines);
         } else if (defined(backgroundPaddingExpression) && defined(backgroundPaddingExpression.conditions)) {
-            backgroundPadding = new ConditionsExpression(backgroundPaddingExpression, expressions);
+            backgroundPadding = new ConditionsExpression(backgroundPaddingExpression, defines);
         }
 
         that._backgroundPadding = backgroundPadding;
 
         var backgroundEnabled;
         if (typeof backgroundEnabledExpression === 'boolean') {
-            backgroundEnabled = new Expression(String(backgroundEnabledExpression), expressions);
+            backgroundEnabled = new Expression(String(backgroundEnabledExpression), defines);
         } else if (typeof backgroundEnabledExpression === 'string') {
-            backgroundEnabled = new Expression(backgroundEnabledExpression, expressions);
+            backgroundEnabled = new Expression(backgroundEnabledExpression, defines);
         } else if (defined(backgroundEnabledExpression.conditions)) {
-            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression, expressions);
+            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression, defines);
         }
 
         that._backgroundEnabled = backgroundEnabled;
 
         var scaleByDistance;
         if (typeof scaleByDistanceExpression === 'string') {
-            scaleByDistance = new Expression(scaleByDistanceExpression, expressions);
+            scaleByDistance = new Expression(scaleByDistanceExpression, defines);
         } else if (defined(scaleByDistanceExpression) && defined(scaleByDistanceExpression.conditions)) {
-            scaleByDistance = new ConditionsExpression(scaleByDistanceExpression, expressions);
+            scaleByDistance = new ConditionsExpression(scaleByDistanceExpression, defines);
         }
 
         that._scaleByDistance = scaleByDistance;
 
         var translucencyByDistance;
         if (typeof translucencyByDistanceExpression === 'string') {
-            translucencyByDistance = new Expression(translucencyByDistanceExpression, expressions);
+            translucencyByDistance = new Expression(translucencyByDistanceExpression, defines);
         } else if (defined(translucencyByDistanceExpression) && defined(translucencyByDistanceExpression.conditions)) {
-            translucencyByDistance = new ConditionsExpression(translucencyByDistanceExpression, expressions);
+            translucencyByDistance = new ConditionsExpression(translucencyByDistanceExpression, defines);
         }
 
         that._translucencyByDistance = translucencyByDistance;
 
         var distanceDisplayCondition;
         if (typeof distanceDisplayConditionExpression === 'string') {
-            distanceDisplayCondition = new Expression(distanceDisplayConditionExpression, expressions);
+            distanceDisplayCondition = new Expression(distanceDisplayConditionExpression, defines);
         } else if (defined(distanceDisplayConditionExpression) && defined(distanceDisplayConditionExpression.conditions)) {
-            distanceDisplayCondition = new ConditionsExpression(distanceDisplayConditionExpression, expressions);
+            distanceDisplayCondition = new ConditionsExpression(distanceDisplayConditionExpression, defines);
         }
 
         that._distanceDisplayCondition = distanceDisplayCondition;
 
         var heightOffset;
         if (typeof heightOffsetExpression === 'number') {
-            heightOffset = new Expression(String(heightOffsetExpression), expressions);
+            heightOffset = new Expression(String(heightOffsetExpression), defines);
         } else if (typeof heightOffsetExpression === 'string') {
-            heightOffset = new Expression(heightOffsetExpression, expressions);
+            heightOffset = new Expression(heightOffsetExpression, defines);
         } else if (defined(heightOffsetExpression.conditions)) {
-            heightOffset  = new ConditionsExpression(heightOffsetExpression, expressions);
+            heightOffset  = new ConditionsExpression(heightOffsetExpression, defines);
         }
 
         that._heightOffset = heightOffset;
 
         var anchorLineEnabled;
         if (typeof anchorLineEnabledExpression === 'boolean') {
-            anchorLineEnabled = new Expression(String(anchorLineEnabledExpression), expressions);
+            anchorLineEnabled = new Expression(String(anchorLineEnabledExpression), defines);
         } else if (typeof anchorLineEnabledExpression === 'string') {
-            anchorLineEnabled = new Expression(anchorLineEnabledExpression, expressions);
+            anchorLineEnabled = new Expression(anchorLineEnabledExpression, defines);
         } else if (defined(anchorLineEnabledExpression.conditions)) {
-            anchorLineEnabled = new ConditionsExpression(anchorLineEnabledExpression, expressions);
+            anchorLineEnabled = new ConditionsExpression(anchorLineEnabledExpression, defines);
         }
 
         that._anchorLineEnabled = anchorLineEnabled;
 
         var anchorLineColor;
         if (typeof anchorLineColorExpression === 'string') {
-            anchorLineColor = new Expression(anchorLineColorExpression, expressions);
+            anchorLineColor = new Expression(anchorLineColorExpression, defines);
         } else if (defined(anchorLineColorExpression.conditions)) {
-            anchorLineColor = new ConditionsExpression(anchorLineColorExpression, expressions);
+            anchorLineColor = new ConditionsExpression(anchorLineColorExpression, defines);
         }
 
         that._anchorLineColor = anchorLineColor;
 
         var image;
         if (typeof(imageExpression) === 'string') {
-            image = new Expression(imageExpression, expressions);
+            image = new Expression(imageExpression, defines);
         } else if (defined(imageExpression) && defined(imageExpression.conditions)) {
-            image = new ConditionsExpression(imageExpression, expressions);
+            image = new ConditionsExpression(imageExpression, defines);
         }
 
         that._image = image;

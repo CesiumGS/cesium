@@ -73,15 +73,6 @@ define([
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
-
-        /**
-         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
-         *
-         * @type {Cesium3DTileset}
-         *
-         * @private
-         */
-        this.primitive = tileset;
     }
 
     var scratchCartographic = new Cartographic();
@@ -164,7 +155,7 @@ define([
         },
 
         /**
-         * Gets and sets the point size of this feature.
+         * Gets or sets the point size of this feature.
          * <p>
          * Only applied when the feature is a point feature and <code>image</code> is <code>undefined</code>.
          * </p>
@@ -201,7 +192,7 @@ define([
         },
 
         /**
-         * Gets and sets the outline color of this feature.
+         * Gets or sets the outline color of this feature.
          * <p>
          * Only applied when the feature is a point feature. The outline will be applied to the point if
          * <code>image</code> is undefined or to the <code>text</code> when it is defined.
@@ -228,7 +219,7 @@ define([
         },
 
         /**
-         * Gets and sets the outline width in pixels of this feature.
+         * Gets or sets the outline width in pixels of this feature.
          * <p>
          * Only applied when the feature is a point feature. The outline width will be applied to the point if
          * <code>image</code> is undefined or to the <code>text</code> when it is defined.
@@ -255,7 +246,7 @@ define([
         },
 
         /**
-         * Gets and sets the font of this feature.
+         * Gets or sets the font of this feature.
          * <p>
          * Only applied when the feature is a point feature and <code>text</code> is defined.
          * </p>
@@ -281,7 +272,7 @@ define([
         },
 
         /**
-         * Gets and sets the fill and outline style of this feature.
+         * Gets or sets the fill and outline style of this feature.
          * <p>
          * Only applied when the feature is a point feature and <code>text</code> is defined.
          * </p>
@@ -307,7 +298,7 @@ define([
         },
 
         /**
-         * Gets and sets the text for this feature.
+         * Gets or sets the text for this feature.
          * <p>
          * Only applied when the feature is a point feature.
          * </p>
@@ -484,7 +475,7 @@ define([
         },
 
         /**
-         * Gets and sets the color for the anchor line.
+         * Gets or sets the color for the anchor line.
          *
          * @memberof Cesium3DTileFeature.prototype
          *
@@ -509,7 +500,7 @@ define([
         },
 
         /**
-         * Gets and sets the image of this feature.
+         * Gets or sets the image of this feature.
          * <p>
          * Only applied when the feature is a point feature.
          * </p>
