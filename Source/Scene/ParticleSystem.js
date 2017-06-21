@@ -33,39 +33,6 @@ define([
         CircleEmitter) {
     "use strict";
 
-    // An array of available particles that we can reuse instead of allocating new.
-    var particlePool = [];
-
-    /**
-     * Gets a Particle to add to the particle system, reusing Particles from the pool if possible.
-     */
-    function getOrCreateParticle() {
-        // Try to reuse an existing particle from the pool.
-        var particle = particlePool.pop();
-        if (!defined(particle)) {
-            // Create a new one
-            particle = new Particle();
-        }
-        return particle;
-    }
-
-    /**
-     * Adds the particle to pool so it can be reused.
-     */
-    function addParticleToPool(particle) {
-        particlePool.push(particle);
-    }
-
-    function freeParticlePool(system) {
-        var billboardCollection = system._billboardCollection;
-        var length = particlePool.length;
-        for (var i = 0; i < length; ++i) {
-            var p = particlePool[i];
-            billboardCollection.remove(p._billboard);
-        }
-        particlePool.length = 0;
-    }
-
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
      * @constructor
@@ -177,8 +144,11 @@ define([
 
         this._lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
 
-        this._particles = [];
         this._billboardCollection = undefined;
+        this._particles = [];
+
+        // An array of available particles that we can reuse instead of allocating new.
+        this._particlePool = [];
 
         this._previousTime = undefined;
         this._currentTime = 0.0;
@@ -536,6 +506,37 @@ define([
         }
     });
 
+    /**
+     * Gets a Particle to add to the particle system, reusing Particles from the pool if possible.
+     */
+    function getOrCreateParticle(system) {
+        // Try to reuse an existing particle from the pool.
+        var particle = system._particlePool.pop();
+        if (!defined(particle)) {
+            // Create a new one
+            particle = new Particle();
+        }
+        return particle;
+    }
+
+    /**
+     * Adds the particle to pool so it can be reused.
+     */
+    function addParticleToPool(system, particle) {
+        system._particlePool.push(particle);
+    }
+
+    function freeParticlePool(system) {
+        var particlePool = system._particlePool;
+        var billboardCollection = system._billboardCollection;
+        var length = particlePool.length;
+        for (var i = 0; i < length; ++i) {
+            var p = particlePool[i];
+            billboardCollection.remove(p._billboard);
+        }
+        particlePool.length = 0;
+    }
+
     function removeBillboard(particle) {
         if (defined(particle._billboard)) {
             particle._billboard.show = false;
@@ -661,7 +662,7 @@ define([
             if (!particle.update(dt, forces)) {
                 removeBillboard(particle);
                 // Add the particle back to the pool so it can be reused.
-                addParticleToPool(particle);
+                addParticleToPool(this, particle);
                 particles[i] = particles[length - 1];
                 --i;
                 --length;
@@ -684,7 +685,7 @@ define([
 
             for (i = 0; i < numToEmit; i++) {
                 // Create a new particle.
-                particle = getOrCreateParticle();
+                particle = getOrCreateParticle(this);
 
                 // Let the emitter initialize the particle.
                 this._emitter.emit(particle);
