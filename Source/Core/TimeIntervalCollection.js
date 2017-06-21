@@ -662,46 +662,33 @@ define([
     function addToDate(julianDate, duration, result) {
         JulianDate.toGregorianDate(julianDate, scratchGregorianDate);
 
-        var millisecond = scratchGregorianDate.millisecond;
-        millisecond += duration.millisecond;
+        var millisecond = scratchGregorianDate.millisecond + duration.millisecond;
+        var second = scratchGregorianDate.second + duration.second;
+        var minute = scratchGregorianDate.minute + duration.minute;
+        var hour = scratchGregorianDate.hour + duration.hour;
+        var day = scratchGregorianDate.day + duration.day;
+        var month = scratchGregorianDate.month + duration.month;
+        var year = scratchGregorianDate.year + duration.year;
+
         if (millisecond >= 1000) {
+            second += Math.floor(millisecond/1000);
             millisecond = millisecond % 1000;
-            scratchGregorianDate.second += Math.floor(millisecond/1000);
         }
-        scratchGregorianDate.millisecond = millisecond;
 
-        var second = scratchGregorianDate.second;
-        second += duration.second;
         if (second >= 60) {
+            minute += Math.floor(second/60);
             second = second % 60;
-            scratchGregorianDate.minute += Math.floor(second/60);
         }
-        scratchGregorianDate.second = second;
 
-        var minute = scratchGregorianDate.minute;
-        minute += duration.minute;
         if (minute >= 60) {
+            hour += Math.floor(minute/60);
             minute = minute % 60;
-            scratchGregorianDate.hour += Math.floor(minute/60);
         }
-        scratchGregorianDate.minute = minute;
 
-        var hour = scratchGregorianDate.hour;
-        hour += duration.hour;
-        if (hour >= 60) {
+        if (hour >= 24) {
+            day += Math.floor(hour/24);
             hour = hour % 24;
-            scratchGregorianDate.day += Math.floor(hour/24);
         }
-        scratchGregorianDate.hour = hour;
-
-        var day = scratchGregorianDate.day;
-        day += duration.day;
-
-        var month = scratchGregorianDate.month;
-        month += duration.month;
-
-        var year = scratchGregorianDate.year;
-        year += duration.year;
 
         // If days is greater than the month's length we need to remove those number of days,
         //  readjust month and year and repeat until days is less than the month's length.
@@ -714,19 +701,23 @@ define([
 
             if (month >= 13) {
                 --month;
-                month = month % 12;
                 year += Math.floor(month/12);
+                month = month % 12;
                 ++month;
             }
 
             monthLengths[2] = isLeapYear(year) ? 29 : 28;
         }
 
+        scratchGregorianDate.millisecond = millisecond;
+        scratchGregorianDate.second = second;
+        scratchGregorianDate.minute = minute;
+        scratchGregorianDate.hour = hour;
         scratchGregorianDate.day = day;
         scratchGregorianDate.month = month;
         scratchGregorianDate.year = year;
 
-        // TODO: Return JulianDate
+        return JulianDate.fromGregorianDate(scratchGregorianDate, result);
     }
 
     var scratchJulianDate1 = new JulianDate();
@@ -761,29 +752,33 @@ define([
                 return false;
             }
             if (defined(matches[1])) { // Years
-                result.years = Number(matches[1].replace(',', '.'));
+                result.year = Number(matches[1].replace(',', '.'));
             }
             if (defined(matches[2])) { // Months
-                result.months = Number(matches[2].replace(',', '.'));
+                result.month = Number(matches[2].replace(',', '.'));
             }
             if (defined(matches[3])) { // Weeks
-                result.days = Number(matches[3].replace(',', '.')) * 7;
+                result.day = Number(matches[3].replace(',', '.')) * 7;
             }
             if (defined(matches[4])) { // Days
-                result.days += Number(matches[4].replace(',', '.'));
+                result.day += Number(matches[4].replace(',', '.'));
             }
             if (defined(matches[5])) { // Hours
-                result.hours = Number(matches[5].replace(',', '.'));
+                result.hour = Number(matches[5].replace(',', '.'));
             }
             if (defined(matches[6])) { // Weeks
-                result.minutes = Number(matches[6].replace(',', '.'));
+                result.minute = Number(matches[6].replace(',', '.'));
             }
             if (defined(matches[7])) { // Seconds
                 var seconds = Number(matches[7].replace(',', '.'));
-                result.seconds = Math.floor(seconds);
-                result.milliseconds = seconds % 1;
+                result.second = Math.floor(seconds);
+                result.millisecond = (seconds % 1) * 1000;
             }
         } else {
+            // They can technically specify the duration as a normal date with some caveats. Try our best to load it.
+            if (iso8601[iso8601.length-1] !== 'Z') { // It's not a date, its a duration, so it always has to be UTC
+                iso8601 += 'Z';
+            }
             JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate1), result);
         }
 
@@ -799,6 +794,7 @@ define([
      * @param {String} options.iso8601 An ISO 8601 interval.
      * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
      * @param {TimeInterval} [result] An existing instance to use for the result.
      * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
      */
@@ -816,6 +812,7 @@ define([
             result = new TimeIntervalCollection();
         }
 
+        var dataCallback = options.dataCallback;
         var dates = options.iso8601.split('/');
         var start = JulianDate.fromIso8601(dates[0]);
         var stop = JulianDate.fromIso8601(dates[1]);
@@ -824,25 +821,34 @@ define([
         var isStopIncluded = defaultValue(options.isStopIncluded, true);
 
         // Not duration so just return collection with one interval
+        var interval;
         if (!parseDuration(dates[2], scratchDuration)) {
-            result.addInterval(new TimeInterval({
+            interval = new TimeInterval({
                 start: start,
                 stop: stop,
                 isStartIncluded: isStartIncluded,
                 isStopIncluded: isStopIncluded
-            }));
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
             return result;
         }
 
         JulianDate.clone(start, scratchJulianDate1);
-        while(JulianDate.compare(stop, scratchJulianDate1) < 0) {
+        while(JulianDate.compare(scratchJulianDate1, stop) < 0) {
             addToDate(scratchJulianDate1, scratchDuration, scratchJulianDate2);
-            result.addInterval(new TimeInterval({
+            var afterStop = (JulianDate.compare(stop, scratchJulianDate2) <= 0);
+            if (afterStop) {
+                scratchJulianDate2 = stop;
+            }
+            interval = new TimeInterval({
                 start: scratchJulianDate1,
                 stop: scratchJulianDate2,
                 isStartIncluded: (result.length === 0) ? isStartIncluded : true,
-                isStopIncluded: (JulianDate.compare(scratchJulianDate2, stop) < 0) ? false : isStopIncluded
-            }));
+                isStopIncluded: afterStop ? isStopIncluded : false
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
 
             JulianDate.clone(scratchJulianDate2, scratchJulianDate1);
         }

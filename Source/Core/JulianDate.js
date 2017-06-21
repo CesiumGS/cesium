@@ -203,6 +203,31 @@ define([
     }
 
     /**
+     * Creates a new instance from a GregorianDate.
+     *
+     * @param {GregorianDate} date A GregorianDate.
+     * @param {JulianDate} [result] An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} date must be a valid GregorianDate.
+     */
+    JulianDate.fromGregorianDate = function(date, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!(date instanceof GregorianDate)) {
+            throw new DeveloperError('date must be a valid GregorianDate.');
+        }
+        //>>includeEnd('debug');
+
+        var components = computeJulianDateComponents(date.year, date.month, date.day, date.hour, date.minute, date.second, date.millisecond);
+        if (!defined(result)) {
+            return new JulianDate(components[0], components[1], TimeStandard.UTC);
+        }
+        setComponents(components[0], components[1], result);
+        convertUtcToTai(result);
+        return result;
+    };
+
+    /**
      * Creates a new instance from a JavaScript Date.
      *
      * @param {Date} date A JavaScript Date.

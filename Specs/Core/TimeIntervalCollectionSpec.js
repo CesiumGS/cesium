@@ -1,13 +1,42 @@
 /*global defineSuite*/
 defineSuite([
         'Core/TimeIntervalCollection',
+        'Core/defaultValue',
         'Core/JulianDate',
         'Core/TimeInterval'
     ], function(
         TimeIntervalCollection,
+        defaultValue,
         JulianDate,
         TimeInterval) {
     'use strict';
+
+    function defaultDataCallback(interval, index) {
+        return index;
+    }
+
+    function iso8601ToJulianDateArray(iso8601Dates) {
+        var julianDates = [];
+        for (var i=0;i<iso8601Dates.length;++i) {
+            julianDates[i] = JulianDate.fromIso8601(iso8601Dates[i]);
+        }
+
+        return julianDates;
+    }
+
+    function checkIntervals(intervals, julianDates, isStartIncluded, isStopIncluded, dataCallback) {
+        dataCallback = defaultValue(dataCallback, defaultDataCallback);
+        var length = intervals.length;
+        expect(length).toEqual(julianDates.length-1);
+        for (var i=0;i<length;++i) {
+            var interval = intervals.get(i);
+            expect(JulianDate.compare(interval.start, julianDates[i])).toEqual(0);
+            expect(JulianDate.compare(interval.stop, julianDates[i+1])).toEqual(0);
+            expect(interval.isStartIncluded).toBe((i===0) ? isStartIncluded : true);
+            expect(interval.isStopIncluded).toBe((i===(length-1)) ? isStopIncluded : false);
+            expect(interval.data).toEqual(dataCallback(interval, i));
+        }
+    }
 
     function TestObject(value) {
         this.value = value;
@@ -983,5 +1012,180 @@ defineSuite([
         listener.calls.reset();
         intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(intervals);
+    });
+
+    it('fromIso8601 throws without options', function() {
+        expect(function() {
+            TimeIntervalCollection.fromIso8601(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('fromIso8601 throws without options.iso8601', function() {
+        expect(function() {
+            TimeIntervalCollection.fromIso8601({});
+        }).toThrowDeveloperError();
+    });
+
+    it('fromIso8601 return single interval if no duration', function() {
+        var start = '2017-01-01T00:00:00Z';
+        var stop = '2017-01-02T00:00:00Z';
+        var julianDates = iso8601ToJulianDateArray([start, stop]);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : start + '/' + stop,
+            isStartIncluded : false,
+            isStopIncluded : false
+        });
+
+        checkIntervals(intervals, julianDates, false, false);
+    });
+
+    it('fromIso8601 works with just year', function() {
+        var iso8601Dates = ['2017-01-01T00:00:00Z', '2018-01-01T00:00:00Z', '2019-01-01T00:00:00Z', '2020-01-01T00:00:00Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    it('fromIso8601 works with just month', function() {
+        var iso8601Dates = ['2016-12-02T10:00:01.5Z', '2017-01-02T10:00:01.5Z', '2017-02-02T10:00:01.5Z', '2017-03-02T10:00:01.5Z', '2017-04-02T10:00:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1M'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    it('fromIso8601 works with just day', function() {
+        var iso8601Dates = ['2016-12-31T10:01:01.5Z', '2017-01-01T10:01:01.5Z', '2017-01-02T10:01:01.5Z', '2017-01-03T10:01:01.5Z', '2017-01-04T10:01:01.5Z', '2017-01-05T10:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1D',
+            isStartIncluded: false
+        });
+
+        checkIntervals(intervals, julianDates, false, true);
+    });
+
+    it('fromIso8601 works with just all date components', function() {
+        var iso8601Dates = ['2017-01-01T10:01:01.5Z', '2018-03-04T10:01:01.5Z', '2019-05-07T10:01:01.5Z', '2020-07-10T10:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y2M3D',
+            isStopIncluded: false
+        });
+
+        checkIntervals(intervals, julianDates, true, false);
+    });
+
+    it('fromIso8601 works with just just hour', function() {
+        var iso8601Dates = ['2017-01-01T22:01:01.5Z', '2017-01-01T23:01:01.5Z', '2017-01-02T00:01:01.5Z', '2017-01-02T01:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1H',
+            isStartIncluded: false
+        });
+
+        checkIntervals(intervals, julianDates, false, true);
+    });
+
+    it('fromIso8601 works with just just minute', function() {
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
+            isStopIncluded: false
+        });
+
+        checkIntervals(intervals, julianDates, true, false);
+    });
+
+    it('fromIso8601 works with just just second', function() {
+        var iso8601Dates = ['2016-12-31T23:59:58.5Z', '2016-12-31T23:59:59.5Z', '2017-01-01T00:00:00.5Z', '2017-01-01T00:00:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1S',
+            isStartIncluded: false,
+            isStopIncluded: false
+        });
+
+        checkIntervals(intervals, julianDates, false, false);
+    });
+
+    it('fromIso8601 works with just just millisecond', function() {
+        var iso8601Dates = ['2016-12-31T23:59:58.5Z', '2016-12-31T23:59:59Z', '2016-12-31T23:59:59.5Z', '2017-01-01T00:00:00Z', '2017-01-01T00:00:00.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT0.5S'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    it('fromIso8601 works with just all time components', function() {
+        var iso8601Dates = ['2017-01-01T10:01:01.5Z', '2017-01-01T11:03:05Z', '2017-01-01T12:05:08.5Z', '2017-01-01T13:07:12Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1H2M3.5S'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    it('fromIso8601 works with just all date and time components', function() {
+        var iso8601Dates = ['2017-01-01T10:01:01.5Z', '2018-03-04T11:03:05Z', '2019-05-07T12:05:08.5Z', '2020-07-10T13:07:12Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y2M3DT1H2M3.5S'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    it('fromIso8601 works with just all date and time components with date string for duration', function() {
+        var iso8601Dates = ['2017-01-01T10:01:01.5Z', '2018-03-04T11:03:05Z', '2019-05-07T12:05:08.5Z', '2020-07-10T13:07:12Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/0001-02-03T01:02:03.5'
+        });
+
+        checkIntervals(intervals, julianDates, true, true);
+    });
+
+    function dataCallback(interval, index) {
+        return JulianDate.toIso8601(interval.start);
+    }
+
+    it('fromIso8601 calls the dataCallback on interval create', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2017-01-01T10:01:01.5Z', '2018-03-04T11:03:05Z', '2019-05-07T12:05:08.5Z', '2020-07-10T13:07:12Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/P1Y2M3DT1H2M3.5S',
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(3);
+        expect(dataSpy).toHaveBeenCalledWith(intervals.get(0), 0);
+        expect(dataSpy).toHaveBeenCalledWith(intervals.get(1), 1);
+        expect(dataSpy).toHaveBeenCalledWith(intervals.get(2), 2);
+
+        checkIntervals(intervals, julianDates, true, true, dataCallback);
     });
 });

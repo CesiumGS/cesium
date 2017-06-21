@@ -1039,4 +1039,15 @@ defineSuite([
         var date = new JulianDate(2556109, 43237.0, TimeStandard.TAI);
         expect(JulianDate.computeTaiMinusUtc(date)).toEqual(37);
     });
+
+    it('fromGregorianDate returns the same date', function() {
+        var iso86011 = '2017-01-01T10:01:01.5Z';
+        var julian1 = JulianDate.fromIso8601(iso86011);
+        var gregorian = JulianDate.toGregorianDate(julian1);
+        var julian2 = JulianDate.fromGregorianDate(gregorian);
+        var iso86012 = JulianDate.toIso8601(julian2);
+
+        expect(iso86011).toEqual(iso86012);
+        expect(JulianDate.compare(julian1, julian2)).toEqual(0);
+    });
 });
