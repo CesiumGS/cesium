@@ -20,7 +20,6 @@ define([
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
-        './ParticleSystemVisualizer',
         './PathVisualizer',
         './PointVisualizer',
         './PolygonGeometryUpdater',
@@ -49,7 +48,6 @@ define([
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
-        ParticleSystemVisualizer,
         PathVisualizer,
         PointVisualizer,
         PolygonGeometryUpdater,
@@ -125,8 +123,7 @@ define([
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
-                new PathVisualizer(scene, entities),
-                new ParticleSystemVisualizer(scene, entities)];
+                new PathVisualizer(scene, entities)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {

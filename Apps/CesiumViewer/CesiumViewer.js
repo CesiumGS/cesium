@@ -166,6 +166,7 @@ define([
         }
     }
 
+    var camera = viewer.camera;
     function saveCamera() {
         var position = camera.positionCartographic;
         var hpr = '';
@@ -178,7 +179,6 @@ define([
 
     var updateTimer;
     if (endUserOptions.saveCamera !== 'false') {
-        var camera = viewer.camera;
         camera.moveStart.addEventListener(function() {
             if (!defined(updateTimer)) {
                 updateTimer = window.setInterval(saveCamera, 1000);

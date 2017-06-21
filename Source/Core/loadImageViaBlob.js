@@ -13,6 +13,17 @@ define([
         loadImage) {
     'use strict';
 
+    var xhrBlobSupported = (function() {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
+        } catch (e) {
+            return false;
+        }
+    })();
+
     /**
      * Asynchronously loads the given image URL by first downloading it as a blob using
      * XMLHttpRequest and then loading the image from the buffer via a blob URL.
@@ -72,17 +83,6 @@ define([
             });
         });
     }
-
-    var xhrBlobSupported = (function() {
-        try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '#', true);
-            xhr.responseType = 'blob';
-            return xhr.responseType === 'blob';
-        } catch (e) {
-            return false;
-        }
-    })();
 
     return loadImageViaBlob;
 });

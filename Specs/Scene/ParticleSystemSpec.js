@@ -119,8 +119,221 @@ defineSuite([
         expect(p.isComplete).toEqual(false);
     });
 
+    it('getters/setters', function() {
+        var show = false;
+        var forces = [function(p) { p.mass++; }];
+        var emitter = new CircleEmitter(10.0);
+        var modelMatrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+        var emitterModelMatrix = new Matrix4(10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0);
+        var startColor = Color.MAGENTA;
+        var endColor = Color.LAVENDAR_BLUSH;
+        var startScale = 19.0;
+        var endScale = 20.0;
+        var rate = 21.0;
+        var bursts = [new ParticleBurst()];
+        var loop = false;
+        var minimumSpeed = 22.0;
+        var maximumSpeed = 23.0;
+        var minimumLife = 24.0;
+        var maximumLife = 25.0;
+        var minimumMass = 26.0;
+        var maximumMass = 27.0;
+        var image = 'url/to/image';
+        var minimumWidth = 28.0;
+        var maximumWidth = 29.0;
+        var minimumHeight = 30.0;
+        var maximumHeight = 31.0;
+        var lifeTime = 32.0;
+
+        var p = new ParticleSystem();
+        p.show = show;
+        p.forces = forces;
+        p.emitter = emitter;
+        p.modelMatrix = modelMatrix;
+        p.emitterModelMatrix = emitterModelMatrix;
+        p.startColor = startColor;
+        p.endColor = endColor;
+        p.startScale = startScale;
+        p.endScale = endScale;
+        p.rate = rate;
+        p.bursts = bursts;
+        p.loop = loop;
+        p.minimumSpeed = minimumSpeed;
+        p.maximumSpeed = maximumSpeed;
+        p.minimumLife = minimumLife;
+        p.maximumLife = maximumLife;
+        p.minimumMass = minimumMass;
+        p.maximumMass = maximumMass;
+        p.image = image;
+        p.minimumWidth = minimumWidth;
+        p.maximumWidth = maximumWidth;
+        p.minimumHeight = minimumHeight;
+        p.maximumHeight = maximumHeight;
+        p.lifeTime = lifeTime;
+
+        expect(p.show).toEqual(show);
+        expect(p.forces).toEqual(forces);
+        expect(p.emitter).toEqual(emitter);
+        expect(p.modelMatrix).toEqual(modelMatrix);
+        expect(p.emitterModelMatrix).toEqual(emitterModelMatrix);
+        expect(p.startColor).toEqual(startColor);
+        expect(p.endColor).toEqual(endColor);
+        expect(p.startScale).toEqual(startScale);
+        expect(p.endScale).toEqual(endScale);
+        expect(p.rate).toEqual(rate);
+        expect(p.bursts).toEqual(bursts);
+        expect(p.loop).toEqual(loop);
+        expect(p.minimumSpeed).toEqual(minimumSpeed);
+        expect(p.maximumSpeed).toEqual(maximumSpeed);
+        expect(p.minimumLife).toEqual(minimumLife);
+        expect(p.maximumLife).toEqual(maximumLife);
+        expect(p.minimumMass).toEqual(minimumMass);
+        expect(p.maximumMass).toEqual(maximumMass);
+        expect(p.image).toEqual(image);
+        expect(p.minimumWidth).toEqual(minimumWidth);
+        expect(p.maximumWidth).toEqual(maximumWidth);
+        expect(p.minimumHeight).toEqual(minimumHeight);
+        expect(p.maximumHeight).toEqual(maximumHeight);
+        expect(p.lifeTime).toEqual(lifeTime);
+        expect(p.complete).toBeDefined();
+        expect(p.isComplete).toEqual(false);
+    });
+
+    it('throws with invalid emitter', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.emitter = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid modelMatrix', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.modelMatrix = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid emitterModelMatrix', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.emitterModelMatrix = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid startColor', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.startColor = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid endColor', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.endColor = undefined;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid startScale', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.startScale = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid endScale', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.endScale = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid rate', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.rate = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid minimumSpeed', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.minimumSpeed = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid maximumSpeed', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.maximumSpeed = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid minimumLife', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.minimumLife = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid maximumLife', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.maximumLife = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid minimumMass', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.minimumMass = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid maximumMass', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.maximumMass = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid minimumWidth', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.minimumWidth = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid maximumWidth', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.maximumWidth = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid minimumHeight', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.minimumHeight = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid maximumHeight', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.maximumHeight = -1.0;
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with invalid lifeTime', function() {
+        var p = new ParticleSystem();
+        expect(function() {
+            p.lifeTime = -1.0;
+        }).toThrowDeveloperError();
+    });
+
     it('renders', function() {
-        var p = scene.primitives.add(new ParticleSystem({
+        scene.primitives.add(new ParticleSystem({
             image : greenImage,
             emitter : new CircleEmitter(1.0),
             rate : 10000,
