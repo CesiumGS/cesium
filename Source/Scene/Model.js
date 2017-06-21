@@ -1408,7 +1408,6 @@ define([
                 if (defined(buffer.extras._pipeline.source)) {
                     loadResources.buffers[id] = buffer.extras._pipeline.source;
                 } else {
-                    var uri = new Uri(buffer.uri);
                     var bufferPath = joinUrls(model._baseUri, buffer.uri);
                     ++loadResources.pendingBufferLoads;
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
@@ -1419,7 +1418,6 @@ define([
 
     function parseBufferViews(model) {
         var bufferViews = model.gltf.bufferViews;
-        var id;
 
         var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
@@ -1436,7 +1434,6 @@ define([
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF accessors to create the bufferview's index buffer.
-        var accessors = model.gltf.accessors;
         ForEach.accessor(model.gltf, function(accessor) {
             var bufferViewId = accessor.bufferView;
             var bufferView = bufferViews[bufferViewId];
@@ -1492,7 +1489,6 @@ define([
                 };
             } else {
                 ++model._loadResources.pendingShaderLoads;
-                var uri = new Uri(shader.uri);
                 var shaderPath = joinUrls(model._baseUri, shader.uri);
                 loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
@@ -1528,13 +1524,14 @@ define([
     function parseTextures(model, context) {
         var gltf = model.gltf;
         var images = gltf.images;
+        var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
             var bufferViewId = gltfImage.bufferView;
-            var uri = gltfImage.uri;
+            uri = gltfImage.uri;
 
             // First check for a compressed texture
             if (defined(extras) && defined(extras.compressedImage3DTiles)) {
@@ -1860,7 +1857,7 @@ define([
                 i = indexBuffersToCreate.dequeue();
                 createIndexBuffer(i.id, i.componentType, model, context);
             }
-        });
+        }
     }
 
     function createAttributeLocations(model, attributes) {
