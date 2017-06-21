@@ -88,13 +88,6 @@ define([
         this.forces = options.forces;
 
         /**
-         * An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
-         * @type {ParticleBurst[]}
-         * @default undefined
-         */
-        this.bursts = options.bursts;
-
-        /**
          * Whether the particle system should loop it's bursts when it is complete.
          * @type {Boolean}
          * @default true
@@ -113,6 +106,8 @@ define([
             emitter = new CircleEmitter(0.5);
         }
         this._emitter = emitter;
+
+        this._bursts = options.bursts;
 
         this._modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._emitterModelMatrix = Matrix4.clone(defaultValue(options.emitterModelMatrix, Matrix4.IDENTITY));
@@ -156,6 +151,9 @@ define([
 
         this._complete = new Event();
         this._isComplete = false;
+
+        this._updateParticlePool = true;
+        this._particleEstimate = 0;
     }
 
     defineProperties(ParticleSystem.prototype, {
@@ -174,6 +172,20 @@ define([
                 Check.defined('value', value);
                 //>>includeEnd('debug');
                 this._emitter = value;
+            }
+        },
+        /**
+         * An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
+         * @type {ParticleBurst[]}
+         * @default undefined
+         */
+        bursts : {
+            get : function() {
+                return this._bursts;
+            },
+            set : function(value) {
+                this._bursts = value;
+                this._updateParticlePool = true;
             }
         },
         /**
@@ -295,6 +307,7 @@ define([
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
                 this._rate = value;
+                this._updateParticlePool = true;
             }
         },
         /**
@@ -363,6 +376,7 @@ define([
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
                 this._maximumLife = value;
+                this._updateParticlePool = true;
             }
         },
         /**
@@ -506,9 +520,38 @@ define([
         }
     });
 
-    /**
-     * Gets a Particle to add to the particle system, reusing Particles from the pool if possible.
-     */
+    function updateParticlePool(system) {
+        var rate = system._rate;
+        var life = system._maximumLife;
+
+        var burstAmount = 0;
+        var bursts = system._bursts;
+        if (defined(bursts)) {
+            var length = bursts.length;
+            for (var i = 0; i < length; ++i) {
+                burstAmount += bursts[i].maximum;
+            }
+        }
+
+        var billboardCollection = system._billboardCollection;
+        var image = system.image;
+
+        var particleEstimate = Math.ceil(rate * life + burstAmount);
+        var particles = system._particles;
+        var particlePool = system._particlePool;
+        var numToAdd = Math.max(particleEstimate - particles.length - particlePool.length, 0);
+
+        for (var j = 0; j < numToAdd; ++j) {
+            var particle = new Particle();
+            particle._billboard = billboardCollection.add({
+                image : image
+            });
+            particlePool.push(particle);
+        }
+
+        system._particleEstimate = particleEstimate;
+    }
+
     function getOrCreateParticle(system) {
         // Try to reuse an existing particle from the pool.
         var particle = system._particlePool.pop();
@@ -519,22 +562,25 @@ define([
         return particle;
     }
 
-    /**
-     * Adds the particle to pool so it can be reused.
-     */
     function addParticleToPool(system, particle) {
         system._particlePool.push(particle);
     }
 
     function freeParticlePool(system) {
+        var particles = system._particles;
         var particlePool = system._particlePool;
         var billboardCollection = system._billboardCollection;
-        var length = particlePool.length;
-        for (var i = 0; i < length; ++i) {
+
+        var numParticles = particles.length;
+        var numInPool = particlePool.length;
+        var estimate = system._particleEstimate;
+
+        var start = numInPool - Math.max(estimate - numParticles - numInPool, 0);
+        for (var i = start; i < numInPool; ++i) {
             var p = particlePool[i];
             billboardCollection.remove(p._billboard);
         }
-        particlePool.length = 0;
+        particlePool.length = start;
     }
 
     function removeBillboard(particle) {
@@ -638,6 +684,11 @@ define([
             this._billboardCollection = new BillboardCollection();
         }
 
+        if (this._updateParticlePool) {
+            updateParticlePool(this);
+            this._updateParticlePool = false;
+        }
+
         // Compute the frame time
         var dt = 0.0;
         if (this._previousTime) {
@@ -703,6 +754,7 @@ define([
 
                 // Add the particle to the system.
                 addParticle(this, particle);
+                updateBillboard(this, particle);
             }
         }
 
