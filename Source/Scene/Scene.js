@@ -43,6 +43,7 @@ define([
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
@@ -120,6 +121,7 @@ define([
         PassState,
         PixelDatatype,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
@@ -625,17 +627,18 @@ define([
         this._cubeMap = context.defaultCubeMap;
         var that = this;
         // buildModuleURL
-        var texturePath = buildModuleUrl('Assets/Textures/BlueSkyBox/');
+        var texturePath = buildModuleUrl('Assets/Textures/Horizon/');
         var paths = {
             positiveX : texturePath + 'PositiveX.png',
-            negativeX : texturePath + 'NegativeX.png',
+            negativeX : texturePath + 'PositiveX.png',
             positiveY : texturePath + 'NegativeY.png',
             negativeY : texturePath + 'PositiveY.png',
-            positiveZ : texturePath + 'PositiveZ.png',
-            negativeZ : texturePath + 'NegativeZ.png'
+            positiveZ : texturePath + 'PositiveX.png',
+            negativeZ : texturePath + 'PositiveX.png'
         };
         loadCubeMap(context, paths).then(function(cubeMap) {
             that._cubeMap = cubeMap;
+            cubeMap.sampler = new Sampler();
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
