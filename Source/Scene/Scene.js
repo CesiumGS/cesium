@@ -3,6 +3,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
+        '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -38,13 +39,16 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/loadCubeMap',
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        './BrdfLutProcessor',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -79,6 +83,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
+        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -114,13 +119,16 @@ define([
         ContextLimits,
         DrawCommand,
         Framebuffer,
+        loadCubeMap,
         Pass,
         PassState,
         PixelDatatype,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
+        BrdfLutProcessor,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -622,6 +630,25 @@ define([
             context : context,
             lightCamera : this._sunCamera,
             enabled : defaultValue(options.shadows, false)
+        });
+
+        this._brdfLUT = new BrdfLutProcessor();
+
+        this._cubeMap = context.defaultCubeMap;
+        var that = this;
+        // buildModuleURL
+        var texturePath = buildModuleUrl('Assets/Textures/Horizon/');
+        var paths = {
+            positiveX : texturePath + 'PositiveX.png',
+            negativeX : texturePath + 'PositiveX.png',
+            positiveY : texturePath + 'NegativeY.png',
+            negativeY : texturePath + 'PositiveY.png',
+            positiveZ : texturePath + 'PositiveX.png',
+            negativeZ : texturePath + 'PositiveX.png'
+        };
+        loadCubeMap(context, paths).then(function(cubeMap) {
+            that._cubeMap = cubeMap;
+            cubeMap.sampler = new Sampler();
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1280,6 +1307,8 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
+        frameState.brdfLUT = scene._brdfLUT._colorTexture;
+        frameState.cubeMap = scene._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -2611,6 +2640,8 @@ define([
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
             frameState.shadowMaps.push(shadowMap);
         }
+
+        scene._brdfLUT.update(frameState);
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;

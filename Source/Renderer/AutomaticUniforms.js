@@ -1437,6 +1437,23 @@ define([
             }
         }),
 
+        czm_brdfLUT : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.brdfLUT;
+            }
+        }),
+
+        // TODO: Docs
+        czm_cubeMap : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.cubeMap;
+            }
+        }),
+
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.

@@ -56,6 +56,7 @@ define([
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
         '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
@@ -131,6 +132,7 @@ define([
         numberOfComponentsForType,
         parseBinaryGltf,
         processModelMaterialsCommon,
+        processPbrMetallicRoughness,
         removePipelineExtras,
         updateVersion,
         Uri,
@@ -2922,7 +2924,7 @@ define([
 
     function DelayLoadedTextureUniform(value, model) {
         this._value = undefined;
-        this._textureId = value;
+        this._textureId = value.index;
         this._model = model;
     }
 
@@ -3106,7 +3108,8 @@ define([
         for (var materialId in materials) {
             if (materials.hasOwnProperty(materialId)) {
                 var material = materials[materialId];
-                var instanceParameters = material.values;
+                var instanceParameters;
+                instanceParameters = material.values;
                 var technique = techniques[material.technique];
                 var parameters = technique.parameters;
                 var uniforms = technique.uniforms;
@@ -4508,7 +4511,8 @@ define([
                     checkSupportedExtensions(this);
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf);
+                    //processModelMaterialsCommon(this.gltf);
+                    processPbrMetallicRoughness(this.gltf, frameState);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
                     this._animationIds = getAnimationIds(this.gltf);
