@@ -11,7 +11,7 @@ define([
      * Provides tiled imagery using the Google Earth Imagery API.
      *
      * Notes: This imagery provider was deprecated in Cesium 1.35 and replaced with {@link GoogleEarthEnterpriseMapsProvider}.
-     *        These are for use with the 2D Maps API. For 3D Earth API uses, see {@link GoogleEarthEngerpriseImageryProvider}.
+     *        These are for use with the 2D Maps API. For 3D Earth API uses, see {@link GoogleEarthEnterpriseImageryProvider}.
      *        GoogleEarthImageryProvider will be removed in Cesium 1.37.
      *
      * @alias GoogleEarthImageryProvider

@@ -5,7 +5,6 @@ define([
         '../Core/DeveloperError',
         '../Core/getImagePixels',
         '../Core/loadImageViaBlob',
-        '../Core/RequestScheduler',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -13,7 +12,6 @@ define([
         DeveloperError,
         getImagePixels,
         loadImageViaBlob,
-        RequestScheduler,
         when) {
     'use strict';
 
@@ -90,7 +88,7 @@ define([
             that._isReady = true;
         }
 
-        when(RequestScheduler.request(options.missingImageUrl, loadImageViaBlob), success, failure);
+        when(loadImageViaBlob(options.missingImageUrl), success, failure);
     }
 
     /**

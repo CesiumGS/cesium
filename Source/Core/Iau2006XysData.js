@@ -7,7 +7,6 @@ define([
         './Iau2006XysSample',
         './JulianDate',
         './loadJson',
-        './RequestScheduler',
         './TimeStandard'
     ], function(
         when,
@@ -17,7 +16,6 @@ define([
         Iau2006XysSample,
         JulianDate,
         loadJson,
-        RequestScheduler,
         TimeStandard) {
     'use strict';
 
@@ -246,7 +244,7 @@ define([
             chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
         }
 
-        when(RequestScheduler.request(chunkUrl, loadJson), function(chunk) {
+        when(loadJson(chunkUrl), function(chunk) {
             xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
             var samples = xysData._samples;

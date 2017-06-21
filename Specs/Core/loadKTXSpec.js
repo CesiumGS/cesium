@@ -2,12 +2,16 @@
 defineSuite([
         'Core/loadKTX',
         'Core/PixelFormat',
+        'Core/Request',
         'Core/RequestErrorEvent',
+        'Core/RequestScheduler',
         'Core/RuntimeError'
     ], function(
         loadKTX,
         PixelFormat,
+        Request,
         RequestErrorEvent,
+        RequestScheduler,
         RuntimeError) {
     'use strict';
 
@@ -333,7 +337,7 @@ defineSuite([
         expect(rejectedError.message).toEqual('3D textures are unsupported.');
     });
 
-    it('Texture arrays are unsupported', function() {
+    it('texture arrays are unsupported', function() {
         var reinterprestBuffer = new Uint32Array(validUncompressed.buffer);
         var invalidKTX = new Uint32Array(reinterprestBuffer);
         invalidKTX[12] = 15;
@@ -353,7 +357,7 @@ defineSuite([
         expect(rejectedError.message).toEqual('Texture arrays are unsupported.');
     });
 
-    it('Cubemaps are unsupported', function() {
+    it('cubemaps are unsupported', function() {
         var reinterprestBuffer = new Uint32Array(validUncompressed.buffer);
         var invalidKTX = new Uint32Array(reinterprestBuffer);
         invalidKTX[13] = 6;
@@ -371,5 +375,20 @@ defineSuite([
         expect(resolvedValue).toBeUndefined();
         expect(rejectedError instanceof RuntimeError).toEqual(true);
         expect(rejectedError.message).toEqual('Cubemaps are unsupported.');
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadKTX(testUrl, undefined, request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 });

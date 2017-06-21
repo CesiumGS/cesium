@@ -9,6 +9,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -21,7 +22,6 @@ define([
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './Request',
-        './RequestScheduler',
         './RequestType',
         './TerrainProvider',
         './TileAvailability',
@@ -36,6 +36,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -48,7 +49,6 @@ define([
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
         Request,
-        RequestScheduler,
         RequestType,
         TerrainProvider,
         TileAvailability,
@@ -56,7 +56,7 @@ define([
     'use strict';
 
     /**
-     * A {@link TerrainProvider} that access terrain data in a Cesium terrain format.
+     * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
      * The format is described on the
      * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
      *
@@ -267,7 +267,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = RequestScheduler.request(metadataUrl, loadJson);
+            var metadata = loadJson(metadataUrl);
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -306,12 +306,11 @@ define([
             return {
                 Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
             };
-        } else {
-            var extensions = extensionsList.join('-');
-            return {
-                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
-            };
         }
+        var extensions = extensionsList.join('-');
+        return {
+            Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+        };
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -479,7 +478,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
@@ -519,22 +518,17 @@ define([
             extensionList.push('watermask');
         }
 
-        function tileLoader(tileUrl) {
-            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
-        }
-
-        if (!defined(request) || (request === false)) {
-            // If a request object isn't provided, perform an immediate request
+        if (typeof request === 'boolean') {
+            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
             request = new Request({
-                defer : true
+                throttle : request,
+                throttleByServer : request,
+                type : RequestType.TERRAIN
             });
         }
 
-        request.url = url;
-        request.requestFunction = tileLoader;
-        request.type = RequestType.TERRAIN;
+        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
 
-        var promise = RequestScheduler.schedule(request);
         if (!defined(promise)) {
             return undefined;
         }
@@ -543,9 +537,8 @@ define([
         return when(promise, function(buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
-            } else {
-                return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
             }
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
         });
     };
 

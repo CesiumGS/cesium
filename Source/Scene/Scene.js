@@ -2098,6 +2098,8 @@ define([
         }
     }
 
+    var scratchEyeTranslation = new Cartesian3();
+
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
 
@@ -2577,8 +2579,6 @@ define([
         this._camera._updateCameraChanged();
     };
 
-    var scratchEyeTranslation = new Cartesian3();
-
     function render(scene, time) {
         scene._pickPositionCacheDirty = true;
 
@@ -2601,7 +2601,6 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
         scene._jobScheduler.resetBudgets();
-        RequestScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2668,6 +2667,7 @@ define([
         }
 
         context.endFrame();
+        RequestScheduler.update();
         callAfterRenderFunctions(frameState);
 
         scene._postRender.raiseEvent(scene, time);
@@ -2843,6 +2843,7 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
+        updateEnvironment(this, passState);
         updateAndExecuteCommands(this, passState, scratchColorZero);
         resolveFramebuffers(this, passState);
 
@@ -2989,6 +2990,7 @@ define([
         passState.scissorTest.rectangle.width = 1;
         passState.scissorTest.rectangle.height = 1;
 
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 

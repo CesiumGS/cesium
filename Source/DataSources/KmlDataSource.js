@@ -29,7 +29,6 @@ define([
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Rectangle',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
@@ -90,7 +89,6 @@ define([
         PinBuilder,
         PolygonHierarchy,
         Rectangle,
-        RequestScheduler,
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
@@ -895,7 +893,7 @@ define([
 
     //Asynchronously processes an external style file.
     function processExternalStyles(dataSource, uri, styleCollection, query) {
-        return when(RequestScheduler.request(proxyUrl(uri, dataSource._proxy, query), loadXML), function(styleKml) {
+        return loadXML(proxyUrl(uri, dataSource._proxy, query)).then(function(styleKml) {
             return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
@@ -1390,6 +1388,17 @@ define([
         return true;
     }
 
+    var geometryTypes = {
+        Point : processPoint,
+        LineString : processLineStringOrLinearRing,
+        LinearRing : processLineStringOrLinearRing,
+        Polygon : processPolygon,
+        Track : processTrack,
+        MultiTrack : processMultiTrack,
+        MultiGeometry : processMultiGeometry,
+        Model : processUnsupportedGeometry
+    };
+
     function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
         var childNodes = geometryNode.childNodes;
         var hasGeometry = false;
@@ -1623,15 +1632,16 @@ define([
         };
     }
 
-    var geometryTypes = {
-        Point : processPoint,
-        LineString : processLineStringOrLinearRing,
-        LinearRing : processLineStringOrLinearRing,
-        Polygon : processPolygon,
-        Track : processTrack,
-        MultiTrack : processMultiTrack,
-        MultiGeometry : processMultiGeometry,
-        Model : processUnsupportedGeometry
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
+    var featureTypes = {
+        Document : processDocument,
+        Folder : processFolder,
+        Placemark : processPlacemark,
+        NetworkLink : processNetworkLink,
+        GroundOverlay : processGroundOverlay,
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processUnsupportedFeature
     };
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
@@ -2076,18 +2086,6 @@ define([
         }
     }
 
-    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
-    var featureTypes = {
-        Document : processDocument,
-        Folder : processFolder,
-        Placemark : processPlacemark,
-        NetworkLink : processNetworkLink,
-        GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupportedFeature,
-        ScreenOverlay : processUnsupportedFeature,
-        Tour : processUnsupportedFeature
-    };
-
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
@@ -2200,7 +2198,7 @@ define([
 
         var promise = data;
         if (typeof data === 'string') {
-            promise = RequestScheduler.request(proxyUrl(data, dataSource._proxy, query), loadBlob);
+            promise = loadBlob(proxyUrl(data, dataSource._proxy, query));
             sourceUri = defaultValue(sourceUri, data);
         }
 
@@ -2241,9 +2239,8 @@ define([
                             return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query);
                         });
                     });
-                } else {
-                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
                 }
+                return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
             })
             .otherwise(function(error) {
                 dataSource._error.raiseEvent(dataSource, error);

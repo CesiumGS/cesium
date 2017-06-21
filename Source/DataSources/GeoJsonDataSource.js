@@ -12,7 +12,6 @@ define([
         '../Core/loadJson',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
@@ -42,7 +41,6 @@ define([
         loadJson,
         PinBuilder,
         PolygonHierarchy,
-        RequestScheduler,
         RuntimeError,
         HeightReference,
         VerticalOrigin,
@@ -207,6 +205,30 @@ define([
         }
         return positions;
     }
+
+    var geoJsonObjectTypes = {
+        Feature : processFeature,
+        FeatureCollection : processFeatureCollection,
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
+
+    var geometryTypes = {
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
 
     // GeoJSON processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, options) {
@@ -458,30 +480,6 @@ define([
             }
         }
     }
-
-    var geoJsonObjectTypes = {
-        Feature : processFeature,
-        FeatureCollection : processFeatureCollection,
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
-
-    var geometryTypes = {
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
 
     /**
      * A {@link DataSource} which processes both
@@ -823,7 +821,7 @@ define([
             if (!defined(sourceUri)) {
                 sourceUri = data;
             }
-            promise = RequestScheduler.request(data, loadJson);
+            promise = loadJson(data);
         }
 
         options = {

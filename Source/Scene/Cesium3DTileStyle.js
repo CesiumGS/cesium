@@ -41,13 +41,16 @@ define([
     var DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
 
     /**
+     * A style that is applied to a {@link Cesium3DTileset}.
+     * <p>
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
      *
      * @alias Cesium3DTileStyle
      * @constructor
      *
-     * @param {String|Object} [data] The url of a style or an object defining a style.
+     * @param {String|Object} [style] The url of a style or an object defining a style.
      *
      * @example
      * tileset.style = new Cesium.Cesium3DTileStyle({
@@ -63,11 +66,18 @@ define([
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
      * });
+     *
+     * @example
+     * tileset.style = new Cesium.Cesium3DTileStyle({
+     *     color : 'vec4(${Temperature})',
+     *     pointSize : '${Temperature} * 2.0'
+     * });
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
-    function Cesium3DTileStyle(data) {
+    function Cesium3DTileStyle(style) {
         this._style = undefined;
         this._ready = false;
-        this._readyPromise = when.defer();
 
         this._show = undefined;
         this._color = undefined;
@@ -99,18 +109,18 @@ define([
         this._showShaderFunctionReady = false;
         this._pointSizeShaderFunctionReady = false;
 
-        var style = this;
-        if (typeof data === 'string') {
-            RequestScheduler.request(data, loadJson).then(function(styleJson) {
-                setup(style, styleJson);
-                style._readyPromise.resolve(style);
-            }).otherwise(function(error) {
-                style._readyPromise.reject(error);
-            });
+        var promise;
+        if (typeof style === 'string') {
+            promise = loadJson(style);
         } else {
-            setup(style, data);
-            style._readyPromise.resolve(style);
+            promise = when.resolve(style);
         }
+
+        var that = this;
+        this._readyPromise = promise.then(function(styleJson) {
+            setup(that, styleJson);
+            return that;
+        });
     }
 
     function setup(that, styleJson) {
@@ -118,20 +128,9 @@ define([
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
-        if (!defined(styleJson.color)) {
-            // If there is no color style do not create a shader function.
-            that._colorShaderFunctionReady = true;
-        }
-
-        if (!defined(styleJson.show)) {
-            // If there is no show style do not create a shader function.
-            that._showShaderFunctionReady = true;
-        }
-
-        if (!defined(styleJson.pointSize)) {
-            // If there is no point size style do not create a shader function.
-            that._pointSizeShaderFunctionReady = true;
-        }
+        that._colorShaderFunctionReady = !defined(styleJson.color);
+        that._showShaderFunctionReady = !defined(styleJson.show);
+        that._pointSizeShaderFunctionReady = !defined(styleJson.pointSize);
 
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
@@ -155,7 +154,7 @@ define([
         var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION);
         var imageExpression = styleJson.image;
 
-        var expressions = styleJson.expressions;
+        var defines = styleJson.defines;
 
         var show;
         if (typeof showExpression === 'boolean') {
@@ -170,9 +169,9 @@ define([
 
         var color;
         if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, expressions);
+            color = new Expression(colorExpression, defines);
         } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, expressions);
+            color = new ConditionsExpression(colorExpression, defines);
         }
 
         that._color = color;
@@ -188,11 +187,11 @@ define([
 
         var pointSize;
         if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression), expressions);
+            pointSize = new Expression(String(pointSizeExpression), defines);
         } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression, expressions);
+            pointSize = new Expression(pointSizeExpression, defines);
         } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression, expressions);
+            pointSize = new ConditionsExpression(pointSizeExpression, defines);
         }
 
         that._pointSize = pointSize;
@@ -367,7 +366,7 @@ define([
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
-                    meta[property] = new Expression(metaJson[property], expressions);
+                    meta[property] = new Expression(metaJson[property], defines);
                 }
             }
         }
@@ -460,8 +459,6 @@ define([
          *         return true;
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         show : {
             get : function() {
@@ -505,8 +502,6 @@ define([
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         color : {
             get : function() {
@@ -565,8 +560,6 @@ define([
          *         return 1.0;
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         pointSize : {
             get : function() {
@@ -972,8 +965,6 @@ define([
          *     }
          * });
          * style.meta.description.evaluate(frameState, feature); // returns a String with the substituted variables
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         meta : {
             get : function() {

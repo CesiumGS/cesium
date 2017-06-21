@@ -100,7 +100,6 @@ define([
         this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
-        this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
         this._addHeightCallbacks = [];

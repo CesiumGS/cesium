@@ -252,14 +252,24 @@ define([
         });
     }
 
+    function createPriorityFunction(surfaceTile, frameState) {
+        return function() {
+            return surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
+        };
+    }
+
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
             // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
             // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
-            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile, frameState);
-            tile._distance = surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
+            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile);
+        }
+
+        if (!defined(tile._priorityFunction)) {
+            // The priority function is used to prioritize requests among all requested tiles
+            tile._priorityFunction = createPriorityFunction(surfaceTile, frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -326,6 +336,7 @@ define([
 
             if (isDoneLoading) {
                 tile.state = QuadtreeTileLoadState.DONE;
+                tile._priorityFunction = undefined;
             }
         }
     };
@@ -358,7 +369,7 @@ define([
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._distance);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._priorityFunction);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.

@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Ellipsoid',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
@@ -18,6 +19,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/RequestType',
+        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
         './Cesium3DTileBatchTable',
@@ -34,6 +36,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Ellipsoid,
         getAbsoluteUri,
         getBaseUri,
@@ -43,6 +46,7 @@ define([
         Matrix4,
         Quaternion,
         RequestType,
+        RuntimeError,
         Transforms,
         TranslationRotationScale,
         Cesium3DTileBatchTable,
@@ -51,10 +55,19 @@ define([
         ModelInstanceCollection) {
     'use strict';
 
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
+
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Implements the {@link Cesium3DTileContent} interface.
+     * </p>
      *
      * @alias Instanced3DModel3DTileContent
      * @constructor
@@ -70,7 +83,7 @@ define([
         this._features = undefined;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         this.featurePropertiesDirty = false;
 
@@ -79,7 +92,7 @@ define([
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featuresLength
          */
         featuresLength : {
             get : function() {
@@ -88,7 +101,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#pointsLength
          */
         pointsLength : {
             get : function() {
@@ -97,7 +110,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#trianglesLength
          */
         trianglesLength : {
             get : function() {
@@ -110,7 +123,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#geometryByteLength
          */
         geometryByteLength : {
             get : function() {
@@ -123,7 +136,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#texturesByteLength
          */
         texturesByteLength : {
             get : function() {
@@ -136,7 +149,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTableByteLength
          */
         batchTableByteLength : {
             get : function() {
@@ -145,7 +158,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#innerContents
          */
         innerContents : {
             get : function() {
@@ -154,7 +167,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#readyPromise
          */
         readyPromise : {
             get : function() {
@@ -163,7 +176,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tileset
          */
         tileset : {
             get : function() {
@@ -172,7 +185,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tile
          */
         tile : {
             get : function() {
@@ -181,7 +194,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#url
          */
         url: {
             get: function() {
@@ -190,7 +203,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTable
          */
         batchTable : {
             get : function() {
@@ -211,23 +224,19 @@ define([
         var view = new DataView(arrayBuffer);
         byteOffset += sizeOfUint32;  // Skip magic
 
-        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Instanced 3D Model version 1 is supported. Version ' + version + ' is not.');
+            throw new RuntimeError('Only Instanced 3D Model version 1 is supported. Version ' + version + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var featureTableJsonByteLength = view.getUint32(byteOffset, true);
-        //>>includeStart('debug', pragmas.debug);
         if (featureTableJsonByteLength === 0) {
-            throw new DeveloperError('featureTableJsonByteLength is zero, the feature table must be defined.');
+            throw new RuntimeError('featureTableJsonByteLength is zero, the feature table must be defined.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
@@ -240,11 +249,9 @@ define([
         byteOffset += sizeOfUint32;
 
         var gltfFormat = view.getUint32(byteOffset, true);
-        //>>includeStart('debug', pragmas.debug);
         if (gltfFormat !== 1 && gltfFormat !== 0) {
-            throw new DeveloperError('Only glTF format 0 (uri) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not.');
+            throw new RuntimeError('Only glTF format 0 (uri) or 1 (embedded) are supported. Format ' + gltfFormat + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJsonByteLength);
@@ -258,11 +265,9 @@ define([
         var instancesLength = featureTable.getGlobalProperty('INSTANCES_LENGTH');
         featureTable.featuresLength = instancesLength;
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(instancesLength)) {
-            throw new DeveloperError('Feature table global property: INSTANCES_LENGTH must be defined');
+            throw new RuntimeError('Feature table global property: INSTANCES_LENGTH must be defined');
         }
-        //>>includeEnd('debug');
 
         var batchTableJson;
         var batchTableBinary;
@@ -283,11 +288,9 @@ define([
         content._batchTable = new Cesium3DTileBatchTable(content, instancesLength, batchTableJson, batchTableBinary);
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
-        //>>includeStart('debug', pragmas.debug);
         if (gltfByteLength === 0) {
-            throw new DeveloperError('glTF byte length is zero, i3dm must have a glTF to instance.');
+            throw new RuntimeError('glTF byte length is zero, i3dm must have a glTF to instance.');
         }
-        //>>includeEnd('debug');
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
@@ -337,23 +340,17 @@ define([
             if (!defined(position)) {
                 position = instancePositionArray;
                 var positionQuantized = featureTable.getProperty('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3, i, propertyScratch1);
-                //>>includeStart('debug', pragmas.debug);
                 if (!defined(positionQuantized)) {
-                    throw new DeveloperError('Either POSITION or POSITION_QUANTIZED must be defined for each instance.');
+                    throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined for each instance.');
                 }
-                //>>includeEnd('debug');
                 var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
-                //>>includeStart('debug', pragmas.debug);
                 if (!defined(quantizedVolumeOffset)) {
-                    throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
+                    throw new RuntimeError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
                 }
-                //>>includeEnd('debug');
                 var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
-                //>>includeStart('debug', pragmas.debug);
                 if (!defined(quantizedVolumeScale)) {
-                    throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
+                    throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
                 }
-                //>>includeEnd('debug');
                 for (var j = 0; j < 3; j++) {
                     position[j] = (positionQuantized[j] / 65535.0 * quantizedVolumeScale[j]) + quantizedVolumeOffset[j];
                 }
@@ -369,11 +366,9 @@ define([
             var normalRight = featureTable.getProperty('NORMAL_RIGHT', ComponentDatatype.FLOAT, 3, i, propertyScratch2);
             var hasCustomOrientation = false;
             if (defined(normalUp)) {
-                //>>includeStart('debug', pragmas.debug);
                 if (!defined(normalRight)) {
-                    throw new DeveloperError('To define a custom orientation, both NORMAL_UP and NORMAL_RIGHT must be defined.');
+                    throw new RuntimeError('To define a custom orientation, both NORMAL_UP and NORMAL_RIGHT must be defined.');
                 }
-                //>>includeEnd('debug');
                 Cartesian3.unpack(normalUp, 0, instanceNormalUp);
                 Cartesian3.unpack(normalRight, 0, instanceNormalRight);
                 hasCustomOrientation = true;
@@ -381,11 +376,9 @@ define([
                 var octNormalUp = featureTable.getProperty('NORMAL_UP_OCT32P', ComponentDatatype.UNSIGNED_SHORT, 2, i, propertyScratch1);
                 var octNormalRight = featureTable.getProperty('NORMAL_RIGHT_OCT32P', ComponentDatatype.UNSIGNED_SHORT, 2, i, propertyScratch2);
                 if (defined(octNormalUp)) {
-                    //>>includeStart('debug', pragmas.debug);
                     if (!defined(octNormalRight)) {
-                        throw new DeveloperError('To define a custom orientation with oct-encoded vectors, both NORMAL_UP_OCT32P and NORMAL_RIGHT_OCT32P must be defined.');
+                        throw new RuntimeError('To define a custom orientation with oct-encoded vectors, both NORMAL_UP_OCT32P and NORMAL_RIGHT_OCT32P must be defined.');
                     }
-                    //>>includeEnd('debug');
                     AttributeCompression.octDecodeInRange(octNormalUp[0], octNormalUp[1], 65535, instanceNormalUp);
                     AttributeCompression.octDecodeInRange(octNormalRight[0], octNormalRight[1], 65535, instanceNormalRight);
                     hasCustomOrientation = true;
@@ -452,14 +445,14 @@ define([
     }
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#hasProperty
      */
     Instanced3DModel3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#getFeature
      */
     Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this.featuresLength;
@@ -474,7 +467,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
      */
     Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
@@ -482,14 +475,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyStyle
      */
     Instanced3DModel3DTileContent.prototype.applyStyle = function(frameState, style) {
         this._batchTable.applyStyle(frameState, style);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#update
      */
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var commandStart = frameState.commandList.length;
@@ -511,14 +504,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     Instanced3DModel3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     Instanced3DModel3DTileContent.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();

@@ -16,8 +16,7 @@ define([
     'use strict';
 
     /**
-     * Maps a tile's extension (and a tile's magic field in its header) to a new
-     * content object for the tile's payload.
+     * Maps a tile's magic field in its header to a new content object for the tile's payload.
      *
      * @private
      */
