@@ -104,35 +104,35 @@ define([
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
         var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
 
-        var expressions = styleJson.expressions;
+        var defines = styleJson.defines;
 
         var color;
         if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, expressions);
+            color = new Expression(colorExpression, defines);
         } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, expressions);
+            color = new ConditionsExpression(colorExpression, defines);
         }
 
         that._color = color;
 
         var show;
         if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression), expressions);
+            show = new Expression(String(showExpression), defines);
         } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression, expressions);
+            show = new Expression(showExpression, defines);
         } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression, expressions);
+            show = new ConditionsExpression(showExpression, defines);
         }
 
         that._show = show;
 
         var pointSize;
         if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression), expressions);
+            pointSize = new Expression(String(pointSizeExpression), defines);
         } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression, expressions);
+            pointSize = new Expression(pointSizeExpression, defines);
         } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression, expressions);
+            pointSize = new ConditionsExpression(pointSizeExpression, defines);
         }
 
         that._pointSize = pointSize;
@@ -142,7 +142,7 @@ define([
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
-                    meta[property] = new Expression(metaJson[property], expressions);
+                    meta[property] = new Expression(metaJson[property], defines);
                 }
             }
         }
