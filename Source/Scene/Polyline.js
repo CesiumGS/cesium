@@ -89,7 +89,7 @@ define([
 
         this._actualLength = undefined;
 
-        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
+        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES); //eslint-disable-line no-use-before-define
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
@@ -335,7 +335,7 @@ define([
             this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, modelMatrix, this._boundingVolumeWC);
         }
 
-        this._modelMatrix = modelMatrix;
+        this._modelMatrix = Matrix4.clone(modelMatrix, this._modelMatrix);
 
         if (this._segments.positions.length !== segmentPositionsLength) {
             // number of positions changed

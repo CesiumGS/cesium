@@ -171,6 +171,7 @@ define([
             backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             backgroundBillboard.scaleByDistance = label._scaleByDistance;
             backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+            backgroundBillboard.disableDepthTestDistance = label._disableDepthTestDistance;
         }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
@@ -264,6 +265,7 @@ define([
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
                 billboard.scaleByDistance = label._scaleByDistance;
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+                billboard.disableDepthTestDistance = label._disableDepthTestDistance;
             }
         }
 

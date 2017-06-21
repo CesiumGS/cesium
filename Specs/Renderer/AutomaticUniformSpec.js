@@ -1254,4 +1254,17 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_minimumDisableDepthTestDistance', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        context.uniformState.update(frameState);
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_minimumDisableDepthTestDistance == 0.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
 }, 'WebGL');

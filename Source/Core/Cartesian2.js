@@ -335,9 +335,8 @@ define([
      */
     Cartesian2.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left) || !defined(right)) {
-            throw new DeveloperError('left and right are required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.subtract(left, right, distanceScratch);
@@ -358,9 +357,8 @@ define([
      */
     Cartesian2.distanceSquared = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left) || !defined(right)) {
-            throw new DeveloperError('left and right are required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
         //>>includeEnd('debug');
 
         Cartesian2.subtract(left, right, distanceScratch);

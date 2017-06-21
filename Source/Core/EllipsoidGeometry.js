@@ -71,8 +71,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 64);
-        var slicePartitions = defaultValue(options.slicePartitions, 64);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);

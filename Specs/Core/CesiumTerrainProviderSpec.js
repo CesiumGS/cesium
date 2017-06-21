@@ -9,6 +9,8 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/QuantizedMeshTerrainData',
+        'Core/Request',
+        'Core/RequestScheduler',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -22,10 +24,16 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         QuantizedMeshTerrainData,
+        Request,
+        RequestScheduler,
         TerrainProvider,
         pollToPromise,
         when) {
     'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
@@ -81,6 +89,12 @@ defineSuite([
             return when(promise, f, function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
+        });
+    }
+
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
         });
     }
 
@@ -403,7 +417,6 @@ defineSuite([
             });
         });
 
-
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 
@@ -576,15 +589,15 @@ defineSuite([
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                var promise;
+                var i;
+                for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
+                }
+                RequestScheduler.update();
                 expect(promise).toBeDefined();
 
-                var i;
-                for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
-                }
-
-                promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
                 expect(promise).toBeUndefined();
 
                 for (i = 0; i < deferreds.length; ++i) {

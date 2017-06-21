@@ -12,8 +12,13 @@ define([
         '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/Texture',
-        '../Shaders/PostProcessFilters/FXAA'
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/FXAA',
+        '../ThirdParty/Shaders/FXAA3_11'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -27,14 +32,19 @@ define([
         Renderbuffer,
         RenderbufferFormat,
         RenderState,
+        Sampler,
         Texture,
-        FXAAFS) {
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        FXAAFS,
+        FXAA3_11) {
     'use strict';
 
     /**
      * @private
      */
-    function FXAA(context) {
+    function FXAA() {
         this._texture = undefined;
         this._depthStencilTexture = undefined;
         this._depthStencilRenderbuffer = undefined;
@@ -44,12 +54,17 @@ define([
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
 
+        this._useScissorTest = false;
+        this._scissorRectangle = undefined;
+
         var clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
             depth : 1.0,
             owner : this
         });
         this._clearCommand = clearCommand;
+
+        this._qualityPreset = 39;
     }
 
     function destroyResources(fxaa) {
@@ -69,7 +84,7 @@ define([
         }
     }
 
-    FXAA.prototype.update = function(context) {
+    FXAA.prototype.update = function(context, passState) {
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -85,7 +100,13 @@ define([
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.LINEAR,
+                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                })
             });
 
             if (context.depthTexture) {
@@ -119,7 +140,12 @@ define([
         }
 
         if (!defined(this._command)) {
-            this._command = context.createViewportQuadCommand(FXAAFS, {
+            var fs =
+                '#define FXAA_QUALITY_PRESET ' + this._qualityPreset + '\n' +
+                FXAA3_11 + '\n' +
+                FXAAFS;
+
+            this._command = context.createViewportQuadCommand(fs, {
                 owner : this
             });
         }
@@ -127,9 +153,22 @@ define([
         this._viewport.width = width;
         this._viewport.height = height;
 
-        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport)) {
+        var useScissorTest = !BoundingRectangle.equals(this._viewport, passState.viewport);
+        var updateScissor = useScissorTest !== this._useScissorTest;
+        this._useScissorTest = useScissorTest;
+
+        if (!BoundingRectangle.equals(this._scissorRectangle, passState.viewport)) {
+            this._scissorRectangle = BoundingRectangle.clone(passState.viewport, this._scissorRectangle);
+            updateScissor = true;
+        }
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport) || updateScissor) {
             this._rs = RenderState.fromCache({
-                viewport : this._viewport
+                viewport : this._viewport,
+                scissorTest : {
+                    enabled : this._useScissorTest,
+                    rectangle : this._scissorRectangle
+                }
             });
         }
 
@@ -137,13 +176,13 @@ define([
 
         if (textureChanged) {
             var that = this;
-            var step = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
+            var rcpFrame = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
             this._command.uniformMap = {
                 u_texture : function() {
                     return that._texture;
                 },
-                u_step : function() {
-                    return step;
+                u_fxaaQualityRcpFrame : function() {
+                    return rcpFrame;
                 }
             };
         }

@@ -3,13 +3,13 @@ attribute vec2 direction;
 #endif
 attribute vec4 positionHighAndScale;
 attribute vec4 positionLowAndRotation;
-attribute vec4 compressedAttribute0;        // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
-attribute vec4 compressedAttribute1;        // aligned axis, translucency by distance, image width
-attribute vec4 compressedAttribute2;        // image height, color, pick color, size in meters, valid aligned axis, 13 bits free
-attribute vec4 eyeOffset;                   // eye offset in meters, 4 bytes free (texture range)
-attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
-attribute vec4 pixelOffsetScaleByDistance;  // near, nearScale, far, farScale
-attribute vec2 distanceDisplayCondition;    // near, far
+attribute vec4 compressedAttribute0;                       // pixel offset, translate, horizontal origin, vertical origin, show, direction, texture coordinates (texture offset)
+attribute vec4 compressedAttribute1;                       // aligned axis, translucency by distance, image width
+attribute vec4 compressedAttribute2;                       // image height, color, pick color, size in meters, valid aligned axis, 13 bits free
+attribute vec4 eyeOffset;                                  // eye offset in meters, 4 bytes free (texture range)
+attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
+attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
+attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
 varying vec2 v_textureCoordinates;
 
@@ -51,11 +51,9 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
         float angle = rotation;
         if (validAlignedAxis)
         {
-            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
-            vec3 normal = normalize(cross(alignedAxis, pos));
-            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
-            tangent = czm_modelViewProjection * tangent;
-            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
+            vec4 projectedAlignedAxis = czm_modelViewProjection * vec4(alignedAxis, 0.0);
+            angle += sign(-projectedAlignedAxis.x) * acos( sign(projectedAlignedAxis.y) * (projectedAlignedAxis.y * projectedAlignedAxis.y) /
+                    (projectedAlignedAxis.x * projectedAlignedAxis.x + projectedAlignedAxis.y * projectedAlignedAxis.y) );
         }
 
         float cosTheta = cos(angle);
@@ -74,7 +72,7 @@ vec4 computePositionWindowCoordinates(vec4 positionEC, vec2 imageSize, float sca
 
     if (sizeInMeters)
     {
-        originTranslate += originTranslate / czm_metersPerPixel(positionEC);
+        originTranslate /= czm_metersPerPixel(positionEC);
     }
 
     positionWC.xy += originTranslate;
@@ -205,7 +203,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -246,8 +244,8 @@ void main()
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
-    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x;
-    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y;
+    float nearSq = distanceDisplayConditionAndDisableDepth.x;
+    float farSq = distanceDisplayConditionAndDisableDepth.y;
     if (lengthSq < nearSq || lengthSq > farSq)
     {
         positionEC.xyz = vec3(0.0);
@@ -257,6 +255,25 @@ void main()
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
+
+#ifdef DISABLE_DEPTH_DISTANCE
+    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
+        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+    }
+
+    if (disableDepthTestDistance != 0.0)
+    {
+        gl_Position.z = min(gl_Position.z, gl_Position.w);
+
+        bool clipped = gl_Position.z < -gl_Position.w || gl_Position.z > gl_Position.w;
+        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
+        {
+            gl_Position.z = -gl_Position.w;
+        }
+    }
+#endif
 
 #ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;

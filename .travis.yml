@@ -11,11 +11,12 @@ script:
   - npm run deploy-status -- --status pending --message 'Waiting for build'
   - echo -en 'travis_fold:end:script.deployPending\\r'
 
-  - echo 'jsHint' && echo -en 'travis_fold:start:script.jsHint\\r'
-  - npm run jsHint -- --failTaskOnError
-  - echo -en 'travis_fold:end:script.jsHint\\r'
+  - echo 'eslint' && echo -en 'travis_fold:start:script.eslint\\r'
+  - npm run eslint
+  - echo -en 'travis_fold:end:script.eslint\\r'
 
   - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run build
   - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 

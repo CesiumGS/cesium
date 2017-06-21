@@ -1523,10 +1523,26 @@ define([
          * @glslUniform
          */
         czm_geometricToleranceOverMeter : new AutomaticUniform({
-            size: 1,
-            datatype: WebGLConstants.FLOAT,
-            getValue: function(uniformState) {
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
                 return uniformState.geometricToleranceOverMeter;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always be applied. When less than zero,
+         * the depth test should never be applied.
+         *
+         * @alias czm_minimumDisableDepthTestDistance
+         * @glslUniform
+         */
+        czm_minimumDisableDepthTestDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.minimumDisableDepthTestDistance;
             }
         })
     };

@@ -2,9 +2,11 @@
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
+        '../../Core/Clock',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/deprecationWarning',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
@@ -46,9 +48,11 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Clock,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -259,7 +263,7 @@ define([
      * @param {Boolean} [options.navigationHelpButton=true] If set to false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {Boolean} [options.scene3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
-     * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
+     * @param {ClockViewModel} [options.clockViewModel=new ClockViewModel(options.clock)] The clock view model to use to control current time.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -311,7 +315,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'https://assets.agi.com/stk-terrain/world'
+     *         url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
@@ -401,11 +405,28 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var scene3DOnly = defaultValue(options.scene3DOnly, false);
 
+        var deprecatedClock = options.clock;
+        if (defined(deprecatedClock)) {
+            deprecationWarning('Viewer.options.clock', 'Passing options.clock when creating a new Viewer instance was deprecated in Cesium 1.34 and will be removed in Cesium 1.37, pass options.clockViewModel instead.');
+        }
+
+        var clock;
+        var clockViewModel;
+        var destroyClockViewModel = false;
+        if (defined(options.clockViewModel)) {
+            clockViewModel = options.clockViewModel;
+            clock = clockViewModel.clock;
+        } else {
+            clock = defined(deprecatedClock) ? deprecatedClock : new Clock();
+            clockViewModel = new ClockViewModel(clock);
+            destroyClockViewModel = true;
+        }
+
         // Cesium widget
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
-            clock : options.clock,
+            clock : clock,
             skyBox : options.skyBox,
             skyAtmosphere : options.skyAtmosphere,
             sceneMode : options.sceneMode,
@@ -436,8 +457,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             dataSourceCollection : dataSourceCollection
         });
 
-        var clock = cesiumWidget.clock;
-        var clockViewModel = new ClockViewModel(clock);
         var eventHelper = new EventHelper();
 
         eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
@@ -649,6 +668,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._destroyDataSourceCollection = destroyDataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
         this._clockViewModel = clockViewModel;
+        this._destroyClockViewModel = destroyClockViewModel;
         this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
@@ -1067,7 +1087,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          */
         clock : {
             get : function() {
-                return this._cesiumWidget.clock;
+                return this._clockViewModel.clock;
+            }
+        },
+
+        /**
+         * Gets the clock view model.
+         * @memberof Viewer.prototype
+         * @type {ClockViewModel}
+         * @readonly
+         */
+        clockViewModel : {
+            get : function() {
+                return this._clockViewModel;
             }
         },
 
@@ -1492,7 +1524,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             this._selectionIndicator = this._selectionIndicator.destroy();
         }
 
-        this._clockViewModel = this._clockViewModel.destroy();
+        if (this._destroyClockViewModel) {
+            this._clockViewModel = this._clockViewModel.destroy();
+        }
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         this._cesiumWidget = this._cesiumWidget.destroy();
 
