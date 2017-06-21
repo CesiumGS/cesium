@@ -595,6 +595,8 @@ define([
             return 0;
         }
 
+        dt = CesiumMath.mod(dt, system._lifeTime);
+
         // Compute the number of particles to emit based on the rate.
         var v = dt * system._rate;
         var numToEmit = Math.floor(v);
@@ -610,9 +612,9 @@ define([
             var length = system.bursts.length;
             for (var i = 0; i < length; i++) {
                 var burst = system.bursts[i];
-                if (defined(burst) && !burst._complete && system._currentTime > burst.time) {
-                    var count = CesiumMath.randomBetween(burst.minimum, burst.maximum);
-                    numToEmit += count;
+                var currentTime = system._currentTime;//CesiumMath.mod(system._currentTime, system._lifeTime);
+                if (defined(burst) && !burst._complete && currentTime > burst.time) {
+                    numToEmit += CesiumMath.randomBetween(burst.minimum, burst.maximum);
                     burst._complete = true;
                 }
             }
@@ -709,7 +711,7 @@ define([
 
         if (this._lifeTime !== Number.MAX_VALUE && this._currentTime > this._lifeTime) {
             if (this.loop) {
-                this._currentTime = this._currentTime - this._lifeTime;
+                this._currentTime = CesiumMath.mod(this._currentTime, this._lifeTime);
                 if (this.bursts) {
                     var burstLength = this.bursts.length;
                     // Reset any bursts
