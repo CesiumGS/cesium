@@ -408,6 +408,21 @@ defineSuite([
         expect(cache[fullKey]).not.toBeDefined();
     });
 
+    it('freezes render states', function(){
+        var rs = RenderState.fromCache();
+        expect(function() {
+            rs.depthRange = {};
+        }).toThrow();
+
+        expect(function() {
+            rs.frontFace = WindingOrder.COUNTER_CLOCKWISE;
+        }).toThrow();
+
+        expect(function() {
+            rs._applyFunctions.push(function(){});
+        }).not.toThrow();
+    });
+
     it('fails to create (frontFace)', function() {
         expect(function() {
             RenderState.fromCache({

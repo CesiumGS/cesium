@@ -408,17 +408,16 @@ define([
 
         // Cache miss.  Fully define render state and try again.
         var states = new RenderState(renderState);
-        //>>includeStart('debug', pragmas.debug);
-        states = freezeRenderState(states);
-        //>>includeEnd('debug');
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
         if (!defined(cachedState)) {
             states.id = nextRenderStateId++;
-
+            //>>includeStart('debug', pragmas.debug);
+            states = freezeRenderState(states);
+            //>>includeEnd('debug');
             cachedState = {
-                referenceCount : 0,
-                state : states
+                referenceCount: 0,
+                state: states
             };
 
             // Cache full render state.  Multiple partially defined render states may map to this.
@@ -433,7 +432,7 @@ define([
             state : cachedState.state
         };
 
-        return cachedState.state;
+                return cachedState.state;
     };
 
     /**
