@@ -380,6 +380,10 @@ define([
             this.occlusionAngle = options.occlusionAngle;
             dirty = true;
         }
+
+        if (!options.enabled) {
+            return;
+        }
         
         createResources(this, frameState.context, dirty);
 
@@ -401,6 +405,7 @@ define([
                 derivedCommand.receiveShadows = false;
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
             }
+            
             commandList[i] = derivedCommand;
         }
 
