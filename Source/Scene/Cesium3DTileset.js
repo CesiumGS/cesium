@@ -733,7 +733,7 @@ define([
             occlusionAngle : defaultValue(options.occlusionAngle, 0.1),
             rangeParameter : defaultValue(options.rangeParameter, 0.01),
             neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
-            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 8)
+            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 2)
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
