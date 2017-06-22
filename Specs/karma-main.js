@@ -56,7 +56,6 @@
         'Specs/customizeJasmine'
     ], function(
         customizeJasmine) {
-
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, webglStub, release);
 
                     var specFiles = Object.keys(__karma__.files).filter(function(file) {

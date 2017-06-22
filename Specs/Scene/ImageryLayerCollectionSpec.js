@@ -544,9 +544,8 @@ defineSuite([
                     // At level 1, only the northwest quadrant has a valid tile.
                     if (level !== 1 || (x === 0 && y === 0)) {
                         return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
-                    } else {
-                        return when.reject();
                     }
+                    return when.reject();
                 }
             };
 

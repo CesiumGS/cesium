@@ -8,16 +8,12 @@ span.cesium-projectionPicker-wrapper {
     visibility: visible;
     opacity: 1;
     transition: opacity 0.25s linear;
-    -webkit-transition: opacity 0.25s linear;
-    -moz-transition: opacity 0.25s linear;
 }
 
 .cesium-projectionPicker-hidden {
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
-    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
-    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
 .cesium-projectionPicker-wrapper .cesium-projectionPicker-none {
@@ -25,8 +21,6 @@ span.cesium-projectionPicker-wrapper {
 }
 
 .cesium-projectionPicker-wrapper .cesium-projectionPicker-dropDown-icon {
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
     box-sizing: border-box;
     padding: 0;
     margin: 3px 0;

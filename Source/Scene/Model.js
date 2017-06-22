@@ -20,6 +20,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
+        '../Core/joinUrls',
         '../Core/loadArrayBuffer',
         '../Core/loadCRN',
         '../Core/loadImage',
@@ -60,11 +61,13 @@ define([
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeType',
         './Axis',
         './BlendingState',
         './ColorBlendMode',
         './getAttributeOrUniformBySemantic',
         './HeightReference',
+        './JobType',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
@@ -93,6 +96,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
+        joinUrls,
         loadArrayBuffer,
         loadCRN,
         loadImage,
@@ -133,11 +137,13 @@ define([
         updateVersion,
         Uri,
         when,
+        AttributeType,
         Axis,
         BlendingState,
         ColorBlendMode,
         getAttributeOrUniformBySemantic,
         HeightReference,
+        JobType,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
@@ -162,11 +168,12 @@ define([
         FAILED : 3
     };
 
-    // GLTF_SPEC: Figure out correct mime types (https://github.com/KhronosGroup/glTF/issues/412)
-    var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json,model/gltf.binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
+    // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
+    var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
     function LoadResources() {
-        this.buffersToCreate = new Queue();
+        this.vertexBuffersToCreate = new Queue();
+        this.indexBuffersToCreate = new Queue();
         this.buffers = {};
         this.pendingBufferLoads = 0;
 
@@ -200,7 +207,9 @@ define([
     };
 
     LoadResources.prototype.finishedBuffersCreation = function() {
-        return ((this.pendingBufferLoads === 0) && (this.buffersToCreate.length === 0));
+        return ((this.pendingBufferLoads === 0) &&
+                (this.vertexBuffersToCreate.length === 0) &&
+                (this.indexBuffersToCreate.length === 0));
     };
 
     LoadResources.prototype.finishedProgramCreation = function() {
@@ -221,7 +230,8 @@ define([
             (this.pendingBufferLoads === 0) &&
             (this.pendingShaderLoads === 0);
         var finishedResourceCreation =
-            (this.buffersToCreate.length === 0) &&
+            (this.vertexBuffersToCreate.length === 0) &&
+            (this.indexBuffersToCreate.length === 0) &&
             (this.programsToCreate.length === 0) &&
             (this.pendingBufferViewToImage === 0);
 
@@ -336,6 +346,7 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
+     * @param {Boolean} [options.addBatchIdToGeneratedShaders=false] Determines if shaders generated for materials using the KHR_materials_common extension should include a batchId attribute. For models contained in b3dm tiles.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
@@ -379,13 +390,15 @@ define([
 
                     cachedGltf = new CachedGltf({
                         gltf : parsedGltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 } else {
                     // Normal glTF (JSON)
                     cachedGltf = new CachedGltf({
                         gltf : options.gltf,
-                        ready : true
+                        ready : true,
+                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
                     });
                 }
 
@@ -399,10 +412,8 @@ define([
         setCachedGltf(this, cachedGltf);
 
         this._basePath = defaultValue(options.basePath, '');
-
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(this._basePath);
-        this._baseUri = modelUri.resolve(docUri);
+        var baseUri = getBaseUri(document.location.href);
+        this._baseUri = joinUrls(baseUri, this._basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -524,8 +535,7 @@ define([
          *
          * @private
          */
-        this.pickPrimitive = options.pickPrimitive;
-
+        this._pickObject = options.pickObject;
         this._allowPicking = defaultValue(options.allowPicking, true);
 
         this._ready = false;
@@ -621,6 +631,7 @@ define([
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+        this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
@@ -666,13 +677,18 @@ define([
             pickPrograms : {},
             silhouettePrograms: {},
             textures : {},
-
             samplers : {},
             renderStates : {}
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
+
+        this._cachedGeometryByteLength = 0;
+        this._cachedTexturesByteLength = 0;
+        this._geometryByteLength = 0;
+        this._texturesByteLength = 0;
+        this._trianglesLength = 0;
 
         this._nodeCommands = [];
         this._pickIds = [];
@@ -993,6 +1009,61 @@ define([
             get : function() {
                 return this._upAxis;
             }
+        },
+
+        /**
+         * Gets the model's triangle count.
+         *
+         * @private
+         */
+        trianglesLength : {
+            get : function() {
+                return this._trianglesLength;
+            }
+        },
+
+        /**
+         * Gets the model's geometry memory in bytes. This includes all vertex and index buffers.
+         *
+         * @private
+         */
+        geometryByteLength : {
+            get : function() {
+                return this._geometryByteLength;
+            }
+        },
+
+        /**
+         * Gets the model's texture memory in bytes.
+         *
+         * @private
+         */
+        texturesByteLength : {
+            get : function() {
+                return this._texturesByteLength;
+            }
+        },
+
+        /**
+         * Gets the model's cached geometry memory in bytes. This includes all vertex and index buffers.
+         *
+         * @private
+         */
+        cachedGeometryByteLength : {
+            get : function() {
+                return this._cachedGeometryByteLength;
+            }
+        },
+
+        /**
+         * Gets the model's cached texture memory in bytes.
+         *
+         * @private
+         */
+        cachedTexturesByteLength : {
+            get : function() {
+                return this._cachedTexturesByteLength;
+            }
         }
     });
 
@@ -1041,6 +1112,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1098,10 +1170,15 @@ define([
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
+        var basePath = defaultValue(options.basePath, getBaseUri(url, true));
 
         options = clone(options);
-        options.basePath = getBaseUri(url);
+        if (defined(options.basePath) && !defined(options.cacheKey)) {
+            cacheKey += basePath;
+        }
+
         options.cacheKey = cacheKey;
+        options.basePath = basePath;
         var model = new Model(options);
 
         options.headers = defined(options.headers) ? clone(options.headers) : {};
@@ -1331,8 +1408,7 @@ define([
                 if (defined(buffer.extras._pipeline.source)) {
                     loadResources.buffers[id] = buffer.extras._pipeline.source;
                 } else {
-                    var uri = new Uri(buffer.uri);
-                    var bufferPath = uri.resolve(model._baseUri).toString();
+                    var bufferPath = joinUrls(model._baseUri, buffer.uri);
                     ++loadResources.pendingBufferLoads;
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
                 }
@@ -1341,18 +1417,47 @@ define([
     }
 
     function parseBufferViews(model) {
+        var bufferViews = model.gltf.bufferViews;
+
+        var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
+
+        // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
         ForEach.bufferView(model.gltf, function(bufferView, id) {
             if (bufferView.target === WebGLConstants.ARRAY_BUFFER) {
-                model._loadResources.buffersToCreate.enqueue(id);
+                vertexBuffersToCreate.enqueue(id);
+            }
+        });
+
+        var indexBuffersToCreate = model._loadResources.indexBuffersToCreate;
+        var indexBufferIds = {};
+
+        // The Cesium Renderer requires knowing the datatype for an index buffer
+        // at creation type, which is not part of the glTF bufferview so loop
+        // through glTF accessors to create the bufferview's index buffer.
+        ForEach.accessor(model.gltf, function(accessor) {
+            var bufferViewId = accessor.bufferView;
+            var bufferView = bufferViews[bufferViewId];
+
+            if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(indexBufferIds[bufferViewId])) {
+                indexBufferIds[bufferViewId] = true;
+                indexBuffersToCreate.enqueue({
+                    id : bufferViewId,
+                    // In theory, several glTF accessors with different componentTypes could
+                    // point to the same glTF bufferView, which would break this.
+                    // In practice, it is unlikely, but possible with uint32 indices in glTF 2.0.
+// TODO: Is this disallowed in latest glTF 2.0 spec??
+                    componentType : accessor.componentType
+                });
             }
         });
     }
 
-    function shaderLoad(model, id) {
+    function shaderLoad(model, type, id) {
         return function(source) {
             var loadResources = model._loadResources;
             loadResources.shaders[id] = {
                 source : source,
+                type : type,
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
@@ -1384,9 +1489,8 @@ define([
                 };
             } else {
                 ++model._loadResources.pendingShaderLoads;
-                var uri = new Uri(shader.uri);
-                var shaderPath = uri.resolve(model._baseUri).toString();
-                loadText(shaderPath).then(shaderLoad(model, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                var shaderPath = joinUrls(model._baseUri, shader.uri);
+                loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
             }
         });
     }
@@ -1420,13 +1524,14 @@ define([
     function parseTextures(model, context) {
         var gltf = model.gltf;
         var images = gltf.images;
+        var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
             var bufferViewId = gltfImage.bufferView;
-            var uri = gltfImage.uri;
+            uri = gltfImage.uri;
 
             // First check for a compressed texture
             if (defined(extras) && defined(extras.compressedImage3DTiles)) {
@@ -1473,14 +1578,17 @@ define([
             } else {
                 ++model._loadResources.pendingTextureLoads;
                 uri = new Uri(uri);
-                var imagePath = uri.resolve(model._baseUri).toString();
+                var imagePath = joinUrls(model._baseUri, gltfImage.uri);
+
+                var promise;
                 if (ktxRegex.test(imagePath)) {
-                    loadKTX(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    promise = loadKTX(imagePath);
                 } else if (crnRegex.test(imagePath)) {
-                    loadCRN(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    promise = loadCRN(imagePath);
                 } else {
-                    loadImage(imagePath).then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                    promise = loadImage(imagePath);
                 }
+                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
         });
     }
@@ -1637,51 +1745,119 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function createBuffers(model, context) {
+    var CreateVertexBufferJob = function() {
+        this.id = undefined;
+        this.model = undefined;
+        this.context = undefined;
+    };
+
+    CreateVertexBufferJob.prototype.set = function(id, model, context) {
+        this.id = id;
+        this.model = model;
+        this.context = context;
+    };
+
+    CreateVertexBufferJob.prototype.execute = function() {
+        createVertexBuffer(this.id, this.model, this.context);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function createVertexBuffer(bufferViewId, model, context) {
+        var loadResources = model._loadResources;
+        var bufferViews = model.gltf.bufferViews;
+        var bufferView = bufferViews[bufferViewId];
+
+        var vertexBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : loadResources.getBuffer(bufferView),
+            usage : BufferUsage.STATIC_DRAW
+        });
+        vertexBuffer.vertexArrayDestroyable = false;
+        model._rendererResources.buffers[bufferViewId] = vertexBuffer;
+        model._geometryByteLength += vertexBuffer.sizeInBytes;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    var CreateIndexBufferJob = function() {
+        this.id = undefined;
+        this.componentType = undefined;
+        this.model = undefined;
+        this.context = undefined;
+    };
+
+    CreateIndexBufferJob.prototype.set = function(id, componentType, model, context) {
+        this.id = id;
+        this.componentType = componentType;
+        this.model = model;
+        this.context = context;
+    };
+
+    CreateIndexBufferJob.prototype.execute = function() {
+        createIndexBuffer(this.id, this.componentType, this.model, this.context);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    function createIndexBuffer(bufferViewId, componentType, model, context) {
+        var loadResources = model._loadResources;
+        var bufferViews = model.gltf.bufferViews;
+        var bufferView = bufferViews[bufferViewId];
+
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : loadResources.getBuffer(bufferView),
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : componentType
+        });
+        indexBuffer.vertexArrayDestroyable = false;
+        model._rendererResources.buffers[bufferViewId] = indexBuffer;
+        model._geometryByteLength += indexBuffer.sizeInBytes;
+    }
+
+    var scratchVertexBufferJob = new CreateVertexBufferJob();
+    var scratchIndexBufferJob = new CreateIndexBufferJob();
+
+    function createBuffers(model, frameState) {
         var loadResources = model._loadResources;
 
         if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
-        var bufferView;
-        var bufferViews = model.gltf.bufferViews;
-        var rendererBuffers = model._rendererResources.buffers;
+        var context = frameState.context;
+        var vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
+        var indexBuffersToCreate = loadResources.indexBuffersToCreate;
+        var i;
 
-        while (loadResources.buffersToCreate.length > 0) {
-            var bufferViewId = loadResources.buffersToCreate.dequeue();
-            bufferView = bufferViews[bufferViewId];
-
-            // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
-            var vertexBuffer = Buffer.createVertexBuffer({
-                context : context,
-                typedArray : loadResources.getBuffer(bufferView),
-                usage : BufferUsage.STATIC_DRAW
-            });
-            vertexBuffer.vertexArrayDestroyable = false;
-            rendererBuffers[bufferViewId] = vertexBuffer;
-        }
-
-        // The Cesium Renderer requires knowing the datatype for an index buffer
-        // at creation type, which is not part of the glTF bufferview so loop
-        // through glTF accessors to create the bufferview's index buffer.
-        ForEach.accessor(model.gltf, function(accessor) {
-            bufferView = bufferViews[accessor.bufferView];
-
-            if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[accessor.bufferView])) {
-                var indexBuffer = Buffer.createIndexBuffer({
-                    context : context,
-                    typedArray : loadResources.getBuffer(bufferView),
-                    usage : BufferUsage.STATIC_DRAW,
-                    indexDatatype : accessor.componentType
-                });
-                indexBuffer.vertexArrayDestroyable = false;
-                rendererBuffers[accessor.bufferView] = indexBuffer;
-                // In theory, several glTF accessors with different componentTypes could
-                // point to the same glTF bufferView, which would break this.
-                // In practice, it is unlikely, but possible with uint32 indices in glTF 2.0.
+        if (model.asynchronous) {
+            while (vertexBuffersToCreate.length > 0) {
+                scratchVertexBufferJob.set(vertexBuffersToCreate.peek(), model, context);
+                if (!frameState.jobScheduler.execute(scratchVertexBufferJob, JobType.BUFFER)) {
+                    break;
+                }
+                vertexBuffersToCreate.dequeue();
             }
-        });
+
+            while (indexBuffersToCreate.length > 0) {
+                i = indexBuffersToCreate.peek();
+                scratchIndexBufferJob.set(i.id, i.componentType, model, context);
+                if (!frameState.jobScheduler.execute(scratchIndexBufferJob, JobType.BUFFER)) {
+                    break;
+                }
+                indexBuffersToCreate.dequeue();
+            }
+        } else {
+            while (vertexBuffersToCreate.length > 0) {
+                createVertexBuffer(vertexBuffersToCreate.dequeue(), model, context);
+            }
+
+            while (indexBuffersToCreate.length > 0) {
+                i = indexBuffersToCreate.dequeue();
+                createIndexBuffer(i.id, i.componentType, model, context);
+            }
+        }
     }
 
     function createAttributeLocations(model, attributes) {
@@ -1695,7 +1871,7 @@ define([
         // the normal attribute.
         for (i = 1; i < length; ++i) {
             var attribute = attributes[i];
-            if (/position/i.test(attribute)) {
+            if (/pos/i.test(attribute)) {
                 attributes[i] = attributes[0];
                 attributes[0] = attribute;
                 break;
@@ -1882,6 +2058,24 @@ define([
         return shader;
     }
 
+    var CreateProgramJob = function() {
+        this.id = undefined;
+        this.model = undefined;
+        this.context = undefined;
+    };
+
+    CreateProgramJob.prototype.set = function(id, model, context) {
+        this.id = id;
+        this.model = model;
+        this.context = context;
+    };
+
+    CreateProgramJob.prototype.execute = function() {
+        createProgram(this.id, this.model, this.context);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model.gltf.shaders;
@@ -1937,9 +2131,11 @@ define([
         }
     }
 
-    function createPrograms(model, context) {
+    var scratchCreateProgramJob = new CreateProgramJob();
+
+    function createPrograms(model, frameState) {
         var loadResources = model._loadResources;
-        var id;
+        var programsToCreate = loadResources.programsToCreate;
 
         if (loadResources.pendingShaderLoads !== 0) {
             return;
@@ -1951,17 +2147,20 @@ define([
             return;
         }
 
+        var context = frameState.context;
+
         if (model.asynchronous) {
-            // Create one program per frame
-            if (loadResources.programsToCreate.length > 0) {
-                id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+            while (programsToCreate.length > 0) {
+                scratchCreateProgramJob.set(programsToCreate.peek(), model, context);
+                if (!frameState.jobScheduler.execute(scratchCreateProgramJob, JobType.PROGRAM)) {
+                    break;
+                }
+                programsToCreate.dequeue();
             }
         } else {
             // Create all loaded programs this frame
-            while (loadResources.programsToCreate.length > 0) {
-                id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+            while (programsToCreate.length > 0) {
+                createProgram(programsToCreate.dequeue(), model, context);
             }
         }
     }
@@ -2031,6 +2230,26 @@ define([
         }
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    var CreateTextureJob = function() {
+        this.gltfTexture = undefined;
+        this.model = undefined;
+        this.context = undefined;
+    };
+
+    CreateTextureJob.prototype.set = function(gltfTexture, model, context) {
+        this.gltfTexture = gltfTexture;
+        this.model = model;
+        this.context = context;
+    };
+
+    CreateTextureJob.prototype.execute = function() {
+        createTexture(this.gltfTexture, this.model, this.context);
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     function createTexture(gltfTexture, model, context) {
         var textures = model.gltf.textures;
         var texture = textures[gltfTexture.id];
@@ -2097,23 +2316,27 @@ define([
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;
+        model._texturesByteLength += tx.sizeInBytes;
     }
 
-    function createTextures(model, context) {
-        var loadResources = model._loadResources;
-        var gltfTexture;
+    var scratchCreateTextureJob = new CreateTextureJob();
+
+    function createTextures(model, frameState) {
+        var context = frameState.context;
+        var texturesToCreate = model._loadResources.texturesToCreate;
 
         if (model.asynchronous) {
-            // Create one texture per frame
-            if (loadResources.texturesToCreate.length > 0) {
-                gltfTexture = loadResources.texturesToCreate.dequeue();
-                createTexture(gltfTexture, model, context);
+            while (texturesToCreate.length > 0) {
+                scratchCreateTextureJob.set(texturesToCreate.peek(), model, context);
+                if (!frameState.jobScheduler.execute(scratchCreateTextureJob, JobType.TEXTURE)) {
+                    break;
+                }
+                texturesToCreate.dequeue();
             }
         } else {
             // Create all loaded textures this frame
-            while (loadResources.texturesToCreate.length > 0) {
-                gltfTexture = loadResources.texturesToCreate.dequeue();
-                createTexture(gltfTexture, model, context);
+            while (texturesToCreate.length > 0) {
+                createTexture(texturesToCreate.dequeue(), model, context);
             }
         }
     }
@@ -2126,21 +2349,37 @@ define([
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
+        var location;
+        var index;
         var technique = techniques[materials[primitive.material].technique];
         var parameters = technique.parameters;
         var attributes = technique.attributes;
-        var programAttributeLocations = model._rendererResources.programs[technique.program].vertexAttributes;
+        var program = model._rendererResources.programs[technique.program];
+        var programVertexAttributes = program.vertexAttributes;
+        var programAttributeLocations = program._attributeLocations;
 
-        // Note: WebGL shader compiler may have optimized and removed some attributes from programAttributeLocations
-        for (var location in programAttributeLocations){
-            if (programAttributeLocations.hasOwnProperty(location)) {
+        // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
+        for (location in programVertexAttributes){
+            if (programVertexAttributes.hasOwnProperty(location)) {
                 var attribute = attributes[location];
-                var index = programAttributeLocations[location].index;
+                index = programVertexAttributes[location].index;
                 if (defined(attribute)) {
                     var parameter = parameters[attribute];
                     attributeLocations[parameter.semantic] = index;
-                } else {
-                    // Pre-created attributes
+                }
+            }
+        }
+
+        // Always add pre-created attributes.
+        // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
+        // but should be included in the list of attribute locations for the pick program.
+        // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
+        // that programVertexAttributes optimizes out unused attributes.
+        var precreatedAttributes = model._precreatedAttributes;
+        if (defined(precreatedAttributes)) {
+            for (location in precreatedAttributes) {
+                if (precreatedAttributes.hasOwnProperty(location)) {
+                    index = programAttributeLocations[location];
                     attributeLocations[location] = index;
                 }
             }
@@ -2361,6 +2600,7 @@ define([
                                 if (defined(a.normalized) && a.normalized) {
                                     normalize = true;
                                 }
+
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
@@ -2959,19 +3199,19 @@ define([
                         var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
-                            case 'SCALAR':
+                            case AttributeType.SCALAR:
                                 uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC2':
+                            case AttributeType.VEC2:
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC3':
+                            case AttributeType.VEC3:
                                 uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC4':
+                            case AttributeType.VEC4:
                                 // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
                                 var uniformVariableScale = uniformVariable + '_scale';
                                 var uniformVariableTranslate = uniformVariable + '_translate';
@@ -3047,6 +3287,18 @@ define([
         };
     }
 
+    function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
+        switch (primitive.mode) {
+            case PrimitiveType.TRIANGLES:
+                return (indicesCount / 3);
+            case PrimitiveType.TRIANGLE_STRIP:
+            case PrimitiveType.TRIANGLE_FAN:
+                return Math.max(indicesCount - 2, 0);
+            default:
+                return 0;
+        }
+    }
+
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
@@ -3103,6 +3355,9 @@ define([
                 offset = 0;
             }
 
+            // Update model triangle count using number of indices
+            model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
+
             var um = uniformMaps[primitive.material];
             var uniformMap = um.uniformMap;
             if (defined(um.jointMatrixUniformName)) {
@@ -3132,12 +3387,16 @@ define([
 
             // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
             var isTranslucent = rs.blending.enabled;
-            var owner = {
-                primitive : defaultValue(model.pickPrimitive, model),
-                id : model.id,
-                node : runtimeNode.publicNode,
-                mesh : runtimeMeshesByName[mesh.name]
-            };
+
+            var owner = model._pickObject;
+            if (!defined(owner)) {
+                owner = {
+                    primitive : model,
+                    id : model.id,
+                    node : runtimeNode.publicNode,
+                    mesh : runtimeMeshesByName[mesh.name]
+                };
+            }
 
             var castShadows = ShadowMode.castShadows(model._shadows);
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
@@ -3336,6 +3595,26 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
+    function getGeometryByteLength(buffers) {
+        var memory = 0;
+        for (var id in buffers) {
+            if (buffers.hasOwnProperty(id)) {
+                memory += buffers[id].sizeInBytes;
+            }
+        }
+        return memory;
+    }
+
+    function getTexturesByteLength(textures) {
+        var memory = 0;
+        for (var id in textures) {
+            if (textures.hasOwnProperty(id)) {
+                memory += textures[id].sizeInBytes;
+            }
+        }
+        return memory;
+    }
+
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
@@ -3358,12 +3637,15 @@ define([
             if (defined(model._precreatedAttributes)) {
                 createVertexArrays(model, context);
             }
+
+            model._cachedGeometryByteLength += getGeometryByteLength(cachedResources.buffers);
+            model._cachedTexturesByteLength += getTexturesByteLength(cachedResources.textures);
         } else {
-            createBuffers(model, context); // using glTF bufferViews
-            createPrograms(model, context);
+            createBuffers(model, frameState); // using glTF bufferViews
+            createPrograms(model, frameState);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
-            createTextures(model, context);
+            createTextures(model, frameState);
         }
 
         createSkins(model);
@@ -3413,7 +3695,7 @@ define([
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
-        if (model._mode !== SceneMode.SCENE3D) {
+        if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
             var translation = Matrix4.getColumn(computedModelMatrix, 3, scratchComputedTranslation);
             if (!Cartesian4.equals(translation, Cartesian4.UNIT_W)) {
                 computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
@@ -3545,7 +3827,6 @@ define([
             }
         }
     }
-
 
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:

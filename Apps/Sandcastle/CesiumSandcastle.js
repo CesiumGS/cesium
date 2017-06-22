@@ -139,7 +139,7 @@ require({
     var subtabs = {};
     var docError = false;
     var galleryError = false;
-    var notFound = false;
+    var deferredLoadError = false;
     var galleryTooltipTimer;
     var activeGalleryTooltipDemo;
     var demoTileHeightRule = findCssStyle('.demoTileThumbnail');
@@ -367,6 +367,7 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+        /*eslint-disable new-cap*/
         if (!JSHINT(getScriptFromEditor(false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
@@ -378,6 +379,7 @@ require({
                 }
             }
         }
+        /*eslint-enable new-cap*/
     }
 
     function scheduleHint() {
@@ -695,7 +697,7 @@ require({
     }
 
     function loadFromGallery(demo) {
-        notFound = false;
+        deferredLoadError = false;
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
@@ -806,8 +808,8 @@ require({
                 if (galleryError) {
                     appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
                 }
-                if (notFound) {
-                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '\n', true);
+                if (deferredLoadError) {
+                    appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '. Redirecting to HelloWorld.\n', true);
                 }
             }
         } else if (Cesium.defined(e.data.log)) {
@@ -882,6 +884,8 @@ require({
         showGallery();
         scheduleHintNoChange();
     });
+
+    var searchContainer;
 
     function hideSearchContainer() {
         if (dom.byId('searchContainer')) {
@@ -1060,15 +1064,10 @@ require({
             url : 'gallery/' + name + '.html',
             handleAs : 'text',
             error : function(error) {
-                if (error.status === 404) {
                     loadFromGallery(gallery_demos[hello_world_index])
                         .then(function() {
-                            notFound = true;
+                            deferredLoadError = true;
                         });
-                } else {
-                    galleryError = true;
-                    appendConsole('consoleError', error, true);
-                }
             }
         });
     }
@@ -1294,7 +1293,6 @@ require({
         });
     }
 
-    var searchContainer;
     when(promise).then(function() {
         dom.byId('searchDemos').appendChild(galleryErrorMsg);
         searchContainer = registry.byId('searchContainer');

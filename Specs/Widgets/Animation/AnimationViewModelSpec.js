@@ -611,7 +611,7 @@ defineSuite([
         var originalTicks = [0.0, 1.0, 2.0];
         animationViewModel.setShuttleRingTicks(originalTicks);
 
-        var ticks = animationViewModel.getShuttleRingTicks(ticks);
+        var ticks = animationViewModel.getShuttleRingTicks();
         ticks.push(99);
         ticks[0] = -99;
         expect(animationViewModel.getShuttleRingTicks()).toEqual(originalTicks);

@@ -222,6 +222,18 @@ defineSuite([
         expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
+    it('Allows empty options object without failing', function() {
+        var property = new SampledProperty(Number);
+
+        var interpolationAlgorithm = property.interpolationAlgorithm;
+        var interpolationDegree = property.interpolationDegree;
+
+        property.setInterpolationOptions({});
+
+        expect(property.interpolationAlgorithm).toEqual(interpolationAlgorithm);
+        expect(property.interpolationDegree).toEqual(interpolationDegree);
+    });
+
     it('mergeNewSamples works with huge data sets.', function() {
         var times = [];
         var values = [];
@@ -441,6 +453,8 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
     });
 
+    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
+
     //The remaining tests were verified with STK Components available from http://www.agi.com.
     it('addSample works with multiple derivatives', function() {
         var results = [0, -3.39969163485071, 0.912945250727628, -6.17439797860995, 0.745113160479349, -1.63963048028446, -0.304810621102217, 4.83619040459681, -0.993888653923375, 169.448966391543];
@@ -462,7 +476,6 @@ defineSuite([
         }
     });
 
-    var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
     var times = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
                  JulianDate.addSeconds(epoch, 60, new JulianDate()),
                  JulianDate.addSeconds(epoch, 120, new JulianDate()),

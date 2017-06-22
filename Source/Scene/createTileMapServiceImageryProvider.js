@@ -61,7 +61,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
@@ -105,8 +105,7 @@ define([
             var tileSetRegex = /tileset/i;
             var tileSetsRegex = /tilesets/i;
             var bboxRegex = /boundingbox/i;
-            var srsRegex = /srs/i;
-            var format, bbox, tilesets, srs;
+            var format, bbox, tilesets;
             var tilesetsList = []; //list of TileSets
 
             // Allowing options properties (already copied to that) to override XML values
@@ -128,8 +127,6 @@ define([
                     }
                 } else if (bboxRegex.test(nodeList.item(i).nodeName)) {
                     bbox = nodeList.item(i);
-                } else if (srsRegex.test(nodeList.item(i).nodeName)) {
-                    srs = nodeList.item(i).textContent;
                 }
             }
 

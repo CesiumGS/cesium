@@ -611,6 +611,11 @@ define([
      * removing the widget from layout.
      */
     Animation.prototype.destroy = function() {
+        if (defined(this._observer)) {
+            this._observer.disconnect();
+            this._observer = undefined;
+        }
+
         var mouseCallback = this._mouseCallback;
         this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
@@ -698,6 +703,27 @@ define([
      * animation.applyThemeChanges();
      */
     Animation.prototype.applyThemeChanges = function() {
+        // Since we rely on computed styles for themeing, we can't actually
+        // do anything if the container has not yet been added to the DOM.
+        // Set up an observer to be notified when it is added and apply
+        // the changes at that time.
+        if (!document.body.contains(this._container)) {
+            if (defined(this._observer)) {
+                //Already listening.
+                return;
+            }
+            var that = this;
+            that._observer = new MutationObserver(function() {
+                if (document.body.contains(that._container)) {
+                    that._observer.disconnect();
+                    that._observer = undefined;
+                    that.applyThemeChanges();
+                }
+            });
+            that._observer.observe(document, {childList : true, subtree : true});
+            return;
+        }
+
         var buttonNormalBackColor = getElementColor(this._themeNormal);
         var buttonHoverBackColor = getElementColor(this._themeHover);
         var buttonToggledBackColor = getElementColor(this._themeSelect);

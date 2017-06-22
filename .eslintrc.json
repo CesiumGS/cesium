@@ -1,0 +1,6 @@
+{
+    "extends": "./Tools/eslint-config-cesium/browser.js",
+    "rules": {
+        "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
+    }
+}

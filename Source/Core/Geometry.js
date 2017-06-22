@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './GeometryType',
         './PrimitiveType'
     ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -67,9 +69,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.attributes)) {
-            throw new DeveloperError('options.attributes is required.');
-        }
+        Check.typeOf.object('options.attributes', options.attributes);
         //>>includeEnd('debug');
 
         /**
@@ -173,9 +173,7 @@ define([
      */
     Geometry.computeNumberOfVertices = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(geometry)) {
-            throw new DeveloperError('geometry is required.');
-        }
+        Check.typeOf.object('geometry', geometry);
         //>>includeEnd('debug');
 
         var numberOfVertices = -1;

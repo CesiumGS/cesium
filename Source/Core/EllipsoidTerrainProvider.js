@@ -152,14 +152,13 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         var width = 16;
         var height = 16;
         return new HeightmapTerrainData({

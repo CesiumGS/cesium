@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './AttributeType',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -12,6 +13,7 @@ define([
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType'
     ], function(
+        AttributeType,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -180,7 +182,7 @@ define([
 
             matrices = new Array(count);
 
-            if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.MAT4)) {
                 for (var i = 0; i < count; ++i) {
                     var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
                     matrices[i] = Matrix4.fromArray(typedArrayView);

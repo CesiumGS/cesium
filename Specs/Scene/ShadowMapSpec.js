@@ -494,9 +494,7 @@ defineSuite([
         // Move the camera into the shadowed area
         scene.camera.moveRight(0.2);
 
-        var shadowedColor;
         renderAndCall(function(rgba) {
-            shadowedColor = rgba;
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
         });
@@ -712,7 +710,6 @@ defineSuite([
         ];
 
         for (var i = 0; i < 6; ++i) {
-            /* jshint loopfunc: true */
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
                 modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
@@ -725,14 +722,14 @@ defineSuite([
             // Render without shadows
             scene.shadowMap.enabled = false;
             var unshadowedColor;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 unshadowedColor = rgba;
                 expect(rgba).not.toEqual(backgroundColor);
             });
 
             // Render with shadows
             scene.shadowMap.enabled = true;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual(backgroundColor);
                 expect(rgba).not.toEqual(unshadowedColor);
             });
