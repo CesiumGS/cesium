@@ -59,7 +59,9 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThan('sizeInBytes', sizeInBytes, 0);
+        if (sizeInBytes <= 0) {
+            throw new DeveloperError('Buffer size must be greater than zero.');
+        }
         //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();

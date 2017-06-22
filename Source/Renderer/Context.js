@@ -894,7 +894,9 @@ define([
 
         Check.defined('drawCommand.vertexArray', va);
         Check.typeOf.number.greaterThanOrEquals('drawCommand.offset', offset, 0);
-        Check.typeOf.number.greaterThanOrEquals('drawCommand.count', count, 0);
+        if (defined(count)) {
+            Check.typeOf.number.greaterThanOrEquals('drawCommand.count', count, 0);
+        }
         Check.typeOf.number.greaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
         //>>includeEnd('debug');
 
