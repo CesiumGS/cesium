@@ -31,7 +31,28 @@
                 <input type="range" min="-1" max="1" step="0.05" data-bind="value: occlusionAngle, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: occlusionAngle">
             </td>
-        </tr>
+          </tr>
+          <tr>
+            <td>Point Occlusion Filter Size</td>
+            <td>
+                <input type="range" min="0" max="4" step="1" data-bind="value: neighborhoodHalfWidth, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: neighborhoodHalfWidth">
+            </td>
+          </tr>
+          <tr>
+            <td>Region Growing Iterations</td>
+            <td>
+                <input type="range" min="0" max="10" step="1" data-bind="value: numRegionGrowingPasses, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: numRegionGrowingPasses">
+            </td>
+          </tr>
+          <tr>
+            <td>Region Growing Range Parameter</td>
+            <td>
+                <input type="range" min="0" max="1" step="0.001" data-bind="value: rangeParameter, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: rangeParameter">
+            </td>
+          </tr>
         </tbody>
     </table>
 </div>
@@ -45,6 +66,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+inspectorViewModel.picking = false;
 
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
@@ -67,7 +89,10 @@ style.pointSize = Cesium.defaultValue(style.pointSize, 1.0);
 tileset.style = new Cesium.Cesium3DTileStyle(style);
 
 var viewModel = {
-    occlusionAngle: 0.1,
+    occlusionAngle: tileset.pointCloudPostProcessorOptions.occlusionAngle,
+    rangeParameter: tileset.pointCloudPostProcessorOptions.rangeParameter,
+    numRegionGrowingPasses: tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
+    neighborhoodHalfWidth: tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
 };
 Cesium.knockout.track(viewModel);
 
@@ -84,6 +109,9 @@ function subscribeParameter(name) {
 }
 
 subscribeParameter('occlusionAngle');
+subscribeParameter('rangeParameter');
+subscribeParameter('neighborhoodHalfWidth');
+subscribeParameter('numRegionGrowingPasses');
 
 Sandcastle.addToggleButton('Enabled', true, function(checked) {
     tileset.pointCloudPostProcessorOptions['enabled'] = checked;
