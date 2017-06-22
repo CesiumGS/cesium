@@ -534,10 +534,10 @@ define([
                     break;
                 }
 
-                var key = tilesRequested.pop();
-                success = addToCache(this, key, approachingData);
+                var tile = tilesRequested.pop();
+                success = addToCache(this, tile, approachingData);
                 if (!success) {
-                    tilesRequested.push(key);
+                    tilesRequested.push(tile);
                 }
             } while(success);
         }
@@ -600,14 +600,15 @@ define([
         return (index >= 0 && seconds <= 5.0) ? intervals.get(index) : undefined;
     }
 
-    function addToCache(that, key, timeDimensionValue) {
+    function addToCache(that, tile, timeDimensionValue) {
+        var key = tile.key;
         var keyElements = getKeyElements(key);
         var url = buildImageUrl(that, keyElements.x, keyElements.y, keyElements.level, timeDimensionValue);
         var request = new Request({
             throttle : true,
             throttleByServer : true,
-            type : RequestType.IMAGERY
-            //priorityFunction : priorityFunction
+            type : RequestType.IMAGERY,
+            priorityFunction : tile.priorityFunction
         });
         var promise = ImageryProvider.loadImage(that, url, request);
         if (!defined(promise)) {
@@ -653,7 +654,6 @@ define([
             key = getKey(x, y, level);
             var cache = this._tileCache[this._timeDimensionValue];
             if (defined(cache) && defined(cache[key])) {
-                tilesRequestedForInterval.push(key);
                 result = cache[key].promise;
                 delete cache[key];
             }
@@ -668,9 +668,15 @@ define([
         // If we are approaching an interval, preload this tile in the next interval
         if (defined(result) && timeDependent) {
             var approachingInterval = getApproachingInterval(this);
-            if (!defined(approachingInterval) || !addToCache(this, key, approachingInterval.data)) {
+            var tile = {
+                key: key,
+                // Determines priority based on camera distance to the tile.
+                // Since the imagery regardless of time will be attached to the same tile we can just steal it.
+                priorityFunction: request.priorityFunction
+            };
+            if (!defined(approachingInterval) || !addToCache(this, tile, approachingInterval.data)) {
                 // Add to recent request list if we aren't approaching and interval or the request was throttled
-                tilesRequestedForInterval.push(key);
+                tilesRequestedForInterval.push(tile);
             }
         }
 
