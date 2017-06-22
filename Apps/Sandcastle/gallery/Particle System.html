@@ -168,7 +168,7 @@ var viewModel = {
     maximumSpeed : 5.0,
     startScale : 1.0,
     endScale : 4.0,
-    particleSize : 40.0,
+    particleSize : 20.0,
     transX : 2.5,
     transY : 4.0,
     transZ : 1.0,
@@ -394,6 +394,7 @@ Sandcastle.addToggleButton('Fly', viewModel.fly, function(checked) {
 
 Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
     entity.show = checked;
+    particleSystem.show = checked;
 });
 
 var options = [{
