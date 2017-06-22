@@ -59,7 +59,8 @@ define([
         './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
         './WallGraphics',
-        './KmlLookAt'
+        './KmlLookAt',
+        './KmlCamera'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -120,7 +121,8 @@ define([
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics,
-        KmlLookAt) {
+        KmlLookAt,
+        KmlCamera) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -2161,13 +2163,13 @@ define([
         if(defined(camera)) {
             var result = {};
 
-            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
-            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
-            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+            result.longitude = queryNumericValue(camera, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(camera, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(camera, 'altitude', namespaces.kml);
 
-            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
-            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
-            result.roll = queryNumericValue(lookAt, 'roll', namespaces.kml);
+            result.heading = queryNumericValue(camera, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(camera, 'tilt', namespaces.kml);
+            result.roll = queryNumericValue(camera, 'roll', namespaces.kml);
 
             entity.kml.camera = new KmlCamera(entity, result);
         }
