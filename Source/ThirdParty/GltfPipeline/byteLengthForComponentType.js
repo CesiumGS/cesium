@@ -13,8 +13,6 @@ define([
      *     5122 (SHORT)          : 2
      *     5123 (UNSIGNED_SHORT) : 2
      *     5126 (FLOAT)          : 4
-     *
-     * Allowed by extension:
      *     5125 (UNSIGNED_INT)   : 4
      *
      * @param {Number} [componentType]

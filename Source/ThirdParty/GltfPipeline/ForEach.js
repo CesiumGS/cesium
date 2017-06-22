@@ -1,9 +1,7 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined'
     ], function(
-        defaultValue,
         defined) {
     'use strict';
 
@@ -17,8 +15,13 @@ define([
         if (defined(arrayOfObjects)) {
             for (var i = 0; i < arrayOfObjects.length; i++) {
                 var object = arrayOfObjects[i];
-                var offset = defaultValue(handler(object, i), 0);
-                i += offset;
+                var returnValue = handler(object, i);
+                if (typeof returnValue === 'number') {
+                    i += returnValue;
+                }
+                else if (returnValue) {
+                    break;
+                }
             }
         }
     };

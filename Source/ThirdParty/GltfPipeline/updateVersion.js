@@ -2,27 +2,27 @@
 define([
         './addExtensionsRequired',
         './addToArray',
-        './ForEach',
         './findAccessorMinMax',
+        './ForEach',
         '../../Core/Cartesian3',
         '../../Core/Math',
-        '../../Core/Quaternion',
-        '../../Core/WebGLConstants',
         '../../Core/clone',
         '../../Core/defaultValue',
-        '../../Core/defined'
+        '../../Core/defined',
+        '../../Core/Quaternion',
+        '../../Core/WebGLConstants'
     ], function(
         addExtensionsRequired,
         addToArray,
-        ForEach,
         findAccessorMinMax,
+        ForEach,
         Cartesian3,
         CesiumMath,
-        Quaternion,
-        WebGLConstants,
         clone,
         defaultValue,
-        defined) {
+        defined,
+        Quaternion,
+        WebGLConstants) {
     'use strict';
 
     var updateFunctions = {
@@ -250,7 +250,7 @@ define([
         };
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset' && topLevelId !== 'extensions') {
+            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset') {
                 var objectMapping = {};
                 var object = gltf[topLevelId];
                 if (typeof(object) === 'object' && !Array.isArray(object)) {
@@ -516,45 +516,44 @@ define([
     function removeBufferType(gltf) {
         ForEach.buffer(gltf, function(buffer) {
             delete buffer.type;
-
         });
     }
 
     function makeMaterialValuesArrays(gltf) {
         ForEach.material(gltf, function(material) {
-           ForEach.materialValue(material, function(value, name) {
-               if (!Array.isArray(value)) {
-                   material.values[name] = [value];
-               }
-           }) ;
+            ForEach.materialValue(material, function(value, name) {
+                if (!Array.isArray(value)) {
+                    material.values[name] = [value];
+                }
+            });
         });
     }
 
     function requireAttributeSetIndex(gltf) {
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitive(mesh, function(primitive) {
-               ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
-                   if (semantic === 'TEXCOORD') {
-                       primitive.attributes.TEXCOORD_0 = accessorId;
-                   } else if (semantic === 'COLOR') {
-                       primitive.attributes.COLOR_0 = accessorId;
-                   }
-               });
-               delete primitive.attributes.TEXCOORD;
-               delete primitive.attributes.COLOR;
-           });
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
+                    if (semantic === 'TEXCOORD') {
+                        primitive.attributes.TEXCOORD_0 = accessorId;
+                    } else if (semantic === 'COLOR') {
+                        primitive.attributes.COLOR_0 = accessorId;
+                    }
+                });
+                delete primitive.attributes.TEXCOORD;
+                delete primitive.attributes.COLOR;
+            });
         });
         ForEach.technique(gltf, function(technique) {
-           ForEach.techniqueParameter(technique, function(parameter) {
-               var semantic = parameter.semantic;
-               if (defined(semantic)) {
-                   if (semantic === 'TEXCOORD') {
-                       parameter.semantic = 'TEXCOORD_0';
-                   } else if (semantic === 'COLOR') {
-                       parameter.semantic = 'COLOR_0';
-                   }
-               }
-           });
+            ForEach.techniqueParameter(technique, function(parameter) {
+                var semantic = parameter.semantic;
+                if (defined(semantic)) {
+                    if (semantic === 'TEXCOORD') {
+                        parameter.semantic = 'TEXCOORD_0';
+                    } else if (semantic === 'COLOR') {
+                        parameter.semantic = 'COLOR_0';
+                    }
+                }
+            });
         });
     }
 
@@ -569,30 +568,30 @@ define([
     function underscoreApplicationSpecificSemantics(gltf) {
         var mappedSemantics = {};
         ForEach.mesh(gltf, function(mesh) {
-           ForEach.meshPrimitive(mesh, function(primitive) {
-               /* jshint unused:vars */
-               ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
-                   if (semantic.charAt(0) !== '_') {
-                       var setIndex = semantic.search(/_[0-9]+/g);
-                       var strippedSemantic = semantic;
-                       if (setIndex >= 0) {
-                           strippedSemantic = semantic.substring(0, setIndex);
-                       }
-                       if (!defined(knownSemantics[strippedSemantic])) {
-                           var newSemantic = '_' + semantic;
-                           mappedSemantics[semantic] = newSemantic;
-                       }
-                   }
-               });
-               for(var semantic in mappedSemantics) {
-                   if (mappedSemantics.hasOwnProperty(semantic)) {
-                       var mappedSemantic = mappedSemantics[semantic];
-                       var accessorId = primitive.attributes[semantic];
-                       delete primitive.attributes[semantic];
-                       primitive.attributes[mappedSemantic] = accessorId;
-                   }
-               }
-           });
+            ForEach.meshPrimitive(mesh, function(primitive) {
+                /* jshint unused:vars */
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, semantic) {
+                    if (semantic.charAt(0) !== '_') {
+                        var setIndex = semantic.search(/_[0-9]+/g);
+                        var strippedSemantic = semantic;
+                        if (setIndex >= 0) {
+                            strippedSemantic = semantic.substring(0, setIndex);
+                        }
+                        if (!defined(knownSemantics[strippedSemantic])) {
+                            var newSemantic = '_' + semantic;
+                            mappedSemantics[semantic] = newSemantic;
+                        }
+                    }
+                });
+                for (var semantic in mappedSemantics) {
+                    if (mappedSemantics.hasOwnProperty(semantic)) {
+                        var mappedSemantic = mappedSemantics[semantic];
+                        var accessorId = primitive.attributes[semantic];
+                        delete primitive.attributes[semantic];
+                        primitive.attributes[mappedSemantic] = accessorId;
+                    }
+                }
+            });
         });
         ForEach.technique(gltf, function(technique) {
             ForEach.techniqueParameter(technique, function(parameter) {
@@ -635,7 +634,6 @@ define([
     }
 
     function clampTechniqueFunctionStates(gltf) {
-        var i;
         ForEach.technique(gltf, function(technique) {
             var techniqueStates = technique.states;
             if (defined(techniqueStates)) {
@@ -643,7 +641,7 @@ define([
                 if (defined(functions)) {
                     var blendColor = functions.blendColor;
                     if (defined(blendColor)) {
-                        for (i = 0; i < 4; i++) {
+                        for (var i = 0; i < 4; i++) {
                             blendColor[i] = CesiumMath.clamp(blendColor[i], 0.0, 1.0);
                         }
                     }
@@ -718,12 +716,12 @@ define([
 
     function stripTechniqueAttributeValues(gltf) {
         ForEach.technique(gltf, function(technique) {
-           ForEach.techniqueAttribute(technique, function(attribute) {
-               var parameter = technique.parameters[attribute];
-               if (defined(parameter.value)) {
-                   delete parameter.value;
-               }
-           });
+            ForEach.techniqueAttribute(technique, function(attribute) {
+                var parameter = technique.parameters[attribute];
+                if (defined(parameter.value)) {
+                    delete parameter.value;
+                }
+            });
         });
     }
 

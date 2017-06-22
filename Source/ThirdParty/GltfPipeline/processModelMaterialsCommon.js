@@ -202,7 +202,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
-                semantic: options.useCesiumRTCMatrixInShaders ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
+                semantic: 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix: {
@@ -381,15 +381,6 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
-        if (options.addBatchIdToGeneratedShaders) {
-            techniqueAttributes.a_batchId = 'batchId';
-            techniqueParameters.batchId = {
-                semantic: '_BATCHID',
-                type: WebGLConstants.FLOAT
-            };
-            vertexShader += 'attribute float a_batchId;\n';
-        }
-
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
             defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
 
@@ -502,7 +493,7 @@ define([
         var colorCreationBlock = '  vec3 color = vec3(0.0, 0.0, 0.0);\n';
         if (hasNormals) {
             fragmentShader += '  vec3 normal = normalize(v_normal);\n';
-            if (parameterValues.doubleSided) {
+            if (khrMaterialsCommon.doubleSided) {
                 fragmentShader += '  if (gl_FrontFacing == false)\n';
                 fragmentShader += '  {\n';
                 fragmentShader += '    normal = -normal;\n';
@@ -583,8 +574,8 @@ define([
                     WebGLConstants.DEPTH_TEST,
                     WebGLConstants.BLEND
                 ],
-                depthMask: false,
                 functions: {
+                    depthMask : [false],
                     blendEquationSeparate: [
                         WebGLConstants.FUNC_ADD,
                         WebGLConstants.FUNC_ADD
@@ -597,7 +588,7 @@ define([
                     ]
                 }
             };
-        } else if (parameterValues.doubleSided) {
+        } else if (khrMaterialsCommon.doubleSided) {
             techniqueStates = {
                 enable: [
                     WebGLConstants.DEPTH_TEST
@@ -890,8 +881,6 @@ define([
         if (!defined(gltf)) {
             return undefined;
         }
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var hasExtension = false;
         var extensionsRequired = gltf.extensionsRequired;

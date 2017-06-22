@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './addToArray',
+        './ForEach',
         '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/WebGLConstants'
     ], function(
         addToArray,
+        ForEach,
         clone,
         defaultValue,
         defined,
@@ -432,6 +434,54 @@ define([
         }
     }
 
+    function inferBufferViewTargets(gltf) {
+        // If bufferView elements are missing targets, we can infer their type from their use
+        var needsTarget = {};
+        var shouldTraverse = 0;
+        ForEach.bufferView(gltf, function(bufferView, bufferViewId) {
+            if (!defined(bufferView.target)) {
+                needsTarget[bufferViewId] = true;
+                shouldTraverse++;
+            }
+        });
+        if (shouldTraverse > 0) {
+            var accessors = gltf.accessors;
+            var bufferViews = gltf.bufferViews;
+            ForEach.mesh(gltf, function (mesh) {
+                ForEach.meshPrimitive(mesh, function (primitive) {
+                    var indices = primitive.indices;
+                    if (defined(indices)) {
+                        var accessor = accessors[indices];
+                        var bufferViewId = accessor.bufferView;
+                        if (needsTarget[bufferViewId]) {
+                            var bufferView = bufferViews[bufferViewId];
+                            if (defined(bufferView)) {
+                                bufferView.target = WebGLConstants.ELEMENT_ARRAY_BUFFER;
+                                needsTarget[bufferViewId] = false;
+                                shouldTraverse--;
+                            }
+                        }
+                    }
+                    ForEach.meshPrimitiveAttribute(primitive, function (accessorId) {
+                        var accessor = accessors[accessorId];
+                        var bufferViewId = accessor.bufferView;
+                        if (needsTarget[bufferViewId]) {
+                            var bufferView = bufferViews[bufferViewId];
+                            if (defined(bufferView)) {
+                                bufferView.target = WebGLConstants.ARRAY_BUFFER;
+                                needsTarget[bufferViewId] = false;
+                                shouldTraverse--;
+                            }
+                        }
+                    });
+                });
+                if (shouldTraverse === 0) {
+                    return true;
+                }
+            });
+        }
+    }
+
     /**
      * Adds default glTF values if they don't exist.
      *
@@ -452,6 +502,7 @@ define([
         addDefaultTechnique(gltf);
         enableDiffuseTransparency(gltf);
         selectDefaultScene(gltf);
+        inferBufferViewTargets(gltf);
         if (options.optimizeForCesium) {
             optimizeForCesium(gltf);
         }

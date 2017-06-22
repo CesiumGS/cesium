@@ -199,6 +199,7 @@ define([
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
+        bufferView.byteOffset = defaultValue(bufferView.byteOffset, 0);
         return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
     };
 
@@ -2256,6 +2257,10 @@ define([
 
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
+        sampler = defaultValue(sampler, new Sampler({
+            wrapS : TextureWrap.REPEAT,
+            wrapT : TextureWrap.REPEAT
+        }));
 
         var internalFormat = gltfTexture.internalFormat;
 
