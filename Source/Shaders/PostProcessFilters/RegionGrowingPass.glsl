@@ -42,28 +42,10 @@ void comparisonNetwork8(inout float[neighborhoodSize] neighbors,
 // NOTE: This can be sped up a lot by replacing the depth
 // primitive array with two vec4s and using swizzle operations!
 // (assuming that the neighborhood is exactly 3x3)
-void fastMedianFinder(in float[neighborhoodSize] neighbors,
-                      in vec4[neighborhoodSize] colorNeighbors,
-                      out float outDepth,
-                      out vec4 outColor) {
-    /*for (int i = 0; i < neighborhoodSize; i++) {
-        float key = neighbors[i];
-        int modifiedFlag = 0;
-
-        for (int c = neighborhoodSize - 1; c >= 0; c--) {
-            if (c > i - 1)
-                continue;
-
-            if (neighbors[c] <= key) {
-                neighbors[c + 1] = key;
-                modifiedFlag = 1;
-                break;
-            }
-            neighbors[c + 1] = neighbors[c];
-        }
-        if (modifiedFlag == 0)
-            neighbors[0] = key;
-            }*/
+void fastMedian3(in float[neighborhoodSize] neighbors,
+                 in vec4[neighborhoodSize] colorNeighbors,
+                 out float outDepth,
+                 out vec4 outColor) {
     comparisonNetwork8(neighbors, colorNeighbors);
 
     for (int i = neighborhoodSize - 1; i >= 0; i--) {
@@ -76,6 +58,17 @@ void fastMedianFinder(in float[neighborhoodSize] neighbors,
 
     outDepth = 1.0;
     outColor = vec4(0, 0, 0, 0);
+}
+
+void genericMedianFinder(in float[neighborhoodSize] neighbors,
+                         in vec4[neighborhoodSize] colorNeighbors,
+                         out float outDepth,
+                         out vec4 outColor) {
+    // Perhaps we should have a valid way of handling the
+    // difficult-to-optimize cases.
+    // For now this does nothing.
+    outDepth = 0.0;
+    outColor = vec4(1, 0, 0, 1);
 }
 
 void main() {
@@ -115,7 +108,11 @@ void main() {
             }
         }
 
-        fastMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+#if neighborhoodFullWidth == 3
+        fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+#else
+        genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+#endif
     }
     // Otherwise if our depth value is valid
     else {
@@ -140,7 +137,8 @@ void main() {
 
                 float depthDelta = abs(neighbor - depth);
 
-                float weight = (1.0 - rI / 2.0) * (1.0 - min(1.0, depthDelta / max(1e-5, rangeParameter)));
+                float weight = (1.0 - rI / 2.0) * (1.0 - min(1.0, depthDelta / max(1e-5,
+                                                   rangeParameter)));
                 depthAccum += weight * neighbor;
                 colorAccum += weight * colorNeighbor;
                 normalization += weight;
