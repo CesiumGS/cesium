@@ -784,7 +784,9 @@ define([
             JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate1), result);
         }
 
-        return true;
+        // A duration of 0 will cause an infinite loop, so just make sure something is non-zero
+        return (result.year || result.month || result.day || result.hour ||
+                result.minute || result.second || result.millisecond);
     }
 
 

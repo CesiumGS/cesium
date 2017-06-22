@@ -153,29 +153,49 @@ define([
         var timeDimensionValues = options.timeDimensionValues;
         if (defined(clock) && defined(timeDimensionValues) && timeDimensionValues.length > 0) {
             this._clock = clock;
+            var timeDimensionDefaultValue = options.timeDimensionDefaultValue;
+            if (timeDimensionValues.length === 1) {
+                var value = timeDimensionValues[0];
+                //>>includeStart('debug', pragmas.debug);
+                if (value.indexOf('/') === -1) {
+                    throw new DeveloperError('options.timeDimensionValues must have more than one value or specify an Iso8601 time interval.');
+                }
+                //>>includeEnd('debug');
+                this._timeDimensionIntervals = TimeIntervalCollection.fromIso8601({
+                    iso8601 : value,
+                    leadingInterval: true,
+                    trailingInterval: true,
+                    dataCallback: function(interval, index) {
+                        if (index === 0) { // leading
+                            return defaultValue(timeDimensionDefaultValue, JulianDate.toIso8601(interval.stop));
+                        }
+                        return JulianDate.toIso8601(interval.start);
+                    }
+                });
+            } else {
+                var timeDimensionIntervals = this._timeDimensionIntervals = new TimeIntervalCollection();
+                var valueCount = timeDimensionValues.length;
 
-            var timeDimensionIntervals = this._timeDimensionIntervals = new TimeIntervalCollection();
-            var valueCount = timeDimensionValues.length;
+                // Add a default interval, which will only end up being used up to first interval
+                var defaultInterval = TimeInterval.clone(Iso8601.MAXIMUM_INTERVAL);
+                defaultInterval.data = defaultValue(timeDimensionDefaultValue, timeDimensionValues[0]);
+                timeDimensionIntervals.addInterval(defaultInterval);
 
-            // Add a default interval, which will only end up being used up to first interval
-            var defaultInterval = TimeInterval.clone(Iso8601.MAXIMUM_INTERVAL);
-            defaultInterval.data = defaultValue(options.timeDimensionDefaultValue, timeDimensionValues[0]);
-            timeDimensionIntervals.addInterval(defaultInterval);
+                var startDate = JulianDate.fromIso8601(timeDimensionValues[0]);
+                for (var i = 0; i < valueCount; ++i) {
+                    var v = timeDimensionValues[i];
+                    var endDate = (i < valueCount - 1) ? JulianDate.fromIso8601(timeDimensionValues[i + 1]) : Iso8601.MAXIMUM_VALUE;
 
-            var startDate = JulianDate.fromIso8601(timeDimensionValues[0]);
-            for (var i = 0; i < valueCount; ++i) {
-                var v = timeDimensionValues[i];
-                var endDate = (i < valueCount - 1) ? JulianDate.fromIso8601(timeDimensionValues[i + 1]) : Iso8601.MAXIMUM_VALUE;
+                    timeDimensionIntervals.addInterval(new TimeInterval({
+                        start : startDate,
+                        stop : endDate,
+                        isStartIncluded : true,
+                        isStopIncluded : (i === (valueCount - 1)), // True for last interval only
+                        data : v // String must be exact
+                    }));
 
-                timeDimensionIntervals.addInterval(new TimeInterval({
-                    start : startDate,
-                    stop : endDate,
-                    isStartIncluded : true,
-                    isStopIncluded : (i === (valueCount - 1)), // True for last interval only
-                    data : v // String must be exact
-                }));
-
-                startDate = endDate;
+                    startDate = endDate;
+                }
             }
 
             clock.onTick.addEventListener(this._clockOnTick, this);
@@ -473,7 +493,7 @@ define([
         var time = clock.currentTime;
         var interval = this._timeDimensionIntervals.findIntervalContainingDate(time);
         var data = interval.data;
-        var currentData = this._timeDimensionValue
+        var currentData = this._timeDimensionValue;
         if (data !== currentData) {
             // Clear out caches not from current time interval
             delete this._tileCache[currentData];
