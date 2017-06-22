@@ -118,7 +118,7 @@ define([
          * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
-         * @default 16
+         * @default 128
          */
         slices : createPropertyDescriptor('slices'),
 

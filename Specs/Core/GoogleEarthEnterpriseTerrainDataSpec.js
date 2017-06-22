@@ -143,7 +143,7 @@ defineSuite([
     describe('upsample', function() {
         it('works for all four children of a simple quad', function() {
             var maxShort = 32767;
-            tilingScheme = new GeographicTilingScheme();
+            var tilingScheme = new GeographicTilingScheme();
             var buffer = getBuffer(tilingScheme, 0, 0, 0);
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
@@ -152,7 +152,7 @@ defineSuite([
                 negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
-            var tilingScheme = new GeographicTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             var childRectangles = [
                 tilingScheme.tileXYToRectangle(0, 0, 1),
                 tilingScheme.tileXYToRectangle(1, 0, 1),
