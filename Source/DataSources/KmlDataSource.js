@@ -2161,7 +2161,12 @@ define([
             }
         }
 
-        dataSource.kmlTour = tour;
+        if(defined(dataSource.kmlTours)) {
+            dataSource.kmlTours.push(tour);
+        }
+        else {
+            dataSource.kmlTours = [tour];
+        }
     }
 
     function processTourFlyTo(tour, entryNode) {
