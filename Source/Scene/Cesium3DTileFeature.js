@@ -567,7 +567,12 @@ define([
     });
 
     Cesium3DTileFeature.prototype._setBillboardImage = function() {
-        var b = this._billboardCollection.get(this._batchId);
+        var billboardCollection = this._billboardCollection;
+        if (!defined(billboardCollection)) {
+            return;
+        }
+
+        var b = billboardCollection.get(this._batchId);
 
         if (defined(this._billboardImage) && this._billboardImage !== b.image) {
             b.image = this._billboardImage;
