@@ -14,6 +14,8 @@ define([
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
+        '../Core/Request',
+        '../Core/RequestType',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/WebMercatorTilingScheme',
@@ -35,6 +37,8 @@ define([
         objectToQuery,
         queryToObject,
         Rectangle,
+        Request,
+        RequestType,
         TimeInterval,
         TimeIntervalCollection,
         WebMercatorTilingScheme,
@@ -57,6 +61,10 @@ define([
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
+     * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension.
+     * @param {String} [options.timeDimensionIdentifier='TIME'] The identifier for the time dimension.
+     * @param {String[]} [options.timeDimensionValues] The values used for the time dimension. Should be ISO8601 formatted dates.
+     * @param {String} [options.timeDimensionDefaultValue=options.timeDimensionValues[0]]
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
@@ -146,7 +154,7 @@ define([
         this._tileCache = {};
 
         this._tilesRequestedForInterval = [];
-        this._timeDimensionName = defaultValue(options.timeDimensionName, 'TIME');
+        this._timeDimensionIdentifier = defaultValue(options.timeDimensionIdentifier, 'TIME');
         this._timeDimensionIntervals = undefined;
         this._timeDimensionValue = undefined;
         var clock = options.clock;
@@ -168,6 +176,8 @@ define([
                     dataCallback: function(interval, index) {
                         if (index === 0) { // leading
                             return defaultValue(timeDimensionDefaultValue, JulianDate.toIso8601(interval.stop));
+                        } else if(JulianDate.compare(interval.stop, Iso8601.MAXIMUM_VALUE) === 0) { //trailing
+                            return defaultValue(timeDimensionDefaultValue, JulianDate.toIso8601(interval.start));
                         }
                         return JulianDate.toIso8601(interval.start);
                     }
@@ -255,7 +265,7 @@ define([
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
 
             if (defined(timeDimensionValue)) {
-                url = url.replace('{'+imageryProvider._timeDimensionName+'}', timeDimensionValue);
+                url = url.replace('{'+imageryProvider._timeDimensionIdentifier+'}', timeDimensionValue);
             }
         }
         else {
@@ -274,7 +284,7 @@ define([
             queryOptions.format = imageryProvider._format;
 
             if (defined(timeDimensionValue)) {
-                queryOptions[imageryProvider._timeDimensionName] = timeDimensionValue;
+                queryOptions[imageryProvider._timeDimensionIdentifier] = timeDimensionValue;
             }
 
             uri.query = objectToQuery(queryOptions);
@@ -495,7 +505,13 @@ define([
         var data = interval.data;
         var currentData = this._timeDimensionValue;
         if (data !== currentData) {
-            // Clear out caches not from current time interval
+            // Cancel all outstanding requests and clear out caches not from current time interval
+            var currentCache = this._tileCache[currentData];
+            for(var t in currentCache) {
+                if(currentCache.hasOwnProperty(t)) {
+                    currentCache[t].request.cancel();
+                }
+            }
             delete this._tileCache[currentData];
             this._tilesRequestedForInterval = [];
 
@@ -508,15 +524,22 @@ define([
 
         var approachingInterval = getApproachingInterval(this);
         if (defined(approachingInterval)) {
+            var approachingData = approachingInterval.data;
             // Start loading recent tiles from end of this._tilesRequestedForInterval
+            //  We keep prefetching until we hit a throttling limit.
             var tilesRequested = this._tilesRequestedForInterval;
-            var length = tilesRequested.length;
-            var countToRemove = Math.min(5, tilesRequested.length);
-            var removedElements = tilesRequested.splice(length - countToRemove, countToRemove);
-            for (var i = 0; i < countToRemove; ++i) {
-                var key = removedElements[i];
-                addToCache(this, key, approachingInterval.data);
-            }
+            var success = true;
+            do {
+                if (tilesRequested.length === 0) {
+                    break;
+                }
+
+                var key = tilesRequested.pop();
+                success = addToCache(this, key, approachingData);
+                if (!success) {
+                    tilesRequested.push(key);
+                }
+            } while(success);
         }
     };
 
@@ -580,14 +603,28 @@ define([
     function addToCache(that, key, timeDimensionValue) {
         var keyElements = getKeyElements(key);
         var url = buildImageUrl(that, keyElements.x, keyElements.y, keyElements.level, timeDimensionValue);
-        var result = ImageryProvider.loadImage(that, url);
+        var request = new Request({
+            throttle : true,
+            throttleByServer : true,
+            type : RequestType.IMAGERY
+            //priorityFunction : priorityFunction
+        });
+        var promise = ImageryProvider.loadImage(that, url, request);
+        if (!defined(promise)) {
+            return false;
+        }
 
         var tileCache = that._tileCache;
         if (!defined(tileCache[timeDimensionValue])) {
             tileCache[timeDimensionValue] = {};
         }
 
-        tileCache[timeDimensionValue][key] = result;
+        tileCache[timeDimensionValue][key] = {
+            promise: promise,
+            request: request
+        };
+
+        return true;
     }
 
     /**
@@ -609,14 +646,15 @@ define([
         var result;
         var key;
         var timeDependent = defined(this._clock);
+        var tilesRequestedForInterval = this._tilesRequestedForInterval;
 
         // Try and load from cache
         if (timeDependent) {
             key = getKey(x, y, level);
             var cache = this._tileCache[this._timeDimensionValue];
             if (defined(cache) && defined(cache[key])) {
-                this._tilesRequestedForInterval.push(key);
-                result = cache[key];
+                tilesRequestedForInterval.push(key);
+                result = cache[key].promise;
                 delete cache[key];
             }
         }
@@ -628,15 +666,17 @@ define([
         }
 
         // If we are approaching an interval, preload this tile in the next interval
-        if (timeDependent) {
+        if (defined(result) && timeDependent) {
             var approachingInterval = getApproachingInterval(this);
-            if (defined(approachingInterval)) {
-                // We are approaching an interval edge, so preload next interval tile as well
-                addToCache(this, key, approachingInterval.data);
-            } else {
-                // Add to recent request list in case we need to preload for next time interval
-                this._tilesRequestedForInterval.push(key);
+            if (!defined(approachingInterval) || !addToCache(this, key, approachingInterval.data)) {
+                // Add to recent request list if we aren't approaching and interval or the request was throttled
+                tilesRequestedForInterval.push(key);
             }
+        }
+
+        // Don't let the tile list get out of hand
+        if (tilesRequestedForInterval.length > 512) {
+            tilesRequestedForInterval.splice(0, 256);
         }
 
         return result;
