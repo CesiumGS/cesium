@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,9 +8,9 @@ define([
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/WebGLConstants',
-        '../Core/Check',
         './BufferUsage'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -17,7 +18,6 @@ define([
         DeveloperError,
         IndexDatatype,
         WebGLConstants,
-        Check,
         BufferUsage) {
     'use strict';
 
@@ -59,9 +59,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (sizeInBytes <= 0) {
-            throw new DeveloperError('Buffer size must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('sizeInBytes', sizeInBytes, 0);
         //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();
@@ -119,9 +117,7 @@ define([
      */
     Buffer.createVertexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return new Buffer({
@@ -180,9 +176,7 @@ define([
      */
     Buffer.createIndexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
 
         if (!IndexDatatype.validate(options.indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
@@ -250,9 +244,8 @@ define([
         offsetInBytes = defaultValue(offsetInBytes, 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!arrayView) {
-            throw new DeveloperError('arrayView is required.');
-        }
+        Check.defined('arrayView', arrayView);
+
         if (offsetInBytes + arrayView.byteLength > this._sizeInBytes) {
             throw new DeveloperError('This buffer is not large enough.');
         }

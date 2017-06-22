@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingRectangle',
+        '../Core/Check',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
@@ -14,6 +15,7 @@ define([
         './ShaderProgram'
     ], function(
         BoundingRectangle,
+        Check,
         Color,
         defined,
         destroyObject,
@@ -76,9 +78,7 @@ define([
 
     ComputeEngine.prototype.execute = function(computeCommand) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(computeCommand)) {
-            throw new DeveloperError('computeCommand is required.');
-        }
+        Check.defined('computeCommand', computeCommand);
         //>>includeEnd('debug');
 
         // This may modify the command's resources, so do error checking afterwards
@@ -91,9 +91,7 @@ define([
             throw new DeveloperError('computeCommand.fragmentShaderSource or computeCommand.shaderProgram is required.');
         }
 
-        if (!defined(computeCommand.outputTexture)) {
-            throw new DeveloperError('computeCommand.outputTexture is required.');
-        }
+        Check.defined('computeCommand.outputTexture', computeCommand.outputTexture);
         //>>includeEnd('debug');
 
         var outputTexture = computeCommand.outputTexture;
