@@ -449,11 +449,10 @@ define([
                     start : root1,
                     stop : root0
                 };
-            } else {
-                // qw2 == product.  Repeated roots (2 intersections).
-                var root = Math.sqrt(difference / w2);
-                return new Interval(root, root);
             }
+            // qw2 == product.  Repeated roots (2 intersections).
+            var root = Math.sqrt(difference / w2);
+            return new Interval(root, root);
         } else if (q2 < 1.0) {
             // Inside ellipsoid (2 intersections).
             difference = q2 - 1.0; // Negatively valued.
@@ -463,17 +462,16 @@ define([
             discriminant = qw * qw - product;
             temp = -qw + Math.sqrt(discriminant); // Positively valued.
             return new Interval(0.0, temp / w2);
-        } else {
-            // q2 == 1.0. On ellipsoid.
-            if (qw < 0.0) {
-                // Looking inward.
-                w2 = Cartesian3.magnitudeSquared(w);
-                return new Interval(0.0, -qw / w2);
-            }
-
-            // qw >= 0.0.  Looking outward or tangent.
-            return undefined;
         }
+        // q2 == 1.0. On ellipsoid.
+        if (qw < 0.0) {
+            // Looking inward.
+            w2 = Cartesian3.magnitudeSquared(w);
+            return new Interval(0.0, -qw / w2);
+        }
+
+        // qw >= 0.0.  Looking outward or tangent.
+        return undefined;
     };
 
     function addWithCancellationCheck(left, right, tolerance) {

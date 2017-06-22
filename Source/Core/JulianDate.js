@@ -659,7 +659,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var gDate = JulianDate.toGregorianDate(julianDate, gDate);
+        var gDate = JulianDate.toGregorianDate(julianDate, gregorianDateScratch);
         var millisecondStr;
 
         if (!defined(precision) && gDate.millisecond !== 0) {
