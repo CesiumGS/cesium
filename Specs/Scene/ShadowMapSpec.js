@@ -722,14 +722,14 @@ defineSuite([
             // Render without shadows
             scene.shadowMap.enabled = false;
             var unshadowedColor;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 unshadowedColor = rgba;
                 expect(rgba).not.toEqual(backgroundColor);
             });
 
             // Render with shadows
             scene.shadowMap.enabled = true;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual(backgroundColor);
                 expect(rgba).not.toEqual(unshadowedColor);
             });

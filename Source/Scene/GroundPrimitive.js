@@ -239,6 +239,8 @@ define([
         });
 
         var readOnlyAttributes;
+        var readOnlyInstanceAttributesScratch = ['color'];
+
         if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
             readOnlyAttributes = readOnlyInstanceAttributesScratch;
         }
@@ -259,8 +261,6 @@ define([
             _createPickOffsets : true
         };
     }
-
-    var readOnlyInstanceAttributesScratch = ['color'];
 
     defineProperties(GroundPrimitive.prototype, {
         /**

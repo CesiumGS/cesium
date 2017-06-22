@@ -1392,6 +1392,17 @@ define([
         return true;
     }
 
+    var geometryTypes = {
+        Point : processPoint,
+        LineString : processLineStringOrLinearRing,
+        LinearRing : processLineStringOrLinearRing,
+        Polygon : processPolygon,
+        Track : processTrack,
+        MultiTrack : processMultiTrack,
+        MultiGeometry : processMultiGeometry,
+        Model : processUnsupportedGeometry
+    };
+
     function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
         var childNodes = geometryNode.childNodes;
         var hasGeometry = false;
@@ -1621,49 +1632,16 @@ define([
         };
     }
 
-    function processCamera(featureNode, entity) {
-        var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
-        if(defined(camera)) {
-            var result = {};
-
-            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
-            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
-            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
-
-            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
-            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
-            result.roll = queryNumericValue(lookAt, 'roll', namespaces.kml);
-
-            entity.kml.camera = new KmlCamera(entity, result);
-        }
-    }
-
-    function processLookAt(featureNode, entity) {
-        var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
-        if(defined(lookAt)) {
-            var result = {};
-
-            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
-            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
-            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
-
-            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
-            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
-            result.range = queryNumericValue(lookAt, 'range', namespaces.kml);
-
-            entity.kml.lookAt = new KmlLookAt(entity, result);
-        }
-    }
-
-    var geometryTypes = {
-        Point : processPoint,
-        LineString : processLineStringOrLinearRing,
-        LinearRing : processLineStringOrLinearRing,
-        Polygon : processPolygon,
-        Track : processTrack,
-        MultiTrack : processMultiTrack,
-        MultiGeometry : processMultiGeometry,
-        Model : processUnsupportedGeometry
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
+    var featureTypes = {
+        Document : processDocument,
+        Folder : processFolder,
+        Placemark : processPlacemark,
+        NetworkLink : processNetworkLink,
+        GroundOverlay : processGroundOverlay,
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processTour
     };
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
@@ -2112,18 +2090,6 @@ define([
         }
     }
 
-    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
-    var featureTypes = {
-        Document : processDocument,
-        Folder : processFolder,
-        Placemark : processPlacemark,
-        NetworkLink : processNetworkLink,
-        GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupportedFeature,
-        ScreenOverlay : processUnsupportedFeature,
-        Tour : processTour
-    };
-
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
@@ -2188,6 +2154,40 @@ define([
         ft['lookAt'] = t.kml.lookAt;
 
         tour['playlist'].push(ft);
+    }
+
+    function processCamera(featureNode, entity) {
+        var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
+        if(defined(camera)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            result.roll = queryNumericValue(lookAt, 'roll', namespaces.kml);
+
+            entity.kml.camera = new KmlCamera(entity, result);
+        }
+    }
+
+    function processLookAt(featureNode, entity) {
+        var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
+        if(defined(lookAt)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            result.range = queryNumericValue(lookAt, 'range', namespaces.kml);
+
+            entity.kml.lookAt = new KmlLookAt(entity, result);
+        }
     }
 
     function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query) {
@@ -2334,9 +2334,8 @@ define([
                             return loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver, context, query);
                         });
                     });
-                } else {
-                    return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
                 }
+                return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context, query);
             })
             .otherwise(function(error) {
                 dataSource._error.raiseEvent(dataSource, error);
