@@ -32,34 +32,18 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 // Add a WMTS imagery layer
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
-    url : 'http://localhost:9001/geowebcache/service/wmts',
-    proxy: new Cesium.DefaultProxy('/proxy/'),
-    layer : '3_Hourly_Satellite_Derived_Precip',
+    url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+    layer : 'AMSR2_Snow_Water_Equivalent',
     style : 'default',
-    tileMatrixSetID : 'EPSG:4326',
-    tileMatrixLabels : ['EPSG:4326:0','EPSG:4326:1',
-                        'EPSG:4326:2','EPSG:4326:3',
-                        'EPSG:4326:4','EPSG:4326:5',
-                        'EPSG:4326:6','EPSG:4326:7',
-                        'EPSG:4326:8','EPSG:4326:9',
-                        'EPSG:4326:10','EPSG:4326:11',
-                        'EPSG:4326:12','EPSG:4326:13',
-                        'EPSG:4326:14','EPSG:4326:15',
-                        'EPSG:4326:16','EPSG:4326:17',
-                        'EPSG:4326:18','EPSG:4326:19',
-                        'EPSG:4326:20','EPSG:4326:21'],
+    tileMatrixSetID : '2km',
+    maximumLevel : 5,
     format : 'image/png',
+    timeDimensionName : 'Time',
     clock: viewer.clock,
-    timeDimensionValues: ['2017-06-11T00:00:00Z', '2017-06-11T03:00:00Z',
-                          '2017-06-11T06:00:00Z', '2017-06-11T09:00:00Z',
-                          '2017-06-11T12:00:00Z', '2017-06-11T15:00:00Z',
-                          '2017-06-11T18:00:00Z', '2017-06-11T21:00:00Z',
-                          '2017-06-12T00:00:00Z', '2017-06-12T03:00:00Z',
-                          '2017-06-12T06:00:00Z', '2017-06-12T09:00:00Z',
-                          '2017-06-12T12:00:00Z', '2017-06-12T15:00:00Z']
+    timeDimensionValues: ['2015-07-30/2017-06-16/P1D']
 }));
 
-viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2017-06-11T02:59:40Z');//Sandcastle_End
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2015-07-31T03:59:40Z');//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
