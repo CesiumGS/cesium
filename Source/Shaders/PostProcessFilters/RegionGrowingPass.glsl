@@ -70,12 +70,11 @@ void fastMedianFinder(in float[neighborhoodSize] neighbors,
         if (neighbors[i] <= 1.0 - EPS) {
             outDepth = neighbors[i / 2];
             outColor = colorNeighbors[i / 2];
-            //outColor = vec4(1, 0, 0, 1);
             return;
         }
     }
 
-    outDepth = 0.0;
+    outDepth = 1.0;
     outColor = vec4(0, 0, 0, 0);
 }
 
