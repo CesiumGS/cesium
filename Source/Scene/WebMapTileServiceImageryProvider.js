@@ -601,7 +601,16 @@ define([
     }
 
     function addToCache(that, tile, timeDimensionValue) {
+        var tileCache = that._tileCache;
+        if (!defined(tileCache[timeDimensionValue])) {
+            tileCache[timeDimensionValue] = {};
+        }
+
         var key = tile.key;
+        if (defined(tileCache[timeDimensionValue][key])) {
+            return true; // Already in the cache
+        }
+
         var keyElements = getKeyElements(key);
         var url = buildImageUrl(that, keyElements.x, keyElements.y, keyElements.level, timeDimensionValue);
         var request = new Request({
@@ -613,11 +622,6 @@ define([
         var promise = ImageryProvider.loadImage(that, url, request);
         if (!defined(promise)) {
             return false;
-        }
-
-        var tileCache = that._tileCache;
-        if (!defined(tileCache[timeDimensionValue])) {
-            tileCache[timeDimensionValue] = {};
         }
 
         tileCache[timeDimensionValue][key] = {
