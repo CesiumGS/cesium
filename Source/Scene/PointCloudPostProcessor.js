@@ -46,7 +46,7 @@ define([
      /**
      * @private
      */
-    function PointCloudPostProcessor() {
+    function PointCloudPostProcessor(options) {
         this._framebuffers = undefined;
         this._colorTextures = undefined;
         this._ecTexture = undefined;
@@ -55,7 +55,10 @@ define([
         this._blendCommand = undefined;
         this._clearCommands = undefined;
 
-        this.occlusionAngle = 0.1;
+        this.occlusionAngle = options.occlusionAngle;
+        this.rangeParameter = options.rangeParameter;
+        this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
+        this.numRegionGrowingPasses = options.numRegionGrowingPasses;
     }
 
     function createSampler() {
@@ -178,6 +181,11 @@ define([
         processor._ecTexture = ecTexture;
     }
 
+    function replaceConstants(sourceStr, constantName, replacement) {
+        var r = "#define\\s" + constantName + "\\s([0-9.]+)";
+        return sourceStr.replace(new RegExp(r, "g"), "#define " + constantName + " " + replacement);
+    };
+
     function pointOcclusionStage(processor, context) {
         var uniformMap = {
             pointCloud_colorTexture : function() {
@@ -190,7 +198,14 @@ define([
                 return processor.occlusionAngle;
             }
         };
-        return context.createViewportQuadCommand(PointOcclusionPass, {
+
+        var pointOcclusionStr = replaceConstants(
+            PointOcclusionPass,
+            "neighborhoodHalfWidth",
+            processor.neighborhoodHalfWidth
+        );
+        
+        return context.createViewportQuadCommand(pointOcclusionStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
@@ -213,6 +228,9 @@ define([
             },
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[i];
+            },
+            rangeParameter : function() {
+                return processor.rangeParameter;
             }
         };
 
@@ -235,7 +253,7 @@ define([
     }
 
     function createCommands(processor, context) {
-        var numRegionGrowingPasses = 4;
+        var numRegionGrowingPasses = processor.numRegionGrowingPasses;
         var drawCommands = new Array(numRegionGrowingPasses + 1);
 
         var i;
@@ -376,15 +394,21 @@ define([
 
         var dirty = false;
         // Set options here
-        if (options.occlusionAngle != this.occlusionAngle) {
+        if (options.occlusionAngle != this.occlusionAngle ||
+            options.rangeParameter != this.rangeParameter ||
+            options.neighborhoodHalfWidth != this.neighborhoodHalfWidth ||
+            options.numRegionGrowingPasses != this.numRegionGrowingPasses) {
             this.occlusionAngle = options.occlusionAngle;
+            this.rangeParameter = options.rangeParameter;
+            this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
+            this.numRegionGrowingPasses = options.numRegionGrowingPasses;
             dirty = true;
         }
 
         if (!options.enabled) {
             return;
         }
-        
+
         createResources(this, frameState.context, dirty);
 
         // Render point cloud commands into an offscreen FBO.

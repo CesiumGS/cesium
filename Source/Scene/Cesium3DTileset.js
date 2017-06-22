@@ -207,7 +207,6 @@ define([
         });
 
         this._backfaceCommands = new ManagedArray();
-        this._pointCloudPostProcessor = new PointCloudPostProcessor();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumMemoryUsage = defaultValue(options.maximumMemoryUsage, 512);
@@ -727,12 +726,17 @@ define([
          * </p>
          *
          * @type {Event}
-         * @default {enabled : true, occlusionAngle : 0.1}
+         * @default {enabled : true, occlusionAngle : 0.1, rangeParameter : 1.0}
          */
         this.pointCloudPostProcessorOptions = {
             enabled : defaultValue(options.enabled, true),
-            occlusionAngle : defaultValue(options.occlusionAngle, 0.1)
+            occlusionAngle : defaultValue(options.occlusionAngle, 0.1),
+            rangeParameter : defaultValue(options.rangeParameter, 0.01),
+            neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
+            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 8)
         };
+
+        this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
 
         var that = this;
 
@@ -1612,7 +1616,10 @@ define([
             // TODO : make the processor a static class so it can be used by multiple tilesets?
             tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, {
                 enabled : tileset.pointCloudPostProcessorOptions.enabled,
-                occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle
+                occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
+                rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
+                neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
+                numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses
             });
         }
 
