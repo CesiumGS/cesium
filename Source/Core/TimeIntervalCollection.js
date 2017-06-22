@@ -8,6 +8,7 @@ define([
         './Event',
         './GregorianDate',
         './isLeapYear',
+        './Iso8601',
         './JulianDate',
         './TimeInterval'
     ], function(
@@ -19,6 +20,7 @@ define([
         Event,
         GregorianDate,
         isLeapYear,
+        Iso8601,
         JulianDate,
         TimeInterval) {
     'use strict';
@@ -792,8 +794,10 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.iso8601 An ISO 8601 interval.
-     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
-     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
      * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
      * @param {TimeInterval} [result] An existing instance to use for the result.
      * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
@@ -819,10 +823,25 @@ define([
 
         var isStartIncluded = defaultValue(options.isStartIncluded, true);
         var isStopIncluded = defaultValue(options.isStopIncluded, true);
-
-        // Not duration so just return collection with one interval
+        var leadingInterval = defaultValue(options.leadingInterval, false);
+        var trailingInterval = defaultValue(options.trailingInterval, false);
         var interval;
+
+        var startIndex = 0;
+        if (leadingInterval) {
+            ++startIndex;
+            interval = new TimeInterval({
+                start: Iso8601.MINIMUM_VALUE,
+                stop: start,
+                isStartIncluded: true,
+                isStopIncluded: !isStartIncluded
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
         if (!parseDuration(dates[2], scratchDuration)) {
+            // Not duration so just a collection with one interval
             interval = new TimeInterval({
                 start: start,
                 stop: stop,
@@ -831,26 +850,36 @@ define([
             });
             interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
             result.addInterval(interval);
-            return result;
+        } else {
+            JulianDate.clone(start, scratchJulianDate1);
+            while (JulianDate.compare(scratchJulianDate1, stop) < 0) {
+                addToDate(scratchJulianDate1, scratchDuration, scratchJulianDate2);
+                var afterStop = (JulianDate.compare(stop, scratchJulianDate2) <= 0);
+                if (afterStop) {
+                    scratchJulianDate2 = stop;
+                }
+                interval = new TimeInterval({
+                    start : scratchJulianDate1,
+                    stop : scratchJulianDate2,
+                    isStartIncluded : (result.length === startIndex) ? isStartIncluded : true,
+                    isStopIncluded : afterStop ? isStopIncluded : false
+                });
+                interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+                result.addInterval(interval);
+
+                JulianDate.clone(scratchJulianDate2, scratchJulianDate1);
+            }
         }
 
-        JulianDate.clone(start, scratchJulianDate1);
-        while(JulianDate.compare(scratchJulianDate1, stop) < 0) {
-            addToDate(scratchJulianDate1, scratchDuration, scratchJulianDate2);
-            var afterStop = (JulianDate.compare(stop, scratchJulianDate2) <= 0);
-            if (afterStop) {
-                scratchJulianDate2 = stop;
-            }
+        if (trailingInterval) {
             interval = new TimeInterval({
-                start: scratchJulianDate1,
-                stop: scratchJulianDate2,
-                isStartIncluded: (result.length === 0) ? isStartIncluded : true,
-                isStopIncluded: afterStop ? isStopIncluded : false
+                start: stop,
+                stop: Iso8601.MAXIMUM_VALUE,
+                isStartIncluded: !isStopIncluded,
+                isStopIncluded: true
             });
             interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
             result.addInterval(interval);
-
-            JulianDate.clone(scratchJulianDate2, scratchJulianDate1);
         }
 
         return result;

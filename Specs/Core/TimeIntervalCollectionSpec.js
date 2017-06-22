@@ -2,11 +2,13 @@
 defineSuite([
         'Core/TimeIntervalCollection',
         'Core/defaultValue',
+        'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval'
     ], function(
         TimeIntervalCollection,
         defaultValue,
+        Iso8601,
         JulianDate,
         TimeInterval) {
     'use strict';
@@ -1168,6 +1170,9 @@ defineSuite([
     });
 
     function dataCallback(interval, index) {
+        if (JulianDate.compare(Iso8601.MINIMUM_VALUE, interval.start) === 0) {
+            return 'default';
+        }
         return JulianDate.toIso8601(interval.start);
     }
 
@@ -1182,10 +1187,107 @@ defineSuite([
         });
 
         expect(dataSpy.calls.count()).toEqual(3);
-        expect(dataSpy).toHaveBeenCalledWith(intervals.get(0), 0);
-        expect(dataSpy).toHaveBeenCalledWith(intervals.get(1), 1);
-        expect(dataSpy).toHaveBeenCalledWith(intervals.get(2), 2);
+        for (var i = 0; i < 3; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
 
         checkIntervals(intervals, julianDates, true, true, dataCallback);
+    });
+
+    it('fromIso8601 handles leadingInterval option', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
+            isStartIncluded: true,
+            isStopIncluded: false,
+            leadingInterval: true,
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(4);
+        for (var i = 0; i < 4; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
+
+        // Check leading interval
+        var leading = intervals._intervals.shift();
+        expect(JulianDate.compare(leading.start, Iso8601.MINIMUM_VALUE)).toEqual(0);
+        expect(JulianDate.compare(leading.stop, julianDates[0])).toEqual(0);
+        expect(leading.isStartIncluded).toBe(true);
+        expect(leading.isStopIncluded).toBe(false);
+        expect(leading.data).toEqual(dataCallback(leading, 0));
+
+        checkIntervals(intervals, julianDates, true, false, dataCallback);
+    });
+
+    it('fromIso8601 handles trailingInterval option', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
+            isStartIncluded: false,
+            isStopIncluded: true,
+            trailingInterval: true,
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(4);
+        for (var i = 0; i < 4; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
+
+        // Check trailing interval
+        var trailing = intervals._intervals.pop();
+        expect(JulianDate.compare(trailing.start, julianDates[iso8601Dates.length-1])).toEqual(0);
+        expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
+        expect(trailing.isStartIncluded).toBe(false);
+        expect(trailing.isStopIncluded).toBe(true);
+        expect(trailing.data).toEqual(dataCallback(trailing, 4));
+
+        checkIntervals(intervals, julianDates, false, true, dataCallback);
+    });
+
+    it('fromIso8601 handles leadingInterval and trailingInterval option', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+
+        var intervals = TimeIntervalCollection.fromIso8601({
+            iso8601 : iso8601Dates[0] + '/' + iso8601Dates[iso8601Dates.length-1] + '/PT1M',
+            isStartIncluded: false,
+            isStopIncluded: false,
+            leadingInterval: true,
+            trailingInterval: true,
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(5);
+        for (var i = 0; i < 4; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
+
+        // Check leading interval
+        var leading = intervals._intervals.shift();
+        expect(JulianDate.compare(leading.start, Iso8601.MINIMUM_VALUE)).toEqual(0);
+        expect(JulianDate.compare(leading.stop, julianDates[0])).toEqual(0);
+        expect(leading.isStartIncluded).toBe(true);
+        expect(leading.isStopIncluded).toBe(true);
+        expect(leading.data).toEqual(dataCallback(leading, 0));
+
+        // Check trailing interval
+        var trailing = intervals._intervals.pop();
+        expect(JulianDate.compare(trailing.start, julianDates[iso8601Dates.length-1])).toEqual(0);
+        expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
+        expect(trailing.isStartIncluded).toBe(true);
+        expect(trailing.isStopIncluded).toBe(true);
+        expect(trailing.data).toEqual(dataCallback(trailing, 4));
+
+        // Remove leading interval and check the rest
+        checkIntervals(intervals, julianDates, false, false, dataCallback);
     });
 });
