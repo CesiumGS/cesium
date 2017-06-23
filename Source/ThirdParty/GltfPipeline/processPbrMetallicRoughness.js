@@ -192,6 +192,15 @@ define([
         var vertexShader = 'precision highp float;\n';
         var fragmentShader = 'precision highp float;\n';
 
+        var skin = gltf.skins[0];
+        var joints = (defined(skin)) ? skin.joints : [];
+        var jointCount = joints.length;
+        var hasSkinning = jointCount > 0;
+        var skinningInfo = {};
+        if (hasSkinning) {
+            skinningInfo = material.extras._pipeline.skinning;
+        }
+
         var hasNormals = true;
         var hasTangents = false;
         for (var entry in gltf.meshes) {
@@ -228,6 +237,14 @@ define([
             techniqueParameters.normalMatrix = {
                 semantic: 'MODELVIEWINVERSETRANSPOSE',
                 type: WebGLConstants.FLOAT_MAT3
+            };
+        }
+
+        if (hasSkinning) {
+            techniqueParameters.jointMatrix = {
+                count: jointCount,
+                semantic: 'JOINTMATRIX',
+                type: WebGLConstants.FLOAT_MAT4
             };
         }
 
@@ -275,6 +292,36 @@ define([
 
         // Add attributes with semantics
         var vertexShaderMain = '';
+        if (hasSkinning) {
+            var i, j;
+            var numberOfComponents = numberOfComponentsForType(skinningInfo.type);
+            var matrix = false;
+            if (skinningInfo.type.indexOf('MAT') === 0) {
+                matrix = true;
+                numberOfComponents = Math.sqrt(numberOfComponents);
+            }
+            if (!matrix) {
+                for (i = 0; i < numberOfComponents; i++) {
+                    if (i === 0) {
+                        vertexShaderMain += '  mat4 skinMat = ';
+                    } else {
+                        vertexShaderMain += '  skinMat += ';
+                    }
+                    vertexShaderMain += 'a_weight[' + i + '] * u_jointMatrix[int(a_joint[' + i + '])];\n';
+                }
+            } else {
+                for (i = 0; i < numberOfComponents; i++) {
+                    for (j = 0; j < numberOfComponents; j++) {
+                        if (i === 0 && j === 0) {
+                            vertexShaderMain += '  mat4 skinMat = ';
+                        } else {
+                            vertexShaderMain += '  skinMat += ';
+                        }
+                        vertexShaderMain += 'a_weight[' + i + '][' + j + '] * u_jointMatrix[int(a_joint[' + i + '][' + j + '])];\n';
+                    }
+                }
+            }
+        }
 
         // Add position always
         var techniqueAttributes = {
@@ -286,7 +333,11 @@ define([
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_positionEC;\n';
-        vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+        if (hasSkinning) {
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
+        } else {
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+        }
         vertexShaderMain += '  v_positionEC = pos.xyz;\n';
         vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
         fragmentShader += 'varying vec3 v_positionEC;\n';
@@ -300,7 +351,11 @@ define([
             };
             vertexShader += 'attribute vec3 a_normal;\n';
             vertexShader += 'varying vec3 v_normal;\n';
-            vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+            if (hasSkinning) {
+                vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n';
+            } else {
+                vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+            }
 
             fragmentShader += 'varying vec3 v_normal;\n';
         }
@@ -335,11 +390,31 @@ define([
             fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
         }
 
+        if (hasSkinning) {
+            techniqueAttributes.a_joint = 'joint';
+            var attributeType = getShaderVariable(skinningInfo.type);
+            var webGLConstant = glslTypeToWebGLConstant(attributeType);
+
+            techniqueParameters.joint = {
+                semantic: 'JOINT',
+                type: webGLConstant
+            };
+            techniqueAttributes.a_weight = 'weight';
+            techniqueParameters.weight = {
+                semantic: 'WEIGHT',
+                type: webGLConstant
+            };
+
+            vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
+            vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
+        }
+
         // Generate lighting code blocks
 
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
+        console.log(vertexShader);
 
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
@@ -757,37 +832,34 @@ define([
                 var materialId = primitive.material;
                 var material = materials[materialId];
 
-                if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
-                    var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                    var jointAccessorId = primitive.attributes.JOINT;
-                    var componentType;
-                    var type;
-                    if (defined(jointAccessorId)) {
-                        var jointAccessor = accessors[jointAccessorId];
-                        componentType = jointAccessor.componentType;
-                        type = jointAccessor.type;
-                    }
-                    var isSkinned = defined(jointAccessorId);
+                var jointAccessorId = primitive.attributes.JOINTS_0;
+                var componentType;
+                var type;
+                if (defined(jointAccessorId)) {
+                    var jointAccessor = accessors[jointAccessorId];
+                    componentType = jointAccessor.componentType;
+                    type = jointAccessor.type;
+                }
+                var isSkinned = defined(jointAccessorId);
 
-                    var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-                    if (!defined(skinningInfo)) {
-                        khrMaterialsCommon.extras._pipeline.skinning = {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
-                        };
-                    } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
-                        // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
-                        var clonedMaterial = clone(material, true);
-                        clonedMaterial.extensions.KHR_materials_common.extras._pipeline.skinning = {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
-                        };
-                        // Split this off as a separate material
-                        materialId = addToArray(materials, clonedMaterial);
-                        primitive.material = materialId;
-                    }
+                var skinningInfo = material.extras._pipeline.skinning;
+                if (!defined(skinningInfo)) {
+                    material.extras._pipeline.skinning = {
+                        skinned: isSkinned,
+                        componentType: componentType,
+                        type: type
+                    };
+                } else if ((skinningInfo.skinned !== isSkinned) || (skinningInfo.type !== type)) {
+                    // This primitive uses the same material as another one that either isn't skinned or uses a different type to store joints and weights
+                    var clonedMaterial = clone(material, true);
+                    clonedMaterial.material.extras._pipeline.skinning = {
+                        skinned: isSkinned,
+                        componentType: componentType,
+                        type: type
+                    };
+                    // Split this off as a separate material
+                    materialId = addToArray(materials, clonedMaterial);
+                    primitive.material = materialId;
                 }
             });
         });
