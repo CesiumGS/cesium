@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/getMagic',
         '../Core/Intersect',
@@ -38,6 +39,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         getMagic,
         Intersect,
@@ -133,7 +135,10 @@ define([
 
         var refine;
         if (defined(header.refine)) {
-            refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
+            if (header.refine === 'replace' || header.refine === 'add') {
+                Cesium3DTile._deprecationWarning('lowercase-refine', 'This tile uses a lowercase refine "' + header.refine + '". Instead use "' + header.refine.toUpperCase() + '".');
+            }
+            refine = (header.refine.toUpperCase() === 'REPLACE') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
         } else if (defined(parent)) {
             // Inherit from parent tile if omitted.
             refine = parent.refine;
@@ -324,6 +329,9 @@ define([
         this._color = undefined;
         this._colorDirty = false;
     }
+
+    // This can be overridden for testing purposes
+    Cesium3DTile._deprecationWarning = deprecationWarning;
 
     defineProperties(Cesium3DTile.prototype, {
         /**

@@ -1576,6 +1576,8 @@ define([
         }
     }
 
+    var scratchStack = [];
+
     function destroySubtree(tileset, tile) {
         var root = tile;
         var statistics = tileset._statistics;
@@ -1751,8 +1753,6 @@ define([
     Cesium3DTileset.prototype.isDestroyed = function() {
         return false;
     };
-
-    var scratchStack = [];
 
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
