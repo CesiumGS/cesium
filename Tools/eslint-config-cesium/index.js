@@ -31,6 +31,7 @@ module.exports = {
         'no-irregular-whitespace': 'error',
         'no-loop-func': 'error',
         'no-new': 'error',
+        'no-trailing-spaces': ['error'],
         'no-undef': 'error',
         'no-undef-init': 'error',
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
