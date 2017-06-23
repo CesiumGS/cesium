@@ -29,6 +29,44 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+function dataCallback(interval, index) {
+    var time;
+    if (index === 0) { // leading
+        time = Cesium.JulianDate.toIso8601(interval.stop);
+    } else {
+        time = Cesium.JulianDate.toIso8601(interval.start);
+    }
+
+    return {
+        Time: time
+    };
+}
+
+var times1 = Cesium.TimeIntervalCollection.fromIso8601({
+    iso8601: '2015-07-30/2017-06-16/P1D',
+    leadingInterval: true,
+    trailingInterval: true,
+    isStopIncluded: false, // We want stop time to be part of the trailing interval
+    dataCallback: dataCallback
+});
+
+var times2 = Cesium.TimeIntervalCollection.fromIso8601DateArray({
+    iso8601Dates: ['2015-07-30', '2015-07-31', '2015-08-01', '2015-08-02', '2015-08-03', '2015-08-04', '2015-08-05'],
+    leadingInterval: true,
+    trailingInterval: true,
+    isStopIncluded: false, // We want stop time to be part of the trailing interval
+    dataCallback: dataCallback
+});
+
+var times3 = Cesium.TimeIntervalCollection.fromIso8601DurationArray({
+    epoch: Cesium.JulianDate.fromIso8601('2015-07-30'),
+    iso8601Durations: ['P0D', 'P1D', 'P2D', 'P3D', 'P4D', 'P5D', 'P6D'],
+    leadingInterval: true,
+    trailingInterval: true,
+    isStopIncluded: false, // We want stop time to be part of the trailing interval
+    dataCallback: dataCallback
+});
+
 // Add a WMTS imagery layer
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
@@ -38,12 +76,13 @@ imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
     tileMatrixSetID : '2km',
     maximumLevel : 5,
     format : 'image/png',
-    timeDimensionIdentifier : 'Time',
     clock: viewer.clock,
-    timeDimensionValues: ['2015-07-30/2017-06-16/P1D']
+    times: times1
 }));
 
-viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2015-07-31T03:59:40Z');//Sandcastle_End
+viewer.clock.multiplier = 14400;
+viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2015-07-31T03:59:40Z');
+//Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
