@@ -515,7 +515,7 @@ define([
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
-     * 
+     *
      * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {

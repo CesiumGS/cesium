@@ -243,7 +243,7 @@ define([
          * Gets the property specifying whether the geometry
          * casts or receives shadows from each light source.
          * @memberof EllipsoidGeometryUpdater.prototype
-         * 
+         *
          * @type {Property}
          * @readonly
          */
@@ -493,7 +493,7 @@ define([
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
         this._shadowsProperty = defaultValue(ellipsoid.shadows, defaultShadows);
         this._distanceDisplayConditionProperty = defaultValue(ellipsoid.distanceDisplayCondition, defaultDistanceDisplayCondition);
-        
+
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
@@ -621,13 +621,13 @@ define([
         var in3D = sceneMode === SceneMode.SCENE3D;
 
         var options = this._options;
-        
+
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
         var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
         var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
-        
+
         //We only rebuild the primitive if something other than the radii has changed
         //For the radii, we use unit sphere and then deform it with a scale matrix.
         var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
