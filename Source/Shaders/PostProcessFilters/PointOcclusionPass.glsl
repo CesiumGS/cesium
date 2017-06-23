@@ -19,43 +19,69 @@ void modifySectorHistogram(in int index,
                            in float value,
                            inout vec4 shFirst,
                            inout vec4 shSecond) {
-    if (index == 0)
-        shFirst.x = value;
-    else if (index == 1)
-        shFirst.y = value;
-    else if (index == 2)
-        shFirst.z = value;
-    else if (index == 3)
-        shFirst.w = value;
-    else if (index == 4)
-        shSecond.x = value;
-    else if (index == 5)
-        shSecond.y = value;
-    else if (index == 6)
-        shSecond.z = value;
-    else if (index == 7)
-        shSecond.w = value;
+    if (index < 4) {
+        if (index < 2) {
+            if (index == 0) {
+                shFirst.x = value;
+            } else {
+                shFirst.y = value;
+            }
+        } else {
+            if (index == 2) {
+                shFirst.z = value;
+            } else {
+                shFirst.w = value;
+            }
+        }
+    } else {
+        if (index < 6) {
+            if (index == 4) {
+                shSecond.x = value;
+            } else {
+                shSecond.y = value;
+            }
+        } else {
+            if (index == 6) {
+                shSecond.z = value;
+            } else {
+                shSecond.w = value;
+            }
+        }
+    }
 }
 
 float readSectorHistogram(in int index,
                           in vec4 shFirst,
                           in vec4 shSecond) {
-    if (index == 0)
-        return shFirst.x;
-    else if (index == 1)
-        return shFirst.y;
-    else if (index == 2)
-        return shFirst.z;
-    else if (index == 3)
-        return shFirst.w;
-    else if (index == 4)
-        return shSecond.x;
-    else if (index == 5)
-        return shSecond.y;
-    else if (index == 6)
-        return shSecond.z;
-    else if (index == 7)
-        return shSecond.w;
+    if (index < 4) {
+        if (index < 2) {
+            if (index == 0) {
+                return shFirst.x;
+            } else {
+                return shFirst.y;
+            }
+        } else {
+            if (index == 2) {
+                return shFirst.z;
+            } else {
+                return shFirst.w;
+            }
+        }
+    } else {
+        if (index < 6) {
+            if (index == 4) {
+                return shSecond.x;
+            } else {
+                return shSecond.y;
+            }
+        } else {
+            if (index == 6) {
+                return shSecond.z;
+            } else {
+                return shSecond.w;
+            }
+        }
+    }
 }
 
 int getSector(in vec2 d) {
