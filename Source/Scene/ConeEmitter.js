@@ -11,7 +11,7 @@ define([
         Cartesian3,
         Check,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var defaultAngle = CesiumMath.toRadians(30.0);
 

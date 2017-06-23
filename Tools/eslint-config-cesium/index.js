@@ -41,6 +41,7 @@ module.exports = {
         'no-unused-vars': ['error', {vars: 'all', args: 'all'}],
         'no-useless-escape': 'off',
         'no-use-before-define': ['error', 'nofunc'],
+        'quotes': ['error', 'single', {avoidEscape: true}],
         semi: 'error',
         strict: 'error',
         'wrap-iife': ['error', 'any']

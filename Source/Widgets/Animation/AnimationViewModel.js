@@ -174,7 +174,7 @@ define([
             }
 
             //Convert to decimal string and remove any trailing zeroes
-            return multiplier.toFixed(3).replace(/0{0,3}$/, "") + 'x';
+            return multiplier.toFixed(3).replace(/0{0,3}$/, '') + 'x';
         });
 
         /**
@@ -379,9 +379,9 @@ define([
         var gregorianDate = JulianDate.toGregorianDate(date);
         var millisecond = Math.round(gregorianDate.millisecond);
         if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
-            return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
+            return sprintf('%02d:%02d:%02d.%03d', gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
         }
-        return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
+        return sprintf('%02d:%02d:%02d UTC', gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
     };
 
     /**

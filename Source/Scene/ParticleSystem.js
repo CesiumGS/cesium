@@ -31,7 +31,7 @@ define([
         BillboardCollection,
         Particle,
         CircleEmitter) {
-    "use strict";
+    'use strict';
 
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.

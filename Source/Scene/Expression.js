@@ -476,7 +476,7 @@ define([
                 if (j < 0) {
                     throw new RuntimeError('Unmatched {.');
                 }
-                result += "czm_" + exp.substr(i + 2, j - (i + 2));
+                result += 'czm_' + exp.substr(i + 2, j - (i + 2));
                 exp = exp.substr(j + 1);
                 i = exp.indexOf('${');
             }

@@ -9,7 +9,7 @@ define([
     defined,
     sampleTerrain,
     DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.

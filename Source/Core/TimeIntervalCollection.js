@@ -303,7 +303,7 @@ define([
     TimeIntervalCollection.prototype.addInterval = function(interval, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 
@@ -451,7 +451,7 @@ define([
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 
