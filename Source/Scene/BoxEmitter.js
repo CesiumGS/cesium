@@ -11,7 +11,7 @@ define([
         Cartesian3,
         Check,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var defaultDimensions = new Cartesian3(1.0, 1.0, 1.0);
 

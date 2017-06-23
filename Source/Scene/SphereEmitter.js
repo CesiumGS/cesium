@@ -11,7 +11,7 @@ define([
         Cartesian3,
         Check,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A ParticleEmitter that emits particles within a sphere.
