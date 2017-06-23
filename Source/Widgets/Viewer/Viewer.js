@@ -1256,11 +1256,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         if (defined(selectionIndicatorViewModel)) {
                             selectionIndicatorViewModel.animateAppear();
                         }
-                    } else {
+                    } else if (defined(selectionIndicatorViewModel)) {
                         // Leave the info text in place here, it is needed during the exit animation.
-                        if (defined(selectionIndicatorViewModel)) {
-                            selectionIndicatorViewModel.animateDepart();
-                        }
+                        selectionIndicatorViewModel.animateDepart();
                     }
                     this._selectedEntityChanged.raiseEvent(value);
                 }

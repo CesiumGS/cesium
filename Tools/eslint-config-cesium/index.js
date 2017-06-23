@@ -29,6 +29,7 @@ module.exports = {
         'no-extra-boolean-cast': 'off',
         'no-floating-decimal': 'error',
         'no-irregular-whitespace': 'error',
+        'no-lonely-if': 'error',
         'no-loop-func': 'error',
         'no-new': 'error',
         'no-trailing-spaces': ['error'],
