@@ -209,7 +209,8 @@ define([
 
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices * 2);
         var index = 0;
-        for (var i = 0; i < slices - 1; i++) {
+        var i;
+        for (i = 0; i < slices - 1; i++) {
             indices[index++] = i;
             indices[index++] = i + 1;
             indices[index++] = i + slices;
