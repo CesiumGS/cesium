@@ -388,7 +388,7 @@ define([
             }
         } else {
             if (defined(parameterValues.baseColorFactor)) {
-                fragmentShaderMain += '  vec3 baseColor = u_baseColorFactor;\n';
+                fragmentShaderMain += '  vec3 baseColor = u_baseColorFactor.rgb;\n';
             } else {
                 fragmentShaderMain += '  vec3 baseColor = vec3(1.0);\n';
             }

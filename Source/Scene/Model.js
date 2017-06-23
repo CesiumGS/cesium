@@ -2403,8 +2403,8 @@ define([
                 var id = stack.pop();
                 var n = nodes[id];
 
-                if (defined(n.jointName)) {
-                    jointNodes[n.jointName] = id;
+                if (defined(n)) {
+                    jointNodes[id] = id;
                 }
 
                 var children = n.children;
@@ -2438,12 +2438,13 @@ define([
             // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
             // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
             var forest = [];
-            if (defined(node.skeleton)) {
-                forest.push(node.skeleton);
+            var skin = skins[node.skin];
+            if (defined(skin.skeleton)) {
+                forest.push(skin.skeleton);
             }
 
             var mappedJointNames = mapJointNames(forest, nodes);
-            var gltfJointNames = skins[node.skin].jointNames;
+            var gltfJointNames = skins[node.skin].joints;
             var jointNamesLength = gltfJointNames.length;
             for (var i = 0; i < jointNamesLength; ++i) {
                 var jointName = gltfJointNames[i];
