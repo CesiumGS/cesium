@@ -210,7 +210,8 @@ define([
         // in the range we're looking at. Even though this just holds information already
         // available in xTable this is a much more convenient format.
         var zIndices = new Array(length * (inputOrder + 1));
-        for (var i = 0; i < length; i++) {
+        var i;
+        for (i = 0; i < length; i++) {
             for (var j = 0; j < (inputOrder + 1); j++) {
                 zIndices[i * (inputOrder + 1) + j] = i;
             }

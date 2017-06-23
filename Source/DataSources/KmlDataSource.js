@@ -1960,6 +1960,9 @@ define([
         }
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
+            var viewRefreshMode;
+            var viewBoundScale;
+            var queryString;
             if (defined(href)) {
                 var newSourceUri = href;
                 href = resolveHref(href, undefined, sourceUri, uriResolver, query);
@@ -1977,12 +1980,12 @@ define([
                     }
                 } else {
                     newSourceUri = href; // Not a data uri so use the fully qualified uri
-                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
-                    var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                    viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
+                    viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
                     var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
                     var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                     var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                    var queryString = makeQueryString(viewFormat, httpQuery);
+                    queryString = makeQueryString(viewFormat, httpQuery);
 
                     linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
                         viewBoundScale, dataSource._lastCameraView.bbox);
@@ -2637,7 +2640,8 @@ define([
             // Remove old entities
             entityCollection.suspendEvents();
             var entitiesCopy = entityCollection.values.slice();
-            for (var i=0;i<entitiesCopy.length;++i) {
+            var i;
+            for (i=0;i<entitiesCopy.length;++i) {
                 var entityToRemove = entitiesCopy[i];
                 if (entityToRemove.parent === networkLinkEntity) {
                     entityToRemove.parent = undefined;
