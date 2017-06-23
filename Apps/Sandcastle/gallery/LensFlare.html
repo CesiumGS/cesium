@@ -87,12 +87,12 @@ function startup(Cesium) {
     Cesium.knockout.getObservable(viewModel, 'LensFlare_HaloWidth').subscribe(updateSettings);
 
     function updateSettings() {
-        postProcessor.LensFlareStage.show = Boolean(viewModel.LensFlare_Show);
-        postProcessor.LensFlareStage._uniformValues.Intensity = Number(viewModel.LensFlare_Intensity);
-        postProcessor.LensFlareStage._uniformValues.Distortion = Number(viewModel.LensFlare_Distortion);
-        postProcessor.LensFlareStage._uniformValues.GhostDispersal = Number(viewModel.LensFlare_Dispersion);
-        postProcessor.LensFlareStage._uniformValues.HaloWidth = Number(viewModel.LensFlare_HaloWidth);
-        postProcessor.LensFlareStage._uniformValues.EarthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
+        postProcessor.lensFlareStage.show = Boolean(viewModel.LensFlare_Show);
+        postProcessor.lensFlareStage._uniformValues.intensity = Number(viewModel.LensFlare_Intensity);
+        postProcessor.lensFlareStage._uniformValues.distortion = Number(viewModel.LensFlare_Distortion);
+        postProcessor.lensFlareStage._uniformValues.ghostDispersal = Number(viewModel.LensFlare_Dispersion);
+        postProcessor.lensFlareStage._uniformValues.haloWidth = Number(viewModel.LensFlare_HaloWidth);
+        postProcessor.lensFlareStage._uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
     }
 
 //Sandcastle_End

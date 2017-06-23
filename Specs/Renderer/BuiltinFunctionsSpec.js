@@ -125,6 +125,35 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_WorldCoordinatestoNDC', function () {
+
+        var camera = createCamera();
+        camera.frustum.near = 1.0;
+
+        var canvas = context.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        var vp = new BoundingRectangle(0.0, 0.0, width, height);
+        context.uniformState.viewport = vp;
+        context.uniformState.update(createFrameState(context, camera));
+
+        var fs =
+            'void main() { ' +           
+            '  vec4 worldCoordinates4 = vec4(0.0, 0.0, 0.0, 1.0);' +
+            '  vec4 eyeCoordinates4 = czm_view * worldCoordinates4;' +
+            '  worldCoordinates4 = czm_eyeToWindowCoordinates(eyeCoordinates4);' +
+            '  vec4 result = czm_viewportOrthographic * vec4(worldCoordinates4.xy, -worldCoordinates4.z, 1.0);' +
+            '  vec4 actual = czm_WorldCoordinatestoNDC(worldCoordinates4.xyz);' +
+            '  vec3 diff = actual.xyz - result.xyz;' +
+            '  gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
+            '}';
+
+        expect({
+            context: context,
+            fragmentShader: fs
+        }).contextToRender();
+    });
+
     it('has czm_tangentToEyeSpaceMatrix', function() {
         var fs =
             'void main() { ' +
