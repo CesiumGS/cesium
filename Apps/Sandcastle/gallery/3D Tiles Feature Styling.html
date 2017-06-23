@@ -33,99 +33,12 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table>
-        <tbody>
-        <tr>
-            <td>Red Shift</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: redShift, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: redShift">
-            </td>
-        </tr>
-        <tr>
-            <td>Red Amplitude</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: redAmplitude, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: redAmplitude">
-            </td>
-        </tr>
-        <tr>
-            <td>Red Frequency</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: redFrequency, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: redFrequency">
-            </td>
-        </tr>
-        <tr>
-            <td>Red Phase</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: redPhase, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: redPhase">
-            </td>
-        </tr>
-        <tr>
-            <td>Green Shift</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: greenShift, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: greenShift">
-            </td>
-        </tr>
-        <tr>
-            <td>Green Amplitude</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: greenAmplitude, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: greenAmplitude">
-            </td>
-        </tr>
-        <tr>
-            <td>Green Frequency</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: greenFrequency, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: greenFrequency">
-            </td>
-        </tr>
-        <tr>
-            <td>Green Phase</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: greenPhase, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: greenPhase">
-            </td>
-        </tr>
-        <tr>
-            <td>Blue Shift</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: blueShift, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: blueShift">
-            </td>
-        </tr>
-        <tr>
-            <td>Blue Amplitude</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: blueAmplitude, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: blueAmplitude">
-            </td>
-        </tr>
-        <tr>
-            <td>Blue Frequency</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: blueFrequency, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: blueFrequency">
-            </td>
-        </tr>
-        <tr>
-            <td>Blue Phase</td>
-            <td>
-                <input type="range" min="0" max="1" step="0.01" data-bind="value: bluePhase, valueUpdate: 'input'">
-                <input type="text" size="5" data-bind="value: bluePhase">
-            </td>
-        </tr>
-        </tbody></table>
 <script id="cesium_sandcastle_script">
     function startup(Cesium) {
         'use strict';
 //Sandcastle_Begin
 // A demo of interactive 3D Tiles styling
-// based on IQs procedural color palettes: http://iquilezles.org/www/articles/palettes/palettes.htm
+// Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // Set the initial camera view to look at Manhattan
@@ -145,99 +58,107 @@ var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     maximumScreenSpaceError: 16 // default value
 }));
 
-var NUMBER_OF_BINS = 50;
-var MAX_HEIGHT = 400;
-var BIN_SIZE = MAX_HEIGHT / NUMBER_OF_BINS;
-
-//The current 3D Tiles style definition.
-var currentStyle = {
-    show: "${height} > 0",
-    color: undefined
-};
-
-// The viewModel tracks the color parameters of our mini application.
-var viewModel = {
-    redShift : 0.5,
-    redAmplitude : 0.5,
-    redFrequency : 1,
-    redPhase : 0,
-    greenShift : 0.5,
-    greenAmplitude : 0.5,
-    greenFrequency : 1,
-    greenPhase : 0.33,
-    blueShift : 0.5,
-    blueAmplitude : 0.5,
-    blueFrequency : 1,
-    bluePhase : 0.66
-};
-
-// Compute a color value within a procedural color palette.
-function getColorChannel(shift, amplitude, frequency, phase, t) {
-    return shift + amplitude * Math.cos(Math.PI * 2 * (frequency * t + phase)) * 255;
-}
-
-// Recompute the feature colors.
-var featureColors = [];
-function makeFeatureColors() {
-    featureColors = [];
-    for (var i=0; i < NUMBER_OF_BINS; ++i) {
-        var t = i / NUMBER_OF_BINS;
-        var r = getColorChannel(viewModel["redShift"], viewModel["redAmplitude"], viewModel["redFrequency"], viewModel["redPhase"], t);
-        var g = getColorChannel(viewModel["greenShift"], viewModel["greenAmplitude"], viewModel["greenFrequency"], viewModel["greenPhase"], t);
-        var b = getColorChannel(viewModel["blueShift"], viewModel["blueAmplitude"], viewModel["blueFrequency"], viewModel["bluePhase"], t);
-
-        featureColors.push(r + ", " + g + ", " + b);
-    }
-}
-
-function updateStyle() {
-    var conditions = [];
-    makeFeatureColors();
-    for (var i = 0; i < NUMBER_OF_BINS; i++) {
-        // Add a height based color condition for each bin
-        if (i === NUMBER_OF_BINS - 1) {
-            conditions[i] = ['true', "color('white')"];
-        } else {
-            conditions[i] = ['${height} < ' + BIN_SIZE * i, "rgb(" + featureColors[i] + ")"];
+function colorByHeight() {
+    city.style = new Cesium.Cesium3DTileStyle({
+        color: {
+            conditions: [
+                ["${height} >= 400", "color('purple', 0.5)"],
+                ["${height} >= 300", "color('red')"],
+                ["${height} >= 200", "color('orange')"],
+                ["${height} >= 150", "color('yellow')"],
+                ["${height} >= 100", "color('lime')"],
+                ["${height} >= 50", "color('cyan')"],
+                ["true", "color('blue')"]
+            ]
+        },
+        meta: {
+            description: "'Building id ${id} has height ${Height}.'"
         }
+    });
+}
+
+function hideByHeight() {
+    city.style = new Cesium.Cesium3DTileStyle({
+        "show" : "${height} > 200 && ${height} < 400",
+        "color" : "color('red')"
+    });
+}
+
+function colorByPosition() {
+    city.style = new Cesium.Cesium3DTileStyle({
+        color: {
+            conditions: [
+                ["${latitude} >= 0.7125", "color('purple', 0.5)"],
+                ["${latitude} >= 0.712", "color('red')"],
+                ["${latitude} >= 0.7115", "color('orange')"],
+                ["${latitude} >= 0.711", "color('yellow')"],
+                ["${latitude} >= 0.7105", "color('lime')"],
+                ["${latitude} >= 0.710", "color('cyan')"],
+                ["true", "color('blue')"]
+            ]
+        },
+        meta: {
+            description: "'Building id ${id} has height ${Height}.'"
+        }
+    });
+}
+
+function colorByNameRegex() {
+    city.style = new Cesium.Cesium3DTileStyle({
+        "color" : "(regExp('3').test(${name})) ? color('cyan', 0.9) : color('purple', 0.9)"
+    });
+}
+
+function colorByArea() {
+    city.style = new Cesium.Cesium3DTileStyle({
+        color: {
+            conditions: [
+                ["${area} >= 2000", "color('purple', 0.5)"],
+                ["${area} >= 1000", "color('red')"],
+                ["${area} >= 500", "color('orange')"],
+                ["${area} >= 350", "color('yellow')"],
+                ["${area} >= 200", "color('lime')"],
+                ["${area} >= 100", "color('cyan')"],
+                ["true", "color('blue')"]
+            ]
+        },
+        meta: {
+            description: "'Building id ${id} has height ${Height}.'"
+        }
+    });
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Color By Height',
+    onselect : function() {
+        colorByHeight();
+        Sandcastle.highlight(colorByHeight);
     }
-
-    // Apply the new style
-    currentStyle.color = {
-        conditions: conditions
-    };
-    city.style = new Cesium.Cesium3DTileStyle(currentStyle);
-}
-
-// When the tileset is loaded, apply styling
-city.readyPromise.then(function(tileset) {
-    updateStyle();
-});
-
-// Convert the viewModel members into knockout observables.
-Cesium.knockout.track(viewModel);
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-// Make the updateStyle function subscribe to the viewModel.
-function subscribeParameter(name) {
-    Cesium.knockout.getObservable(viewModel, name).subscribe(
-        updateStyle
-    );
-}
-
-subscribeParameter('redShift');
-subscribeParameter('redAmplitude');
-subscribeParameter('redFrequency');
-subscribeParameter('redPhase');
-subscribeParameter('greenShift');
-subscribeParameter('greenAmplitude');
-subscribeParameter('greenFrequency');
-subscribeParameter('greenPhase');
-subscribeParameter('blueShift');
-subscribeParameter('blueAmplitude');
-subscribeParameter('blueFrequency');
-subscribeParameter('bluePhase');
+},{
+    text : 'Color By Area',
+    onselect : function() {
+        colorByArea();
+        Sandcastle.highlight(colorByArea);
+    }
+},{
+    text : 'Color By Position',
+    onselect : function() {
+        colorByPosition();
+        Sandcastle.highlight(colorByPosition);
+    }
+},{
+    text : 'Hide By Height',
+    onselect : function() {
+        hideByHeight();
+        Sandcastle.highlight(hideByHeight);
+    }
+},{
+    text : 'Color By Name Regex',
+    onselect : function() {
+        colorByNameRegex();
+        Sandcastle.highlight(colorByNameRegex);
+    }
+}]);
 //Sandcastle_End
         Sandcastle.finishedLoading();
     }
