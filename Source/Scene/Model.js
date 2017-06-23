@@ -1548,13 +1548,15 @@ define([
     function parseTextures(model, context) {
         var images = model.gltf.images;
         var textures = model.gltf.textures;
+        var binary;
+        var uri;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var gltfImage = images[textures[id].source];
                 var extras = gltfImage.extras;
 
-                var binary;
-                var uri;
+                binary = undefined;
+                uri = undefined;
 
                 // First check for a compressed texture
                 if (defined(extras) && defined(extras.compressedImage3DTiles)) {
