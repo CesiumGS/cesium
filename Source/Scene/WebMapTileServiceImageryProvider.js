@@ -653,20 +653,30 @@ define([
         var key;
         var timeDependent = defined(this._times);
         var tilesRequestedForInterval = this._tilesRequestedForInterval;
+        var times = this._times;
+        var currentIntervalIndex = this._currentIntervalIndex;
+        var currentInterval;
 
         // Try and load from cache
         if (timeDependent) {
+            currentInterval = times.get(currentIntervalIndex);
+
             key = getKey(x, y, level);
-            var cache = this._tileCache[this._currentIntervalIndex];
+            var cache = this._tileCache[currentIntervalIndex];
             if (defined(cache) && defined(cache[key])) {
-                result = cache[key].promise;
+                var item = cache[key];
+                result = item.promise
+                    .otherwise(function(e) {
+                        // Set the correct state in case it was cancelled
+                        request.state = item.request.state;
+                        throw e;
+                    });
                 delete cache[key];
             }
         }
 
         // Couldn't load from cache
         if (!defined(result)) {
-            var currentInterval = this._times.get(this._currentIntervalIndex);
             var url = buildImageUrl(this, x, y, level, defined(currentInterval) ? currentInterval.data : undefined);
             result = ImageryProvider.loadImage(this, url, request);
         }
