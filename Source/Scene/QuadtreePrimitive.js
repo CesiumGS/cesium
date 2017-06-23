@@ -767,7 +767,8 @@ define([
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            for (var i = primitive._lastTileIndex; i < customDataLength; ++i) {
+            var i;
+            for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
 
                 if (tile.level > data.level) {
