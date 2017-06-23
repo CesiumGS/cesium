@@ -4,6 +4,7 @@
 #define neighborhoodFullWidth 3
 #define neighborhoodSize 8
 #define EPS 1e-6
+#define SQRT2 1.414213562
 
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_depthTexture;
@@ -71,6 +72,34 @@ void genericMedianFinder(in float[neighborhoodSize] neighbors,
     outColor = vec4(1, 0, 0, 1);
 }
 
+void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
+                   inout vec4[neighborhoodSize] colorNeighbors) {
+    bool pastCenter = false;
+    for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
+        for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
+            ivec2 d = ivec2(i, j);
+            if (d == ivec2(0, 0)) {
+                pastCenter = true;
+                continue;
+            }
+            vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
+            float neighbor = texture2D(pointCloud_depthTexture, neighborCoords).r;
+            vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
+            if (pastCenter) {
+                depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
+                    neighbor;
+                colorNeighbors[(j + 1) * neighborhoodFullWidth + i] =
+                    colorNeighbor;
+            } else {
+                depthNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
+                    neighbor;
+                colorNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
+                    colorNeighbor;
+            }
+        }
+    }
+}
+
 void main() {
     vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
     float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r;
@@ -78,36 +107,22 @@ void main() {
     vec4 finalColor = color;
     float finalDepth = depth;
 
+    float depthNeighbors[neighborhoodSize];
+    vec4 colorNeighbors[neighborhoodSize];
+    float rIs[neighborhoodSize];
+    rIs[0] = SQRT2;
+    rIs[1] = 1.0;
+    rIs[2] = SQRT2;
+    rIs[3] = 1.0;
+    rIs[4] = 1.0;
+    rIs[5] = SQRT2;
+    rIs[6] = 1.0;
+    rIs[7] = SQRT2;
+
+    loadIntoArray(depthNeighbors, colorNeighbors);
+
     // If our depth value is invalid
     if (depth > 1.0 - EPS) {
-        float depthNeighbors[neighborhoodSize];
-        vec4 colorNeighbors[neighborhoodSize];
-
-        int pastCenter = 0;
-        for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
-            for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
-                ivec2 d = ivec2(i, j);
-                if (d == ivec2(0, 0)) {
-                    pastCenter = 1;
-                    continue;
-                }
-                vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-                float neighbor = texture2D(pointCloud_depthTexture, neighborCoords).r;
-                vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
-                if (pastCenter == 1) {
-                    depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
-                        neighbor;
-                    colorNeighbors[(j + 1) * neighborhoodFullWidth + i] =
-                        colorNeighbor;
-                } else {
-                    depthNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
-                        neighbor;
-                    colorNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
-                        colorNeighbor;
-                }
-            }
-        }
-
 #if neighborhoodFullWidth == 3
         fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
@@ -120,33 +135,28 @@ void main() {
         vec4 colorAccum = vec4(0);
         float normalization = 0.0;
 
-        for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
-            for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
-                ivec2 d = ivec2(i, j);
+        for (int i = 0; i < neighborhoodSize; i++) {
+            float neighbor = depthNeighbors[i];
+            vec4 colorNeighbor = colorNeighbors[i];
+            float rI = rIs[i];
 
-                // Does this even make sense?
-                /*if (d == ivec2(0, 0)) {
-                    continue;
-                }*/
-
-                float rI = sqrt(float(d.x * d.x + d.y * d.y));
-
-                vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-                float neighbor = texture2D(pointCloud_depthTexture, neighborCoords).r;
-                vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
-
+            if (neighbor < 1.0 - EPS) {
                 float depthDelta = abs(neighbor - depth);
 
-                float weight = (1.0 - rI / 2.0) * (1.0 - min(1.0, depthDelta / max(1e-5,
-                                                   rangeParameter)));
-                depthAccum += weight * neighbor;
-                colorAccum += weight * colorNeighbor;
+                float weight =
+                    (1.0 - rI / 2.0) *
+                    (1.0 - min(1.0, depthDelta / max(1e-5, rangeParameter)));
+
+                depthAccum += neighbor * weight;
+                colorAccum += colorNeighbor * weight;
                 normalization += weight;
             }
         }
 
-        finalDepth = depthAccum / normalization;
-        finalColor = colorAccum / normalization;
+        if (depthAccum > EPS) {
+            finalDepth = depthAccum / normalization;
+            finalColor = colorAccum / normalization;
+        }
     }
 
     gl_FragColor = finalColor;
