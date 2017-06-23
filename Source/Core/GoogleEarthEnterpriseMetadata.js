@@ -211,10 +211,8 @@ define([
                 if (!isBitSet(x, bitmask)) { // Right to left
                     digit |= 1;
                 }
-            } else {
-                if (isBitSet(x, bitmask)) { // Left to right
-                    digit |= 1;
-                }
+            } else if (isBitSet(x, bitmask)) { // Left to right
+                digit |= 1;
             }
 
             quadkey += digit;

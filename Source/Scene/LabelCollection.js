@@ -219,12 +219,10 @@ define([
                     // no texture, and therefore no billboard, for this glyph.
                     // so, completely unbind glyph.
                     unbindGlyph(labelCollection, glyph);
-                } else {
+                } else if (defined(glyph.textureInfo)) {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (defined(glyph.textureInfo)) {
-                        glyph.textureInfo = undefined;
-                    }
+                    glyph.textureInfo = undefined;
                 }
             } else {
                 // create a glyph object

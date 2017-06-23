@@ -108,20 +108,16 @@ define([
         if (updater.fillEnabled) {
             if (updater.onTerrain) {
                 that._groundColorBatch.add(time, updater);
-            } else {
-                if (updater.isClosed) {
-                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                        that._closedColorBatches[index].add(time, updater);
-                    } else {
-                        that._closedMaterialBatches[index].add(time, updater);
-                    }
+            } else if (updater.isClosed) {
+                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                    that._closedColorBatches[index].add(time, updater);
                 } else {
-                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                        that._openColorBatches[index].add(time, updater);
-                    } else {
-                        that._openMaterialBatches[index].add(time, updater);
-                    }
+                    that._closedMaterialBatches[index].add(time, updater);
                 }
+            } else if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                that._openColorBatches[index].add(time, updater);
+            } else {
+                that._openMaterialBatches[index].add(time, updater);
             }
         }
     }

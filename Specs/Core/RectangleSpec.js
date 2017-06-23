@@ -586,7 +586,7 @@ defineSuite([
         expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
         expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
     });
-    
+
     it('union works without a result parameter', function() {
         var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
         var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);

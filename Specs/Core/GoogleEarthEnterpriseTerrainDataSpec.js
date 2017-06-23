@@ -107,7 +107,8 @@ defineSuite([
             offset += sizeOfInt32;
 
             // Points
-            for (var j = 0; j < 4; ++j) {
+            var j;
+            for (j = 0; j < 4; ++j) {
                 var xPos = 0;
                 var yPos = 0;
                 var altitude = altitudeStart;

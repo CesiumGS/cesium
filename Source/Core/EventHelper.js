@@ -24,7 +24,7 @@ define([
      *
      * // later...
      * helper.removeAll();
-     * 
+     *
      * @see Event
      */
     function EventHelper() {

@@ -76,19 +76,17 @@ define([
             for (var i = 0; i < length; ++i) {
                 tileset._desiredTiles.push(leaves.get(i));
             }
+        } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
+            tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
         } else {
-            if (tileset.immediatelyLoadDesiredLevelOfDetail) {
-                tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
-            } else {
-                // leaves of the base traversal is where we start the skip traversal
-                tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
+            // leaves of the base traversal is where we start the skip traversal
+            tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 
-                // load and select tiles without skipping up to tileset.baseScreenSpaceError
-                tileset._baseTraversal.execute(tileset, root, tileset.baseScreenSpaceError, frameState, outOfCore);
+            // load and select tiles without skipping up to tileset.baseScreenSpaceError
+            tileset._baseTraversal.execute(tileset, root, tileset.baseScreenSpaceError, frameState, outOfCore);
 
-                // skip traversal starts from a prepopulated queue from the base traversal
-                tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
-            }
+            // skip traversal starts from a prepopulated queue from the base traversal
+            tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
         }
 
         // mark tiles for selection or their nearest loaded ancestor
