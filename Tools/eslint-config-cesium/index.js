@@ -32,6 +32,7 @@ module.exports = {
         'no-lonely-if': 'error',
         'no-loop-func': 'error',
         'no-new': 'error',
+        'no-sequences': 'error',
         'no-trailing-spaces': ['error'],
         'no-undef': 'error',
         'no-undef-init': 'error',
