@@ -47,6 +47,17 @@ define([
         ImageryProvider) {
     'use strict';
 
+    function getDataCallback(defaultTimeValue) {
+        return function(interval, index) {
+            if (index === 0) { // leading
+                return defaultValue(defaultTimeValue, JulianDate.toIso8601(interval.stop));
+            } else if(JulianDate.compare(interval.stop, Iso8601.MAXIMUM_VALUE) === 0) { //trailing
+                return defaultValue(defaultTimeValue, JulianDate.toIso8601(interval.start));
+            }
+            return JulianDate.toIso8601(interval.start);
+        };
+    }
+
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
      * This provider supports HTTP KVP-encoded and RESTful GetTile requests, but does not yet support the SOAP encoding.
@@ -160,8 +171,8 @@ define([
         var clock = options.clock;
         var timeDimensionValues = options.timeDimensionValues;
         if (defined(clock) && defined(timeDimensionValues) && timeDimensionValues.length > 0) {
+            var dataCallback = getDataCallback(options.timeDimensionDefaultValue);
             this._clock = clock;
-            var timeDimensionDefaultValue = options.timeDimensionDefaultValue;
             if (timeDimensionValues.length === 1) {
                 var value = timeDimensionValues[0];
                 //>>includeStart('debug', pragmas.debug);
@@ -170,42 +181,20 @@ define([
                 }
                 //>>includeEnd('debug');
                 this._timeDimensionIntervals = TimeIntervalCollection.fromIso8601({
-                    iso8601 : value,
+                    iso8601: value,
+                    isStopIncluded: false,
                     leadingInterval: true,
                     trailingInterval: true,
-                    dataCallback: function(interval, index) {
-                        if (index === 0) { // leading
-                            return defaultValue(timeDimensionDefaultValue, JulianDate.toIso8601(interval.stop));
-                        } else if(JulianDate.compare(interval.stop, Iso8601.MAXIMUM_VALUE) === 0) { //trailing
-                            return defaultValue(timeDimensionDefaultValue, JulianDate.toIso8601(interval.start));
-                        }
-                        return JulianDate.toIso8601(interval.start);
-                    }
+                    dataCallback: dataCallback
                 });
             } else {
-                var timeDimensionIntervals = this._timeDimensionIntervals = new TimeIntervalCollection();
-                var valueCount = timeDimensionValues.length;
-
-                // Add a default interval, which will only end up being used up to first interval
-                var defaultInterval = TimeInterval.clone(Iso8601.MAXIMUM_INTERVAL);
-                defaultInterval.data = defaultValue(timeDimensionDefaultValue, timeDimensionValues[0]);
-                timeDimensionIntervals.addInterval(defaultInterval);
-
-                var startDate = JulianDate.fromIso8601(timeDimensionValues[0]);
-                for (var i = 0; i < valueCount; ++i) {
-                    var v = timeDimensionValues[i];
-                    var endDate = (i < valueCount - 1) ? JulianDate.fromIso8601(timeDimensionValues[i + 1]) : Iso8601.MAXIMUM_VALUE;
-
-                    timeDimensionIntervals.addInterval(new TimeInterval({
-                        start : startDate,
-                        stop : endDate,
-                        isStartIncluded : true,
-                        isStopIncluded : (i === (valueCount - 1)), // True for last interval only
-                        data : v // String must be exact
-                    }));
-
-                    startDate = endDate;
-                }
+                this._timeDimensionIntervals = TimeIntervalCollection.fromIso8601Array({
+                    iso8601Array : timeDimensionValues,
+                    isStopIncluded: false,
+                    leadingInterval: true,
+                    trailingInterval: true,
+                    dataCallback: dataCallback
+                });
             }
 
             clock.onTick.addEventListener(this._clockOnTick, this);

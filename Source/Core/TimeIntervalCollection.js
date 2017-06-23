@@ -801,8 +801,8 @@ define([
      * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
      * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
      * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
-     * @param {TimeInterval} [result] An existing instance to use for the result.
-     * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
      */
     TimeIntervalCollection.fromIso8601 = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -876,6 +876,87 @@ define([
         if (trailingInterval) {
             interval = new TimeInterval({
                 start: stop,
+                stop: Iso8601.MAXIMUM_VALUE,
+                isStartIncluded: !isStopIncluded,
+                isStopIncluded: true
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        return result;
+    };
+
+    /**
+     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String[]} options.iso8601Array An array of ISO 8601 dates.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601Array = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601Array)) {
+            throw new DeveloperError('options.iso8601Array is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new TimeIntervalCollection();
+        }
+
+        var iso8601Array = options.iso8601Array;
+        var length = iso8601Array.length;
+        var dataCallback = options.dataCallback;
+
+        var isStartIncluded = defaultValue(options.isStartIncluded, true);
+        var isStopIncluded = defaultValue(options.isStopIncluded, true);
+        var leadingInterval = defaultValue(options.leadingInterval, false);
+        var trailingInterval = defaultValue(options.trailingInterval, false);
+        var interval;
+
+        // Add a default interval, which will only end up being used up to first interval
+        var startIndex = 0;
+        if (leadingInterval) {
+            ++startIndex;
+            interval = new TimeInterval({
+                start: Iso8601.MINIMUM_VALUE,
+                stop: JulianDate.fromIso8601(iso8601Array[0]),
+                isStartIncluded: true,
+                isStopIncluded: !isStartIncluded
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        for (var i = 0; i < length-1; ++i) {
+            var startDate = JulianDate.fromIso8601(iso8601Array[i]);
+            var endDate = JulianDate.fromIso8601(iso8601Array[i + 1]);
+
+            interval = new TimeInterval({
+                start : startDate,
+                stop : endDate,
+                isStartIncluded : (result.length === startIndex) ? isStartIncluded : true,
+                isStopIncluded : (i === (length-2)) ? isStopIncluded : false
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+
+            startDate = endDate;
+        }
+
+        if (trailingInterval) {
+            interval = new TimeInterval({
+                start: JulianDate.fromIso8601(iso8601Array[length-1]),
                 stop: Iso8601.MAXIMUM_VALUE,
                 isStartIncluded: !isStopIncluded,
                 isStopIncluded: true
