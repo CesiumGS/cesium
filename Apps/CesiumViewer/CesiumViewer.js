@@ -165,7 +165,7 @@ define([
             });
         }
     }
-    
+
     var camera = viewer.camera;
     function saveCamera() {
         var position = camera.positionCartographic;

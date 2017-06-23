@@ -130,7 +130,6 @@ define([
         }
 
         var context = frameState.context;
-        var that = this;
 
         if (this._sources !== this.sources) {
             this._sources = this.sources;
