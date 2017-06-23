@@ -928,7 +928,7 @@ define([
     };
 
     /**
-     * Creates a new instance from an array of {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} dates.
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} date array.
      *
      * @param {Object} options Object with the following properties:
      * @param {String[]} options.iso8601Dates An array of ISO 8601 dates.
@@ -940,7 +940,7 @@ define([
      * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
      * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
      */
-    TimeIntervalCollection.fromIso8601Dates = function(options, result) {
+    TimeIntervalCollection.fromIso8601DateArray = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -963,7 +963,7 @@ define([
     };
 
     /**
-     * Creates a new instance from an array of {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} durations.
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration array.
      *
      * @param {Object} options Object with the following properties:
      * @param {JulianDate} options.epoch An date that the durations are relative to.
@@ -977,7 +977,7 @@ define([
      * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
      * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
      */
-    TimeIntervalCollection.fromIso8601Durations = function(options, result) {
+    TimeIntervalCollection.fromIso8601DurationArray = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
