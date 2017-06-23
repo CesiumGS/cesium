@@ -9,6 +9,7 @@ Change Log
 * Enable [no-alert](http://eslint.org/docs/rules/no-alert).
 * Enable [no-loop-func](http://eslint.org/docs/rules/no-loop-func).
 * Enable [no-undef-init](http://eslint.org/docs/rules/no-undef-init).
+* Enable [default-case](http://eslint.org/docs/rules/default-case).
 * Enable [no-implicit-globals](http://eslint.org/docs/rules/no-implicit-globals).
 * Enable [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces).
 * Enable [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if).

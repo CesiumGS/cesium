@@ -129,6 +129,7 @@ define([
                     gl.vertexAttrib4fv(this.index, this.value);
                 };
                 break;
+            // no default
             }
 
             attr.disableVertexAttribArray = function(gl) {

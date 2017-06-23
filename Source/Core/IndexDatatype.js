@@ -66,11 +66,11 @@ define([
                 return Uint16Array.BYTES_PER_ELEMENT;
             case IndexDatatype.UNSIGNED_INT:
                 return Uint32Array.BYTES_PER_ELEMENT;
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
+            //>>includeEnd('debug');
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
-        //>>includeEnd('debug');
     };
 
     /**

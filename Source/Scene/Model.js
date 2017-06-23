@@ -3284,6 +3284,8 @@ define([
                                 setUniforms[uniformVariableScale] = true;
                                 setUniforms[uniformVariableTranslate] = true;
                                 break;
+                            default:
+                                throw new RuntimeError('Unknown type: ' + a.type);
                         }
                     }
                 }

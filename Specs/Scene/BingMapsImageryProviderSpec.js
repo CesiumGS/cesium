@@ -90,7 +90,7 @@ defineSuite([
     });
 
     function createFakeMetadataResponse(mapStyle) {
-        var stylePrefix = 'a';
+        var stylePrefix;
         switch (mapStyle) {
         case BingMapsStyle.AERIAL_WITH_LABELS:
             stylePrefix = 'h';
@@ -98,6 +98,8 @@ defineSuite([
         case BingMapsStyle.ROAD:
             stylePrefix = 'r';
             break;
+        default:
+           stylePrefix = 'a';
         }
 
         return {

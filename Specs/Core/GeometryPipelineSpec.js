@@ -2902,4 +2902,14 @@ defineSuite([
             return GeometryPipeline.splitLongitude();
         }).toThrowDeveloperError();
     });
+
+    it('splitLongitude throws when geometry instance.geometry.geometryType is an unhandled case', function() {
+        expect(function() {
+            return GeometryPipeline.splitLongitude(new GeometryInstance({
+                geometry : {
+                    geometryType : ""
+                }
+            }));
+        }).toThrowDeveloperError();
+    });
 });

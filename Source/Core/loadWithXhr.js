@@ -149,10 +149,10 @@ define([
                 return parser.parseFromString(decodeDataUriText(isBase64, data), mimeType);
             case 'json':
                 return JSON.parse(decodeDataUriText(isBase64, data));
+            //>>includeStart('debug', pragmas.debug);
             default:
-                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Unhandled responseType: ' + responseType);
-                //>>includeEnd('debug');
+            //>>includeEnd('debug');
         }
     }
 

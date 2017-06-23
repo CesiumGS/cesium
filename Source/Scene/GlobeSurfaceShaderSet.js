@@ -2,12 +2,14 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
         '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
+        DeveloperError,
         TerrainQuantization,
         ShaderProgram,
         SceneMode) {
@@ -51,6 +53,10 @@ define([
         case SceneMode.MORPHING:
             positionMode = getPositionMorphingMode;
             break;
+        //>>includeStart('debug', pragmas.debug);
+        default:
+            throw new DeveloperError('Unknown sceneMode: ' + sceneMode);
+        //>>includeEnd('debug');
         }
 
         return positionMode;

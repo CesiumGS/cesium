@@ -1678,9 +1678,9 @@ define([
             return indexLineLoop(geometry);
         case PrimitiveType.LINES:
             return indexLines(geometry);
+        default:
+            return geometry;
         }
-
-        return geometry;
     }
 
     function offsetPointFromXZPlane(p, isBehind) {
@@ -2546,6 +2546,10 @@ define([
             case GeometryType.LINES:
                 splitLongitudeLines(instance);
                 break;
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new DeveloperError('Unknown geometryType: ' + geometry.geometryType);
+            //>>includeEnd('debug');
             }
         } else {
             indexPrimitive(geometry);

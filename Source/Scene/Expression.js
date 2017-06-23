@@ -1735,6 +1735,9 @@ define([
                 if (value === 'tiles3d_tileset_time') {
                     return 'u_tilesetTime';
                 }
+                break;
+            default:
+                throw new RuntimeError('Error generating style shader: Invalid expression type.');
         }
     };
 

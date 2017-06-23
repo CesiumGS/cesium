@@ -401,9 +401,6 @@ define([
                 width : 16,
                 height : 16
             });
-        } else if (terrainState === TerrainState.NONE) {
-            // Already have info and there isn't any terrain here
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         // Figure out where we are getting the terrain and what version
@@ -430,6 +427,11 @@ define([
                     }
                 }
                 break;
+            case TerrainState.NONE:
+                // Already have info and there isn't any terrain here
+                return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+            default:
+                return when.reject(new RuntimeError('TerrainState not recognized'));
         }
 
         // We can't figure out where to get the terrain
