@@ -1003,6 +1003,8 @@ define([
     var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
 
     function computeCascades(shadowMap, frameState) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -1127,8 +1129,6 @@ define([
     var scratchLightView = new Matrix4();
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
-    var scratchMin = new Cartesian3();
-    var scratchMax = new Cartesian3();
     var scratchTranslation = new Cartesian3();
 
     function fitShadowMapToScene(shadowMap, frameState) {

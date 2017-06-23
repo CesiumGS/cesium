@@ -886,6 +886,8 @@ require({
         scheduleHintNoChange();
     });
 
+    var searchContainer;
+
     function hideSearchContainer() {
         if (dom.byId('searchContainer')) {
             var innerPanel = registry.byId('innerPanel');
@@ -1292,7 +1294,6 @@ require({
         });
     }
 
-    var searchContainer;
     when(promise).then(function() {
         dom.byId('searchDemos').appendChild(galleryErrorMsg);
         searchContainer = registry.byId('searchContainer');

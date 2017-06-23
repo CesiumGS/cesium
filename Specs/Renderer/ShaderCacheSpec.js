@@ -112,7 +112,6 @@ defineSuite([
 
         var cache = new ShaderCache(context);
         var sp = cache.replaceShaderProgram({
-            shaderProgram : sp,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
             attributeLocations : attributeLocations
