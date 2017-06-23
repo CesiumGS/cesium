@@ -10,6 +10,8 @@ Change Log
 * Enable [no-loop-func](http://eslint.org/docs/rules/no-loop-func).
 * Enable [no-undef-init](http://eslint.org/docs/rules/no-undef-init).
 * Enable [no-implicit-globals](http://eslint.org/docs/rules/no-implicit-globals).
+* Enable [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces).
+* Enable [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if).
 * Enable [block-scoped-var](http://eslint.org/docs/rules/block-scoped-var).
 
 ### 1.0.0 - 2017-06-12

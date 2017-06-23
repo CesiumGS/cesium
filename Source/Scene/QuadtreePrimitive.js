@@ -587,20 +587,18 @@ define([
                 queueChildTileLoad(primitive, northeast);
                 queueChildTileLoad(primitive, southeast);
             }
+        } else if (cameraPosition.latitude < southwest.north) {
+            // Camera southeast quadrant
+            queueChildTileLoad(primitive, southeast);
+            queueChildTileLoad(primitive, southwest);
+            queueChildTileLoad(primitive, northeast);
+            queueChildTileLoad(primitive, northwest);
         } else {
-            if (cameraPosition.latitude < southwest.north) {
-                // Camera southeast quadrant
-                queueChildTileLoad(primitive, southeast);
-                queueChildTileLoad(primitive, southwest);
-                queueChildTileLoad(primitive, northeast);
-                queueChildTileLoad(primitive, northwest);
-            } else {
-                // Camera in northeast quadrant
-                queueChildTileLoad(primitive, northeast);
-                queueChildTileLoad(primitive, northwest);
-                queueChildTileLoad(primitive, southeast);
-                queueChildTileLoad(primitive, southwest);
-            }
+            // Camera in northeast quadrant
+            queueChildTileLoad(primitive, northeast);
+            queueChildTileLoad(primitive, northwest);
+            queueChildTileLoad(primitive, southeast);
+            queueChildTileLoad(primitive, southwest);
         }
     }
 
@@ -635,20 +633,18 @@ define([
                 visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
                 visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
             }
+        } else if (cameraPosition.latitude < southwest.rectangle.north) {
+            // Camera southeast quadrant
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
         } else {
-            if (cameraPosition.latitude < southwest.rectangle.north) {
-                // Camera southeast quadrant
-                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
-            } else {
-                // Camera in northeast quadrant
-                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
-                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
-            }
+            // Camera in northeast quadrant
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
         }
     }
 

@@ -207,7 +207,7 @@ define([
          * @default 16
          */
         numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the ellipse
          * casts or receives shadows from each light source.

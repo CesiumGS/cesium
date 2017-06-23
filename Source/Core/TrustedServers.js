@@ -8,7 +8,7 @@ define([
         defined,
         DeveloperError) {
     'use strict';
-    
+
     /**
      * A singleton that contains all of the servers that are trusted. Credentials will be sent with
      * any requests to these servers.
@@ -149,6 +149,6 @@ define([
     TrustedServers.clear = function() {
         _servers = {};
     };
-    
+
     return TrustedServers;
 });

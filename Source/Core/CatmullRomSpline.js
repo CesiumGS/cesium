@@ -138,7 +138,7 @@ define([
      *
      * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
-     * 
+     *
      * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline

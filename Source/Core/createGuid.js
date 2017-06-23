@@ -12,7 +12,7 @@ define(function() {
      *
      * @example
      * this.guid = Cesium.createGuid();
-     * 
+     *
      * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
      */
     function createGuid() {
