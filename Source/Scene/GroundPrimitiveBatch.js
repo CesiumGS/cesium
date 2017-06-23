@@ -150,6 +150,8 @@ define([
         this._commands = [];
         this._pickCommands = [];
 
+        this._pickObject = options.pickObject;
+
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
 
@@ -725,6 +727,11 @@ define([
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
+        var owner = primitive._pickObject;
+        if (!defined(owner)) {
+            owner = primitive;
+        }
+
         for (var j = 0; j < length; ++j) {
             var offset = batchedIndices[j].offset;
             var count = batchedIndices[j].count;
@@ -732,7 +739,7 @@ define([
             var stencilPreloadCommand = commands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = commands[j * 3] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 
@@ -748,7 +755,7 @@ define([
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = commands[j * 3 + 1] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 
@@ -764,7 +771,7 @@ define([
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = commands[j * 3 + 2] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 
@@ -791,6 +798,11 @@ define([
         var vertexArray = primitive._va;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
+        var owner = primitive._pickObject;
+        if (!defined(owner)) {
+            owner = primitive;
+        }
+
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
             var count = primitive._indexCounts[j];
@@ -799,7 +811,7 @@ define([
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 
@@ -815,7 +827,7 @@ define([
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 
@@ -831,7 +843,7 @@ define([
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : primitive
+                    owner : owner
                 });
             }
 

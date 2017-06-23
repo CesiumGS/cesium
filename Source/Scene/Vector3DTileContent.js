@@ -330,6 +330,11 @@ define([
         // TODO: must have rectangle
         var rectangle = content._tile.contentBoundingVolume.rectangle;
 
+        var pickObject = {
+            content : content,
+            primitive : content._tileset
+        };
+
         if (numberOfPolygons > 0) {
             var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
             byteOffset += indicesByteLength;
@@ -360,7 +365,8 @@ define([
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
-                batchIds : batchIds
+                batchIds : batchIds,
+                pickObject : pickObject
             });
         }
 
