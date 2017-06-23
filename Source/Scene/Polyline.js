@@ -89,7 +89,7 @@ define([
 
         this._actualLength = undefined;
 
-        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
+        this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES); //eslint-disable-line no-use-before-define
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;

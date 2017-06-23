@@ -346,7 +346,7 @@ define([
                         if (!defined(that._tileset)) {
                             return;
                         }
-                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
+                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) { //eslint-disable-line no-use-before-define
                             var position;
                             if (scene.pickPositionSupported) {
                                 position = scene.pickPosition(e.endPosition);
