@@ -1497,6 +1497,8 @@ define([
         }
 
         this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+        var vs;
+        var fs;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
@@ -1659,8 +1661,6 @@ define([
         var va;
         var vaLength;
         var command;
-        var vs;
-        var fs;
         var j;
 
         var commandList = frameState.commandList;

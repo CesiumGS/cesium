@@ -126,15 +126,23 @@ defineSuite([
         }).toThrowRuntimeError();
     });
 
-    it('evaluates with additional expressions', function() {
-        var additionalExpressions = {
+    it('evaluates with defines', function() {
+        var defines = {
             halfHeight: '${Height}/2'
         };
         var feature = new MockFeature();
         feature.addProperty('Height', 10);
 
-        var expression = new Expression('${halfHeight}', additionalExpressions);
+        var expression = new Expression('${halfHeight}', defines);
         expect(expression.evaluate(frameState, feature)).toEqual(5);
+    });
+
+    it('evaluates with defines, honoring order of operations', function() {
+        var defines = {
+            value: '1 + 2'
+        };
+        var expression = new Expression('5.0 * ${value}', defines);
+        expect(expression.evaluate(frameState, undefined)).toEqual(15);
     });
 
     it('evaluate takes result argument', function() {

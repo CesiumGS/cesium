@@ -220,7 +220,7 @@ define([
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        
+
         var bs = primitive.getBoundingSphere(entity);
         if (!defined(bs)) {
             return BoundingSphereState.FAILED;

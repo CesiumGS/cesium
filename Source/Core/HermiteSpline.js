@@ -173,7 +173,7 @@ define([
      * });
      *
      * var p0 = spline.evaluate(times[0]);
-     * 
+     *
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline

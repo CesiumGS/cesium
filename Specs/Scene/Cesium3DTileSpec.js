@@ -12,6 +12,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/SphereOutlineGeometry',
         'Core/Transforms',
+        'Scene/Cesium3DTileRefine',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
@@ -28,6 +29,7 @@ defineSuite([
         Rectangle,
         SphereOutlineGeometry,
         Transforms,
+        Cesium3DTileRefine,
         TileBoundingRegion,
         TileOrientedBoundingBox,
         createScene) {
@@ -35,7 +37,7 @@ defineSuite([
 
     var tileWithBoundingSphere = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         boundingVolume : {
             sphere: [0.0, 0.0, 0.0, 5.0]
@@ -44,7 +46,7 @@ defineSuite([
 
     var tileWithContentBoundingSphere = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         content : {
             url : '0/0.b3dm',
             boundingVolume : {
@@ -59,7 +61,7 @@ defineSuite([
 
     var tileWithBoundingRegion = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         boundingVolume: {
             region : [-1.2, -1.2, 0.0, 0.0, -30, -34]
@@ -68,7 +70,7 @@ defineSuite([
 
     var tileWithContentBoundingRegion = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         content : {
             url : '0/0.b3dm',
@@ -83,7 +85,7 @@ defineSuite([
 
     var tileWithBoundingBox = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         boundingVolume: {
             box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
@@ -92,7 +94,7 @@ defineSuite([
 
     var tileWithContentBoundingBox = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         content : {
             url : '0/0.b3dm',
@@ -107,7 +109,7 @@ defineSuite([
 
     var tileWithViewerRequestVolume = {
         geometricError : 1,
-        refine : 'replace',
+        refine : 'REPLACE',
         children : [],
         boundingVolume: {
             box : [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0]
@@ -295,6 +297,15 @@ defineSuite([
             // Check the new transform
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude);
             expect(boundingSphere.center).toEqualEpsilon(newCenter, CesiumMath.EPSILON7);
+        });
+
+        it('logs deprecation warning if refine is lowercase', function() {
+            spyOn(Cesium3DTile, '_deprecationWarning');
+            var header = clone(tileWithBoundingSphere, true);
+            header.refine = 'replace';
+            var tile = new Cesium3DTile(mockTileset, '/some_url', header, undefined);
+            expect(tile.refine).toBe(Cesium3DTileRefine.REPLACE);
+            expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
         });
     });
 

@@ -41,7 +41,7 @@ define([
      *     })
      *   }
      * });
-     * 
+     *
      * @see ColorGeometryInstanceAttribute
      * @see ShowGeometryInstanceAttribute
      * @see DistanceDisplayConditionGeometryInstanceAttribute
