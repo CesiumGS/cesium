@@ -188,7 +188,7 @@ define([
                     dataCallback: dataCallback
                 });
             } else {
-                this._timeDimensionIntervals = TimeIntervalCollection.fromIso8601Array({
+                this._timeDimensionIntervals = TimeIntervalCollection.fromIso8601Dates({
                     iso8601Array : timeDimensionValues,
                     isStopIncluded: false,
                     leadingInterval: true,

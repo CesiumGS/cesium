@@ -1291,13 +1291,13 @@ defineSuite([
         checkIntervals(intervals, julianDates, false, false, dataCallback);
     });
 
-    it('fromIso8601Array handles leadingInterval option', function() {
+    it('fromIso8601Dates handles leadingInterval option', function() {
         var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
         var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
-        var intervals = TimeIntervalCollection.fromIso8601Array({
-            iso8601Array : iso8601Dates,
+        var intervals = TimeIntervalCollection.fromIso8601Dates({
+            iso8601Dates: iso8601Dates,
             isStartIncluded: true,
             isStopIncluded: false,
             leadingInterval: true,
@@ -1320,13 +1320,13 @@ defineSuite([
         checkIntervals(intervals, julianDates, true, false, dataCallback);
     });
 
-    it('fromIso8601Array handles trailingInterval option', function() {
+    it('fromIso8601Dates handles trailingInterval option', function() {
         var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
         var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
-        var intervals = TimeIntervalCollection.fromIso8601Array({
-            iso8601Array : iso8601Dates,
+        var intervals = TimeIntervalCollection.fromIso8601Dates({
+            iso8601Dates: iso8601Dates,
             isStartIncluded: false,
             isStopIncluded: true,
             trailingInterval: true,
@@ -1349,13 +1349,13 @@ defineSuite([
         checkIntervals(intervals, julianDates, false, true, dataCallback);
     });
 
-    it('fromIso8601Array handles leadingInterval and trailingInterval option', function() {
+    it('fromIso8601Dates handles leadingInterval and trailingInterval option', function() {
         var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
         var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
         var julianDates = iso8601ToJulianDateArray(iso8601Dates);
 
-        var intervals = TimeIntervalCollection.fromIso8601Array({
-            iso8601Array : iso8601Dates,
+        var intervals = TimeIntervalCollection.fromIso8601Dates({
+            iso8601Dates: iso8601Dates,
             isStartIncluded: false,
             isStopIncluded: false,
             leadingInterval: true,
