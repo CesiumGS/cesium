@@ -2,6 +2,11 @@
 
 #define TAU 6.28318530718
 #define PI 3.14159265359
+#define PI_4 0.785398163
+#define C0 1.57073
+#define C1 -0.212053
+#define C2 0.0740935
+#define C3 -0.0186166
 #define EPS 1e-6
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
 #define numSectors 8
@@ -11,8 +16,20 @@ uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
 varying vec2 v_textureCoordinates;
 
+float acosFast(in float inX) {
+    float x = abs(inX);
+    float res = ((C3 * x + C2) * x + C1) * x + C0; // p(x)
+    res *= sqrt(1.0 - x);
+
+    return (inX >= 0.0) ? res : PI - res;
+}
+
+float atanFast(in float x) {
+    return PI_4 * x - x * (abs(x) - 1.0) * (0.2447 + 0.0663 * abs(x));
+}
+
 float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atan(y, x);
+    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
 }
 
 void modifySectorHistogram(in int index,
@@ -111,9 +128,6 @@ void main() {
     float near = czm_currentFrustum.x;
     float far = czm_currentFrustum.y;
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
-    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    //vec4 color = texture2D(pointCloud_colorTexture, gl_FragCoord.xy / czm_viewport.zw);
-    //vec4 EC = texture2D(pointCloud_ECTexture, gl_FragCoord.xy / czm_viewport.zw);
 
     // The position of this pixel in 3D (i.e the position of the point)
     vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
@@ -122,7 +136,6 @@ void main() {
     // pixel. We don't care about reprojecting it.
     if (length(centerPosition) == 0.)
         discard;
-
 
     // We split our region of interest (the point of interest and its
     // neighbors)
@@ -185,7 +198,7 @@ void main() {
             // |vec_1| * |vec_2| * cos(angle_between), and in this case,
             // the magnitude of both vectors is 1 because they are both
             // normalized.
-            float angle = acos(dotProduct);
+            float angle = acosFast(dotProduct);
 
             // This horizon point is behind the current point. That means that it can't
             // occlude the current point. So we ignore it and move on.
