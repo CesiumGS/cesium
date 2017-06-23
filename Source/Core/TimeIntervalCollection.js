@@ -998,7 +998,8 @@ define([
 
         var length = iso8601Durations.length;
         for (var i=0;i<length;++i) {
-            if (parseDuration(iso8601Durations[i], scratchDuration)) {
+            // Allow a duration of 0 on the first iteration, because then it is just the epoch
+            if (parseDuration(iso8601Durations[i], scratchDuration) || i === 0) {
                 if (relativeToPrevious && defined(previousDate)) {
                     date = addToDate(previousDate, scratchDuration);
                 } else {

@@ -1387,4 +1387,88 @@ defineSuite([
         // Remove leading interval and check the rest
         checkIntervals(intervals, julianDates, false, false, dataCallback);
     });
+
+    it('fromIso8601DurationArray handles relativeToPrevious set to false', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+        var iso8601Durations = ['PT0M', 'PT1M', 'PT2M', 'PT3M'];
+
+        var intervals = TimeIntervalCollection.fromIso8601DurationArray({
+            epoch: julianDates[0],
+            iso8601Durations: iso8601Durations,
+            relativeToPrevious: false,
+            isStartIncluded: false,
+            isStopIncluded: false,
+            leadingInterval: true,
+            trailingInterval: true,
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(5);
+        for (var i = 0; i < 4; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
+
+        // Check leading interval
+        var leading = intervals._intervals.shift();
+        expect(JulianDate.compare(leading.start, Iso8601.MINIMUM_VALUE)).toEqual(0);
+        expect(JulianDate.compare(leading.stop, julianDates[0])).toEqual(0);
+        expect(leading.isStartIncluded).toBe(true);
+        expect(leading.isStopIncluded).toBe(true);
+        expect(leading.data).toEqual(dataCallback(leading, 0));
+
+        // Check trailing interval
+        var trailing = intervals._intervals.pop();
+        expect(JulianDate.compare(trailing.start, julianDates[iso8601Dates.length-1])).toEqual(0);
+        expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
+        expect(trailing.isStartIncluded).toBe(true);
+        expect(trailing.isStopIncluded).toBe(true);
+        expect(trailing.data).toEqual(dataCallback(trailing, 4));
+
+        // Remove leading interval and check the rest
+        checkIntervals(intervals, julianDates, false, false, dataCallback);
+    });
+
+    it('fromIso8601DurationArray handles relativeToPrevious set to true', function() {
+        var dataSpy = jasmine.createSpy('data').and.callFake(dataCallback);
+        var iso8601Dates = ['2016-12-31T23:58:01.5Z', '2016-12-31T23:59:01.5Z', '2017-01-01T00:00:01.5Z', '2017-01-01T00:01:01.5Z'];
+        var julianDates = iso8601ToJulianDateArray(iso8601Dates);
+        var iso8601Durations = ['PT0M', 'PT1M', 'PT1M', 'PT1M'];
+
+        var intervals = TimeIntervalCollection.fromIso8601DurationArray({
+            epoch: julianDates[0],
+            iso8601Durations: iso8601Durations,
+            relativeToPrevious: true,
+            isStartIncluded: false,
+            isStopIncluded: false,
+            leadingInterval: true,
+            trailingInterval: true,
+            dataCallback: dataSpy
+        });
+
+        expect(dataSpy.calls.count()).toEqual(5);
+        for (var i = 0; i < 4; ++i) {
+            expect(dataSpy).toHaveBeenCalledWith(intervals.get(i), i);
+        }
+
+        // Check leading interval
+        var leading = intervals._intervals.shift();
+        expect(JulianDate.compare(leading.start, Iso8601.MINIMUM_VALUE)).toEqual(0);
+        expect(JulianDate.compare(leading.stop, julianDates[0])).toEqual(0);
+        expect(leading.isStartIncluded).toBe(true);
+        expect(leading.isStopIncluded).toBe(true);
+        expect(leading.data).toEqual(dataCallback(leading, 0));
+
+        // Check trailing interval
+        var trailing = intervals._intervals.pop();
+        expect(JulianDate.compare(trailing.start, julianDates[iso8601Dates.length-1])).toEqual(0);
+        expect(JulianDate.compare(trailing.stop, Iso8601.MAXIMUM_VALUE)).toEqual(0);
+        expect(trailing.isStartIncluded).toBe(true);
+        expect(trailing.isStopIncluded).toBe(true);
+        expect(trailing.data).toEqual(dataCallback(trailing, 4));
+
+        // Remove leading interval and check the rest
+        checkIntervals(intervals, julianDates, false, false, dataCallback);
+    });
 });
