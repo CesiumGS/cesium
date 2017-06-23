@@ -62,7 +62,8 @@ define([
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
-     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object with time dynamic parameters.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {Object} [options.dimensions] A object containing static dimensions and their values.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
@@ -158,6 +159,7 @@ define([
         var clock = this._clock = options.clock;
         var times = this._times = options.times;
         this._currentIntervalIndex = -1;
+        this._dimensions = defaultValue(options.dimensions, {});
 
         if (defined(times) && times.length > 0) {
             clock.onTick.addEventListener(this._clockOnTick, this);
@@ -215,6 +217,15 @@ define([
                 .replace('{TileRow}', row.toString())
                 .replace('{TileCol}', col.toString())
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
+
+            var staticDimensions = imageryProvider._dimensions;
+            if (defined(staticDimensions)) {
+                for (key in staticDimensions) {
+                    if (staticDimensions.hasOwnProperty(key)) {
+                        url = url.replace('{'+key+'}', staticDimensions[key]);
+                    }
+                }
+            }
 
             if (defined(dynamicIntervalData)) {
                 for (key in dynamicIntervalData) {
@@ -487,6 +498,25 @@ define([
             set : function(value) {
                 if (this._times !== value) {
                     this._times = value;
+                    this._clockOnTick(this._clock);
+                    if (defined(this._reload)) {
+                        this._reload();
+                    }
+                }
+            }
+        },
+        /**
+         * Gets or sets an object that contains static dimensions and their values.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Object}
+         */
+        dimensions : {
+            get : function() {
+                return this._dimensions;
+            },
+            set : function(value) {
+                if (this._dimensions !== value) {
+                    this._dimensions = value;
                     this._clockOnTick(this._clock);
                     if (defined(this._reload)) {
                         this._reload();
