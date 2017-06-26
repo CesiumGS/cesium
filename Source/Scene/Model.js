@@ -3517,6 +3517,7 @@ define([
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
+        var skins = gltf.skins;
 
         var scene = gltf.scenes[gltf.scene];
         var sceneNodes = scene.nodes;
@@ -3577,17 +3578,17 @@ define([
                     }
                 }
 
-                var skeleton = gltfNode.skeleton;
-                if (defined(skeleton)) {
-                    skeletonIds.push(skeleton);
+                var skin = gltfNode.skin;
+                if (defined(skin)) {
+                    skeletonIds.push(skins[skin].skeleton);
                 }
 
                 if (stack.length === 0) {
                     for (var k = 0; k < skeletonIds.length; k++) {
-                        skeleton = skeletonIds[k];
+                        var skeleton = skeletonIds[k];
                         if (!seen[skeleton]) {
                             stack.push({
-                                parentRuntmeNode : undefined,
+                                parentRuntimeNode : undefined,
                                 gltfNode : nodes[skeleton],
                                 id : skeleton
                             });

@@ -396,12 +396,12 @@ define([
             var webGLConstant = glslTypeToWebGLConstant(attributeType);
 
             techniqueParameters.joint = {
-                semantic: 'JOINT',
+                semantic: 'JOINTS_0',
                 type: webGLConstant
             };
             techniqueAttributes.a_weight = 'weight';
             techniqueParameters.weight = {
-                semantic: 'WEIGHT',
+                semantic: 'WEIGHTS_0',
                 type: webGLConstant
             };
 
@@ -414,7 +414,6 @@ define([
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
-        console.log(vertexShader);
 
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
