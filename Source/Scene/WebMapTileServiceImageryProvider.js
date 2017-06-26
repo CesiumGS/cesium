@@ -9,19 +9,16 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/isArray',
-        '../Core/Iso8601',
-        '../Core/JulianDate',
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestType',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './ImageryProvider'
+        './ImageryProvider',
+        './TimeDynamicImagery'
     ], function(
         combine,
         Credit,
@@ -32,19 +29,16 @@ define([
         Event,
         freezeObject,
         isArray,
-        Iso8601,
-        JulianDate,
         objectToQuery,
         queryToObject,
         Rectangle,
         Request,
         RequestType,
-        TimeInterval,
-        TimeIntervalCollection,
         WebMercatorTilingScheme,
         Uri,
         when,
-        ImageryProvider) {
+        ImageryProvider,
+        TimeDynamicImagery) {
     'use strict';
 
     /**
@@ -153,17 +147,21 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
-        this._tileCache = {};
-
-        this._tilesRequestedForInterval = [];
-        var clock = this._clock = options.clock;
-        var times = this._times = options.times;
-        this._currentIntervalIndex = -1;
-        this._dimensions = defaultValue(options.dimensions, {});
-
-        if (defined(times) && times.length > 0) {
-            clock.onTick.addEventListener(this._clockOnTick, this);
-            this._clockOnTick(clock);
+        var that = this;
+        this._reload = undefined;
+        if (defined(options.times)) {
+            this._timeDynamicImagery = new TimeDynamicImagery({
+                clock : options.clock,
+                times : options.times,
+                requestImageFunction: function(x, y, level, request, interval) {
+                    return requestImage(that, x, y, level, request, interval);
+                },
+                reloadFunction: function() {
+                    if (defined(that._reload)) {
+                        that._reload();
+                    }
+                }
+            });
         }
 
         this._readyPromise = when.resolve(true);
@@ -201,11 +199,12 @@ define([
         request : 'GetTile'
     });
 
-    function buildImageUrl(imageryProvider, col, row, level, dynamicIntervalData) {
+    function requestImage(imageryProvider, col, row, level, request, interval) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
         var url, key;
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
         if (imageryProvider._url.indexOf('{') >= 0) {
             // resolve tile-URL template
@@ -268,7 +267,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        return url;
+        return ImageryProvider.loadImage(this, url, request);
     }
 
     defineProperties(WebMapTileServiceImageryProvider.prototype, {
@@ -466,22 +465,16 @@ define([
             }
         },
         /**
-         * Gets or sets a clock that is used to get keep the time used for time dynamic parameters
+         * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
          * @memberof WebMapTileServiceImageryProvider.prototype
          * @type {Clock}
          */
         clock : {
             get : function() {
-                return this._clock;
+                return this._timeDynamicImagery.clock;
             },
             set : function(value) {
-                if (this._clock !== value) {
-                    this._clock = value;
-                    this._clockOnTick(value);
-                    if (defined(this._reload)) {
-                        this._reload();
-                    }
-                }
+                this._timeDynamicImagery.clock = value;
             }
         },
         /**
@@ -493,16 +486,10 @@ define([
          */
         times : {
             get : function() {
-                return this._times;
+                return this._timeDynamicImagery.times;
             },
             set : function(value) {
-                if (this._times !== value) {
-                    this._times = value;
-                    this._clockOnTick(this._clock);
-                    if (defined(this._reload)) {
-                        this._reload();
-                    }
-                }
+                this._timeDynamicImagery.times = value;
             }
         },
         /**
@@ -526,53 +513,6 @@ define([
     });
 
     /**
-     * @private
-     */
-    WebMapTileServiceImageryProvider.prototype._clockOnTick = function(clock) {
-        var time = clock.currentTime;
-        var times = this._times;
-        var index = times.indexOf(time);
-        var currentIntervalIndex = this._currentIntervalIndex;
-
-        if (index !== currentIntervalIndex) {
-            // Cancel all outstanding requests and clear out caches not from current time interval
-            var currentCache = this._tileCache[currentIntervalIndex];
-            for(var t in currentCache) {
-                if(currentCache.hasOwnProperty(t)) {
-                    currentCache[t].request.cancel();
-                }
-            }
-            delete this._tileCache[currentIntervalIndex];
-            this._tilesRequestedForInterval = [];
-
-            this._currentIntervalIndex = index;
-            if (defined(this._reload)) {
-                this._reload();
-            }
-            return;
-        }
-
-        var approachingInterval = getApproachingInterval(this);
-        if (defined(approachingInterval)) {
-            // Start loading recent tiles from end of this._tilesRequestedForInterval
-            //  We keep prefetching until we hit a throttling limit.
-            var tilesRequested = this._tilesRequestedForInterval;
-            var success = true;
-            do {
-                if (tilesRequested.length === 0) {
-                    break;
-                }
-
-                var tile = tilesRequested.pop();
-                success = addToCache(this, tile, approachingInterval);
-                if (!success) {
-                    tilesRequested.push(tile);
-                }
-            } while(success);
-        }
-    };
-
-    /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
      * @param {Number} x The tile X coordinate.
@@ -585,82 +525,6 @@ define([
     WebMapTileServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
         return undefined;
     };
-
-    function getKey(x, y, level) {
-        return x + '-' + y + '-' + level;
-    }
-
-    function getKeyElements(key) {
-        var s = key.split('-');
-        return {
-            x: s[0],
-            y: s[1],
-            level: s[2]
-        };
-    }
-
-    function getApproachingInterval(that) {
-        var times = that._times;
-        if (!defined(times)) {
-            return undefined;
-        }
-        var clock = that._clock;
-        var time = clock.currentTime;
-        var isAnimating = clock.canAnimate && clock.shouldAnimate;
-        var multiplier = clock.multiplier;
-
-        if (!isAnimating && multiplier !== 0) {
-            return undefined;
-        }
-
-        var seconds;
-        var index = times.indexOf(time);
-        var interval = times.get(index);
-        if (multiplier > 0) { // animating forward
-            seconds = JulianDate.secondsDifference(interval.stop, time);
-            ++index;
-        } else { //backwards
-            seconds = JulianDate.secondsDifference(interval.start, time); // Will be negative
-            --index;
-        }
-        seconds /= multiplier; // Will always be positive
-
-        // Less than 5 wall time seconds
-        return (index >= 0 && seconds <= 5.0) ? times.get(index) : undefined;
-    }
-
-    function addToCache(that, tile, interval) {
-        var index = that._times.indexOf(interval.start);
-        var tileCache = that._tileCache;
-        if (!defined(tileCache[index])) {
-            tileCache[index] = {};
-        }
-
-        var key = tile.key;
-        if (defined(tileCache[index][key])) {
-            return true; // Already in the cache
-        }
-
-        var keyElements = getKeyElements(key);
-        var url = buildImageUrl(that, keyElements.x, keyElements.y, keyElements.level, interval.data);
-        var request = new Request({
-            throttle : true,
-            throttleByServer : true,
-            type : RequestType.IMAGERY,
-            priorityFunction : tile.priorityFunction
-        });
-        var promise = ImageryProvider.loadImage(that, url, request);
-        if (!defined(promise)) {
-            return false;
-        }
-
-        tileCache[index][key] = {
-            promise: promise,
-            request: request
-        };
-
-        return true;
-    }
 
     /**
      * Requests the image for a given tile.  This function should
@@ -679,55 +543,23 @@ define([
      */
     WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
         var result;
-        var key;
-        var timeDependent = defined(this._times);
-        var tilesRequestedForInterval = this._tilesRequestedForInterval;
-        var times = this._times;
-        var currentIntervalIndex = this._currentIntervalIndex;
+        var timeDynamicImagery = this._timeDynamicImagery;
         var currentInterval;
 
         // Try and load from cache
-        if (timeDependent) {
-            currentInterval = times.get(currentIntervalIndex);
-
-            key = getKey(x, y, level);
-            var cache = this._tileCache[currentIntervalIndex];
-            if (defined(cache) && defined(cache[key])) {
-                var item = cache[key];
-                result = item.promise
-                    .otherwise(function(e) {
-                        // Set the correct state in case it was cancelled
-                        request.state = item.request.state;
-                        throw e;
-                    });
-                delete cache[key];
-            }
+        if (defined(timeDynamicImagery)) {
+            currentInterval = timeDynamicImagery.getCurrentInterval();
+            result = timeDynamicImagery.getFromCache(x, y, level, request);
         }
 
         // Couldn't load from cache
         if (!defined(result)) {
-            var url = buildImageUrl(this, x, y, level, defined(currentInterval) ? currentInterval.data : undefined);
-            result = ImageryProvider.loadImage(this, url, request);
+            result = requestImage(this, x, y, level, request, currentInterval);
         }
 
         // If we are approaching an interval, preload this tile in the next interval
-        if (defined(result) && timeDependent) {
-            var approachingInterval = getApproachingInterval(this);
-            var tile = {
-                key: key,
-                // Determines priority based on camera distance to the tile.
-                // Since the imagery regardless of time will be attached to the same tile we can just steal it.
-                priorityFunction: request.priorityFunction
-            };
-            if (!defined(approachingInterval) || !addToCache(this, tile, approachingInterval)) {
-                // Add to recent request list if we aren't approaching and interval or the request was throttled
-                tilesRequestedForInterval.push(tile);
-            }
-        }
-
-        // Don't let the tile list get out of hand
-        if (tilesRequestedForInterval.length > 512) {
-            tilesRequestedForInterval.splice(0, 256);
+        if (defined(result) && defined(timeDynamicImagery)) {
+            timeDynamicImagery.checkApproachingInterval(x, y, level, request);
         }
 
         return result;
