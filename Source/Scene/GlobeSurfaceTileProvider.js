@@ -617,7 +617,8 @@ define([
             var startIndex = -1;
             var tileImageryCollection = tile.data.imagery;
             var length = tileImageryCollection.length;
-            for (var i = 0; i < length; ++i) {
+            var i;
+            for (i = 0; i < length; ++i) {
                 tileImagery = tileImageryCollection[i];
                 imagery = defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery);
                 if (imagery.imageryLayer === layer) {
@@ -631,11 +632,9 @@ define([
                 tileImagery = tileImageryCollection[endIndex];
                 imagery = defined(tileImagery) ? defaultValue(tileImagery.readyImagery, tileImagery.loadingImagery) : undefined;
                 if (!defined(imagery) || imagery.imageryLayer !== layer) {
-                    if (layer._createTileImagerySkeletons(tile, terrainProvider, endIndex)) {
-                        return false; // Don't remove the callback
-                    } else {
-                        return true; // Something went wrong, so remove the callback
-                    }
+                    // Return false to keep the callback if we have to wait on the skeletons
+                    // Return true to remove the callback if something went wrong
+                    return !(layer._createTileImagerySkeletons(tile, terrainProvider, endIndex));
                 }
 
                 for (i = startIndex; i < endIndex; ++i) {

@@ -37,7 +37,7 @@ defineSuite([
 
     it('resolves readyPromise', function() {
         var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png'
+            image : 'Data/Images/Red16x16.png'
         });
 
         return provider.readyPromise.then(function(result) {
@@ -48,20 +48,20 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var provider = new SingleTileImageryProvider({
-            url : 'invalid.image.url'
+            image : 'invalid.image.url'
         });
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
         }).otherwise(function (e) {
             expect(provider.ready).toBe(false);
-            expect(e.message).toContain(provider.url);
+            expect(e.message).toContain('invalid.image.url');
         });
     });
 
     it('returns valid value for hasAlphaChannel', function() {
         var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png'
+            image : 'Data/Images/Red16x16.png'
         });
 
         return pollToPromise(function() {
@@ -76,12 +76,11 @@ defineSuite([
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var credit = 'hi';
         var provider = new SingleTileImageryProvider({
-            url : url,
+            image : url,
             rectangle : rectangle,
             credit : credit
         });
 
-        expect(provider.url).toEqual(url);
         expect(provider.rectangle).toEqual(rectangle);
         expect(provider.hasAlphaChannel).toEqual(true);
 
@@ -107,7 +106,7 @@ defineSuite([
     it('can use a custom ellipsoid', function() {
         var ellipsoid = new Ellipsoid(1, 2, 3);
         var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png',
+            image : 'Data/Images/Red16x16.png',
             ellipsoid : ellipsoid
         });
 
@@ -127,7 +126,7 @@ defineSuite([
         });
 
         var provider = new SingleTileImageryProvider({
-            url : imageUrl
+            image : imageUrl
         });
 
         expect(loadImage.createImage).toHaveBeenCalled();
@@ -143,7 +142,7 @@ defineSuite([
 
     it('turns the supplied credit into a logo', function() {
         var provider = new SingleTileImageryProvider({
-            url : 'Data/Images/Red16x16.png'
+            image : 'Data/Images/Red16x16.png'
         });
 
         return pollToPromise(function() {
@@ -152,7 +151,7 @@ defineSuite([
             expect(provider.credit).toBeUndefined();
 
             var providerWithCredit = new SingleTileImageryProvider({
-                url : 'Data/Images/Red16x16.png',
+                image : 'Data/Images/Red16x16.png',
                 credit : 'Thanks to our awesome made up source of this imagery!'
             });
 
@@ -174,7 +173,7 @@ defineSuite([
         });
 
         var provider = new SingleTileImageryProvider({
-            url : imageUrl,
+            image : imageUrl,
             proxy : proxy
         });
 
@@ -227,5 +226,46 @@ defineSuite([
                 imagery.releaseReference();
             });
         });
+    });
+
+    it('options.image can be a HTMLImageElement', function() {
+        var image = new Image(12, 16);
+        var provider = new SingleTileImageryProvider({
+            image : image
+        });
+
+        expect(provider._image).toBe(image);
+        expect(provider._tileWidth).toEqual(image.width);
+        expect(provider._tileHeight).toEqual(image.height);
+        expect(provider._ready).toBe(true);
+    });
+
+    it('options.image can be a HTMLCanvasElement', function() {
+        var canvas = document.createElement('canvas');
+        canvas.width  = 12;
+        canvas.height = 16;
+
+        var provider = new SingleTileImageryProvider({
+            image : canvas
+        });
+
+        expect(provider._image).toBe(canvas);
+        expect(provider._tileWidth).toEqual(canvas.width);
+        expect(provider._tileHeight).toEqual(canvas.height);
+        expect(provider._ready).toBe(true);
+    });
+
+    it('reload calls the _reload function', function() {
+        var image = new Image(12, 16);
+        var provider = new SingleTileImageryProvider({
+            image : image
+        });
+
+        provider.reload();
+
+        provider._reload = jasmine.createSpy('reload');
+
+        provider.reload();
+        expect(provider._reload.calls.count()).toEqual(1);
     });
 });
