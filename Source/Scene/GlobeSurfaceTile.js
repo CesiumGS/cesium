@@ -293,7 +293,8 @@ define([
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
-        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
                 isUpsampledOnly = false;

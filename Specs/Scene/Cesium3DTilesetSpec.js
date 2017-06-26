@@ -2535,6 +2535,9 @@ defineSuite([
             var tile = tileset._root;
             var statistics = tileset._statistics;
             var expiredContent;
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
 
             // Check that expireDuration and expireDate are correctly set
             var expireDate = JulianDate.addSeconds(JulianDate.now(), 5.0, new JulianDate());
@@ -2592,6 +2595,9 @@ defineSuite([
                 // Expired content is destroyed
                 expect(tile._expiredContent).toBeUndefined();
                 expect(expiredContent.isDestroyed()).toBe(true);
+
+                // Expect the style to be reapplied
+                expect(tile.content.getFeature(0).color).toEqual(Color.RED);
 
                 // statistics for new content
                 expect(statistics.numberOfCommands).toBe(10);

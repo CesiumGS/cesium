@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
@@ -13,10 +15,12 @@ define([
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
+        Check,
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -35,7 +39,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url for the tile.
+     * @param {String|Canvas|Image} options.image A Property specifying the Image, URI, or Canvas to use for the tile.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
@@ -53,15 +57,19 @@ define([
     function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
-        var canvas = options.canvas;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(url) && !defined(canvas)) {
-            throw new DeveloperError('Either url or canvas is required.');
-        }
-        //>>includeEnd('debug');
+        var image = options.image;
 
         this._url = url;
+        if (defined(url)) {
+            deprecationWarning('SingleTileImageryProvider.url', 'SingleTileImageryProvider url parameter was deprecated in Cesium 1.35. It now takes an image parameter that can contain a url, a Canvas or an Image. It will be removed in Cesium 1.37.');
+            image = defaultValue(image, url);
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(image)) {
+            throw new DeveloperError('options.image is required.');
+        }
+        //>>includeEnd('debug');
 
         var proxy = options.proxy;
         this._proxy = proxy;
@@ -85,16 +93,19 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var imageUrl = url;
-        if (defined(proxy)) {
-            imageUrl = proxy.getURL(imageUrl);
-        }
-
         var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
         this._credit = credit;
+
+        var imageUrl;
+        if (typeof image === 'string') {
+            imageUrl = image;
+            if (defined(proxy)) {
+                imageUrl = proxy.getURL(imageUrl);
+            }
+        }
 
         var that = this;
         var error;
@@ -125,8 +136,8 @@ define([
             when(loadImage(imageUrl), success, failure);
         }
 
-        if (defined(canvas)) {
-            success(canvas);
+        if (!defined(imageUrl)) {
+            success(image);
         } else {
             doRequest();
         }
@@ -138,9 +149,11 @@ define([
          * @memberof SingleTileImageryProvider.prototype
          * @type {String}
          * @readonly
+         * @deprecated
          */
         url : {
             get : function() {
+                deprecationWarning('SingleTileImageryProvider.prototype.url', 'SingleTileImageryProvider\'s url property was deprecated in Cesium 1.35. It will be removed in Cesium 1.37.');
                 return this._url;
             }
         },
@@ -354,6 +367,9 @@ define([
         }
     });
 
+    /**
+     * Reloads the image.
+     */
     SingleTileImageryProvider.prototype.reload = function() {
         if (defined(this._reload)) {
             this._reload();

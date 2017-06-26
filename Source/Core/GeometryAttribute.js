@@ -41,7 +41,7 @@ define([
      *   },
      *   primitiveType : Cesium.PrimitiveType.LINE_LOOP
      * });
-     * 
+     *
      * @see Geometry
      */
     function GeometryAttribute(options) {

@@ -605,7 +605,8 @@ define([
         var lastLevelX = 0, lastLevelY = 0;
         var currentX = 0, currentY = 0;
         var maxLevel = GroundPrimitive._terrainHeightsMaxLevel;
-        for(var i = 0; i <= maxLevel; ++i) {
+        var i;
+        for(i = 0; i <= maxLevel; ++i) {
             var failed = false;
             for(var j = 0; j < 4; ++j) {
                 var corner = scratchCorners[j];
@@ -1065,10 +1066,8 @@ define([
                 var instanceRectangle = getRectangle(frameState, geometry);
                 if (!defined(rectangle)) {
                     rectangle = instanceRectangle;
-                } else {
-                    if (defined(instanceRectangle)) {
-                        Rectangle.union(rectangle, instanceRectangle, rectangle);
-                    }
+                } else if (defined(instanceRectangle)) {
+                    Rectangle.union(rectangle, instanceRectangle, rectangle);
                 }
 
                 var id = instance.id;

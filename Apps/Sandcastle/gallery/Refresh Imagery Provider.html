@@ -45,8 +45,7 @@ var ctx = canvas.getContext("2d");
 
 var colorProvider = new Cesium.SingleTileImageryProvider({
     rectangle: Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75),
-    canvas: canvas,
-    url: 'test'
+    image: canvas
 });
 
 viewer.imageryLayers.addImageryProvider(colorProvider);
@@ -56,7 +55,7 @@ var index = 0;
 Sandcastle.addDefaultToolbarButton('Change Color', function() {
     ctx.fillStyle = colors[++index % 3];
     ctx.fillRect(0, 0, 1, 1);
-    
+
     colorProvider.reload();
 });
 
@@ -64,8 +63,7 @@ var videoElement = document.getElementById('trailer');
 
 var videoProvider = new Cesium.SingleTileImageryProvider({
     rectangle: Cesium.Rectangle.fromDegrees(-100.0, 28.0, -80, 38.8),
-    canvas: videoElement,
-    url: 'test'
+    image: videoElement
 });
 
 viewer.imageryLayers.addImageryProvider(videoProvider);

@@ -37,7 +37,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -254,7 +254,7 @@ gulp.task('makeZipFile', ['release'], function() {
         nodir : true
     });
 
-    var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
+    var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
@@ -1061,7 +1061,7 @@ function createCesiumJs() {
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
   var Cesium = {\n\
-    VERSION : "' + version + '",\n\
+    VERSION : \'' + version + '\',\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\

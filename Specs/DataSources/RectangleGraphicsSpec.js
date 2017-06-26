@@ -58,7 +58,7 @@ defineSuite([
         expect(rectangle.closeBottom).toBeInstanceOf(ConstantProperty);
         expect(rectangle.shadows).toBeInstanceOf(ConstantProperty);
         expect(rectangle.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
-        
+
         expect(rectangle.material.color.getValue()).toEqual(options.material);
         expect(rectangle.show.getValue()).toEqual(options.show);
         expect(rectangle.coordinates.getValue()).toEqual(options.coordinates);

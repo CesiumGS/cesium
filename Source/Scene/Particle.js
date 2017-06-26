@@ -13,7 +13,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color) {
-    "use strict";
+    'use strict';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
 

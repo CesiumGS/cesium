@@ -2,5 +2,8 @@
     "extends": "../.eslintrc.json",
     "env": {
         "jasmine": true
+    },
+    "rules": {
+        "quotes": "off"
     }
 }
