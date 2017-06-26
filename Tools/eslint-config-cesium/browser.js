@@ -8,5 +8,8 @@ module.exports = {
     },
     plugins: [
         'html'
-    ]
+    ],
+    rules: {
+        'no-implicit-globals': 'error'
+    }
 };

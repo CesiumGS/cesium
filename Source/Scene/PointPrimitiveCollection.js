@@ -784,65 +784,63 @@ define([
             }
 
             this._pointPrimitivesToUpdateIndex = 0;
-        } else {
+        } else if (pointPrimitivesToUpdateLength > 0) {
             // PointPrimitives were modified, but none were added or removed.
-            if (pointPrimitivesToUpdateLength > 0) {
-                var writers = scratchWriterArray;
-                writers.length = 0;
+            var writers = scratchWriterArray;
+            writers.length = 0;
 
-                if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
-                    writers.push(writePositionSizeAndOutline);
-                }
-
-                if (properties[COLOR_INDEX] || properties[OUTLINE_COLOR_INDEX]) {
-                    writers.push(writeCompressedAttrib0);
-                }
-
-                if (properties[SHOW_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
-                    writers.push(writeCompressedAttrib1);
-                }
-
-                if (properties[SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writeScaleByDistance);
-                }
-
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX]) {
-                    writers.push(writeDistanceDisplayConditionAndDepthDisable);
-                }
-
-                var numWriters = writers.length;
-
-                vafWriters = this._vaf.writers;
-
-                if ((pointPrimitivesToUpdateLength / pointPrimitivesLength) > 0.1) {
-                    // If more than 10% of pointPrimitive change, rewrite the entire buffer.
-
-                    // PERFORMANCE_IDEA:  I totally made up 10% :).
-
-                    for (var m = 0; m < pointPrimitivesToUpdateLength; ++m) {
-                        var b = pointPrimitivesToUpdate[m];
-                        b._dirty = false;
-
-                        for ( var n = 0; n < numWriters; ++n) {
-                            writers[n](this, context, vafWriters, b);
-                        }
-                    }
-                    this._vaf.commit();
-                } else {
-                    for (var h = 0; h < pointPrimitivesToUpdateLength; ++h) {
-                        var bb = pointPrimitivesToUpdate[h];
-                        bb._dirty = false;
-
-                        for ( var o = 0; o < numWriters; ++o) {
-                            writers[o](this, context, vafWriters, bb);
-                        }
-                        this._vaf.subCommit(bb._index, 1);
-                    }
-                    this._vaf.endSubCommits();
-                }
-
-                this._pointPrimitivesToUpdateIndex = 0;
+            if (properties[POSITION_INDEX] || properties[OUTLINE_WIDTH_INDEX] || properties[PIXEL_SIZE_INDEX]) {
+                writers.push(writePositionSizeAndOutline);
             }
+
+            if (properties[COLOR_INDEX] || properties[OUTLINE_COLOR_INDEX]) {
+                writers.push(writeCompressedAttrib0);
+            }
+
+            if (properties[SHOW_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                writers.push(writeCompressedAttrib1);
+            }
+
+            if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writeScaleByDistance);
+            }
+
+            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE_INDEX]) {
+                writers.push(writeDistanceDisplayConditionAndDepthDisable);
+            }
+
+            var numWriters = writers.length;
+
+            vafWriters = this._vaf.writers;
+
+            if ((pointPrimitivesToUpdateLength / pointPrimitivesLength) > 0.1) {
+                // If more than 10% of pointPrimitive change, rewrite the entire buffer.
+
+                // PERFORMANCE_IDEA:  I totally made up 10% :).
+
+                for (var m = 0; m < pointPrimitivesToUpdateLength; ++m) {
+                    var b = pointPrimitivesToUpdate[m];
+                    b._dirty = false;
+
+                    for ( var n = 0; n < numWriters; ++n) {
+                        writers[n](this, context, vafWriters, b);
+                    }
+                }
+                this._vaf.commit();
+            } else {
+                for (var h = 0; h < pointPrimitivesToUpdateLength; ++h) {
+                    var bb = pointPrimitivesToUpdate[h];
+                    bb._dirty = false;
+
+                    for ( var o = 0; o < numWriters; ++o) {
+                        writers[o](this, context, vafWriters, bb);
+                    }
+                    this._vaf.subCommit(bb._index, 1);
+                }
+                this._vaf.endSubCommits();
+            }
+
+            this._pointPrimitivesToUpdateIndex = 0;
         }
 
         // If the number of total pointPrimitives ever shrinks considerably
@@ -902,6 +900,8 @@ define([
         }
 
         this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+        var vs;
+        var fs;
 
         if (blendOptionChanged ||
             (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
@@ -1030,8 +1030,6 @@ define([
         var vaLength;
         var command;
         var j;
-        var vs;
-        var fs;
 
         var commandList = frameState.commandList;
 

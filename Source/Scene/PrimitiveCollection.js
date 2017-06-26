@@ -135,7 +135,7 @@ define([
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
-     * 
+     *
      * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.remove = function(primitive) {
@@ -337,7 +337,7 @@ define([
      *   var p = primitives.get(i);
      *   p.show = !p.show;
      * }
-     * 
+     *
      * @see PrimitiveCollection#length
      */
     PrimitiveCollection.prototype.get = function(index) {
@@ -400,7 +400,7 @@ define([
      *
      * @example
      * primitives = primitives && primitives.destroy();
-     * 
+     *
      * @see PrimitiveCollection#isDestroyed
      */
     PrimitiveCollection.prototype.destroy = function() {

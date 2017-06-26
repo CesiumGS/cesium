@@ -626,7 +626,7 @@ define([
         if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
-        
+
         Check.typeOf.number.greaterThan('Ellipsoid.radii.z', this._radii.z, 0);
         //>>includeEnd('debug');
 

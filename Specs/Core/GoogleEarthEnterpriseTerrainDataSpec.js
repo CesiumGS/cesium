@@ -107,7 +107,8 @@ defineSuite([
             offset += sizeOfInt32;
 
             // Points
-            for (var j = 0; j < 4; ++j) {
+            var j;
+            for (j = 0; j < 4; ++j) {
                 var xPos = 0;
                 var yPos = 0;
                 var altitude = altitudeStart;
@@ -143,7 +144,7 @@ defineSuite([
     describe('upsample', function() {
         it('works for all four children of a simple quad', function() {
             var maxShort = 32767;
-            tilingScheme = new GeographicTilingScheme();
+            var tilingScheme = new GeographicTilingScheme();
             var buffer = getBuffer(tilingScheme, 0, 0, 0);
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
@@ -152,7 +153,7 @@ defineSuite([
                 negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
-            var tilingScheme = new GeographicTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             var childRectangles = [
                 tilingScheme.tileXYToRectangle(0, 0, 1),
                 tilingScheme.tileXYToRectangle(1, 0, 1),

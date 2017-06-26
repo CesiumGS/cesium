@@ -13,7 +13,7 @@ define([
     defineProperties,
     DeveloperError,
     Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Reports the availability of tiles in a {@link TilingScheme}.

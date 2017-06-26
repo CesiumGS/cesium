@@ -127,8 +127,8 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
-            for (j = 0; j < badNodes.length; ++j) {
-                message = message + badNodes[j].name + '\n';
+            for (var k = 0; k < badNodes.length; ++k) {
+                message = message + badNodes[k].name + '\n';
             }
             throw new DeveloperError(message);
         }
@@ -202,7 +202,7 @@ define([
         // #version must be first
         // defaults to #version 100 if not specified
         if (defined(version)) {
-            result = '#version ' + version;
+            result = '#version ' + version + '\n';
         }
 
         if (isFragmentShader) {

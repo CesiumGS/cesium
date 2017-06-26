@@ -303,7 +303,7 @@ define([
     TimeIntervalCollection.prototype.addInterval = function(interval, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 
@@ -326,17 +326,15 @@ define([
         index = binarySearch(intervals, interval, compareIntervalStartTimes);
         if (index < 0) {
             index = ~index;
-        } else {
+        } else if (index > 0 && interval.isStartIncluded && intervals[index - 1].isStartIncluded && intervals[index - 1].start.equals(interval.start)) {
             // interval's start date exactly equals the start date of at least one interval in the collection.
             // It could actually equal the start date of two intervals if one of them does not actually
             // include the date.  In that case, the binary search could have found either.  We need to
             // look at the surrounding intervals and their IsStartIncluded properties in order to make sure
             // we're working with the correct interval.
-            if (index > 0 && interval.isStartIncluded && intervals[index - 1].isStartIncluded && intervals[index - 1].start.equals(interval.start)) {
-                --index;
-            } else if (index < intervals.length && !interval.isStartIncluded && intervals[index].isStartIncluded && intervals[index].start.equals(interval.start)) {
-                ++index;
-            }
+            --index;
+        } else if (index < intervals.length && !interval.isStartIncluded && intervals[index].isStartIncluded && intervals[index].start.equals(interval.start)) {
+            ++index;
         }
 
         if (index > 0) {
@@ -453,7 +451,7 @@ define([
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(interval)) {
-            throw new DeveloperError("interval is required");
+            throw new DeveloperError('interval is required');
         }
         //>>includeEnd('debug');
 

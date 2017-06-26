@@ -19,7 +19,7 @@ define([
     }
 
     /**
-     * The underlying bounding volume
+     * The underlying bounding volume.
      *
      * @memberof TileBoundingVolume.prototype
      *
@@ -29,7 +29,7 @@ define([
     TileBoundingVolume.prototype.boundingVolume = undefined;
 
     /**
-     * The underlying bounding sphere
+     * The underlying bounding sphere.
      *
      * @memberof TileBoundingVolume.prototype
      *
@@ -37,17 +37,6 @@ define([
      * @readonly
      */
     TileBoundingVolume.prototype.boundingSphere = undefined;
-
-    /**
-     * Creates a debug primitive that shows the outline of the tile bounding
-     * volume.
-     *
-     * @param {Color} color The desired color of the primitive's mesh
-     * @return {Primitive}
-     */
-    TileBoundingVolume.prototype.createDebugVolume = function(color) {
-        DeveloperError.throwInstantiationError();
-    };
 
     /**
      * Calculates the distance between the tile and the camera.
@@ -70,6 +59,17 @@ define([
      *                      intersects the plane.
      */
     TileBoundingVolume.prototype.intersectPlane = function(plane) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    /**
+     * Creates a debug primitive that shows the outline of the tile bounding
+     * volume.
+     *
+     * @param {Color} color The desired color of the primitive's mesh
+     * @return {Primitive}
+     */
+    TileBoundingVolume.prototype.createDebugVolume = function(color) {
         DeveloperError.throwInstantiationError();
     };
 

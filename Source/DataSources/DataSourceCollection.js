@@ -205,7 +205,7 @@ define([
      *
      * @example
      * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
-     * 
+     *
      * @see DataSourceCollection#isDestroyed
      */
     DataSourceCollection.prototype.destroy = function() {

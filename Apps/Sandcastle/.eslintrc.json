@@ -8,6 +8,9 @@
         "Cesium": true
     },
     "rules": {
-        "no-unused-vars": ["off"]
+        "no-alert": ["off"],
+        "no-implicit-globals": "off",
+        "no-unused-vars": ["off"],
+        "quotes": "off"
     }
 }

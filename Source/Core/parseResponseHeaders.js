@@ -12,7 +12,7 @@ define([], function() {
      *                 described here: http://www.w3.org/TR/XMLHttpRequest/#the-getallresponseheaders()-method
      * @returns {Object} A dictionary of key/value pairs, where each key is the name of a header and the corresponding value
      *                   is that header's value.
-     * 
+     *
      * @private
      */
     function parseResponseHeaders(headerString) {

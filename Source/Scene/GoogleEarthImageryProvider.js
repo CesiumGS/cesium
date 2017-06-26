@@ -34,4 +34,3 @@ define([
 
     return GoogleEarthImageryProvider;
 });
-

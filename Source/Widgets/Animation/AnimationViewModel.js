@@ -174,7 +174,7 @@ define([
             }
 
             //Convert to decimal string and remove any trailing zeroes
-            return multiplier.toFixed(3).replace(/0{0,3}$/, "") + 'x';
+            return multiplier.toFixed(3).replace(/0{0,3}$/, '') + 'x';
         });
 
         /**
@@ -202,21 +202,19 @@ define([
                 var multiplier = angleToMultiplier(angle, ticks);
                 if (that.snapToTicks) {
                     multiplier = ticks[getTypicalMultiplierIndex(multiplier, ticks)];
-                } else {
-                    if (multiplier !== 0) {
-                        var positiveMultiplier = Math.abs(multiplier);
+                } else if (multiplier !== 0) {
+                    var positiveMultiplier = Math.abs(multiplier);
 
-                        if (positiveMultiplier > 100) {
-                            var numDigits = positiveMultiplier.toFixed(0).length - 2;
-                            var divisor = Math.pow(10, numDigits);
-                            multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
-                        } else if (positiveMultiplier > realtimeShuttleRingAngle) {
-                            multiplier = Math.round(multiplier);
-                        } else if (positiveMultiplier > 1) {
-                            multiplier = +multiplier.toFixed(1);
-                        } else if (positiveMultiplier > 0) {
-                            multiplier = +multiplier.toFixed(2);
-                        }
+                    if (positiveMultiplier > 100) {
+                        var numDigits = positiveMultiplier.toFixed(0).length - 2;
+                        var divisor = Math.pow(10, numDigits);
+                        multiplier = (Math.round(multiplier / divisor) * divisor) | 0;
+                    } else if (positiveMultiplier > realtimeShuttleRingAngle) {
+                        multiplier = Math.round(multiplier);
+                    } else if (positiveMultiplier > 1) {
+                        multiplier = +multiplier.toFixed(1);
+                    } else if (positiveMultiplier > 0) {
+                        multiplier = +multiplier.toFixed(2);
                     }
                 }
                 clockViewModel.multiplier = multiplier;
@@ -381,9 +379,9 @@ define([
         var gregorianDate = JulianDate.toGregorianDate(date);
         var millisecond = Math.round(gregorianDate.millisecond);
         if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
-            return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
+            return sprintf('%02d:%02d:%02d.%03d', gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
         }
-        return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
+        return sprintf('%02d:%02d:%02d UTC', gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
     };
 
     /**
