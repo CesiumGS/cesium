@@ -477,7 +477,7 @@ define([
             set : function(value) {
                 if (this._clock !== value) {
                     this._clock = value;
-                    this._clockOnTick(this._clock);
+                    this._clockOnTick(value);
                     if (defined(this._reload)) {
                         this._reload();
                     }
@@ -517,7 +517,6 @@ define([
             set : function(value) {
                 if (this._dimensions !== value) {
                     this._dimensions = value;
-                    this._clockOnTick(this._clock);
                     if (defined(this._reload)) {
                         this._reload();
                     }
