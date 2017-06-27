@@ -1,34 +1,40 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/WebMapTileServiceImageryProvider',
-        'Core/Credit',
-        'Core/DefaultProxy',
-        'Core/GeographicTilingScheme',
-        'Core/loadImage',
-        'Core/queryToObject',
-        'Core/RequestScheduler',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/Uri'
-    ], function(
-        WebMapTileServiceImageryProvider,
-        Credit,
-        DefaultProxy,
-        GeographicTilingScheme,
-        loadImage,
-        queryToObject,
-        RequestScheduler,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        Uri) {
+    'Scene/WebMapTileServiceImageryProvider',
+    'Core/Clock',
+    'Core/Credit',
+    'Core/DefaultProxy',
+    'Core/GeographicTilingScheme',
+    'Core/JulianDate',
+    'Core/loadImage',
+    'Core/queryToObject',
+    'Core/RequestScheduler',
+    'Core/TimeIntervalCollection',
+    'Core/WebMercatorTilingScheme',
+    'Scene/Imagery',
+    'Scene/ImageryLayer',
+    'Scene/ImageryProvider',
+    'Scene/ImageryState',
+    'Specs/pollToPromise',
+    'ThirdParty/Uri'
+], function(
+    WebMapTileServiceImageryProvider,
+    Clock,
+    Credit,
+    DefaultProxy,
+    GeographicTilingScheme,
+    JulianDate,
+    loadImage,
+    queryToObject,
+    RequestScheduler,
+    TimeIntervalCollection,
+    WebMercatorTilingScheme,
+    Imagery,
+    ImageryLayer,
+    ImageryProvider,
+    ImageryState,
+    pollToPromise,
+    Uri) {
     'use strict';
 
     beforeEach(function() {
@@ -166,6 +172,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
@@ -177,6 +184,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutLayer).toThrowDeveloperError();
     });
 
@@ -188,6 +196,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutStyle).toThrowDeveloperError();
     });
 
@@ -199,7 +208,22 @@ defineSuite([
                 url : 'http://wmts.invalid'
             });
         }
+
         expect(createWithoutTMS).toThrowDeveloperError();
+    });
+
+    it('requires clock if times is specified', function() {
+        function createWithoutClock() {
+            return new WebMapTileServiceImageryProvider({
+                layer : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wmts.invalid',
+                tileMatrixSetID : 'someTMS',
+                times : new TimeIntervalCollection()
+            });
+        }
+
+        expect(createWithoutClock).toThrowDeveloperError();
     });
 
     it('resolves readyPromise', function() {
@@ -400,5 +424,28 @@ defineSuite([
                 imagery.releaseReference();
             });
         });
+    });
+
+    it('tiles preload as we approach the next time interval', function() {
+        // var times = TimeIntervalCollection.fromIso8601('2017-04-26/2017-04-30/P1D');
+        // var clock = new Clock({
+        //     currentTime : JulianDate.fromIso8601('2017-04-26')
+        // });
+        //
+        // var provider = new WebMapTileServiceImageryProvider({
+        //     layer : 'someLayer',
+        //     style : 'someStyle',
+        //     url : 'http://wmts.invalid',
+        //     tileMatrixSetID : 'someTMS',
+        //     clock : clock,
+        //     times : times
+        // });
+        //
+        // clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:55:00');
+        // clock.tick();
+    });
+
+    it('reload is called once we cross into next interval', function() {
+
     });
 });
