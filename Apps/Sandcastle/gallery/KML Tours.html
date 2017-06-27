@@ -57,7 +57,9 @@ TourPlayer.prototype.play = function(done) {
       // Clean player
       self.activeScenePlayer = null;
       self.tourEnd.raiseEvent();
-      done && done();
+      if (done !== undefined) {
+          done();
+      }
     });
   }
 };
@@ -70,10 +72,10 @@ TourPlayer.prototype.playEntry = function(entry, index, next) {
     index: index
   };
 
-  this.activeScenePlayer = new PlayerConstructor(entry, (function() {
+  this.activeScenePlayer = new PlayerConstructor(entry, function() {
     this.sceneEnd.raiseEvent(entry.entryType, entry.duration);
     next();
-  }).bind(this), context);
+  }.bind(this), context);
 
   this.sceneStart.raiseEvent(entry.entryType, entry.duration);
   this.activeScenePlayer.play();
