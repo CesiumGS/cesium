@@ -75,7 +75,7 @@ define([
         Check.typeOf.number('options.positions', length);
         Check.typeOf.number('options.topRadius', topRadius);
         Check.typeOf.number('options.bottomRadius', bottomRadius);
-        Check.typeOf.number.greaterThanOrEquals('options.sclices', slices, 3);
+        Check.typeOf.number.greaterThanOrEquals('options.slices', slices, 3);
         //>>includeEnd('debug');
 
         this._length = length;
