@@ -6,7 +6,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './Math'
     ], function(
@@ -16,7 +15,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         CesiumMath) {
     'use strict';
@@ -181,7 +179,7 @@ define([
         var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125)
+        Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125);
         //>>includeEnd('debug');
 
         vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
