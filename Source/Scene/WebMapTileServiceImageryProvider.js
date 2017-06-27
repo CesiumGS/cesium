@@ -204,6 +204,7 @@ define([
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
         var url, key;
+        var staticDimensions = imageryProvider._dimensions;
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
         if (imageryProvider._url.indexOf('{') >= 0) {
@@ -217,7 +218,6 @@ define([
                 .replace('{TileCol}', col.toString())
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
 
-            var staticDimensions = imageryProvider._dimensions;
             if (defined(staticDimensions)) {
                 for (key in staticDimensions) {
                     if (staticDimensions.hasOwnProperty(key)) {
@@ -249,6 +249,14 @@ define([
             queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
             queryOptions.format = imageryProvider._format;
 
+            if (defined(staticDimensions)) {
+                for (key in staticDimensions) {
+                    if (staticDimensions.hasOwnProperty(key)) {
+                        url = url.replace('{'+key+'}', staticDimensions[key]);
+                    }
+                }
+            }
+
             if (defined(dynamicIntervalData)) {
                 for (key in dynamicIntervalData) {
                     if (dynamicIntervalData.hasOwnProperty(key)) {
@@ -267,7 +275,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        return ImageryProvider.loadImage(this, url, request);
+        return ImageryProvider.loadImage(imageryProvider, url, request);
     }
 
     defineProperties(WebMapTileServiceImageryProvider.prototype, {
@@ -548,7 +556,7 @@ define([
 
         // Try and load from cache
         if (defined(timeDynamicImagery)) {
-            currentInterval = timeDynamicImagery.getCurrentInterval();
+            currentInterval = timeDynamicImagery.currentInterval;
             result = timeDynamicImagery.getFromCache(x, y, level, request);
         }
 

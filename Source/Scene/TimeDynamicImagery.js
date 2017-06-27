@@ -88,13 +88,30 @@ define([
                     this._reloadFunction();
                 }
             }
+        },
+        /**
+         * Gets the current interval.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {TimeInterval}
+         */
+        currentInterval : {
+            get : function() {
+                return this._times.get(this._currentIntervalIndex);
+            }
         }
     });
 
-    TimeDynamicImagery.prototype.getCurrentInterval = function () {
-        return this._times.get(this._currentIntervalIndex);
-    };
-
+    /**
+     * Gets the tile from the cache if its available.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     *
+     * @returns {Promise.<Image>|undefined} A promise for the image that will resolve when the image is available, or
+     *          undefined if the tile is not in the cache.
+     */
     TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
         var key = getKey(x, y, level);
         var result;
@@ -113,6 +130,15 @@ define([
         return result;
     };
 
+    /**
+     * Checks if the next interval is approaching and will start preload the tile if necessary. Otherwise it will
+     * just add the tile to a list so it will be prefetched when we approach the next interval.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     */
     TimeDynamicImagery.prototype.checkApproachingInterval = function (x, y, level, request) {
         var key = getKey(x, y, level);
         var tilesRequestedForInterval = this._tilesRequestedForInterval;
@@ -246,7 +272,7 @@ define([
             type : RequestType.IMAGERY,
             priorityFunction : tile.priorityFunction
         });
-        var promise = this._requestImageFunction(keyElements.x, keyElements.y, keyElements.level, request, interval);
+        var promise = that._requestImageFunction(keyElements.x, keyElements.y, keyElements.level, request, interval);
         if (!defined(promise)) {
             return false;
         }
@@ -258,4 +284,6 @@ define([
 
         return true;
     }
+
+    return TimeDynamicImagery;
 });
