@@ -195,7 +195,7 @@ define([
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
         webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
-        var defaultToWebgl2 = false;
+        var defaultToWebgl2 = true;
         var requestWebgl2 = defaultToWebgl2 && (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
 
@@ -269,11 +269,11 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
-        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
-        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
-        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']) || this._webgl2;
+        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']) || this._webgl2;
+        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']) || this._webgl2;
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']) || this._webgl2;
+        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']) || this._webgl2;
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
