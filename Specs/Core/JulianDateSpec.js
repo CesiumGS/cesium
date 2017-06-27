@@ -164,77 +164,77 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Construct from ISO8601 local calendar date, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2009, 7, 1));
-        var computedDate = JulianDate.fromIso8601('20090801T00');
+    it('Construct from ISO8601 calendar date, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1)));
+        var computedDate = JulianDate.fromIso8601('20090801');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from ISO8601 local calendar date, extended format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2009, 7, 1));
-        var computedDate = JulianDate.fromIso8601('2009-08-01T00');
+    it('Construct from ISO8601 calendar date, extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1)));
+        var computedDate = JulianDate.fromIso8601('2009-08-01');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from ISO8601 local calendar date on Feb 29th, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2000, 1, 29));
-        var computedDate = JulianDate.fromIso8601('20000229T00');
+    it('Construct from ISO8601 calendar date on Feb 29th, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2000, 1, 29)));
+        var computedDate = JulianDate.fromIso8601('20000229');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from ISO8601 local calendar date on Feb 29th, extended format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2000, 1, 29));
-        var computedDate = JulianDate.fromIso8601('2000-02-29T00');
+    it('Construct from ISO8601 calendar date on Feb 29th, extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2000, 1, 29)));
+        var computedDate = JulianDate.fromIso8601('2000-02-29');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local ordinal date, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601('1985102T00');
+    it('Construct from an ISO8601 ordinal date, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(1985, 3, 12)));
+        var computedDate = JulianDate.fromIso8601('1985102');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local ordinal date, extended format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601('1985-102T00');
+    it('Construct from an ISO8601 ordinal date, extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(1985, 3, 12)));
+        var computedDate = JulianDate.fromIso8601('1985-102');
         expect(computedDate).toEqual(expectedDate);
     });
 
     it('Construct an ISO8601 ordinal date on a leap year', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2000, 11, 31));
-        var computedDate = JulianDate.fromIso8601('2000-366T00');
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2000, 11, 31)));
+        var computedDate = JulianDate.fromIso8601('2000-366');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local week date, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(1985, 3, 12));
-        var computedDate = JulianDate.fromIso8601('1985W155T00');
+    it('Construct from an ISO8601 week date, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(1985, 3, 12)));
+        var computedDate = JulianDate.fromIso8601('1985W155');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local week date, extended format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2008, 8, 27));
-        var computedDate = JulianDate.fromIso8601('2008-W39-6T00');
+    it('Construct from an ISO8601 week date, extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 8, 27)));
+        var computedDate = JulianDate.fromIso8601('2008-W39-6');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local calendar week date, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(1985, 3, 7));
-        var computedDate = JulianDate.fromIso8601('1985W15T00');
+    it('Construct from an ISO8601 calendar week date, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(1985, 3, 7)));
+        var computedDate = JulianDate.fromIso8601('1985W15');
         expect(computedDate).toEqual(expectedDate);
     });
 
-    it('Construct from an ISO8601 local calendar week date, extended format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(2008, 8, 21));
-        var computedDate = JulianDate.fromIso8601('2008-W39T00');
+    it('Construct from an ISO8601 calendar week date, extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 8, 21)));
+        var computedDate = JulianDate.fromIso8601('2008-W39');
         expect(computedDate).toEqual(expectedDate);
     });
 
     //Note, there is no 'extended format' for calendar month because eliminating the
     //would confuse is with old YYMMDD dates
-    it('Construct from an ISO8601 local calendar month, basic format', function() {
-        var expectedDate = JulianDate.fromDate(new Date(1985, 3, 1));
-        var computedDate = JulianDate.fromIso8601('1985-04T00');
+    it('Construct from an ISO8601 calendar month, basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(1985, 3, 1)));
+        var computedDate = JulianDate.fromIso8601('1985-04');
         expect(computedDate).toEqual(expectedDate);
     });
 
@@ -443,18 +443,6 @@ defineSuite([
     it('Construct from ISO8601 local calendar date and time with no seconds and UTC offset in extended format', function() {
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
         var computedDate = JulianDate.fromIso8601('2009-08-01T07:30-05:00');
-        expect(computedDate).toEqual(expectedDate);
-    });
-
-    it('Construct from ISO8601 with date only in basic format should be midnight UTC', function() {
-        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1)));
-        var computedDate = JulianDate.fromIso8601('20090801');
-        expect(computedDate).toEqual(expectedDate);
-    });
-
-    it('Construct from ISO8601 with date only in extended format should be midnight UTC', function() {
-        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1)));
-        var computedDate = JulianDate.fromIso8601('2009-08-01');
         expect(computedDate).toEqual(expectedDate);
     });
 
