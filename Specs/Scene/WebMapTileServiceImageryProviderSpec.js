@@ -8,6 +8,7 @@ defineSuite([
     'Core/JulianDate',
     'Core/loadImage',
     'Core/queryToObject',
+    'Core/Request',
     'Core/RequestScheduler',
     'Core/TimeIntervalCollection',
     'Core/WebMercatorTilingScheme',
@@ -26,6 +27,7 @@ defineSuite([
     JulianDate,
     loadImage,
     queryToObject,
+    Request,
     RequestScheduler,
     TimeIntervalCollection,
     WebMercatorTilingScheme,
@@ -426,26 +428,118 @@ defineSuite([
         });
     });
 
-    it('tiles preload as we approach the next time interval', function() {
-        // var times = TimeIntervalCollection.fromIso8601('2017-04-26/2017-04-30/P1D');
-        // var clock = new Clock({
-        //     currentTime : JulianDate.fromIso8601('2017-04-26')
-        // });
-        //
-        // var provider = new WebMapTileServiceImageryProvider({
-        //     layer : 'someLayer',
-        //     style : 'someStyle',
-        //     url : 'http://wmts.invalid',
-        //     tileMatrixSetID : 'someTMS',
-        //     clock : clock,
-        //     times : times
-        // });
-        //
-        // clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:55:00');
-        // clock.tick();
+    it('tiles preload on requestImage as we approach the next time interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26')
+        });
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:56:00Z');
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // TODO: Test tile 0,0,0 was prefetched
+            });
+    });
+
+    it('tiles preload onTick event as we approach the next time interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26')
+        });
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // TODO: Test tile 0,0,0 wasn't prefetched
+
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:55:00Z');
+                clock.tick();
+
+                // TODO: Test tile 0,0,0 was prefetching
+            });
     });
 
     it('reload is called once we cross into next interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26')
+        });
 
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                provider._reload = jasmine.createSpy('reload');
+
+                clock.currentTime = JulianDate.fromIso8601('2017-04-27T00:00:00Z');
+                clock.tick();
+
+                expect(provider._reload.calls.count()).toEqual(1);
+            });
     });
 });
