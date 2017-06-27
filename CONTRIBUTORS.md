@@ -149,3 +149,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Hülya Yurtman](https://github.com/hulyayurtman)
 * [Esra ERİK](https://github.com/esraerik)
 * [Rishabh Shah](https://github.com/rms13)
+* [Rudraksha Shah](https://github.com/Rudraksha20)
