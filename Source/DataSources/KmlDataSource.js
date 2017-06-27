@@ -58,7 +58,9 @@ define([
         './SampledPositionProperty',
         './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './WallGraphics',
+        './KmlLookAt',
+        './KmlCamera'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -118,7 +120,9 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics) {
+        WallGraphics,
+        KmlLookAt,
+        KmlCamera) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -212,6 +216,8 @@ define([
     var BILLBOARD_NEAR_RATIO = 1.0;
     var BILLBOARD_FAR_DISTANCE = 1.6093e+7;
     var BILLBOARD_FAR_RATIO = 0.1;
+
+    var FAIL_ON_NETWORK_LINK_CALL_FAILS = false;
 
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
@@ -1612,14 +1618,10 @@ define([
         kmlData.snippet = queryStringValue(featureNode, 'Snippet', namespaces.kml);
 
         processExtendedData(featureNode, entity);
-        processDescription(featureNode, entity, styleEntity, uriResolver, dataSource._proxy, sourceUri);
+        processDescription(featureNode, entity, styleEntity, uriResolver);
+        processLookAt(featureNode, entity);
+        processCamera(featureNode, entity);
 
-        if (defined(queryFirstNode(featureNode, 'Camera', namespaces.kml))) {
-            console.log('KML - Unsupported view: Camera');
-        }
-        if (defined(queryFirstNode(featureNode, 'LookAt', namespaces.kml))) {
-            console.log('KML - Unsupported view: LookAt');
-        }
         if (defined(queryFirstNode(featureNode, 'Region', namespaces.kml))) {
             console.log('KML - Placemark Regions are unsupported');
         }
@@ -1639,7 +1641,7 @@ define([
         GroundOverlay : processGroundOverlay,
         PhotoOverlay : processUnsupportedFeature,
         ScreenOverlay : processUnsupportedFeature,
-        Tour : processUnsupportedFeature
+        Tour : processTour
     };
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
@@ -2078,9 +2080,13 @@ define([
                     } else if (viewRefreshMode === 'onRegion'){
                         console.log('KML - Unsupported viewRefreshMode: onRegion');
                     }
+                }).otherwise(function(){
+                  console.log('KML - Failed to call NetworkLink');
                 });
 
-                promises.push(promise);
+                if (FAIL_ON_NETWORK_LINK_CALL_FAILS) {
+                  promises.push(promise);
+                }
             }
         }
     }
@@ -2091,6 +2097,97 @@ define([
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query);
         } else {
             processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context);
+        }
+    }
+
+    function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
+        var name = queryStringValue(node, 'name', namespaces.kml);
+        var tour = {'name': name};
+
+        var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
+        if(playlistNode) {
+            tour['playlist'] = [];
+
+            var childNodes = playlistNode.childNodes;
+            for(var i = 0; i < childNodes.length; i++) {
+                var entryNode = childNodes[i];
+
+                if (entryNode.localName === 'FlyTo') {
+                    processTourFlyTo(tour, entryNode);
+                }
+                else if (entryNode.localName === 'Wait') {
+                    var w = { '_type': 'Wait' };
+
+                    var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
+                    if(duration !== null) {
+                        w['duration'] = duration;
+                    }
+
+                    tour['playlist'].push(w);
+                }
+            }
+        }
+
+        if(defined(dataSource.kmlTours)) {
+            dataSource.kmlTours.push(tour);
+        }
+        else {
+            dataSource.kmlTours = [tour];
+        }
+    }
+
+    function processTourFlyTo(tour, entryNode) {
+
+        var ft = { '_type': 'FlyTo' };
+
+        var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
+        if(duration !== null) {
+            ft['duration'] = duration;
+        }
+
+        var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
+        if(flyToMode !== null) {
+            ft['flyToMode'] = flyToMode;
+        }
+
+        var t = {kml: {}};
+        processLookAt(entryNode, t);
+        ft['lookAt'] = t.kml.lookAt;
+
+        tour['playlist'].push(ft);
+    }
+
+    function processCamera(featureNode, entity) {
+        var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
+        if(defined(camera)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(camera, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(camera, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(camera, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(camera, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(camera, 'tilt', namespaces.kml);
+            result.roll = queryNumericValue(camera, 'roll', namespaces.kml);
+
+            entity.kml.camera = new KmlCamera(entity, result);
+        }
+    }
+
+    function processLookAt(featureNode, entity) {
+        var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
+        if(defined(lookAt)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            result.range = queryNumericValue(lookAt, 'range', namespaces.kml);
+
+            entity.kml.lookAt = new KmlLookAt(entity, result);
         }
     }
 
