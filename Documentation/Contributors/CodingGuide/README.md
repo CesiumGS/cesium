@@ -138,11 +138,7 @@ function Model(options) {
 
 ## Linting
 
-For syntax and style guidelines, we use the [ESLint](http://eslint.org/docs/rules/) recommended settings as a base
-and extend it with additional rules. For a list of what rules are enabled, look in `index.js`, `browser.js`, and `node.js`
-in the [`eslint-config-cesium`](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Tools/eslint-config-cesium) folder.
-These are contained in the Node module [`eslint-config-cesium`](https://www.npmjs.com/package/eslint-config-cesium), which is maintained in the Cesium repository and is
-available for use on other projects as well.
+For syntax and style guidelines, we use the [ESLint](http://eslint.org/docs/rules/) recommended settings as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium), which is maintained as part of the Cesium repository and also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js). 
 
 * When disabling linting for one line, use `//eslint-disable-line`:
 ```js
