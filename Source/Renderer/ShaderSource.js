@@ -213,7 +213,7 @@ define([
         // #version must be first
         // defaults to #version 100 if not specified
         if (defined(version)) {
-            result = '#version ' + version;
+            result = '#version ' + version + '\n';
         }
 
         for (i = 0; i < extensions.length; i++) {
