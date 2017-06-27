@@ -4273,7 +4273,7 @@ defineSuite([
 
             expect(tour.playlist[0].duration).toEqual(1);
             expect(tour.playlist[0].entryType).toEqual("SoundCue");
-            
+
             expect(tour.playlist[1].duration).toEqual(2);
             expect(tour.playlist[1].entryType).toEqual("Wait");
 
@@ -4327,7 +4327,7 @@ defineSuite([
             expect(flyto1.flyToMode).toEqual('bounce');
             expect(flyto1.duration).toEqual(5);
             expect(flyto1.lookAt).toBeInstanceOf(KmlLookAt);
-            
+
             expect(flyto1.lookAt.longitude).toEqual(10.0);
             expect(flyto1.lookAt.latitude).toEqual(20.0);
             expect(flyto1.lookAt.altitude).toEqual(30);
@@ -4337,7 +4337,7 @@ defineSuite([
 
             expect(flyto2.duration).toEqual(4.1);
             expect(flyto2.camera).toBeInstanceOf(KmlCamera);
-            
+
             expect(flyto2.camera.longitude).toEqual(170.0);
             expect(flyto2.camera.latitude).toEqual(-43.0);
             expect(flyto2.camera.altitude).toEqual(9700);

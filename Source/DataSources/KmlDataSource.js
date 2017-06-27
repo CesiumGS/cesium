@@ -1717,7 +1717,7 @@ define([
                         playlistNodeProcessor(tour, entryNode);
                     }
                     else {
-                        console.log("Unknown KML Tour playlist entry type " + entryNode.localName);
+                        console.log('Unknown KML Tour playlist entry type ' + entryNode.localName);
                     }
                 }
             }
@@ -1731,7 +1731,7 @@ define([
     }
 
     function processTourUnsupportedNode(tour, entryNode) {
-        console.log("KML Tour unsupported node " + entryNode.localName);
+        console.log('KML Tour unsupported node ' + entryNode.localName);
     }
 
     function processTourSoundCue(tour, entryNode) {

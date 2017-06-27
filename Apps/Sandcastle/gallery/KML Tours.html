@@ -84,14 +84,13 @@ TourPlayer.prototype.playEntry = function(entry, index, next) {
 Asynchronous array iterator
 */
 function chainPlaylist(playlist, onEach, done) {
-  var generator = generate(playlist);
+  var playlistIndex = 0;
 
   var next = function(success) {
     if (success === undefined || success) {
-      var entry = generator.next();
-      if (!entry.done) {
-        var v = entry.value;
-        onEach(v[0], v[1], next);
+      var entry = playlist[playlistIndex++];
+      if (entry) {
+        onEach(entry, playlistIndex, next);
       }
       // We've done
       else {
@@ -103,11 +102,6 @@ function chainPlaylist(playlist, onEach, done) {
   // Make a first step
   next();
 
-  function* generate(playlist) {
-    for (var i = 0; i < playlist.length; i++) {
-      yield [playlist[i], i];
-    }
-  }
 }
 
 //------------------------------------------------------------

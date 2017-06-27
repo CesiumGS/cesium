@@ -32,11 +32,11 @@ define([
     }
 
     KmlCamera.prototype.getViewOptions = function() {
-        orientation = {
+        var orientation = {
             heading: CesiumMath.toRadians(this.heading),
             pitch: CesiumMath.toRadians(this.tilt - 90),
             roll: CesiumMath.toRadians(this.roll)
-        }
+        };
 
         var dst = Cartesian3.fromDegrees(this.longitude, this.latitude, this.altitude);
 
@@ -44,7 +44,7 @@ define([
             dstination: dst,
             orientation: orientation
         };
-    }
+    };
 
     KmlCamera.prototype.flyToMe = function(viewer, duration) {
         var camera = (viewer && viewer.camera) ? viewer.camera : viewer;
@@ -56,7 +56,6 @@ define([
     };
 
     KmlCamera.prototype.setView = function(viewer) {
-        var camera = (viewer && viewer.camera) ? viewer.camera : viewer;
         var options = this.getViewOptions();
         return viewer.setView(options);
     };
