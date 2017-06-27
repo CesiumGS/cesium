@@ -1,4 +1,4 @@
-#extension GL_EXT_frag_depth : enable
+#version 300 es
 
 #define neighborhoodHalfWidth 1  // TUNABLE PARAMETER -- half-width of region-growing kernel
 #define neighborhoodFullWidth 3
@@ -10,7 +10,8 @@ uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_depthTexture;
 uniform float rangeParameter;
 
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
+layout(location = 0) out vec4 colorOut;
 
 #define otherswap(a, b, aC, bC) if (a > b) { temp = a; a = b; b = temp; tempColor = aC; aC = bC; bC = tempColor; }
 
@@ -83,8 +84,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = texture2D(pointCloud_depthTexture, neighborCoords).r;
-            vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
+            float neighbor = texture(pointCloud_depthTexture, neighborCoords).r;
+            vec4 colorNeighbor = texture(pointCloud_colorTexture, neighborCoords);
             if (pastCenter) {
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
                     neighbor;
@@ -101,8 +102,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
 }
 
 void main() {
-    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r;
+    vec4 color = texture(pointCloud_colorTexture, v_textureCoordinates);
+    float depth = texture(pointCloud_depthTexture, v_textureCoordinates).r;
 
     vec4 finalColor = color;
     float finalDepth = depth;
@@ -159,6 +160,6 @@ void main() {
         }
     }
 
-    gl_FragColor = finalColor;
-    gl_FragDepthEXT = finalDepth;
+    colorOut = finalColor;
+    gl_FragDepth = finalDepth;
 }

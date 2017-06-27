@@ -1,4 +1,4 @@
-#extension GL_EXT_frag_depth : enable
+#version 300 es
 
 #define TAU 6.28318530718
 #define PI 3.14159265359
@@ -14,7 +14,7 @@
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
-varying vec2 v_textureCoordinates;
+in vec2 v_textureCoordinates;
 
 float acosFast(in float inX) {
     float x = abs(inX);
@@ -130,7 +130,7 @@ void main() {
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
 
     // The position of this pixel in 3D (i.e the position of the point)
-    vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
+    vec3 centerPosition = texture(pointCloud_ECTexture, v_textureCoordinates).xyz;
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
@@ -169,8 +169,8 @@ void main() {
             ivec2 pI = pos + d;
 
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
-            vec3 neighborPosition = texture2D(pointCloud_ECTexture,
-                                              vec2(pI) / czm_viewport.zw).xyz;
+            vec3 neighborPosition = texture(pointCloud_ECTexture,
+                                            vec2(pI) / czm_viewport.zw).xyz;
 
             // If our horizon pixel doesn't exist, ignore it and move on
             if (length(neighborPosition) < EPS || pI == pos) {
@@ -231,5 +231,5 @@ void main() {
 
     // This is the depth of this pixel... assuming that it's valid.
     float linearizedDepth = (-centerPosition.z - near) / (far - near);
-    gl_FragDepthEXT = linearizedDepth;
+    gl_FragDepth = linearizedDepth;
 }
