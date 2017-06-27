@@ -14,7 +14,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 * [Naming](#naming)
 * [Formatting](#formatting)
-* [Code Guidelines](#code-guidelines)
+* [Linting](#linting)
 * [Units](#units)
 * [Basic Code Construction](#basic-code-construction)
 * [Functions](#functions)
@@ -136,13 +136,22 @@ function Model(options) {
 
 * Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
 
-## Code Guidelines
+## Linting
 
-For syntax and style guidelines, we adhere to the common JavaScript "recommended" rules, according to [ESLint](http://eslint.org/docs/rules/). Some
-additions include enabling [`no-new`](http://eslint.org/docs/rules/no-new) and [`no-extend-native`](http://eslint.org/docs/rules/no-extend-native).
-For a complete list of what rules are enabled, look in `index.js`, `browser.js`, and `node.js` in the [`eslint-config-cesium`](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Tools/eslint-config-cesium) folder.
+For syntax and style guidelines, we use the [ESLint](http://eslint.org/docs/rules/) recommended settings as a base
+and extend it with additional rules. For a list of what rules are enabled, look in `index.js`, `browser.js`, and `node.js`
+in the [`eslint-config-cesium`](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Tools/eslint-config-cesium) folder.
+These are contained in the Node module [`eslint-config-cesium`](https://www.npmjs.com/package/eslint-config-cesium), which is maintained in the Cesium repository and is
+available for use on other projects as well.
 
-* When [disabling rules with inline comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments), place the comments on new lines and as close to the associated code as possible:
+* When disabling linting for one line, use `//eslint-disable-line`:
+```js
+function exit(warningMessage) {
+    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+}
+```
+
+* When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible:
 ```js
 /*eslint-disable no-empty*/
 try {
@@ -152,13 +161,7 @@ try {
 /*eslint-enable no-empty*/
 ```
 
-* If possible, use `//eslint-disable-line` to disable specific rules for one line.
-```js
-fn multiplyByThree(foo) {
-    var unusedVar = 5; //eslint-disable-line no-unused-vars
-    return foo * 3;
-}
-```
+* See [Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments) for more examples.
 
 ## Units
 
