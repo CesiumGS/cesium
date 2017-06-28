@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PerspectiveOffCenterFrustum',
         'Core/Cartesian2',

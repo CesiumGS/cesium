@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/WebGLConstants',
         'Core/WindingOrder',

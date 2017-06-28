@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
     'Core/BingMapsGeocoderService',
     'Core/loadJsonp',

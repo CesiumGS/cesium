@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ScreenSpaceCameraController',
         'Core/Cartesian2',

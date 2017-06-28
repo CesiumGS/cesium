@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/earcut-2.1.1',
         './Cartesian2',
