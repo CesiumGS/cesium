@@ -353,7 +353,8 @@ define([
         }
         //>>includeEnd('debug')
 
-        //Not move onto the time string, which is much simpler.
+        //Now move onto the time string, which is much simpler.
+        //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
         var offsetIndex;
         if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
@@ -425,9 +426,6 @@ define([
                 minute = minute + new Date(Date.UTC(year, month - 1, day, hour, minute)).getTimezoneOffset();
                 break;
             }
-        } else {
-            //If no time is specified, it is considered the beginning of the day, local time.
-            minute = minute + new Date(year, month - 1, day).getTimezoneOffset();
         }
 
         //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.
