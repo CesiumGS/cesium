@@ -129,7 +129,7 @@ define([
             } else {
 // END GLTF_SPEC
                 if (sampler.interpolation === 'LINEAR') {
-                    if (path === 'translation' || path === 'scale') {
+                    if (path === 'translation' || path === 'scale' || path === 'weights') {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints

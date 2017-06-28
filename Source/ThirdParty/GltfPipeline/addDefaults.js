@@ -474,6 +474,24 @@ define([
                             }
                         }
                     });
+                    var morphTargets = primitive.targets;
+                    for (var target in morphTargets) {
+                        var targetAttributes = morphTargets[target];
+                        for (var attribute in targetAttributes) {
+                            if (attribute !== 'extras') {
+                                var accessor = accessors[targetAttributes[attribute]];
+                                var bufferViewId = accessor.bufferView;
+                                if (needsTarget[bufferViewId]) {
+                                    var bufferView = bufferViews[bufferViewId];
+                                    if (defined(bufferView)) {
+                                        bufferView.target = WebGLConstants.ARRAY_BUFFER;
+                                        needsTarget[bufferViewId] = false;
+                                        shouldTraverse--;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 });
                 if (shouldTraverse === 0) {
                     return true;

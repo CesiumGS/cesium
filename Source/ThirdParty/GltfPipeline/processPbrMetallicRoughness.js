@@ -203,12 +203,19 @@ define([
 
         var hasNormals = true;
         var hasTangents = false;
+        var hasMorphTargets = false;
+        var morphTargets;
         for (var entry in gltf.meshes) {
             if (defined(entry)) {
                 var mesh = gltf.meshes[entry];
                 var primitives = mesh.primitives;
                 for (var primitive in primitives) {
                     if (defined(primitive)) {
+                        var targets = primitives[primitive].targets;
+                        if (!hasMorphTargets && defined(targets)) {
+                            hasMorphTargets = true;
+                            morphTargets = targets;
+                        }
                         var attributes = primitives[primitive].attributes;
                         for (var attribute in attributes) {
                             if (attribute.indexOf('TANGENT') >= 0) {
@@ -333,10 +340,43 @@ define([
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_positionEC;\n';
+
+        // Morph Target Weighting
+        vertexShaderMain += '  vec3 weightedPos = a_position;\n';
+        if (hasNormals) {
+            vertexShaderMain += '  vec3 weightedNormal = a_normal;\n';
+        }
+        if (hasTangents) {
+            vertexShaderMain += '  vec3 weightedTangent = a_tangent;\n';
+        }
+        if (hasMorphTargets) {
+            for (var target in morphTargets) {
+                var targetAttributes = morphTargets[target];
+                for (var targetAttribute in targetAttributes) {
+                    var attributeLower = targetAttribute.toLowerCase() + '_' + target;
+                    techniqueAttributes['a_' + attributeLower] = attributeLower;
+                    techniqueParameters[attributeLower] = {
+                        semantic : targetAttribute + '_' + target,
+                        type : WebGLConstants.FLOAT_VEC3
+                    }
+                    vertexShader += 'attribute vec3 a_' + attributeLower + ';\n';
+                    if (targetAttribute === 'POSITION') {
+                        vertexShaderMain += '  weightedPos += 0.5 * a_' + attributeLower + ';\n';
+                    } else if (targetAttribute === 'NORMAL') {
+                        vertexShaderMain += '  weightedNormal += 0.5 * a_' + attributeLower + ';\n';
+                    } else if (targetAttribute === 'TANGENT') {
+                        vertexShaderMain += '  weightedTangent += 0.5 * a_' + attributeLower + ';\n';
+                    } else {
+                        // Invalid attribute
+                    }
+                }
+            }
+        }
+
         if (hasSkinning) {
-            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(a_position,1.0);\n';
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(weightedPos,1.0);\n';
         } else {
-            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n';
+            vertexShaderMain += '  vec4 pos = u_modelViewMatrix * vec4(weightedPos,1.0);\n';
         }
         vertexShaderMain += '  v_positionEC = pos.xyz;\n';
         vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
@@ -352,9 +392,9 @@ define([
             vertexShader += 'attribute vec3 a_normal;\n';
             vertexShader += 'varying vec3 v_normal;\n';
             if (hasSkinning) {
-                vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * a_normal;\n';
+                vertexShaderMain += '  v_normal = u_normalMatrix * mat3(skinMat) * weightedNormal;\n';
             } else {
-                vertexShaderMain += '  v_normal = u_normalMatrix * a_normal;\n';
+                vertexShaderMain += '  v_normal = u_normalMatrix * weightedNormal;\n';
             }
 
             fragmentShader += 'varying vec3 v_normal;\n';
@@ -368,7 +408,7 @@ define([
             };
             vertexShader += 'attribute vec3 a_tangent;\n';
             vertexShader += 'varying vec3 v_tangent;\n';
-            vertexShaderMain += '  v_tangent = (u_modelViewMatrix * vec4(a_tangent, 1.0)).xyz;\n';
+            vertexShaderMain += '  v_tangent = (u_modelViewMatrix * vec4(weightedTangent, 1.0)).xyz;\n';
 
             fragmentShader += 'varying vec3 v_tangent;\n';
         }
@@ -784,8 +824,17 @@ define([
         var techniques = gltf.techniques;
         var programs = gltf.programs;
         var shaders = gltf.shaders;
+        var targets = primitive.targets;
 
         var attributes = primitive.attributes;
+        for (var target in targets) {
+            var targetAttributes = targets[target];
+            for (var attribute in targetAttributes) {
+                if (attribute !== 'extras') {
+                    attributes[attribute + '_' + target] = targetAttributes[attribute];
+                }
+            }
+        }
         var material = materials[primitive.material];
         var technique = techniques[material.technique];
         var program = programs[technique.program];

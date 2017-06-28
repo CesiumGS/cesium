@@ -2495,8 +2495,10 @@ define([
             //if (targetPath === 'translation') {
             //    return;
             //}
-            runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
-            runtimeNode.dirtyNumber = model._maxDirtyNumber;
+            if (defined(spline)) {
+                runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
+                runtimeNode.dirtyNumber = model._maxDirtyNumber;
+            }
         };
     }
 
@@ -2543,7 +2545,9 @@ define([
                     startTime = Math.min(startTime, input[0]);
                     stopTime = Math.max(stopTime, input[input.length - 1]);
 
-                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
+                    if (path !== 'weights') {
+                        var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
+                    }
                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
                 }
