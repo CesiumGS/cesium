@@ -1,17 +1,17 @@
 /*global define*/
 define([
+        './Check',
         '../ThirdParty/when',
         './CompressedTextureBuffer',
         './defined',
-        './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
         './RuntimeError'
     ], function(
+        Check,
         when,
         CompressedTextureBuffer,
         defined,
-        DeveloperError,
         loadArrayBuffer,
         PixelFormat,
         RuntimeError) {
@@ -72,9 +72,7 @@ define([
      */
     function loadKTX(urlOrBuffer, headers, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(urlOrBuffer)) {
-            throw new DeveloperError('urlOrBuffer is required.');
-        }
+        Check.defined('urlOrBuffer', urlOrBuffer);
         //>>includeEnd('debug');
 
         var loadPromise;
