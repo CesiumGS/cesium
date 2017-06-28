@@ -41,7 +41,7 @@ defineSuite([
 
     it('clock is required', function() {
         expect(function() {
-            var timeDynamicImagery = new TimeDynamicImagery({
+            return new TimeDynamicImagery({
                 times: times,
                 requestImageFunction: function() {
                 },
@@ -53,7 +53,7 @@ defineSuite([
 
     it('times is required', function() {
         expect(function() {
-            var timeDynamicImagery = new TimeDynamicImagery({
+            return new TimeDynamicImagery({
                 clock: clock,
                 requestImageFunction: function() {
                 },
@@ -65,7 +65,7 @@ defineSuite([
 
     it('requestImageFunction is required', function() {
         expect(function() {
-            var timeDynamicImagery = new TimeDynamicImagery({
+            return new TimeDynamicImagery({
                 clock: clock,
                 times: times,
                 reloadFunction: function() {
@@ -76,7 +76,7 @@ defineSuite([
 
     it('reloadFunction is required', function() {
         expect(function() {
-            var timeDynamicImagery = new TimeDynamicImagery({
+            return new TimeDynamicImagery({
                 clock: clock,
                 times: times,
                 requestImageFunction: function() {
