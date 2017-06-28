@@ -28,7 +28,7 @@ Change Log
 * Added a Sandcastle demo for setting time with the Clock API [#5457](https://github.com/AnalyticalGraphicsInc/cesium/pull/5457);
 * Added support for `ParticleSystem`s. [#5212](https://github.com/AnalyticalGraphicsInc/cesium/pull/5212)
 * Added `Cesium.Math.randomBetween`.
-* `defaultValue` updated to check for Null.
+* Modified `defaultValue` to check for both `undefined` and `null`. [#5551](https://github.com/AnalyticalGraphicsInc/cesium/pull/5551)
 
 ### 1.34 - 2017-06-01
 
