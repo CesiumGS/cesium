@@ -45,9 +45,9 @@ define([
      */
     function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('terrainProvider',terrainProvider);
-        Check.typeOf.number('level',level);
-        Check.defined('positions',positions);
+        Check.typeOf.object('terrainProvider', terrainProvider);
+        Check.typeOf.number('level', level);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         var deferred = when.defer();
