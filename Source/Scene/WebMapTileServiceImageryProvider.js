@@ -1,44 +1,44 @@
 /*global define*/
 define([
-        '../Core/combine',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/freezeObject',
-        '../Core/isArray',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestType',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './ImageryProvider',
-        './TimeDynamicImagery'
-    ], function(
-        combine,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        freezeObject,
-        isArray,
-        objectToQuery,
-        queryToObject,
-        Rectangle,
-        Request,
-        RequestType,
-        WebMercatorTilingScheme,
-        Uri,
-        when,
-        ImageryProvider,
-        TimeDynamicImagery) {
+    '../Core/combine',
+    '../Core/Credit',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Event',
+    '../Core/freezeObject',
+    '../Core/isArray',
+    '../Core/objectToQuery',
+    '../Core/queryToObject',
+    '../Core/Rectangle',
+    '../Core/Request',
+    '../Core/RequestType',
+    '../Core/WebMercatorTilingScheme',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    './ImageryProvider',
+    './TimeDynamicImagery'
+], function(
+    combine,
+    Credit,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Event,
+    freezeObject,
+    isArray,
+    objectToQuery,
+    queryToObject,
+    Rectangle,
+    Request,
+    RequestType,
+    WebMercatorTilingScheme,
+    Uri,
+    when,
+    ImageryProvider,
+    TimeDynamicImagery) {
     'use strict';
 
     /**
@@ -99,6 +99,29 @@ define([
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      *
+     * @example
+     * // Example 3. NASA time dynamic weather data (RESTful)
+     * var times = Cesium.TimeIntervalCollection.fromIso8601({
+     *     iso8601: '2015-07-30/2017-06-16/P1D',
+     *     dataCallback: function dataCallback(interval, index) {
+     *         return {
+     *             Time: Cesium.JulianDate.toIso8601(interval.start)
+     *         };
+     *     }
+     * });
+     * var weather = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+     *     layer : 'AMSR2_Snow_Water_Equivalent',
+     *     style : 'default',
+     *     tileMatrixSetID : '2km',
+     *     maximumLevel : 5,
+     *     format : 'image/png',
+     *     clock: clock,
+     *     times: times,
+     *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+     * });
+     * viewer.imageryLayers.addImageryProvider(weather);
+     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -138,7 +161,7 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ellipsoid : options.ellipsoid});
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
 
@@ -153,10 +176,10 @@ define([
             this._timeDynamicImagery = new TimeDynamicImagery({
                 clock : options.clock,
                 times : options.times,
-                requestImageFunction: function(x, y, level, request, interval) {
+                requestImageFunction : function(x, y, level, request, interval) {
                     return requestImage(that, x, y, level, request, interval);
                 },
-                reloadFunction: function() {
+                reloadFunction : function() {
                     if (defined(that._reload)) {
                         that._reload();
                     }
@@ -221,7 +244,7 @@ define([
             if (defined(staticDimensions)) {
                 for (key in staticDimensions) {
                     if (staticDimensions.hasOwnProperty(key)) {
-                        url = url.replace('{'+key+'}', staticDimensions[key]);
+                        url = url.replace('{' + key + '}', staticDimensions[key]);
                     }
                 }
             }
@@ -229,7 +252,7 @@ define([
             if (defined(dynamicIntervalData)) {
                 for (key in dynamicIntervalData) {
                     if (dynamicIntervalData.hasOwnProperty(key)) {
-                        url = url.replace('{'+key+'}', dynamicIntervalData[key]);
+                        url = url.replace('{' + key + '}', dynamicIntervalData[key]);
                     }
                 }
             }
@@ -252,7 +275,7 @@ define([
             if (defined(staticDimensions)) {
                 for (key in staticDimensions) {
                     if (staticDimensions.hasOwnProperty(key)) {
-                        url = url.replace('{'+key+'}', staticDimensions[key]);
+                        url = url.replace('{' + key + '}', staticDimensions[key]);
                     }
                 }
             }
@@ -429,7 +452,7 @@ define([
          * @readonly
          */
         ready : {
-            value: true
+            value : true
         },
 
         /**

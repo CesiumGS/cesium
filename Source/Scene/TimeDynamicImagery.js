@@ -112,7 +112,7 @@ define([
      * @returns {Promise.<Image>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if the tile is not in the cache.
      */
-    TimeDynamicImagery.prototype.getFromCache = function (x, y, level, request) {
+    TimeDynamicImagery.prototype.getFromCache = function(x, y, level, request) {
         var key = getKey(x, y, level);
         var result;
         var cache = this._tileCache[this._currentIntervalIndex];
@@ -132,24 +132,24 @@ define([
 
     /**
      * Checks if the next interval is approaching and will start preload the tile if necessary. Otherwise it will
-     * just add the tile to a list so it will be prefetched when we approach the next interval.
+     * just add the tile to a list to preload when we approach the next interval.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
      * @param {Request} [request] The request object. Intended for internal use only.
      */
-    TimeDynamicImagery.prototype.checkApproachingInterval = function (x, y, level, request) {
+    TimeDynamicImagery.prototype.checkApproachingInterval = function(x, y, level, request) {
         var key = getKey(x, y, level);
         var tilesRequestedForInterval = this._tilesRequestedForInterval;
 
         // If we are approaching an interval, preload this tile in the next interval
         var approachingInterval = getApproachingInterval(this);
         var tile = {
-            key: key,
+            key : key,
             // Determines priority based on camera distance to the tile.
             // Since the imagery regardless of time will be attached to the same tile we can just steal it.
-            priorityFunction: request.priorityFunction
+            priorityFunction : request.priorityFunction
         };
         if (!defined(approachingInterval) || !addToCache(this, tile, approachingInterval)) {
             // Add to recent request list if we aren't approaching and interval or the request was throttled
@@ -162,11 +162,6 @@ define([
         }
     };
 
-    /**
-     *
-     * @param clock
-     * @private
-     */
     TimeDynamicImagery.prototype._clockOnTick = function(clock) {
         var time = clock.currentTime;
         var times = this._times;
@@ -176,8 +171,8 @@ define([
         if (index !== currentIntervalIndex) {
             // Cancel all outstanding requests and clear out caches not from current time interval
             var currentCache = this._tileCache[currentIntervalIndex];
-            for(var t in currentCache) {
-                if(currentCache.hasOwnProperty(t)) {
+            for (var t in currentCache) {
+                if (currentCache.hasOwnProperty(t)) {
                     currentCache[t].request.cancel();
                 }
             }
@@ -193,10 +188,10 @@ define([
         var approachingInterval = getApproachingInterval(this);
         if (defined(approachingInterval)) {
             // Start loading recent tiles from end of this._tilesRequestedForInterval
-            //  We keep prefetching until we hit a throttling limit.
+            //  We keep preloading until we hit a throttling limit.
             var tilesRequested = this._tilesRequestedForInterval;
             var success = true;
-            do {
+            while (success) {
                 if (tilesRequested.length === 0) {
                     break;
                 }
@@ -206,7 +201,7 @@ define([
                 if (!success) {
                     tilesRequested.push(tile);
                 }
-            } while(success);
+            }
         }
     };
 
@@ -217,9 +212,9 @@ define([
     function getKeyElements(key) {
         var s = key.split('-');
         return {
-            x: s[0],
-            y: s[1],
-            level: s[2]
+            x : s[0],
+            y : s[1],
+            level : s[2]
         };
     }
 
@@ -278,8 +273,8 @@ define([
         }
 
         tileCache[index][key] = {
-            promise: promise,
-            request: request
+            promise : promise,
+            request : request
         };
 
         return true;

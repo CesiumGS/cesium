@@ -42,7 +42,7 @@ function dataCallback(interval, index) {
     };
 }
 
-var times1 = Cesium.TimeIntervalCollection.fromIso8601({
+var times = Cesium.TimeIntervalCollection.fromIso8601({
     iso8601: '2015-07-30/2017-06-16/P1D',
     leadingInterval: true,
     trailingInterval: true,
@@ -50,26 +50,8 @@ var times1 = Cesium.TimeIntervalCollection.fromIso8601({
     dataCallback: dataCallback
 });
 
-var times2 = Cesium.TimeIntervalCollection.fromIso8601DateArray({
-    iso8601Dates: ['2015-07-30', '2015-07-31', '2015-08-01', '2015-08-02', '2015-08-03', '2015-08-04', '2015-08-05'],
-    leadingInterval: true,
-    trailingInterval: true,
-    isStopIncluded: false, // We want stop time to be part of the trailing interval
-    dataCallback: dataCallback
-});
-
-var times3 = Cesium.TimeIntervalCollection.fromIso8601DurationArray({
-    epoch: Cesium.JulianDate.fromIso8601('2015-07-30'),
-    iso8601Durations: ['P0D', 'P1D', 'P2D', 'P3D', 'P4D', 'P5D', 'P6D'],
-    leadingInterval: true,
-    trailingInterval: true,
-    isStopIncluded: false, // We want stop time to be part of the trailing interval
-    dataCallback: dataCallback
-});
-
 // Add a WMTS imagery layer
-var imageryLayers = viewer.imageryLayers;
-imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
+var provider = new Cesium.WebMapTileServiceImageryProvider({
     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
     layer : 'AMSR2_Snow_Water_Equivalent',
     style : 'default',
@@ -77,11 +59,25 @@ imageryLayers.addImageryProvider(new Cesium.WebMapTileServiceImageryProvider({
     maximumLevel : 5,
     format : 'image/png',
     clock: viewer.clock,
-    times: times1
-}));
+    times: times,
+    credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+});
+var imageryLayers = viewer.imageryLayers;
+imageryLayers.addImageryProvider(provider);
+provider.readyPromise
+    .then(function() {
+        var start = Cesium.JulianDate.fromIso8601('2015-07-30');
+        var end = Cesium.JulianDate.fromIso8601('2017-06-17');
 
-viewer.clock.multiplier = 14400;
-viewer.clock.currentTime = Cesium.JulianDate.fromIso8601('2015-07-31T03:59:40Z');
+        viewer.timeline.zoomTo(start, end);
+
+        var clock = viewer.clock;
+        clock.startTime = start;
+        clock.endTime = end;
+        clock.currentTime = start;
+        clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+        clock.multiplier = 86400;
+    });
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

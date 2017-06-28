@@ -1,28 +1,28 @@
 /*global define*/
 define([
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Event',
-        './GregorianDate',
-        './isLeapYear',
-        './Iso8601',
-        './JulianDate',
-        './TimeInterval'
-    ], function(
-        binarySearch,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GregorianDate,
-        isLeapYear,
-        Iso8601,
-        JulianDate,
-        TimeInterval) {
+    './binarySearch',
+    './defaultValue',
+    './defined',
+    './defineProperties',
+    './DeveloperError',
+    './Event',
+    './GregorianDate',
+    './isLeapYear',
+    './Iso8601',
+    './JulianDate',
+    './TimeInterval'
+], function(
+    binarySearch,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Event,
+    GregorianDate,
+    isLeapYear,
+    Iso8601,
+    JulianDate,
+    TimeInterval) {
     'use strict';
 
     function compareIntervalStartTimes(left, right) {
@@ -623,7 +623,7 @@ define([
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
                 if (defined(mergeCallback) ||
-                   ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
+                    ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
                     (!defined(dataComparer) && rightInterval.data === leftInterval.data))) {
 
                     var intersection = TimeInterval.intersect(leftInterval, rightInterval, new TimeInterval(), mergeCallback);
@@ -689,16 +689,16 @@ define([
         if (leadingInterval) {
             ++startIndex;
             interval = new TimeInterval({
-                start: Iso8601.MINIMUM_VALUE,
-                stop: julianDates[0],
-                isStartIncluded: true,
-                isStopIncluded: !isStartIncluded
+                start : Iso8601.MINIMUM_VALUE,
+                stop : julianDates[0],
+                isStartIncluded : true,
+                isStopIncluded : !isStartIncluded
             });
             interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
             result.addInterval(interval);
         }
 
-        for (var i = 0; i < length-1; ++i) {
+        for (var i = 0; i < length - 1; ++i) {
             var startDate = julianDates[i];
             var endDate = julianDates[i + 1];
 
@@ -706,7 +706,7 @@ define([
                 start : startDate,
                 stop : endDate,
                 isStartIncluded : (result.length === startIndex) ? isStartIncluded : true,
-                isStopIncluded : (i === (length-2)) ? isStopIncluded : false
+                isStopIncluded : (i === (length - 2)) ? isStopIncluded : false
             });
             interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
             result.addInterval(interval);
@@ -716,10 +716,10 @@ define([
 
         if (trailingInterval) {
             interval = new TimeInterval({
-                start: julianDates[length-1],
-                stop: Iso8601.MAXIMUM_VALUE,
-                isStartIncluded: !isStopIncluded,
-                isStopIncluded: true
+                start : julianDates[length - 1],
+                stop : Iso8601.MAXIMUM_VALUE,
+                isStartIncluded : !isStopIncluded,
+                isStopIncluded : true
             });
             interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
             result.addInterval(interval);
@@ -730,6 +730,7 @@ define([
 
     var scratchGregorianDate = new GregorianDate();
     var monthLengths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
     /**
      * Adds duration represented as a GregorianDate to a JulianDate
      *
@@ -755,22 +756,22 @@ define([
         var year = scratchGregorianDate.year + duration.year;
 
         if (millisecond >= 1000) {
-            second += Math.floor(millisecond/1000);
+            second += Math.floor(millisecond / 1000);
             millisecond = millisecond % 1000;
         }
 
         if (second >= 60) {
-            minute += Math.floor(second/60);
+            minute += Math.floor(second / 60);
             second = second % 60;
         }
 
         if (minute >= 60) {
-            hour += Math.floor(minute/60);
+            hour += Math.floor(minute / 60);
             minute = minute % 60;
         }
 
         if (hour >= 24) {
-            day += Math.floor(hour/24);
+            day += Math.floor(hour / 24);
             hour = hour % 24;
         }
 
@@ -785,7 +786,7 @@ define([
 
             if (month >= 13) {
                 --month;
-                year += Math.floor(month/12);
+                year += Math.floor(month / 12);
                 month = month % 12;
                 ++month;
             }
@@ -806,6 +807,7 @@ define([
 
     var scratchJulianDate = new JulianDate();
     var durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
+
     /**
      * Parses ISO8601 duration string
      *
@@ -859,7 +861,7 @@ define([
             }
         } else {
             // They can technically specify the duration as a normal date with some caveats. Try our best to load it.
-            if (iso8601[iso8601.length-1] !== 'Z') { // It's not a date, its a duration, so it always has to be UTC
+            if (iso8601[iso8601.length - 1] !== 'Z') { // It's not a date, its a duration, so it always has to be UTC
                 iso8601 += 'Z';
             }
             JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate), result);
@@ -916,12 +918,12 @@ define([
         }
 
         return TimeIntervalCollection.fromJulianDateArray({
-            julianDates: julianDates,
-            isStartIncluded: options.isStartIncluded,
-            isStopIncluded: options.isStopIncluded,
-            leadingInterval: options.leadingInterval,
-            trailingInterval: options.trailingInterval,
-            dataCallback: options.dataCallback
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
         }, result);
     };
 
@@ -949,14 +951,14 @@ define([
         //>>includeEnd('debug');
 
         return TimeIntervalCollection.fromJulianDateArray({
-            julianDates: options.iso8601Dates.map(function(date) {
+            julianDates : options.iso8601Dates.map(function(date) {
                 return JulianDate.fromIso8601(date);
             }),
-            isStartIncluded: options.isStartIncluded,
-            isStopIncluded: options.isStopIncluded,
-            leadingInterval: options.leadingInterval,
-            trailingInterval: options.trailingInterval,
-            dataCallback: options.dataCallback
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
         }, result);
     };
 
@@ -995,7 +997,7 @@ define([
         var date, previousDate;
 
         var length = iso8601Durations.length;
-        for (var i=0;i<length;++i) {
+        for (var i = 0; i < length; ++i) {
             // Allow a duration of 0 on the first iteration, because then it is just the epoch
             if (parseDuration(iso8601Durations[i], scratchDuration) || i === 0) {
                 if (relativeToPrevious && defined(previousDate)) {
@@ -1009,12 +1011,12 @@ define([
         }
 
         return TimeIntervalCollection.fromJulianDateArray({
-            julianDates: julianDates,
-            isStartIncluded: options.isStartIncluded,
-            isStopIncluded: options.isStopIncluded,
-            leadingInterval: options.leadingInterval,
-            trailingInterval: options.trailingInterval,
-            dataCallback: options.dataCallback
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
         }, result);
     };
 
