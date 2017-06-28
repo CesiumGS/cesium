@@ -61,7 +61,7 @@ define([
 
         this._url = url;
         if (defined(url)) {
-            deprecationWarning('SingleTileImageryProvider.url', 'SingleTileImageryProvider url parameter was deprecated in Cesium 1.35. It now takes an image parameter that can contain a url, a Canvas or an Image. It will be removed in Cesium 1.37.');
+            deprecationWarning('SingleTileImageryProvider.url', 'SingleTileImageryProvider taking an options.url parameter has been deprecated and will be removed in Cesium 1.37, use the options.image parameter instead.');
             image = defaultValue(image, url);
         }
 

@@ -6,10 +6,15 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/loadImage',
         'Core/Rectangle',
+        'Core/RequestScheduler',
+        'Scene/Globe',
+        'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/QuadtreeTile',
+        'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -19,10 +24,15 @@ defineSuite([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        RequestScheduler,
+        Globe,
+        GlobeSurfaceTile,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        QuadtreeTile,
+        createScene,
         pollToPromise,
         when) {
     'use strict';
@@ -53,7 +63,7 @@ defineSuite([
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).otherwise(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('invalid.image.url');
         });
@@ -100,6 +110,7 @@ defineSuite([
         function constructWithoutUrl() {
             return new SingleTileImageryProvider({});
         }
+
         expect(constructWithoutUrl).toThrowDeveloperError();
     });
 
@@ -242,7 +253,7 @@ defineSuite([
 
     it('options.image can be a HTMLCanvasElement', function() {
         var canvas = document.createElement('canvas');
-        canvas.width  = 12;
+        canvas.width = 12;
         canvas.height = 16;
 
         var provider = new SingleTileImageryProvider({
@@ -256,16 +267,50 @@ defineSuite([
     });
 
     it('reload calls the _reload function', function() {
+        var tilingScheme = new GeographicTilingScheme();
+        var alwaysDeferTerrainProvider = {
+            requestTileGeometry : function(x, y, level) {
+                return undefined;
+            },
+            tilingScheme : tilingScheme,
+            hasWaterMask : function() {
+                return true;
+            },
+            getTileDataAvailable : function(x, y, level) {
+                return undefined;
+            }
+        };
+
         var image = new Image(12, 16);
         var provider = new SingleTileImageryProvider({
             image : image
         });
 
-        provider.reload();
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
 
-        provider._reload = jasmine.createSpy('reload');
+        var scene = createScene();
+        scene.globe = new Globe();
+        var imageryLayers = scene.imageryLayers;
+        var layer = imageryLayers.addImageryProvider(provider);
 
-        provider.reload();
-        expect(provider._reload.calls.count()).toEqual(1);
+        var imagery = layer.getImageryFromCache(0, 0, 0);
+        imagery.addReference();
+        layer._requestImagery(imagery);
+        RequestScheduler.update();
+
+        spyOn(provider, '_reload').and.callThrough();
+
+        return pollToPromise(function() {
+            return imagery.state === ImageryState.RECEIVED;
+        }).then(function() {
+            expect(layer._imageryCache).not.toEqual({});
+
+            provider.reload();
+            expect(layer._imageryCache).toEqual({});
+            expect(provider._reload.calls.count()).toEqual(1);
+        });
     });
+
 });
