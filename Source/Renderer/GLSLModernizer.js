@@ -10,7 +10,15 @@ define([], function() {
      *
      * @private
      */
-    function glslModernize(source, isFragmentShader, first) {
+    function glslModernizeShaderSource(shaderSource, isFragmentShader) {
+        for (var i = 0; i < shaderSource.sources.length; i++) {
+            shaderSource.sources[i] =
+                glslModernizeShaderText(shaderSource.sources[i], isFragmentShader, i === 0);
+        }
+        shaderSource.defines.push("MODERNIZED");
+    }
+    
+    function glslModernizeShaderText(source, isFragmentShader, first) {
         var mainFunctionRegex = /void\s+main\(\)/;
         var splitSource = source.split('\n');
         var mainFunctionLine;
@@ -100,6 +108,9 @@ define([], function() {
         var vsSource = shaderProgram.vertexShaderSource.clone();
         var fsSource = shaderProgram.fragmentShaderSource.clone();
 
+        glslModernizeShaderSource(vsSource, false);
+        glslModernizeShaderSource(fsSource, true);
+
         var newShaderProgramOptions = {
             vertexShaderSource : vsSource,
             fragmentShaderSource : fsSource,
@@ -112,7 +123,8 @@ define([], function() {
     }
 
     var GLSLModernizer = {
-        glslModernize : glslModernize,
+        glslModernizeShaderText : glslModernizeShaderText,
+        glslModernizeShaderSource : glslModernizeShaderSource,
         glslModernizeShaderProgram : glslModernizeShaderProgram
     };
 
