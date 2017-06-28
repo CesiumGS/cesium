@@ -8,12 +8,10 @@ defineSuite([
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Scene/Globe',
-        'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/QuadtreeTile',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -26,12 +24,10 @@ defineSuite([
         Rectangle,
         RequestScheduler,
         Globe,
-        GlobeSurfaceTile,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        QuadtreeTile,
         createScene,
         pollToPromise,
         when) {
@@ -266,21 +262,7 @@ defineSuite([
         expect(provider._ready).toBe(true);
     });
 
-    it('reload calls the _reload function', function() {
-        var tilingScheme = new GeographicTilingScheme();
-        var alwaysDeferTerrainProvider = {
-            requestTileGeometry : function(x, y, level) {
-                return undefined;
-            },
-            tilingScheme : tilingScheme,
-            hasWaterMask : function() {
-                return true;
-            },
-            getTileDataAvailable : function(x, y, level) {
-                return undefined;
-            }
-        };
-
+    it('reload calls clears the layer\'s cache', function() {
         var image = new Image(12, 16);
         var provider = new SingleTileImageryProvider({
             image : image
