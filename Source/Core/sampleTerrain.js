@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './Check',
-        '../ThirdParty/when',
-        './defined'
+        '../ThirdParty/when'
     ], function(
         Check,
-        when,
-        defined) {
+        when) {
     'use strict';
 
     /**
