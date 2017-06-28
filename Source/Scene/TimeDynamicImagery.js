@@ -157,7 +157,7 @@ define([
         }
 
         // Don't let the tile list get out of hand
-        if (tilesRequestedForInterval.length > 512) {
+        if (tilesRequestedForInterval.length >= 512) {
             tilesRequestedForInterval.splice(0, 256);
         }
     };
@@ -211,10 +211,14 @@ define([
 
     function getKeyElements(key) {
         var s = key.split('-');
+        if (s.length !== 3) {
+            return undefined;
+        }
+
         return {
-            x : s[0],
-            y : s[1],
-            level : s[2]
+            x : Number(s[0]),
+            y : Number(s[1]),
+            level : Number(s[2])
         };
     }
 
@@ -234,6 +238,10 @@ define([
 
         var seconds;
         var index = times.indexOf(time);
+        if (index === -1) {
+            return undefined;
+        }
+
         var interval = times.get(index);
         if (multiplier > 0) { // animating forward
             seconds = JulianDate.secondsDifference(interval.stop, time);
