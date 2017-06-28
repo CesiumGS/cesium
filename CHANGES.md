@@ -30,6 +30,7 @@ Change Log
 * Fixed a bug where camera zooming worked incorrectly when the display height was greater than the display width [#5421](https://github.com/AnalyticalGraphicsInc/cesium/pull/5421)
 * Updated glTF/glb MIME types. [#5420](https://github.com/AnalyticalGraphicsInc/cesium/issues/5420)
 * Added `Cesium.Math.randomBetween`.
+* Added check for comparing two 'number' values to be equal in 'Check'.
 
 ### 1.34 - 2017-06-01
 
