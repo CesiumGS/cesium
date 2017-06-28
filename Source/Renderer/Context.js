@@ -276,6 +276,10 @@ define([
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
+        if (this._webgl2) {
+            this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float']);
+        }
+
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
         this._etc1 = !!getExtension(gl, ['WEBGL_compressed_texture_etc1']);
@@ -612,6 +616,20 @@ define([
         instancedArrays : {
             get : function() {
                 return this._instancedArrays || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
+         * extension makes the formats gl.R16F, gl.RG16F, gl.RGBA16F, gl.R32F, gl.RG32F,
+         * gl.RGBA32F, gl.R11F_G11F_B10F color renderable.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+         */
+        colorBufferFloat : {
+            get : function() {
+                return this._colorBufferFloat;
             }
         },
 
