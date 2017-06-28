@@ -2,6 +2,7 @@
 defineSuite([
     'Scene/WebMapTileServiceImageryProvider',
     'Core/Clock',
+    'Core/ClockStep',
     'Core/Credit',
     'Core/DefaultProxy',
     'Core/GeographicTilingScheme',
@@ -10,6 +11,7 @@ defineSuite([
     'Core/queryToObject',
     'Core/Request',
     'Core/RequestScheduler',
+    'Core/RequestState',
     'Core/TimeIntervalCollection',
     'Core/WebMercatorTilingScheme',
     'Scene/Imagery',
@@ -21,6 +23,7 @@ defineSuite([
 ], function(
     WebMapTileServiceImageryProvider,
     Clock,
+    ClockStep,
     Credit,
     DefaultProxy,
     GeographicTilingScheme,
@@ -29,6 +32,7 @@ defineSuite([
     queryToObject,
     Request,
     RequestScheduler,
+    RequestState,
     TimeIntervalCollection,
     WebMercatorTilingScheme,
     Imagery,
@@ -454,15 +458,28 @@ defineSuite([
             loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
+        var entry;
         return pollToPromise(function() {
             return provider.ready;
         })
             .then(function() {
-                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:56:00Z');
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:56Z');
                 return provider.requestImage(0, 0, 0, new Request());
             })
             .then(function() {
-                // TODO: Test tile 0,0,0 was prefetched
+                RequestScheduler.update();
+
+                // Test tile 0,0,0 was prefetched
+                var cache = provider._timeDynamicImagery._tileCache;
+                expect(cache['1']).toBeDefined();
+                entry = cache['1']['0-0-0'];
+                expect(entry).toBeDefined();
+                expect(entry.promise).toBeDefined();
+                return entry.promise;
+            })
+            .then(function() {
+                expect(entry.request).toBeDefined();
+                expect(entry.request.state).toEqual(RequestState.RECEIVED);
             });
     });
 
@@ -492,6 +509,7 @@ defineSuite([
             loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
+        var entry;
         return pollToPromise(function() {
             return provider.ready;
         })
@@ -499,12 +517,25 @@ defineSuite([
                 return provider.requestImage(0, 0, 0, new Request());
             })
             .then(function() {
-                // TODO: Test tile 0,0,0 wasn't prefetched
+                // Test tile 0,0,0 wasn't prefetched
+                var cache = provider._timeDynamicImagery._tileCache;
+                expect(cache['1']).toBeUndefined();
 
-                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:55:00Z');
+                // Update the clock and process any requests
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:55Z');
                 clock.tick();
+                RequestScheduler.update();
 
-                // TODO: Test tile 0,0,0 was prefetching
+                // Test tile 0,0,0 was prefetched
+                expect(cache['1']).toBeDefined();
+                entry = cache['1']['0-0-0'];
+                expect(entry).toBeDefined();
+                expect(entry.promise).toBeDefined();
+                return entry.promise;
+            })
+            .then(function() {
+                expect(entry.request).toBeDefined();
+                expect(entry.request.state).toEqual(RequestState.RECEIVED);
             });
     });
 
@@ -518,8 +549,13 @@ defineSuite([
             }
         });
         var clock = new Clock({
-            currentTime : JulianDate.fromIso8601('2017-04-26')
+            currentTime : JulianDate.fromIso8601('2017-04-26'),
+            clockStep : ClockStep.TICK_DEPENDENT
         });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
 
         var provider = new WebMapTileServiceImageryProvider({
             layer : 'someLayer',
@@ -530,16 +566,29 @@ defineSuite([
             times : times
         });
 
+        provider._reload = jasmine.createSpy();
+        spyOn(provider._timeDynamicImagery, 'getFromCache').and.callThrough();
+
         return pollToPromise(function() {
             return provider.ready;
         })
             .then(function() {
-                provider._reload = jasmine.createSpy('reload');
-
-                clock.currentTime = JulianDate.fromIso8601('2017-04-27T00:00:00Z');
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:59Z');
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                RequestScheduler.update();
                 clock.tick();
 
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
                 expect(provider._reload.calls.count()).toEqual(1);
+
+                var calls = provider._timeDynamicImagery.getFromCache.calls.all();
+                expect(calls.length).toBe(2);
+                expect(calls[0].returnValue).toBeUndefined();
+                expect(calls[1].returnValue).toBeDefined();
             });
     });
 });
