@@ -2473,7 +2473,7 @@ defineSuite([
             destination: destination
         });
         camera.flyHome(0);
-        expect(camera.position).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-9183857.990445068, 3896182.1777645755, 1.0), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON8);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON8);
     });
