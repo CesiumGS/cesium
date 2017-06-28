@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 2.0.1 - 2017-06-28
+* Remove [eslint-plugin-html](https://www.npmjs.com/package/eslint-plugin-html) peerDependency from `browser` config.
+
 ### 2.0.0 - 2017-06-27
 
 * Enable [no-floating-decimal](http://eslint.org/docs/rules/no-floating-decimal).
