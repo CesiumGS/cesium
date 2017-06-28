@@ -1,13 +1,13 @@
 /*global define*/
 define([
-    './Check',
+    './DeveloperError',
     './binarySearch',
     './Cartographic',
     './defined',
     './defineProperties',
     './Rectangle'
 ], function(
-    Check,
+    DeveloperError,
     binarySearch,
     Cartographic,
     defined,
@@ -90,7 +90,10 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('node', node);
+        if(!defined(node))
+        {
+            throw new DeveloperError('The Specified Position does not exist in any root node of the tiling scheme');
+        }
         //>>includeEnd('debug');
 
         return findMaxLevelFromNode(undefined, node, position);

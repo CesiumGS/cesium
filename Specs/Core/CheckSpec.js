@@ -191,7 +191,7 @@ defineSuite([
     });
 
     describe('Check.typeOf.number.equals', function () {
-        it('throws if value associated with mockName1 and/or mockname2 are not a number', function () {
+        it('throws if either value is not a number', function () {
             expect(function () {
                 Check.typeOf.number.equals('mockName1', 'mockname2', 'a', 3);
             }).toThrowDeveloperError();
@@ -203,13 +203,13 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws if value associated with mockName1 and mockName2 is a number but not equal', function () {
+        it('throws if both the values are a number but not equal', function () {
             expect(function () {
                 Check.typeOf.number.equals('mockName1', 'mockName2', 1, 4);
             }).toThrowDeveloperError();
         });
 
-        it('does not throw if value associated with mockName1 and mockName2 is a number and is equal', function () {
+        it('does not throw if both values are a number and are equal', function () {
             expect(function () {
                 Check.typeOf.number.equal('mockName1', 'mockName2', 3, 3);
             }).not.toThrowDeveloperError();

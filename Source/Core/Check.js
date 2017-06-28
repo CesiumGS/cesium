@@ -178,7 +178,7 @@ define([
         Check.typeOf.number(name1, test1);
         Check.typeOf.number(name2, test2);
         if (test1 !== test2) {
-            throw new DeveloperError(name1 + ' must be equal to ' + name2 + ' the actual values are ' + test1 + ' and ' + test2);
+            throw new DeveloperError(name1 + ' must be equal to ' + name2 + ', the actual values are ' + test1 + ' and ' + test2);
         }
     };
 
