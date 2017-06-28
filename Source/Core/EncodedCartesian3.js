@@ -1,12 +1,13 @@
 /*global define*/
 define([
+        './Check',
         './Cartesian3',
-        './defined',
-        './DeveloperError'
+        './defined'
     ], function(
+        Check,
         Cartesian3,
-        defined,
-        DeveloperError) {
+        defined
+    ) {
     'use strict';
 
     /**
@@ -58,9 +59,7 @@ define([
      */
     EncodedCartesian3.encode = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.number('value', value);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -106,9 +105,7 @@ define([
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
