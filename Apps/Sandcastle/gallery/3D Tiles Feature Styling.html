@@ -53,12 +53,13 @@ viewer.scene.camera.setView({
     endTransform: Cesium.Matrix4.IDENTITY
 });
 
-// Load the NYC buildings tileset
+// Load the NYC buildings tileset.
 var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url: 'https://cesiumjs.org/NewYork/3DTilesGml',
     maximumScreenSpaceError: 16 // default value
 }));
 
+// Color buildings based on their height.
 function colorByHeight() {
     city.style = new Cesium.Cesium3DTileStyle({
         color: {
@@ -78,6 +79,7 @@ function colorByHeight() {
     });
 }
 
+// Show only buildings between 200 and 400 meters in height.
 function hideByHeight() {
     city.style = new Cesium.Cesium3DTileStyle({
         "show" : "${height} > 200 && ${height} < 400",
@@ -85,6 +87,7 @@ function hideByHeight() {
     });
 }
 
+// Color buildings by their latitude coordinate.
 function colorByPosition() {
     city.style = new Cesium.Cesium3DTileStyle({
         color: {
@@ -104,12 +107,14 @@ function colorByPosition() {
     });
 }
 
+// Highlight buildings with a '3' in their id.
 function colorByNameRegex() {
     city.style = new Cesium.Cesium3DTileStyle({
         "color" : "(regExp('3').test(${name})) ? color('cyan', 0.9) : color('purple', 0.9)"
     });
 }
 
+// Color buildings by their total area.
 function colorByArea() {
     city.style = new Cesium.Cesium3DTileStyle({
         color: {
@@ -129,6 +134,7 @@ function colorByArea() {
     });
 }
 
+// Change building color over time.
 function animateColor() {
     city.style = new Cesium.Cesium3DTileStyle({
         defines : {
