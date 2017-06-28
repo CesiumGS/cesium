@@ -19,7 +19,6 @@
     "cesium"
   ],
   "peerDependencies": {
-    "eslint": ">= 4",
-    "eslint-plugin-html": ">= 3"
+    "eslint": ">= 4"
   }
 }
