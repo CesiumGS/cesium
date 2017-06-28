@@ -63,7 +63,7 @@ define([], function() {
 
         if (findInSource(/gl_FragColor/)) {
             replaceInSource(/gl_FragColor/, "czm_fragColor");
-            splitSource.splice(mainFunctionLine, 0, "layout(location = 0) out vec4 czm_fragColor");
+            splitSource.splice(mainFunctionLine, 0, "layout(location = 0) out vec4 czm_fragColor;");
         }
 
         if (first === true) {
