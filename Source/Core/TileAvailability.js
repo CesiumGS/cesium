@@ -1,17 +1,17 @@
 /*global define*/
 define([
-    './DeveloperError',
     './binarySearch',
     './Cartographic',
     './defined',
     './defineProperties',
+    './DeveloperError',
     './Rectangle'
 ], function(
-    DeveloperError,
     binarySearch,
     Cartographic,
     defined,
     defineProperties,
+    DeveloperError,
     Rectangle) {
     'use strict';
 
@@ -90,9 +90,8 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if(!defined(node))
-        {
-            throw new DeveloperError('The Specified Position does not exist in any root node of the tiling scheme');
+        if (!defined(node)) {
+            throw new DeveloperError('The specified position does not exist in any root node of the tiling scheme.');
         }
         //>>includeEnd('debug');
 
