@@ -42,7 +42,7 @@ define([
      */
     function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('ellipsoid', ellipsoid);
+        Check.typeOf.object('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         this._ellipsoid = ellipsoid;
@@ -157,7 +157,7 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function(directionToPoint, positions, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('directionToPoint', directionToPoint);
+        Check.typeOf.object('directionToPoint', directionToPoint);
         Check.defined('positions', positions);
         //>>includeEnd('debug');
 
@@ -200,9 +200,9 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function(directionToPoint, vertices, stride, center, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('directionToPoint', directionToPoint);
+        Check.typeOf.object('directionToPoint', directionToPoint);
         Check.defined('vertices', vertices);
-        Check.defined('stride', stride);
+        Check.typeOf.number('stride', stride);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -242,7 +242,7 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle = function(rectangle, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('rectangle', rectangle);
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var positions = Rectangle.subsample(rectangle, ellipsoid, 0.0, subsampleScratch);
