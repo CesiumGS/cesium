@@ -96,5 +96,25 @@ define([], function() {
         return compileSource();
     }
 
-    return glslModernize;
+    function glslModernizeShaderProgram(context, shaderProgram) {
+        var vsSource = shaderProgram.vertexShaderSource.clone();
+        var fsSource = shaderProgram.fragmentShaderSource.clone();
+
+        var newShaderProgramOptions = {
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
+            gl : shaderProgram._gl,
+            logShaderCompilation : shaderProgram._logShaderCompilation,
+            attributeLocations : shaderProgram._attributeLocations
+        };
+
+        return context.shaderCache.getShaderProgram(newShaderProgramOptions);
+    }
+
+    var GLSLModernizer = {
+        glslModernize : glslModernize,
+        glslModernizeShaderProgram : glslModernizeShaderProgram
+    };
+
+    return GLSLModernizer;
 });
