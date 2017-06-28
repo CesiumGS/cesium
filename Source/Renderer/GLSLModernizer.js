@@ -21,6 +21,11 @@ define([], function() {
     function glslModernizeShaderText(source, isFragmentShader, first) {
         var mainFunctionRegex = /void\s+main\(\)/;
         var splitSource = source.split('\n');
+
+        if (source.search(/#version 300 es/g) !== -1) {
+            return source;
+        }
+        
         var mainFunctionLine;
         for (var number = 0; number < splitSource.length; number++) {
             var line = splitSource[number];
