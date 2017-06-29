@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/UrlTemplateImageryProvider',
         'Core/DefaultProxy',

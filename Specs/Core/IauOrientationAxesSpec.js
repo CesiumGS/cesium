@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/IauOrientationAxes',
         'Core/Iau2000Orientation',

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AttributeCompression',
         './Cartesian2',

@@ -1,4 +1,3 @@
-/*global define*/
 define([
     '../ThirdParty/google-earth-dbroot-parser',
     '../ThirdParty/when',

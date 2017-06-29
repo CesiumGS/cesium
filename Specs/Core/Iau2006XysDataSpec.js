@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Iau2006XysData',
         'Core/defined',

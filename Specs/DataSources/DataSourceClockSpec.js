@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceClock',
         'Core/ClockRange',

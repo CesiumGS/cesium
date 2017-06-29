@@ -3,6 +3,9 @@
     "env": {
         "jasmine": true
     },
+    "globals": {
+        "defineSuite": true
+    },
     "rules": {
         "quotes": "off"
     }

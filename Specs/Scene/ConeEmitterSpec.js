@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ConeEmitter',
         'Core/Cartesian3',

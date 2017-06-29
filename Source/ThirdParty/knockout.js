@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './knockout-3.4.0',
         './knockout-es5',

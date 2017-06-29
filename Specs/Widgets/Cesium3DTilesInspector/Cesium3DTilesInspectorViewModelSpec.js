@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
         'Scene/Cesium3DTileset',

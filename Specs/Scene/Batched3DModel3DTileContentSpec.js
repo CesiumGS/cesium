@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',

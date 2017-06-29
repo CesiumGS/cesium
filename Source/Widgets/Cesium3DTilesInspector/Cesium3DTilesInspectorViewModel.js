@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Scene/Cesium3DTileFeature',
         '../../Scene/Cesium3DTileset',
