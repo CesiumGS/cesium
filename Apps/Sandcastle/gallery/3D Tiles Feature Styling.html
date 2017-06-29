@@ -102,7 +102,7 @@ function colorByPosition() {
             ]
         },
         meta: {
-            description: "'Building id ${id} has height ${Height}.'"
+            description: "'Building id ${id} is positioned at latitude: ${latitude} and longitude: ${longitude}.'"
         }
     });
 }
@@ -131,16 +131,6 @@ function colorByArea() {
         meta: {
             description: "'Building id ${id} has height ${Height}.'"
         }
-    });
-}
-
-// Change building color over time.
-function animateColor() {
-    city.style = new Cesium.Cesium3DTileStyle({
-        defines : {
-            mixValue : "(cos(${height} + ${tiles3d_tileset_time}) + 1) / 2",
-        },
-        color : "mix(color('purple'), color('cyan'), ${mixValue})"
     });
 }
 
@@ -173,12 +163,6 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         colorByNameRegex();
         Sandcastle.highlight(colorByNameRegex);
-    }
-},{
-    text : 'Animate Color',
-    onselect : function() {
-        animateColor();
-        Sandcastle.highlight(animateColor);
     }
 }]);
 //Sandcastle_End
