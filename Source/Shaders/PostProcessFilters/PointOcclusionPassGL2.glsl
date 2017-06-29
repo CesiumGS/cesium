@@ -163,7 +163,6 @@ void main() {
 
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
-        depthOut = czm_packDepth(0.0);
         discard;
     } else {
         // This is the depth of this pixel... assuming that it's valid.
