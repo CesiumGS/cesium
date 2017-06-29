@@ -8,6 +8,7 @@ defineSuite([
     'Core/GeographicTilingScheme',
     'Core/JulianDate',
     'Core/loadImage',
+    'Core/objectToQuery',
     'Core/queryToObject',
     'Core/Request',
     'Core/RequestScheduler',
@@ -29,6 +30,7 @@ defineSuite([
     GeographicTilingScheme,
     JulianDate,
     loadImage,
+    objectToQuery,
     queryToObject,
     Request,
     RequestScheduler,
@@ -589,6 +591,106 @@ defineSuite([
                 expect(calls.length).toBe(2);
                 expect(calls[0].returnValue).toBeUndefined();
                 expect(calls[1].returnValue).toBeDefined();
+            });
+    });
+
+    it('dimensions work with RESTful requests', function() {
+        var lastUrl;
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            lastUrl = url;
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{FOO}',
+            tileMatrixSetID : 'someTMS',
+            dimensions : {
+                FOO: 'BAR'
+            }
+        });
+
+        provider._reload = jasmine.createSpy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                expect(lastUrl).toEqual('http://wmts.invalid/BAR');
+                expect(provider._reload.calls.count()).toEqual(0);
+                provider.dimensions = {
+                    FOO : 'BAZ'
+                };
+                expect(provider._reload.calls.count()).toEqual(1);
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                expect(lastUrl).toEqual('http://wmts.invalid/BAZ');
+            });
+    });
+
+    it('dimensions work with KVP requests', function() {
+        var lastUrl;
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            lastUrl = url;
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var uri = new Uri('http://wmts.invalid/kvp');
+        var query = {
+            service: 'WMTS',
+            version: '1.0.0',
+            request: 'GetTile',
+            tilematrix : 0,
+            layer : 'someLayer',
+            style : 'someStyle',
+            tilerow : 0,
+            tilecol : 0,
+            tilematrixset : 'someTMS',
+            format : 'image/jpeg',
+            FOO : 'BAR'
+        };
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : query.layer,
+            style : query.style,
+            url : uri.toString(),
+            tileMatrixSetID : query.tilematrixset,
+            dimensions : {
+                FOO: query.FOO
+            }
+        });
+
+        provider._reload = jasmine.createSpy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // Verify request is correct
+                uri.query = objectToQuery(query);
+                expect(lastUrl).toEqual(uri.toString());
+                expect(provider._reload.calls.count()).toEqual(0);
+
+                // Change value of FOO dimension
+                query.FOO = 'BAZ';
+                provider.dimensions = {
+                    FOO : query.FOO
+                };
+                expect(provider._reload.calls.count()).toEqual(1);
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // Verify request changed
+                uri.query = objectToQuery(query);
+                expect(lastUrl).toEqual(uri.toString());
             });
     });
 });

@@ -170,6 +170,7 @@ define([
         this._maximumLevel = options.maximumLevel;
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._dimensions = options.dimensions;
 
         var that = this;
         this._reload = undefined;
@@ -276,7 +277,7 @@ define([
             if (defined(staticDimensions)) {
                 for (key in staticDimensions) {
                     if (staticDimensions.hasOwnProperty(key)) {
-                        url = url.replace('{' + key + '}', staticDimensions[key]);
+                        queryOptions[key] = staticDimensions[key];
                     }
                 }
             }
