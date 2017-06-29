@@ -1,11 +1,11 @@
 define([
         'Core/defaultValue',
-        'Widgets/Viewer/Viewer',
-        'Specs/getWebGLStub'
+        'Specs/getWebGLStub',
+        'Widgets/Viewer/Viewer'
     ], function(
         defaultValue,
-        Viewer,
-        getWebGLStub) {
+        getWebGLStub,
+        Viewer) {
     'use strict';
 
     function createViewer(container, options) {

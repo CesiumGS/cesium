@@ -1,6 +1,6 @@
 define([
-        './Check',
         './Cartesian2',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -9,8 +9,8 @@ define([
         './Math',
         './Rectangle'
     ], function(
-        Check,
         Cartesian2,
+        Check,
         defaultValue,
         defined,
         defineProperties,

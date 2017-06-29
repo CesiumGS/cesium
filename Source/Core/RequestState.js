@@ -1,6 +1,6 @@
 define([
         '../Core/freezeObject'
-], function(
+    ], function(
         freezeObject) {
     'use strict';
 

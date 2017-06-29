@@ -1,6 +1,6 @@
 defineSuite([
         'Core/Heap'
-], function(
+    ], function(
         Heap) {
     'use strict';
 

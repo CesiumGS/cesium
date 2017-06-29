@@ -3,8 +3,7 @@ define([
         './defineProperties'
     ], function(
         defined,
-        defineProperties
-    ) {
+        defineProperties) {
     'use strict';
 
     /**

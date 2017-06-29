@@ -1,17 +1,17 @@
 define([
-    './CompressedTextureBuffer',
-    './defined',
-    './DeveloperError',
-    './loadArrayBuffer',
-    './TaskProcessor',
-    '../ThirdParty/when'
-], function(
-    CompressedTextureBuffer,
-    defined,
-    DeveloperError,
-    loadArrayBuffer,
-    TaskProcessor,
-    when) {
+        '../ThirdParty/when',
+        './CompressedTextureBuffer',
+        './defined',
+        './DeveloperError',
+        './loadArrayBuffer',
+        './TaskProcessor'
+    ], function(
+        when,
+        CompressedTextureBuffer,
+        defined,
+        DeveloperError,
+        loadArrayBuffer,
+        TaskProcessor) {
     'use strict';
 
     var transcodeTaskProcessor = new TaskProcessor('transcodeCRNToDXT', Number.POSITIVE_INFINITY);

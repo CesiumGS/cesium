@@ -1,21 +1,21 @@
 define([
-    './Cartesian3',
-    './Cartographic',
-    './defined',
-    './DeveloperError',
-    './GeographicProjection',
-    './Math',
-    './Matrix2',
-    './Rectangle'
-], function(
-    Cartesian3,
-    Cartographic,
-    defined,
-    DeveloperError,
-    GeographicProjection,
-    CesiumMath,
-    Matrix2,
-    Rectangle) {
+        './Cartesian3',
+        './Cartographic',
+        './defined',
+        './DeveloperError',
+        './GeographicProjection',
+        './Math',
+        './Matrix2',
+        './Rectangle'
+    ], function(
+        Cartesian3,
+        Cartographic,
+        defined,
+        DeveloperError,
+        GeographicProjection,
+        CesiumMath,
+        Matrix2,
+        Rectangle) {
     'use strict';
 
     var cos = Math.cos;
