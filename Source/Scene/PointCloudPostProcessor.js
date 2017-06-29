@@ -143,29 +143,29 @@ define([
             });
         }
 
-        /* We want to reuse textures as much as possible, so here's the order
-         * of events:
-         *
-         * 1.  We render normally to our prior:
-         *     * Color -> 0
-         *     * Depth -> dirty ("dirty depth")
-         *     * EC -> 0
-         * 2.  Then we perform the screen-space point occlusion stage with color[0] and EC:
-         *     * No color
-         *     * Pseudo-depth -> 0
-         *     * No EC
-         * 3a. Then we perform the region growing stage with color[0] and depth[0]:
-         *     * Color -> 1
-         *     * Pseudo-depth -> 1
-         * 3b. We do the region growing stage again with color[1] and depth[1]:
-         *     * Color -> 0
-         *     * Pseudo-depth -> 0
-         * 3c. Repeat steps 3a and 3b until all holes are filled and/or we run
-         *     out of time.
-         */
-
+        // (EC stands for eye-space)
+        // 
+        // We want to reuse textures as much as possible, so here's the order
+        // of events:
+        //
+        // 1.  We render normally to our prior:
+        //     * Color -> 0
+        //     * Depth -> dirty ("dirty depth")
+        //     * EC -> 0
+        // 2.  Then we perform the screen-space point occlusion stage with color[0] and EC:
+        //     * No color
+        //     * Pseudo-depth -> 0
+        //     * No EC
+        // 3a. Then we perform the region growing stage with color[0] and depth[0]:
+        //     * Color -> 1
+        //     * Pseudo-depth -> 1
+        // 3b. We do the region growing stage again with color[1] and depth[1]:
+        //     * Color -> 0
+        //     * Pseudo-depth -> 0
+        // 3c. Repeat steps 3a and 3b until all holes are filled and/or we run
+        //     out of time.
         processor._framebuffers = {
-            "prior": new Framebuffer({
+            prior : new Framebuffer({
                 context : context,
                 colorTextures : [
                     colorTextures[0],
@@ -174,17 +174,17 @@ define([
                 depthStencilTexture : dirty,
                 destroyAttachments : false
             }),
-            "screenSpacePass": new Framebuffer({
+            screenSpacePass : new Framebuffer({
                 context : context,
                 colorTextures : [depthTextures[0]],
                 destroyAttachments : false
             }),
-            "regionGrowingPassA": new Framebuffer({
+            regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1], depthTextures[1]],
                 destroyAttachments : false
             }),
-            "regionGrowingPassB": new Framebuffer({
+            regionGrowingPassB : new Framebuffer({
                 context: context,
                 colorTextures: [colorTextures[0], depthTextures[0]],
                 destroyAttachments: false
@@ -197,8 +197,8 @@ define([
     }
 
     function replaceConstants(sourceStr, constantName, replacement) {
-        var r = "#define\\s" + constantName + "\\s([0-9.]+)";
-        return sourceStr.replace(new RegExp(r, "g"), "#define " + constantName + " " + replacement);
+        var r = '#define\\s' + constantName + '\\s([0-9.]+)';
+        return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     };
 
     function pointOcclusionStage(processor, context) {
@@ -216,7 +216,7 @@ define([
 
         var pointOcclusionStr = replaceConstants(
             (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
-            "neighborhoodHalfWidth",
+            'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
         );
         
