@@ -19,8 +19,10 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Scene/BlendingState',
-        '../Shaders/PostProcessFilters/PointOcclusionPass',
-        '../Shaders/PostProcessFilters/RegionGrowingPass'
+        '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
+        '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
+        '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
+        '../Shaders/PostProcessFilters/RegionGrowingPassGL2'
     ], function(
         Color,
         defined,
@@ -41,8 +43,11 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         BlendingState,
-        PointOcclusionPass,
-        RegionGrowingPass) {
+        PointOcclusionPassGL1,
+        RegionGrowingPassGL1,
+        PointOcclusionPassGL2,
+        RegionGrowingPassGL2,
+    ) {
     'use strict';
 
      /**
@@ -202,7 +207,7 @@ define([
         };
 
         var pointOcclusionStr = replaceConstants(
-            PointOcclusionPass,
+            (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
             "neighborhoodHalfWidth",
             processor.neighborhoodHalfWidth
         );
@@ -240,7 +245,10 @@ define([
             processor._framebuffers.regionGrowingPassA :
             processor._framebuffers.regionGrowingPassB;
 
-        return context.createViewportQuadCommand(RegionGrowingPass, {
+        var regionGrowingPassStr = (context.webgl2) ?
+            RegionGrowingPassGL2 :
+            RegionGrowingPassGL1;
+        return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
