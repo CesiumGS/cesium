@@ -32,75 +32,6 @@ float atan2(in float y, in float x) {
     return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
 }
 
-void modifySectorHistogram(in int index,
-                           in float value,
-                           inout vec4 shFirst,
-                           inout vec4 shSecond) {
-    if (index < 4) {
-        if (index < 2) {
-            if (index == 0) {
-                shFirst.x = value;
-            } else {
-                shFirst.y = value;
-            }
-        } else {
-            if (index == 2) {
-                shFirst.z = value;
-            } else {
-                shFirst.w = value;
-            }
-        }
-    } else {
-        if (index < 6) {
-            if (index == 4) {
-                shSecond.x = value;
-            } else {
-                shSecond.y = value;
-            }
-        } else {
-            if (index == 6) {
-                shSecond.z = value;
-            } else {
-                shSecond.w = value;
-            }
-        }
-    }
-}
-
-float readSectorHistogram(in int index,
-                          in vec4 shFirst,
-                          in vec4 shSecond) {
-    if (index < 4) {
-        if (index < 2) {
-            if (index == 0) {
-                return shFirst.x;
-            } else {
-                return shFirst.y;
-            }
-        } else {
-            if (index == 2) {
-                return shFirst.z;
-            } else {
-                return shFirst.w;
-            }
-        }
-    } else {
-        if (index < 6) {
-            if (index == 4) {
-                return shSecond.x;
-            } else {
-                return shSecond.y;
-            }
-        } else {
-            if (index == 6) {
-                return shSecond.z;
-            } else {
-                return shSecond.w;
-            }
-        }
-    }
-}
-
 int getSector(in vec2 d) {
     float angle = (atan2(float(d.y), float(d.x)) + PI) / TAU;
     return int(angle * float(numSectors));
@@ -154,8 +85,12 @@ void main() {
     // The widest the cone can be is 90 degrees
     float maxAngle = PI / 2.0;
 
-    vec4 shFirst = vec4(maxAngle);
-    vec4 shSecond = vec4(maxAngle);
+    // Our sector array defaults to an angle of "maxAngle" in each sector
+    // (i.e no horizon pixels!)
+    float sh[numSectors];
+    for (int i = 0; i < numSectors; i++) {
+        sh[i] = maxAngle;
+    }
 
     // Right now this is obvious because everything happens in eye space,
     // but this kind of statement is nice for a reference implementation
@@ -205,18 +140,18 @@ void main() {
             if (angle > maxAngle)
                 continue;
             // If we've found a horizon pixel, store it in the histogram
-            if (readSectorHistogram(sectors.x, shFirst, shSecond) > angle) {
-                modifySectorHistogram(sectors.x, angle, shFirst, shSecond);
+            if (sh[sectors.x] > angle) {
+                sh[sectors.x] = angle;
             }
-            if (readSectorHistogram(sectors.y, shFirst, shSecond) > angle) {
-                modifySectorHistogram(sectors.y, angle, shFirst, shSecond);
+            if (sh[sectors.y] > angle) {
+                sh[sectors.y] = angle;
             }
         }
     }
 
     float accumulator = 0.0;
     for (int i = 0; i < numSectors; i++) {
-        float angle = readSectorHistogram(i, shFirst, shSecond);
+        float angle = sh[i];
         // If the z component is less than zero,
         // that means that there is no valid horizon pixel
         if (angle <= 0.0 || angle > maxAngle)
