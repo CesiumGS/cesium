@@ -1,9 +1,10 @@
 #extension GL_EXT_frag_depth : enable
+#extension GL_EXT_draw_buffers : enable
 
 #define neighborhoodHalfWidth 1  // TUNABLE PARAMETER -- half-width of region-growing kernel
 #define neighborhoodFullWidth 3
 #define neighborhoodSize 8
-#define EPS 1e-6
+#define EPS 1e-8
 #define SQRT2 1.414213562
 
 uniform sampler2D pointCloud_colorTexture;
@@ -49,15 +50,15 @@ void fastMedian3(in float[neighborhoodSize] neighbors,
                  out vec4 outColor) {
     comparisonNetwork8(neighbors, colorNeighbors);
 
-    for (int i = neighborhoodSize - 1; i >= 0; i--) {
-        if (neighbors[i] <= 1.0 - EPS) {
-            outDepth = neighbors[i / 2];
-            outColor = colorNeighbors[i / 2];
+    for (int i = 0; i < neighborhoodSize; i++) {
+        if (neighbors[i] > EPS) {
+            outDepth = neighbors[i + (neighborhoodSize - 1 - i) / 2];
+            outColor = colorNeighbors[i + (neighborhoodSize - 1 - i) / 2];
             return;
         }
     }
 
-    outDepth = 1.0;
+    outDepth = 0.0;
     outColor = vec4(0, 0, 0, 0);
 }
 
@@ -122,7 +123,7 @@ void main() {
     loadIntoArray(depthNeighbors, colorNeighbors);
 
     // If our depth value is invalid
-    if (depth > 1.0 - EPS) {
+    if (depth < EPS) {
 #if neighborhoodFullWidth == 3
         fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
@@ -140,7 +141,7 @@ void main() {
             vec4 colorNeighbor = colorNeighbors[i];
             float rI = rIs[i];
 
-            if (neighbor < 1.0 - EPS) {
+            if (neighbor > EPS) {
                 float depthDelta = abs(neighbor - depth);
 
                 float weight =
@@ -159,6 +160,6 @@ void main() {
         }
     }
 
-    gl_FragColor = finalColor;
-    gl_FragDepthEXT = finalDepth;
+    gl_FragData[0] = finalColor;
+    gl_FragData[1] = czm_packDepth(finalDepth);
 }

@@ -231,5 +231,5 @@ void main() {
 
     // This is the depth of this pixel... assuming that it's valid.
     float linearizedDepth = (-centerPosition.z - near) / (far - near);
-    gl_FragDepthEXT = linearizedDepth;
+    gl_FragData[0] = czm_packDepth(linearizedDepth);
 }
