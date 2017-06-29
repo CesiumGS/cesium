@@ -56,8 +56,8 @@ ivec2 collapseSectors(in ivec4 sectors) {
 }
 
 void main() {
-    float near = czm_currentFrustum.x;
-    float far = czm_currentFrustum.y;
+    float near = czm_entireFrustum.x;
+    float far = czm_entireFrustum.y;
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
 
     // The position of this pixel in 3D (i.e the position of the point)
