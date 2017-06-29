@@ -16,6 +16,8 @@ uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
 in vec2 v_textureCoordinates;
 
+layout(location = 0) out vec4 depthOut;
+
 float acosFast(in float inX) {
     float x = abs(inX);
     float res = ((C3 * x + C2) * x + C1) * x + C0; // p(x)
@@ -161,10 +163,11 @@ void main() {
 
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
+        depthOut = czm_packDepth(0.0);
         discard;
+    } else {
+        // This is the depth of this pixel... assuming that it's valid.
+        float linearizedDepth = (-centerPosition.z - near) / (far - near);
+        depthOut = czm_packDepth(linearizedDepth);
     }
-
-    // This is the depth of this pixel... assuming that it's valid.
-    float linearizedDepth = (-centerPosition.z - near) / (far - near);
-    gl_FragDepth = linearizedDepth;
 }

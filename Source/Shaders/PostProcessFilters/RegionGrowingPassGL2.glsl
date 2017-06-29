@@ -3,7 +3,7 @@
 #define neighborhoodHalfWidth 1  // TUNABLE PARAMETER -- half-width of region-growing kernel
 #define neighborhoodFullWidth 3
 #define neighborhoodSize 8
-#define EPS 1e-6
+#define EPS 1e-8
 #define SQRT2 1.414213562
 
 uniform sampler2D pointCloud_colorTexture;
@@ -12,6 +12,7 @@ uniform float rangeParameter;
 
 in vec2 v_textureCoordinates;
 layout(location = 0) out vec4 colorOut;
+layout(location = 1) out vec4 depthOut;
 
 #define otherswap(a, b, aC, bC) if (a > b) { temp = a; a = b; b = temp; tempColor = aC; aC = bC; bC = tempColor; }
 
@@ -50,15 +51,15 @@ void fastMedian3(in float[neighborhoodSize] neighbors,
                  out vec4 outColor) {
     comparisonNetwork8(neighbors, colorNeighbors);
 
-    for (int i = neighborhoodSize - 1; i >= 0; i--) {
-        if (neighbors[i] <= 1.0 - EPS) {
-            outDepth = neighbors[i / 2];
-            outColor = colorNeighbors[i / 2];
+    for (int i = 0; i < neighborhoodSize; i++) {
+        if (neighbors[i] > EPS) {
+            outDepth = neighbors[i + (neighborhoodSize - 1 - i) / 2];
+            outColor = colorNeighbors[i + (neighborhoodSize - 1 - i) / 2];
             return;
         }
     }
 
-    outDepth = 1.0;
+    outDepth = 0.0;
     outColor = vec4(0, 0, 0, 0);
 }
 
@@ -84,7 +85,7 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = texture(pointCloud_depthTexture, neighborCoords).r;
+            float neighbor = czm_unpackDepth(texture(pointCloud_depthTexture, neighborCoords));
             vec4 colorNeighbor = texture(pointCloud_colorTexture, neighborCoords);
             if (pastCenter) {
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
@@ -103,7 +104,7 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
 
 void main() {
     vec4 color = texture(pointCloud_colorTexture, v_textureCoordinates);
-    float depth = texture(pointCloud_depthTexture, v_textureCoordinates).r;
+    float depth = czm_unpackDepth(texture(pointCloud_depthTexture, v_textureCoordinates));
 
     vec4 finalColor = color;
     float finalDepth = depth;
@@ -123,7 +124,7 @@ void main() {
     loadIntoArray(depthNeighbors, colorNeighbors);
 
     // If our depth value is invalid
-    if (depth > 1.0 - EPS) {
+    if (depth < EPS) {
 #if neighborhoodFullWidth == 3
         fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
@@ -141,12 +142,12 @@ void main() {
             vec4 colorNeighbor = colorNeighbors[i];
             float rI = rIs[i];
 
-            if (neighbor < 1.0 - EPS) {
+            if (neighbor > EPS) {
                 float depthDelta = abs(neighbor - depth);
 
                 float weight =
                     (1.0 - rI / 2.0) *
-                    (1.0 - min(1.0, depthDelta / max(1e-5, rangeParameter)));
+                    (1.0 - min(1.0, depthDelta / max(1e-38, rangeParameter)));
 
                 depthAccum += neighbor * weight;
                 colorAccum += colorNeighbor * weight;
@@ -161,5 +162,5 @@ void main() {
     }
 
     colorOut = finalColor;
-    gl_FragDepth = finalDepth;
+    depthOut = czm_packDepth(finalDepth);
 }

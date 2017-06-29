@@ -58,6 +58,7 @@ define([
         this._colorTextures = undefined;
         this._ecTexture = undefined;
         this._depthTextures = undefined;
+        this._dirty = undefined;
         this._drawCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommands = undefined;
@@ -80,6 +81,7 @@ define([
     function destroyFramebuffers(processor) {
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
+        processor._dirty.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
         processor._ecTexture.destroy();
@@ -112,24 +114,31 @@ define([
             sampler : createSampler()
         });
 
-        for (i = 0; i < 3; ++i) {
-            if (i < 2) {
-                colorTextures[i] = new Texture({
-                    context : context,
-                    width : screenWidth,
-                    height : screenHeight,
-                    pixelFormat : PixelFormat.RGBA,
-                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-                    sampler : createSampler()
-                });
-            }
+        var dirty = new Texture({
+            context: context,
+            width: screenWidth,
+            height: screenHeight,
+            pixelFormat: PixelFormat.DEPTH_STENCIL,
+            pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
+            sampler: createSampler()
+        });
+        
+        for (i = 0; i < 2; ++i) {
+            colorTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
 
             depthTextures[i] = new Texture({
                 context : context,
                 width : screenWidth,
                 height : screenHeight,
-                pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 sampler : createSampler()
             });
         }
@@ -139,18 +148,18 @@ define([
          *
          * 1.  We render normally to our prior:
          *     * Color -> 0
-         *     * Depth -> 2 ("dirty depth")
+         *     * Depth -> dirty ("dirty depth")
          *     * EC -> 0
          * 2.  Then we perform the screen-space point occlusion stage with color[0] and EC:
          *     * No color
-         *     * Depth -> 0
+         *     * Pseudo-depth -> 0
          *     * No EC
          * 3a. Then we perform the region growing stage with color[0] and depth[0]:
          *     * Color -> 1
-         *     * Depth -> 1
+         *     * Pseudo-depth -> 1
          * 3b. We do the region growing stage again with color[1] and depth[1]:
          *     * Color -> 0
-         *     * Depth -> 0
+         *     * Pseudo-depth -> 0
          * 3c. Repeat steps 3a and 3b until all holes are filled and/or we run
          *     out of time.
          */
@@ -162,30 +171,29 @@ define([
                     colorTextures[0],
                     ecTexture
                 ],
-                depthStencilTexture : depthTextures[2],
+                depthStencilTexture : dirty,
                 destroyAttachments : false
             }),
             "screenSpacePass": new Framebuffer({
                 context : context,
-                depthStencilTexture : depthTextures[0],
+                colorTextures : [depthTextures[0]],
                 destroyAttachments : false
             }),
             "regionGrowingPassA": new Framebuffer({
                 context : context,
-                depthStencilTexture : depthTextures[1],
-                colorTextures : [colorTextures[1]],
+                colorTextures : [colorTextures[1], depthTextures[1]],
                 destroyAttachments : false
             }),
             "regionGrowingPassB": new Framebuffer({
                 context: context,
-                depthStencilTexture: depthTextures[0],
-                colorTextures: [colorTextures[0]],
+                colorTextures: [colorTextures[0], depthTextures[0]],
                 destroyAttachments: false
             })
         };
         processor._depthTextures = depthTextures;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
+        processor._dirty = dirty;
     }
 
     function replaceConstants(sourceStr, constantName, replacement) {
@@ -216,10 +224,6 @@ define([
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
-                depthMask : true,
-                depthTest : {
-                    enabled : true
-                }
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -252,10 +256,6 @@ define([
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                depthMask : true,
-                depthTest : {
-                    enabled : true
-                }
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
