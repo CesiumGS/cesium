@@ -1,7 +1,7 @@
 define([
-        './Check',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -10,9 +10,9 @@ define([
         './Math',
         './scaleToGeodeticSurface'
     ], function(
-        Check,
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,

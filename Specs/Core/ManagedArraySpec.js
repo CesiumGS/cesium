@@ -1,6 +1,6 @@
 defineSuite([
         'Core/ManagedArray'
-], function(
+    ], function(
         ManagedArray) {
     'use strict';
 

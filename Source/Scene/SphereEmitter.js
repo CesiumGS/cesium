@@ -1,14 +1,14 @@
 define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Math'
     ], function(
-        defaultValue,
-        defineProperties,
         Cartesian3,
         Check,
+        defaultValue,
+        defineProperties,
         CesiumMath) {
     'use strict';
 

@@ -1,15 +1,15 @@
 defineSuite([
         'Widgets/Animation/Animation',
         'Core/defined',
+        'Specs/pollToPromise',
         'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel',
-        'Specs/pollToPromise'
+        'Widgets/ClockViewModel'
     ], function(
         Animation,
         defined,
+        pollToPromise,
         AnimationViewModel,
-        ClockViewModel,
-        pollToPromise) {
+        ClockViewModel) {
     'use strict';
 
     var container;

@@ -7,7 +7,7 @@ define([
         '../../ThirdParty/knockout',
         '../getElement',
         './Cesium3DTilesInspectorViewModel'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,

@@ -1,17 +1,17 @@
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Color'
-    ],function(
-        defaultValue,
-        defined,
-        defineProperties,
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties'
+    ], function(
         Cartesian2,
         Cartesian3,
-        Color) {
+        Color,
+        defaultValue,
+        defined,
+        defineProperties) {
     'use strict';
 
     var defaultSize = new Cartesian2(1.0, 1.0);

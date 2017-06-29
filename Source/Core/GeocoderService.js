@@ -1,5 +1,5 @@
 define([
-    './DeveloperError'
+        './DeveloperError'
     ], function(
         DeveloperError) {
     'use strict';

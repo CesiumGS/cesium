@@ -1,13 +1,13 @@
 define([
-    '../ThirdParty/when',
-    './defined',
-    './sampleTerrain',
-    './DeveloperError'
-], function(
-    when,
-    defined,
-    sampleTerrain,
-    DeveloperError) {
+        '../ThirdParty/when',
+        './defined',
+        './DeveloperError',
+        './sampleTerrain'
+    ], function(
+        when,
+        defined,
+        DeveloperError,
+        sampleTerrain) {
     'use strict';
 
     /**

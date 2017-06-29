@@ -1,7 +1,7 @@
 define([
-        '../Core/Check',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -18,9 +18,9 @@ define([
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
-        Check,
         Cartesian3,
         Cartographic,
+        Check,
         defined,
         destroyObject,
         DeveloperError,
