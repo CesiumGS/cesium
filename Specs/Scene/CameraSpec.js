@@ -2725,7 +2725,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(Rectangle.MAX_VALUE);
+        expect(rect).toEqual(Camera.DEFAULT_VIEW_RECTANGLE);
     });
 
     it('computeViewRectangle when globe isn\'t visible', function() {
