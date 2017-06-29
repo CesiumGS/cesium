@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/loadImage',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../ThirdParty/when'
-    ], function(
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        loadImage,
-        Rectangle,
-        RuntimeError,
-        TileProviderError,
-        when) {
+    '../Core/Check',
+    '../Core/Credit',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/deprecationWarning',
+    '../Core/DeveloperError',
+    '../Core/Event',
+    '../Core/GeographicTilingScheme',
+    '../Core/loadImage',
+    '../Core/Rectangle',
+    '../Core/RuntimeError',
+    '../Core/TileProviderError',
+    '../ThirdParty/when'
+], function(
+    Check,
+    Credit,
+    defaultValue,
+    defined,
+    defineProperties,
+    deprecationWarning,
+    DeveloperError,
+    Event,
+    GeographicTilingScheme,
+    loadImage,
+    Rectangle,
+    RuntimeError,
+    TileProviderError,
+    when) {
     'use strict';
 
     /**
@@ -87,6 +87,7 @@ define([
         this._texture = undefined;
         this._tileWidth = 0;
         this._tileHeight = 0;
+        this._dynamic = false;
 
         this._errorEvent = new Event();
 
@@ -114,6 +115,7 @@ define([
             that._image = image;
             that._tileWidth = image.width;
             that._tileHeight = image.height;
+            that._dynamic = (image instanceof HTMLVideoElement);
             that._ready = true;
             that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
@@ -122,13 +124,13 @@ define([
         function failure(e) {
             var message = 'Failed to load image ' + imageUrl + '.';
             error = TileProviderError.handleError(
-                    error,
-                    that,
-                    that._errorEvent,
-                    message,
-                    0, 0, 0,
-                    doRequest,
-                    e);
+                error,
+                that,
+                that._errorEvent,
+                message,
+                0, 0, 0,
+                doRequest,
+                e);
             that._readyPromise.reject(new RuntimeError(message));
         }
 
@@ -196,7 +198,7 @@ define([
          * @type {Number}
          * @readonly
          */
-        tileHeight: {
+        tileHeight : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
@@ -363,6 +365,19 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the imagery provider is dynamic. If this property is true, reload will
+         * be called every frame.
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        dynamic : {
+            get : function() {
+                return this._dynamic;
             }
         }
     });

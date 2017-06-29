@@ -242,6 +242,17 @@ define([
          */
         hasAlphaChannel : {
             get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the imagery provider is dynamic. If this property is true, reload will
+         * be called every frame.
+         * @memberof ImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        dynamic : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 

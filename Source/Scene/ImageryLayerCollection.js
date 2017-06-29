@@ -537,6 +537,13 @@ define([
             if (layer.show) {
                 layer._isBaseLayer = isBaseLayer;
                 isBaseLayer = false;
+
+                // If the provider is dynamic, call reload
+                var provider = layer.imageryProvider;
+                var dynamic = defaultValue(provider.dynamic, false);
+                if (dynamic && defined(provider._reload)) {
+                    provider._reload();
+                }
             } else {
                 layer._isBaseLayer = false;
             }

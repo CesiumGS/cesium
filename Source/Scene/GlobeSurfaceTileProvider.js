@@ -613,7 +613,8 @@ define([
 
     function getTileReadyCallback(tileImageriesToFree, layer, terrainProvider) {
         return function(tile) {
-            var tileImagery, imagery;
+            var tileImagery;
+            var imagery;
             var startIndex = -1;
             var tileImageryCollection = tile.data.imagery;
             var length = tileImageryCollection.length;
