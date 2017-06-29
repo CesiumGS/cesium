@@ -271,7 +271,10 @@ define([
             var fsSource = shaderProgram.fragmentShaderSource.clone();
             var attributeLocations = shaderProgram._attributeLocations;
             for (var a = 0; a < vsSource.sources.length; a++) {
-                vsSource.sources[a] = GLSLModernizer.glslModernizeShaderText(vsSource.sources[a], false, true);
+                if (context.webgl2) {
+                    vsSource.sources[a] = GLSLModernizer.glslModernizeShaderText(
+                        vsSource.sources[a], false, true);
+                }
             }
             drawCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
                 vertexShaderSource : vsSource,
@@ -392,10 +395,12 @@ define([
                 '{ \n' +
                 '    czm_point_cloud_post_process_main(); \n' +
                 '    gl_FragData[1] = vec4(v_positionECPS, 0); \n' +
-                    '}');
+                '}');
 
-            GLSLModernizer.glslModernizeShaderSource(vs, false);
-            GLSLModernizer.glslModernizeShaderSource(fs, true);
+            if (context.webgl2) {
+                GLSLModernizer.glslModernizeShaderSource(vs, false);
+                GLSLModernizer.glslModernizeShaderSource(fs, true);
+            }
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
                 vertexShaderSource : vs,
