@@ -2793,16 +2793,26 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [optional] width of the pick rectangle
+     * @param {Number} [optional] height of the pick rectangle
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      */
-    Scene.prototype.pick = function(windowPosition) {
+    Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
+        // override the rectangle dimensions if defined
+         if(defined(width))
+            {
+            rectangleWidth = width;
+            // use width for height, if width is defined, but not height
+            rectangleHeight = defined(height) ? height : width;
+            scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+            }
 
         var context = this._context;
         var us = context.uniformState;
