@@ -52,7 +52,7 @@ void fastMedian3(in float[neighborhoodSize] neighbors,
     comparisonNetwork8(neighbors, colorNeighbors);
 
     for (int i = 0; i < neighborhoodSize; i++) {
-        if (neighbors[i] > EPS) {
+        if (abs(neighbors[i]) > EPS) {
             outDepth = neighbors[i + (neighborhoodSize - 1 - i) / 2];
             outColor = colorNeighbors[i + (neighborhoodSize - 1 - i) / 2];
             return;
@@ -142,7 +142,7 @@ void main() {
             vec4 colorNeighbor = colorNeighbors[i];
             float rI = rIs[i];
 
-            if (neighbor > EPS) {
+            if (abs(neighbor) > EPS) {
                 float depthDelta = abs(neighbor - depth);
 
                 float weight =
@@ -155,7 +155,7 @@ void main() {
             }
         }
 
-        if (depthAccum > EPS) {
+        if (abs(depthAccum) > EPS) {
             finalDepth = depthAccum / normalization;
             finalColor = colorAccum / normalization;
         }
