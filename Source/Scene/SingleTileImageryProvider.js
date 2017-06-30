@@ -83,11 +83,13 @@ define([
         });
         this._tilingScheme = tilingScheme;
 
+        this._originalImage = image;
         this._image = undefined;
         this._texture = undefined;
         this._tileWidth = 0;
         this._tileHeight = 0;
         this._dynamic = false;
+        this._dynamicTime = 0;
 
         this._errorEvent = new Event();
 
@@ -100,29 +102,25 @@ define([
         }
         this._credit = credit;
 
-        var imageUrl;
-        if (typeof image === 'string') {
-            imageUrl = image;
-            if (defined(proxy)) {
-                imageUrl = proxy.getURL(imageUrl);
-            }
-        }
-
         var that = this;
         var error;
 
         function success(image) {
-            that._image = image;
-            that._tileWidth = image.width;
-            that._tileHeight = image.height;
-            that._dynamic = (image instanceof HTMLVideoElement);
+            if (image instanceof HTMLVideoElement) {
+                that._dynamic = true;
+                that._dynamicTime = image.currentTime;
+            }
             that._ready = true;
             that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
         }
 
         function failure(e) {
-            var message = 'Failed to load image ' + imageUrl + '.';
+            var location = '';
+            if (typeof image === 'string') {
+                location = ' ' + image;
+            }
+            var message = 'Failed to load image ' + location + '.';
             error = TileProviderError.handleError(
                 error,
                 that,
@@ -135,14 +133,37 @@ define([
         }
 
         function doRequest() {
-            when(loadImage(imageUrl), success, failure);
+            getImage(that, image)
+                .then(success)
+                .otherwise(failure);
         }
 
-        if (!defined(imageUrl)) {
-            success(image);
-        } else {
-            doRequest();
+        doRequest();
+    }
+
+    function getImage(that, image) {
+        function success(imageObj) {
+            that._image = imageObj;
+            that._tileWidth = imageObj.width;
+            that._tileHeight = imageObj.height;
         }
+
+        // We have a Image, Canvas or Video
+        if (typeof image !== 'string') {
+            success(image);
+            return when(image);
+        }
+
+        var proxy = that._proxy;
+        if (defined(proxy)) {
+            image = proxy.getURL(image);
+        }
+
+        return loadImage(image)
+            .then(function(imageObj) {
+                success(imageObj);
+                return imageObj;
+            });
     }
 
     defineProperties(SingleTileImageryProvider.prototype, {
@@ -157,6 +178,24 @@ define([
             get : function() {
                 deprecationWarning('SingleTileImageryProvider.prototype.url', 'SingleTileImageryProvider\'s url property was deprecated in Cesium 1.35. It will be removed in Cesium 1.37.');
                 return this._url;
+            }
+        },
+
+        /**
+         * Gets or sets the image of this tile
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {String|Canvas|Image}
+         * @readonly
+         */
+        image : {
+            get : function() {
+                return this._originalImage;
+            },
+            set : function(value) {
+                if (this._originalImage !== value) {
+                    this._originalImage = value;
+                    this.reload();
+                }
             }
         },
 
@@ -382,12 +421,21 @@ define([
         }
     });
 
+    var frameDiff = 1 / 24;
     /**
      * Reloads the image.
      */
     SingleTileImageryProvider.prototype.reload = function() {
         if (defined(this._reload)) {
-            this._reload();
+            if (this._dynamic) {
+                var currentTime = this._image.currentTime;
+                if (Math.abs(this._dynamicTime - currentTime) < frameDiff) {
+                    return;
+                }
+                this._dynamicTime = currentTime;
+            }
+            getImage(this, this._originalImage)
+                .then(this._reload);
         }
     };
 

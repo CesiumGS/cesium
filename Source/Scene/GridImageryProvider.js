@@ -349,5 +349,11 @@ define([
         return undefined;
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    GridImageryProvider.prototype.reload = function() {
+    };
+
     return GridImageryProvider;
 });

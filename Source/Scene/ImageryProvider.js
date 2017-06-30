@@ -308,6 +308,14 @@ define([
      */
     ImageryProvider.prototype.pickFeatures = DeveloperError.throwInstantiationError;
 
+    /**
+     * Reloads the existing tiles of the imagery provider. This function should not be called before
+     * {@link ImageryProvider#ready} returns true. This function is optional, so it may not exist on all ImageryProviders.
+     *
+     * @function
+     */
+    ImageryProvider.prototype.reload = DeveloperError.throwInstantiationError;
+
     var ktxRegex = /\.ktx$/i;
     var crnRegex = /\.crn$/i;
 

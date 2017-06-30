@@ -351,5 +351,11 @@ define([
         return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    MapboxImageryProvider.prototype.reload = function() {
+    };
+
     return MapboxImageryProvider;
 });

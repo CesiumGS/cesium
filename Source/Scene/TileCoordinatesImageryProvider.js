@@ -287,5 +287,11 @@ define([
         return undefined;
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    TileCoordinatesImageryProvider.prototype.reload = function() {
+    };
+
     return TileCoordinatesImageryProvider;
 });

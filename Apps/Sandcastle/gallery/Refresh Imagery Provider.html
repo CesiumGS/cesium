@@ -67,11 +67,6 @@ var videoProvider = new Cesium.SingleTileImageryProvider({
 });
 
 viewer.imageryLayers.addImageryProvider(videoProvider);
-
-viewer.scene.preRender.addEventListener(function() {
-    colorProvider.reload();
-});
-
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

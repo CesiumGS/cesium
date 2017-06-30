@@ -519,6 +519,12 @@ define([
         return undefined;
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    GoogleEarthEnterpriseImageryProvider.prototype.reload = function() {
+    };
+
     //
     // Functions to handle imagery packets
     //

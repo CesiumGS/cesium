@@ -465,6 +465,12 @@ define([
     };
 
     /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    WebMapServiceImageryProvider.prototype.reload = function() {
+    };
+
+    /**
      * The default parameters to include in the WMS URL to obtain images.  The values are as follows:
      *    service=WMS
      *    version=1.1.1

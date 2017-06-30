@@ -695,5 +695,11 @@ define([
         });
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    ArcGisMapServerImageryProvider.prototype.reload = function() {
+    };
+
     return ArcGisMapServerImageryProvider;
 });

@@ -677,6 +677,12 @@ define([
         return doRequest();
     };
 
+    /**
+     * Reloading is not currently supported by this imagery provider, so this function does nothing.
+     */
+    UrlTemplateImageryProvider.prototype.reload = function() {
+    };
+
     var degreesScratchComputed = false;
     var degreesScratch = new Rectangle();
     var projectedScratchComputed = false;
