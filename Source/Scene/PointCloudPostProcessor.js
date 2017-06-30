@@ -211,6 +211,9 @@ define([
             },
             occlusionAngle : function() {
                 return processor.occlusionAngle;
+            },
+            ONE : function() {
+                return 1.0;
             }
         };
 

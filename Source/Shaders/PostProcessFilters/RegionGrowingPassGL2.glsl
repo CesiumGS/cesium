@@ -124,7 +124,7 @@ void main() {
     loadIntoArray(depthNeighbors, colorNeighbors);
 
     // If our depth value is invalid
-    if (depth < EPS) {
+    if (abs(depth) < EPS) {
 #if neighborhoodFullWidth == 3
         fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else

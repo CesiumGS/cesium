@@ -731,7 +731,7 @@ define([
         this.pointCloudPostProcessorOptions = {
             enabled : defaultValue(options.enabled, true),
             occlusionAngle : defaultValue(options.occlusionAngle, 0.1),
-            rangeParameter : defaultValue(options.rangeParameter, 2e-38),
+            rangeParameter : defaultValue(options.rangeParameter, 0.001),
             neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
             numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 2)
         };
