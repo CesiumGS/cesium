@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EntityCluster',
         'Core/Cartesian2',

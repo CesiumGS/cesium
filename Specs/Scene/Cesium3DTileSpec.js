@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTile',
         'Core/Cartesian3',
@@ -122,7 +121,8 @@ defineSuite([
     var mockTileset = {
         debugShowBoundingVolume : true,
         debugShowViewerRequestVolume : true,
-        modelMatrix : Matrix4.IDENTITY
+        modelMatrix : Matrix4.IDENTITY,
+        _geometricError : 2
     };
 
     var centerLongitude = -1.31968;
@@ -142,14 +142,6 @@ defineSuite([
         expect(tile.isDestroyed()).toEqual(true);
     });
 
-    it('throws if geometricError is undefined', function() {
-        var tileWithoutGeometricError = clone(tileWithBoundingSphere, true);
-        delete tileWithoutGeometricError.geometricError;
-        expect(function() {
-            return new Cesium3DTile(mockTileset, '/some_url', tileWithoutGeometricError, undefined);
-        }).toThrowRuntimeError();
-    });
-
     it('throws if boundingVolume is undefined', function() {
         var tileWithoutBoundingVolume = clone(tileWithBoundingSphere, true);
         delete tileWithoutBoundingVolume.boundingVolume;
@@ -164,6 +156,33 @@ defineSuite([
         expect(function() {
             return new Cesium3DTile(mockTileset, '/some_url', tileWithoutBoundingVolume, undefined);
         }).toThrowRuntimeError();
+    });
+
+    it('logs deprecation warning if refine is lowercase', function() {
+        spyOn(Cesium3DTile, '_deprecationWarning');
+        var header = clone(tileWithBoundingSphere, true);
+        header.refine = 'replace';
+        var tile = new Cesium3DTile(mockTileset, '/some_url', header, undefined);
+        expect(tile.refine).toBe(Cesium3DTileRefine.REPLACE);
+        expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
+    });
+
+    it('logs deprecation warning if geometric error is undefined', function() {
+        spyOn(Cesium3DTile, '_deprecationWarning');
+
+        var geometricErrorMissing = clone(tileWithBoundingSphere, true);
+        delete geometricErrorMissing.geometricError;
+
+        var parent = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
+        var child = new Cesium3DTile(mockTileset, '/some_url', geometricErrorMissing, parent);
+        expect(child.geometricError).toBe(parent.geometricError);
+        expect(child.geometricError).toBe(1);
+
+        var tile = new Cesium3DTile(mockTileset, '/some_url', geometricErrorMissing, undefined);
+        expect(tile.geometricError).toBe(mockTileset._geometricError);
+        expect(tile.geometricError).toBe(2);
+
+        expect(Cesium3DTile._deprecationWarning.calls.count()).toBe(2);
     });
 
     describe('bounding volumes', function() {
@@ -297,15 +316,6 @@ defineSuite([
             // Check the new transform
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude);
             expect(boundingSphere.center).toEqualEpsilon(newCenter, CesiumMath.EPSILON7);
-        });
-
-        it('logs deprecation warning if refine is lowercase', function() {
-            spyOn(Cesium3DTile, '_deprecationWarning');
-            var header = clone(tileWithBoundingSphere, true);
-            header.refine = 'replace';
-            var tile = new Cesium3DTile(mockTileset, '/some_url', header, undefined);
-            expect(tile.refine).toBe(Cesium3DTileRefine.REPLACE);
-            expect(Cesium3DTile._deprecationWarning).toHaveBeenCalled();
         });
     });
 

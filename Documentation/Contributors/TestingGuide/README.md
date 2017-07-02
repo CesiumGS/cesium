@@ -233,7 +233,6 @@ Tests are written in JavaScript using Jasmine.  It is important to realize that 
 Here is a stripped down version of the tests:
 
 ```javascript
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3'
     ], function(
@@ -696,7 +695,6 @@ This test is more cohesive and easier to debug than if it were written using a _
 As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `defineSuite`.
 
 ```javascript
-/*global defineSuite*/
 defineSuite([
         'Scene/DebugModelMatrixPrimitive',
         'Specs/createScene'

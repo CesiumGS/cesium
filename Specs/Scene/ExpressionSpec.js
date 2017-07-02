@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Expression',
         'Core/Cartesian2',
@@ -120,6 +119,9 @@ defineSuite([
 
         expression = new Expression('\'${undefined}\'');
         expect(expression.evaluate(frameState, feature)).toEqual('');
+
+        expression = new Expression('abs(-${height}) + max(${height}, ${width}) + clamp(${height}, 0, 2)');
+        expect(expression.evaluate(frameState, feature)).toEqual(22);
 
         expect(function() {
             return new Expression('${height');

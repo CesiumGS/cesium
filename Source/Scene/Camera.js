@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -1276,7 +1275,7 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             this.flyTo({
-                destination : Rectangle.MAX_VALUE,
+                destination : Camera.DEFAULT_VIEW_RECTANGLE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });

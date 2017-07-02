@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -90,7 +89,7 @@ defineSuite([
         scene = createScene();
         scene.frameState.scene3DOnly = false;
         scene.primitives.destroyPrimitives = false;
-        
+
         ellipsoid = Ellipsoid.WGS84;
     });
 
