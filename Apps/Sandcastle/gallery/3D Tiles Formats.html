@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Interact with sample 3D Tiles tilesets.">
+    <meta name="description" content="Showcase of different 3D Tiles formats.">
     <meta name="cesium-sandcastle-labels" content="3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -19,33 +19,17 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    #toolbar {
-        background: rgba(42, 42, 42, 0.8);
-        padding: 4px;
-        border-radius: 4px;
-    }
-    #toolbar .header {
-        font-weight: bold;
-        padding-top: 5px;
-        padding-bottom: 5px;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <select data-bind="options: tilesets, optionsText: 'name', value: selectedTileset, optionsCaption: 'Choose a Tileset...'"></select>
-    <div><input type="checkbox" data-bind="checked: shadows" /> Shadows</div>
-    <div class="header">Right click action:</div>
-    <div><input type="radio" value='zoom' data-bind="checked: rightClickAction" />Zoom to feature</div>
-    <div><input type="radio" value='annotate' data-bind="checked: rightClickAction" />Annotate</div>
-    <div class="header">Middle click action:</div>
-    <div><input type="radio" value='hide' data-bind="checked: middleClickAction" />Hide feature</div>
+    <div><input type="checkbox" data-bind="checked: shadows"> Shadows</div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
 var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
@@ -55,10 +39,6 @@ var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
 var scene = viewer.scene;
-scene.pickTranslucentDepth = true;
-
-var annotations = scene.primitives.add(new Cesium.LabelCollection());
-
 var tileset;
 
 var viewModel = {
@@ -105,9 +85,7 @@ var viewModel = {
         }
     ],
     selectedTileset: undefined,
-    shadows: true,
-    rightClickAction: 'zoom',
-    middleClickAction: 'hide'
+    shadows: true
 };
 
 Cesium.knockout.track(viewModel);
@@ -121,7 +99,6 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(function(enabled) 
 
 Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(options) {
     if (Cesium.defined(tileset)) {
-        annotations.removeAll();
         scene.primitives.remove(tileset);
     }
     if (!Cesium.defined(options)) {
@@ -152,12 +129,11 @@ Cesium.knockout.getObservable(viewModel, 'selectedTileset').subscribe(function(o
                         ["${Height} >= 1", "color('cyan')"],
                         ["true", "color('blue')"]
                     ]
-                },
-                meta: {
-                    description: "'Building id ${id} has height ${Height}.'"
                 }
             });
         }
+    }).otherwise(function(error) {
+        throw(error);
     });
 });
 
@@ -174,103 +150,15 @@ handler.setInputAction(function(movement) {
             var propertyName = propertyNames[i];
             console.log(propertyName + ': ' + feature.getProperty(propertyName));
         }
-
-        // evaluate feature description
-        if (Cesium.defined(tileset.style)) {
-            if (Cesium.defined(tileset.style.meta.description)) {
-                console.log('Description : ' + tileset.style.meta.description.evaluate(scene.frameState, feature));
-            }
-        }
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 handler.setInputAction(function(movement) {
-    var action = viewModel.rightClickAction;
-    if (action === 'annotate') {
-        // Add annotation showing the height at the click location
-        annotate(movement);
-    } else if (action === 'zoom') {
-        // When a feature is right clicked, zoom to it
-        zoom(movement);
-    }
-}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-
-handler.setInputAction(function(movement) {
-    var action = viewModel.middleClickAction;
-    if (action === 'hide') {
-        var feature = inspectorViewModel.feature;
-        if (Cesium.defined(feature)) {
-            feature.show = false;
-        }
-    }
-}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
-
-function annotate(movement) {
-    if (Cesium.defined(inspectorViewModel.feature) && scene.pickPositionSupported) {
-        var cartesian = scene.pickPosition(movement.position);
-        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-        var height = cartographic.height.toFixed(2) + ' m';
-
-        annotations.add({
-            position : cartesian,
-            text : height,
-            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            eyeOffset : new Cesium.Cartesian3(0.0, 0.0, -1.0)
-        });
-    }
-}
-
-function offsetFromHeadingPitchRange(heading, pitch, range) {
-    pitch = Cesium.Math.clamp(pitch, -Cesium.Math.PI_OVER_TWO, Cesium.Math.PI_OVER_TWO);
-    heading = Cesium.Math.zeroToTwoPi(heading) - Cesium.Math.PI_OVER_TWO;
-
-    var pitchQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Y, -pitch);
-    var headingQuat = Cesium.Quaternion.fromAxisAngle(Cesium.Cartesian3.UNIT_Z, -heading);
-    var rotQuat = Cesium.Quaternion.multiply(headingQuat, pitchQuat, headingQuat);
-    var rotMatrix = Cesium.Matrix3.fromQuaternion(rotQuat);
-
-    var offset = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_X);
-    Cesium.Matrix3.multiplyByVector(rotMatrix, offset, offset);
-    Cesium.Cartesian3.negate(offset, offset);
-    Cesium.Cartesian3.multiplyByScalar(offset, range, offset);
-    return offset;
-}
-
-function zoom(movement) {
     var feature = inspectorViewModel.feature;
     if (Cesium.defined(feature)) {
-        var longitude = feature.getProperty('Longitude');
-        var latitude = feature.getProperty('Latitude');
-        var height = feature.getProperty('Height');
-
-        if (!Cesium.defined(longitude) || !Cesium.defined(latitude) || !Cesium.defined(height)) {
-            return;
-        }
-
-        var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
-        var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
-
-        var camera = scene.camera;
-        var heading = camera.heading;
-        var pitch = camera.pitch;
-
-        var offset = offsetFromHeadingPitchRange(heading, pitch, height * 2.0);
-
-        var transform = Cesium.Transforms.eastNorthUpToFixedFrame(position);
-        Cesium.Matrix4.multiplyByPoint(transform, offset, position);
-
-        camera.flyTo({
-            destination : position,
-            orientation : {
-                heading : heading,
-                pitch : pitch
-            },
-            easingFunction : Cesium.EasingFunction.QUADRATIC_OUT
-        });
+        feature.show = false;
     }
-}
-
+}, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

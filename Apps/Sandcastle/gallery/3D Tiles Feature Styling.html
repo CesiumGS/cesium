@@ -4,95 +4,78 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Interact with sample 3D Tiles tilesets.">
-    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+    <meta name="description" content="Interactive 3D Tiles styling.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    #toolbar {
-        background: rgba(42, 42, 42, 0.8);
-        padding: 4px;
-        border-radius: 4px;
-    }
-    #toolbar .header {
-        font-weight: bold;
-        padding-top: 5px;
-        padding-bottom: 5px;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
+function startup(Cesium) {
+    'use strict';
 //Sandcastle_Begin
 // A demo of interactive 3D Tiles styling
 // Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.clock.multiplier = 15000; // speedup the clock.
 
 // Set the initial camera view to look at Manhattan
+var initialPosition = Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753);
+var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(21.27879878293835, -21.34390550872461, 0.0716951918898415);
 viewer.scene.camera.setView({
-    destination: Cesium.Cartesian3.fromDegrees(-74.01881302800248, 40.69114333714821, 753),
-    orientation: {
-        heading: Cesium.Math.toRadians(21.27879878293835),
-        pitch: Cesium.Math.toRadians(-21.34390550872461),
-        roll: Cesium.Math.toRadians(0.0716951918898415)
-    },
+    destination: initialPosition,
+    orientation: initialOrientation,
     endTransform: Cesium.Matrix4.IDENTITY
 });
 
 // Load the NYC buildings tileset.
-var city = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://cesiumjs.org/NewYork/3DTilesGml',
-    maximumScreenSpaceError: 16 // default value
+var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url: 'https://beta.cesium.com/api/assets/1445?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODNmMjQzNy1mNGI4LTQ2ZTItOWI0NS0yZDUzMzMyNWMxNzQiLCJpZCI6OSwiaWF0IjoxNDgxODI5ODU0fQ.4fmVtksZ1CAzjPBprJ47uIuK0vr-8CcuDKM7M8a0mF4'
 }));
 
 // Color buildings based on their height.
 function colorByHeight() {
-    city.style = new Cesium.Cesium3DTileStyle({
+    tileset.style = new Cesium.Cesium3DTileStyle({
         color: {
             conditions: [
-                ["${height} >= 400", "color('purple', 0.5)"],
-                ["${height} >= 300", "color('red')"],
-                ["${height} >= 200", "color('orange')"],
-                ["${height} >= 150", "color('yellow')"],
-                ["${height} >= 100", "color('lime')"],
-                ["${height} >= 50", "color('cyan')"],
-                ["true", "color('blue')"]
+                ["${height} >= 300", "rgba(45, 0, 75, 0.5)"],
+                ["${height} >= 200", "rgb(102, 71, 151)"],
+                ["${height} >= 100", "rgb(170, 162, 204)"],
+                ["${height} >= 50", "rgb(224, 226, 238)"],
+                ["${height} >= 25", "rgb(252, 230, 200)"],
+                ["${height} >= 10", "rgb(248, 176, 87)"],
+                ["${height} >= 5", "rgb(198, 106, 11)"],
+                ["true", "rgb(127, 59, 8)"]
             ]
-        },
-        meta: {
-            description: "'Building id ${id} has height ${Height}.'"
         }
     });
 }
 
-// Show only buildings between 200 and 400 meters in height.
-function hideByHeight() {
-    city.style = new Cesium.Cesium3DTileStyle({
-        "show" : "${height} > 200 && ${height} < 400",
-        "color" : "color('red')"
+// Color buildings by their total area.
+function colorByArea() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color: "mix(color('yellow'), color('red'), min(${area} / 10000.0, 1.0))"
     });
 }
 
 // Color buildings by their latitude coordinate.
-function colorByPosition() {
-    city.style = new Cesium.Cesium3DTileStyle({
+function colorByLatitude() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
         color: {
             conditions: [
-                ["${latitude} >= 0.7125", "color('purple', 0.5)"],
+                ["${latitude} >= 0.7125", "color('purple')"],
                 ["${latitude} >= 0.712", "color('red')"],
                 ["${latitude} >= 0.7115", "color('orange')"],
                 ["${latitude} >= 0.711", "color('yellow')"],
@@ -100,37 +83,36 @@ function colorByPosition() {
                 ["${latitude} >= 0.710", "color('cyan')"],
                 ["true", "color('blue')"]
             ]
-        },
-        meta: {
-            description: "'Building id ${id} is positioned at latitude: ${latitude} and longitude: ${longitude}.'"
         }
     });
 }
 
-// Highlight buildings with a '3' in their id.
-function colorByNameRegex() {
-    city.style = new Cesium.Cesium3DTileStyle({
-        "color" : "(regExp('3').test(${name})) ? color('cyan', 0.9) : color('purple', 0.9)"
-    });
-}
-
-// Color buildings by their total area.
-function colorByArea() {
-    city.style = new Cesium.Cesium3DTileStyle({
-        color: {
-            conditions: [
-                ["${area} >= 2000", "color('purple', 0.5)"],
-                ["${area} >= 1000", "color('red')"],
-                ["${area} >= 500", "color('orange')"],
-                ["${area} >= 350", "color('yellow')"],
-                ["${area} >= 200", "color('lime')"],
-                ["${area} >= 100", "color('cyan')"],
-                ["true", "color('blue')"]
+// Color buildings by distance from a landmark.
+function colorByDistance() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        defines : {
+            distance : "distance(vec2(${longitude}, ${latitude}), vec2(-1.291777521, 0.7105706624))"
+        },
+        color : {
+            conditions : [
+                ["${distance} > 0.0002", "color('gray')"],
+                ["true", "mix(color('yellow'), color('green'), ${distance} / 0.0002)"]
             ]
-        },
-        meta: {
-            description: "'Building id ${id} has height ${Height}.'"
         }
+    });
+}
+
+// Color buildings with a '3' in their name.
+function colorByNameRegex() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : "(regExp('3').test(${name})) ? color('cyan', 0.9) : color('purple', 0.1)"
+    });
+}
+
+// Show only buildings greater than 200 meters in height.
+function hideByHeight() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        show : "${height} > 200"
     });
 }
 
@@ -138,41 +120,42 @@ Sandcastle.addToolbarMenu([{
     text : 'Color By Height',
     onselect : function() {
         colorByHeight();
-        Sandcastle.highlight(colorByHeight);
     }
-},{
+}, {
     text : 'Color By Area',
     onselect : function() {
         colorByArea();
-        Sandcastle.highlight(colorByArea);
     }
-},{
-    text : 'Color By Position',
+}, {
+    text : 'Color By Latitude',
     onselect : function() {
-        colorByPosition();
-        Sandcastle.highlight(colorByPosition);
+        colorByLatitude();
     }
-},{
-    text : 'Hide By Height',
+}, {
+    text : 'Color By Distance',
     onselect : function() {
-        hideByHeight();
-        Sandcastle.highlight(hideByHeight);
+        colorByDistance();
     }
-},{
+}, {
     text : 'Color By Name Regex',
     onselect : function() {
         colorByNameRegex();
-        Sandcastle.highlight(colorByNameRegex);
+    }
+}, {
+    text : 'Hide By Height',
+    onselect : function() {
+        hideByHeight();
     }
 }]);
+
 //Sandcastle_End
-        Sandcastle.finishedLoading();
-    }
-    if (typeof Cesium !== "undefined") {
-        startup(Cesium);
-    } else if (typeof require === "function") {
-        require(["Cesium"], startup);
-    }
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
