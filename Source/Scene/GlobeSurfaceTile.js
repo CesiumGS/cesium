@@ -335,6 +335,14 @@ define([
             }
 
             if (isDoneLoading) {
+                var newCallbacks = [];
+                tile._loadedCallbacks.forEach(function(cb) {
+                    if (!cb(tile)) {
+                        newCallbacks.push(cb);
+                    }
+                });
+                tile._loadedCallbacks = newCallbacks;
+
                 tile.state = QuadtreeTileLoadState.DONE;
                 tile._priorityFunction = undefined;
             }

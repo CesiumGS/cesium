@@ -71,6 +71,7 @@ define([
         this._customData = [];
         this._frameUpdated = undefined;
         this._frameRendered = undefined;
+        this._loadedCallbacks = [];
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
