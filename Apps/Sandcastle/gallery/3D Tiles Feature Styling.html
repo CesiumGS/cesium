@@ -29,6 +29,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 // A demo of interactive 3D Tiles styling
 // Styling language Documentation: https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling
+// Building data courtesy of NYC OpenData portal: http://www1.nyc.gov/site/doitt/initiatives/3d-building.page
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // Set the initial camera view to look at Manhattan
@@ -42,7 +43,7 @@ viewer.scene.camera.setView({
 
 // Load the NYC buildings tileset.
 var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url: 'https://beta.cesium.com/api/assets/1445?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiODNmMjQzNy1mNGI4LTQ2ZTItOWI0NS0yZDUzMzMyNWMxNzQiLCJpZCI6OSwiaWF0IjoxNDgxODI5ODU0fQ.4fmVtksZ1CAzjPBprJ47uIuK0vr-8CcuDKM7M8a0mF4'
+    url: 'https://beta.cesium.com/api/assets/1461?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkYWJmM2MzNS02OWM5LTQ3OWItYjEyYS0xZmNlODM5ZDNkMTYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjFdLCJpYXQiOjE0OTkyNjQ3NDN9.vuR75SqPDKcggvUrG_vpx0Av02jdiAxnnB1fNf-9f7s'
 }));
 
 // Color buildings based on their height.
