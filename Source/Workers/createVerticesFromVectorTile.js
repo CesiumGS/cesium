@@ -125,6 +125,13 @@ define([
         var minHeight = scratchHeights.min;
         var maxHeight = scratchHeights.max;
 
+        var minimumHeights = parameters.minimumHeights;
+        var maximumHeights = parameters.maximumHeights;
+        if (defined(minimumHeights) && defined(maximumHeights)) {
+            minimumHeights = new Float32Array(minimumHeights);
+            maximumHeights = new Float32Array(maximumHeights);
+        }
+
         var i;
         var j;
         var rgba;
@@ -233,6 +240,13 @@ define([
             var polygonCount = counts[i];
             var batchId = batchIds[i];
 
+            var polygonMinimumHeight = minHeight;
+            var polygonMaximumHeight = maxHeight;
+            if (defined(minimumHeights) && defined(maximumHeights)) {
+                polygonMinimumHeight = minimumHeights[i];
+                polygonMaximumHeight = maximumHeights[i];
+            }
+
             var minLat = Number.POSITIVE_INFINITY;
             var maxLat = Number.NEGATIVE_INFINITY;
             var minLon = Number.POSITIVE_INFINITY;
@@ -251,10 +265,10 @@ define([
 
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
-                var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, scratchScaledNormal);
+                var scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMinimumHeight, scratchScaledNormal);
                 var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
 
-                scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, scaledNormal);
+                scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMaximumHeight, scaledNormal);
                 var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
 
                 Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);

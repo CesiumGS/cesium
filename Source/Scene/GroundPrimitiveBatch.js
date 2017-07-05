@@ -91,6 +91,8 @@ define([
      * @param {Number[]} options.indexCounts The number of indices for each polygon.
      * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
      * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Float32Array} [options.polygonMinimumHeights] An array containing the minimum heights for each polygon.
+     * @param {Float32Array} [options.polygonMaximumHeights] An array containing the maximum heights for each polygon.
      * @param {Rectangle} options.rectangle The rectangle containing the tile.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
@@ -126,6 +128,8 @@ define([
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
+        this._polygonMinimumHeights = options.polygonMinimumHeights;
+        this._polygonMaximumHeights = options.polygonMaximumHeights;
         this._center = options.center;
         this._rectangle = options.rectangle;
 
@@ -272,7 +276,8 @@ define([
                 packedBuffer = primitive._packedBuffer = packBuffer(primitive);
             }
 
-            var verticesPromise = primitive._verticesPromise = createVerticesTaskProcessor.scheduleTask({
+            var transferrableObjects = [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer, packedBuffer.buffer];
+            var parameters = {
                 packedBuffer : packedBuffer.buffer,
                 positions : positions.buffer,
                 counts : counts.buffer,
@@ -280,8 +285,17 @@ define([
                 indices : indices.buffer,
                 batchIds : batchIds.buffer,
                 batchTableColors : batchTableColors.buffer
-            }, [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer, packedBuffer.buffer]);
+            };
 
+            var minimumHeights = primitive._polygonMinimumHeights;
+            var maximumHeights = primitive._polygonMaximumHeights;
+            if (defined(minimumHeights) && defined(maximumHeights)) {
+                transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
+                parameters.minimumHeights = minimumHeights;
+                parameters.maximumHeights = maximumHeights;
+            }
+
+            var verticesPromise = primitive._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
             if (!defined(verticesPromise)) {
                 // Postponed
                 return;
@@ -290,12 +304,14 @@ define([
             when(verticesPromise, function(result) {
                 primitive._positions = undefined;
                 primitive._counts = undefined;
+                primitive._polygonMinimumHeights = undefined;
+                primitive._polygonMaximumHeights = undefined;
 
                 var packedBuffer = new Float64Array(result.packedBuffer);
                 var indexDatatype = packedBuffer[0];
                 unpackBuffer(primitive, packedBuffer);
 
-                primitive._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ?new Uint16Array(result.indices) : new Uint32Array(result.indices);
+                primitive._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ? new Uint16Array(result.indices) : new Uint32Array(result.indices);
                 primitive._indexOffsets = new Uint32Array(result.indexOffsets);
                 primitive._indexCounts = new Uint32Array(result.indexCounts);
 

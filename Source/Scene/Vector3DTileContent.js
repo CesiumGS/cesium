@@ -348,6 +348,16 @@ define([
             var polygonIndexCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_INDEX_COUNT.byteOffset;
             var indexCounts = new Uint32Array(featureTableBinary.buffer, polygonIndexCountByteOffset, numberOfPolygons);
 
+            var polygonMinimumHeights;
+            var polygonMaximumHeights;
+            if (defined(featureTableJson.POLYGON_MINIMUM_HEIGHTS) && defined(featureTableJson.POLYGON_MAXIMUM_HEIGHTS)) {
+                var polygonMinimumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MINIMUM_HEIGHTS.byteOffset;
+                polygonMinimumHeights = new Float32Array(featureTableBinary.buffer, polygonMinimumHeightsByteOffset, numberOfPolygons);
+
+                var polygonMaximumHeightsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_MAXIMUM_HEIGHTS.byteOffset;
+                polygonMaximumHeights = new Float32Array(featureTableBinary.buffer, polygonMaximumHeightsByteOffset, numberOfPolygons);
+            }
+
             batchIds = new Array(numberOfPolygons);
             for (i = 0; i < numberOfPolygons; ++i) {
                 batchId = i + numberOfPoints;
@@ -361,6 +371,8 @@ define([
                 indices : indices,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
+                polygonMinimumHeights : polygonMinimumHeights,
+                polygonMaximumHeights : polygonMaximumHeights,
                 center : center,
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
