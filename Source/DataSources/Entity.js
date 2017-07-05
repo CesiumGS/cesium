@@ -581,9 +581,14 @@ define([
     var orientationScratch = new Quaternion();
 
     /**
-     * @private
+     * Computes the model matrix for the entity's transform at specified time.
+     *
+     * @param {JulianDate} time The time to retrieve model matrix for.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
-    Entity.prototype._getModelMatrix = function(time, result) {
+    Entity.prototype.computeModelMatrix = function(time, result) {
         var position = Property.getValueOrUndefined(this._position, time, positionScratch);
         if (!defined(position)) {
             return undefined;
