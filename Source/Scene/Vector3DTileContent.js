@@ -323,9 +323,70 @@ define([
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
         var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
 
+        var polygonBatchIds;
+        var polylineBatchIds;
+        var pointBatchIds;
         var i;
-        var batchId;
-        var batchIds;
+
+        if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
+            var polygonBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_BATCH_IDS.byteOffset;
+            polygonBatchIds = new Uint16Array(featureTableBinary.buffer, polygonBatchIdsByteOffset, numberOfPolygons);
+        }
+
+        if (numberOfPolylines > 0 && defined(featureTableJson.POLYLINE_BATCH_IDS)) {
+            var polylineBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_BATCH_IDS.byteOffset;
+            polylineBatchIds = new Uint16Array(featureTableBinary.buffer, polylineBatchIdsByteOffset, numberOfPolylines);
+        }
+
+        if (numberOfPoints > 0 && defined(featureTableJson.POINT_BATCH_IDS)) {
+            var pointBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POINT_BATCH_IDS.byteOffset;
+            pointBatchIds = new Uint16Array(featureTableBinary.buffer, pointBatchIdsByteOffset, numberOfPoints);
+        }
+
+        if (!defined(polygonBatchIds) && !defined(polylineBatchIds) && !defined(pointBatchIds)) {
+            var maxId = -1;
+
+            if (defined(polygonBatchIds)) {
+                for (i = 0; i < numberOfPolygons; ++i) {
+                    maxId = Math.max(maxId, polygonBatchIds[i]);
+                }
+            }
+
+            if (defined(polylineBatchIds)) {
+                for (i = 0; i < numberOfPolylines; ++i) {
+                    maxId = Math.max(maxId, polylineBatchIds[i]);
+                }
+            }
+
+            if (defined(pointBatchIds)) {
+                for (i = 0; i < numberOfPoints; ++i) {
+                    maxId = Math.max(maxId, pointBatchIds[i]);
+                }
+            }
+
+            maxId = maxId + 1;
+
+            if (!defined(polygonBatchIds) && numberOfPolygons > 0) {
+                polygonBatchIds = new Uint16Array(numberOfPolygons);
+                for (i = 0; i < numberOfPolygons; ++i) {
+                    polygonBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(polylineBatchIds) && numberOfPolylines > 0) {
+                polylineBatchIds = new Uint16Array(numberOfPolylines);
+                for (i = 0; i < numberOfPolylines; ++i) {
+                    polylineBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(pointBatchIds) && numberOfPoints > 0) {
+                pointBatchIds = new Uint16Array(numberOfPoints);
+                for (i = 0; i < numberOfPoints; ++i) {
+                    pointBatchIds[i] = maxId++;
+                }
+            }
+        }
 
         // TODO: must have rectangle
         var rectangle = content._tile.contentBoundingVolume.rectangle;
@@ -358,12 +419,6 @@ define([
                 polygonMaximumHeights = new Float32Array(featureTableBinary.buffer, polygonMaximumHeightsByteOffset, numberOfPolygons);
             }
 
-            batchIds = new Array(numberOfPolygons);
-            for (i = 0; i < numberOfPolygons; ++i) {
-                batchId = i + numberOfPoints;
-                batchIds[i] = batchId;
-            }
-
             content._polygons = new GroundPrimitiveBatch({
                 positions : polygonPositions,
                 counts : counts,
@@ -377,7 +432,7 @@ define([
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
-                batchIds : batchIds,
+                batchIds : polygonBatchIds,
                 pickObject : pickObject
             });
         }
@@ -390,18 +445,15 @@ define([
             var polylineCounts = new Uint32Array(featureTableBinary.buffer, polylineCountByteOffset, numberOfPolylines);
 
             var widths = new Array(numberOfPolylines);
-            batchIds = new Array(numberOfPolylines);
-            var polygonBatchOffset = numberOfPoints + numberOfPolygons;
             for (i = 0; i < numberOfPolylines; ++i) {
                 widths[i] = 2.0;
-                batchIds[i] = i + polygonBatchOffset;
             }
 
             content._polylines = new GroundPolylineBatch({
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,
-                batchIds : batchIds,
+                batchIds : polylineBatchIds,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
                 center : center,
@@ -427,6 +479,8 @@ define([
             AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
             for (i = 0; i < numberOfPoints; ++i) {
+                var id = pointBatchIds[i];
+
                 var u = uBuffer[i];
                 var v = vBuffer[i];
                 var height = heightBuffer[i];
@@ -441,13 +495,13 @@ define([
                 var b = content._billboardCollection.add();
                 b.position = position;
                 b.verticalOrigin = VerticalOrigin.BOTTOM;
-                b._batchIndex = i;
+                b._batchIndex = id;
 
                 var l = content._labelCollection.add();
                 l.text = ' ';
                 l.position = position;
                 l.verticalOrigin = VerticalOrigin.BOTTOM;
-                l._batchIndex = i;
+                l._batchIndex = id;
 
                 var p = content._polylineCollection.add();
                 p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
