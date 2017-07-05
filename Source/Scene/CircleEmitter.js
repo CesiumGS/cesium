@@ -15,6 +15,8 @@ define([
     /**
      * A ParticleEmitter that emits particles from a circle.
      * Particles will be positioned within a circle and have initial velocities going along the z vector.
+     *
+     * @alias CircleEmitter
      * @constructor
      *
      * @param {Number} [radius=1.0] The radius of the circle in meters.

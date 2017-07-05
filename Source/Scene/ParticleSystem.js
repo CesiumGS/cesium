@@ -34,6 +34,8 @@ define([
 
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
+     *
+     * @alias ParticleSystem
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:

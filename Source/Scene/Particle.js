@@ -18,6 +18,8 @@ define([
 
     /**
      * A particle emitted by a {@link ParticleSystem}.
+     *
+     * @alias Particle
      * @constructor
      *
      * @param {Object} options An object with the following properties:

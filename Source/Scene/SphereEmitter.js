@@ -15,6 +15,8 @@ define([
     /**
      * A ParticleEmitter that emits particles within a sphere.
      * Particles will be positioned randomly within the sphere and have initial velocities emanating from the center of the sphere.
+     *
+     * @alias SphereEmitter
      * @constructor
      *
      * @param {Number} [radius=1.0] The radius of the sphere in meters.

@@ -17,6 +17,8 @@ define([
     /**
      * A ParticleEmitter that emits particles within a box.
      * Particles will be positioned randomly within the box and have initial velocities emanating from the center of the box.
+     *
+     * @alias BoxEmitter
      * @constructor
      *
      * @param {Cartesian3} dimensions The width, height and depth dimensions of the box.
