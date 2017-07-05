@@ -14,6 +14,7 @@ define([
      * This type describes an interface and is not intended to be instantiated directly.
      * </p>
      *
+     * @alias ParticleEmitter
      * @constructor
      *
      * @see BoxEmitter
