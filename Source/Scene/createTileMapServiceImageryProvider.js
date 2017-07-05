@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartographic',
@@ -61,7 +60,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider

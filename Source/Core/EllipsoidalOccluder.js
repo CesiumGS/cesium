@@ -1,19 +1,18 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Rectangle'
     ], function(
         BoundingSphere,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Rectangle) {
     'use strict';
 
@@ -42,9 +41,7 @@ define([
      */
     function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('ellipsoid is required.');
-        }
+        Check.typeOf.object('ellipsoid', ellipsoid);
         //>>includeEnd('debug');
 
         this._ellipsoid = ellipsoid;
@@ -159,12 +156,8 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function(directionToPoint, positions, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(directionToPoint)) {
-            throw new DeveloperError('directionToPoint is required');
-        }
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required');
-        }
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -206,15 +199,9 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function(directionToPoint, vertices, stride, center, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(directionToPoint)) {
-            throw new DeveloperError('directionToPoint is required');
-        }
-        if (!defined(vertices)) {
-            throw new DeveloperError('vertices is required');
-        }
-        if (!defined(stride)) {
-            throw new DeveloperError('stride is required');
-        }
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('vertices', vertices);
+        Check.typeOf.number('stride', stride);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -254,9 +241,7 @@ define([
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle = function(rectangle, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.typeOf.object('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var positions = Rectangle.subsample(rectangle, ellipsoid, 0.0, subsampleScratch);

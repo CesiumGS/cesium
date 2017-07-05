@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -31,9 +30,9 @@ defineSuite([
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
+        'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
-        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
@@ -71,9 +70,9 @@ defineSuite([
         Primitive,
         PrimitiveCollection,
         Scene,
+        SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
-        SceneTransforms,
         createCanvas,
         createScene,
         equals,

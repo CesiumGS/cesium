@@ -1,16 +1,15 @@
-/*global define*/
 define([
         './Cartesian3',
         './defined',
         './DeveloperError',
-        './Math',
-        './freezeObject'
+        './freezeObject',
+        './Math'
     ], function(
         Cartesian3,
         defined,
         DeveloperError,
-        CesiumMath,
-        freezeObject) {
+        freezeObject,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -137,11 +136,10 @@ define([
 
         if (!defined(result)) {
             return new Plane(normal, distance);
-        } else {
-            Cartesian3.clone(normal, result.normal);
-            result.distance = distance;
-            return result;
         }
+        Cartesian3.clone(normal, result.normal);
+        result.distance = distance;
+        return result;
     };
 
     /**

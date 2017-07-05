@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './BoundingSphere',
@@ -239,9 +238,8 @@ define([
         if (needsSort) {
             arrayScratch.sort(sortFunction);
             return IndexDatatype.createTypedArray(vertexCount, arrayScratch);
-        } else {
-            return indices;
         }
+        return indices;
     }
 
     var createMeshTaskProcessor = new TaskProcessor('createVerticesFromQuantizedTerrainMesh');

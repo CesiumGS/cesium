@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PolylineArrowMaterialProperty',
         'Core/Color',

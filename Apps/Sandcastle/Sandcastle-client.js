@@ -13,9 +13,8 @@
             return 'null';
         } else if (defined(value)) {
             return value.toString();
-        } else {
-            return 'undefined';
         }
+        return 'undefined';
     }
 
     console.originalLog = console.log;
