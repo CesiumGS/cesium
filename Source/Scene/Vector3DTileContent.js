@@ -514,11 +514,11 @@ define([
         var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
+            var billboardCollection = content._billboardCollection;
+            var labelCollection = content._labelCollection;
+            var polylineCollection = content._polylineCollection;
             for (var i = 0; i < featuresLength; ++i) {
-                if (defined(content._billboardCollection) && i < content._billboardCollection.length) {
-                    var billboardCollection = content._billboardCollection;
-                    var labelCollection = content._labelCollection;
-                    var polylineCollection = content._polylineCollection;
+                if (defined(billboardCollection) && i < billboardCollection.length) {
                     features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection, polylineCollection);
                 } else {
                     features[i] = new Cesium3DTileFeature(tileset, content, i);

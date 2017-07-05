@@ -442,7 +442,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -485,7 +485,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -543,7 +543,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -646,7 +646,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -690,7 +690,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -734,7 +734,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -913,7 +913,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -955,7 +955,7 @@ define([
          *
          * @type {StyleExpression}
          *
-         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
          * @example
          * var style = new Cesium3DTileStyle({
