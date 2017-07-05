@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "id": {
@@ -33,7 +33,7 @@
       ]
     },
     "geometricError": 240,
-    "refine": "replace",
+    "refine": "REPLACE",
     "children": [
       {
         "boundingVolume": {
@@ -47,7 +47,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "replace",
+        "refine": "REPLACE",
         "content": {
           "url": "parent.b3dm",
           "boundingVolume": {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Batched3DModel3DTileContent',
         './Composite3DTileContent',

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Check',
         '../../Core/defaultValue',
@@ -8,7 +7,7 @@ define([
         '../../ThirdParty/knockout',
         '../getElement',
         './Cesium3DTilesInspectorViewModel'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,

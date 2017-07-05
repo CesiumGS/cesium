@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ConditionsExpression',
         'Core/Cartesian4',

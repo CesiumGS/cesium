@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
@@ -276,7 +275,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var asset = tileset.asset;
             expect(asset).toBeDefined();
-            expect(asset.version).toEqual('0.0');
+            expect(asset.version).toEqual('1.0');
             expect(asset.tilesetVersion).toEqual('1.2.3');
 
             var properties = tileset.properties;
@@ -2535,6 +2534,9 @@ defineSuite([
             var tile = tileset._root;
             var statistics = tileset._statistics;
             var expiredContent;
+            tileset.style = new Cesium3DTileStyle({
+                color : 'color("red")'
+            });
 
             // Check that expireDuration and expireDate are correctly set
             var expireDate = JulianDate.addSeconds(JulianDate.now(), 5.0, new JulianDate());
@@ -2592,6 +2594,9 @@ defineSuite([
                 // Expired content is destroyed
                 expect(tile._expiredContent).toBeUndefined();
                 expect(expiredContent.isDestroyed()).toBe(true);
+
+                // Expect the style to be reapplied
+                expect(tile.content.getFeature(0).color).toEqual(Color.RED);
 
                 // statistics for new content
                 expect(statistics.numberOfCommands).toBe(10);

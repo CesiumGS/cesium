@@ -7,7 +7,7 @@
     var url = require('url');
     var request = require('request');
 
-    var gzipHeader = Buffer.from("1F8B08", "hex");
+    var gzipHeader = Buffer.from('1F8B08', 'hex');
 
     var yargs = require('yargs').options({
         'port' : {
@@ -53,8 +53,8 @@
     var app = express();
     app.use(compression());
     app.use(function(req, res, next) {
-        res.header("Access-Control-Allow-Origin", "*");
-        res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
         next();
     });
 

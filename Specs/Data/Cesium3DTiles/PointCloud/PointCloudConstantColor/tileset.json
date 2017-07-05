@@ -1,10 +1,10 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "geometricError": 17.32,
   "root": {
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "sphere": [
         1215012.8828876738,

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Color',
@@ -139,7 +138,7 @@ define([
             var i = 2;
             var finalId = id;
             while (defined(entityCollection.getById(finalId))) {
-                finalId = id + "_" + i;
+                finalId = id + '_' + i;
                 i++;
             }
             id = finalId;

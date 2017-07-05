@@ -1,26 +1,25 @@
-/*global define*/
 define([
-        './clone',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './Check',
+        './clone',
         './defined',
         './defineProperties',
         './Heap',
         './isBlobUri',
         './isDataUri',
-        './RequestState',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when'
+        './RequestState'
     ], function(
-        clone,
+        Uri,
+        when,
         Check,
+        clone,
         defined,
         defineProperties,
         Heap,
         isBlobUri,
         isDataUri,
-        RequestState,
-        Uri,
-        when) {
+        RequestState) {
     'use strict';
 
     function sortRequests(a, b) {

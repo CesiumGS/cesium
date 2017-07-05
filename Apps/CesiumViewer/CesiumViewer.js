@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/defined',
@@ -181,7 +180,7 @@ define([
     if (endUserOptions.saveCamera !== 'false') {
         camera.moveStart.addEventListener(function() {
             if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, 1000);
+                updateTimer = window.setInterval(saveCamera, camera, 1000);
             }
         });
         camera.moveEnd.addEventListener(function() {
@@ -189,7 +188,7 @@ define([
                 window.clearInterval(updateTimer);
                 updateTimer = undefined;
             }
-            saveCamera();
+            saveCamera(camera);
         });
     }
 
