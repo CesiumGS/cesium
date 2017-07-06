@@ -285,7 +285,7 @@ void main() {
 
         // The solid angle is too small, so we occlude this point
         if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
-            depthOut = czm_packDepth(0.0);
+            discard;
         } else {
             // Write out the distance of the point
             //
