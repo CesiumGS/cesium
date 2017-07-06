@@ -37,7 +37,7 @@ tileset.readyPromise.then(function() {
     viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-    var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
+    var dimensions = new Cesium.Cartesian3(40.0, 30.0, 50.0);
     var boxModelMatrix =  Cesium.Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
     var boxGeometry = Cesium.BoxGeometry.fromDimensions({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -51,10 +51,7 @@ tileset.readyPromise.then(function() {
         }
     });
     viewer.scene.primitives.add(new Cesium.ClassificationPrimitive({
-        geometryInstances : boxGeometryInstance,
-        appearance : new Cesium.PerInstanceColorAppearance({
-            closed: true
-        })
+        geometryInstances : boxGeometryInstance
     }));
 }).otherwise(function(error) {
     throw(error);

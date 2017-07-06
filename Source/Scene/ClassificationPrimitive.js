@@ -1068,6 +1068,7 @@ define([
 
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
+                /*
                 geometry = instance.geometry;
                 instanceType = geometry.constructor;
                 groundInstances[i] = new GeometryInstance({
@@ -1078,9 +1079,12 @@ define([
                     id : instance.id,
                     pickPrimitive : this
                 });
+                */
+                instance.pickPrimitive = this;
             }
 
-            primitiveOptions.geometryInstances = groundInstances;
+            //primitiveOptions.geometryInstances = groundInstances;
+            primitiveOptions.geometryInstances = instances;
 
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
