@@ -6,10 +6,15 @@
 #define neighborhoodSize 8
 #define EPS 1e-8
 #define SQRT2 1.414213562
+#define densityScaleFactor 32.0
+#define DENSITY_VIEW
 
 uniform sampler2D pointCloud_colorTexture;
+uniform sampler2D pointCloud_densityTexture;
 uniform sampler2D pointCloud_depthTexture;
 uniform float rangeParameter;
+uniform int densityHalfWidth;
+uniform int iterationNumber;
 
 varying vec2 v_textureCoordinates;
 
@@ -122,13 +127,18 @@ void main() {
 
     loadIntoArray(depthNeighbors, colorNeighbors);
 
+    float density = densityScaleFactor * czm_unpackDepth(
+                        texture2D(pointCloud_densityTexture, v_textureCoordinates));
+
     // If our depth value is invalid
     if (abs(depth) < EPS) {
+        if (float(iterationNumber) <= density + EPS) {
 #if neighborhoodFullWidth == 3
-        fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+            fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
-        genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+            genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #endif
+        }
     }
     // Otherwise if our depth value is valid
     else {
@@ -160,6 +170,10 @@ void main() {
         }
     }
 
+#ifdef DENSITY_VIEW
+    gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0);
+#else
     gl_FragData[0] = finalColor;
+#endif
     gl_FragData[1] = czm_packDepth(finalDepth);
 }

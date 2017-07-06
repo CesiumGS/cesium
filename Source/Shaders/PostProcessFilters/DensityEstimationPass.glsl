@@ -15,7 +15,7 @@ void main() {
                                    v_textureCoordinates));
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
 
-    int closestNeighbor = neighborhoodHalfWidth + 1;
+    float closestNeighbor = float(neighborhoodHalfWidth) + 1.0;
     vec2 neighborhoodAccum = vec2(0.0);
 
     if (center < EPS) {
@@ -32,13 +32,14 @@ void main() {
 
                 neighborhoodAccum += vec2(d);
                 closestNeighbor = min(closestNeighbor,
-                                      max(abs(i), abs(j)));
+                                      max(abs(float(i)),
+                                          abs(float(j))));
             }
         }
 
-        if (closestNeighbor <= neighborhoodHalfWidth &&
-            length(neighborhoodAccum) < neighborhoodVectorSize) {
-            gl_FragData[0] = czm_packDepth(float(closestNeighbor) /
+        if (int(closestNeighbor) <= neighborhoodHalfWidth &&
+                length(neighborhoodAccum) < neighborhoodVectorSize) {
+            gl_FragData[0] = czm_packDepth(closestNeighbor /
                                            densityScaleFactor);
         } else {
             gl_FragData[0] = czm_packDepth(0.0);
