@@ -1,0 +1,47 @@
+#extension GL_EXT_draw_buffers : enable
+
+#define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of region-growing kernel
+
+#define EPS 1e-8
+
+#define densityScaleFactor 32.0
+
+uniform sampler2D pointCloud_depthTexture;
+uniform float neighborhoodVectorSize;
+varying vec2 v_textureCoordinates;
+
+void main() {
+    float center = czm_unpackDepth(texture2D(pointCloud_depthTexture,
+                                   v_textureCoordinates));
+    ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
+
+    int closestNeighbor = neighborhoodHalfWidth + 1;
+    vec2 neighborhoodAccum = vec2(0.0);
+
+    if (center < EPS) {
+        for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
+            for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
+                ivec2 d = ivec2(i, j);
+                ivec2 pI = pos + d;
+
+                float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
+                                                 vec2(pI) / czm_viewport.zw));
+                if (neighbor < EPS || pI == pos) {
+                    continue;
+                }
+
+                neighborhoodAccum += vec2(d);
+                closestNeighbor = min(closestNeighbor,
+                                      max(abs(i), abs(j)));
+            }
+        }
+
+        if (closestNeighbor <= neighborhoodHalfWidth &&
+            length(neighborhoodAccum) < neighborhoodVectorSize) {
+            gl_FragData[0] = czm_packDepth(float(closestNeighbor) /
+                                           densityScaleFactor);
+        } else {
+            gl_FragData[0] = czm_packDepth(0.0);
+        }
+    }
+}

@@ -22,7 +22,8 @@ define([
         '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
-        '../Shaders/PostProcessFilters/RegionGrowingPassGL2'
+        '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
+        '../Shaders/PostProcessFilters/DensityEstimationPass'
     ], function(
         Color,
         defined,
@@ -47,6 +48,7 @@ define([
         RegionGrowingPassGL1,
         PointOcclusionPassGL2,
         RegionGrowingPassGL2,
+        DensityEstimationPass
     ) {
     'use strict';
 
@@ -58,6 +60,7 @@ define([
         this._colorTextures = undefined;
         this._ecTexture = undefined;
         this._depthTextures = undefined;
+        this._densityTexture = undefined;
         this._dirty = undefined;
         this._drawCommands = undefined;
         this._blendCommand = undefined;
@@ -67,6 +70,9 @@ define([
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
         this.numRegionGrowingPasses = options.numRegionGrowingPasses;
+        this.densityHalfWidth = options.densityHalfWidth;
+        this.neighborhoodVectorSize = options.neighborhoodVectorSize;
+        this.densityViewEnabled = options.densityViewEnabled;
     }
 
     function createSampler() {
@@ -81,6 +87,7 @@ define([
     function destroyFramebuffers(processor) {
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
+        processor._densityTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
@@ -111,6 +118,15 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT,
+            sampler : createSampler()
+        });
+
+        var densityMap = new Texture({
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
 
@@ -179,6 +195,11 @@ define([
                 colorTextures : [depthTextures[0]],
                 destroyAttachments : false
             }),
+            densityEstimationPass : new Framebuffer({
+                context : context,
+                colorTextures : [densityMap],
+                destroyAttachments : false
+            }),
             regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1], depthTextures[1]],
@@ -191,15 +212,26 @@ define([
             })
         };
         processor._depthTextures = depthTextures;
+        processor._densityTexture = densityMap;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
     }
 
     function replaceConstants(sourceStr, constantName, replacement) {
-        var r = '#define\\s' + constantName + '\\s([0-9.]+)';
-        return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
-    };
+        var r;
+        if (typeof(replacement) === "boolean") {
+            if (replacement === false) {
+                r = '#define\\s' + constantName;
+                return sourceStr.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
+            } else {
+                return sourceStr;
+            }
+        } else {
+            r = '#define\\s' + constantName + '\\s([0-9.]+)';
+            return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
+        }
+    }
 
     function pointOcclusionStage(processor, context) {
         var uniformMap = {
@@ -233,6 +265,37 @@ define([
         });
     }
 
+    function densityEstimationStage(processor, context) {
+        var uniformMap = {
+            pointCloud_depthTexture : function() {
+                return processor._depthTextures[0];
+            },
+            neighborhoodVectorSize : function() {
+                return processor.neighborhoodVectorSize;
+            }
+        };
+
+        var densityEstimationStr = replaceConstants(
+            DensityEstimationPass,
+            'neighborhoodHalfWidth',
+            processor.densityHalfWidth
+        );
+
+        if (context.webgl2) {
+            densityEstimationStr = GLSLModernizer.
+                glslModernizeShaderText(densityEstimationStr, true, true);
+        }
+
+        return context.createViewportQuadCommand(densityEstimationStr, {
+            uniformMap : uniformMap,
+            framebuffer : processor._framebuffers.densityEstimationPass,
+            renderState : RenderState.fromCache({
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
     function regionGrowingStage(processor, context, iteration) {
         var i = iteration % 2;
 
@@ -243,8 +306,17 @@ define([
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[i];
             },
+            pointCloud_densityTexture : function() {
+                return processor._densityTexture;
+            },
             rangeParameter : function() {
                 return processor.rangeParameter;
+            },
+            densityHalfWidth : function() {
+                return processor.densityHalfWidth;
+            },
+            iterationNumber : function() {
+                return iteration;
             }
         };
 
@@ -255,6 +327,13 @@ define([
         var regionGrowingPassStr = (context.webgl2) ?
             RegionGrowingPassGL2 :
             RegionGrowingPassGL1;
+
+        regionGrowingPassStr = replaceConstants(
+            regionGrowingPassStr,
+            'DENSITY_VIEW',
+            processor.densityViewEnabled
+        );
+        
         return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
@@ -271,9 +350,10 @@ define([
 
         var i;
         drawCommands[0] = pointOcclusionStage(processor, context);
+        drawCommands[1] = densityEstimationStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
-            drawCommands[i + 1] = regionGrowingStage(processor, context, i);
+            drawCommands[i + 2] = regionGrowingStage(processor, context, i);
         }
 
         for (i = 0; i < drawCommands.length; i++) {
@@ -294,7 +374,6 @@ define([
             });
         }
 
-        // TODO : point cloud depth information is lost
         var blendFS =
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -430,14 +509,20 @@ define([
 
         var dirty = false;
         // Set options here
-        if (options.occlusionAngle != this.occlusionAngle ||
-            options.rangeParameter != this.rangeParameter ||
-            options.neighborhoodHalfWidth != this.neighborhoodHalfWidth ||
-            options.numRegionGrowingPasses != this.numRegionGrowingPasses) {
+        if (options.occlusionAngle !== this.occlusionAngle ||
+            options.rangeParameter !== this.rangeParameter ||
+            options.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
+            options.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
+            options.densityHalfWidth !== this.densityHalfWidth ||
+            options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
+            options.densityViewEnabled !== this.densityViewEnabled) {
             this.occlusionAngle = options.occlusionAngle;
             this.rangeParameter = options.rangeParameter;
             this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
             this.numRegionGrowingPasses = options.numRegionGrowingPasses;
+            this.densityHalfWidth = options.densityHalfWidth;
+            this.neighborhoodVectorSize = options.neighborhoodVectorSize;
+            this.densityViewEnabled = options.densityViewEnabled;
             dirty = true;
         }
 
@@ -479,10 +564,14 @@ define([
             if (i == 0) {
                 commandList.push(clearCommands['screenSpacePass']);
             } else {
-                if (i % 2 == 1)
-                    commandList.push(clearCommands['regionGrowingPassA']);
-                else
-                    commandList.push(clearCommands['regionGrowingPassB']);
+                if (i == 1) {
+                    commandList.push(clearCommands['densityEstimationPass']);
+                } else {
+                    if (i % 2 == 0)
+                        commandList.push(clearCommands['regionGrowingPassA']);
+                    else
+                        commandList.push(clearCommands['regionGrowingPassB']);
+                }
             }
             
             commandList.push(drawCommands[i]);

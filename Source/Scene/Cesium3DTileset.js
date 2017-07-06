@@ -733,7 +733,10 @@ define([
             occlusionAngle : defaultValue(options.occlusionAngle, 0.1),
             rangeParameter : defaultValue(options.rangeParameter, 0.001),
             neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
-            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 2)
+            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 4),
+            densityHalfWidth : defaultValue(options.densityHalfWidth, 4),
+            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 10.0),
+            densityViewEnabled : defaultValue(options.densityViewEnabled, false)
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
@@ -1619,7 +1622,10 @@ define([
                 occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
                 rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
                 neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
-                numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses
+                numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
+                densityHalfWidth : tileset.pointCloudPostProcessorOptions.densityHalfWidth,
+                neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
+                densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled
             });
         }
 

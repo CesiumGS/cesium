@@ -5,10 +5,15 @@
 #define neighborhoodSize 8
 #define EPS 1e-8
 #define SQRT2 1.414213562
+#define densityScaleFactor 32.0
+#define DENSITY_VIEW
 
 uniform sampler2D pointCloud_colorTexture;
+uniform sampler2D pointCloud_densityTexture;
 uniform sampler2D pointCloud_depthTexture;
 uniform float rangeParameter;
+uniform int densityHalfWidth;
+uniform int iterationNumber;
 
 in vec2 v_textureCoordinates;
 layout(location = 0) out vec4 colorOut;
@@ -85,7 +90,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = czm_unpackDepth(texture(pointCloud_depthTexture, neighborCoords));
+            float neighbor = czm_unpackDepth(texture(pointCloud_depthTexture,
+                                             neighborCoords));
             vec4 colorNeighbor = texture(pointCloud_colorTexture, neighborCoords);
             if (pastCenter) {
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
@@ -104,7 +110,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
 
 void main() {
     vec4 color = texture(pointCloud_colorTexture, v_textureCoordinates);
-    float depth = czm_unpackDepth(texture(pointCloud_depthTexture, v_textureCoordinates));
+    float depth = czm_unpackDepth(texture(pointCloud_depthTexture,
+                                          v_textureCoordinates));
 
     vec4 finalColor = color;
     float finalDepth = depth;
@@ -123,13 +130,22 @@ void main() {
 
     loadIntoArray(depthNeighbors, colorNeighbors);
 
+    float density = densityScaleFactor * czm_unpackDepth(
+                        texture(pointCloud_densityTexture, v_textureCoordinates));
+
     // If our depth value is invalid
     if (abs(depth) < EPS) {
+        // If the area that we want to region grow is sufficently sparse
+        if (float(iterationNumber) <= density + EPS) {
 #if neighborhoodFullWidth == 3
-        fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+            fastMedian3(depthNeighbors,
+                        colorNeighbors,
+                        finalDepth,
+                        finalColor);
 #else
-        genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
+            genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #endif
+        }
     }
     // Otherwise if our depth value is valid
     else {
@@ -161,6 +177,10 @@ void main() {
         }
     }
 
+    #ifdef DENSITY_VIEW
+    colorOut = vec4(vec3(density / float(densityHalfWidth)), 1.0);
+    #else
     colorOut = finalColor;
+    #endif
     depthOut = czm_packDepth(finalDepth);
 }

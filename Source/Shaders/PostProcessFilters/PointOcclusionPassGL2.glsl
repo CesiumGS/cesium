@@ -9,6 +9,7 @@
 #define C3 -0.0186166
 #define EPS 1e-6
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
+#define neighborhoodSize 9
 #define numSectors 8
 
 #define PERIOD 1e-5
@@ -181,11 +182,12 @@ void main() {
 
     // The position of this pixel in 3D (i.e the position of the point)
     vec3 centerPosition = texture(pointCloud_ECTexture, v_textureCoordinates).xyz;
+    bool invalid = false;
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
-    if (length(centerPosition) == 0.)
-        discard;
+    if (length(centerPosition) < EPS)
+        invalid = true;
 
     // We split our region of interest (the point of interest and its
     // neighbors)
@@ -231,107 +233,111 @@ void main() {
                 continue;
             }
 
-            // sectors contains both possible sectors that the
-            // neighbor pixel could be in
-            ivec2 sectors = collapseSectors(getSectors(vec2(d)));
+            if (!invalid) {
+                // sectors contains both possible sectors that the
+                // neighbor pixel could be in
+                ivec2 sectors = collapseSectors(getSectors(vec2(d)));
 
-            // This is the offset of the horizon point from the center in 3D
-            // (a 3D analog of d)
-            vec3 c = neighborPosition - centerPosition;
+                // This is the offset of the horizon point from the center in 3D
+                // (a 3D analog of d)
+                vec3 c = neighborPosition - centerPosition;
 
-            // Now we calculate the dot product between the vector
-            // from the viewer to the center and the vector to the horizon pixel.
-            // We normalize both vectors first because we only care about their relative
-            // directions
-            // TODO: Redo the math and figure out whether the result should be negated or not
-            float dotProduct = dot(normalize(viewer - centerPosition),
-                                   normalize(c));
+                // Now we calculate the dot product between the vector
+                // from the viewer to the center and the vector to the horizon pixel.
+                // We normalize both vectors first because we only care about their relative
+                // directions
+                // TODO: Redo the math and figure out whether the result should be negated or not
+                float dotProduct = dot(normalize(viewer - centerPosition),
+                                       normalize(c));
 
-            // We calculate the angle that this horizon pixel would make
-            // in the cone. The dot product is be equal to
-            // |vec_1| * |vec_2| * cos(angle_between), and in this case,
-            // the magnitude of both vectors is 1 because they are both
-            // normalized.
-            float angle = acosFast(dotProduct);
+                // We calculate the angle that this horizon pixel would make
+                // in the cone. The dot product is be equal to
+                // |vec_1| * |vec_2| * cos(angle_between), and in this case,
+                // the magnitude of both vectors is 1 because they are both
+                // normalized.
+                float angle = acosFast(dotProduct);
 
-            // This horizon point is behind the current point. That means that it can't
-            // occlude the current point. So we ignore it and move on.
-            if (angle > maxAngle)
-                continue;
-            // If we've found a horizon pixel, store it in the histogram
-            if (sh[sectors.x] > angle) {
-                sh[sectors.x] = angle;
-            }
-            if (sh[sectors.y] > angle) {
-                sh[sectors.y] = angle;
+                // This horizon point is behind the current point. That means that it can't
+                // occlude the current point. So we ignore it and move on.
+                if (angle > maxAngle)
+                    continue;
+                // If we've found a horizon pixel, store it in the histogram
+                if (sh[sectors.x] > angle) {
+                    sh[sectors.x] = angle;
+                }
+                if (sh[sectors.y] > angle) {
+                    sh[sectors.y] = angle;
+                }
             }
         }
     }
 
-    float accumulator = 0.0;
-    for (int i = 0; i < numSectors; i++) {
-        float angle = sh[i];
-        // If the z component is less than zero,
-        // that means that there is no valid horizon pixel
-        if (angle <= 0.0 || angle > maxAngle)
-            angle = maxAngle;
-        accumulator += angle;
-    }
+    if (!invalid) {
+        float accumulator = 0.0;
+        for (int i = 0; i < numSectors; i++) {
+            float angle = sh[i];
+            // If the z component is less than zero,
+            // that means that there is no valid horizon pixel
+            if (angle <= 0.0 || angle > maxAngle)
+                angle = maxAngle;
+            accumulator += angle;
+        }
 
-    // The solid angle is too small, so we occlude this point
-    if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
-        discard;
-    } else {
-        // Write out the distance of the point
-        //
-        // We use the distance of the point rather than
-        // the linearized depth. This is because we want
-        // to encode as much information about position disparities
-        // between points as we can, and the z-values of
-        // neighboring points are usually very similar.
-        // On the other hand, the x-values and y-values are
-        // usually fairly different.
+        // The solid angle is too small, so we occlude this point
+        if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
+            depthOut = czm_packDepth(0.0);
+        } else {
+            // Write out the distance of the point
+            //
+            // We use the distance of the point rather than
+            // the linearized depth. This is because we want
+            // to encode as much information about position disparities
+            // between points as we can, and the z-values of
+            // neighboring points are usually very similar.
+            // On the other hand, the x-values and y-values are
+            // usually fairly different.
 #ifdef USE_TRIANGLE
-        // We can get even more accuracy by passing the 64-bit
-        // distance into a triangle wave function that
-        // uses 64-bit primitives internally. The region
-        // growing pass only cares about deltas between
-        // different pixels, so we just have to ensure that
-        // the period of triangle function is greater than that
-        // of the largest possible delta can arise between
-        // different points.
-        //
-        // The triangle function is C0 continuous, which avoids
-        // artifacts from discontinuities. That said, I have noticed
-        // some inexplicable artifacts occasionally, so please
-        // disable this optimization if that becomes an issue.
-        //
-        // It's important that the period of the triangle function
-        // is at least two orders of magnitude greater than
-        // the average depth delta that we are likely to come
-        // across. The triangle function works because we have
-        // some assumption of locality in the depth domain.
-        // Massive deltas break that locality -- but that's
-        // actually not an issue. Deltas that are larger than
-        // the period function will be "wrapped around", and deltas
-        // that are much larger than the period function may be
-        // "wrapped around" many times. A similar process occurs
-        // in many random number generators. The resulting delta
-        // is usually at least an order of magnitude greater than
-        // the average delta, so it won't even be considered in
-        // the region growing pass.
-        vec2 highPrecisionX = split(centerPosition.x);
-        vec2 highPrecisionY = split(centerPosition.y);
-        vec2 highPrecisionZ = split(centerPosition.z);
-        vec2 highPrecisionLength =
-            sqrt_fp64(sum_fp64(sum_fp64(
-                                   mul_fp64(highPrecisionX, highPrecisionX),
-                                   mul_fp64(highPrecisionY, highPrecisionY)),
-                               mul_fp64(highPrecisionZ, highPrecisionZ)));
-        float triangleResult = triangleFP64(highPrecisionLength, PERIOD);
-        depthOut = czm_packDepth(triangleResult);
+            // We can get even more accuracy by passing the 64-bit
+            // distance into a triangle wave function that
+            // uses 64-bit primitives internally. The region
+            // growing pass only cares about deltas between
+            // different pixels, so we just have to ensure that
+            // the period of triangle function is greater than that
+            // of the largest possible delta can arise between
+            // different points.
+            //
+            // The triangle function is C0 continuous, which avoids
+            // artifacts from discontinuities. That said, I have noticed
+            // some inexplicable artifacts occasionally, so please
+            // disable this optimization if that becomes an issue.
+            //
+            // It's important that the period of the triangle function
+            // is at least two orders of magnitude greater than
+            // the average depth delta that we are likely to come
+            // across. The triangle function works because we have
+            // some assumption of locality in the depth domain.
+            // Massive deltas break that locality -- but that's
+            // actually not an issue. Deltas that are larger than
+            // the period function will be "wrapped around", and deltas
+            // that are much larger than the period function may be
+            // "wrapped around" many times. A similar process occurs
+            // in many random number generators. The resulting delta
+            // is usually at least an order of magnitude greater than
+            // the average delta, so it won't even be considered in
+            // the region growing pass.
+            vec2 highPrecisionX = split(centerPosition.x);
+            vec2 highPrecisionY = split(centerPosition.y);
+            vec2 highPrecisionZ = split(centerPosition.z);
+            vec2 highPrecisionLength =
+                sqrt_fp64(sum_fp64(sum_fp64(
+                                       mul_fp64(highPrecisionX, highPrecisionX),
+                                       mul_fp64(highPrecisionY, highPrecisionY)),
+                                   mul_fp64(highPrecisionZ, highPrecisionZ)));
+            float triangleResult = triangleFP64(highPrecisionLength, PERIOD);
+            depthOut = czm_packDepth(triangleResult);
 #else
-        depthOut = czm_packDepth(length(centerPosition));
+            depthOut = czm_packDepth(length(centerPosition));
 #endif
+        }
     }
 }
