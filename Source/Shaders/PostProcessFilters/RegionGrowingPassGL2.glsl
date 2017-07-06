@@ -177,10 +177,10 @@ void main() {
         }
     }
 
-    #ifdef DENSITY_VIEW
+#ifdef DENSITY_VIEW
     colorOut = vec4(vec3(density / float(densityHalfWidth)), 1.0);
-    #else
+#else
     colorOut = finalColor;
-    #endif
+#endif
     depthOut = czm_packDepth(finalDepth);
 }
