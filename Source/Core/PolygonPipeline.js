@@ -41,7 +41,7 @@ define([
      */
     PolygonPipeline.computeArea2D = function(positions) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('positions', positions);
+        Check.defined('positions', positions);
         Check.typeOf.number.greaterThanOrEquals('positions.length', positions.length, 3);
         //>>includeEnd('debug');
 
