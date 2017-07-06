@@ -812,8 +812,8 @@ define([
         } else {
             groundPrimitive._spPick = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
+                vertexShaderSource : vsSource,
+                fragmentShaderSource : fsSource,
                 attributeLocations : attributeLocations
             });
         }

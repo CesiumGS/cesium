@@ -72,7 +72,7 @@ define([
     var readOnlyInstanceAttributesScratch = ['color'];
 
     /**
-     * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
+     * A classification primitive represents a volume enclosing geometry in the {@link Scene} to be highlighted.  The geometry must be from a single {@link GeometryInstance}.
      * Batching multiple geometries is not yet supported.
      * <p>
      * A primitive combines the geometry instance with an {@link Appearance} that describes the full shading, including
@@ -86,7 +86,11 @@ define([
      * will be rendering artifacts for some viewing angles.
      * </p>
      * <p>
-     * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
+     * Valid geometries are {@link BoxGeometry}, {@link CylinderGeometry}, {@link EllipsoidGeometry}, {@link PolylineVolumeGeometry}, and {@link SphereGeometry}.
+     * </p>
+     * <p>
+     * Geometries that follow the surface of the ellipsoid, such as {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry},
+     * are also valid if they are extruded volumes; otherwise, they will not be rendered.
      * </p>
      *
      * @alias ClassificationPrimitive
@@ -106,6 +110,7 @@ define([
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
      *
      * @see Primitive
+     * @see GroundPrimitive
      * @see GeometryInstance
      * @see Appearance
      */
@@ -175,6 +180,7 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
+        this._pickPrimitive = options.pickPrimitive;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -467,34 +473,6 @@ define([
         groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
-    function modifyForEncodedNormals(primitive, vertexShaderSource) {
-        if (!primitive.compressVertices) {
-            return vertexShaderSource;
-        }
-
-        if (vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1) {
-            var attributeName = 'compressedAttributes';
-
-            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
-            var attributeDecl = 'attribute vec2 ' + attributeName + ';';
-
-            var globalDecl = 'vec3 extrudeDirection;\n';
-            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ', 65535.0);\n';
-
-            var modifiedVS = vertexShaderSource;
-            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+extrudeDirection;/g, '');
-            modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
-            var compressedMain =
-                'void main() \n' +
-                '{ \n' +
-                decode +
-                '    czm_non_compressed_main(); \n' +
-                '}';
-
-            return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
-        }
-    }
-
     function createShaderProgram(groundPrimitive, frameState, appearance) {
         if (defined(groundPrimitive._sp)) {
             return;
@@ -508,7 +486,6 @@ define([
         vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = Primitive._modifyShaderPosition(groundPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
-        vs = modifyForEncodedNormals(primitive, vs);
 
         var fs = ShadowVolumeFS;
         var attributeLocations = groundPrimitive._primitive._attributeLocations;
@@ -680,50 +657,47 @@ define([
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
+        var primitive = groundPrimitive._primitive;
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingVolumes = groundPrimitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
-            boundingVolumes = groundPrimitive._boundingVolumes2D;
+            boundingVolumes = primitive._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingVolumes = primitive._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(primitive._boundingSphere2D)) {
+            boundingVolumes = primitive._boundingSphere2D;
+        } else if (defined(primitive._boundingSphereMorph)) {
+            boundingVolumes = primitive._boundingSphereMorph;
         }
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
-            for (var j = 0; j < colorLength; ++j) {
-                colorCommands[j].modelMatrix = modelMatrix;
-                colorCommands[j].boundingVolume = undefined;//boundingVolumes[Math.floor(j / 3)];
-                colorCommands[j].cull = cull;
-                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+            for (var i = 0; i < colorLength; ++i) {
+                var colorCommand = colorCommands[i];
+                colorCommand.modelMatrix = modelMatrix;
+                colorCommand.boundingVolume = undefined;//boundingVolumes[Math.floor(i / 3)];
+                colorCommand.cull = cull;
+                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
-                commandList.push(colorCommands[j]);
+                commandList.push(colorCommand);
             }
         }
 
         if (passes.pick) {
-            var primitive = groundPrimitive._primitive;
             var pickOffsets = primitive._pickOffsets;
             var length = pickOffsets.length * 3;
             pickCommands.length = length;
 
-            var pickIndex = 0;
-            for (var k = 0; k < length; k += 3) {
-                var pickOffset = pickOffsets[pickIndex++];
+            for (var j = 0; j < length; ++j) {
+                var pickOffset = pickOffsets[Math.floor(j / 3)];
                 var bv = boundingVolumes[pickOffset.index];
 
-                pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = bv;
-                pickCommands[k].cull = cull;
+                var pickCommand = pickCommands[j];
+                pickCommand.modelMatrix = modelMatrix;
+                pickCommand.boundingVolume = undefined;//bv;
+                pickCommand.cull = cull;
 
-                pickCommands[k + 1].modelMatrix = modelMatrix;
-                pickCommands[k + 1].boundingVolume = bv;
-                pickCommands[k + 1].cull = cull;
-
-                pickCommands[k + 2].modelMatrix = modelMatrix;
-                pickCommands[k + 2].boundingVolume = bv;
-                pickCommands[k + 2].cull = cull;
-
-                commandList.push(pickCommands[k], pickCommands[k + 1], pickCommands[k + 2]);
+                commandList.push(pickCommand);
             }
         }
     }
@@ -769,14 +743,19 @@ define([
             }
             //>>includeEnd('debug');
 
+            var geometryInstances = new Array(length);
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
-
-                // TODO: clone instances
-                instance.pickPrimitive = this;
+                geometryInstances[i] = new GeometryInstance({
+                    geometry : instance.geometry,
+                    attributes : instance.attributes,
+                    modelMatrix : instance.modelMatrix,
+                    id : instance.id,
+                    pickPrimitive : defaultValue(this._pickPrimitive, that)
+                });
             }
 
-            primitiveOptions.geometryInstances = instances;
+            primitiveOptions.geometryInstances = geometryInstances;
 
             primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
@@ -823,20 +802,6 @@ define([
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
     };
-
-    /**
-     * @private
-     */
-    /*
-    ClassificationPrimitive.prototype.getBoundingSphere = function(id) {
-        var index = this._boundingSpheresKeys.indexOf(id);
-        if (index !== -1) {
-            return this._boundingSpheres[index];
-        }
-
-        return undefined;
-    };
-    */
 
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.

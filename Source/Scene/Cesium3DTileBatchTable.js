@@ -1305,10 +1305,6 @@ define([
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
 
-        if (!translucentCommand) {
-            derivedCommand.pass = Pass.CESIUM_3D_TILE;
-        }
-
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {
             return translucentCommand;
