@@ -232,6 +232,7 @@ define([], function() {
         removeExtension("EXT_frag_depth");
 
         replaceInSource(/texture2D/, "texture");
+        replaceInSource(/gl_FragDepthEXT/, "gl_FragDepth");
 
         if (isFragmentShader) {
             replaceInSource(/varying/, "in");
