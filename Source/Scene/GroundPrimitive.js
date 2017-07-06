@@ -68,6 +68,8 @@ define([
         StencilOperation) {
     'use strict';
 
+    var readOnlyInstanceAttributesScratch = ['color'];
+
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
      * Batching multiple geometries is not yet supported.
@@ -238,8 +240,6 @@ define([
         });
 
         var readOnlyAttributes;
-        var readOnlyInstanceAttributesScratch = ['color'];
-
         if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
             readOnlyAttributes = readOnlyInstanceAttributesScratch;
         }
@@ -772,14 +772,20 @@ define([
         vs = Primitive._updateColorAttribute(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
 
-        var fs = ShadowVolumeFS;
+        var vsSource = new ShaderSource({
+            defines : ['EXTRUDED_GEOMETRY'],
+            sources : [vs]
+        });
+        var fsSource = new ShaderSource({
+            sources : [ShadowVolumeFS]
+        });
         var attributeLocations = groundPrimitive._primitive._attributeLocations;
 
         groundPrimitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : groundPrimitive._sp,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
         });
 
@@ -787,14 +793,19 @@ define([
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
+            var pickVS = new ShaderSource({
+                defines : ['EXTRUDED_GEOMETRY'],
+                sources : [vsPick]
+            });
+
             var pickFS = new ShaderSource({
-                sources : [fs],
+                sources : [ShadowVolumeFS],
                 pickColorQualifier : 'varying'
             });
             groundPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : groundPrimitive._spPick,
-                vertexShaderSource : vsPick,
+                vertexShaderSource : pickVS,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });

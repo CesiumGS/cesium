@@ -69,6 +69,8 @@ define([
         StencilOperation) {
     'use strict';
 
+    var readOnlyInstanceAttributesScratch = ['color'];
+
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
      * Batching multiple geometries is not yet supported.
@@ -148,7 +150,6 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
@@ -170,28 +171,10 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._uniformMap = {
-            u_globeMinimumAltitude: function() {
-                return 55000.0;
-            }
-        };
-
-        this._boundingVolumes = [];
-        this._boundingVolumes2D = [];
-
         this._ready = false;
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
-
-        this._maxHeight = undefined;
-        this._minHeight = undefined;
-
-        this._maxTerrainHeight = ClassificationPrimitive._defaultMaxTerrainHeight;
-        this._minTerrainHeight = ClassificationPrimitive._defaultMinTerrainHeight;
-
-        this._boundingSpheresKeys = [];
-        this._boundingSpheres = [];
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -218,8 +201,6 @@ define([
             _createPickOffsets : true
         };
     }
-
-    var readOnlyInstanceAttributesScratch = ['color'];
 
     defineProperties(ClassificationPrimitive.prototype, {
         /**
@@ -357,26 +338,6 @@ define([
         return scene.context.stencilBuffer;
     };
 
-    ClassificationPrimitive._defaultMaxTerrainHeight = 9000.0;
-    ClassificationPrimitive._defaultMinTerrainHeight = -100000.0;
-
-    ClassificationPrimitive._terrainHeights = undefined;
-    ClassificationPrimitive._terrainHeightsMaxLevel = 6;
-
-    function getComputeMaximumHeightFunction(primitive) {
-        return function(granularity, ellipsoid) {
-            var r = ellipsoid.maximumRadius;
-            var delta = (r / Math.cos(granularity * 0.5)) - r;
-            return primitive._maxHeight + delta;
-        };
-    }
-
-    function getComputeMinimumHeightFunction(primitive) {
-        return function(granularity, ellipsoid) {
-            return primitive._minHeight;
-        };
-    }
-
     function getStencilPreloadRenderState(enableStencil) {
         return {
             colorMask : {
@@ -494,188 +455,6 @@ define([
         depthMask : false
     };
 
-    var scratchBVCartesianHigh = new Cartesian3();
-    var scratchBVCartesianLow = new Cartesian3();
-    var scratchBVCartesian = new Cartesian3();
-    var scratchBVCartographic = new Cartographic();
-    var scratchBVRectangle = new Rectangle();
-    var tilingScheme = new GeographicTilingScheme();
-    var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
-    var scratchTileXY = new Cartesian2();
-
-    function getRectangle(frameState, geometry) {
-        var ellipsoid = frameState.mapProjection.ellipsoid;
-
-        if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
-            if (defined(geometry.rectangle)) {
-                return geometry.rectangle;
-            }
-
-            return undefined;
-        }
-
-        var highPositions = geometry.attributes.position3DHigh.values;
-        var lowPositions = geometry.attributes.position3DLow.values;
-        var length = highPositions.length;
-
-        var minLat = Number.POSITIVE_INFINITY;
-        var minLon = Number.POSITIVE_INFINITY;
-        var maxLat = Number.NEGATIVE_INFINITY;
-        var maxLon = Number.NEGATIVE_INFINITY;
-
-        for (var i = 0; i < length; i +=3) {
-            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
-            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
-
-            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
-            var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
-
-            var latitude = cartographic.latitude;
-            var longitude = cartographic.longitude;
-
-            minLat = Math.min(minLat, latitude);
-            minLon = Math.min(minLon, longitude);
-            maxLat = Math.max(maxLat, latitude);
-            maxLon = Math.max(maxLon, longitude);
-        }
-
-        var rectangle = scratchBVRectangle;
-        rectangle.north = maxLat;
-        rectangle.south = minLat;
-        rectangle.east = maxLon;
-        rectangle.west = minLon;
-
-        return rectangle;
-    }
-
-    var scratchDiagonalCartesianNE = new Cartesian3();
-    var scratchDiagonalCartesianSW = new Cartesian3();
-    var scratchDiagonalCartographic = new Cartographic();
-    var scratchCenterCartesian = new Cartesian3();
-    var scratchSurfaceCartesian = new Cartesian3();
-
-    function getTileXYLevel(rectangle) {
-        Cartographic.fromRadians(rectangle.east, rectangle.north, 0.0, scratchCorners[0]);
-        Cartographic.fromRadians(rectangle.west, rectangle.north, 0.0, scratchCorners[1]);
-        Cartographic.fromRadians(rectangle.east, rectangle.south, 0.0, scratchCorners[2]);
-        Cartographic.fromRadians(rectangle.west, rectangle.south, 0.0, scratchCorners[3]);
-
-        // Determine which tile the bounding rectangle is in
-        var lastLevelX = 0, lastLevelY = 0;
-        var currentX = 0, currentY = 0;
-        var maxLevel = ClassificationPrimitive._terrainHeightsMaxLevel;
-        for(var i = 0; i <= maxLevel; ++i) {
-            var failed = false;
-            for(var j = 0; j < 4; ++j) {
-                var corner = scratchCorners[j];
-                tilingScheme.positionToTileXY(corner, i, scratchTileXY);
-                if (j === 0) {
-                    currentX = scratchTileXY.x;
-                    currentY = scratchTileXY.y;
-                } else if(currentX !== scratchTileXY.x || currentY !== scratchTileXY.y) {
-                    failed = true;
-                    break;
-                }
-            }
-
-            if (failed) {
-                break;
-            }
-
-            lastLevelX = currentX;
-            lastLevelY = currentY;
-        }
-
-        if (i === 0) {
-            return undefined;
-        }
-
-        return {
-            x : lastLevelX,
-            y : lastLevelY,
-            level : (i > maxLevel) ? maxLevel : (i - 1)
-        };
-    }
-
-    function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
-        var xyLevel = getTileXYLevel(rectangle);
-
-        // Get the terrain min/max for that tile
-        var minTerrainHeight = ClassificationPrimitive._defaultMinTerrainHeight;
-        var maxTerrainHeight = ClassificationPrimitive._defaultMaxTerrainHeight;
-        if (defined(xyLevel)) {
-            var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
-            var heights = ClassificationPrimitive._terrainHeights[key];
-            if (defined(heights)) {
-                minTerrainHeight = heights[0];
-                maxTerrainHeight = heights[1];
-            }
-
-            // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
-            ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle, scratchDiagonalCartographic),
-                scratchDiagonalCartesianNE);
-            ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle, scratchDiagonalCartographic),
-                scratchDiagonalCartesianSW);
-
-            Cartesian3.subtract(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
-            Cartesian3.add(scratchDiagonalCartesianNE,
-                Cartesian3.multiplyByScalar(scratchCenterCartesian, 0.5, scratchCenterCartesian), scratchCenterCartesian);
-            var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
-            if (defined(surfacePosition)) {
-                var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);
-                minTerrainHeight = Math.min(minTerrainHeight, -distance);
-            } else {
-                minTerrainHeight = ClassificationPrimitive._defaultMinTerrainHeight;
-            }
-        }
-
-        primitive._minTerrainHeight = Math.max(ClassificationPrimitive._defaultMinTerrainHeight, minTerrainHeight);
-        primitive._maxTerrainHeight = maxTerrainHeight;
-    }
-
-    var scratchBoundingSphere = new BoundingSphere();
-    function getInstanceBoundingSphere(rectangle, ellipsoid) {
-        var xyLevel = getTileXYLevel(rectangle);
-
-        // Get the terrain max for that tile
-        var maxTerrainHeight = ClassificationPrimitive._defaultMaxTerrainHeight;
-        if (defined(xyLevel)) {
-            var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
-            var heights = ClassificationPrimitive._terrainHeights[key];
-            if (defined(heights)) {
-                maxTerrainHeight = heights[1];
-            }
-        }
-
-        var result = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, 0.0);
-        BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxTerrainHeight, scratchBoundingSphere);
-
-        return BoundingSphere.union(result, scratchBoundingSphere, result);
-    }
-
-    function createBoundingVolume(groundPrimitive, frameState, geometry) {
-        var ellipsoid = frameState.mapProjection.ellipsoid;
-        var rectangle = getRectangle(frameState, geometry);
-
-        // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
-        if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, groundPrimitive._maxHeight, groundPrimitive._minHeight, ellipsoid);
-            groundPrimitive._boundingVolumes.push(obb);
-        } else {
-            var highPositions = geometry.attributes.position3DHigh.values;
-            var lowPositions = geometry.attributes.position3DLow.values;
-            groundPrimitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
-        }
-
-        if (!frameState.scene3DOnly) {
-            var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, groundPrimitive._maxHeight, groundPrimitive._minHeight);
-            Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
-
-            groundPrimitive._boundingVolumes2D.push(boundingVolume);
-        }
-    }
-
     function createRenderStates(groundPrimitive, context, appearance, twoPasses) {
         if (defined(groundPrimitive._rsStencilPreloadPass)) {
             return;
@@ -773,7 +552,7 @@ define([
         colorCommands.length = length;
 
         var vaIndex = 0;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
+        var uniformMap = primitive._batchTable.getUniformMapCallback()();
 
         for (var i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -832,7 +611,7 @@ define([
         pickCommands.length = length;
 
         var pickIndex = 0;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
+        var uniformMap = primitive._batchTable.getUniformMapCallback()();
 
         for (var j = 0; j < length; j += 3) {
             var pickOffset = pickOffsets[pickIndex++];
@@ -949,30 +728,6 @@ define([
         }
     }
 
-    ClassificationPrimitive._initialized = false;
-    ClassificationPrimitive._initPromise = undefined;
-
-    /**
-     * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
-     * ClassificationPrimitive synchronously.
-     *
-     * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
-     *
-     */
-    ClassificationPrimitive.initializeTerrainHeights = function() {
-        var initPromise = ClassificationPrimitive._initPromise;
-        if (defined(initPromise)) {
-            return initPromise;
-        }
-
-        ClassificationPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
-            ClassificationPrimitive._initialized = true;
-            ClassificationPrimitive._terrainHeights = json;
-        });
-
-        return ClassificationPrimitive._initPromise;
-    };
-
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -990,105 +745,39 @@ define([
             return;
         }
 
-        if (!ClassificationPrimitive._initialized) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!this.asynchronous) {
-                throw new DeveloperError('For synchronous ClassificationPrimitives, you must call ClassificationPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
-            }
-            //>>includeEnd('debug');
-
-            ClassificationPrimitive.initializeTerrainHeights();
-            return;
-        }
-
         var that = this;
         var primitiveOptions = this._primitiveOptions;
 
         if (!defined(this._primitive)) {
-            var ellipsoid = frameState.mapProjection.ellipsoid;
-
-            var instance;
-            var geometry;
-            var instanceType;
-
             var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
-            var groundInstances = new Array(length);
 
             var i;
+            var instance;
+            //>>includeStart('debug', pragmas.debug);
             var color;
-            var rectangle;
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
-                geometry = instance.geometry;
-                var instanceRectangle = getRectangle(frameState, geometry);
-                if (!defined(rectangle)) {
-                    rectangle = instanceRectangle;
-                } else {
-                    if (defined(instanceRectangle)) {
-                        Rectangle.union(rectangle, instanceRectangle, rectangle);
-                    }
-                }
-
-                var id = instance.id;
-                if (defined(id) && defined(instanceRectangle)) {
-                    var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
-                    this._boundingSpheresKeys.push(id);
-                    this._boundingSpheres.push(boundingSphere);
-                }
-
-                instanceType = geometry.constructor;
-                if (defined(instanceType)/* && defined(instanceType.createShadowVolume)*/) {
-                    var attributes = instance.attributes;
-
-                    //>>includeStart('debug', pragmas.debug);
-                    if (!defined(attributes) || !defined(attributes.color)) {
-                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                    } else if (!defined(color)) {
-                        color = attributes.color;
-                    }
-                    //>>includeEnd('debug');
-                } else {
-                    //>>includeStart('debug', pragmas.debug);
-                    throw new DeveloperError('Not all of the geometry instances have ClassificationPrimitive support.');
-                    //>>includeEnd('debug');
+                var attributes = instance.attributes;
+                if (!defined(attributes) || !defined(attributes.color)) {
+                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                    throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                } else if (!defined(color)) {
+                    color = attributes.color;
                 }
             }
-
-            // Now compute the min/max heights for the primitive
-            //setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
-            //var exaggeration = frameState.terrainExaggeration;
-            //this._minHeight = this._minTerrainHeight * exaggeration;
-            //this._maxHeight = this._maxTerrainHeight * exaggeration;
-
-            this._minHeight = ClassificationPrimitive._defaultMaxTerrainHeight;
-            this._maxHeight = ClassificationPrimitive._defaultMinTerrainHeight;
+            //>>includeEnd('debug');
 
             for (i = 0; i < length; ++i) {
                 instance = instances[i];
-                /*
-                geometry = instance.geometry;
-                instanceType = geometry.constructor;
-                groundInstances[i] = new GeometryInstance({
-                    //geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
-                    //    getComputeMaximumHeightFunction(this)),
-                    geometry : geometry,
-                    attributes : instance.attributes,
-                    id : instance.id,
-                    pickPrimitive : this
-                });
-                */
+
+                // TODO: clone instances
                 instance.pickPrimitive = this;
             }
 
-            //primitiveOptions.geometryInstances = groundInstances;
             primitiveOptions.geometryInstances = instances;
 
-            primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
-                createBoundingVolume(that, frameState, geometry);
-            };
             primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
@@ -1138,6 +827,7 @@ define([
     /**
      * @private
      */
+    /*
     ClassificationPrimitive.prototype.getBoundingSphere = function(id) {
         var index = this._boundingSpheresKeys.indexOf(id);
         if (index !== -1) {
@@ -1146,6 +836,7 @@ define([
 
         return undefined;
     };
+    */
 
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
