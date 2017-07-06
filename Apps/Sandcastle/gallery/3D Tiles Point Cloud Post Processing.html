@@ -40,7 +40,7 @@
             </td>
           </tr>
           <tr>
-            <td>Region Growing Iterations</td>
+            <td>Maximum Region Growing Iterations</td>
             <td>
                 <input type="range" min="0" max="10" step="1" data-bind="value: numRegionGrowingPasses, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: numRegionGrowingPasses">
@@ -49,8 +49,15 @@
           <tr>
             <td>Region Growing Range Parameter</td>
             <td>
-                <input type="range" min="5e-39" max="2e-38" step="1e-41" data-bind="value: rangeParameter, valueUpdate: 'input'">
+                <input type="range" min="0" max="1" step="1e-41" data-bind="value: rangeParameter, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: rangeParameter">
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Neighborhood Vector Size</td>
+            <td>
+                <input type="range" min="0.0" max="200.0" step="1e-2" data-bind="value: neighborhoodVectorSize, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: neighborhoodVectorSize">
             </td>
           </tr>
         </tbody>
@@ -93,6 +100,7 @@ var viewModel = {
     rangeParameter: tileset.pointCloudPostProcessorOptions.rangeParameter,
     numRegionGrowingPasses: tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
     neighborhoodHalfWidth: tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
+    neighborhoodVectorSize: tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
 };
 Cesium.knockout.track(viewModel);
 
@@ -112,9 +120,14 @@ subscribeParameter('occlusionAngle');
 subscribeParameter('rangeParameter');
 subscribeParameter('neighborhoodHalfWidth');
 subscribeParameter('numRegionGrowingPasses');
+subscribeParameter('neighborhoodVectorSize');
 
 Sandcastle.addToggleButton('Enabled', true, function(checked) {
-    tileset.pointCloudPostProcessorOptions['enabled'] = checked;
+    tileset.pointCloudPostProcessorOptions.enabled = checked;
+});
+
+Sandcastle.addToggleButton('Density View', false, function(checked) {
+    tileset.pointCloudPostProcessorOptions.densityViewEnabled = checked;
 });
 
 ///////////////////////////////////////////////////////////////////////////////
