@@ -1022,7 +1022,7 @@ define([
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n';
+            vs += '    gl_PointSize *= show; \n';
         }
 
         vs += '} \n';
