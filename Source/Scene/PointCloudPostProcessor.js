@@ -339,7 +339,6 @@ define([
             'STENCIL_VIEW',
             processor.stencilViewEnabled
         );
-        console.log(regionGrowingPassStr);
 
         var func = StencilFunction.EQUAL;
         var op = {
