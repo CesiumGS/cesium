@@ -390,6 +390,7 @@ define([
             '#extension GL_EXT_draw_buffers : enable \n' +
             '#define DENSITY_VIEW \n' +
             '#define densityScaleFactor 32.0 \n' +
+            '#define EPS 1e-6 \n' +
             'uniform int densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
@@ -397,13 +398,17 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    #ifdef DENSITY_VIEW \n' +
-            '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
-            '    gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
-            '    #else \n' +
-            '    gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    #endif \n' +
-            '    gl_FragData[1] = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    float depth = czm_unpackDepth(rawDepth); \n' +
+            '    if (depth > EPS) { \n' +
+            '        #ifdef DENSITY_VIEW \n' +
+            '        float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
+            '        #else \n' +
+            '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
+            '        #endif \n' +
+            '        gl_FragData[1] = rawDepth; \n' +
+            '    } \n' +
             '} \n';
 
         if (context.webgl2) {
