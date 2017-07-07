@@ -8,6 +8,8 @@
 #define SQRT2 1.414213562
 #define densityScaleFactor 32.0
 #define DENSITY_VIEW
+#define STENCIL_VIEW
+#define DELAY 1
 
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_densityTexture;
@@ -19,6 +21,31 @@ uniform int iterationNumber;
 varying vec2 v_textureCoordinates;
 
 #define otherswap(a, b, aC, bC) if (a > b) { temp = a; a = b; b = temp; tempColor = aC; aC = bC; bC = tempColor; }
+
+vec4 testColor(in int value) {
+    if (value == 0) {
+        return vec4(1.0, 0.0, 0.0, 1.0);
+    } else if (value == 1) {
+        return vec4(1.0, 0.5, 0.0, 1.0);
+    } else if (value == 2) {
+        return vec4(1.0, 1.0, 0.0, 1.0);
+    } else if (value == 3) {
+        return vec4(0.5, 1.0, 0.0, 1.0);
+    } else if (value == 4) {
+        return vec4(0.0, 1.0, 0.0, 1.0);
+    } else if (value == 5) {
+        return vec4(0.0, 1.0, 0.5, 1.0);
+    } else if (value == 6) {
+        return vec4(0.0, 1.0, 1.0, 1.0);
+    } else if (value == 7) {
+        return vec4(0.0, 0.5, 1.0, 1.0);
+    } else if (value == 8) {
+        return vec4(0.0, 0.0, 1.0, 1.0);
+    } else {
+        return vec4(1.0, 1.0, 1.0, 1.0);
+    }
+}
+
 
 void comparisonNetwork8(inout float[neighborhoodSize] neighbors,
                         inout vec4[neighborhoodSize] neighborsColor) {
@@ -132,7 +159,7 @@ void main() {
 
     // If our depth value is invalid
     if (abs(depth) < EPS) {
-        if (float(iterationNumber) <= density + EPS) {
+        if (float(iterationNumber - DELAY) <= density + EPS) {
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
@@ -173,7 +200,11 @@ void main() {
 #ifdef DENSITY_VIEW
     gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0);
 #else
+#ifdef STENCIL_VIEW
+    gl_FragData[0] = testColor(iterationNumber);
+#else
     gl_FragData[0] = finalColor;
+#endif
 #endif
     gl_FragData[1] = czm_packDepth(finalDepth);
 }

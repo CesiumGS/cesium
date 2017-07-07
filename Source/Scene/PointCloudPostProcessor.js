@@ -387,6 +387,7 @@ define([
             processor._framebuffers.regionGrowingPassB;
 
         var copyStageStr =
+            '#extension GL_EXT_draw_buffers : enable \n' +
             '#define DENSITY_VIEW \n' +
             '#define densityScaleFactor 32.0 \n' +
             'uniform int densityHalfWidth; \n' +
