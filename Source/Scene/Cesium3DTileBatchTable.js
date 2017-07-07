@@ -1,8 +1,8 @@
-/*global define*/
 define([
         '../Core/arrayFill',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -14,6 +14,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        '../Core/RuntimeError',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
@@ -24,6 +25,7 @@ define([
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
+        './AttributeType',
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
@@ -34,6 +36,7 @@ define([
         arrayFill,
         Cartesian2,
         Cartesian4,
+        Check,
         clone,
         Color,
         combine,
@@ -45,6 +48,7 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        RuntimeError,
         ContextLimits,
         DrawCommand,
         Pass,
@@ -55,6 +59,7 @@ define([
         Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        AttributeType,
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
@@ -164,8 +169,8 @@ define([
         var parentIdsLength = instancesLength;
 
         if (defined(classIds.byteOffset)) {
-            classIds.componentType = defaultValue(classIds.componentType, 'UNSIGNED_SHORT');
-            classIds.type = 'SCALAR';
+            classIds.componentType = defaultValue(classIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
+            classIds.type = AttributeType.SCALAR;
             binaryAccessor = getBinaryAccessor(classIds);
             classIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + classIds.byteOffset, instancesLength);
         }
@@ -173,8 +178,8 @@ define([
         var parentIndexes;
         if (defined(parentCounts)) {
             if (defined(parentCounts.byteOffset)) {
-                parentCounts.componentType = defaultValue(parentCounts.componentType, 'UNSIGNED_SHORT');
-                parentCounts.type = 'SCALAR';
+                parentCounts.componentType = defaultValue(parentCounts.componentType, ComponentDatatype.UNSIGNED_SHORT);
+                parentCounts.type = AttributeType.SCALAR;
                 binaryAccessor = getBinaryAccessor(parentCounts);
                 parentCounts = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentCounts.byteOffset, instancesLength);
             }
@@ -186,13 +191,11 @@ define([
             }
         }
 
-        if (defined(parentIds)) {
-            if (defined(parentIds.byteOffset)) {
-                parentIds.componentType = defaultValue(parentIds.componentType, 'UNSIGNED_SHORT');
-                parentIds.type = 'SCALAR';
-                binaryAccessor = getBinaryAccessor(parentIds);
-                parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
-            }
+        if (defined(parentIds) && defined(parentIds.byteOffset)) {
+            parentIds.componentType = defaultValue(parentIds.componentType, ComponentDatatype.UNSIGNED_SHORT);
+            parentIds.type = AttributeType.SCALAR;
+            binaryAccessor = getBinaryAccessor(parentIds);
+            parentIds = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + parentIds.byteOffset, parentIdsLength);
         }
 
         var classesLength = classes.length;
@@ -276,44 +279,40 @@ define([
 
     Cesium3DTileBatchTable.getBinaryProperties = function(featuresLength, json, binary) {
         var binaryProperties;
-        if (defined(json)) {
-            for (var name in json) {
-                if (json.hasOwnProperty(name)) {
-                    var property = json[name];
-                    var byteOffset = property.byteOffset;
-                    if (defined(byteOffset)) {
-                        // This is a binary property
-                        var componentType = ComponentDatatype.fromName(property.componentType);
-                        var type = property.type;
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(componentType)) {
-                            throw new DeveloperError('componentType is required.');
-                        }
-                        if (!defined(type)) {
-                            throw new DeveloperError('type is required.');
-                        }
-                        if (!defined(binary)) {
-                            throw new DeveloperError('Property ' + name + ' requires a batch table binary.');
-                        }
-                        //>>includeEnd('debug');
-
-                        var binaryAccessor = getBinaryAccessor(property);
-                        var componentCount = binaryAccessor.componentsPerAttribute;
-                        var classType = binaryAccessor.classType;
-                        var typedArray = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + byteOffset, featuresLength);
-
-                        if (!defined(binaryProperties)) {
-                            binaryProperties = {};
-                        }
-
-                        // Store any information needed to access the binary data, including the typed array,
-                        // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
-                        binaryProperties[name] = {
-                            typedArray : typedArray,
-                            componentCount : componentCount,
-                            type : classType
-                        };
+        for (var name in json) {
+            if (json.hasOwnProperty(name)) {
+                var property = json[name];
+                var byteOffset = property.byteOffset;
+                if (defined(byteOffset)) {
+                    // This is a binary property
+                    var componentType = property.componentType;
+                    var type = property.type;
+                    if (!defined(componentType)) {
+                        throw new RuntimeError('componentType is required.');
                     }
+                    if (!defined(type)) {
+                        throw new RuntimeError('type is required.');
+                    }
+                    if (!defined(binary)) {
+                        throw new RuntimeError('Property ' + name + ' requires a batch table binary.');
+                    }
+
+                    var binaryAccessor = getBinaryAccessor(property);
+                    var componentCount = binaryAccessor.componentsPerAttribute;
+                    var classType = binaryAccessor.classType;
+                    var typedArray = binaryAccessor.createArrayBufferView(binary.buffer, binary.byteOffset + byteOffset, featuresLength);
+
+                    if (!defined(binaryProperties)) {
+                        binaryProperties = {};
+                    }
+
+                    // Store any information needed to access the binary data, including the typed array,
+                    // componentCount (e.g. a VEC4 would be 4), and the type used to pack and unpack (e.g. Cartesian4).
+                    binaryProperties[name] = {
+                        typedArray : typedArray,
+                        componentCount : componentCount,
+                        type : classType
+                    };
                 }
             }
         }
@@ -348,16 +347,16 @@ define([
         return batchTable._showAlphaProperties;
     }
 
-    Cesium3DTileBatchTable.prototype.setShow = function(batchId, show) {
-        var featuresLength = this.featuresLength;
-        //>>includeStart('debug', pragmas.debug);
+    function checkBatchId(batchId, featuresLength) {
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
+    }
 
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
+    Cesium3DTileBatchTable.prototype.setShow = function(batchId, show) {
+        //>>includeStart('debug', pragmas.debug);
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.bool('show', show);
         //>>includeEnd('debug');
 
         if (show && !defined(this._showAlphaProperties)) {
@@ -384,24 +383,18 @@ define([
 
     Cesium3DTileBatchTable.prototype.setAllShow = function(show) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(show)) {
-            throw new DeveloperError('show is required.');
-        }
+        Check.typeOf.bool('show', show);
         //>>includeEnd('debug');
 
         var featuresLength = this.featuresLength;
         for (var i = 0; i < featuresLength; ++i) {
-            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
             this.setShow(i, show);
         }
     };
 
     Cesium3DTileBatchTable.prototype.getShow = function(batchId) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
         if (!defined(this._showAlphaProperties)) {
@@ -416,15 +409,9 @@ define([
     var scratchColorBytes = new Array(4);
 
     Cesium3DTileBatchTable.prototype.setColor = function(batchId, color) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.object('color', color);
         //>>includeEnd('debug');
 
         if (Color.equals(color, Color.WHITE) && !defined(this._batchValues)) {
@@ -472,28 +459,19 @@ define([
 
     Cesium3DTileBatchTable.prototype.setAllColor = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(color)) {
-            throw new DeveloperError('color is required.');
-        }
+        Check.typeOf.object('color', color);
         //>>includeEnd('debug');
 
         var featuresLength = this.featuresLength;
         for (var i = 0; i < featuresLength; ++i) {
-            // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
             this.setColor(i, color);
         }
     };
 
     Cesium3DTileBatchTable.prototype.getColor = function(batchId, result) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
@@ -600,23 +578,17 @@ define([
     }
 
     function traverseHierarchySingleParent(hierarchy, instanceIndex, endConditionCallback) {
-        while (true) { // eslint-disable-line no-constant-condition
+        var hasParent = true;
+        while (hasParent) {
             var result = endConditionCallback(hierarchy, instanceIndex);
             if (defined(result)) {
                 // The end condition was met, stop the traversal and return the result
                 return result;
             }
             var parentId = hierarchy.parentIds[instanceIndex];
-            if (parentId === instanceIndex) {
-                // Stop the traversal when the instance has no parent (its parentId equals itself)
-                break;
-            }
+            hasParent = parentId !== instanceIndex;
             instanceIndex = parentId;
         }
-    }
-
-    function traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback) {
-        return endConditionCallback(hierarchy, instanceIndex);
     }
 
     function traverseHierarchy(hierarchy, instanceIndex, endConditionCallback) {
@@ -625,7 +597,7 @@ define([
         var parentCounts = hierarchy.parentCounts;
         var parentIds = hierarchy.parentIds;
         if (!defined(parentIds)) {
-            return traverseHierarchyNoParents(hierarchy, instanceIndex, endConditionCallback);
+            return endConditionCallback(hierarchy, instanceIndex);
         } else if (defined(parentCounts)) {
             return traverseHierarchyMultipleParents(hierarchy, instanceIndex, endConditionCallback);
         }
@@ -644,14 +616,16 @@ define([
         return defined(result);
     }
 
-    function getPropertyNamesInHierarchy(batchTable, batchId, names) {
+    function getPropertyNamesInHierarchy(batchTable, batchId, results) {
         var hierarchy = batchTable._batchTableHierarchy;
         traverseHierarchy(hierarchy, batchId, function(hierarchy, instanceIndex) {
             var classId = hierarchy.classIds[instanceIndex];
             var instances = hierarchy.classes[classId].instances;
             for (var name in instances) {
                 if (instances.hasOwnProperty(name)) {
-                    names[name] = true;
+                    if (results.indexOf(name) === -1) {
+                        results.push(name);
+                    }
                 }
             }
         });
@@ -698,14 +672,9 @@ define([
     }
 
     Cesium3DTileBatchTable.prototype.isClass = function(batchId, className) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(className)) {
-            throw new DeveloperError('className is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('className', className);
         //>>includeEnd('debug');
 
         // PERFORMANCE_IDEA : cache results in the ancestor classes to speed up this check if this area becomes a hotspot
@@ -727,20 +696,15 @@ define([
 
     Cesium3DTileBatchTable.prototype.isExactClass = function(batchId, className) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(className)) {
-            throw new DeveloperError('className is required.');
-        }
+        Check.typeOf.string('className', className);
         //>>includeEnd('debug');
 
         return (this.getExactClassName(batchId) === className);
     };
 
     Cesium3DTileBatchTable.prototype.getExactClassName = function(batchId) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
         var hierarchy = this._batchTableHierarchy;
@@ -753,60 +717,41 @@ define([
     };
 
     Cesium3DTileBatchTable.prototype.hasProperty = function(batchId, name) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         var json = this.batchTableJson;
         return (defined(json) && defined(json[name])) || (defined(this._batchTableHierarchy) && hasPropertyInHierarchy(this, batchId, name));
     };
 
-    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId) {
-        var featuresLength = this.featuresLength;
+    Cesium3DTileBatchTable.prototype.getPropertyNames = function(batchId, results) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
+        checkBatchId(batchId, this.featuresLength);
         //>>includeEnd('debug');
 
+        results = defined(results) ? results : [];
+        results.length = 0;
+
         var json = this.batchTableJson;
-
-        if (!defined(json)) {
-            return [];
-        }
-
-        if (!defined(this._batchTableHierarchy)) {
-            return Object.keys(json);
-        }
-
-        // Has a batch table hierarchy. Build a hash map of property names to avoid duplicates.
-        // Different classes in the hierarchy may have identical property names.
-        var names = {};
         for (var name in json) {
             if (json.hasOwnProperty(name)) {
-                names[name] = true;
+                results.push(name);
             }
         }
-        getPropertyNamesInHierarchy(this, batchId, names);
 
-        return Object.keys(names);
+        if (defined(this._batchTableHierarchy)) {
+            getPropertyNamesInHierarchy(this, batchId, results);
+        }
+
+        return results;
     };
 
     Cesium3DTileBatchTable.prototype.getProperty = function(batchId, name) {
-        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, this.featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         if (!defined(this.batchTableJson)) {
@@ -838,13 +783,8 @@ define([
     Cesium3DTileBatchTable.prototype.setProperty = function(batchId, name, value) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
-            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
+        checkBatchId(batchId, featuresLength);
+        Check.typeOf.string('name', name);
         //>>includeEnd('debug');
 
         if (defined(this._batchTableBinaryProperties)) {
@@ -978,7 +918,9 @@ define([
             return getHighlightOnlyShader(source);
         }
 
-        // Find the diffuse uniform
+        // Find the diffuse uniform. Examples matches:
+        //   uniform vec3 u_diffuseColor;
+        //   uniform sampler2D diffuseTexture;
         var regex = new RegExp('uniform\\s+(vec[34]|sampler2D)\\s+' + diffuseUniformName + ';');
         var uniformMatch = source.match(regex);
 
@@ -1104,12 +1046,17 @@ define([
         var colorBlendAmount = tileset.colorBlendAmount;
         if (colorBlendMode === Cesium3DTileColorBlendMode.HIGHLIGHT) {
             return 0.0;
-        } else if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
+        }
+        if (colorBlendMode === Cesium3DTileColorBlendMode.REPLACE) {
             return 1.0;
-        } else if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
+        }
+        if (colorBlendMode === Cesium3DTileColorBlendMode.MIX) {
             // The value 0.0 is reserved for highlight, so clamp to just above 0.0.
             return CesiumMath.clamp(colorBlendAmount, CesiumMath.EPSILON4, 1.0);
         }
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Invalid color blend mode "' + colorBlendMode + '".');
+        //>>includeEnd('debug');
     }
 
     Cesium3DTileBatchTable.prototype.getUniformMapCallback = function() {

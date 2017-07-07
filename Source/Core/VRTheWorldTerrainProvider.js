@@ -1,10 +1,10 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Credit',
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -16,7 +16,6 @@ define([
         './Math',
         './Rectangle',
         './Request',
-        './RequestScheduler',
         './RequestType',
         './TerrainProvider',
         './TileProviderError'
@@ -26,6 +25,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -37,7 +37,6 @@ define([
         CesiumMath,
         Rectangle,
         Request,
-        RequestScheduler,
         RequestType,
         TerrainProvider,
         TileProviderError) {
@@ -152,7 +151,7 @@ define([
         }
 
         function requestMetadata() {
-            when(RequestScheduler.request(that._url, loadXML), metadataSuccess, metadataFailure);
+            when(loadXML(that._url), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -260,7 +259,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -280,18 +279,16 @@ define([
             url = proxy.getURL(url);
         }
 
-        if (!defined(request) || (request === false)) {
-            // If a request object isn't provided, perform an immediate request
+        if (typeof request === 'boolean') {
+            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
             request = new Request({
-                defer : true
+                throttle : request,
+                throttleByServer : request,
+                type : RequestType.TERRAIN
             });
         }
 
-        request.url = url;
-        request.requestFunction = loadImage;
-        request.type = RequestType.TERRAIN;
-
-        var promise = RequestScheduler.schedule(request);
+        var promise = loadImage(url, undefined, request);
         if (!defined(promise)) {
             return undefined;
         }

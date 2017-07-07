@@ -2,7 +2,6 @@
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/
 
-/*global define*/
 define(function() {
 
 /*global module: true, exports: true, console: true */

@@ -1,19 +1,18 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
         'Core/defined',
         'Core/Math',
+        'Scene/Cesium3DTileset',
+        'Scene/Cesium3DTileStyle',
         'Scene/Globe',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
         Cesium3DTilesInspectorViewModel,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
         defined,
         CesiumMath,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
         Globe,
         createScene,
         when) {
@@ -167,7 +166,7 @@ defineSuite([
             viewModel.tileset = new Cesium3DTileset({
                 url : tilesetUrl
             });
-            return viewModel._tilesetLoaded;
+            return viewModel.tileset.readyPromise;
         });
 
         afterAll(function() {
@@ -224,7 +223,7 @@ defineSuite([
                 url : tilesetUrl
             });
 
-            return viewModel._tilesetLoaded;
+            return viewModel.tileset.readyPromise;
         });
 
         afterAll(function() {

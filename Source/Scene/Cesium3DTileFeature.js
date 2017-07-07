@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/defined',
@@ -10,9 +9,12 @@ define([
     'use strict';
 
     /**
+     * A feature of a {@link Cesium3DTileset}.
+     * <p>
      * Provides access to a feature's properties stored in the tile's batch table, as well
      * as the ability to show/hide a feature and change its highlight color via
      * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color}, respectively.
+     * </p>
      * <p>
      * Modifications to a <code>Cesium3DTileFeature</code> object have the lifetime of the tile's
      * content.  If the tile's content is unloaded, e.g., due to it going out of view and needing
@@ -45,20 +47,11 @@ define([
         this._content = content;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-
-        /**
-         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
-         *
-         * @type {Cesium3DTileset}
-         *
-         * @private
-         */
-        this.primitive = tileset;
     }
 
     defineProperties(Cesium3DTileFeature.prototype, {
         /**
-         * Gets and sets if the feature will be shown. This is set for all features
+         * Gets or sets if the feature will be shown. This is set for all features
          * when a style's show is evaluated.
          *
          * @memberof Cesium3DTileFeature.prototype
@@ -77,7 +70,7 @@ define([
         },
 
         /**
-         * Gets and sets the highlight color multiplied with the feature's color.  When
+         * Gets or sets the highlight color multiplied with the feature's color.  When
          * this is white, the feature's color is not changed. This is set for all features
          * when a style's color is evaluated.
          *
@@ -113,6 +106,37 @@ define([
             get : function() {
                 return this._content;
             }
+        },
+
+        /**
+         * Gets the tileset containing the feature.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileset}
+         *
+         * @readonly
+         */
+        tileset : {
+            get : function() {
+                return this._content.tileset;
+            }
+        },
+
+        /**
+         * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
+         * the tileset containing the feature.
+         *
+         * @memberof Cesium3DTileFeature.prototype
+         *
+         * @type {Cesium3DTileset}
+         *
+         * @readonly
+         */
+        primitive : {
+            get : function() {
+                return this._content.tileset;
+            }
         }
     });
 
@@ -135,18 +159,16 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *
+     * @param {String[]} results An array into which to store the results.
      * @returns {String[]} The names of the feature's properties.
      */
-    Cesium3DTileFeature.prototype.getPropertyNames = function() {
-        return this._content.batchTable.getPropertyNames(this._batchId);
+    Cesium3DTileFeature.prototype.getPropertyNames = function(results) {
+        return this._content.batchTable.getPropertyNames(this._batchId, results);
     };
 
     /**
-     * Returns the value of the feature's property with the given name. This includes properties from this feature's
+     * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
-     * <p>
-     * The value is copied before being returned.
-     * </p>
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
      *

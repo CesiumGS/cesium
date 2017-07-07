@@ -1,38 +1,39 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainProvider',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/defined',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/GoogleEarthEnterpriseTileInformation',
-    'Core/loadImage',
-    'Core/loadWithXhr',
-    'Core/Math',
-    'Core/Request',
-    'Core/TerrainProvider',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainProvider,
-    DefaultProxy,
-    defaultValue,
-    defined,
-    Ellipsoid,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTerrainData,
-    GoogleEarthEnterpriseTileInformation,
-    loadImage,
-    loadWithXhr,
-    CesiumMath,
-    Request,
-    TerrainProvider,
-    pollToPromise,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Core/Request',
+        'Core/RequestScheduler',
+        'Core/TerrainProvider',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainProvider,
+        DefaultProxy,
+        defaultValue,
+        defined,
+        Ellipsoid,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTerrainData,
+        GoogleEarthEnterpriseTileInformation,
+        loadImage,
+        loadWithXhr,
+        CesiumMath,
+        Request,
+        RequestScheduler,
+        TerrainProvider,
+        pollToPromise,
+        when) {
     'use strict';
 
     function installMockGetQuadTreePacket() {
@@ -75,6 +76,16 @@ defineSuite([
             });
         });
     }
+
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
+        });
+    }
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
@@ -292,8 +303,6 @@ defineSuite([
                 url : baseUrl
             });
 
-            var request = new Request();
-
             var promises = [];
             return pollToPromise(function() {
                 return terrainProvider.ready;
@@ -308,17 +317,15 @@ defineSuite([
                     });
                 })
                 .then(function() {
-                    var promise = terrainProvider.requestTileGeometry(1, 2, 3, request);
-                    expect(promise).toBeDefined();
-                    return promise;
-                })
-                .then(function(terrainData) {
-                    expect(terrainData).toBeDefined();
-                    for (var i = 0; i < 10; ++i) {
-                        promises.push(terrainProvider.requestTileGeometry(i, i, i, request));
+                    var promise;
+                    for (var i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                        promise = terrainProvider.requestTileGeometry(i, i, i, createRequest());
+                        promises.push(promise);
                     }
+                    RequestScheduler.update();
+                    expect(promise).toBeDefined();
 
-                    return terrainProvider.requestTileGeometry(1, 2, 3, request);
+                    return terrainProvider.requestTileGeometry(1, 2, 3, createRequest());
                 })
                 .then(function(terrainData) {
                     expect(terrainData).toBeUndefined();
@@ -330,7 +337,7 @@ defineSuite([
                     return when.all(promises)
                         .otherwise(function() {
                             loadRealTile = true;
-                            return terrainProvider.requestTileGeometry(1, 2, 3, request);
+                            return terrainProvider.requestTileGeometry(1, 2, 3);
                         });
                 })
                 .then(function(terrainData) {

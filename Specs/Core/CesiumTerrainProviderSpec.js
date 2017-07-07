@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
@@ -30,6 +29,10 @@ defineSuite([
         pollToPromise,
         when) {
     'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
@@ -85,6 +88,12 @@ defineSuite([
             return when(promise, f, function(error) {
                 expect('requestTileGeometry').toBe('returning a tile.'); // test failure
             });
+        });
+    }
+
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
         });
     }
 
@@ -362,8 +371,6 @@ defineSuite([
     describe('requestTileGeometry', function() {
 
         it('uses multiple urls specified in layer.json', function() {
-            RequestScheduler.throttle = false;
-
             returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
 
             var provider = new CesiumTerrainProvider({
@@ -382,13 +389,10 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
                 provider.requestTileGeometry(1, 0, 1);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
-                RequestScheduler.throttle = true;
             });
         });
 
         it('supports scheme-less template URLs in layer.json resolved with absolute URL', function() {
-            RequestScheduler.throttle = false;
-
             returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
 
             var url = getAbsoluteUri('Data/CesiumTerrainTileJson');
@@ -409,7 +413,6 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo2.com');
                 provider.requestTileGeometry(1, 0, 1);
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
-                RequestScheduler.throttle = true;
             });
         });
 
@@ -582,20 +585,18 @@ defineSuite([
                 url : baseUrl
             });
 
-            var request = new Request();
-
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                var promise;
+                var i;
+                for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
+                }
+                RequestScheduler.update();
                 expect(promise).toBeDefined();
 
-                var i;
-                for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
-                }
-
-                promise = terrainProvider.requestTileGeometry(0, 0, 0, request);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
                 expect(promise).toBeUndefined();
 
                 for (i = 0; i < deferreds.length; ++i) {

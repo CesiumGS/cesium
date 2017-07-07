@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Model',
         'Core/Cartesian2',
@@ -348,6 +347,23 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('does not render during morph', function() {
+        var commandList = scene.frameState.commandList;
+        var model = texturedBoxModel;
+        model.show = true;
+        model.cull = false;
+        expect(model.ready).toBe(true);
+
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBe(0);
+        scene.completeMorph();
+        model.show = false;
     });
 
     it('Renders x-up model', function() {
@@ -1929,7 +1945,7 @@ defineSuite([
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(scene).toRenderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 expect(rgba).not.toEqual(oldPixelColor);
                 oldPixelColor = rgba;

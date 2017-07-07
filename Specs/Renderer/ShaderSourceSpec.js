@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/ShaderSource'
     ], function(
@@ -64,5 +63,13 @@ defineSuite([
                 pickColorQualifier : 'const'
             });
         }).toThrowDeveloperError();
+    });
+
+    it('combines #version to shader', function() {
+        var source = new ShaderSource({
+            sources : ['#version 300 es\nvoid main() {gl_FragColor = vec4(1.0); }']
+        });
+        var shaderText = source.createCombinedVertexShader();
+        expect(shaderText).toStartWith('#version 300 es\n');
     });
 });

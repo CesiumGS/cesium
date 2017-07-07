@@ -1,48 +1,49 @@
-/*global define*/
 define([
-    '../ThirdParty/when',
-    './Credit',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Event',
-    './GeographicTilingScheme',
-    './GoogleEarthEnterpriseMetadata',
-    './GoogleEarthEnterpriseTerrainData',
-    './HeightmapTerrainData',
-    './JulianDate',
-    './loadArrayBuffer',
-    './Math',
-    './Rectangle',
-    './Request',
-    './RequestScheduler',
-    './RequestType',
-    './RuntimeError',
-    './TaskProcessor',
-    './TileProviderError'
-], function(
-    when,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTerrainData,
-    HeightmapTerrainData,
-    JulianDate,
-    loadArrayBuffer,
-    CesiumMath,
-    Rectangle,
-    Request,
-    RequestScheduler,
-    RequestType,
-    RuntimeError,
-    TaskProcessor,
-    TileProviderError) {
+        '../ThirdParty/when',
+        './Credit',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './deprecationWarning',
+        './DeveloperError',
+        './Event',
+        './GeographicTilingScheme',
+        './GoogleEarthEnterpriseMetadata',
+        './GoogleEarthEnterpriseTerrainData',
+        './HeightmapTerrainData',
+        './JulianDate',
+        './loadArrayBuffer',
+        './Math',
+        './Rectangle',
+        './Request',
+        './RequestState',
+        './RequestType',
+        './RuntimeError',
+        './TaskProcessor',
+        './TileProviderError'
+    ], function(
+        when,
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        deprecationWarning,
+        DeveloperError,
+        Event,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTerrainData,
+        HeightmapTerrainData,
+        JulianDate,
+        loadArrayBuffer,
+        CesiumMath,
+        Rectangle,
+        Request,
+        RequestState,
+        RequestType,
+        RuntimeError,
+        TaskProcessor,
+        TileProviderError) {
     'use strict';
 
     var TerrainState = {
@@ -156,6 +157,7 @@ define([
 
         this._terrainCache = new TerrainCache();
         this._terrainPromises = {};
+        this._terrainRequests = {};
 
         this._errorEvent = new Event();
 
@@ -343,7 +345,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Request} [request] The request object.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -436,28 +438,31 @@ define([
 
         // Load that terrain
         var terrainPromises = this._terrainPromises;
+        var terrainRequests = this._terrainRequests;
         var url = buildTerrainUrl(this, q, terrainVersion);
-        var promise;
+        var sharedPromise;
+        var sharedRequest;
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
-            promise = terrainPromises[q];
+            sharedPromise = terrainPromises[q];
+            sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
-            if (!defined(request) || (request === false)) {
-                // If a request object isn't provided, perform an immediate request
+            if (typeof request === 'boolean') {
+                deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
                 request = new Request({
-                    defer : true
+                    throttle : request,
+                    throttleByServer : request,
+                    type : RequestType.TERRAIN
                 });
             }
 
-            request.url = url;
-            request.requestFunction = loadArrayBuffer;
-            request.type = RequestType.TERRAIN;
+            sharedRequest = request;
+            var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
 
-            var requestPromise = RequestScheduler.schedule(request);
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
             }
 
-            promise = requestPromise
+            sharedPromise = requestPromise
                 .then(function(terrain) {
                     if (defined(terrain)) {
                         return taskProcessor.scheduleTask({
@@ -489,22 +494,20 @@ define([
                     }
 
                     return when.reject(new RuntimeError('Failed to load terrain.'));
-                })
-                .otherwise(function(error) {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(error);
                 });
 
-            terrainPromises[q] = promise; // Store promise without delete from terrainPromises
+            terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
+            terrainRequests[q] = sharedRequest;
 
             // Set promise so we remove from terrainPromises just one time
-            promise = promise
+            sharedPromise = sharedPromise
                 .always(function() {
                     delete terrainPromises[q];
+                    delete terrainRequests[q];
                 });
         }
 
-        return promise
+        return sharedPromise
             .then(function() {
                 var buffer = terrainCache.get(quadKey);
                 if (defined(buffer)) {
@@ -516,10 +519,17 @@ define([
                         negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
                         negativeElevationThreshold: metadata.negativeAltitudeThreshold
                     });
-                } else {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(new RuntimeError('Failed to load terrain.'));
                 }
+
+                return when.reject(new RuntimeError('Failed to load terrain.'));
+            })
+            .otherwise(function(error) {
+                if (sharedRequest.state === RequestState.CANCELLED) {
+                    request.state = sharedRequest.state;
+                    return when.reject(error);
+                }
+                info.terrainState = TerrainState.NONE;
+                return when.reject(error);
             });
     };
 
@@ -576,7 +586,12 @@ define([
 
         if (metadata.isValid(quadKey)) {
             // We will need this tile, so request metadata and return false for now
-            metadata.populateSubtree(x, y, level);
+            var request = new Request({
+                throttle : true,
+                throttleByServer : true,
+                type : RequestType.TERRAIN
+            });
+            metadata.populateSubtree(x, y, level, request);
         }
         return false;
     };

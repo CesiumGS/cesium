@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian2',
         './Cartesian3',
@@ -8,7 +7,7 @@ define([
         Cartesian2,
         Cartesian3,
         Check,
-        defined ) {
+        defined) {
     'use strict';
 
     var scratchCartesian1 = new Cartesian3();

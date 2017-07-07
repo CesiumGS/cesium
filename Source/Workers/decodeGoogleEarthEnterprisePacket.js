@@ -1,16 +1,15 @@
-/*global define*/
 define([
-    '../Core/decodeGoogleEarthEnterpriseData',
-    '../Core/RuntimeError',
-    '../Core/GoogleEarthEnterpriseTileInformation',
-    './createTaskProcessorWorker',
-    '../ThirdParty/pako_inflate'
-], function(
-    decodeGoogleEarthEnterpriseData,
-    RuntimeError,
-    GoogleEarthEnterpriseTileInformation,
-    createTaskProcessorWorker,
-    pako) {
+        '../Core/decodeGoogleEarthEnterpriseData',
+        '../Core/GoogleEarthEnterpriseTileInformation',
+        '../Core/RuntimeError',
+        '../ThirdParty/pako_inflate',
+        './createTaskProcessorWorker'
+    ], function(
+        decodeGoogleEarthEnterpriseData,
+        GoogleEarthEnterpriseTileInformation,
+        RuntimeError,
+        pako,
+        createTaskProcessorWorker) {
     'use strict';
 
     // Datatype sizes

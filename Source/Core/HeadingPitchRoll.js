@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -9,7 +8,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A rotation expressed as a heading, pitch, and roll. Heading is the rotation about the

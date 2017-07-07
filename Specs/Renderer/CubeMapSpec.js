@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/CubeMap',
         'Core/Cartesian3',
