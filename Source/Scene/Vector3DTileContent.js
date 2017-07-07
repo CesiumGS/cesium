@@ -1,11 +1,9 @@
 /*global define*/
 define([
         '../Core/AttributeCompression',
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -15,18 +13,12 @@ define([
         '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
-        '../Core/loadArrayBuffer',
         '../Core/Math',
-        '../Core/Matrix4',
         '../Core/NearFarScalar',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestType',
-        '../Core/TranslationRotationScale',
+        '../Core/Rectangle',
         '../ThirdParty/when',
         './BillboardCollection',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileContentState',
         './Cesium3DTileFeature',
         './GroundPolylineBatch',
         './GroundPrimitiveBatch',
@@ -36,11 +28,9 @@ define([
         './VerticalOrigin'
     ], function(
         AttributeCompression,
-        BoundingSphere,
         Cartesian3,
         Cartographic,
         Color,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -50,18 +40,12 @@ define([
         Ellipsoid,
         getMagic,
         getStringFromTypedArray,
-        loadArrayBuffer,
         CesiumMath,
-        Matrix4,
         NearFarScalar,
-        Request,
-        RequestScheduler,
-        RequestType,
-        TranslationRotationScale,
+        Rectangle,
         when,
         BillboardCollection,
         Cesium3DTileBatchTable,
-        Cesium3DTileContentState,
         Cesium3DTileFeature,
         GroundPolylineBatch,
         GroundPrimitiveBatch,
@@ -323,6 +307,17 @@ define([
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
         var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
 
+        var rectangle;
+        if (defined(featureTableJson.RECTANGLE)) {
+            rectangle = Rectangle.unpack(featureTableJson.RECTANGLE);
+        } else {
+            rectangle = content._tile.contentBoundingVolume.rectangle;
+        }
+
+        var format = defaultValue(featureTableJson.FORMAT, 0);
+        var isCartographic = format === 0;
+        var modelMatrix = content._tile.computedTransform;
+
         var polygonBatchIds;
         var polylineBatchIds;
         var pointBatchIds;
@@ -388,9 +383,6 @@ define([
             }
         }
 
-        // TODO: must have rectangle
-        var rectangle = content._tile.contentBoundingVolume.rectangle;
-
         var pickObject = {
             content : content,
             primitive : content._tileset
@@ -433,7 +425,9 @@ define([
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : polygonBatchIds,
-                pickObject : pickObject
+                pickObject : pickObject,
+                isCartographic : isCartographic,
+                modelMatrix : modelMatrix
             });
         }
 

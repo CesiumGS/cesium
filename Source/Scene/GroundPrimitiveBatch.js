@@ -132,6 +132,8 @@ define([
         this._polygonMaximumHeights = options.polygonMaximumHeights;
         this._center = options.center;
         this._rectangle = options.rectangle;
+        this._isCartographic = options.isCartographic;
+        this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
@@ -178,7 +180,7 @@ define([
     });
 
     function packBuffer(primitive) {
-        var packedBuffer = new Float64Array(2 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
+        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
 
         var offset = 0;
         packedBuffer[offset++] = primitive._minimumHeight;
@@ -191,6 +193,9 @@ define([
         offset += Ellipsoid.packedLength;
 
         Rectangle.pack(primitive._rectangle, packedBuffer, offset);
+        offset += Rectangle.packedLength;
+
+        packedBuffer[offset] = primitive._isCartographic ? 1.0 : 0.0;
 
         return packedBuffer;
     }
@@ -740,6 +745,8 @@ define([
         commands.length = length * 3;
 
         var vertexArray = primitive._va;
+        var sp = primitive._sp;
+        var modelMatrix = primitive._modelMatrix;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
@@ -760,10 +767,11 @@ define([
             }
 
             stencilPreloadCommand.vertexArray = vertexArray;
+            stencilPreloadCommand.modelMatrix = modelMatrix;
             stencilPreloadCommand.offset = offset;
             stencilPreloadCommand.count = count;
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = primitive._sp;
+            stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
@@ -776,10 +784,11 @@ define([
             }
 
             stencilDepthCommand.vertexArray = vertexArray;
+            stencilDepthCommand.modelMatrix = modelMatrix;
             stencilDepthCommand.offset = offset;
             stencilDepthCommand.count = count;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = primitive._sp;
+            stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
@@ -792,10 +801,11 @@ define([
             }
 
             colorCommand.vertexArray = vertexArray;
+            colorCommand.modelMatrix = modelMatrix;
             colorCommand.offset = offset;
             colorCommand.count = count;
             colorCommand.renderState = primitive._rsColorPass;
-            colorCommand.shaderProgram = primitive._sp;
+            colorCommand.shaderProgram = sp;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
             colorCommand.pass = Pass.GROUND;
@@ -812,6 +822,9 @@ define([
         pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
+        var sp = primitive._sp;
+        var spPick = primitive._spPick;
+        var modelMatrix = primitive._modelMatrix;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
         var owner = primitive._pickObject;
@@ -832,10 +845,11 @@ define([
             }
 
             stencilPreloadCommand.vertexArray = vertexArray;
+            stencilPreloadCommand.modelMatrix = modelMatrix;
             stencilPreloadCommand.offset = offset;
             stencilPreloadCommand.count = count;
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = primitive._sp;
+            stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
@@ -848,10 +862,11 @@ define([
             }
 
             stencilDepthCommand.vertexArray = vertexArray;
+            stencilDepthCommand.modelMatrix = modelMatrix;
             stencilDepthCommand.offset = offset;
             stencilDepthCommand.count = count;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = primitive._sp;
+            stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
@@ -864,10 +879,11 @@ define([
             }
 
             colorCommand.vertexArray = vertexArray;
+            colorCommand.modelMatrix = modelMatrix;
             colorCommand.offset = offset;
             colorCommand.count = count;
             colorCommand.renderState = primitive._rsPickPass;
-            colorCommand.shaderProgram = primitive._spPick;
+            colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
             colorCommand.pass = Pass.GROUND;

@@ -47,6 +47,9 @@ define([
         offset += Ellipsoid.packedLength;
 
         Rectangle.unpack(packedBuffer, offset, scratchRectangle);
+        offset += Rectangle.packedLength;
+
+        return packedBuffer[offset] === 1.0;
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -117,7 +120,7 @@ define([
 
         var boundingVolumes = new Array(counts.length);
 
-        unpackBuffer(parameters.packedBuffer);
+        var isCartographic = unpackBuffer(parameters.packedBuffer);
 
         var center = scratchCenter;
         var ellipsoid = scratchEllipsoid;
@@ -135,8 +138,6 @@ define([
         var i;
         var j;
         var rgba;
-        var lat;
-        var lon;
 
         var positionsLength = positions.length / 2;
         var uBuffer = positions.subarray(0, positionsLength);
@@ -148,11 +149,16 @@ define([
             var u = uBuffer[i];
             var v = vBuffer[i];
 
-            lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-            lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
+            var x = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
+            var y = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
 
-            var cart = Cartographic.fromRadians(lon, lat, 0.0, scratchBVCartographic);
-            var decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
+            var decodedPosition;
+            if (isCartographic) {
+                var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
+                decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
+            } else {
+                decodedPosition = Cartesian3.fromElements(x, y, 0.0, scratchEncodedPosition);
+            }
             Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
         }
 
@@ -255,8 +261,8 @@ define([
             for (j = 0; j < polygonCount; ++j) {
                 var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
-                lat = carto.latitude;
-                lon = carto.longitude;
+                var lat = carto.latitude;
+                var lon = carto.longitude;
 
                 minLat = Math.min(lat, minLat);
                 maxLat = Math.max(lat, maxLat);
