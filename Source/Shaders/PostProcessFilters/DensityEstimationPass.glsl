@@ -8,6 +8,7 @@
 
 uniform sampler2D pointCloud_depthTexture;
 uniform float neighborhoodVectorSize;
+uniform float maxAbsRatio;
 varying vec2 v_textureCoordinates;
 
 void main() {
@@ -42,7 +43,8 @@ void main() {
         float absRatio = length(neighborhoodAccum) /
                          length(absNeighborhoodAccum);
         if (int(closestNeighbor) <= neighborhoodHalfWidth &&
-                absRatio < neighborhoodVectorSize) {
+            !(absRatio > maxAbsRatio &&
+             length(neighborhoodAccum) > neighborhoodVectorSize)) {
             gl_FragData[0] = czm_packDepth(closestNeighbor /
                                            densityScaleFactor);
         } else {

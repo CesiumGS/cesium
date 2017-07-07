@@ -735,7 +735,8 @@ define([
             neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
             numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 4),
             densityHalfWidth : defaultValue(options.densityHalfWidth, 4),
-            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 0.5),
+            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 10.0),
+            maxAbsRatio : defaultValue(options.maxAbsRatio, 0.9),
             densityViewEnabled : defaultValue(options.densityViewEnabled, false),
             stencilViewEnabled : defaultValue(options.stencilViewEnabled, false)
         };
@@ -1626,6 +1627,7 @@ define([
                 numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
                 densityHalfWidth : tileset.pointCloudPostProcessorOptions.densityHalfWidth,
                 neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
+                maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
                 densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled,
                 stencilViewEnabled : tileset.pointCloudPostProcessorOptions.stencilViewEnabled
             });

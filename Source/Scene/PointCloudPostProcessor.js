@@ -79,6 +79,7 @@ define([
         this.numRegionGrowingPasses = options.numRegionGrowingPasses;
         this.densityHalfWidth = options.densityHalfWidth;
         this.neighborhoodVectorSize = options.neighborhoodVectorSize;
+        this.maxAbsRatio = options.maxAbsRatio;
         this.densityViewEnabled = options.densityViewEnabled;
         this.stencilViewEnabled = options.stencilViewEnabled;
     }
@@ -272,6 +273,9 @@ define([
             },
             neighborhoodVectorSize : function() {
                 return processor.neighborhoodVectorSize;
+            },
+            maxAbsRatio : function() {
+                return processor.maxAbsRatio;
             }
         };
 
@@ -687,6 +691,7 @@ define([
             options.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
             options.densityHalfWidth !== this.densityHalfWidth ||
             options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
+            options.maxAbsRatio !== this.maxAbsRatio ||
             options.densityViewEnabled !== this.densityViewEnabled ||
             options.stencilViewEnabled !== this.stencilViewEnabled) {
             this.occlusionAngle = options.occlusionAngle;
@@ -697,6 +702,7 @@ define([
             this.neighborhoodVectorSize = options.neighborhoodVectorSize;
             this.densityViewEnabled = options.densityViewEnabled;
             this.stencilViewEnabled = options.stencilViewEnabled;
+            this.maxAbsRatio = options.maxAbsRatio;
             dirty = true;
         }
 

@@ -56,8 +56,15 @@
           <tr>
             <td>Maximum Neighborhood Vector Size</td>
             <td>
-                <input type="range" min="0.0" max="1.0" step="1e-2" data-bind="value: neighborhoodVectorSize, valueUpdate: 'input'">
+                <input type="range" min="0.0" max="200.0" step="1e-2" data-bind="value: neighborhoodVectorSize, valueUpdate: 'input'">
                 <input type="text" size="2" data-bind="value: neighborhoodVectorSize">
+            </td>
+          </tr>
+          <tr>
+            <td>Max Neighborhood ABS ratio</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="1e-2" data-bind="value: maxAbsRatio, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: maxAbsRatio">
             </td>
           </tr>
         </tbody>
@@ -101,6 +108,7 @@ var viewModel = {
     numRegionGrowingPasses: tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
     neighborhoodHalfWidth: tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
     neighborhoodVectorSize: tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
+    maxAbsRatio: tileset.pointCloudPostProcessorOptions.maxAbsRatio,
 };
 Cesium.knockout.track(viewModel);
 
@@ -121,6 +129,7 @@ subscribeParameter('rangeParameter');
 subscribeParameter('neighborhoodHalfWidth');
 subscribeParameter('numRegionGrowingPasses');
 subscribeParameter('neighborhoodVectorSize');
+subscribeParameter('maxAbsRatio');
 
 Sandcastle.addToggleButton('Enabled', true, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;
