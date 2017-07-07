@@ -1610,7 +1610,7 @@ define([
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
-                    var imagePath = joinUrls(model._baseUri, gltfImage.uri);
+                    var imagePath = joinUrls(model._baseUri, uri);
 
                     var promise;
                     if (ktxRegex.test(imagePath)) {
