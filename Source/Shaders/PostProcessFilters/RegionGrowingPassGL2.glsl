@@ -7,6 +7,8 @@
 #define SQRT2 1.414213562
 #define densityScaleFactor 32.0
 #define DENSITY_VIEW
+#define STENCIL_VIEW
+#define DELAY 1
 
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_densityTexture;
@@ -20,6 +22,31 @@ layout(location = 0) out vec4 colorOut;
 layout(location = 1) out vec4 depthOut;
 
 #define otherswap(a, b, aC, bC) if (a > b) { temp = a; a = b; b = temp; tempColor = aC; aC = bC; bC = tempColor; }
+
+vec4 testColor(in int value) {
+    switch (value) {
+        case 0:
+            return vec4(1.0, 0.0, 0.0, 1.0);
+        case 1:
+            return vec4(1.0, 0.5, 0.0, 1.0);
+        case 2:
+            return vec4(1.0, 1.0, 0.0, 1.0);
+        case 3:
+            return vec4(0.5, 1.0, 0.0, 1.0);
+        case 4:
+            return vec4(0.0, 1.0, 0.0, 1.0);
+        case 5:
+            return vec4(0.0, 1.0, 0.5, 1.0);
+        case 6:
+            return vec4(0.0, 1.0, 1.0, 1.0);
+        case 7:
+            return vec4(0.0, 0.5, 1.0, 1.0);
+        case 8:
+            return vec4(0.0, 0.0, 1.0, 1.0);
+        default:
+            return vec4(1.0, 1.0, 1.0, 1.0);
+    }
+}
 
 void comparisonNetwork8(inout float[neighborhoodSize] neighbors,
                         inout vec4[neighborhoodSize] neighborsColor) {
@@ -136,7 +163,7 @@ void main() {
     // If our depth value is invalid
     if (abs(depth) < EPS) {
         // If the area that we want to region grow is sufficently sparse
-        if (float(iterationNumber) <= density + EPS) {
+        if (float(iterationNumber - DELAY) <= density + EPS) {
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors,
                         colorNeighbors,
@@ -180,7 +207,11 @@ void main() {
 #ifdef DENSITY_VIEW
     colorOut = vec4(vec3(density / float(densityHalfWidth)), 1.0);
 #else
+#ifdef STENCIL_VIEW
+    colorOut = testColor(iterationNumber);
+#else
     colorOut = finalColor;
+#endif
 #endif
     depthOut = czm_packDepth(finalDepth);
 }

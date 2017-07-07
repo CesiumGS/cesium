@@ -736,7 +736,8 @@ define([
             numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 4),
             densityHalfWidth : defaultValue(options.densityHalfWidth, 4),
             neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 30.0),
-            densityViewEnabled : defaultValue(options.densityViewEnabled, false)
+            densityViewEnabled : defaultValue(options.densityViewEnabled, false),
+            stencilViewEnabled : defaultValue(options.stencilViewEnabled, false)
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
@@ -1625,7 +1626,8 @@ define([
                 numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
                 densityHalfWidth : tileset.pointCloudPostProcessorOptions.densityHalfWidth,
                 neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
-                densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled
+                densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled,
+                stencilViewEnabled : tileset.pointCloudPostProcessorOptions.stencilViewEnabled
             });
         }
 

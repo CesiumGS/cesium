@@ -19,6 +19,8 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Scene/BlendingState',
+        '../Scene/StencilFunction',
+        '../Scene/StencilOperation',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
@@ -44,6 +46,8 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         BlendingState,
+        StencilFunction,
+        StencilOperation,
         PointOcclusionPassGL1,
         RegionGrowingPassGL1,
         PointOcclusionPassGL2,
@@ -62,7 +66,10 @@ define([
         this._depthTextures = undefined;
         this._densityTexture = undefined;
         this._dirty = undefined;
+        this._clearStencil = undefined;
         this._drawCommands = undefined;
+        this._stencilCommands = undefined;
+        this._copyCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommands = undefined;
 
@@ -73,6 +80,7 @@ define([
         this.densityHalfWidth = options.densityHalfWidth;
         this.neighborhoodVectorSize = options.neighborhoodVectorSize;
         this.densityViewEnabled = options.densityViewEnabled;
+        this.stencilViewEnabled = options.stencilViewEnabled;
     }
 
     function createSampler() {
@@ -159,27 +167,10 @@ define([
             });
         }
 
-        // (EC stands for eye-space)
-        // 
-        // We want to reuse textures as much as possible, so here's the order
-        // of events:
-        //
-        // 1.  We render normally to our prior:
-        //     * Color -> 0
-        //     * Depth -> dirty ("dirty depth")
-        //     * EC -> 0
-        // 2.  Then we perform the screen-space point occlusion stage with color[0] and EC:
-        //     * No color
-        //     * Pseudo-depth -> 0
-        //     * No EC
-        // 3a. Then we perform the region growing stage with color[0] and depth[0]:
-        //     * Color -> 1
-        //     * Pseudo-depth -> 1
-        // 3b. We do the region growing stage again with color[1] and depth[1]:
-        //     * Color -> 0
-        //     * Pseudo-depth -> 0
-        // 3c. Repeat steps 3a and 3b until all holes are filled and/or we run
-        //     out of time.
+        // There used to be an explanation of how this worked here
+        // but it got too long.
+        // TODO: Find a better place to put an explanation of what all
+        // the framebuffers are meant for.
         processor._framebuffers = {
             prior : new Framebuffer({
                 context : context,
@@ -195,6 +186,11 @@ define([
                 colorTextures : [depthTextures[0]],
                 destroyAttachments : false
             }),
+            stencilMask : new Framebuffer({
+                context : context,
+                depthStencilTexture: dirty,
+                destroyAttachments : false
+            }),
             densityEstimationPass : new Framebuffer({
                 context : context,
                 colorTextures : [densityMap],
@@ -202,12 +198,16 @@ define([
             }),
             regionGrowingPassA : new Framebuffer({
                 context : context,
-                colorTextures : [colorTextures[1], depthTextures[1]],
+                colorTextures : [colorTextures[1],
+                                 depthTextures[1]],
+                depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             regionGrowingPassB : new Framebuffer({
                 context: context,
-                colorTextures: [colorTextures[0], depthTextures[0]],
+                colorTextures: [colorTextures[0],
+                                depthTextures[0]],
+                depthStencilTexture: dirty,
                 destroyAttachments: false
             })
         };
@@ -333,8 +333,91 @@ define([
             'DENSITY_VIEW',
             processor.densityViewEnabled
         );
+
+        regionGrowingPassStr = replaceConstants(
+            regionGrowingPassStr,
+            'STENCIL_VIEW',
+            processor.stencilViewEnabled
+        );
+        console.log(regionGrowingPassStr);
+
+        var func = StencilFunction.EQUAL;
+        var op = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
         
         return context.createViewportQuadCommand(regionGrowingPassStr, {
+            uniformMap : uniformMap,
+            framebuffer : framebuffer,
+            renderState : RenderState.fromCache({
+                stencilTest : {
+                    enabled : true,
+                    reference : 0,
+                    mask : 1,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                }
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
+    function copyRegionGrowingColorStage(processor, context, i) {
+        var uniformMap = {
+            pointCloud_colorTexture : function() {
+                return processor._colorTextures[i];
+            },
+            pointCloud_depthTexture : function() {
+                return processor._depthTextures[i];
+            },
+            pointCloud_densityTexture : function() {
+                return processor._densityTexture;
+            },
+            densityHalfWidth : function() {
+                return processor.densityHalfWidth;
+            }
+        };
+
+        var framebuffer = (i === 0) ?
+            processor._framebuffers.regionGrowingPassA :
+            processor._framebuffers.regionGrowingPassB;
+
+        var copyStageStr =
+            '#define DENSITY_VIEW \n' +
+            '#define densityScaleFactor 32.0 \n' +
+            'uniform int densityHalfWidth; \n' +
+            'uniform sampler2D pointCloud_colorTexture; \n' +
+            'uniform sampler2D pointCloud_depthTexture; \n' +
+            'uniform sampler2D pointCloud_densityTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef DENSITY_VIEW \n' +
+            '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '    gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
+            '    #else \n' +
+            '    gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
+            '    #endif \n' +
+            '    gl_FragData[1] = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '} \n';
+
+        if (context.webgl2) {
+            copyStageStr = GLSLModernizer.
+                glslModernizeShaderText(copyStageStr,
+                                    true, true);
+        }
+        copyStageStr = replaceConstants(
+            copyStageStr,
+            'DENSITY_VIEW',
+            processor.densityViewEnabled
+        );
+
+        return context.createViewportQuadCommand(copyStageStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
@@ -344,9 +427,65 @@ define([
         });
     }
 
+    function stencilMaskStage(processor, context, iteration) {
+        var uniformMap = {
+            pointCloud_densityTexture : function() {
+                return processor._densityTexture;
+            }
+        };
+
+        var stencilMaskStageStr =
+            '#define EPS 1e-8 \n' +
+            '#define CUTOFF 0 \n' +
+            '#define DELAY 0 \n' +
+            '#define densityScaleFactor 32.0 \n' +
+            'uniform sampler2D pointCloud_densityTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '    if (float(CUTOFF - DELAY) + EPS > density) \n' +
+            '        discard; \n' +
+            '} \n';
+
+        stencilMaskStageStr = replaceConstants(
+            stencilMaskStageStr,
+            'CUTOFF',
+            iteration
+        );
+
+        var framebuffer = processor._framebuffers.stencilMask;
+
+        var func = StencilFunction.ALWAYS;
+        var op = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.ZERO
+        };
+        return context.createViewportQuadCommand(stencilMaskStageStr, {
+            uniformMap : uniformMap,
+            framebuffer : framebuffer,
+            renderState : RenderState.fromCache({
+                stencilTest : {
+                    enabled : true,
+                    reference : 1,
+                    mask : 0,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                }
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
     function createCommands(processor, context) {
         var numRegionGrowingPasses = processor.numRegionGrowingPasses;
-        var drawCommands = new Array(numRegionGrowingPasses + 1);
+        var drawCommands = new Array(numRegionGrowingPasses + 2);
+        var stencilCommands = new Array(numRegionGrowingPasses);
+        var copyCommands = new Array(2);
 
         var i;
         drawCommands[0] = pointOcclusionStage(processor, context);
@@ -354,8 +493,12 @@ define([
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
             drawCommands[i + 2] = regionGrowingStage(processor, context, i);
+            stencilCommands[i] = stencilMaskStage(processor, context, i);
         }
 
+        copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
+        copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
+        
         for (i = 0; i < drawCommands.length; i++) {
             var shaderProgram = drawCommands[i].shaderProgram;
             var vsSource = shaderProgram.vertexShaderSource.clone();
@@ -371,6 +514,26 @@ define([
                 vertexShaderSource : vsSource,
                 fragmentShaderSource : fsSource,
                 attributeLocations : attributeLocations
+            });
+        }
+
+        for (i = 0; i < copyCommands.length; i++) {
+            var copyProgram = copyCommands[i].shaderProgram;
+            var vsSourceCopy = copyProgram.vertexShaderSource.clone();
+            var fsSourceCopy = copyProgram.fragmentShaderSource.clone();
+            var attributeLocationsCopy =
+                copyProgram._attributeLocations;
+            for (var b = 0; b < vsSource.sources.length; b++) {
+                if (context.webgl2) {
+                    vsSourceCopy.sources[b] = GLSLModernizer.glslModernizeShaderText(
+                        vsSourceCopy.sources[b], false, true);
+                }
+            }
+
+            copyCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
+                vertexShaderSource : vsSourceCopy,
+                fragmentShaderSource : fsSourceCopy,
+                attributeLocations : attributeLocationsCopy
             });
         }
 
@@ -411,6 +574,7 @@ define([
                     framebuffer : framebuffers[name],
                     color : new Color(0.0, 0.0, 0.0, 0.0),
                     depth : 1.0,
+                    stencil : 1.0,
                     renderState : RenderState.fromCache(),
                     pass : Pass.CESIUM_3D_TILE,
                     owner : processor
@@ -419,8 +583,10 @@ define([
         }
 
         processor._drawCommands = drawCommands;
+        processor._stencilCommands = stencilCommands;
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
+        processor._copyCommands = copyCommands;
     }
 
     function createResources(processor, context, dirty) {
@@ -428,6 +594,7 @@ define([
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
         var drawCommands = processor._drawCommands;
+        var stencilCommands = processor._stencilCommands;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
              (colorTextures[0].height !== screenHeight));
@@ -436,7 +603,7 @@ define([
             createFramebuffers(processor, context);
         }
 
-        if (!defined(drawCommands) || dirty) {
+        if (!defined(drawCommands) || !defined(stencilCommands) || dirty) {
             createCommands(processor, context);
         }
 
@@ -515,7 +682,8 @@ define([
             options.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
             options.densityHalfWidth !== this.densityHalfWidth ||
             options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
-            options.densityViewEnabled !== this.densityViewEnabled) {
+            options.densityViewEnabled !== this.densityViewEnabled ||
+            options.stencilViewEnabled !== this.stencilViewEnabled) {
             this.occlusionAngle = options.occlusionAngle;
             this.rangeParameter = options.rangeParameter;
             this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -523,6 +691,7 @@ define([
             this.densityHalfWidth = options.densityHalfWidth;
             this.neighborhoodVectorSize = options.neighborhoodVectorSize;
             this.densityViewEnabled = options.densityViewEnabled;
+            this.stencilViewEnabled = options.stencilViewEnabled;
             dirty = true;
         }
 
@@ -556,6 +725,8 @@ define([
 
         // Apply processing commands
         var drawCommands = this._drawCommands;
+        var copyCommands = this._copyCommands;
+        var stencilCommands = this._stencilCommands;
         var clearCommands = this._clearCommands;
         var length = drawCommands.length;
         for (i = 0; i < length; ++i) {
@@ -573,7 +744,11 @@ define([
                         commandList.push(clearCommands['regionGrowingPassB']);
                 }
             }
-            
+
+            if (i >= 2) {
+                commandList.push(copyCommands[i % 2]);
+                commandList.push(stencilCommands[i - 2]);
+            }
             commandList.push(drawCommands[i]);
         }
 

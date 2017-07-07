@@ -44,5 +44,7 @@ void main() {
         } else {
             gl_FragData[0] = czm_packDepth(0.0);
         }
+    } else {
+        gl_FragData[0] = czm_packDepth(1.0 / densityScaleFactor);
     }
 }
