@@ -17,6 +17,7 @@ void main() {
 
     float closestNeighbor = float(neighborhoodHalfWidth) + 1.0;
     vec2 neighborhoodAccum = vec2(0.0);
+    vec2 absNeighborhoodAccum = vec2(0.0);
 
     if (center < EPS) {
         for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
@@ -31,14 +32,17 @@ void main() {
                 }
 
                 neighborhoodAccum += vec2(d);
+                absNeighborhoodAccum += abs(vec2(d));
                 closestNeighbor = min(closestNeighbor,
                                       max(abs(float(i)),
                                           abs(float(j))));
             }
         }
 
+        float absRatio = length(neighborhoodAccum) /
+                         length(absNeighborhoodAccum);
         if (int(closestNeighbor) <= neighborhoodHalfWidth &&
-                length(neighborhoodAccum) < neighborhoodVectorSize) {
+                absRatio < neighborhoodVectorSize) {
             gl_FragData[0] = czm_packDepth(closestNeighbor /
                                            densityScaleFactor);
         } else {

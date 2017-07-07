@@ -735,7 +735,7 @@ define([
             neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
             numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 4),
             densityHalfWidth : defaultValue(options.densityHalfWidth, 4),
-            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 30.0),
+            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 0.5),
             densityViewEnabled : defaultValue(options.densityViewEnabled, false),
             stencilViewEnabled : defaultValue(options.stencilViewEnabled, false)
         };
