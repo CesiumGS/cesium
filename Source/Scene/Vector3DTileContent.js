@@ -303,9 +303,12 @@ define([
             return;
         }
 
-        var center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
-        var minHeight = featureTableJson.MINIMUM_HEIGHT;
-        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
+        var center;
+        if (defined(featureTableJson.RTC_CENTER)) {
+            center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        } else {
+            center = Cartesian3.ZERO;
+        }
 
         var rectangle;
         if (defined(featureTableJson.RECTANGLE)) {
@@ -314,6 +317,8 @@ define([
             rectangle = content._tile.contentBoundingVolume.rectangle;
         }
 
+        var minHeight = featureTableJson.MINIMUM_HEIGHT;
+        var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
         var format = defaultValue(featureTableJson.FORMAT, 0);
         var isCartographic = format === 0;
         var modelMatrix = content._tile.computedTransform;

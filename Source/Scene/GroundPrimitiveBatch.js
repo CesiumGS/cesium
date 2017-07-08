@@ -180,7 +180,7 @@ define([
     });
 
     function packBuffer(primitive) {
-        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
+        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
 
         var offset = 0;
         packedBuffer[offset++] = primitive._minimumHeight;
@@ -195,7 +195,9 @@ define([
         Rectangle.pack(primitive._rectangle, packedBuffer, offset);
         offset += Rectangle.packedLength;
 
-        packedBuffer[offset] = primitive._isCartographic ? 1.0 : 0.0;
+        packedBuffer[offset++] = primitive._isCartographic ? 1.0 : 0.0;
+
+        Matrix4.pack(primitive._modelMatrix, packedBuffer, offset);
 
         return packedBuffer;
     }
@@ -746,7 +748,7 @@ define([
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
-        var modelMatrix = primitive._modelMatrix;
+        var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
 
@@ -824,7 +826,7 @@ define([
         var vertexArray = primitive._va;
         var sp = primitive._sp;
         var spPick = primitive._spPick;
-        var modelMatrix = primitive._modelMatrix;
+        var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
 
         var owner = primitive._pickObject;

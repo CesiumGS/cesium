@@ -8,6 +8,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         './createTaskProcessorWorker'
@@ -20,6 +21,7 @@ define([
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
+        Matrix4,
         OrientedBoundingBox,
         Rectangle,
         createTaskProcessorWorker) {
@@ -28,6 +30,7 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchRectangle = new Rectangle();
+    var scratchMatrix4 = new Matrix4();
     var scratchHeights = {
         min : undefined,
         max : undefined
@@ -49,7 +52,11 @@ define([
         Rectangle.unpack(packedBuffer, offset, scratchRectangle);
         offset += Rectangle.packedLength;
 
-        return packedBuffer[offset] === 1.0;
+        var isCartographic = packedBuffer[offset++] === 1.0;
+
+        Matrix4.unpack(packedBuffer, offset, scratchMatrix4);
+
+        return isCartographic;
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -127,6 +134,7 @@ define([
         var rectangle = scratchRectangle;
         var minHeight = scratchHeights.min;
         var maxHeight = scratchHeights.max;
+        var modelMatrix = scratchMatrix4;
 
         var minimumHeights = parameters.minimumHeights;
         var maximumHeights = parameters.maximumHeights;
@@ -260,6 +268,8 @@ define([
 
             for (j = 0; j < polygonCount; ++j) {
                 var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                Matrix4.multiplyByPoint(modelMatrix, position, position);
+
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
                 var lon = carto.longitude;
