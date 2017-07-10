@@ -2,6 +2,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
 
+* [Bentley Systems ](https://www.bentley.com/)
+    * [Jason Crow](https://github.com/jason-crow)
+
 * [Analytical Graphics, Inc.](http://www.agi.com/)
    * [Patrick Cozzi](https://github.com/pjcozzi)
    * [Kristian Calhoun](https://github.com/kristiancalhoun)
