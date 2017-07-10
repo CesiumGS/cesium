@@ -2769,9 +2769,6 @@ define([
     }
 
     // pick rectangle width and height, assumed odd
-    var rectangleWidth = 3.0;
-    var rectangleHeight = 3.0;
-    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
     var scratchPosition = new Cartesian2();
 
@@ -2806,13 +2803,9 @@ define([
         }
         //>>includeEnd('debug');
         // override the rectangle dimensions if defined
-         if(defined(width))
-            {
-            rectangleWidth = width;
-            // use width for height, if width is defined, but not height
-            rectangleHeight = defined(height) ? height : width;
-            scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
-            }
+        var rectangleWidth = width || 3.0;
+        var rectangleHeight = height || width || 3.0;
+        var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
         var context = this._context;
         var us = context.uniformState;
@@ -2835,7 +2828,6 @@ define([
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
-
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
         updateEnvironment(this, passState);
