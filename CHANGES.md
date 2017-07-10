@@ -1,9 +1,10 @@
 Change Log
 ==========
 
-### 1.36 2017-08-01
+### 1.36 - 2017-08-01
 
 * Fixed a bug where a Model's compressed textures were not being displayed. [#5596](https://github.com/AnalyticalGraphicsInc/cesium/pull/5596)
+* Fixed a bug where jsep was undefined when using webpack [#5593](https://github.com/AnalyticalGraphicsInc/cesium/issues/5593)
 
 ### 1.35 - 2017-07-05
 
