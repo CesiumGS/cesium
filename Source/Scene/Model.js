@@ -1677,7 +1677,8 @@ define([
             uniformMaps[id] = {
                 uniformMap : undefined,
                 values : undefined,
-                jointMatrixUniformName : undefined
+                jointMatrixUniformName : undefined,
+                morphWeightsUniformName : undefined
             };
 
             var modelMaterial = new ModelMaterial(model, material, id);
@@ -2545,9 +2546,8 @@ define([
                     startTime = Math.min(startTime, input[0]);
                     stopTime = Math.max(stopTime, input[input.length - 1]);
 
-                    if (path !== 'weights') {
-                        var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
-                    }
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
+
                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
                 }
@@ -3124,6 +3124,7 @@ define([
                 var uniformMap = {};
                 var uniformValues = {};
                 var jointMatrixUniformName;
+                var morphWeightsUniformName;
 
                 // Uniform parameters
                 for (var name in uniforms) {
@@ -3150,11 +3151,13 @@ define([
                         } else if (defined(parameter.node)) {
                             uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
                         } else if (defined(parameter.semantic)) {
-                            if (parameter.semantic !== 'JOINTMATRIX') {
-                                // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                            } else {
+                            if (parameter.semantic === 'JOINTMATRIX') {
                                 jointMatrixUniformName = name;
+                            } else if (parameter.semantic === 'MORPHWEIGHTS') {
+                                morphWeightsUniformName = name;
+                            } else {
+                                // Map glTF semantic to Cesium automatic uniform
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model)
                             }
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
@@ -3169,6 +3172,7 @@ define([
                 u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
                 u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
                 u.jointMatrixUniformName = jointMatrixUniformName;
+                u.morphWeightsUniformName = morphWeightsUniformName;
             }
         }
     }
@@ -3270,6 +3274,12 @@ define([
     function createJointMatricesFunction(runtimeNode) {
         return function() {
             return runtimeNode.computedJointMatrices;
+        };
+    }
+
+    function createMorphWeightsFunction(runtimeNode) {
+        return function() {
+            return runtimeNode.weights;
         };
     }
 
@@ -3375,6 +3385,12 @@ define([
                 jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
 
                 uniformMap = combine(uniformMap, jointUniformMap);
+            }
+            if (defined(um.morphWeightsUniformName)) {
+                var morphWeightsUniformMap = {};
+                morphWeightsUniformMap[um.morphWeightsUniformName] = createMorphWeightsFunction(runtimeNode);
+
+                uniformMap = combine(uniformMap, morphWeightsUniformMap);
             }
 
             uniformMap = combine(uniformMap, {

@@ -10,6 +10,7 @@ define([
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Core/WebGLConstants',
+        '../Core/WeightSpline',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType'
     ], function(
@@ -23,6 +24,7 @@ define([
         Quaternion,
         QuaternionSpline,
         WebGLConstants,
+        WeightSpline,
         getAccessorByteStride,
         numberOfComponentsForType) {
     'use strict';
@@ -76,7 +78,8 @@ define([
             var byteStride = getAccessorByteStride(gltf, accessor);
 
             values = new Array(count);
-            var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+            var accessorByteOffset = defaultValue(accessor.byteOffset, 0);
+            var byteOffset = bufferView.byteOffset + accessorByteOffset;
             for (var i = 0; i < count; i++) {
                 var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
                 if (type === 'SCALAR') {
@@ -129,13 +132,18 @@ define([
             } else {
 // END GLTF_SPEC
                 if (sampler.interpolation === 'LINEAR') {
-                    if (path === 'translation' || path === 'scale' || path === 'weights') {
+                    if (path === 'translation' || path === 'scale') {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
                     } else if (path === 'rotation') {
                         spline = new QuaternionSpline({
+                            times : times,
+                            points : controlPoints
+                        });
+                    } else if (path === 'weights') {
+                        spline = new WeightSpline({
                             times : times,
                             points : controlPoints
                         });

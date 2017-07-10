@@ -255,6 +255,14 @@ define([
             };
         }
 
+        if (hasMorphTargets) {
+            techniqueParameters.morphWeights = {
+                count: morphTargets.length,
+                semantic: 'MORPHWEIGHTS',
+                type: WebGLConstants.FLOAT
+            };
+        }
+
         // Add material parameters
         var hasTexCoords = false;
         for (var name in parameterValues) {
@@ -287,7 +295,7 @@ define([
                 var param = techniqueParameters[paramName];
                 techniqueUniforms['u_' + paramName] = paramName;
                 var arraySize = defined(param.count) ? '[' + param.count + ']' : '';
-                if (((param.type !== WebGLConstants.FLOAT_MAT3) && (param.type !== WebGLConstants.FLOAT_MAT4)) ||
+                if (((param.type !== WebGLConstants.FLOAT_MAT3) && (param.type !== WebGLConstants.FLOAT_MAT4) && (paramName !== 'morphWeights')) ||
                     param.useInFragment) {
                     fragmentShader += 'uniform ' + webGLConstantToGlslType(param.type) + ' u_' + paramName + arraySize + ';\n';
                     delete param.useInFragment;
@@ -353,21 +361,23 @@ define([
             for (var target in morphTargets) {
                 var targetAttributes = morphTargets[target];
                 for (var targetAttribute in targetAttributes) {
-                    var attributeLower = targetAttribute.toLowerCase() + '_' + target;
-                    techniqueAttributes['a_' + attributeLower] = attributeLower;
-                    techniqueParameters[attributeLower] = {
-                        semantic : targetAttribute + '_' + target,
-                        type : WebGLConstants.FLOAT_VEC3
-                    }
-                    vertexShader += 'attribute vec3 a_' + attributeLower + ';\n';
-                    if (targetAttribute === 'POSITION') {
-                        vertexShaderMain += '  weightedPos += 0.5 * a_' + attributeLower + ';\n';
-                    } else if (targetAttribute === 'NORMAL') {
-                        vertexShaderMain += '  weightedNormal += 0.5 * a_' + attributeLower + ';\n';
-                    } else if (targetAttribute === 'TANGENT') {
-                        vertexShaderMain += '  weightedTangent += 0.5 * a_' + attributeLower + ';\n';
-                    } else {
-                        // Invalid attribute
+                    if (targetAttribute !== 'extras') {
+                        var attributeLower = targetAttribute.toLowerCase() + '_' + target;
+                        techniqueAttributes['a_' + attributeLower] = attributeLower;
+                        techniqueParameters[attributeLower] = {
+                            semantic : targetAttribute + '_' + target,
+                            type : WebGLConstants.FLOAT_VEC3
+                        }
+                        vertexShader += 'attribute vec3 a_' + attributeLower + ';\n';
+                        if (targetAttribute === 'POSITION') {
+                            vertexShaderMain += '  weightedPos += u_morphWeights[' + target + '] * a_' + attributeLower + ';\n';
+                        } else if (targetAttribute === 'NORMAL') {
+                            vertexShaderMain += '  weightedNormal += u_morphWeights[' + target + '] * a_' + attributeLower + ';\n';
+                        } else if (targetAttribute === 'TANGENT') {
+                            vertexShaderMain += '  weightedTangent += u_morphWeights[' + target + '] * a_' + attributeLower + ';\n';
+                        } else {
+                            // Invalid attribute
+                        }
                     }
                 }
             }
@@ -454,6 +464,7 @@ define([
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
+        console.log(vertexShader);
 
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
