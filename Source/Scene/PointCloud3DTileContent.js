@@ -97,6 +97,9 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
+        // Used to determine how to attenuate points
+        this._pointAttenuationMaxSize = 1.0;
+
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -238,6 +241,15 @@ define([
         batchTable : {
             get : function() {
                 return this._batchTable;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        pointAttenuationMaxSize : {
+            get : function() {
+                return this._pointAttenuationMaxSize;
             }
         }
     });
@@ -507,6 +519,9 @@ define([
         }
 
         var uniformMap = {
+            u_pointAttenuationMaxSize : function() {
+                return content._pointAttenuationMaxSize;
+            },
             u_pointSize : function() {
                 return content._pointSize;
             },
@@ -898,6 +913,7 @@ define([
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
                  'uniform float u_pointSize; \n' +
+                 'uniform float u_pointAttenuationMaxSize; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
                  'uniform float u_tilesetTime; \n';
@@ -999,6 +1015,15 @@ define([
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
+
+        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1); \n';
+        vs += '    position_EC.z *= -1.0; \n';
+
+        vs += '    float attenuationFactor = \n' +
+              '    ((position_EC.z - czm_frustumClamp.x) /\n' +
+              '    (czm_frustumClamp.y - czm_frustumClamp.x)); \n';
+
+        vs += '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor);';
 
         vs += '    color = color * u_highlightColor; \n';
 
