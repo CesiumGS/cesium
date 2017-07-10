@@ -680,9 +680,8 @@ define(function() {
 	}
 }(this));
 
-    if (typeof jsep.noConflict === 'function') {
+    // `jsep` only exists when running in the browser
+    if (typeof jsep !== 'undefined') {
         return jsep.noConflict();
     }
-
-    return jsep;
 });
