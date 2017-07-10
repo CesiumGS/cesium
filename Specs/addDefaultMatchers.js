@@ -438,7 +438,7 @@ define([
         height = height || width || 3;
         x = x || 0;
         y = y || 0;
-        var adjustedX = x + ((width - 1) * 0.5)
+        var adjustedX = x + ((width - 1) * 0.5);
         var adjustedY = -1 * (y + ((height - 1) * 0.5) - actual._context.drawingBufferHeight);
         return pickPrimitiveEquals(actual, expected, adjustedX, adjustedY, width, height);
     }
