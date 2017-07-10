@@ -185,6 +185,7 @@ define([
             screenSpacePass : new Framebuffer({
                 context : context,
                 colorTextures : [depthTextures[0]],
+                depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             stencilMask : new Framebuffer({
@@ -255,11 +256,27 @@ define([
             'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
         );
+
+        var func = StencilFunction.EQUAL;
+        var op = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
         
         return context.createViewportQuadCommand(pointOcclusionStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
+                stencilTest : {
+                    enabled : true,
+                    reference : 0,
+                    mask : 1,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                }
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -579,15 +596,29 @@ define([
         var clearCommands = {};
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
-                clearCommands[name] = new ClearCommand({
-                    framebuffer : framebuffers[name],
-                    color : new Color(0.0, 0.0, 0.0, 0.0),
-                    depth : 1.0,
-                    stencil : 1.0,
-                    renderState : RenderState.fromCache(),
-                    pass : Pass.CESIUM_3D_TILE,
-                    owner : processor
-                });
+                // The screen space pass should consider
+                // the stencil value, so we don't clear it
+                // here
+                if (name === "screenSpacePass") {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        stencil : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                }
             }
         }
 
@@ -728,6 +759,27 @@ define([
                 derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
+
+                var func = StencilFunction.ALWAYS;
+                var op = {
+                    fail: StencilOperation.KEEP,
+                    zFail: StencilOperation.KEEP,
+                    zPass: StencilOperation.ZERO
+                };
+                var derivedCommandRenderState = derivedCommand.renderState;
+                derivedCommandRenderState.stencilTest = {
+                    enabled : true,
+                    reference : 1,
+                    mask : 0,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                };
+                derivedCommand.renderState = RenderState.fromCache(
+                    derivedCommandRenderState
+                );
+                
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
             }
             
