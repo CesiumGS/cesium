@@ -464,7 +464,6 @@ define([
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
-        console.log(vertexShader);
 
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
