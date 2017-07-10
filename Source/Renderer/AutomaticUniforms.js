@@ -1107,6 +1107,14 @@ define([
             }
         }),
 
+        czm_frustumClamp : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC2,
+            getValue : function(uniformState) {
+                return uniformState.frustumClamp;
+            }
+        }),
+
         /**
          * The distances to the frustum planes. The top, bottom, left and right distances are
          * the x, y, z, and w components, respectively.
