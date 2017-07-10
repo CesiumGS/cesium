@@ -67,6 +67,13 @@
                 <input type="text" size="2" data-bind="value: maxAbsRatio">
             </td>
           </tr>
+          <tr>
+            <td>Point Attenuation Multiplier</td>
+            <td>
+                <input type="range" min="1.0" max="10.0" step="1" data-bind="value: pointAttenuationMultiplier, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: pointAttenuationMultiplier">
+            </td>
+          </tr>
         </tbody>
     </table>
 </div>
@@ -103,12 +110,13 @@ style.pointSize = Cesium.defaultValue(style.pointSize, 1.0);
 tileset.style = new Cesium.Cesium3DTileStyle(style);
 
 var viewModel = {
-    occlusionAngle: tileset.pointCloudPostProcessorOptions.occlusionAngle,
-    rangeParameter: tileset.pointCloudPostProcessorOptions.rangeParameter,
-    numRegionGrowingPasses: tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
-    neighborhoodHalfWidth: tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
-    neighborhoodVectorSize: tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
-    maxAbsRatio: tileset.pointCloudPostProcessorOptions.maxAbsRatio,
+    occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
+    rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
+    numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
+    neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
+    neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
+    maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
+    pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier
 };
 Cesium.knockout.track(viewModel);
 
@@ -130,6 +138,7 @@ subscribeParameter('neighborhoodHalfWidth');
 subscribeParameter('numRegionGrowingPasses');
 subscribeParameter('neighborhoodVectorSize');
 subscribeParameter('maxAbsRatio');
+subscribeParameter('pointAttenuationMultiplier');
 
 Sandcastle.addToggleButton('Enabled', true, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;

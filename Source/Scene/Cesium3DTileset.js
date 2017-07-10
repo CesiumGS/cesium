@@ -738,7 +738,8 @@ define([
             neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 10.0),
             maxAbsRatio : defaultValue(options.maxAbsRatio, 0.9),
             densityViewEnabled : defaultValue(options.densityViewEnabled, false),
-            stencilViewEnabled : defaultValue(options.stencilViewEnabled, false)
+            stencilViewEnabled : defaultValue(options.stencilViewEnabled, false),
+            pointAttenuationMultiplier : defaultValue(options.pointAttenuationMultiplier, 2.0)
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
@@ -1629,7 +1630,8 @@ define([
                 neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
                 maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
                 densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled,
-                stencilViewEnabled : tileset.pointCloudPostProcessorOptions.stencilViewEnabled
+                stencilViewEnabled : tileset.pointCloudPostProcessorOptions.stencilViewEnabled,
+                pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier
             });
         }
 

@@ -82,6 +82,7 @@ define([
         this.maxAbsRatio = options.maxAbsRatio;
         this.densityViewEnabled = options.densityViewEnabled;
         this.stencilViewEnabled = options.stencilViewEnabled;
+        this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
     }
 
     function createSampler() {
@@ -724,7 +725,8 @@ define([
             options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
             options.maxAbsRatio !== this.maxAbsRatio ||
             options.densityViewEnabled !== this.densityViewEnabled ||
-            options.stencilViewEnabled !== this.stencilViewEnabled) {
+            options.stencilViewEnabled !== this.stencilViewEnabled ||
+            options.pointAttenuationMultiplier !== this.pointAttenuationMultiplier) {
             this.occlusionAngle = options.occlusionAngle;
             this.rangeParameter = options.rangeParameter;
             this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -734,6 +736,7 @@ define([
             this.densityViewEnabled = options.densityViewEnabled;
             this.stencilViewEnabled = options.stencilViewEnabled;
             this.maxAbsRatio = options.maxAbsRatio;
+            this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
             dirty = true;
         }
 
@@ -751,7 +754,8 @@ define([
             var command = commandList[i];
 
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
-            if (!defined(derivedCommand) || command.dirty) {
+            if (!defined(derivedCommand) || command.dirty || dirty) {
+                console.log(command.dirty);
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 
@@ -779,8 +783,18 @@ define([
                 derivedCommand.renderState = RenderState.fromCache(
                     derivedCommandRenderState
                 );
+
+                // TODO: Even if the filter is disabled,
+                // point attenuation settings are not! Fix this behavior.
+                var derivedCommandUniformMap = derivedCommand.uniformMap;
+                var attenuationMultiplier = this.pointAttenuationMultiplier;
+                derivedCommandUniformMap['u_pointAttenuationMaxSize'] = function() {
+                    return attenuationMultiplier;
+                };
+                derivedCommand.uniformMap = derivedCommandUniformMap;
                 
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
+                command.dirty = false;
             }
             
             commandList[i] = derivedCommand;
