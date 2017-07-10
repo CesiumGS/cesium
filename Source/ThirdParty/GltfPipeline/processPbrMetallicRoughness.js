@@ -556,6 +556,7 @@ define([
         fragmentLightingBlock += '  float VdotH = clamp(dot(v, h), 0.0, 1.0);\n';
 
         fragmentLightingBlock += '  vec3 f0 = vec3(0.04);\n';
+        fragmentLightingBlock += '  float alpha = roughness * roughness;\n';
         fragmentLightingBlock += '  vec3 diffuseColor = baseColor * (1.0 - metalness);\n';
         fragmentLightingBlock += '  vec3 specularColor = mix(f0, baseColor, metalness);\n';
         fragmentLightingBlock += '  float reflectance = max(max(specularColor.r, specularColor.g), specularColor.b);\n';
@@ -563,8 +564,8 @@ define([
         fragmentLightingBlock += '  vec3 r0 = specularColor.rgb;\n';
 
         fragmentLightingBlock += '  vec3 F = fresnelSchlick2(r0, r90, VdotH);\n';
-        fragmentLightingBlock += '  float G = smithVisibilityGGX(roughness, NdotL, NdotV);\n';
-        fragmentLightingBlock += '  float D = GGX(roughness, NdotH);\n';
+        fragmentLightingBlock += '  float G = smithVisibilityGGX(alpha, NdotL, NdotV);\n';
+        fragmentLightingBlock += '  float D = GGX(alpha, NdotH);\n';
 
         fragmentLightingBlock += '  vec3 diffuseContribution = (1.0 - F) * lambertianDiffuse(baseColor);\n';
         fragmentLightingBlock += '  vec3 specularContribution = F * G * D / (4.0 * NdotL * NdotV);\n';
