@@ -3,12 +3,14 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Renderer/GLSLModernizer',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
+        GLSLModernizer,
         CzmBuiltins,
         AutomaticUniforms) {
     'use strict';
@@ -240,6 +242,8 @@ define([
             }
         }
 
+        result += '#define OUTPUT_DECLARATION\n\n';
+
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -250,6 +254,11 @@ define([
 
         // append actual source
         result += combinedSources;
+
+        // modernize the source
+        result = GLSLModernizer.glslModernizeShaderText(result,
+                                                        isFragmentShader,
+                                                        true);
 
         return result;
     }

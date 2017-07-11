@@ -1,5 +1,8 @@
 /*global define*/
-define([], function() {
+define([
+        '../Core/DeveloperError',
+        ], function(
+            DeveloperError) {
     'use strict';
 
     /**
@@ -18,31 +21,72 @@ define([], function() {
         shaderSource.defines.push("MODERNIZED");
     }
 
+    // Note that this function requires the presence of the
+    // "#define OUTPUT_DECLARATION" line that is appended
+    // by ShaderSource
     function glslModernizeShaderText(source, isFragmentShader, first) {
-        var mainFunctionRegex = /void\s+main\(\)/;
+        var mainFunctionRegex = /void\s+main\s*\((void)?\)/;
+        var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
 
         if (source.search(/#version 300 es/g) !== -1) {
             return source;
         }
         
-        var mainFunctionLine;
-        for (var number = 0; number < splitSource.length; number++) {
+        var outputDeclarationLine = -1;
+        var number;
+        for (number = 0; number < splitSource.length; number++) {
             var line = splitSource[number];
-            if (mainFunctionRegex.exec(line)) {
-                mainFunctionLine = number;
+            if (outputDeclarationRegex.exec(line)) {
+                outputDeclarationLine = number;
+                break;
             }
         };
+        
+        if (outputDeclarationLine == -1) {
+            for (number = 0; number < splitSource.length; number++) {
+                var line = splitSource[number];
+                if (mainFunctionRegex.exec(line)) {
+                    outputDeclarationLine = number;
+                }
+            };
+        }
+
+        if (outputDeclarationLine == -1) {
+            throw new DeveloperError('Could not find a ' +
+                                     '#define OUTPUT_DECLARATION ' +
+                                     'nor a main function!');
+        }
+
+        function safeNameFind(regex, str) {
+            if (str.search(regex) !== -1) {
+                var regExpStr = regex.toString();
+                regExpStr = regExpStr.match(/\/([^\/]+)(\/.)?/)[1];
+                var somethingBadInString =
+                    new RegExp("[a-zA-Z0-9_]+" + regExpStr, 'g');
+                if (str.search(somethingBadInString) === -1) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         function replaceInSource(regex, replacement) {
+            var replaceAll = function(target, search, replacement) {
+                return target.split(search).join(replacement);
+            };
             for (var number = 0; number < splitSource.length; number++) {
-                splitSource[number] = splitSource[number].replace(regex, replacement);
+                var line = splitSource[number];
+                if (safeNameFind(regex, line)) {
+                    splitSource[number] = replaceAll(line, regex, replacement);
+                }
             }
         }
 
         function findInSource(regex) {
             for (var number = 0; number < splitSource.length; number++) {
-                if (splitSource[number].search(regex) !== -1) {
+                var line = splitSource[number];
+                if (safeNameFind(regex, line)) {
                     return true;
                 }
             }
@@ -164,10 +208,10 @@ define([], function() {
             if (source.search(fragDataString) != -1) {
                 setAdd(newOutput, variableSet);
                 replaceInSource(regex, newOutput);
-                splitSource.splice(mainFunctionLine, 0,
+                splitSource.splice(outputDeclarationLine, 0,
                     "layout(location = " + i + ") out vec4 " +
                     newOutput + ";");
-                mainFunctionLine += 1;
+                outputDeclarationLine += 1;
             }
         }
 
@@ -175,12 +219,11 @@ define([], function() {
         if (findInSource(/gl_FragColor/)) {
             setAdd(czmFragColor, variableSet);
             replaceInSource(/gl_FragColor/, czmFragColor);
-            splitSource.splice(mainFunctionLine, 0, "layout(location = 0) out vec4 czm_fragColor;");
-            mainFunctionLine += 1;
+            splitSource.splice(outputDeclarationLine, 0, "layout(location = 0) out vec4 czm_fragColor;");
+            outputDeclarationLine += 1;
         }
         
         var variableMap = getVariablePreprocessorBranch(variableSet);
-        console.log(variableMap);
         var lineAdds = {};
         for (var c = 0; c < splitSource.length; c++) {
             var l = splitSource[c];
@@ -202,7 +245,6 @@ define([], function() {
                 var entry = variableMap[variableName];
                 var depth = entry.length;
                 var d;
-                //console.log(entry);
                 for (d = 0; d < depth; d++) {
                     splitSource.splice(lineNumber, 0, entry[d]);
                 }
@@ -216,7 +258,7 @@ define([], function() {
         if (first === true) {
             var versionThree = "#version 300 es";
             var foundVersion = false;
-            for (var number = 0; number < splitSource.length; number++) {
+            for (number = 0; number < splitSource.length; number++) {
                 if (splitSource[number].search(/#version/) != -1) {
                     splitSource[number] = versionThree;
                     foundVersion = true;
@@ -232,6 +274,8 @@ define([], function() {
         removeExtension("EXT_frag_depth");
 
         replaceInSource(/texture2D/, "texture");
+        replaceInSource(/texture3D/, "texture");
+        replaceInSource(/textureCube/, "texture");
         replaceInSource(/gl_FragDepthEXT/, "gl_FragDepth");
 
         if (isFragmentShader) {
