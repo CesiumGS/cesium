@@ -38,6 +38,19 @@ define([
         };
     }
 
+    function selectTilesetOnHover (viewModel, value) {
+        if (value) {
+            viewModel._eventHandler.setInputAction(function(e) {
+                var pick = viewModel._scene.pick(e.endPosition);
+                if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
+                    viewModel.tileset = pick.primitive;
+                }
+            }, ScreenSpaceEventType.MOUSE_MOVE);
+        } else {
+            viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+        }
+    }
+
     var stringOptions = {
         maximumFractionDigits : 3
     };
@@ -821,6 +834,10 @@ define([
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
+
+        if (!defined(this._tileset)) {
+            selectTilesetOnHover(this, true);
+        }
     }
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
@@ -953,6 +970,7 @@ define([
 
                 this._statisticsText = getStatistics(tileset, false);
                 this._pickStatisticsText = getStatistics(tileset, true);
+                selectTilesetOnHover(this, false);
             }
         },
 
