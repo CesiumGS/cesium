@@ -2210,6 +2210,23 @@ defineSuite([
             cartographic = scene.globe.ellipsoid.cartesianToCartographic(l._clampedPosition);
             expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
         });
+
+        it('resets the clamped position when HeightReference.NONE', function() {
+            scene.globe = createGlobe();
+            spyOn(scene.camera, 'update');
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                text: 't',
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            scene.renderForSpecs();
+            expect(l._clampedPosition).toBeDefined();
+            expect(l._glyphs[0].billboard._clampedPosition).toBeDefined();
+
+            l.heightReference = HeightReference.NONE;
+            expect(l._clampedPosition).toBeUndefined();
+            expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
+        });
     });
 
 }, 'WebGL');
