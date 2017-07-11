@@ -209,7 +209,7 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property. Alternative an object defining a show style can be used.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property. Alternatively a boolean, string, or object defining a show style can be used.
          * <p>
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
@@ -234,7 +234,29 @@ define([
          *         return true;
          *     }
          * };
-         */
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a boolean
+         * style.show = true;
+         * };
+		 *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a string
+         * style.show = '${Height} > 0';
+         * };
+		 *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a condition
+         * style.show = {
+         *     conditions: [
+         *         ['${height} > 2', 'false'],
+         *         ['true', 'true']
+         *     ];
+         * };
+		 */
         show : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -252,18 +274,15 @@ define([
                     this._show = new Expression(value);
                 } else if (defined(value.conditions)) {
                     this._show = new ConditionsExpression(value);
-                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
-                    this._show = value;
                 } else {
-                    this._show = undefined;
-                    return;
+                    this._show = value;
                 }
                 this._showShaderFunctionReady = false;
             }
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property. Alternative an object defining a color style can be used.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property. Alternatively a string or object defining a color style can be used.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -288,6 +307,21 @@ define([
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a string
+         * style.color = 'color("blue")';
+		 *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a condition
+         * style.color = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         color : {
             get : function() {
@@ -304,18 +338,15 @@ define([
                     this._color = new Expression(value);
                 } else if (defined(value.conditions)) {
                     this._color = new ConditionsExpression(value);
-                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
-                    this._color = value;
                 } else {
-                    this._color = undefined;
-                    return;
+                    this._color = value;
                 }
                 this._colorShaderFunctionReady = false;
             }
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternative an object defining a pointSize style can be used.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternatively a number, string, or object defining a pointSize style can be used.
          * <p>
          * The expression must return or convert to a <code>Number</code>.
          * </p>
@@ -340,7 +371,27 @@ define([
          *         return 1.0;
          *     }
          * };
-         */
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a number
+         * style.pointSize = 1.0;
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a string
+         * style.pointSize = '${height} / 10';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a condition
+         * style.pointSize =  {
+         *     conditions : [
+         *         ['${height} > 2', '1.0'],
+         *         ['true', '2.0']
+         *     ]
+         * };
+		 */
         pointSize : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -358,11 +409,8 @@ define([
                     this._pointSize = new Expression(value);
                 } else if (defined(value.conditions)) {
                     this._pointSize = new ConditionsExpression(value);
-                } else if (defined(value.expression) || defined(value.conditionsExpression)) {
-                    this._pointSize = value;
                 } else {
-                    this._pointSize = undefined;
-                    return;
+                    this._pointSize = value;
                 }
                 this._pointSizeShaderFunctionReady = false;
             }
