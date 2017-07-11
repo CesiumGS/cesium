@@ -4,10 +4,10 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Core/PrimitiveType',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
-        '../Renderer/GLSLModernizer',
         '../Renderer/Pass',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -31,10 +31,10 @@ define([
         defined,
         destroyObject,
         PixelFormat,
+        PrimitiveType,
         ClearCommand,
         DrawCommand,
         Framebuffer,
-        GLSLModernizer,
         Pass,
         PixelDatatype,
         RenderState,
@@ -303,11 +303,6 @@ define([
             processor.densityHalfWidth
         );
 
-        if (context.webgl2) {
-            densityEstimationStr = GLSLModernizer.
-                glslModernizeShaderText(densityEstimationStr, true, true);
-        }
-
         return context.createViewportQuadCommand(densityEstimationStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.densityEstimationPass,
@@ -433,11 +428,6 @@ define([
             '    } \n' +
             '} \n';
 
-        if (context.webgl2) {
-            copyStageStr = GLSLModernizer.
-                glslModernizeShaderText(copyStageStr,
-                                    true, true);
-        }
         copyStageStr = replaceConstants(
             copyStageStr,
             'DENSITY_VIEW',
@@ -525,44 +515,6 @@ define([
 
         copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
-        
-        for (i = 0; i < drawCommands.length; i++) {
-            var shaderProgram = drawCommands[i].shaderProgram;
-            var vsSource = shaderProgram.vertexShaderSource.clone();
-            var fsSource = shaderProgram.fragmentShaderSource.clone();
-            var attributeLocations = shaderProgram._attributeLocations;
-            for (var a = 0; a < vsSource.sources.length; a++) {
-                if (context.webgl2) {
-                    vsSource.sources[a] = GLSLModernizer.glslModernizeShaderText(
-                        vsSource.sources[a], false, true);
-                }
-            }
-            drawCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
-                vertexShaderSource : vsSource,
-                fragmentShaderSource : fsSource,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        for (i = 0; i < copyCommands.length; i++) {
-            var copyProgram = copyCommands[i].shaderProgram;
-            var vsSourceCopy = copyProgram.vertexShaderSource.clone();
-            var fsSourceCopy = copyProgram.fragmentShaderSource.clone();
-            var attributeLocationsCopy =
-                copyProgram._attributeLocations;
-            for (var b = 0; b < vsSource.sources.length; b++) {
-                if (context.webgl2) {
-                    vsSourceCopy.sources[b] = GLSLModernizer.glslModernizeShaderText(
-                        vsSourceCopy.sources[b], false, true);
-                }
-            }
-
-            copyCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
-                vertexShaderSource : vsSourceCopy,
-                fragmentShaderSource : fsSourceCopy,
-                attributeLocations : attributeLocationsCopy
-            });
-        }
 
         var blendFS =
             'uniform sampler2D pointCloud_colorTexture; \n' +
@@ -695,11 +647,6 @@ define([
                 '    gl_FragData[1] = vec4(v_positionECPS, 0); \n' +
                 '}');
 
-            if (context.webgl2) {
-                GLSLModernizer.glslModernizeShaderSource(vs, false);
-                GLSLModernizer.glslModernizeShaderSource(fs, true);
-            }
-
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
@@ -752,6 +699,9 @@ define([
         var commandEnd = commandList.length;
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
+            if (command.primitiveType !== PrimitiveType.POINTS) {
+                continue;
+            }
 
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
             if (!defined(derivedCommand) || command.dirty || dirty) {
