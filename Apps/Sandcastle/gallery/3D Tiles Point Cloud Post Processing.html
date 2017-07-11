@@ -83,7 +83,6 @@ function startup(Cesium) {
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    globe : false
 });
 viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
@@ -92,7 +91,7 @@ inspectorViewModel.picking = false;
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
 var scene = viewer.scene;
-var url = '../../../Specs/Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties/';
+var url = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
