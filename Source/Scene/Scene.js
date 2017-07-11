@@ -2769,6 +2769,9 @@ define([
     }
 
     // pick rectangle width and height, assumed odd
+    var rectangleWidth = 3.0;
+    var rectangleHeight = 3.0;
+    var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
     var scratchPosition = new Cartesian2();
 
@@ -2790,8 +2793,8 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Number} [optional] width of the pick rectangle
-     * @param {Number} [optional] height of the pick rectangle
+     * @param {Number} [width=3] width of the pick rectangle
+     * @param {Number} [height=3] height of the pick rectangle
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -2803,9 +2806,9 @@ define([
         }
         //>>includeEnd('debug');
         // override the rectangle dimensions if defined
-        var rectangleWidth = width || 3.0;
-        var rectangleHeight = height || width || 3.0;
-        var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+        rectangleWidth = defaultValue(width, 3.0);
+        rectangleHeight = defaultValue(height, rectangleWidth);
+        scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
         var context = this._context;
         var us = context.uniformState;

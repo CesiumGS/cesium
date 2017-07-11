@@ -20,7 +20,7 @@ define([
         options = defaultValue(options, {});
 
         // save the canvas so we don't try to clone an HTMLCanvasElement
-        var canvas = defined(options.canvas) ? options.canvas : createCanvas();
+        var canvas = defined(options.canvas) ? options.canvas : createCanvas(10,10);
         options.canvas = undefined;
 
         options = clone(options, true);

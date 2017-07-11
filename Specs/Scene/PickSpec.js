@@ -10,7 +10,6 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/SceneMode',
-        'Specs/createCanvas',
         'Specs/createScene',
     ], 'Scene/Pick', function(
         FeatureDetection,
@@ -24,7 +23,6 @@ defineSuite([
         PerspectiveFrustum,
         Primitive,
         SceneMode,
-        createCanvas,
         createScene) {
     'use strict';
 
@@ -59,20 +57,6 @@ defineSuite([
     afterEach(function() {
         primitives.removeAll();
     });
-
-     // reset the scene such that the canvas is 10 pixels and the camera is set
-    //  such that the primitive only takes up a small area at the canvas center
-    function setupPickSizeTestScene()  {
-        scene = createScene({canvas: createCanvas(10,10) });
-        primitives = scene.primitives;
-        camera = scene.camera;
-        scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = SceneMode.getMorphTime(scene.mode);
-
-        camera.setView({
-            destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
-        });
-    }
 
     function createRectangle() {
         var e = new Primitive({
@@ -110,32 +94,34 @@ defineSuite([
         expect(scene).toPickPrimitive(rectangle);
     });
 
-    it('picks a primitive at pickSize extent', function() {
+    it('picks a primitive with a modified pick search area', function() {
         if (FeatureDetection.isInternetExplorer()) {
             // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
             return;
         }
 
-        setupPickSizeTestScene();
-        var rectangle = createRectangle();
-        // scene is 10px, primitive is at center, pick size convers 5px pixel from corner
-        var config = { x: 0, y: 0, size: 5 };
+        camera.setView({
+            destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
+        });
 
-        expect(scene).toPickNearbyPrimitive(rectangle, config);
+        var rectangle = createRectangle();
+
+        expect(scene).toPickPrimitive(rectangle,7,7,5);
     });
 
-    it('does not pick a primitive at pickSize extent', function() {
+    it('does not pick a primitive with a modified pick search area', function() {
        if (FeatureDetection.isInternetExplorer()) {
             // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
             return;
         }
 
-        setupPickSizeTestScene();
-        createRectangle();
-        // scene is 10px, primitive is at center, pick size only convers 3px from corner
-        var config = { x: 0, y: 0, size: 3 };
+        camera.setView({
+            destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
+        });
 
-        expect(scene).notToPickNearbyPrimitive(config);
+        createRectangle();
+
+        expect(scene).notToPick(0,0,3);
     });
 
 

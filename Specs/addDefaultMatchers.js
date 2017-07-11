@@ -263,32 +263,16 @@ define([
 
             toPickPrimitive : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
-                        return pickPrimitiveEquals(actual, expected);
-                    }
-                };
-            },
-
-            toPickNearbyPrimitive : function(util, customEqualityTesters) {
-                return {
-                    compare : function(actual, expected, config) {
-                        return pickPrimitiveEqualsWrapper(actual, expected, config.x, config.y, config.size);
-                    }
-                };
-            },
-
-            notToPickNearbyPrimitive : function(util, customEqualityTesters) {
-                return {
-                    compare : function(actual, config) {
-                        return pickPrimitiveEqualsWrapper(actual, undefined, config.x, config.y, config.size);
+                    compare : function(actual, expected, x, y, size) {
+                        return pickPrimitiveEquals(actual, expected, x, y, size);
                     }
                 };
             },
 
             notToPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
-                        return pickPrimitiveEquals(actual, undefined);
+                    compare : function(actual, expected, x, y, size) {
+                        return pickPrimitiveEquals(actual, undefined, x, y, size);
                     }
                 };
             },
@@ -432,17 +416,6 @@ define([
         };
     }
 
-    // converts x and y coordinates such that after updating for drawing buffer position, the correct coordinates will be used
-    function pickPrimitiveEqualsWrapper(actual, expected, x, y, width, height) {
-        width = width || 3;
-        height = height || width || 3;
-        x = x || 0;
-        y = y || 0;
-        var adjustedX = x + ((width - 1) * 0.5);
-        var adjustedY = -1 * (y + ((height - 1) * 0.5) - actual._context.drawingBufferHeight);
-        return pickPrimitiveEquals(actual, expected, adjustedX, adjustedY, width, height);
-    }
-
     function renderAndReadPixels(options) {
         var scene;
 
@@ -494,7 +467,8 @@ define([
 
     function pickPrimitiveEquals(actual, expected, x, y, pickWidth, pickHeight) {
         var scene = actual;
-        var result = scene.pick(new Cartesian2(x || 0, y || 0), pickWidth, pickHeight);
+        var windowPosition = new Cartesian2(defaultValue(x,0), defaultValue(y,0));
+        var result = scene.pick(windowPosition, pickWidth, pickHeight);
 
         if (!!window.webglStub) {
             return {

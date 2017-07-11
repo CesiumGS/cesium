@@ -59,7 +59,7 @@
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, webglStub, release);
 
                     var specFiles = Object.keys(__karma__.files).filter(function(file) {
-                        return /Spec\.js$/.test(file);
+                        return /PickSpec\.js$/.test(file);
                     });
 
                     require(specFiles, function() {
