@@ -1245,6 +1245,8 @@ define([
 
     /**
      * Generates an HTML string of the statistics
+     *
+     * @function
      * @param {Cesium3DTileset} tileset The tileset
      * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
      * @returns {String} The formatted statistics
