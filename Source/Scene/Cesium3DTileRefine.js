@@ -7,6 +7,10 @@ define([
 
     /**
      * The refinement approach for a tile.
+     * <p>
+     * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/tile.schema.json|tile schema}
+     * in the 3D Tiles spec.
+     * </p>
      *
      * @exports Cesium3DTileRefine
      *

@@ -27,7 +27,7 @@
 ## Build the Code
 
 Prerequisites:
- * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 4.x or newer.
+ * Install [Node.js](http://nodejs.org/) on your system.  Building Cesium requires Node 6.x or newer.
 
 Cesium uses [npm modules](https://docs.npmjs.com/getting-started/what-is-npm) for development, so after syncing, you need to run `npm install` from the Cesium root directory:
 

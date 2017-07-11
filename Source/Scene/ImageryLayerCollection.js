@@ -515,7 +515,7 @@ define([
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
-     * 
+     *
      * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
@@ -528,7 +528,8 @@ define([
         var layers = this._layers;
         var layersShownOrHidden;
         var layer;
-        for (var i = 0, len = layers.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = layers.length; i < len; ++i) {
             layer = layers[i];
 
             layer._layerIndex = i;

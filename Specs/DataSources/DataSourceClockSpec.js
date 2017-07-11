@@ -89,7 +89,7 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
-    
+
     it('gets value as a clock instance',function () {
           var source = new DataSourceClock();
           source.startTime = JulianDate.now();
@@ -98,7 +98,7 @@ defineSuite([
           source.clockRange = ClockRange.CLAMPED;
           source.clockStep = ClockStep.TICK_DEPENDENT;
           source.multiplier = 2;
-          
+
           var clock = source.getValue();
           expect(clock.startTime).toEqual(source.startTime);
           expect(clock.stopTime).toEqual(source.stopTime);
@@ -106,17 +106,17 @@ defineSuite([
           expect(clock.clockRange).toEqual(source.clockRange);
           expect(clock.clockStep).toEqual(source.clockStep);
           expect(clock.multiplier).toEqual(source.multiplier);
-          
+
           source.multiplier = undefined;
           source.clockStep = undefined;
           source.clockRange = undefined;
-          
+
           clock = source.getValue();
           expect(clock.startTime).toEqual(source.startTime);
           expect(clock.stopTime).toEqual(source.stopTime);
           expect(clock.currentTime).toEqual(source.currentTime);
           expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
           expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-          expect(clock.multiplier).toEqual(1.0);          
+          expect(clock.multiplier).toEqual(1.0);
     });
 });

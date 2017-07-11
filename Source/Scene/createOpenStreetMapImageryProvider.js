@@ -95,7 +95,7 @@ define([
             credit = new Credit(credit);
         }
 
-        var templateUrl = url + "{z}/{x}/{y}." + fileExtension;
+        var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;
 
         return new UrlTemplateImageryProvider({
             url: templateUrl,

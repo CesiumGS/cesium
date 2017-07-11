@@ -35,7 +35,6 @@ define([
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
@@ -54,6 +53,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeType',
         './Axis',
         './BlendingState',
         './ColorBlendMode',
@@ -105,7 +105,6 @@ define([
         PrimitiveType,
         Quaternion,
         Queue,
-        RequestScheduler,
         RuntimeError,
         Transforms,
         WebGLConstants,
@@ -124,6 +123,7 @@ define([
         gltfDefaults,
         Uri,
         when,
+        AttributeType,
         Axis,
         BlendingState,
         ColorBlendMode,
@@ -156,8 +156,8 @@ define([
         FAILED : 3
     };
 
-    // GLTF_SPEC: Figure out correct mime types (https://github.com/KhronosGroup/glTF/issues/412)
-    var defaultModelAccept = 'model/vnd.gltf.binary,model/vnd.gltf+json,model/gltf.binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
+    // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
+    var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
     function LoadResources() {
         this.vertexBuffersToCreate = new Queue();
@@ -1134,6 +1134,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -1191,10 +1192,15 @@ define([
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
+        var basePath = defaultValue(options.basePath, getBaseUri(url, true));
 
         options = clone(options);
-        options.basePath = getBaseUri(url, true);
+        if (defined(options.basePath) && !defined(options.cacheKey)) {
+            cacheKey += basePath;
+        }
+
         options.cacheKey = cacheKey;
+        options.basePath = basePath;
         var model = new Model(options);
 
         options.headers = defined(options.headers) ? clone(options.headers) : {};
@@ -1212,7 +1218,7 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            RequestScheduler.request(url, loadArrayBuffer, options.headers, options.requestType).then(function(arrayBuffer) {
+            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
@@ -1424,8 +1430,7 @@ define([
                 else if (buffer.type === 'arraybuffer') {
                     ++model._loadResources.pendingBufferLoads;
                     var bufferPath = joinUrls(model._baseUri, buffer.uri);
-                    var promise = RequestScheduler.request(bufferPath, loadArrayBuffer, undefined, model._requestType);
-                    promise.then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                    loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
                 }
             }
         }
@@ -1507,8 +1512,7 @@ define([
                 } else {
                     ++model._loadResources.pendingShaderLoads;
                     var shaderPath = joinUrls(model._baseUri, shader.uri);
-                    var promise = RequestScheduler.request(shaderPath, loadText, undefined, model.requestType);
-                    promise.then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                    loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
                 }
             }
         }
@@ -1544,13 +1548,15 @@ define([
     function parseTextures(model, context) {
         var images = model.gltf.images;
         var textures = model.gltf.textures;
+        var binary;
+        var uri;
         for (var id in textures) {
             if (textures.hasOwnProperty(id)) {
                 var gltfImage = images[textures[id].source];
                 var extras = gltfImage.extras;
 
-                var binary = undefined;
-                var uri = undefined;
+                binary = undefined;
+                uri = undefined;
 
                 // First check for a compressed texture
                 if (defined(extras) && defined(extras.compressedImage3DTiles)) {
@@ -1609,11 +1615,11 @@ define([
 
                     var promise;
                     if (ktxRegex.test(imagePath)) {
-                        promise = RequestScheduler.request(imagePath, loadKTX, undefined, model._requestType);
+                        promise = loadKTX(imagePath);
                     } else if (crnRegex.test(imagePath)) {
-                        promise = RequestScheduler.request(imagePath, loadCRN, undefined, model._requestType);
+                        promise = loadCRN(imagePath);
                     } else {
-                        promise = RequestScheduler.request(imagePath, loadImage, undefined, model._requestType);
+                        promise = loadImage(imagePath);
                     }
                     promise.then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                 }
@@ -3259,19 +3265,19 @@ define([
                         var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
-                            case 'SCALAR':
+                            case AttributeType.SCALAR:
                                 uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC2':
+                            case AttributeType.VEC2:
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC3':
+                            case AttributeType.VEC3:
                                 uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
                                 break;
-                            case 'VEC4':
+                            case AttributeType.VEC4:
                                 // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
                                 var uniformVariableScale = uniformVariable + '_scale';
                                 var uniformVariableTranslate = uniformVariable + '_translate';

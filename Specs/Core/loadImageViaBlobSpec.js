@@ -1,9 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Core/loadImageViaBlob',
+        'Core/Request',
+        'Core/RequestScheduler',
         'ThirdParty/when'
     ], function(
         loadImageViaBlob,
+        Request,
+        RequestScheduler,
         when) {
     'use strict';
 
@@ -77,5 +81,20 @@ defineSuite([
         expect(success).toEqual(false);
         expect(failure).toEqual(true);
         expect(loadedImage).toBeUndefined();
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadImageViaBlob(testUrl, request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 });

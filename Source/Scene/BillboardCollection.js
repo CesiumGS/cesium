@@ -1355,85 +1355,83 @@ define([
             }
 
             this._billboardsToUpdateIndex = 0;
-        } else {
+        } else if (billboardsToUpdateLength > 0) {
             // Billboards were modified, but none were added or removed.
-            if (billboardsToUpdateLength > 0) {
-                var writers = scratchWriterArray;
-                writers.length = 0;
+            var writers = scratchWriterArray;
+            writers.length = 0;
 
-                if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
-                    writers.push(writePositionScaleAndRotation);
-                }
+            if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
+                writers.push(writePositionScaleAndRotation);
+            }
 
-                if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
-                    writers.push(writeCompressedAttrib0);
-                    if (this._instanced) {
-                        writers.push(writeEyeOffset);
-                    }
-                }
-
-                if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
-                    writers.push(writeCompressedAttrib1);
-                    writers.push(writeCompressedAttrib2);
-                }
-
-                if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
-                    writers.push(writeCompressedAttrib2);
-                }
-
-                if (properties[EYE_OFFSET_INDEX]) {
+            if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
+                writers.push(writeCompressedAttrib0);
+                if (this._instanced) {
                     writers.push(writeEyeOffset);
                 }
-
-                if (properties[SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writeScaleByDistance);
-                }
-
-                if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writePixelOffsetScaleByDistance);
-                }
-
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE]) {
-                    writers.push(writeDistanceDisplayConditionAndDepthDisable);
-                }
-
-                var numWriters = writers.length;
-                vafWriters = this._vaf.writers;
-
-                if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
-                    // If more than 10% of billboard change, rewrite the entire buffer.
-
-                    // PERFORMANCE_IDEA:  I totally made up 10% :).
-
-                    for (var m = 0; m < billboardsToUpdateLength; ++m) {
-                        var b = billboardsToUpdate[m];
-                        b._dirty = false;
-
-                        for ( var n = 0; n < numWriters; ++n) {
-                            writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
-                        }
-                    }
-                    this._vaf.commit(getIndexBuffer(context));
-                } else {
-                    for (var h = 0; h < billboardsToUpdateLength; ++h) {
-                        var bb = billboardsToUpdate[h];
-                        bb._dirty = false;
-
-                        for ( var o = 0; o < numWriters; ++o) {
-                            writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
-                        }
-
-                        if (this._instanced) {
-                            this._vaf.subCommit(bb._index, 1);
-                        } else {
-                            this._vaf.subCommit(bb._index * 4, 4);
-                        }
-                    }
-                    this._vaf.endSubCommits();
-                }
-
-                this._billboardsToUpdateIndex = 0;
             }
+
+            if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                writers.push(writeCompressedAttrib1);
+                writers.push(writeCompressedAttrib2);
+            }
+
+            if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
+                writers.push(writeCompressedAttrib2);
+            }
+
+            if (properties[EYE_OFFSET_INDEX]) {
+                writers.push(writeEyeOffset);
+            }
+
+            if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writeScaleByDistance);
+            }
+
+            if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writePixelOffsetScaleByDistance);
+            }
+
+            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE]) {
+                writers.push(writeDistanceDisplayConditionAndDepthDisable);
+            }
+
+            var numWriters = writers.length;
+            vafWriters = this._vaf.writers;
+
+            if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
+                // If more than 10% of billboard change, rewrite the entire buffer.
+
+                // PERFORMANCE_IDEA:  I totally made up 10% :).
+
+                for (var m = 0; m < billboardsToUpdateLength; ++m) {
+                    var b = billboardsToUpdate[m];
+                    b._dirty = false;
+
+                    for ( var n = 0; n < numWriters; ++n) {
+                        writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
+                    }
+                }
+                this._vaf.commit(getIndexBuffer(context));
+            } else {
+                for (var h = 0; h < billboardsToUpdateLength; ++h) {
+                    var bb = billboardsToUpdate[h];
+                    bb._dirty = false;
+
+                    for ( var o = 0; o < numWriters; ++o) {
+                        writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
+                    }
+
+                    if (this._instanced) {
+                        this._vaf.subCommit(bb._index, 1);
+                    } else {
+                        this._vaf.subCommit(bb._index * 4, 4);
+                    }
+                }
+                this._vaf.endSubCommits();
+            }
+
+            this._billboardsToUpdateIndex = 0;
         }
 
         // If the number of total billboards ever shrinks considerably
@@ -1499,6 +1497,8 @@ define([
         }
 
         this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+        var vs;
+        var fs;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
@@ -1661,8 +1661,6 @@ define([
         var va;
         var vaLength;
         var command;
-        var vs;
-        var fs;
         var j;
 
         var commandList = frameState.commandList;

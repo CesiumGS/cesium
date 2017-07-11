@@ -466,7 +466,8 @@ define([
         var uBuffer = new Array(numPoints);
         var vBuffer = new Array(numPoints);
         var heights = new Array(numPoints);
-        for (var i = 0; i < numPoints; ++i) {
+        var i;
+        for (i = 0; i < numPoints; ++i) {
             uBuffer[i] = uStart + (dv.getUint8(offset++) * xScale);
             vBuffer[i] = vStart + (dv.getUint8(offset++) * yScale);
 

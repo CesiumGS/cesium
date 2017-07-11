@@ -23,6 +23,9 @@ define([
         SceneMode) {
     'use strict';
 
+    /**
+     * @private
+     */
     var Cesium3DTilesetTraversal = {};
 
     function selectTiles(tileset, frameState, outOfCore) {
@@ -34,6 +37,7 @@ define([
 
         tileset._desiredTiles.length = 0;
         tileset._selectedTiles.length = 0;
+        tileset._requestedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._hasMixedContent = false;
 
@@ -62,7 +66,7 @@ define([
             return;
         }
 
-        loadTile(root, frameState);
+        loadTile(tileset, root, frameState);
 
         if (!tileset.skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -72,19 +76,17 @@ define([
             for (var i = 0; i < length; ++i) {
                 tileset._desiredTiles.push(leaves.get(i));
             }
+        } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
+            tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
         } else {
-            if (tileset.immediatelyLoadDesiredLevelOfDetail) {
-                tileset._skipTraversal.execute(tileset, root, frameState, outOfCore);
-            } else {
-                // leaves of the base traversal is where we start the skip traversal
-                tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
+            // leaves of the base traversal is where we start the skip traversal
+            tileset._baseTraversal.leaves = tileset._skipTraversal.queue1;
 
-                // load and select tiles without skipping up to tileset.baseScreenSpaceError
-                tileset._baseTraversal.execute(tileset, root, tileset.baseScreenSpaceError, frameState, outOfCore);
+            // load and select tiles without skipping up to tileset.baseScreenSpaceError
+            tileset._baseTraversal.execute(tileset, root, tileset.baseScreenSpaceError, frameState, outOfCore);
 
-                // skip traversal starts from a prepopulated queue from the base traversal
-                tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
-            }
+            // skip traversal starts from a prepopulated queue from the base traversal
+            tileset._skipTraversal.execute(tileset, undefined, frameState, outOfCore);
         }
 
         // mark tiles for selection or their nearest loaded ancestor
@@ -231,7 +233,7 @@ define([
 
     function selectTile(tileset, tile, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
-        // zoomed into a neighborhood and can cull the skyscrapers in the root node.
+        // zoomed into a neighborhood and can cull the skyscrapers in the root tile.
         if (tile.contentAvailable && (
                 (tile._visibilityPlaneMask === CullingVolume.MASK_INSIDE) ||
                 (tile.contentVisibility(frameState) !== Intersect.OUTSIDE)
@@ -244,7 +246,7 @@ define([
                 tileContent.featurePropertiesDirty = false;
                 tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
-            }  else if ((tile._lastSelectedFrameNumber !== frameState.frameNumber - 1)) {
+            } else if ((tile._lastSelectedFrameNumber !== frameState.frameNumber - 1) || tile.lastStyleTime === 0) {
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
                 tileset._selectedTilesToStyle.push(tile);
             }
@@ -299,30 +301,36 @@ define([
     };
 
     BaseTraversal.prototype.getChildren = function(tile) {
-        if (baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
-            var children = tile.children;
-            var childrenLength = children.length;
-            var allReady = true;
-            var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                loadTile(child, this.frameState);
-                touch(this.tileset, child, this.outOfCore);
+        var tileset = this.tileset;
+        var outOfCore = this.outOfCore;
+        var frameState = this.frameState;
+        if (!baseUpdateAndCheckChildren(tileset, tile, this.baseScreenSpaceError, frameState)) {
+            return emptyArray;
+        }
 
-                // content cannot be replaced until all of the nearest descendants with content are all loaded
-                if (replacementWithContent) {
-                    if (!child.hasEmptyContent) {
-                        allReady = allReady && child.contentAvailable;
-                    } else {
-                        allReady = allReady && this.internalDFS.execute(child);
-                    }
+        var children = tile.children;
+        var childrenLength = children.length;
+        var allReady = true;
+        var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            loadTile(tileset, child, frameState);
+            touch(tileset, child, outOfCore);
+
+            // content cannot be replaced until all of the nearest descendants with content are all loaded
+            if (replacementWithContent) {
+                if (!child.hasEmptyContent) {
+                    allReady = allReady && child.contentAvailable;
+                } else {
+                    allReady = allReady && this.internalDFS.execute(child);
                 }
             }
-
-            if (allReady) {
-                return children;
-            }
         }
+
+        if (allReady) {
+            return children;
+        }
+
         return emptyArray;
     };
 
@@ -394,20 +402,25 @@ define([
     };
 
     InternalBaseTraversal.prototype.getChildren = function(tile) {
-        if (baseUpdateAndCheckChildren(this.tileset, tile, this.baseScreenSpaceError, this.frameState)) {
-            var children = tile.children;
-            var childrenLength = children.length;
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                loadTile(child, this.frameState);
-                touch(this.tileset, child, this.outOfCore);
-                if (!tile.contentAvailable) {
-                    this.allLoaded = false;
-                }
-            }
-            return children;
+        var tileset = this.tileset;
+        var frameState = this.frameState;
+        var outOfCore = this.outOfCore;
+
+        if (!baseUpdateAndCheckChildren(tileset, tile, this.baseScreenSpaceError, frameState)) {
+            return emptyArray;
         }
-        return emptyArray;
+
+        var children = tile.children;
+        var childrenLength = children.length;
+        for (var i = 0; i < childrenLength; ++i) {
+            var child = children[i];
+            loadTile(tileset, child, frameState);
+            touch(tileset, child, outOfCore);
+            if (!tile.contentAvailable) {
+                this.allLoaded = false;
+            }
+        }
+        return children;
     };
 
     InternalBaseTraversal.prototype.updateAndCheckChildren = BaseTraversal.prototype.updateAndCheckChildren;
@@ -531,9 +544,9 @@ define([
                 touch(tileset, children[i], this.outOfCore);
             }
             return children;
-        } else {
-            return emptyArray;
         }
+
+        return emptyArray;
     };
 
     InternalSkipTraversal.prototype.shouldVisit = function(tile) {
@@ -559,11 +572,11 @@ define([
                     var tiles = parent.children;
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
-                        loadTile(tiles[i], this.frameState);
+                        loadTile(this.tileset, tiles[i], this.frameState);
                         touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
-                    loadTile(tile, this.frameState);
+                    loadTile(this.tileset, tile, this.frameState);
                     touch(this.tileset, tile, this.outOfCore);
                 }
             }
@@ -626,11 +639,10 @@ define([
         }
     }
 
-    function loadTile(tile, frameState) {
+    function loadTile(tileset, tile, frameState) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
             tile._requestedFrame = frameState.frameNumber;
-            computeSSE(tile, frameState);
-            tile._requestHeap.insert(tile);
+            tileset._requestedTiles.push(tile);
         }
     }
 
@@ -670,7 +682,7 @@ define([
 
     function getScreenSpaceError(tileset, geometricError, tile, frameState) {
         if (geometricError === 0.0) {
-            // Leaf nodes do not have any error so save the computation
+            // Leaf tiles do not have any error so save the computation
             return 0.0;
         }
 
@@ -745,9 +757,9 @@ define([
         while (stack.length > 0) {
             maxLength = Math.max(maxLength, stack.length);
 
-            var node = stack.pop();
-            options.visitStart(node);
-            var children = options.getChildren(node);
+            var tile = stack.pop();
+            options.visitStart(tile);
+            var children = options.getChildren(tile);
             var isNativeArray = !defined(children.get);
             var length = children.length;
             for (var i = 0; i < length; ++i) {
@@ -759,9 +771,9 @@ define([
             }
 
             if (length === 0 && defined(options.leafHandler)) {
-                options.leafHandler(node);
+                options.leafHandler(tile);
             }
-            options.visitEnd(node);
+            options.visitEnd(tile);
         }
 
         stack.trim(maxLength);
@@ -781,9 +793,9 @@ define([
             maxLength = Math.max(maxLength, length);
 
             for (var i = 0; i < length; ++i) {
-                var node = queue1.get(i);
-                options.visitStart(node);
-                var children = options.getChildren(node);
+                var tile = queue1.get(i);
+                options.visitStart(tile);
+                var children = options.getChildren(tile);
                 var isNativeArray = !defined(children.get);
                 var childrenLength = children.length;
                 for (var j = 0; j < childrenLength; ++j) {
@@ -795,9 +807,9 @@ define([
                 }
 
                 if (childrenLength === 0 && defined(options.leafHandler)) {
-                    options.leafHandler(node);
+                    options.leafHandler(tile);
                 }
-                options.visitEnd(node);
+                options.visitEnd(tile);
             }
 
             queue1.length = 0;

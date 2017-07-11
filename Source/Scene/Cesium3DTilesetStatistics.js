@@ -16,9 +16,9 @@ define([
         this.numberOfCommands = 0;
         this.numberOfAttemptedRequests = 0;
         this.numberOfPendingRequests = 0;
-        this.numberProcessing = 0;
-        this.numberContentReady = 0; // Number of tiles with content loaded, does not include empty tiles
-        this.numberTotal = 0; // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
+        this.numberOfTilesProcessing = 0;
+        this.numberOfTilesWithContentReady = 0; // Number of tiles with content loaded, does not include empty tiles
+        this.numberOfTilesTotal = 0; // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
         // Features statistics
         this.numberOfFeaturesSelected = 0; // Number of features rendered
         this.numberOfFeaturesLoaded = 0; // Number of features in memory
@@ -97,9 +97,9 @@ define([
         result.selected = statistics.selected;
         result.numberOfAttemptedRequests = statistics.numberOfAttemptedRequests;
         result.numberOfPendingRequests = statistics.numberOfPendingRequests;
-        result.numberProcessing = statistics.numberProcessing;
-        result.numberContentReady = statistics.numberContentReady;
-        result.numberTotal = statistics.numberTotal;
+        result.numberOfTilesProcessing = statistics.numberOfTilesProcessing;
+        result.numberOfTilesWithContentReady = statistics.numberOfTilesWithContentReady;
+        result.numberOfTilesTotal = statistics.numberOfTilesTotal;
         result.numberOfFeaturesSelected = statistics.numberOfFeaturesSelected;
         result.numberOfFeaturesLoaded = statistics.numberOfFeaturesLoaded;
         result.numberOfPointsSelected = statistics.numberOfPointsSelected;

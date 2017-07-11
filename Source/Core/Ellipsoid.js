@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './Check',
         './Cartesian3',
         './Cartographic',
         './defaultValue',
@@ -10,6 +11,7 @@ define([
         './Math',
         './scaleToGeodeticSurface'
     ], function(
+        Check,
         Cartesian3,
         Cartographic,
         defaultValue,
@@ -27,9 +29,9 @@ define([
         z = defaultValue(z, 0.0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (x < 0.0 || y < 0.0 || z < 0.0) {
-            throw new DeveloperError('All radii components must be greater than or equal to zero.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('x', x, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('y', y, 0.0);
+        Check.typeOf.number.greaterThanOrEquals('z', z, 0.0);
         //>>includeEnd('debug');
 
         ellipsoid._radii = new Cartesian3(x, y, z);
@@ -283,12 +285,8 @@ define([
      */
     Ellipsoid.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -308,9 +306,7 @@ define([
      */
     Ellipsoid.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -338,9 +334,7 @@ define([
      */
     Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographic)) {
-            throw new DeveloperError('cartographic is required.');
-        }
+        Check.typeOf.object('cartographic', cartographic);
         //>>includeEnd('debug');
 
         var longitude = cartographic.longitude;
@@ -422,10 +416,8 @@ define([
      */
     Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartographics)) {
-            throw new DeveloperError('cartographics is required.');
-        }
-        //>>includeEnd('debug');
+        Check.defined('cartographics', cartographics);
+        //>>includeEnd('debug')
 
         var length = cartographics.length;
         if (!defined(result)) {
@@ -496,9 +488,7 @@ define([
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesians)) {
-            throw new DeveloperError('cartesians is required.');
-        }
+        Check.defined('cartesians', cartesians);
         //>>includeEnd('debug');
 
         var length = cartesians.length;
@@ -536,9 +526,7 @@ define([
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -633,15 +621,13 @@ define([
      */
     Ellipsoid.prototype.getSurfaceNormalIntersectionWithZAxis = function(position, buffer, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(position)) {
-            throw new DeveloperError('position is required.');
-        }
+        Check.typeOf.object('position', position);
+
         if (!CesiumMath.equalsEpsilon(this._radii.x, this._radii.y, CesiumMath.EPSILON15)) {
             throw new DeveloperError('Ellipsoid must be an ellipsoid of revolution (radii.x == radii.y)');
         }
-        if (this._radii.z === 0) {
-            throw new DeveloperError('Ellipsoid.radii.z must be greater than 0');
-        }
+
+        Check.typeOf.number.greaterThan('Ellipsoid.radii.z', this._radii.z, 0);
         //>>includeEnd('debug');
 
         buffer = defaultValue(buffer, 0.0);

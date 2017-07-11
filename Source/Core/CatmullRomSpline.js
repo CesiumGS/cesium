@@ -1,21 +1,21 @@
 /*global define*/
 define([
+        './Check',
         './Cartesian3',
         './Cartesian4',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './HermiteSpline',
         './Matrix4',
         './Spline'
     ], function(
+        Check,
         Cartesian3,
         Cartesian4,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         HermiteSpline,
         Matrix4,
         Spline) {
@@ -138,7 +138,7 @@ define([
      *
      * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
-     * 
+     *
      * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline
@@ -152,15 +152,10 @@ define([
         var lastTangent = options.lastTangent;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times)) {
-            throw new DeveloperError('points and times are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
+        Check.defined('points', points);
+        Check.defined('times', times);
+        Check.typeOf.number.greaterThanOrEquals('points.length', points.length, 2);
+        Check.typeOf.number.equals('times.length', 'points.length', times.length, points.length);
         //>>includeEnd('debug');
 
         if (points.length > 2) {

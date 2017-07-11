@@ -35,7 +35,7 @@ define([
      *     _gl.deleteTexture(_texture);
      *     return Cesium.destroyObject(this);
      * };
-     * 
+     *
      * @see DeveloperError
      */
     function destroyObject(object, message) {

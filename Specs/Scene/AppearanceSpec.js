@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/WebGLConstants',
         'Scene/Appearance',
+        'Core/WebGLConstants',
         'Scene/BlendingState',
         'Scene/Material'
     ], function(
-        WebGLConstants,
         Appearance,
+        WebGLConstants,
         BlendingState,
         Material) {
     'use strict';
@@ -123,5 +123,4 @@ defineSuite([
         expect(rs.depthMask).toEqual(false);
         expect(rs.blending).toBe(BlendingState.ALPHA_BLEND);
     });
-
 });

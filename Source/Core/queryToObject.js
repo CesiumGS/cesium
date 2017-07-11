@@ -27,7 +27,7 @@ define([
      * //   key2 : 'a/b',
      * //   key3 : ['x', 'y']
      * // }
-     * 
+     *
      * @see objectToQuery
      */
     function queryToObject(queryString) {

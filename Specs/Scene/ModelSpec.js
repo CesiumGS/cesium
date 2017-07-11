@@ -80,6 +80,7 @@ defineSuite([
     var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
+    var texturedBoxBasePathUrl = './Data/Models/Box-Textured-BasePath/CesiumTexturedBoxTest.gltf';
     var texturedBoxKTXUrl = './Data/Models/Box-Textured-KTX/CesiumTexturedBoxTest.gltf';
     var texturedBoxKTXBinaryUrl = './Data/Models/Box-Textured-KTX-Binary/CesiumTexturedBoxTest.glb';
     var texturedBoxKTXEmbeddedUrl = './Data/Models/Box-Textured-KTX-Embedded/CesiumTexturedBoxTest.gltf';
@@ -272,6 +273,17 @@ defineSuite([
         expect(model._baseUri).toEndWith(params);
     });
 
+    it('fromGltf takes a base path', function() {
+        var url = texturedBoxBasePathUrl;
+        var basePath = './Data/Models/Box-Textured-Separate/';
+        var model = Model.fromGltf({
+            url: url,
+            basePath: basePath
+        });
+        expect(model._basePath).toEndWith(basePath);
+        expect(model._cacheKey).toEndWith(basePath);
+    });
+
     it('renders', function() {
         verifyRender(texturedBoxModel);
     });
@@ -336,6 +348,23 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('does not render during morph', function() {
+        var commandList = scene.frameState.commandList;
+        var model = texturedBoxModel;
+        model.show = true;
+        model.cull = false;
+        expect(model.ready).toBe(true);
+
+        scene.renderForSpecs();
+        expect(commandList.length).toBeGreaterThan(0);
+
+        scene.morphTo2D(1.0);
+        scene.renderForSpecs();
+        expect(commandList.length).toBe(0);
+        scene.completeMorph();
+        model.show = false;
     });
 
     it('Renders x-up model', function() {
@@ -1917,7 +1946,7 @@ defineSuite([
             }
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(scene).toRenderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 expect(rgba).not.toEqual(oldPixelColor);
                 oldPixelColor = rgba;

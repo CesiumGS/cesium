@@ -594,16 +594,14 @@ define([
                         message : 'Expected context to render ' + expected + ', but rendered: ' + rgba
                     };
                 }
-            } else {
-                if (CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) &&
-                    CesiumMath.equalsEpsilon(rgba[1], expected[1], 0, epsilon) &&
-                    CesiumMath.equalsEpsilon(rgba[2], expected[2], 0, epsilon) &&
-                    CesiumMath.equalsEpsilon(rgba[3], expected[3], 0, epsilon)) {
-                    return {
-                        pass : false,
-                        message : 'Expected context not to render ' + expected + ', but rendered: ' + rgba
-                    };
-                }
+            } else if (CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) &&
+                CesiumMath.equalsEpsilon(rgba[1], expected[1], 0, epsilon) &&
+                CesiumMath.equalsEpsilon(rgba[2], expected[2], 0, epsilon) &&
+                CesiumMath.equalsEpsilon(rgba[3], expected[3], 0, epsilon)) {
+                return {
+                    pass : false,
+                    message : 'Expected context not to render ' + expected + ', but rendered: ' + rgba
+                };
             }
         }
 
