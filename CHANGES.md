@@ -5,6 +5,7 @@ Change Log
 
 * Fixed a bug where a Model's compressed textures were not being displayed. [#5596](https://github.com/AnalyticalGraphicsInc/cesium/pull/5596)
 * Fixed a bug where jsep was undefined when using webpack [#5593](https://github.com/AnalyticalGraphicsInc/cesium/issues/5593)
+* Added behavior to Cesium3DTilesetInspector that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 
 ### 1.35 - 2017-07-05
 
