@@ -259,6 +259,7 @@ define([
             }
         }
 
+        // Final position computation
         if (hasSkinning) {
             vertexShaderMain += '  vec4 pos = u_modelViewMatrix * skinMat * vec4(weightedPos,1.0);\n';
         } else {
@@ -268,7 +269,7 @@ define([
         vertexShaderMain += '  gl_Position = u_projectionMatrix * pos;\n';
         fragmentShader += 'varying vec3 v_positionEC;\n';
 
-        // Add normal if we don't have constant lighting
+        // Final normal computation
         if (hasNormals) {
             techniqueAttributes.a_normal = 'normal';
             techniqueParameters.normal = {
@@ -286,6 +287,7 @@ define([
             fragmentShader += 'varying vec3 v_normal;\n';
         }
 
+        // Read tangents if available
         if (hasTangents) {
             techniqueAttributes.a_tangent = 'tangent';
             techniqueParameters.tangent = {
@@ -316,6 +318,7 @@ define([
             fragmentShader += 'varying vec2 ' + v_texcoord + ';\n';
         }
 
+        // Add skinning information if available
         if (hasSkinning) {
             techniqueAttributes.a_joint = 'joint';
             var attributeType = getShaderVariable(skinningInfo.type);
@@ -335,12 +338,11 @@ define([
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
         }
 
-        // Generate lighting code blocks
-
         vertexShader += 'void main(void) {\n';
         vertexShader += vertexShaderMain;
         vertexShader += '}\n';
 
+        // Fragment shader lighting
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
         var lambertianDiffuse = '';
@@ -380,6 +382,39 @@ define([
 
         var fragmentShaderMain = '';
         fragmentShaderMain += 'void main(void) {\n';
+
+        // Add normal mapping to fragment shader
+        if (hasNormals) {
+            fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
+            if (defined(parameterValues.normalTexture) && (hasTangents || frameState.context._standardDerivatives)) {
+                if (hasTangents) {
+                    // Read tangents from varying
+                    fragmentShaderMain += '  vec3 t = normalize(v_tangent);\n';
+                } else {
+                    // Compute tangents
+                    fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
+                    fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
+                    fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
+                    fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
+                    fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
+                    fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
+                    fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
+                }
+                fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
+                fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
+                fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
+                fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
+            } else {
+                fragmentShaderMain += '  vec3 n = ng;\n';
+            }
+            if (parameterValues.doubleSided) {
+                fragmentShaderMain += '  if (!gl_FrontFacing)\n';
+                fragmentShaderMain += '  {\n';
+                fragmentShaderMain += '    n = -n;\n';
+                fragmentShaderMain += '  }\n';
+            }
+        }
+
         // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
             fragmentShaderMain += '  vec3 baseColor = texture2D(u_baseColorTexture, ' + v_texcoord + ').rgb;\n';
@@ -417,7 +452,6 @@ define([
             }
         }
         fragmentShaderMain += '  vec3 v = -normalize(v_positionEC);\n';
-        fragmentShaderMain += '  vec3 ambientLight = vec3(0.0, 0.0, 0.0);\n';
 
         // Generate fragment shader's lighting block
         var fragmentLightingBlock = '';
@@ -467,37 +501,6 @@ define([
         else {
             if (defined(parameterValues.emissiveFactor)) {
                 fragmentLightingBlock += '  color += u_emissiveFactor;\n';
-            }
-        }
-        // Add normal mapping to fragment shader
-        if (hasNormals) {
-            fragmentShaderMain += '  vec3 ng = normalize(v_normal);\n';
-            if (defined(parameterValues.normalTexture) && (hasTangents || frameState.context._standardDerivatives)) {
-                if (hasTangents) {
-                    // Read tangents from varying
-                    fragmentShaderMain += '  vec3 t = normalize(v_tangent);\n';
-                } else {
-                    // Compute tangents
-                    fragmentShader = '#extension GL_OES_standard_derivatives : enable\n' + fragmentShader;
-                    fragmentShaderMain += '  vec3 pos_dx = dFdx(v_positionEC);\n';
-                    fragmentShaderMain += '  vec3 pos_dy = dFdy(v_positionEC);\n';
-                    fragmentShaderMain += '  vec3 tex_dx = dFdx(vec3(' + v_texcoord + ',0.0));\n';
-                    fragmentShaderMain += '  vec3 tex_dy = dFdy(vec3(' + v_texcoord + ',0.0));\n';
-                    fragmentShaderMain += '  vec3 t = (tex_dy.t * pos_dx - tex_dx.t * pos_dy) / (tex_dx.s * tex_dy.t - tex_dy.s * tex_dx.t);\n';
-                    fragmentShaderMain += '  t = normalize(t - ng * dot(ng, t));\n';
-                }
-                fragmentShaderMain += '  vec3 b = normalize(cross(ng, t));\n';
-                fragmentShaderMain += '  mat3 tbn = mat3(t, b, ng);\n';
-                fragmentShaderMain += '  vec3 n = texture2D(u_normalTexture, ' + v_texcoord + ').rgb;\n';
-                fragmentShaderMain += '  n = normalize(tbn * (2.0 * n - 1.0));\n';
-            } else {
-                fragmentShaderMain += '  vec3 n = ng;\n';
-            }
-            if (parameterValues.doubleSided) {
-                fragmentShaderMain += '  if (!gl_FrontFacing)\n';
-                fragmentShaderMain += '  {\n';
-                fragmentShaderMain += '    n = -n;\n';
-                fragmentShaderMain += '  }\n';
             }
         }
 
