@@ -26,6 +26,7 @@ define([
      * @param {String} options.fragmentShader The fragment shader used by the post process stage.
      * @param {Object} options.uniformValues Uniform values that modify the behavior of the post process stage.
      *
+     * @alias PostProcessStage
      * @constructor
      */
     function PostProcessStage(options) {

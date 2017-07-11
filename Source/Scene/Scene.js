@@ -1499,8 +1499,6 @@ define([
             }
         }
 
-        frameState.clampedNear = near;
-
         // Use the computed near and far for shadows
         if (shadowsEnabled) {
             frameState.shadowHints.nearPlane = shadowNear;

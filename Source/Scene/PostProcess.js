@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Check',
         '../Core/Color',
@@ -44,7 +43,7 @@ define([
     'use strict';
 
     /**
-     * Runs a series of post processing stages given an input and output framebuffer.
+     * Executes a series of post processing stages.
      *
      * @param {Object} options An object with the following properties:
      * @param {PostProcessStage[]} options.stages The post processing stages to run.
@@ -211,10 +210,6 @@ define([
         });
     }
 
-    function stageEnabled(stage) {
-        return stage.show && stage.ready;
-    }
-
     function createStages(postProcess, inputColorTexture, outputFramebuffer) {
         var innerStages = [];
         var stagesEnabled = [];
@@ -227,18 +222,9 @@ define([
         var length = stages.length;
         for (i = 0; i < length; ++i) {
             stage = stages[i];
-            var enabled = stageEnabled(stage);
+            var enabled = stage.show && stage.ready;
             stagesEnabled.push(enabled);
-            if (!enabled) {
-                continue;
-            }
-            var subStages = stage._stages;
-            if (defined(subStages)) {
-                var subStagesLength = subStages.length;
-                for (var j = 0; j < subStagesLength; ++j) {
-                    innerStages.push(subStages[j]);
-                }
-            } else {
+            if (enabled) {
                 innerStages.push(stage);
             }
         }
@@ -368,7 +354,8 @@ define([
         var length = stages.length;
         var stagesDirty = false;
         for (i = 0; i < length; ++i) {
-            var enabled = stageEnabled(stages[i]);
+            var stage = stages[i];
+            var enabled = stage.show && stage.ready;
             if (enabled !== stagesEnabled[i]) {
                 stagesEnabled[i] = enabled;
                 stagesDirty = true;
