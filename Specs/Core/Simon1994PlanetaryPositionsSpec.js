@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Simon1994PlanetaryPositions',
         'Core/defined',
@@ -83,7 +82,8 @@ defineSuite([
         //Julian dates for 24 hours, starting from July 6th 2011 @ 01:00 UTC
         var transformMatrix = new Matrix3();
         var timesOfDay = [];
-        for ( var i = 1; i < 25; i++) {
+        var i;
+        for ( i = 1; i < 25; i++) {
             var date = new Date('July 6, 2011');
             date.setUTCHours(i, 0, 0, 0);
             timesOfDay.push(JulianDate.fromDate(date));

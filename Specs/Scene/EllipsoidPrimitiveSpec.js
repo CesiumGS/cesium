@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/EllipsoidPrimitive',
         'Core/Cartesian3',

@@ -1,10 +1,9 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/CartographicGeocoderService',
-    'Core/Cartesian3'
-], function(
-    CartographicGeocoderService,
-    Cartesian3) {
+        'Core/CartographicGeocoderService',
+        'Core/Cartesian3'
+    ], function(
+        CartographicGeocoderService,
+        Cartesian3) {
     'use strict';
 
     var service = new CartographicGeocoderService();

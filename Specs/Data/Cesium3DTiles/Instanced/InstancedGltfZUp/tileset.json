@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0",
+    "version": "1.0",
     "gltfUpAxis": "Z"
   },
   "properties": {
@@ -11,7 +11,7 @@
   },
   "geometricError": 70,
   "root": {
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "region": [
         -1.3197004795898053,

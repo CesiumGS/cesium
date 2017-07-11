@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './defined',
@@ -135,9 +134,8 @@ define([
             return 'Elliptical';
         } else if (eccentricity <= 1.0 + tolerance) {
             return 'Parabolic';
-        } else {
-            return 'Hyperbolic';
         }
+        return 'Hyperbolic';
     }
 
     // Calculates the true anomaly given the mean anomaly and the eccentricity.

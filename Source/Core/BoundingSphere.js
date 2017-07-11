@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartographic',
@@ -101,7 +100,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numPositions = positions.length;
-        for (var i = 1; i < numPositions; i++) {
+        var i;
+        for (i = 1; i < numPositions; i++) {
             Cartesian3.clone(positions[i], currentPos);
 
             var x = currentPos.x;
@@ -365,7 +365,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numElements = positions.length;
-        for (var i = 0; i < numElements; i += stride) {
+        var i;
+        for (i = 0; i < numElements; i += stride) {
             var x = positions[i] + center.x;
             var y = positions[i + 1] + center.y;
             var z = positions[i + 2] + center.z;
@@ -522,7 +523,8 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numElements = positionsHigh.length;
-        for (var i = 0; i < numElements; i += 3) {
+        var i;
+        for (i = 0; i < numElements; i += 3) {
             var x = positionsHigh[i] + positionsLow[i];
             var y = positionsHigh[i + 1] + positionsLow[i + 1];
             var z = positionsHigh[i + 2] + positionsLow[i + 2];
@@ -723,7 +725,8 @@ define([
         }
 
         var positions = [];
-        for (var i = 0; i < length; i++) {
+        var i;
+        for (i = 0; i < length; i++) {
             positions.push(boundingSpheres[i].center);
         }
 

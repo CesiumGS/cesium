@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/arrayFill',
         'Core/Color',
@@ -124,9 +123,8 @@ define([
         var tileset = {};
         var url = '';
         expect(function() {
-            var content = Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, type);
-            content.update(tileset, scene.frameState);
-        }).toThrowDeveloperError();
+            return Cesium3DTileContentFactory[type](tileset, mockTile, url, arrayBuffer, 0);
+        }).toThrowRuntimeError();
     };
 
     Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
@@ -186,7 +184,7 @@ define([
         var featureTableJsonByteLength = featureTableJsonString.length;
 
         var headerByteLength = 28;
-        var byteLength = headerByteLength;
+        var byteLength = headerByteLength + featureTableJsonByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
@@ -199,6 +197,13 @@ define([
         view.setUint32(16, 0, true);                            // featureTableBinaryByteLength
         view.setUint32(20, 0, true);                            // batchTableJsonByteLength
         view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
+
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
+            byteOffset++;
+        }
 
         return buffer;
     };

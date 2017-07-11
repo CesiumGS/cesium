@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Color',
@@ -406,6 +405,7 @@ define([
 
     function updateItems(batch, items, time, isUpdated) {
         var length = items.length;
+        var i;
         for (i = length - 1; i >= 0; i--) {
             var item = items[i];
             if (item.invalidated) {
@@ -420,7 +420,7 @@ define([
         }
 
         length = items.length;
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

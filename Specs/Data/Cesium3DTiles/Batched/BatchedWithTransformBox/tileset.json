@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "id": {
@@ -40,7 +40,7 @@
       4081602.0044800863,
       1
     ],
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "box": [
         0,

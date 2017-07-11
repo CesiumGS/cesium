@@ -1,12 +1,11 @@
-/*global define*/
 define([
         '../../Core/BingMapsGeocoderService',
+        '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
-        '../../Core/CartographicGeocoderService',
         '../../Core/Matrix4',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -14,12 +13,12 @@ define([
         '../getElement'
     ], function(
         BingMapsGeocoderService,
+        CartographicGeocoderService,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        CartographicGeocoderService,
         Matrix4,
         knockout,
         when,
@@ -155,7 +154,7 @@ define([
 
         /**
          * True if the geocoder should query as the user types to autocomplete
-         * @type {Booelan}
+         * @type {Boolean}
          * @default true
          */
         this.autoComplete = defaultValue(options.autocomplete, true);

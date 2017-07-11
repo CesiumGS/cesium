@@ -1,22 +1,23 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/GoogleEarthEnterpriseTileInformation',
-    'Core/decodeGoogleEarthEnterpriseData',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/loadWithXhr',
-    'Core/Math',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTileInformation,
-    decodeGoogleEarthEnterpriseData,
-    DefaultProxy,
-    defaultValue,
-    loadWithXhr,
-    CesiumMath,
-    when) {
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/decodeGoogleEarthEnterpriseData',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Core/Request',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseMetadata,
+        decodeGoogleEarthEnterpriseData,
+        DefaultProxy,
+        defaultValue,
+        GoogleEarthEnterpriseTileInformation,
+        loadWithXhr,
+        CesiumMath,
+        Request,
+        when) {
     'use strict';
 
     it('tileXYToQuadKey', function() {
@@ -114,7 +115,7 @@ defineSuite([
     it('populateSubtree', function() {
         var quad = '0123';
         var index = 0;
-        spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
+        spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version, request) {
             quadKey = defaultValue(quadKey, '') + index.toString();
             this._tileInfo[quadKey] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             index = (index + 1) % 4;
@@ -125,17 +126,20 @@ defineSuite([
         var metadata = new GoogleEarthEnterpriseMetadata({
             url : 'http://test.server'
         });
+        var request = new Request({
+            throttle : true
+        });
         return metadata.readyPromise
             .then(function() {
                 var tileXY = GoogleEarthEnterpriseMetadata.quadKeyToTileXY(quad);
-                return metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level);
+                return metadata.populateSubtree(tileXY.x, tileXY.y, tileXY.level, request);
             })
             .then(function() {
                 expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket.calls.count()).toEqual(4);
-                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('', 1, undefined, false);
-                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('0', 1, undefined, true);
-                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('01', 1, undefined, true);
-                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('012', 1, undefined, true);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('', 1);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('0', 1, request);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('01', 1, request);
+                expect(GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket).toHaveBeenCalledWith('012', 1, request);
 
                 var tileInfo = metadata._tileInfo;
                 expect(tileInfo['0']).toBeDefined();

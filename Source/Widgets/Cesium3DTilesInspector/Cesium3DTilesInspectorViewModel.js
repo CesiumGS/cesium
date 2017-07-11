@@ -1,32 +1,31 @@
-/*global define*/
 define([
-        '../../Scene/Cesium3DTileFeature',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/Cesium3DTileStyle',
-        '../../Scene/Cesium3DTileColorBlendMode',
         '../../Core/Check',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../ThirdParty/knockout',
-        '../../Scene/PerformanceDisplay',
         '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType'
-], function(
-        Cesium3DTileFeature,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        Cesium3DTileColorBlendMode,
+        '../../Core/ScreenSpaceEventType',
+        '../../Scene/Cesium3DTileColorBlendMode',
+        '../../Scene/Cesium3DTileFeature',
+        '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTileStyle',
+        '../../Scene/PerformanceDisplay',
+        '../../ThirdParty/knockout'
+    ], function(
         Check,
         Color,
         defined,
         defineProperties,
         destroyObject,
-        knockout,
-        PerformanceDisplay,
         ScreenSpaceEventHandler,
-        ScreenSpaceEventType) {
+        ScreenSpaceEventType,
+        Cesium3DTileColorBlendMode,
+        Cesium3DTileFeature,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
+        PerformanceDisplay,
+        knockout) {
     'use strict';
 
     function getPickTileset(viewModel) {
@@ -47,9 +46,8 @@ define([
         var memoryInMegabytes = memorySizeInBytes / 1048576;
         if (memoryInMegabytes < 1.0) {
             return memoryInMegabytes.toLocaleString(undefined, stringOptions);
-        } else {
-            return Math.round(memoryInMegabytes).toLocaleString();
         }
+        return Math.round(memoryInMegabytes).toLocaleString();
     }
 
     function getStatistics(tileset, isPick) {
@@ -78,11 +76,11 @@ define([
                 // --- Cache/loading statistics
                 '<li><strong>Requests: </strong>' + statistics.numberOfPendingRequests.toLocaleString() + '</li>' +
                 '<li><strong>Attempted: </strong>' + statistics.numberOfAttemptedRequests.toLocaleString() + '</li>' +
-                '<li><strong>Processing: </strong>' + statistics.numberProcessing.toLocaleString() + '</li>' +
-                '<li><strong>Content Ready: </strong>' + statistics.numberContentReady.toLocaleString() + '</li>' +
+                '<li><strong>Processing: </strong>' + statistics.numberOfTilesProcessing.toLocaleString() + '</li>' +
+                '<li><strong>Content Ready: </strong>' + statistics.numberOfTilesWithContentReady.toLocaleString() + '</li>' +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
-                '<li><strong>Total: </strong>' + statistics.numberTotal.toLocaleString() + '</li>';
+                '<li><strong>Total: </strong>' + statistics.numberOfTilesTotal.toLocaleString() + '</li>';
             s += '</ul>';
             s += '<ul class="cesium-cesiumInspector-statistics">';
             s +=
@@ -347,7 +345,7 @@ define([
                         if (!defined(that._tileset)) {
                             return;
                         }
-                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) {
+                        if (showOnlyPickedTileDebugLabel && defined(picked) && defined(picked.content)) { //eslint-disable-line no-use-before-define
                             var position;
                             if (scene.pickPositionSupported) {
                                 position = scene.pickPosition(e.endPosition);

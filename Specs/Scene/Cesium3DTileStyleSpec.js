@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileStyle',
         'Core/Color',
@@ -523,7 +522,7 @@ defineSuite([
 
     it('applies color style that maps id to color', function() {
         var style = new Cesium3DTileStyle({
-            "expressions" : {
+            "defines" : {
                 "id" : "regExp('^1(\\d)').exec(String(${id}))"
             },
             "color" : {
@@ -592,9 +591,9 @@ defineSuite([
         expect(style.pointSize.evaluate(frameState, feature2)).toEqual(3);
     });
 
-    it('applies with additional expressions', function() {
+    it('applies with defines', function() {
         var style = new Cesium3DTileStyle({
-            "expressions" : {
+            "defines" : {
                 "halfHeight" : "${Height} / 2",
                 "quarterHeight" : "${Height} / 4",
                 "halfVolume" : "${volume} / 2"

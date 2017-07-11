@@ -1,40 +1,39 @@
-/*global define*/
 define([
-    './BoundingSphere',
-    './Cartesian2',
-    './Cartesian3',
-    './Check',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './IndexDatatype',
-    './Intersections2D',
-    './Math',
-    './OrientedBoundingBox',
-    './QuantizedMeshTerrainData',
-    './Rectangle',
-    './TaskProcessor',
-    './TerrainEncoding',
-    './TerrainMesh'
-], function(
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    IndexDatatype,
-    Intersections2D,
-    CesiumMath,
-    OrientedBoundingBox,
-    QuantizedMeshTerrainData,
-    Rectangle,
-    TaskProcessor,
-    TerrainEncoding,
-    TerrainMesh) {
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './Check',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './IndexDatatype',
+        './Intersections2D',
+        './Math',
+        './OrientedBoundingBox',
+        './QuantizedMeshTerrainData',
+        './Rectangle',
+        './TaskProcessor',
+        './TerrainEncoding',
+        './TerrainMesh'
+    ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        IndexDatatype,
+        Intersections2D,
+        CesiumMath,
+        OrientedBoundingBox,
+        QuantizedMeshTerrainData,
+        Rectangle,
+        TaskProcessor,
+        TerrainEncoding,
+        TerrainMesh) {
     'use strict';
 
     /**
@@ -466,7 +465,8 @@ define([
         var uBuffer = new Array(numPoints);
         var vBuffer = new Array(numPoints);
         var heights = new Array(numPoints);
-        for (var i = 0; i < numPoints; ++i) {
+        var i;
+        for (i = 0; i < numPoints; ++i) {
             uBuffer[i] = uStart + (dv.getUint8(offset++) * xScale);
             vBuffer[i] = vStart + (dv.getUint8(offset++) * yScale);
 

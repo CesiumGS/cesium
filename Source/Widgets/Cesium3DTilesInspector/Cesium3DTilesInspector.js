@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Check',
         '../../Core/defaultValue',
@@ -8,7 +7,7 @@ define([
         '../../ThirdParty/knockout',
         '../getElement',
         './Cesium3DTilesInspectorViewModel'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,
@@ -18,80 +17,6 @@ define([
         getElement,
         Cesium3DTilesInspectorViewModel) {
     'use strict';
-
-    function makeSection(name, visibleProp, toggleProp, contents) {
-        var toggle = document.createElement('span');
-        toggle.className = 'cesium-cesiumInspector-toggleSwitch';
-        toggle.setAttribute('data-bind', 'text: ' + visibleProp + ' ? "-" : "+", click: ' + toggleProp);
-
-        var header = document.createElement('div');
-        header.className = 'cesium-cesiumInspector-sectionHeader';
-        header.appendChild(toggle);
-        header.appendChild(document.createTextNode(name));
-
-        var section = document.createElement('div');
-        section.className = 'cesium-cesiumInspector-section';
-        section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : ' + visibleProp + ', "cesium-cesiumInspector-hide" : !' + visibleProp + '}');
-        section.appendChild(contents);
-
-        var panel = document.createElement('div');
-        panel.className = 'cesium-cesiumInspector-dropDown';
-        panel.appendChild(header);
-        panel.appendChild(section);
-
-        return panel;
-    }
-
-    function makeCheckbox(property, text) {
-        var checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.setAttribute('data-bind', 'checked: ' + property);
-
-        var container = document.createElement('div');
-        container.appendChild(checkbox);
-        container.appendChild(document.createTextNode(text));
-
-        return container;
-    }
-
-    function makeRangeInput(property, min, max, step, text, displayProperty) {
-        displayProperty = defaultValue(displayProperty, property);
-        var input = document.createElement('input');
-        input.setAttribute('data-bind', 'value: ' + displayProperty);
-        input.type = 'number';
-
-        var slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = min;
-        slider.max = max;
-        slider.step = step;
-        slider.setAttribute('data-bind', 'valueUpdate: "input", value: ' + property);
-
-        var wrapper = document.createElement('div');
-        wrapper.appendChild(slider);
-
-        var container = document.createElement('div');
-        container.className = 'cesium-cesiumInspector-slider';
-        container.appendChild(document.createTextNode(text));
-        container.appendChild(input);
-        container.appendChild(wrapper);
-
-        return container;
-    }
-
-    function makeButton(action, text, active) {
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = text;
-        button.className = 'cesium-cesiumInspector-pickButton';
-        var binding = 'click: ' + action;
-        if (defined(active)) {
-            binding += ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + '}';
-        }
-        button.setAttribute('data-bind', binding);
-
-        return button;
-    }
 
     /**
      * Inspector widget to aid in debugging 3D Tiles
@@ -279,6 +204,80 @@ define([
 
         return destroyObject(this);
     };
+
+    function makeSection(name, visibleProp, toggleProp, contents) {
+        var toggle = document.createElement('span');
+        toggle.className = 'cesium-cesiumInspector-toggleSwitch';
+        toggle.setAttribute('data-bind', 'text: ' + visibleProp + ' ? "-" : "+", click: ' + toggleProp);
+
+        var header = document.createElement('div');
+        header.className = 'cesium-cesiumInspector-sectionHeader';
+        header.appendChild(toggle);
+        header.appendChild(document.createTextNode(name));
+
+        var section = document.createElement('div');
+        section.className = 'cesium-cesiumInspector-section';
+        section.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : ' + visibleProp + ', "cesium-cesiumInspector-hide" : !' + visibleProp + '}');
+        section.appendChild(contents);
+
+        var panel = document.createElement('div');
+        panel.className = 'cesium-cesiumInspector-dropDown';
+        panel.appendChild(header);
+        panel.appendChild(section);
+
+        return panel;
+    }
+
+    function makeCheckbox(property, text) {
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.setAttribute('data-bind', 'checked: ' + property);
+
+        var container = document.createElement('div');
+        container.appendChild(checkbox);
+        container.appendChild(document.createTextNode(text));
+
+        return container;
+    }
+
+    function makeRangeInput(property, min, max, step, text, displayProperty) {
+        displayProperty = defaultValue(displayProperty, property);
+        var input = document.createElement('input');
+        input.setAttribute('data-bind', 'value: ' + displayProperty);
+        input.type = 'number';
+
+        var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = min;
+        slider.max = max;
+        slider.step = step;
+        slider.setAttribute('data-bind', 'valueUpdate: "input", value: ' + property);
+
+        var wrapper = document.createElement('div');
+        wrapper.appendChild(slider);
+
+        var container = document.createElement('div');
+        container.className = 'cesium-cesiumInspector-slider';
+        container.appendChild(document.createTextNode(text));
+        container.appendChild(input);
+        container.appendChild(wrapper);
+
+        return container;
+    }
+
+    function makeButton(action, text, active) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = text;
+        button.className = 'cesium-cesiumInspector-pickButton';
+        var binding = 'click: ' + action;
+        if (defined(active)) {
+            binding += ', css: {"cesium-cesiumInspector-pickButtonHighlight" : ' + active + '}';
+        }
+        button.setAttribute('data-bind', binding);
+
+        return button;
+    }
 
     return Cesium3DTilesInspector;
 });
