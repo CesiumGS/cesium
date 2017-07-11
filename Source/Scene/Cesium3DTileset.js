@@ -1543,7 +1543,7 @@ define([
                 ++statistics.selected;
             }
         }
-        var addedCommandsLength = commandList.length - lengthBeforeUpdate;
+        var lengthAfterUpdate = commandList.length;
 
         tileset._backfaceCommands.trim();
 
