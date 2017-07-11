@@ -63,121 +63,7 @@ define([
         }
     }
 
-    function generateLightParameters(gltf) {
-        var result = {};
-
-        var lights;
-        if (defined(gltf.extensions) && defined(gltf.extensions.KHR_materials_common)) {
-            lights = gltf.extensions.KHR_materials_common.lights;
-        }
-
-        if (defined(lights)) {
-            // Figure out which node references the light
-            var nodes = gltf.nodes;
-            for (var nodeName in nodes) {
-                if (nodes.hasOwnProperty(nodeName)) {
-                    var node = nodes[nodeName];
-                    if (defined(node.extensions) && defined(node.extensions.KHR_materials_common)) {
-                        var nodeLightId = node.extensions.KHR_materials_common.light;
-                        if (defined(nodeLightId) && defined(lights[nodeLightId])) {
-                            lights[nodeLightId].node = nodeName;
-                        }
-                        delete node.extensions.KHR_materials_common;
-                    }
-                }
-            }
-
-            // Add light parameters to result
-            var lightCount = 0;
-            for (var lightName in lights) {
-                if (lights.hasOwnProperty(lightName)) {
-                    var light = lights[lightName];
-                    var lightType = light.type;
-                    if ((lightType !== 'ambient') && !defined(light.node)) {
-                        delete lights[lightName];
-                        continue;
-                    }
-                    var lightBaseName = 'light' + lightCount.toString();
-                    light.baseName = lightBaseName;
-                    switch (lightType) {
-                        case 'ambient':
-                            var ambient = light.ambient;
-                            result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: ambient.color
-                            };
-                            break;
-                        case 'directional':
-                            var directional = light.directional;
-                            result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: directional.color
-                            };
-                            if (defined(light.node)) {
-                                result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
-                                };
-                            }
-                            break;
-                        case 'point':
-                            var point = light.point;
-                            result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: point.color
-                            };
-                            if (defined(light.node)) {
-                                result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
-                                };
-                            }
-                            result[lightBaseName + 'Attenuation'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: [point.constantAttenuation, point.linearAttenuation, point.quadraticAttenuation]
-                            };
-                            break;
-                        case 'spot':
-                            var spot = light.spot;
-                            result[lightBaseName + 'Color'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: spot.color
-                            };
-                            if (defined(light.node)) {
-                                result[lightBaseName + 'Transform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEW',
-                                    type: WebGLConstants.FLOAT_MAT4
-                                };
-                                result[lightBaseName + 'InverseTransform'] = {
-                                    node: light.node,
-                                    semantic: 'MODELVIEWINVERSE',
-                                    type: WebGLConstants.FLOAT_MAT4,
-                                    useInFragment: true
-                                };
-                            }
-                            result[lightBaseName + 'Attenuation'] = {
-                                type: WebGLConstants.FLOAT_VEC3,
-                                value: [spot.constantAttenuation, spot.linearAttenuation, spot.quadraticAttenuation]
-                            };
-
-                            result[lightBaseName + 'FallOff'] = {
-                                type: WebGLConstants.FLOAT_VEC2,
-                                value: [spot.fallOffAngle, spot.fallOffExponent]
-                            };
-                            break;
-                    }
-                    ++lightCount;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    function generateTechnique(gltf, material, lightParameters, frameState, optimizeForCesium) {
+    function generateTechnique(gltf, material, frameState, optimizeForCesium) {
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -266,8 +152,7 @@ define([
         // Add material parameters
         var hasTexCoords = false;
         for (var name in parameterValues) {
-            //generate shader parameters for KHR_materials_common attributes
-            //(including a check, because some boolean flags should not be used as shader parameters)
+            //generate shader parameters
             if (parameterValues.hasOwnProperty(name)) {
                 var valType = getPBRValueType(name, parameterValues[name]);
                 if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
@@ -276,15 +161,6 @@ define([
                 techniqueParameters[name] = {
                     type: valType
                 };
-            }
-        }
-
-        // Copy light parameters into technique parameters
-        if (defined(lightParameters)) {
-            for (var lightParamName in lightParameters) {
-                if (lightParameters.hasOwnProperty(lightParamName)) {
-                    techniqueParameters[lightParamName] = lightParameters[lightParamName];
-                }
             }
         }
 
@@ -693,8 +569,7 @@ define([
     function getPBRValueType(paramName, paramValue) {
         var value;
 
-        // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
-        // materials using KHR_materials_common with explicit type/value members
+        // Backwards compatibility for COLLADA2GLTF v1.0-draft
         if (defined(paramValue.value)) {
             value = paramValue.value;
         } else {
@@ -722,104 +597,6 @@ define([
                 return WebGLConstants.FLOAT_VEC3;
             case 'doubleSided':
                 return WebGLConstants.BOOL;
-        }
-    }
-
-    function getTechniqueKey(khrMaterialsCommon) {
-        var techniqueKey = '';
-        techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
-
-        var values = khrMaterialsCommon.values;
-        var keys = Object.keys(values).sort();
-        var keysCount = keys.length;
-        for (var i = 0; i < keysCount; ++i) {
-            var name = keys[i];
-            if (values.hasOwnProperty(name)) {
-                techniqueKey += name + ':' + getPBRValueType(name, values[name]);
-                techniqueKey += ';';
-            }
-        }
-
-        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, false);
-        techniqueKey += doubleSided.toString() + ';';
-        var transparent = defaultValue(khrMaterialsCommon.transparent, false);
-        techniqueKey += transparent.toString() + ';';
-        var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
-        techniqueKey += jointCount.toString() + ';';
-        if (jointCount > 0) {
-            var skinningInfo = khrMaterialsCommon.extras._pipeline.skinning;
-            techniqueKey += skinningInfo.type + ';';
-        }
-
-        return techniqueKey;
-    }
-
-    function lightDefaults(gltf) {
-        if (!defined(gltf.extensions)) {
-            gltf.extensions = {};
-        }
-        var extensions = gltf.extensions;
-
-        if (!defined(extensions.KHR_materials_common)) {
-            extensions.KHR_materials_common = {};
-        }
-        var khrMaterialsCommon = extensions.KHR_materials_common;
-
-        if (!defined(khrMaterialsCommon.lights)) {
-            khrMaterialsCommon.lights = {};
-        }
-        var lights = khrMaterialsCommon.lights;
-
-        var lightsLength = lights.length;
-        for (var lightId = 0; lightId < lightsLength; lightId++) {
-            var light = lights[lightId];
-            if (light.type === 'ambient') {
-                if (!defined(light.ambient)) {
-                    light.ambient = {};
-                }
-                var ambientLight = light.ambient;
-
-                if (!defined(ambientLight.color)) {
-                    ambientLight.color = [1.0, 1.0, 1.0];
-                }
-            } else if (light.type === 'directional') {
-                if (!defined(light.directional)) {
-                    light.directional = {};
-                }
-                var directionalLight = light.directional;
-
-                if (!defined(directionalLight.color)) {
-                    directionalLight.color = [1.0, 1.0, 1.0];
-                }
-            } else if (light.type === 'point') {
-                if (!defined(light.point)) {
-                    light.point = {};
-                }
-                var pointLight = light.point;
-
-                if (!defined(pointLight.color)) {
-                    pointLight.color = [1.0, 1.0, 1.0];
-                }
-
-                pointLight.constantAttenuation = defaultValue(pointLight.constantAttenuation, 1.0);
-                pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
-                pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
-            } else if (light.type === 'spot') {
-                if (!defined(light.spot)) {
-                    light.spot = {};
-                }
-                var spotLight = light.spot;
-
-                if (!defined(spotLight.color)) {
-                    spotLight.color = [1.0, 1.0, 1.0];
-                }
-
-                spotLight.constantAttenuation = defaultValue(spotLight.constantAttenuation, 1.0);
-                spotLight.fallOffAngle = defaultValue(spotLight.fallOffAngle, 3.14159265);
-                spotLight.fallOffExponent = defaultValue(spotLight.fallOffExponent, 0.0);
-                spotLight.linearAttenuation = defaultValue(spotLight.linearAttenuation, 0.0);
-                spotLight.quadraticAttenuation = defaultValue(spotLight.quadraticAttenuation, 0.0);
-            }
         }
     }
 
@@ -952,9 +729,6 @@ define([
             if (!defined(gltf.techniques)) {
                 gltf.techniques = [];
             }
-            lightDefaults(gltf);
-
-            var lightParameters = generateLightParameters(gltf);
 
             // Pre-processing to assign skinning info and address incompatibilities
             splitIncompatibleSkins(gltf);
@@ -963,11 +737,8 @@ define([
             ForEach.material(gltf, function(material) {
                 if (material.hasOwnProperty('pbrMetallicRoughness')) {
                     var pbrMetallicRoughness = material.pbrMetallicRoughness;
-                    var technique = generateTechnique(gltf, material, lightParameters, frameState, options.optimizeForCesium);
-                    // var techniqueKey = 'test';
-                    // techniques[techniqueKey] = technique;
-                    // Take advantage of the fact that we generate techniques that use the
-                    // same parameter names as the extension values.
+                    var technique = generateTechnique(gltf, material, frameState, options.optimizeForCesium);
+
                     material.values = {};
                     var values = pbrMetallicRoughness;
                     for (var valueName in values) {
