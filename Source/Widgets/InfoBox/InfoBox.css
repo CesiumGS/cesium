@@ -38,6 +38,10 @@
     box-sizing: content-box;
 }
 
+.cesium-infoBox-title a, .cesium-infoBox-title a:active, .cesium-infoBox-title a:focus {
+    color: inherit;
+}
+
 .cesium-infoBox-bodyless .cesium-infoBox-title {
     border-bottom-left-radius: 7px;
 }
