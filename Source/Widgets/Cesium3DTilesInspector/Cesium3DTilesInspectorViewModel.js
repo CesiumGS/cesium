@@ -548,7 +548,6 @@ define([
         });
         /**
          * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
@@ -569,7 +568,6 @@ define([
         });
         /**
          * Displays the memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
@@ -589,7 +587,7 @@ define([
             }
         });
         /**
-         * Gets or sets the flag to show tile url.  This property is observable.
+         * Gets or sets the flag to show the tile url.  This property is observable.
          *
          * @type {Boolean}
          * @default false
