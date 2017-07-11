@@ -1,12 +1,9 @@
-/*global define*/
 define([
         '../ThirdParty/when',
-        './defined',
-        './DeveloperError'
+        './Check'
     ], function(
         when,
-        defined,
-        DeveloperError) {
+        Check) {
     'use strict';
 
     /**
@@ -45,15 +42,9 @@ define([
      */
     function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
+        Check.typeOf.object('terrainProvider', terrainProvider);
+        Check.typeOf.number('level', level);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
         var deferred = when.defer();

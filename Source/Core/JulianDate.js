@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/sprintf',
         './binarySearch',
@@ -203,6 +202,31 @@ define([
     }
 
     /**
+     * Creates a new instance from a GregorianDate.
+     *
+     * @param {GregorianDate} date A GregorianDate.
+     * @param {JulianDate} [result] An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} date must be a valid GregorianDate.
+     */
+    JulianDate.fromGregorianDate = function(date, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!(date instanceof GregorianDate)) {
+            throw new DeveloperError('date must be a valid GregorianDate.');
+        }
+        //>>includeEnd('debug');
+
+        var components = computeJulianDateComponents(date.year, date.month, date.day, date.hour, date.minute, date.second, date.millisecond);
+        if (!defined(result)) {
+            return new JulianDate(components[0], components[1], TimeStandard.UTC);
+        }
+        setComponents(components[0], components[1], result);
+        convertUtcToTai(result);
+        return result;
+    };
+
+    /**
      * Creates a new instance from a JavaScript Date.
      *
      * @param {Date} date A JavaScript Date.
@@ -353,7 +377,8 @@ define([
         }
         //>>includeEnd('debug')
 
-        //Not move onto the time string, which is much simpler.
+        //Now move onto the time string, which is much simpler.
+        //If no time is specified, it is considered the beginning of the day, UTC to match Javascript's implementation.
         var offsetIndex;
         if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
@@ -425,9 +450,6 @@ define([
                 minute = minute + new Date(Date.UTC(year, month - 1, day, hour, minute)).getTimezoneOffset();
                 break;
             }
-        } else {
-            //If no time is specified, it is considered the beginning of the day, local time.
-            minute = minute + new Date(year, month - 1, day).getTimezoneOffset();
         }
 
         //ISO8601 denotes a leap second by any time having a seconds component of 60 seconds.

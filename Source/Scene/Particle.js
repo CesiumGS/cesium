@@ -1,24 +1,25 @@
-/*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Color'
-    ],function(
-        defaultValue,
-        defined,
-        defineProperties,
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties'
+    ], function(
         Cartesian2,
         Cartesian3,
-        Color) {
+        Color,
+        defaultValue,
+        defined,
+        defineProperties) {
     'use strict';
 
     var defaultSize = new Cartesian2(1.0, 1.0);
 
     /**
      * A particle emitted by a {@link ParticleSystem}.
+     *
+     * @alias Particle
      * @constructor
      *
      * @param {Object} options An object with the following properties:

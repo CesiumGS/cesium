@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',

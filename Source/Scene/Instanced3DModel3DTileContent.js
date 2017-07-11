@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
@@ -9,8 +8,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FeatureDetection',
         '../Core/Ellipsoid',
+        '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getStringFromTypedArray',
@@ -36,8 +35,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        FeatureDetection,
         Ellipsoid,
+        FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
         getStringFromTypedArray,

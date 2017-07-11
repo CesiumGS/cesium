@@ -1,15 +1,14 @@
-/*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Math'
     ], function(
-        defaultValue,
-        defineProperties,
         Cartesian3,
         Check,
+        defaultValue,
+        defineProperties,
         CesiumMath) {
     'use strict';
 
@@ -18,6 +17,8 @@ define([
     /**
      * A ParticleEmitter that emits particles within a cone.
      * Particles will be positioned at the tip of the cone and have initial velocities going towards the base.
+     *
+     * @alias ConeEmitter
      * @constructor
      *
      * @param {Number} [angle=Cesium.Math.toRadians(30.0)] The angle of the cone in radians.

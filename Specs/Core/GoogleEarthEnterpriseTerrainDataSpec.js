@@ -1,32 +1,31 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/BoundingSphere',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/Math',
-    'Core/Matrix4',
-    'Core/Rectangle',
-    'Core/TerrainData',
-    'Core/TerrainMesh',
-    'Core/Transforms',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainData,
-    BoundingSphere,
-    Cartesian3,
-    Cartographic,
-    Ellipsoid,
-    GeographicTilingScheme,
-    CesiumMath,
-    Matrix4,
-    Rectangle,
-    TerrainData,
-    TerrainMesh,
-    Transforms,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Core/TerrainData',
+        'Core/TerrainMesh',
+        'Core/Transforms',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainData,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        GeographicTilingScheme,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        TerrainData,
+        TerrainMesh,
+        Transforms,
+        when) {
     'use strict';
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;

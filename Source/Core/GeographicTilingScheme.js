@@ -1,20 +1,19 @@
-/*global define*/
 define([
         './Cartesian2',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Math',
         './Rectangle'
     ], function(
         Cartesian2,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         GeographicProjection,
         CesiumMath,
@@ -115,9 +114,7 @@ define([
      */
     GeographicTilingScheme.prototype.rectangleToNativeRectangle = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.defined('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var west = CesiumMath.toDegrees(rectangle.west);

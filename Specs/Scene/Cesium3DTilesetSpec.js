@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
@@ -276,7 +275,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var asset = tileset.asset;
             expect(asset).toBeDefined();
-            expect(asset.version).toEqual('0.0');
+            expect(asset.version).toEqual('1.0');
             expect(asset.tilesetVersion).toEqual('1.2.3');
 
             var properties = tileset.properties;
