@@ -573,6 +573,7 @@ define([
 
         fragmentLightingBlock += '  vec3 diffuseIrradiance = vec3(0.5);\n';
         fragmentLightingBlock += '  vec3 specularIrradiance = textureCube(czm_cubeMap, r).rgb;\n';
+        fragmentLightingBlock += '  specularIrradiance = mix(specularIrradiance, diffuseIrradiance, roughness);\n'; // Fake LOD
         fragmentLightingBlock += '  vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(NdotV, 1.0 - roughness)).rg;\n';
         fragmentLightingBlock += '  vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * (specularColor * brdfLUT.x + brdfLUT.y));\n';
         fragmentLightingBlock += '  color += IBLColor;\n';
