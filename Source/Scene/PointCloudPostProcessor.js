@@ -705,7 +705,6 @@ define([
 
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
             if (!defined(derivedCommand) || command.dirty || dirty) {
-                console.log(command.dirty);
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 
