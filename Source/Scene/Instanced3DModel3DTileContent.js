@@ -308,6 +308,10 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
+
+            // We need to remove padding from the end of the model URL in case this tile was part of a composite tile
+            // This removes all white space and null characters from the end of the string.
+            gltfUrl = gltfUrl.trim().replace(/\0+$/, '');
             collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;
