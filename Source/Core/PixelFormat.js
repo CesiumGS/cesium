@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Renderer/PixelDatatype',
         './freezeObject',
@@ -249,7 +248,7 @@ define([
         /**
          * @private
          */
-        compressedTextureSizeInBytes  : function(pixelFormat, width, height) {
+        compressedTextureSizeInBytes : function(pixelFormat, width, height) {
             switch (pixelFormat) {
                 case PixelFormat.RGB_DXT1:
                 case PixelFormat.RGBA_DXT1:

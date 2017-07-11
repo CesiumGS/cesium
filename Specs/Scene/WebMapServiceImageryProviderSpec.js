@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/WebMapServiceImageryProvider',
         'Core/Cartographic',
@@ -139,9 +138,10 @@ defineSuite([
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
 
-            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -188,9 +188,9 @@ defineSuite([
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -206,16 +206,15 @@ defineSuite([
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
-
                 expect(url).not.toContain('&&');
 
                 // Don't need to actually load image, but satisfy the request.
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -572,11 +571,14 @@ defineSuite([
 
                 expect(params.format).toEqual('foo');
                 expect(params.format).not.toEqual('image/jpeg');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 

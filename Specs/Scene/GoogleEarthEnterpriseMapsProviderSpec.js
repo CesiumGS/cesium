@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Core/DefaultProxy',
@@ -14,19 +13,19 @@ defineSuite([
         'Scene/ImageryState',
         'Specs/pollToPromise'
     ], function(
-    GoogleEarthEnterpriseMapsProvider,
-    DefaultProxy,
-    GeographicTilingScheme,
-    loadImage,
-    loadWithXhr,
-    Rectangle,
-    RequestScheduler,
-    WebMercatorTilingScheme,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise) {
+        GoogleEarthEnterpriseMapsProvider,
+        DefaultProxy,
+        GeographicTilingScheme,
+        loadImage,
+        loadWithXhr,
+        Rectangle,
+        RequestScheduler,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise) {
     'use strict';
 
     afterEach(function() {

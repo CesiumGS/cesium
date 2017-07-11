@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ArcGisMapServerImageryProvider',
         'Core/Cartesian2',

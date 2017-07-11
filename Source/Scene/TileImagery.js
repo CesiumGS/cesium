@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         './ImageryState'
@@ -94,10 +93,9 @@ define([
                 // we don't do it here.
                 closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
                 return false; // not done loading
-            } else {
-                // This imagery tile is failed or invalid, and we have the "best available" substitute.
-                return true; // done loading
             }
+            // This imagery tile is failed or invalid, and we have the "best available" substitute.
+            return true; // done loading
         }
 
         return false; // not done loading

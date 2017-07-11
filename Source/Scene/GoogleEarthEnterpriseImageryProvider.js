@@ -1,44 +1,43 @@
-/*global define*/
 define([
-    '../Core/Credit',
-    '../Core/decodeGoogleEarthEnterpriseData',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    '../Core/GeographicTilingScheme',
-    '../Core/GoogleEarthEnterpriseMetadata',
-    '../Core/loadArrayBuffer',
-    '../Core/loadImageFromTypedArray',
-    '../Core/Math',
-    '../Core/Rectangle',
-    '../Core/Request',
-    '../Core/RequestType',
-    '../Core/RuntimeError',
-    '../Core/TileProviderError',
-    '../ThirdParty/protobuf-minimal',
-    '../ThirdParty/when'
-], function(
-    Credit,
-    decodeGoogleEarthEnterpriseData,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    loadArrayBuffer,
-    loadImageFromTypedArray,
-    CesiumMath,
-    Rectangle,
-    Request,
-    RequestType,
-    RuntimeError,
-    TileProviderError,
-    protobuf,
-    when) {
+        '../Core/Credit',
+        '../Core/decodeGoogleEarthEnterpriseData',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/GeographicTilingScheme',
+        '../Core/GoogleEarthEnterpriseMetadata',
+        '../Core/loadArrayBuffer',
+        '../Core/loadImageFromTypedArray',
+        '../Core/Math',
+        '../Core/Rectangle',
+        '../Core/Request',
+        '../Core/RequestType',
+        '../Core/RuntimeError',
+        '../Core/TileProviderError',
+        '../ThirdParty/protobuf-minimal',
+        '../ThirdParty/when'
+    ], function(
+        Credit,
+        decodeGoogleEarthEnterpriseData,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        loadArrayBuffer,
+        loadImageFromTypedArray,
+        CesiumMath,
+        Rectangle,
+        Request,
+        RequestType,
+        RuntimeError,
+        TileProviderError,
+        protobuf,
+        when) {
     'use strict';
 
     function GoogleEarthEnterpriseDiscardPolicy() {
@@ -461,9 +460,8 @@ define([
                 });
                 metadata.populateSubtree(x, y, level, metadataRequest);
                 return undefined; // No metadata so return undefined so we can be loaded later
-            } else {
-                return invalidImage; // Image doesn't exist
             }
+            return invalidImage; // Image doesn't exist
         }
 
         if (!info.hasImagery()) {

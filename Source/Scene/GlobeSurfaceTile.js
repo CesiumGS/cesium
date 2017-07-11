@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -293,7 +292,8 @@ define([
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
-        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
                 isUpsampledOnly = false;
@@ -335,6 +335,14 @@ define([
             }
 
             if (isDoneLoading) {
+                var newCallbacks = [];
+                tile._loadedCallbacks.forEach(function(cb) {
+                    if (!cb(tile)) {
+                        newCallbacks.push(cb);
+                    }
+                });
+                tile._loadedCallbacks = newCallbacks;
+
                 tile.state = QuadtreeTileLoadState.DONE;
                 tile._priorityFunction = undefined;
             }

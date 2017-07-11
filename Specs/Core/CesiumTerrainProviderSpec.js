@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
@@ -416,7 +415,6 @@ defineSuite([
                 expect(loadWithXhr.load.calls.mostRecent().args[0]).toContain('foo3.com');
             });
         });
-
 
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';

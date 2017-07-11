@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
@@ -591,6 +590,7 @@ define([
         attributes.position.values = newPositions;
 
         attributes = extrudedAttributes(attributes, vertexFormat);
+        var i;
         var size = length / 3;
         if (params.shadowVolume) {
             var topNormals = attributes.normal.values;
@@ -613,7 +613,6 @@ define([
             }
         }
 
-        var i;
         var iLength = indices.length;
         var twoSize = size + size;
         var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, iLength * 2 + twoSize * 3);

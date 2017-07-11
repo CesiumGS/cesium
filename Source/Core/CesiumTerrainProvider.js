@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -304,12 +303,11 @@ define([
             return {
                 Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
             };
-        } else {
-            var extensions = extensionsList.join('-');
-            return {
-                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
-            };
         }
+        var extensions = extensionsList.join('-');
+        return {
+            Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+        };
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -552,9 +550,8 @@ define([
         return when(promise, function(buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
-            } else {
-                return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
             }
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
         });
     };
 

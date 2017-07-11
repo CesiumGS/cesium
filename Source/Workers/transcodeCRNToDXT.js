@@ -1,19 +1,17 @@
-/*global define*/
 define([
-    '../Core/CompressedTextureBuffer',
-    '../Core/defined',
-    '../Core/PixelFormat',
-    '../Core/RuntimeError',
-    '../ThirdParty/crunch',
-    './createTaskProcessorWorker'
-], function(
-    CompressedTextureBuffer,
-    defined,
-    PixelFormat,
-    RuntimeError,
-    crunch,
-    createTaskProcessorWorker
-) {
+        '../Core/CompressedTextureBuffer',
+        '../Core/defined',
+        '../Core/PixelFormat',
+        '../Core/RuntimeError',
+        '../ThirdParty/crunch',
+        './createTaskProcessorWorker'
+    ], function(
+        CompressedTextureBuffer,
+        defined,
+        PixelFormat,
+        RuntimeError,
+        crunch,
+        createTaskProcessorWorker) {
     'use strict';
 
     // Modified from texture-tester

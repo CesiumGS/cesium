@@ -1,14 +1,13 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/BingMapsGeocoderService',
-    'Core/loadJsonp',
-    'Core/Rectangle',
-    'Specs/createScene'
-], function(
-    BingMapsGeocoderService,
-    loadJsonp,
-    Rectangle,
-    createScene) {
+        'Core/BingMapsGeocoderService',
+        'Core/loadJsonp',
+        'Core/Rectangle',
+        'Specs/createScene'
+    ], function(
+        BingMapsGeocoderService,
+        loadJsonp,
+        Rectangle,
+        createScene) {
     'use strict';
 
     var service;
