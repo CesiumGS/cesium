@@ -1,13 +1,11 @@
-/*global define*/
 define([
-        './Check',
         './Cartesian3',
+        './Check',
         './defined'
     ], function(
-        Check,
         Cartesian3,
-        defined
-    ) {
+        Check,
+        defined) {
     'use strict';
 
     /**

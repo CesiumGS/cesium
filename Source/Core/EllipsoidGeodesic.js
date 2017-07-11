@@ -1,17 +1,16 @@
-/*global define*/
 define([
-        './Check',
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
         './Ellipsoid',
         './Math'
     ], function(
-        Check,
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,

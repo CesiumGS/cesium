@@ -1,15 +1,14 @@
-/*global define*/
 define([
-        './Check',
         '../ThirdParty/when',
+        './Check',
         './CompressedTextureBuffer',
         './defined',
         './loadArrayBuffer',
         './PixelFormat',
         './RuntimeError'
     ], function(
-        Check,
         when,
+        Check,
         CompressedTextureBuffer,
         defined,
         loadArrayBuffer,

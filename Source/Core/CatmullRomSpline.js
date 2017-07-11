@@ -1,8 +1,7 @@
-/*global define*/
 define([
-        './Check',
         './Cartesian3',
         './Cartesian4',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
@@ -10,9 +9,9 @@ define([
         './Matrix4',
         './Spline'
     ], function(
-        Check,
         Cartesian3,
         Cartesian4,
+        Check,
         defaultValue,
         defined,
         defineProperties,

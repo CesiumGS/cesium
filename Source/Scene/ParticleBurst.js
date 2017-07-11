@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defineProperties'
@@ -9,6 +8,8 @@ define([
 
     /**
      * Represents a burst of {@link Particle}s from a {@link ParticleSystem} at a given time in the systems lifetime.
+     *
+     * @alias ParticleBurst
      * @constructor
      *
      * @param {Object} [options] An object with the following properties:

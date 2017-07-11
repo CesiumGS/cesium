@@ -662,7 +662,6 @@ define(\'' + moduleId + '\', function() {\n\
     contents += '})();';
 
     var paths = '\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
@@ -978,7 +977,6 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return "' + contents + '";\n\
@@ -1019,7 +1017,6 @@ define(function() {\n\
 
     var fileContents = '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define([\n' +
                        contents.amdPath +
                        '\n    ], function(\n' +
@@ -1057,7 +1054,6 @@ function createCesiumJs() {
     });
 
     var contents = '\
-/*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
   var Cesium = {\n\

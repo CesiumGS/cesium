@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/Context',
         'Core/Color',

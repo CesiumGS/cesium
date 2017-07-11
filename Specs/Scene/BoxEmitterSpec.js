@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/BoxEmitter',
         'Core/Cartesian3',

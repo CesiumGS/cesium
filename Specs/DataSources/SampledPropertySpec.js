@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/SampledProperty',
         'Core/Cartesian3',

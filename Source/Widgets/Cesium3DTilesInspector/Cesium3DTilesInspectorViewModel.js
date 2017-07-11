@@ -1,32 +1,31 @@
-/*global define*/
 define([
-        '../../Scene/Cesium3DTileFeature',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/Cesium3DTileStyle',
-        '../../Scene/Cesium3DTileColorBlendMode',
         '../../Core/Check',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../ThirdParty/knockout',
-        '../../Scene/PerformanceDisplay',
         '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType'
-], function(
-        Cesium3DTileFeature,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        Cesium3DTileColorBlendMode,
+        '../../Core/ScreenSpaceEventType',
+        '../../Scene/Cesium3DTileColorBlendMode',
+        '../../Scene/Cesium3DTileFeature',
+        '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTileStyle',
+        '../../Scene/PerformanceDisplay',
+        '../../ThirdParty/knockout'
+    ], function(
         Check,
         Color,
         defined,
         defineProperties,
         destroyObject,
-        knockout,
-        PerformanceDisplay,
         ScreenSpaceEventHandler,
-        ScreenSpaceEventType) {
+        ScreenSpaceEventType,
+        Cesium3DTileColorBlendMode,
+        Cesium3DTileFeature,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
+        PerformanceDisplay,
+        knockout) {
     'use strict';
 
     function getPickTileset(viewModel) {
@@ -1228,6 +1227,8 @@ define([
 
     /**
      * Generates an HTML string of the statistics
+     *
+     * @function
      * @param {Cesium3DTileset} tileset The tileset
      * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
      * @returns {String} The formatted statistics

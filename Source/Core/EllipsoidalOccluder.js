@@ -1,16 +1,15 @@
-/*global define*/
 define([
-        './Check',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
         './Rectangle'
     ], function(
-        Check,
         BoundingSphere,
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,

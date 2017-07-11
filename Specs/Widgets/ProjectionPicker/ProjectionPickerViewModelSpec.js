@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/ProjectionPicker/ProjectionPickerViewModel',
         'Scene/OrthographicFrustum',

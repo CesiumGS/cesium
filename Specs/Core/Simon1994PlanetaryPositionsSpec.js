@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Simon1994PlanetaryPositions',
         'Core/defined',
