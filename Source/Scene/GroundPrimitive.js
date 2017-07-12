@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,29 +16,15 @@ define([
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
-        './BlendingState',
         './ClassificationPrimitive',
-        './DepthFunction',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './SceneMode',
-        './StencilFunction',
-        './StencilOperation'
+        './SceneMode'
     ], function(
         BoundingSphere,
         buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartographic,
-        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
@@ -52,25 +37,11 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        ShadowVolumeFS,
-        ShadowVolumeVS,
         when,
-        BlendingState,
         ClassificationPrimitive,
-        DepthFunction,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode,
-        StencilFunction,
-        StencilOperation) {
+        SceneMode) {
     'use strict';
 
-    var GroundPrimitiveReadOnlyInstanceAttributes = ['color'];
     var GroundPrimitiveUniformMap = {
         u_globeMinimumAltitude: function() {
             return 55000.0;
@@ -227,11 +198,6 @@ define([
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
-        var readOnlyAttributes;
-        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
-            readOnlyAttributes = GroundPrimitiveReadOnlyInstanceAttributes;
-        }
-
         var that = this;
         this._primitiveOptions = {
             geometryInstances : undefined,
@@ -241,7 +207,6 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
-            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createBoundingVolumeFunction : undefined,
             _updateAndQueueCommandsFunction : undefined,
             _pickPrimitive : that,
@@ -601,6 +566,7 @@ define([
             var colorLength = colorCommands.length;
             for (var i = 0; i < colorLength; ++i) {
                 var colorCommand = colorCommands[i];
+                colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[Math.floor(i / 3)];
                 colorCommand.cull = cull;
@@ -621,6 +587,7 @@ define([
                 var bv = boundingVolumes[pickOffset.index];
 
                 var pickCommand = pickCommands[j];
+                pickCommand.owner = groundPrimitive;
                 pickCommand.modelMatrix = modelMatrix;
                 pickCommand.boundingVolume = bv;
                 pickCommand.cull = cull;
