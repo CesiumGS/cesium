@@ -730,17 +730,17 @@ define([
          *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0}
          */
         this.pointCloudPostProcessorOptions = {
-            enabled : defaultValue(options.enabled, true),
-            occlusionAngle : defaultValue(options.occlusionAngle, 0.1),
-            rangeParameter : defaultValue(options.rangeParameter, 0.001),
-            neighborhoodHalfWidth : defaultValue(options.neighborhoodHalfWidth, 4),
-            numRegionGrowingPasses : defaultValue(options.numRegionGrowingPasses, 4),
-            densityHalfWidth : defaultValue(options.densityHalfWidth, 4),
-            neighborhoodVectorSize : defaultValue(options.neighborhoodVectorSize, 10.0),
-            maxAbsRatio : defaultValue(options.maxAbsRatio, 0.9),
-            densityViewEnabled : defaultValue(options.densityViewEnabled, false),
-            stencilViewEnabled : defaultValue(options.stencilViewEnabled, false),
-            pointAttenuationMultiplier : defaultValue(options.pointAttenuationMultiplier, 2.0)
+            enabled : true,
+            occlusionAngle : 0.1,
+            rangeParameter : 0.001,
+            neighborhoodHalfWidth : 4,
+            numRegionGrowingPasses : 4,
+            densityHalfWidth : 4,
+            neighborhoodVectorSize : 10.0,
+            maxAbsRatio : 0.9,
+            densityViewEnabled : false,
+            stencilViewEnabled : false,
+            pointAttenuationMultiplier : 2.0
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
