@@ -1020,7 +1020,7 @@ define([
             vs += '    gl_PointSize = u_pointSize; \n';
         }
 
-        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1); \n';
+        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1.0); \n';
         vs += '    position_EC.z *= -1.0; \n';
 
         vs += '    float attenuationFactor = \n' +
