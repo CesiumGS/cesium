@@ -38,6 +38,22 @@ define([
         };
     }
 
+    function selectTilesetOnHover (viewModel, value) {
+        if (value) {
+            viewModel._eventHandler.setInputAction(function(e) {
+                var pick = viewModel._scene.pick(e.endPosition);
+                if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
+                    viewModel.tileset = pick.primitive;
+                }
+            }, ScreenSpaceEventType.MOUSE_MOVE);
+        } else {
+            viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+
+            // Restore hover-over selection to its current value
+            viewModel.picking = viewModel.picking;
+        }
+    }
+
     var stringOptions = {
         maximumFractionDigits : 3
     };
@@ -548,7 +564,6 @@ define([
         });
         /**
          * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
@@ -569,12 +584,31 @@ define([
         });
         /**
          * Displays the memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
          */
         this.showMemoryUsage = false;
+
+        var showUrl = knockout.observable();
+        knockout.defineProperty(this, 'showUrl', {
+            get : function() {
+                return showUrl();
+            },
+            set : function(value) {
+                showUrl(value);
+                if (defined(that._tileset)) {
+                    that._tileset.debugShowUrl = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show the tile url.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showUrl = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -817,10 +851,14 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
                                    'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
-                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage'];
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
+
+        if (!defined(this._tileset)) {
+            selectTilesetOnHover(this, true);
+        }
     }
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
@@ -928,7 +966,8 @@ define([
                                     'showOnlyPickedTileDebugLabel',
                                     'showGeometricError',
                                     'showRenderingStatistics',
-                                    'showMemoryUsage'];
+                                    'showMemoryUsage',
+                                    'showUrl'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -953,6 +992,7 @@ define([
 
                 this._statisticsText = getStatistics(tileset, false);
                 this._pickStatisticsText = getStatistics(tileset, true);
+                selectTilesetOnHover(this, false);
             }
         },
 

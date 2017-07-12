@@ -1251,6 +1251,7 @@ function requirejsOptimize(name, config) {
 function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
-        stream.on('end', reject);
+        stream.on('end', resolve);
+        stream.on('error', reject);
     });
 }
