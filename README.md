@@ -3,7 +3,7 @@
 </p>
 
 [![Build Status](https://travis-ci.org/AnalyticalGraphicsInc/cesium.svg?branch=master)](https://travis-ci.org/AnalyticalGraphicsInc/cesium)&nbsp;
-[![Docs](https://img.shields.io/badge/docs-online-orange.svg)](http://cesiumjs.org/tutorials.html)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html) [![Docs](https://img.shields.io/badge/docs-online-orange.svg)](http://cesiumjs.org/tutorials.html)
 
 Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
@@ -32,27 +32,39 @@ We appreciate attribution by including the Cesium logo and link in your app.
 
 ### Featured Demos ###
 
-<p align="center">
+<p align="center">  
+<a href="http://cesiumjs.org/demos/ContextCapture.html"><img src="http://cesiumjs.org/images/demos/ContextCapture.jpg" height="150" /></a>&nbsp;
+<a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/STORMevent.html"><img src="http://cesiumjs.org/images/demos/STORMevent.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/MarsTrek.html"><img src="http://cesiumjs.org/images/demos/MarsTrek.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/STKCZML.html"><img src="http://cesiumjs.org/images/demos/STKCZML.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Swisstopo.html"><img src="http://cesiumjs.org/demos/images/Swisstopo.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/NewYork"><img src="http://cesiumjs.org/demos/images/nyc.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodar_03_md.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/hiroshima-archive.html"><img src="http://cesiumjs.org/demos/images/hiroshima/showcase.jpg" height="150" /></a>&nbsp; 
+<a href="http://cesiumjs.org/demos/Smapshot.html"><img src="http://cesiumjs.org/images/demos/smapshot.jpg" height="150" /></a>&nbsp; 
+<a href="http://cesiumjs.org/demos/Flightradar24.html"><img src="http://cesiumjs.org/demos/images/Flightradar24.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/xalps.html"><img src="http://cesiumjs.org/demos/images/RedBull1.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta.png" height="150" /></a>&nbsp;
-<a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/VestaTrek.html"><img src="http://cesiumjs.org/demos/images/VestaTrek.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/CyberCity3D.html"><img src="http://cesiumjs.org/demos/images/CyberCity.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/GEFSonline.html"><img src="http://cesiumjs.org/demos/images/GEFS.jpg" height="150" /></a>&nbsp;
 </p>
 
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/HOWL.html"><img src="http://cesiumjs.org/images/demos/HOWL.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/UNISEC.html"><img src="http://cesiumjs.org/images/demos/UNISEC.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/AllisonHouse.html"><img src="http://cesiumjs.org/images/demos/AllisonHouse.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Smapshot.html"><img src="http://cesiumjs.org/images/demos/smapshot.jpg" height="150" /></a>&nbsp; 
+<a href="http://cesiumjs.org/demos/Ascendium.html"><img src="http://cesiumjs.org/images/demos/Ascendium.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/PropellerPlatform.html"><img src="http://cesiumjs.org/images/demos/PropellerPlatform.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/STORMevent.html"><img src="http://cesiumjs.org/images/demos/STORMevent.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/EndPoint.html"><img src="http://cesiumjs.org/images/demos/EndPoint.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Swisstopo.html"><img src="http://cesiumjs.org/demos/images/Swisstopo.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Stratalogica.html"><img src="http://cesiumjs.org/demos/images/Stratalogica.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/CommercialPlanet.html"><img src="http://cesiumjs.org/demos/images/Commercial.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/STKCZML.html"><img src="http://cesiumjs.org/demos/images/STKCZML.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/STI.html"><img src="http://cesiumjs.org/demos/images/STI.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/PearlHarbor.html"><img src="http://cesiumjs.org/demos/images/PearlHarbor.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/TexasGroundwater.html"><img src="http://cesiumjs.org/demos/images/TXgroundwater.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/JumpLog.html"><img src="http://cesiumjs.org/demos/images/JumpLog.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Soarer.html"><img src="http://cesiumjs.org/demos/images/Soarer.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/IMERG.html"><img src="http://cesiumjs.org/demos/images/IMERG.jpg" height="150" /></a>&nbsp;
@@ -104,6 +116,7 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/HereYouGo.html"><img src="http://cesiumjs.org/demos/images/HereYouGo.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/CyberCity3D.html"><img src="http://cesiumjs.org/demos/images/CyberCity.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/EastJapanEarthquake.html"><img src="http://cesiumjs.org/demos/images/JapanEarthquake.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/NewYork"><img src="http://cesiumjs.org/demos/images/nyc.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/PaperDrone.html"><img src="http://cesiumjs.org/demos/images/PaperDrone.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/OpenWebGIS.html"><img src="http://cesiumjs.org/demos/images/OpenWebGIS.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/3DHarvestingPlanner.html"><img src="http://cesiumjs.org/demos/images/3DHarvest1.jpg" height="150" /></a>&nbsp;
@@ -122,9 +135,9 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/VestaTrek.html"><img src="http://cesiumjs.org/demos/images/VestaTrek.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Taipei3DCityNavigation.html"><img src="http://cesiumjs.org/demos/images/Taipei3DCityNavigation.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/4DChoroplethMap.html"><img src="http://cesiumjs.org/demos/images/4DChoroplethMap.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/RikiTraki.html"><img src="http://cesiumjs.org/demos/images/RikiTraki.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/RikiTraki.html"><img src="http://cesiumjs.org/images/demos/RikiTraki.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/EgyptianObeliskTracker.html"><img src="http://cesiumjs.org/demos/images/EgyptianObeliskTracker.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/hiroshima-archive.html"><img src="http://cesiumjs.org/demos/images/hiroshima/showcase.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/hiroshima-archive.html"><img src="http://cesiumjs.org/demos/images/hiroshima/showcase.jpg" height="150" /></a>&nbsp; 
 <a href="http://cesiumjs.org/demos/nasa-gibs.html"><img src="http://cesiumjs.org/demos/images/nasa-gibs/Cesium-GIBS1-md.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodar_03_md.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/catalonia-spain.html"><img src="http://cesiumjs.org/demos/images/CataloniaSpain/overview_sm.png" height="150" /></a>&nbsp;
