@@ -1596,8 +1596,6 @@ define([
 
         if (addedCommandsLength > 0) {
             // TODO : only do this if the tileset is purely point clouds.
-            // TODO : this may not work well if point cloud spans multiple frustums
-            // TODO : make the processor a static class so it can be used by multiple tilesets?
             tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, {
                 enabled : tileset.pointCloudPostProcessorOptions.enabled,
                 occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
