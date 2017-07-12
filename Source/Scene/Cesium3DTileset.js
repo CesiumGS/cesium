@@ -724,8 +724,10 @@ define([
          * TODO: Write documentation for these properties
          * </p>
          *
-         * @type {Event}
-         * @default {enabled : true, occlusionAngle : 0.1, rangeParameter : 1.0}
+         * @type {Object}
+         * @default {enabled : true, occlusionAngle : 0.1, rangeParameter : 1.0, neighborhoodHalfWidth : 4
+         *           numRegionGrowingPasses : 4, densityHalfWidth : 4, neighborhoodVectorSize : 10.0, maxAbsRatio : 0.9
+         *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0}
          */
         this.pointCloudPostProcessorOptions = {
             enabled : defaultValue(options.enabled, true),
