@@ -57,36 +57,64 @@ define([
                                      '#define OUTPUT_DECLARATION ' +
                                      'nor a main function!');
         }
+        
+        function safeNameFalseNegative(regex, region) {
+            var regExpStr = regex.toString();
+            regExpStr = regExpStr.match(/\/([^\/]+)(\/.)?/)[1];
+            var somethingBadInString =
+                new RegExp("[a-zA-Z0-9_]+" + regExpStr, 'g');
+            var searchResult = region.search(somethingBadInString);
+            if (searchResult === -1) {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         function safeNameFind(regex, str) {
-            if (str.search(regex) !== -1) {
-                var regExpStr = regex.toString();
-                regExpStr = regExpStr.match(/\/([^\/]+)(\/.)?/)[1];
-                var somethingBadInString =
-                    new RegExp("[a-zA-Z0-9_]+" + regExpStr, 'g');
-                if (str.search(somethingBadInString) === -1) {
-                    return true;
-                }
+            var originalMatch = regex.exec(str);
+            if (originalMatch == null) {
+                return -1;
             }
-            return false;
+            var endPos = originalMatch.index + originalMatch[0].length;
+            var region = str.substring(0, endPos);
+
+            var possiblyFalseNegative = safeNameFalseNegative(regex, region);
+            if (possiblyFalseNegative) {
+                return endPos;
+            } else {
+                return endPos + safeNameFind(regex, str.substring(endPos));
+            }
+        }
+
+        function safeNameReplace(regex, str, replacement) {
+            var originalMatch = regex.exec(str);
+            if (originalMatch == null) {
+                return str;
+            }
+            var endPos = originalMatch.index + originalMatch[0].length;
+            var region = str.substring(0, endPos);
+
+            var possiblyFalseNegative = safeNameFalseNegative(regex, region);
+            if (possiblyFalseNegative) {
+                return region.replace(regex, replacement) +
+                    safeNameReplace(regex, str.substr(endPos), replacement);
+            } else {
+                return region +
+                    safeNameReplace(regex, str.substr(endPos), replacement);
+            }
         }
 
         function replaceInSource(regex, replacement) {
-            var replaceAll = function(target, search, replacement) {
-                return target.split(search).join(replacement);
-            };
             for (var number = 0; number < splitSource.length; number++) {
-                var line = splitSource[number];
-                if (safeNameFind(regex, line)) {
-                    splitSource[number] = replaceAll(line, regex, replacement);
-                }
+                splitSource[number] = safeNameReplace(regex, splitSource[number], replacement);
             }
         }
-
+        
         function findInSource(regex) {
             for (var number = 0; number < splitSource.length; number++) {
                 var line = splitSource[number];
-                if (safeNameFind(regex, line)) {
+                if (safeNameFind(regex, line) !== -1) {
                     return true;
                 }
             }
