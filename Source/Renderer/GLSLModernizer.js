@@ -275,8 +275,6 @@ define([
             }
         }
 
-        console.log(compileSource());
-
         if (first === true) {
             var versionThree = "#version 300 es";
             var foundVersion = false;
