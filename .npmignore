@@ -10,9 +10,7 @@
 /.travis.yml
 /.vscode
 /Apps
-/Build/minifyShaders.state
-/Build/Stubs
-/Build/Documentation
+/Build
 /Cesium-*.zip
 /Documentation
 /favicon.ico
