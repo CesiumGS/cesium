@@ -1024,8 +1024,8 @@ define([
         vs += '    position_EC.z *= -1.0; \n';
 
         vs += '    float attenuationFactor = \n' +
-              '    ((position_EC.z - czm_frustumClamp.x) /\n' +
-              '    (czm_frustumClamp.y - czm_frustumClamp.x)); \n';
+              '    ((position_EC.z - czm_clampedFrustum.x) /\n' +
+              '    (czm_clampedFrustum.y - czm_clampedFrustum.x)); \n';
 
         vs += '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor);';
 

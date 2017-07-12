@@ -1106,11 +1106,11 @@ define([
             }
         }),
 
-        czm_frustumClamp : new AutomaticUniform({
+        czm_clampedFrustum : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
-                return uniformState.frustumClamp;
+                return uniformState.clampedFrustum;
             }
         }),
 

@@ -56,7 +56,7 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
-        this._frustumClamp = new Cartesian2();
+        this._clampedFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
 
         this._frameState = undefined;
@@ -639,9 +639,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Cartesian4}
          */
-        frustumClamp : {
+        clampedFrustum : {
             get : function() {
-                return this._frustumClamp;
+                return this._clampedFrustum;
             }
         },
 
@@ -975,8 +975,8 @@ define([
 
         var camera = frameState.camera;
         this.updateCamera(camera);
-        this._frustumClamp.x = frameState.clampedNear;
-        this._frustumClamp.y = frameState.clampedFar;
+        this._clampedFrustum.x = frameState.clampedNear;
+        this._clampedFrustum.y = frameState.clampedFar;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
