@@ -4,6 +4,7 @@ Change Log
 ### 1.36 - 2017-08-01
 
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
+* Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 
 ### 1.35.2 - 2017-07-11
 
