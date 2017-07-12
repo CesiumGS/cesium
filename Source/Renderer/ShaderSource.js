@@ -257,9 +257,7 @@ define([
 
         // modernize the source
         if (context.webgl2) {
-            result = GLSLModernizer.glslModernizeShaderText(result,
-                                                        isFragmentShader,
-                                                        true);
+            result = GLSLModernizer.glslModernizeShaderText(result, isFragmentShader, true);
         }
 
         return result;
