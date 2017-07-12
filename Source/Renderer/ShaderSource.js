@@ -217,7 +217,8 @@ define([
             result = '#version ' + version + '\n';
         }
 
-        for (i = 0; i < extensions.length; i++) {
+        var extensionsLength = extensions.length;
+        for (i = 0; i < extensionsLength; i++) {
             result += extensions[i];
         }
 
