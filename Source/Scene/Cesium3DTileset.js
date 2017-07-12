@@ -1596,19 +1596,7 @@ define([
 
         if (addedCommandsLength > 0) {
             // TODO : only do this if the tileset is purely point clouds.
-            tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, {
-                enabled : tileset.pointCloudPostProcessorOptions.enabled,
-                occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
-                rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
-                neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
-                numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
-                densityHalfWidth : tileset.pointCloudPostProcessorOptions.densityHalfWidth,
-                neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
-                maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
-                densityViewEnabled : tileset.pointCloudPostProcessorOptions.densityViewEnabled,
-                stencilViewEnabled : tileset.pointCloudPostProcessorOptions.stencilViewEnabled,
-                pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier
-            });
+            tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, tileset);
         }
 
         if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {

@@ -657,37 +657,37 @@ define([
         return shader;
     }
 
-    PointCloudPostProcessor.prototype.update = function(frameState, commandStart, options) {
+    PointCloudPostProcessor.prototype.update = function(frameState, commandStart, tileset) {
         if (!processingSupported(frameState.context)) {
             return;
         }
 
         var dirty = false;
         // Set options here
-        if (options.occlusionAngle !== this.occlusionAngle ||
-            options.rangeParameter !== this.rangeParameter ||
-            options.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
-            options.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
-            options.densityHalfWidth !== this.densityHalfWidth ||
-            options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
-            options.maxAbsRatio !== this.maxAbsRatio ||
-            options.densityViewEnabled !== this.densityViewEnabled ||
-            options.stencilViewEnabled !== this.stencilViewEnabled ||
-            options.pointAttenuationMultiplier !== this.pointAttenuationMultiplier) {
-            this.occlusionAngle = options.occlusionAngle;
-            this.rangeParameter = options.rangeParameter;
-            this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
-            this.numRegionGrowingPasses = options.numRegionGrowingPasses;
-            this.densityHalfWidth = options.densityHalfWidth;
-            this.neighborhoodVectorSize = options.neighborhoodVectorSize;
-            this.densityViewEnabled = options.densityViewEnabled;
-            this.stencilViewEnabled = options.stencilViewEnabled;
-            this.maxAbsRatio = options.maxAbsRatio;
-            this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
+        if (tileset.pointCloudPostProcessorOptions.occlusionAngle !== this.occlusionAngle ||
+            tileset.pointCloudPostProcessorOptions.rangeParameter !== this.rangeParameter ||
+            tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
+            tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
+            tileset.pointCloudPostProcessorOptions.densityHalfWidth !== this.densityHalfWidth ||
+            tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
+            tileset.pointCloudPostProcessorOptions.maxAbsRatio !== this.maxAbsRatio ||
+            tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier) {
+            this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
+            this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
+            this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
+            this.numRegionGrowingPasses = tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses;
+            this.densityHalfWidth = tileset.pointCloudPostProcessorOptions.densityHalfWidth;
+            this.neighborhoodVectorSize = tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize;
+            this.densityViewEnabled = tileset.pointCloudPostProcessorOptions.densityViewEnabled;
+            this.stencilViewEnabled = tileset.pointCloudPostProcessorOptions.stencilViewEnabled;
+            this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
+            this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
             dirty = true;
         }
 
-        if (!options.enabled) {
+        if (!tileset.pointCloudPostProcessorOptions.enabled) {
             return;
         }
 
