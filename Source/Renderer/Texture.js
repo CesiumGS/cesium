@@ -77,6 +77,9 @@ define([
                     case PixelFormat.RGBA:
                         internalFormat = WebGLConstants.RGBA32F;
                         break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB32F;
+                        break;
                     case PixelFormat.RG:
                         internalFormat = WebGLConstants.RG32F;
                         break;
