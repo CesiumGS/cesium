@@ -34,7 +34,7 @@ define([
         
         var outputDeclarationLine = -1;
         var number;
-        for (number = 0; number < splitSource.length; number++) {
+        for (number = 0; number < splitSource.length; ++number) {
             var line = splitSource[number];
             if (outputDeclarationRegex.exec(line)) {
                 outputDeclarationLine = number;
@@ -43,7 +43,7 @@ define([
         };
         
         if (outputDeclarationLine == -1) {
-            for (number = 0; number < splitSource.length; number++) {
+            for (number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
                 if (mainFunctionRegex.exec(line)) {
                     outputDeclarationLine = number;
@@ -110,13 +110,13 @@ define([
         }
 
         function replaceInSource(regex, replacement) {
-            for (var number = 0; number < splitSource.length; number++) {
+            for (var number = 0; number < splitSource.length; ++number) {
                 splitSource[number] = safeNameReplace(regex, splitSource[number], replacement);
             }
         }
         
         function findInSource(regex) {
-            for (var number = 0; number < splitSource.length; number++) {
+            for (var number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
                 if (safeNameFind(regex, line) !== -1) {
                     return true;
@@ -127,7 +127,7 @@ define([
 
         function compileSource() {
             var wholeSource = "";
-            for (var number = 0; number < splitSource.length; number++) {
+            for (var number = 0; number < splitSource.length; ++number) {
                 wholeSource += splitSource[number] + "\n";
             }
             return wholeSource;
@@ -139,7 +139,7 @@ define([
         }
   
         function setUnion(set1, set2) {
-            for (var a = 0; a < set2.length; a++) {
+            for (var a = 0; a < set2.length; ++a) {
                 setAdd(set2[a], set1);
             }
         }
@@ -148,13 +148,13 @@ define([
             var variableMap = {};
             var negativeMap = {};
             
-            for (var a = 0; a < variablesThatWeCareAbout.length; a++) {
+            for (var a = 0; a < variablesThatWeCareAbout.length; ++a) {
                 var variableThatWeCareAbout = variablesThatWeCareAbout[a];
                 variableMap[variableThatWeCareAbout] = [null];
             }
             
             var stack = [];
-            for (var i = 0; i < splitSource.length; i++) {
+            for (var i = 0; i < splitSource.length; ++i) {
                 var line = splitSource[i];
                 var hasIF = line.search(/(#ifdef|#if)/g) !== -1;
                 var hasELSE = line.search(/#else/g) !== -1;
@@ -176,7 +176,7 @@ define([
                 } else if (hasENDIF) {
                     stack.pop();
                 } else if (line.search(/layout/g) === -1) {
-                    for (a = 0; a < variablesThatWeCareAbout.length; a++) {
+                    for (a = 0; a < variablesThatWeCareAbout.length; ++a) {
                         var care = variablesThatWeCareAbout[a];
                         if (line.indexOf(care) !== -1) {
                             if (variableMap[care].length === 1 &&
@@ -197,7 +197,7 @@ define([
                 if (variableMap.hasOwnProperty(care)) {
                     var entry = variableMap[care];
                     var toDelete = [];
-                    for (var b = 0; b < entry.length; b++) {
+                    for (var b = 0; b < entry.length; ++b) {
                         var item = entry[b];
                         if (entry.indexOf(negativeMap[item]) !== -1) {
                             toDelete.push(item);
@@ -205,7 +205,7 @@ define([
                         }
                     }
                     
-                    for (var c = 0; c < toDelete.length; c++) {
+                    for (var c = 0; c < toDelete.length; ++c) {
                         var ind = entry.indexOf(toDelete[c]);
                         if (ind !== -1) {
                             entry.splice(ind, 1);
