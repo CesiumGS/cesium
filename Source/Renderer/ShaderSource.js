@@ -153,7 +153,7 @@ define([
         return builtinsSource.replace(root.glslSource, '');
     }
 
-    function combineShader(shaderSource, isFragmentShader, webgl2) {
+    function combineShader(shaderSource, isFragmentShader, context) {
         var i;
         var length;
 
@@ -255,7 +255,7 @@ define([
         result += combinedSources;
 
         // modernize the source
-        if (webgl2) {
+        if (context.webgl2) {
             result = GLSLModernizer.glslModernizeShaderText(result,
                                                         isFragmentShader,
                                                         true);
@@ -323,23 +323,23 @@ define([
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
-     * @param {Boolean} [webgl2] A boolean parameter which is true if the context is using WebGL 2, false otherwise
+     * @param {Object} [context] The current rendering context
      *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedVertexShader = function(webgl2) {
-        return combineShader(this, false, webgl2);
+    ShaderSource.prototype.createCombinedVertexShader = function(context) {
+        return combineShader(this, false, context);
     };
 
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
      *
-     * @param {Boolean} [webgl2] A boolean parameter which is true if the context is using WebGL 2, false otherwise
+     * @param {Object} [context] The current rendering context
      *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedFragmentShader = function(webgl2) {
-        return combineShader(this, true, webgl2);
+    ShaderSource.prototype.createCombinedFragmentShader = function(context) {
+        return combineShader(this, true, context);
     };
 
     /**

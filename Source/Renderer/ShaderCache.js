@@ -96,8 +96,8 @@ define([
             });
         }
 
-        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(this._context.webgl2);
-        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(this._context.webgl2);
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(this._context);
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(this._context);
 
         var keyword = vertexShaderText + fragmentShaderText + JSON.stringify(attributeLocations);
         var cachedShader;
@@ -171,8 +171,8 @@ define([
 
         var context = this._context;
         
-        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(context.webgl2);
-        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(context.webgl2);
+        var vertexShaderText = vertexShaderSource.createCombinedVertexShader(context);
+        var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(context);
 
         var derivedShaderProgram = new ShaderProgram({
             gl : context._gl,

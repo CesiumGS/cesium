@@ -9,7 +9,9 @@ defineSuite([
             defines : ['A', 'B', '']
         });
 
-        var shaderText = source.createCombinedVertexShader(false);
+        var shaderText = source.createCombinedVertexShader({
+            webgl2: false
+        });
         expect(shaderText).toContain('#define A');
         expect(shaderText).toContain('#define B');
         expect(shaderText.match(/#define/g).length).toEqual(2);
@@ -19,7 +21,9 @@ defineSuite([
         var source = new ShaderSource({
             sources : ['void func() {}', 'void main() {}']
         });
-        var shaderText = source.createCombinedVertexShader(false);
+        var shaderText = source.createCombinedVertexShader({
+            webgl2: false
+        });
         expect(shaderText).toContain('#line 0\nvoid func() {}');
         expect(shaderText).toContain('#line 0\nvoid main() {}');
     });
@@ -29,7 +33,9 @@ defineSuite([
             defines : ['A', 'B', ''],
             sources : ['void func() {}', 'void main() {}']
         });
-        var shaderText = source.createCombinedVertexShader(false);
+        var shaderText = source.createCombinedVertexShader({
+            webgl2: false
+        });
         expect(shaderText).toContain('#define A');
         expect(shaderText).toContain('#define B');
         expect(shaderText.match(/#define/g).length).toEqual(2);
@@ -42,7 +48,9 @@ defineSuite([
             sources : ['void main() { gl_FragColor = vec4(1.0); }'],
             pickColorQualifier : 'uniform'
         });
-        var shaderText = source.createCombinedVertexShader(false);
+        var shaderText = source.createCombinedVertexShader({
+            webgl2: false
+        });
         expect(shaderText).toContain('uniform vec4 czm_pickColor;');
         expect(shaderText).toContain('gl_FragColor = czm_pickColor;');
     });
@@ -52,7 +60,9 @@ defineSuite([
             sources : ['void main() { gl_FragColor = vec4(1.0); }'],
             pickColorQualifier : 'varying'
         });
-        var shaderText = source.createCombinedVertexShader(false);
+        var shaderText = source.createCombinedVertexShader({
+            webgl2: false
+        });
         expect(shaderText).toContain('varying vec4 czm_pickColor;');
         expect(shaderText).toContain('gl_FragColor = czm_pickColor;');
     });
@@ -69,7 +79,9 @@ defineSuite([
         var source = new ShaderSource({
             sources : ['#version 300 es\nvoid main() {gl_FragColor = vec4(1.0); }']
         });
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(({
+            webgl2: false
+        });
         expect(shaderText).toStartWith('#version 300 es\n');
     });
 });
