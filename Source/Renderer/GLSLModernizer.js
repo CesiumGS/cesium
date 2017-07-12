@@ -150,16 +150,16 @@ define([
             var stack = [];
             for (var i = 0; i < splitSource.length; ++i) {
                 var line = splitSource[i];
-                var hasIF = line.search(/(#ifdef|#if)/g) !== -1;
-                var hasELSE = line.search(/#else/g) !== -1;
-                var hasENDIF = line.search(/#endif/g) !== -1;
+                var hasIF = /(#ifdef|#if)/g.test(line);
+                var hasELSE = /#else/g.test(line);
+                var hasENDIF = /#endif/g.test(line);
                 
                 if (hasIF) {
                     stack.push(line);
                 } else if (hasELSE) {
                     var top = stack[stack.length - 1];
                     var op = top.replace("ifdef", "ifndef");
-                    if (op.search(/if/g) !== -1) {
+                    if (/if/g.test(op)) {
                         op = op.replace(/(#if\s+)(\S*)([^]*)/, "$1!($2)$3");
                     }
                     stack.pop();
@@ -169,7 +169,7 @@ define([
                     negativeMap[op] = top;
                 } else if (hasENDIF) {
                     stack.pop();
-                } else if (line.search(/layout/g) === -1) {
+                } else if (!/layout/g.test(line)) {
                     for (a = 0; a < variablesThatWeCareAbout.length; ++a) {
                         var care = variablesThatWeCareAbout[a];
                         if (line.indexOf(care) !== -1) {
@@ -228,7 +228,7 @@ define([
             var fragDataString = "gl_FragData\\[" + i + "\\]";
             var newOutput = 'czm_out' + i;
             var regex = new RegExp(fragDataString, "g");
-            if (source.search(fragDataString) != -1) {
+            if (regex.test(source)) {
                 setAdd(newOutput, variableSet);
                 replaceInSource(regex, newOutput);
                 splitSource.splice(outputDeclarationLine, 0, "layout(location = " + i + ") out vec4 " + newOutput + ";");
@@ -279,7 +279,7 @@ define([
             var versionThree = "#version 300 es";
             var foundVersion = false;
             for (number = 0; number < splitSource.length; number++) {
-                if (splitSource[number].search(/#version/) != -1) {
+                if (/#version/.test(splitSource[number])) {
                     splitSource[number] = versionThree;
                     foundVersion = true;
                 }
