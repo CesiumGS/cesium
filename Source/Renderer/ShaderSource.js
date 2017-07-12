@@ -190,7 +190,7 @@ define([
 
         // Extract shader extensions from sources
         var extensions = [];
-        combinedSources = combinedSources.replace(/#extension\s+(.*?)\n/gm, function(match, group1) {
+        combinedSources = combinedSources.replace(/#extension.*\n/gm, function(match) {
             // Extract extension to put at the top
             extensions.push(match);
 
