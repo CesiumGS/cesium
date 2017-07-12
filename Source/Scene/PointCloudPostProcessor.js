@@ -347,13 +347,13 @@ define([
 
         regionGrowingPassStr = replaceConstants(
             regionGrowingPassStr,
-            'DENSITY_VIEW',
+            'densityView',
             processor.densityViewEnabled
         );
 
         regionGrowingPassStr = replaceConstants(
             regionGrowingPassStr,
-            'STENCIL_VIEW',
+            'stencilView',
             processor.stencilViewEnabled
         );
 
@@ -405,7 +405,7 @@ define([
 
         var copyStageStr =
             '#extension GL_EXT_draw_buffers : enable \n' +
-            '#define DENSITY_VIEW \n' +
+            '#define densityView \n' +
             '#define densityScaleFactor 32.0 \n' +
             '#define EPS 1e-6 \n' +
             'uniform int densityHalfWidth; \n' +
@@ -418,7 +418,7 @@ define([
             '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
             '    float depth = czm_unpackDepth(rawDepth); \n' +
             '    if (depth > EPS) { \n' +
-            '        #ifdef DENSITY_VIEW \n' +
+            '        #ifdef densityView \n' +
             '        float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
@@ -430,7 +430,7 @@ define([
 
         copyStageStr = replaceConstants(
             copyStageStr,
-            'DENSITY_VIEW',
+            'densityView',
             processor.densityViewEnabled
         );
 
@@ -453,7 +453,7 @@ define([
 
         var stencilMaskStageStr =
             '#define EPS 1e-8 \n' +
-            '#define CUTOFF 0 \n' +
+            '#define cutoff 0 \n' +
             '#define DELAY 0 \n' +
             '#define densityScaleFactor 32.0 \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
@@ -461,13 +461,13 @@ define([
             'void main() \n' +
             '{ \n' +
             '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
-            '    if (float(CUTOFF - DELAY) + EPS > density) \n' +
+            '    if (float(cutoff - DELAY) + EPS > density) \n' +
             '        discard; \n' +
             '} \n';
 
         stencilMaskStageStr = replaceConstants(
             stencilMaskStageStr,
-            'CUTOFF',
+            'cutoff',
             iteration
         );
 

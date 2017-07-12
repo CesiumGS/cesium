@@ -6,8 +6,8 @@
 #define EPS 1e-8
 #define SQRT2 1.414213562
 #define densityScaleFactor 32.0
-#define DENSITY_VIEW
-#define STENCIL_VIEW
+#define densityView
+#define stencilView
 #define DELAY 1
 
 uniform sampler2D pointCloud_colorTexture;
@@ -204,10 +204,10 @@ void main() {
         }
     }
 
-#ifdef DENSITY_VIEW
+#ifdef densityView
     colorOut = vec4(vec3(density / float(densityHalfWidth)), 1.0);
 #else
-#ifdef STENCIL_VIEW
+#ifdef stencilView
     colorOut = testColor(iterationNumber);
 #else
     colorOut = finalColor;
