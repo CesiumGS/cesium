@@ -87,7 +87,7 @@ defineSuite([
         expect(infoBox.isDestroyed()).toEqual(true);
     });
 
-    it('can manually disable security', function() {
+    it('can set disableSecurity', function() {
         infoBox = new InfoBox(testContainer);
         infoBox.disableSecurity = true;
         expect(infoBox.disableSecurity).toEqual(true);

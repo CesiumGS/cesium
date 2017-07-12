@@ -47,7 +47,7 @@ define([
         this.showInfo = false;
 
         /**
-         * Gets or sets the title text in the info box.
+         * Gets or sets the title text in the info box. Can be HTML if InfoBox 'disableSecurity' is true.
          * @type {String}
          */
         this.titleText = '';
