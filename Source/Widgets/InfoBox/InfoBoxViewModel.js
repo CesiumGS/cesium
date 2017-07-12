@@ -47,10 +47,16 @@ define([
         this.showInfo = false;
 
         /**
-         * Gets or sets the title text in the info box. Can be HTML if InfoBox 'disableSecurity' is true.
+         * Gets or sets the title text in the info box. Can be HTML if securityDisabled is true.
          * @type {String}
          */
         this.titleText = '';
+
+        /**
+         * Gets or sets whether security is enabled or disabled
+         * @type {boolean}
+         */
+        this.securityDisabled = false;
 
         /**
          * Gets or sets the description HTML for the info box.
@@ -58,7 +64,7 @@ define([
          */
         this.description = '';
 
-        knockout.track(this, ['showInfo', 'titleText', 'description', 'maxHeight', 'enableCamera', 'isCameraTracking']);
+        knockout.track(this, ['showInfo', 'titleText', 'securityDisabled', 'description', 'maxHeight', 'enableCamera', 'isCameraTracking']);
 
         this._loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
 

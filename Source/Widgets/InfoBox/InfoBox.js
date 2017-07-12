@@ -52,14 +52,23 @@ define([
 css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyless }');
         container.appendChild(infoElement);
 
-        var titleElement = document.createElement('div');
-        titleElement.className = 'cesium-infoBox-title';
-        if (options.disableSecurity) {
-            titleElement.setAttribute('data-bind', 'html: titleText');
-        } else {
-            titleElement.setAttribute('data-bind', 'text: titleText');
-        }
-        infoElement.appendChild(titleElement);
+        var titleTextContainer = document.createElement('div');
+        titleTextContainer.setAttribute('data-bind', 'ifnot: securityDisabled');
+        infoElement.appendChild(titleTextContainer);
+
+        var titleTextElement = document.createElement('div');
+        titleTextElement.className = 'cesium-infoBox-title';
+        titleTextElement.setAttribute('data-bind', 'text: titleText');
+        titleTextContainer.appendChild(titleTextElement);
+
+        var titleHtmlContainer = document.createElement('div');
+        titleHtmlContainer.setAttribute('data-bind', 'if: securityDisabled');
+        infoElement.appendChild(titleHtmlContainer);
+
+        var titleHtmlElement = document.createElement('div');
+        titleHtmlElement.className = 'cesium-infoBox-title';
+        titleHtmlElement.setAttribute('data-bind', 'html: titleText');
+        titleHtmlContainer.appendChild(titleHtmlElement);
 
         var cameraElement = document.createElement('button');
         cameraElement.type = 'button';
@@ -96,6 +105,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         this._element = infoElement;
         this._frame = frame;
         this._viewModel = viewModel;
+        this._viewModel.securityDisabled = this._disableSecurity;
         this._descriptionSubscription = undefined;
 
         var that = this;
@@ -181,19 +191,14 @@ click: function () { closeClicked.raiseEvent(this); }');
             },
             set : function(value) {
                 this._disableSecurity = value;
-                var e = this._element.getElementsByClassName('cesium-infoBox-title')[0];
+                this._viewModel.securityDisabled = value;
+
                 if (value) {
-                    e.removeAttribute('data-bind');
-                    e.setAttribute('data-bind', 'html: titleText');
                     this._frame.removeAttribute('sandbox');
                 }
                 else {
-                    e.removeAttribute('data-bind');
-                    e.setAttribute('data-bind', 'text: titleText');
                     this._frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms');
                 }
-                knockout.cleanNode(this._element);
-                knockout.applyBindings(this._viewModel, this._element);
             }
         },
 

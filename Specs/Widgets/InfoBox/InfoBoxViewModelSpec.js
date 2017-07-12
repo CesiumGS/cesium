@@ -6,12 +6,21 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         var viewModel = new InfoBoxViewModel();
+        expect(viewModel.titleText).toBe('');
+        expect(viewModel.securityDisabled).toBe(false);
         expect(viewModel.enableCamera).toBe(false);
         expect(viewModel.isCameraTracking).toBe(false);
         expect(viewModel.showInfo).toBe(false);
         expect(viewModel.cameraClicked).toBeDefined();
         expect(viewModel.closeClicked).toBeDefined();
         expect(viewModel.maxHeightOffset(0)).toBeDefined();
+    });
+
+    it('sets title', function() {
+        var safeString = '<p>This is a test.</p>';
+        var viewModel = new InfoBoxViewModel();
+        viewModel.titleText = safeString;
+        expect(viewModel.titleText).toBe(safeString);
     });
 
     it('sets description', function() {
