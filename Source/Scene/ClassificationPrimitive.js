@@ -168,6 +168,9 @@ define([
         this.debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
         this._debugShowShadowVolume = false;
 
+        this._extruded = defaultValue(options._extruded, false);
+        this._uniformMap = options._uniformMap;
+
         this._sp = undefined;
         this._spPick = undefined;
 
@@ -180,7 +183,7 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
-        this._pickPrimitive = options.pickPrimitive;
+        this._pickPrimitive = options._pickPrimitive;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -190,6 +193,9 @@ define([
         if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
             readOnlyAttributes = readOnlyInstanceAttributesScratch;
         }
+
+        this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
+        this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
 
         this._primitiveOptions = {
             geometryInstances : undefined,
@@ -201,9 +207,11 @@ define([
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
             _readOnlyInstanceAttributes : readOnlyAttributes,
+            _createBoundingVolumeFunction : undefined,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined,
+            _updateAndQueueCommandsFunction : undefined,
             _createPickOffsets : true
         };
     }
@@ -473,6 +481,34 @@ define([
         groundPrimitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
 
+    function modifyForEncodedNormals(primitive, vertexShaderSource) {
+        if (!primitive.compressVertices) {
+            return vertexShaderSource;
+        }
+
+        if (vertexShaderSource.search(/attribute\s+vec3\s+extrudeDirection;/g) !== -1) {
+            var attributeName = 'compressedAttributes';
+
+            //only shadow volumes use extrudeDirection, and shadow volumes use vertexFormat: POSITION_ONLY so we don't need to check other attributes
+            var attributeDecl = 'attribute vec2 ' + attributeName + ';';
+
+            var globalDecl = 'vec3 extrudeDirection;\n';
+            var decode = '    extrudeDirection = czm_octDecode(' + attributeName + ', 65535.0);\n';
+
+            var modifiedVS = vertexShaderSource;
+            modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+extrudeDirection;/g, '');
+            modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
+            var compressedMain =
+                'void main() \n' +
+                '{ \n' +
+                decode +
+                '    czm_non_compressed_main(); \n' +
+                '}';
+
+            return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
+        }
+    }
+
     function createShaderProgram(groundPrimitive, frameState, appearance) {
         if (defined(groundPrimitive._sp)) {
             return;
@@ -487,14 +523,26 @@ define([
         vs = Primitive._modifyShaderPosition(groundPrimitive, vs, frameState.scene3DOnly);
         vs = Primitive._updateColorAttribute(primitive, vs);
 
-        var fs = ShadowVolumeFS;
+        if (groundPrimitive._extruded) {
+            vs = modifyForEncodedNormals(primitive, vs);
+        }
+
+        var extrudedDefine = groundPrimitive._extruded ? 'EXTRUDED_GEOMETRY' : '';
+
+        var vsSource = new ShaderSource({
+            defines : [extrudedDefine],
+            sources : [vs]
+        });
+        var fsSource = new ShaderSource({
+            sources : [ShadowVolumeFS]
+        });
         var attributeLocations = groundPrimitive._primitive._attributeLocations;
 
         groundPrimitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : groundPrimitive._sp,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            vertexShaderSource : vsSource,
+            fragmentShaderSource : fsSource,
             attributeLocations : attributeLocations
         });
 
@@ -502,22 +550,28 @@ define([
             var vsPick = ShaderSource.createPickVertexShaderSource(vs);
             vsPick = Primitive._updatePickColorAttribute(vsPick);
 
+            var pickVS = new ShaderSource({
+                defines : [extrudedDefine],
+                sources : [vsPick]
+            });
+
             var pickFS = new ShaderSource({
-                sources : [fs],
+                sources : [ShadowVolumeFS],
                 pickColorQualifier : 'varying'
             });
+
             groundPrimitive._spPick = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : groundPrimitive._spPick,
-                vertexShaderSource : vsPick,
+                vertexShaderSource : pickVS,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
         } else {
             groundPrimitive._spPick = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
+                vertexShaderSource : vsSource,
+                fragmentShaderSource : fsSource,
                 attributeLocations : attributeLocations
             });
         }
@@ -529,7 +583,7 @@ define([
         colorCommands.length = length;
 
         var vaIndex = 0;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()();
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
 
         for (var i = 0; i < length; i += 3) {
             var vertexArray = primitive._va[vaIndex++];
@@ -588,7 +642,7 @@ define([
         pickCommands.length = length;
 
         var pickIndex = 0;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()();
+        var uniformMap = primitive._batchTable.getUniformMapCallback()(groundPrimitive._uniformMap);
 
         for (var j = 0; j < length; j += 3) {
             var pickOffset = pickOffsets[pickIndex++];
@@ -656,8 +710,10 @@ define([
     }
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
-        var boundingVolumes;
         var primitive = groundPrimitive._primitive;
+
+        /*
+        var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = primitive._boundingSphereWC;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
@@ -667,6 +723,7 @@ define([
         } else if (defined(primitive._boundingSphereMorph)) {
             boundingVolumes = primitive._boundingSphereMorph;
         }
+        */
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
@@ -689,12 +746,10 @@ define([
             pickCommands.length = length;
 
             for (var j = 0; j < length; ++j) {
-                var pickOffset = pickOffsets[Math.floor(j / 3)];
-                var bv = boundingVolumes[pickOffset.index];
-
+                //var pickOffset = pickOffsets[Math.floor(j / 3)];
                 var pickCommand = pickCommands[j];
                 pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = undefined;//bv;
+                pickCommand.boundingVolume = undefined;//boundingVolumes[pickOffset.index];
                 pickCommand.cull = cull;
 
                 commandList.push(pickCommand);
@@ -757,6 +812,12 @@ define([
 
             primitiveOptions.geometryInstances = geometryInstances;
 
+            if (defined(this._createBoundingVolumeFunction)) {
+                primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
+                    that._createBoundingVolumeFunction(frameState, geometry);
+                };
+            }
+
             primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
@@ -766,9 +827,16 @@ define([
             primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
-                updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
-            };
+
+            if (defined(this._updateAndQueueCommandsFunction)) {
+                primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+                    that._updateAndQueueCommandsFunction(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
+                };
+            } else {
+                primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+                    updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
+                };
+            }
 
             this._primitive = new Primitive(primitiveOptions);
             this._primitive.readyPromise.then(function(primitive) {
