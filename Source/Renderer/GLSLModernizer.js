@@ -40,7 +40,7 @@ define([
             }
         };
         
-        if (outputDeclarationLine == -1) {
+        if (outputDeclarationLine === -1) {
             for (number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
                 if (mainFunctionRegex.exec(line)) {
@@ -49,7 +49,7 @@ define([
             };
         }
 
-        if (outputDeclarationLine == -1) {
+        if (outputDeclarationLine === -1) {
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION nor a main function!');
         }
         
@@ -68,7 +68,7 @@ define([
 
         function safeNameFind(regex, str) {
             var originalMatch = regex.exec(str);
-            if (originalMatch == null) {
+            if (originalMatch === null) {
                 return -1;
             }
             var endPos = originalMatch.index + originalMatch[0].length;
@@ -79,7 +79,7 @@ define([
                 return endPos;
             } else {
                 var childResult = safeNameFind(regex, str.substring(endPos));
-                if (childResult == -1) {
+                if (childResult === -1) {
                     return -1;
                 } else {
                     return endPos + childResult;
@@ -89,7 +89,7 @@ define([
 
         function safeNameReplace(regex, str, replacement) {
             var originalMatch = regex.exec(str);
-            if (originalMatch == null) {
+            if (originalMatch === null) {
                 return str;
             }
             var endPos = originalMatch.index + originalMatch[0].length;
