@@ -261,7 +261,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @private
          */
         pointAttenuationMaxSize : {
             get : function() {
