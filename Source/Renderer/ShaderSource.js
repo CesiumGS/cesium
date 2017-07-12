@@ -188,7 +188,7 @@ define([
             return '\n';
         });
 
-        // Extract existing shader version from sources
+        // Extract shader extensions from sources
         var extensions = [];
         combinedSources = combinedSources.replace(/#extension\s+(.*?)\n/gm, function(match, group1) {
             // Extract extension to put at the top
