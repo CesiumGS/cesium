@@ -2,12 +2,14 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Renderer/GLSLModernizer',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
+        GLSLModernizer,
         CzmBuiltins,
         AutomaticUniforms) {
     'use strict';
@@ -151,7 +153,7 @@ define([
         return builtinsSource.replace(root.glslSource, '');
     }
 
-    function combineShader(shaderSource, isFragmentShader) {
+    function combineShader(shaderSource, isFragmentShader, webgl2) {
         var i;
         var length;
 
@@ -186,6 +188,17 @@ define([
             return '\n';
         });
 
+        // Extract existing shader version from sources
+        var extensions = [];
+        combinedSources = combinedSources.replace(/#extension\s+(.*?)\n/gm, function(match, group1) {
+            // Extract extension to put at the top
+            extensions.push(match);
+
+            // Replace original #extension directive with a new line so the line numbers
+            // are not off by one.
+            return '\n';
+        });
+
         // Remove precision qualifier
         combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
 
@@ -202,6 +215,10 @@ define([
         // defaults to #version 100 if not specified
         if (defined(version)) {
             result = '#version ' + version + '\n';
+        }
+
+        for (i = 0; i < extensions.length; i++) {
+            result += extensions[i];
         }
 
         if (isFragmentShader) {
@@ -224,6 +241,8 @@ define([
             }
         }
 
+        result += '#define OUTPUT_DECLARATION\n\n';
+
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -234,6 +253,13 @@ define([
 
         // append actual source
         result += combinedSources;
+
+        // modernize the source
+        if (webgl2) {
+            result = GLSLModernizer.glslModernizeShaderText(result,
+                                                        isFragmentShader,
+                                                        true);
+        }
 
         return result;
     }
@@ -297,19 +323,23 @@ define([
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
+     * @param {Boolean} [webgl2] A boolean parameter which is true if the context is using WebGL 2, false otherwise
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedVertexShader = function() {
-        return combineShader(this, false);
+    ShaderSource.prototype.createCombinedVertexShader = function(webgl2) {
+        return combineShader(this, false, webgl2);
     };
 
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
      *
+     * @param {Boolean} [webgl2] A boolean parameter which is true if the context is using WebGL 2, false otherwise
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedFragmentShader = function() {
-        return combineShader(this, true);
+    ShaderSource.prototype.createCombinedFragmentShader = function(webgl2) {
+        return combineShader(this, true, webgl2);
     };
 
     /**

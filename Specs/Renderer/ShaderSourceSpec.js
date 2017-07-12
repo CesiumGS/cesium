@@ -9,7 +9,7 @@ defineSuite([
             defines : ['A', 'B', '']
         });
 
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(false);
         expect(shaderText).toContain('#define A');
         expect(shaderText).toContain('#define B');
         expect(shaderText.match(/#define/g).length).toEqual(2);
@@ -19,7 +19,7 @@ defineSuite([
         var source = new ShaderSource({
             sources : ['void func() {}', 'void main() {}']
         });
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(false);
         expect(shaderText).toContain('#line 0\nvoid func() {}');
         expect(shaderText).toContain('#line 0\nvoid main() {}');
     });
@@ -29,7 +29,7 @@ defineSuite([
             defines : ['A', 'B', ''],
             sources : ['void func() {}', 'void main() {}']
         });
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(false);
         expect(shaderText).toContain('#define A');
         expect(shaderText).toContain('#define B');
         expect(shaderText.match(/#define/g).length).toEqual(2);
@@ -42,7 +42,7 @@ defineSuite([
             sources : ['void main() { gl_FragColor = vec4(1.0); }'],
             pickColorQualifier : 'uniform'
         });
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(false);
         expect(shaderText).toContain('uniform vec4 czm_pickColor;');
         expect(shaderText).toContain('gl_FragColor = czm_pickColor;');
     });
@@ -52,7 +52,7 @@ defineSuite([
             sources : ['void main() { gl_FragColor = vec4(1.0); }'],
             pickColorQualifier : 'varying'
         });
-        var shaderText = source.createCombinedVertexShader();
+        var shaderText = source.createCombinedVertexShader(false);
         expect(shaderText).toContain('varying vec4 czm_pickColor;');
         expect(shaderText).toContain('gl_FragColor = czm_pickColor;');
     });

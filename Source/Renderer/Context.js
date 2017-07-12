@@ -268,12 +268,16 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
-        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
-        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
-        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']) || this._webgl2;
+        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']) || this._webgl2;
+        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']) || this._webgl2;
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']) || this._webgl2;
+        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']) || this._webgl2;
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+
+        if (this._webgl2) {
+            this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float']);
+        }
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
@@ -611,6 +615,20 @@ define([
         instancedArrays : {
             get : function() {
                 return this._instancedArrays || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
+         * extension makes the formats gl.R16F, gl.RG16F, gl.RGBA16F, gl.R32F, gl.RG32F,
+         * gl.RGBA32F, gl.R11F_G11F_B10F color renderable.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+         */
+        colorBufferFloat : {
+            get : function() {
+                return this._colorBufferFloat;
             }
         },
 
@@ -1076,7 +1094,8 @@ define([
             }),
             uniformMap : overrides.uniformMap,
             owner : overrides.owner,
-            framebuffer : overrides.framebuffer
+            framebuffer : overrides.framebuffer,
+            pass : overrides.pass
         });
     };
 
