@@ -48,6 +48,9 @@ define([
             }, ScreenSpaceEventType.MOUSE_MOVE);
         } else {
             viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+
+            // Restore hover-over selection to its current value
+            viewModel.picking = viewModel.picking;
         }
     }
 
