@@ -14,8 +14,7 @@ define([
      */
     function glslModernizeShaderSource(shaderSource, isFragmentShader) {
         for (var i = 0; i < shaderSource.sources.length; i++) {
-            shaderSource.sources[i] =
-                glslModernizeShaderText(shaderSource.sources[i], isFragmentShader, i === 0);
+            shaderSource.sources[i] = glslModernizeShaderText(shaderSource.sources[i], isFragmentShader, i === 0);
         }
         shaderSource.defines.push("MODERNIZED");
     }
@@ -52,9 +51,7 @@ define([
         }
 
         if (outputDeclarationLine == -1) {
-            throw new DeveloperError('Could not find a ' +
-                                     '#define OUTPUT_DECLARATION ' +
-                                     'nor a main function!');
+            throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION nor a main function!');
         }
         
         function safeNameFalseNegative(regex, region) {
@@ -101,11 +98,9 @@ define([
 
             var possiblyFalseNegative = safeNameFalseNegative(regex, region);
             if (possiblyFalseNegative) {
-                return region.replace(regex, replacement) +
-                    safeNameReplace(regex, str.substr(endPos), replacement);
+                return region.replace(regex, replacement) + safeNameReplace(regex, str.substr(endPos), replacement);
             } else {
-                return region +
-                    safeNameReplace(regex, str.substr(endPos), replacement);
+                return region + safeNameReplace(regex, str.substr(endPos), replacement);
             }
         }
 
@@ -179,12 +174,10 @@ define([
                     for (a = 0; a < variablesThatWeCareAbout.length; ++a) {
                         var care = variablesThatWeCareAbout[a];
                         if (line.indexOf(care) !== -1) {
-                            if (variableMap[care].length === 1 &&
-                                 variableMap[care][0] === null) {
+                            if (variableMap[care].length === 1 && variableMap[care][0] === null) {
                                 variableMap[care] = stack.slice();
                             } else {
-                                variableMap[care] = variableMap[care].filter(
-                                  function(x) { return stack.indexOf(x) >= 0; });
+                                variableMap[care] = variableMap[care].filter(function(x) { return stack.indexOf(x) >= 0; });
                             }
                         }
                     }
@@ -216,8 +209,7 @@ define([
           
             for (var care in variableMap) {
                 if (variableMap.hasOwnProperty(care)) {
-                    if (variableMap.length === 1 &&
-                         variableMap[0] === null) {
+                    if (variableMap.length === 1 && variableMap[0] === null) {
                         variableMap.splice(0, 1);
                     }
                 }
@@ -240,9 +232,7 @@ define([
             if (source.search(fragDataString) != -1) {
                 setAdd(newOutput, variableSet);
                 replaceInSource(regex, newOutput);
-                splitSource.splice(outputDeclarationLine, 0,
-                    "layout(location = " + i + ") out vec4 " +
-                    newOutput + ";");
+                splitSource.splice(outputDeclarationLine, 0, "layout(location = " + i + ") out vec4 " + newOutput + ";");
                 outputDeclarationLine += 1;
             }
         }
@@ -261,8 +251,7 @@ define([
             var l = splitSource[c];
             for (var care in variableMap) {
                 if (variableMap.hasOwnProperty(care)) {
-                    var matchVar = 
-                        new RegExp("(layout)[^]+(out)[^]+(" + care + ")[^]+", "g");
+                    var matchVar = new RegExp("(layout)[^]+(out)[^]+(" + care + ")[^]+", "g");
                     if (matchVar.exec(l) !== null) {
                         lineAdds[l] = care;
                     }
