@@ -16,7 +16,6 @@ define([
         for (var i = 0; i < shaderSource.sources.length; i++) {
             shaderSource.sources[i] = glslModernizeShaderText(shaderSource.sources[i], isFragmentShader, i === 0);
         }
-        shaderSource.defines.push("MODERNIZED");
     }
 
     // Note that this function requires the presence of the
