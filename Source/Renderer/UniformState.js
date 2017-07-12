@@ -637,7 +637,7 @@ define([
          * The distance to the clamped near and far planes. The nearest object determines the near
          * plane and the farthest object determines the far plane.
          * @memberof UniformState.prototype
-         * @type {Cartesian4}
+         * @type {Cartesian2}
          */
         clampedFrustum : {
             get : function() {
