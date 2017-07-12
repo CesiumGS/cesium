@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.36 - 2017-08-01
+
+* Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
+* Fixed issue where composite 3D Tiles that contained instanced 3D Tiles with an external model reference would fail to download the model.
+
 ### 1.35.2 - 2017-07-11
 
 * This is an npm-only release to fix an issue with using Cesium in Node.js.
