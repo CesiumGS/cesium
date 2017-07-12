@@ -1544,6 +1544,7 @@ define([
             }
         }
         var lengthAfterUpdate = commandList.length;
+        var addedCommandsLength = lengthAfterUpdate - lengthBeforeUpdate;
 
         tileset._backfaceCommands.trim();
 
@@ -1573,7 +1574,6 @@ define([
              */
 
             var backfaceCommands = tileset._backfaceCommands.values;
-            var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
             commandList.length += backfaceCommands.length;
