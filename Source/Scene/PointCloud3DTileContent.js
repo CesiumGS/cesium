@@ -1020,16 +1020,13 @@ define([
             vs += '    gl_PointSize = u_pointSize; \n';
         }
 
-        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1.0); \n';
-        vs += '    position_EC.z *= -1.0; \n';
-
-        vs += '    float attenuationFactor = \n' +
+        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1.0); \n' +
+              '    position_EC.z *= -1.0; \n\n' +
+              '    float attenuationFactor = \n' +
               '    ((position_EC.z - czm_clampedFrustum.x) /\n' +
-              '    (czm_clampedFrustum.y - czm_clampedFrustum.x)); \n';
-
-        vs += '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor);';
-
-        vs += '    color = color * u_highlightColor; \n';
+              '    (czm_clampedFrustum.y - czm_clampedFrustum.x)); \n' +
+              '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor); \n\n' +
+              '    color = color * u_highlightColor; \n';
 
         if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n' +
