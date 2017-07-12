@@ -83,7 +83,12 @@ define([
             if (possiblyFalseNegative) {
                 return endPos;
             } else {
-                return endPos + safeNameFind(regex, str.substring(endPos));
+                var childResult = safeNameFind(regex, str.substring(endPos));
+                if (childResult == -1) {
+                    return -1;
+                } else {
+                    return endPos + childResult;
+                }
             }
         }
 
@@ -282,6 +287,8 @@ define([
                 }
             }
         }
+
+        console.log(compileSource());
 
         if (first === true) {
             var versionThree = "#version 300 es";
