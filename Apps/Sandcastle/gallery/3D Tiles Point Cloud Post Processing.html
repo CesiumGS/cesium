@@ -100,11 +100,6 @@ tileset.readyPromise.then(function() {
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 });
 
-var style = {
-};
-style.pointSize = Cesium.defaultValue(style.pointSize, 1.0);
-tileset.style = new Cesium.Cesium3DTileStyle(style);
-
 var viewModel = {
     occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
     rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
