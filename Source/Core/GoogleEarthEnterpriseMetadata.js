@@ -157,7 +157,7 @@ define([
 
         /**
          * Gets the proxy used for metadata requests.
-         * @memberof GoogleEarthEnterpriseImageryProvider.prototype
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
          * @type {Proxy}
          * @readonly
          */
@@ -169,7 +169,7 @@ define([
 
         /**
          * Gets a promise that resolves to true when the metadata is ready for use.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
          * @type {Promise.<Boolean>}
          * @readonly
          */
