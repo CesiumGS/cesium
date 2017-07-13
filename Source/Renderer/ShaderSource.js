@@ -242,6 +242,8 @@ define([
             }
         }
 
+        // GLSLModernizer inserts its own layout qualifiers
+        // at this position in the source
         result += '#define OUTPUT_DECLARATION\n\n';
 
         // append built-ins
