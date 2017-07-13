@@ -39,82 +39,24 @@ define([
         if (outputDeclarationLine === -1) {
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION nor a main function!');
         }
-        
-        function safeNameFalseNegative(regex, region) {
-            var regExpStr = regex.toString();
-            regExpStr = regExpStr.match(/\/([^\/]+)(\/.)?/)[1];
-            var somethingBadInString =
-                new RegExp("[a-zA-Z0-9_]+" + regExpStr, 'g');
-            var searchResult = region.search(somethingBadInString);
-            if (searchResult === -1) {
-                return true;
-            } else {
-                return false;
-            }
-        }
 
-        function safeNameFind(regex, str) {
-            var originalMatch = regex.exec(str);
-            if (originalMatch === null) {
-                return -1;
-            }
-            var endPos = originalMatch.index + originalMatch[0].length;
-            var region = str.substring(0, endPos);
-
-            var possiblyFalseNegative = safeNameFalseNegative(regex, region);
-            if (possiblyFalseNegative) {
-                return endPos;
-            } else {
-                var childResult = safeNameFind(regex, str.substring(endPos));
-                if (childResult === -1) {
-                    return -1;
-                } else {
-                    return endPos + childResult;
-                }
-            }
-        }
-
-        function safeNameReplace(regex, str, replacement) {
-            var originalMatch = regex.exec(str);
-            if (originalMatch === null) {
-                return str;
-            }
-            var endPos = originalMatch.index + originalMatch[0].length;
-            var region = str.substring(0, endPos);
-
-            var possiblyFalseNegative = safeNameFalseNegative(regex, region);
-            if (possiblyFalseNegative) {
-                return region.replace(regex, replacement) + safeNameReplace(regex, str.substr(endPos), replacement);
-            } else {
-                return region + safeNameReplace(regex, str.substr(endPos), replacement);
-            }
-        }
-
+        // Note that this fails if your string looks like
+        // searchString[singleCharacter]searchString
         function replaceInSource(str, replacement, strIsRegex) {
-            var replaceAll = function(target, search, replacement) {
-                return target.split(search).join(replacement);
-            };
-
             var regex = str;
             if (!defined(strIsRegex) || strIsRegex === false) {
-                /*var regexStr = "(?:^.*[^\\w](" + str +
-                    ")[^\\w].*$|^(" + str +
-                    ")[^\\w].*$|^.*[^\\w](" + str +
-                    ")$|^(" + str + ")$)";
-                    regex = new RegExp(regexStr, 'g');*/
-                regex = new RegExp(str, 'g');
+                var regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
+                regex = new RegExp(regexStr, 'g');
             }
             for (var number = 0; number < splitSource.length; ++number) {
-                splitSource[number] = safeNameReplace(regex, splitSource[number], replacement);
-                //splitSource[number] = replaceAll(splitSource[number], regex, replacement);
+                splitSource[number] = splitSource[number].replace(regex, function (match, group1, group2, group3) {
+                    return group1 + replacement + group2;
+                });
             }
         }
         
         function findInSource(str) {
-            var regexStr = "(^.*[^\\w](" + str +
-                ")[^\\w].*$|^(" + str +
-                ")[^\\w].*$|^.*[^\\w](" + str +
-                ")$|^(" + str + ")$)";
+            var regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
             var regex = new RegExp(regexStr, 'g');
             for (var number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
@@ -309,7 +251,6 @@ define([
             replaceInSource("varying", "out");
         }
 
-        console.log(compileSource());
         return compileSource();
     }
 
