@@ -34,7 +34,9 @@ defineSuite([
     var primitiveRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
 
     beforeAll(function() {
-        scene = createScene({ canvas: createCanvas(10,10) });
+        scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
         primitives = scene.primitives;
         camera = scene.camera;
     });
