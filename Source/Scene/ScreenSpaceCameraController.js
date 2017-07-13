@@ -8,6 +8,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/HeadingPitchRoll',
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
@@ -35,6 +36,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        HeadingPitchRoll,
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
@@ -447,11 +449,7 @@ define([
     var scratchCartesianTwo = new Cartesian3();
     var scratchCartesianThree = new Cartesian3();
     var scratchZoomViewOptions = {
-      orientation: {
-        heading: 0,
-        pitch: 0,
-        roll: 0
-      }
+      orientation: new HeadingPitchRoll()
     };
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
