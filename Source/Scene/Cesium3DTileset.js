@@ -367,6 +367,22 @@ define([
         this.allTilesLoaded = new Event();
 
         /**
+         * The event fired to indicate that a tile's content was loaded.
+         * <p>
+         * The loaded {@link Cesium3DTile} is passed to the event listener.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileLoad.addEventListener(function(tile) {
+         *     console.log('A tile was loaded.');
+         * });
+         */
+        this.tileLoad = new Event();
+
+        /**
          * The event fired to indicate that a tile's content was unloaded.
          * <p>
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
@@ -1223,7 +1239,10 @@ define([
 
         var removeFunction = removeFromProcessingQueue(tileset, tile);
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(removeFunction).otherwise(removeFunction);
+        tile.contentReadyPromise.then(function() {
+            removeFunction();
+            tileset.tileLoad.raiseEvent(tile);
+        }).otherwise(removeFunction);
     }
 
     function requestTiles(tileset, outOfCore) {
