@@ -10,18 +10,13 @@ define([
      * This function is nowhere near comprehensive or complete. It just
      * handles some common cases.
      *
+     * Note that this function requires the presence of the
+     * "#define OUTPUT_DECLARATION" line that is appended
+     * by ShaderSource.
+     *
      * @private
      */
-    function glslModernizeShaderSource(shaderSource, isFragmentShader) {
-        for (var i = 0; i < shaderSource.sources.length; i++) {
-            shaderSource.sources[i] = glslModernizeShaderText(shaderSource.sources[i], isFragmentShader, i === 0);
-        }
-    }
-
-    // Note that this function requires the presence of the
-    // "#define OUTPUT_DECLARATION" line that is appended
-    // by ShaderSource
-    function glslModernizeShaderText(source, isFragmentShader, first) {
+    function glslModernizeShaderText(source, isFragmentShader) {
         var mainFunctionRegex = /void\s+main\s*\((void)?\)/;
         var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
@@ -275,19 +270,17 @@ define([
             }
         }
 
-        if (first === true) {
-            var versionThree = "#version 300 es";
-            var foundVersion = false;
-            for (number = 0; number < splitSource.length; number++) {
-                if (/#version/.test(splitSource[number])) {
-                    splitSource[number] = versionThree;
-                    foundVersion = true;
-                }
+        var versionThree = "#version 300 es";
+        var foundVersion = false;
+        for (number = 0; number < splitSource.length; number++) {
+            if (/#version/.test(splitSource[number])) {
+                splitSource[number] = versionThree;
+                foundVersion = true;
             }
+        }
 
-            if (!foundVersion) {
-                splitSource.splice(0, 0, versionThree);
-            }
+        if (!foundVersion) {
+            splitSource.splice(0, 0, versionThree);
         }
 
         removeExtension("EXT_draw_buffers");
@@ -308,29 +301,5 @@ define([
         return compileSource();
     }
 
-    function glslModernizeShaderProgram(context, shaderProgram) {
-        var vsSource = shaderProgram.vertexShaderSource.clone();
-        var fsSource = shaderProgram.fragmentShaderSource.clone();
-
-        glslModernizeShaderSource(vsSource, false);
-        glslModernizeShaderSource(fsSource, true);
-
-        var newShaderProgramOptions = {
-            vertexShaderSource : vsSource,
-            fragmentShaderSource : fsSource,
-            gl : shaderProgram._gl,
-            logShaderCompilation : shaderProgram._logShaderCompilation,
-            attributeLocations : shaderProgram._attributeLocations
-        };
-
-        return context.shaderCache.getShaderProgram(newShaderProgramOptions);
-    }
-
-    var GLSLModernizer = {
-        glslModernizeShaderText : glslModernizeShaderText,
-        glslModernizeShaderSource : glslModernizeShaderSource,
-        glslModernizeShaderProgram : glslModernizeShaderProgram
-    };
-
-    return GLSLModernizer;
+    return glslModernizeShaderText;
 });
