@@ -65,7 +65,7 @@ defineSuite([
 
         var expectedVSText = new ShaderSource({
             sources : [vs]
-        }).createCombinedVertexShader(context.webgl2);
+        }).createCombinedVertexShader(context);
 
         expect(sp._vertexShaderText).toEqual(expectedVSText);
 
