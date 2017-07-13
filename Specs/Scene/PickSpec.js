@@ -10,7 +10,8 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Specs/createCanvas'
     ], 'Scene/Pick', function(
         FeatureDetection,
         GeometryInstance,
@@ -23,7 +24,8 @@ defineSuite([
         PerspectiveFrustum,
         Primitive,
         SceneMode,
-        createScene) {
+        createScene,
+        createCanvas) {
     'use strict';
 
     var scene;
@@ -32,7 +34,9 @@ defineSuite([
     var primitiveRectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
 
     beforeAll(function() {
-        scene = createScene();
+        scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
         primitives = scene.primitives;
         camera = scene.camera;
     });
@@ -92,6 +96,22 @@ defineSuite([
 
         var rectangle = createRectangle();
         expect(scene).toPickPrimitive(rectangle);
+    });
+
+    it('picks a primitive with a modified pick search area', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.9.  This test fails when all tests are ran without a breakpoint here.
+            return;
+        }
+
+        camera.setView({
+            destination : Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0)
+        });
+
+        var rectangle = createRectangle();
+
+        expect(scene).toPickPrimitive(rectangle, 7, 7, 5);
+        expect(scene).notToPick(7, 7, 3);
     });
 
     it('does not pick primitives when show is false', function() {
