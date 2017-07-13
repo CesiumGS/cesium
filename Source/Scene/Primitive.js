@@ -1622,36 +1622,30 @@ define([
         }
     }
 
-    function updateBoundingVolumes(primitive, frameState) {
+    Primitive._updateBoundingVolumes = function(primitive, frameState, modelMatrix) {
+        var i;
+        var length;
+        var boundingSphere;
+
         // Update bounding volumes for primitives that are sized in pixels.
         // The pixel size in meters varies based on the distance from the camera.
         var pixelSize = primitive.appearance.pixelSize;
         if (defined(pixelSize)) {
-            var length = primitive._boundingSpheres.length;
-            for (var i = 0; i < length; ++i) {
-                var boundingSphere = primitive._boundingSpheres[i];
+            length = primitive._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                boundingSphere = primitive._boundingSpheres[i];
                 var boundingSphereWC = primitive._boundingSphereWC[i];
                 var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
                 var sizeInMeters = pixelSizeInMeters * pixelSize;
                 boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
             }
         }
-    }
-
-    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
-        //>>includeStart('debug', pragmas.debug);
-        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
-            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-
-        updateBoundingVolumes(primitive, frameState);
 
         if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);
-            var length = primitive._boundingSpheres.length;
-            for (var i = 0; i < length; ++i) {
-                var boundingSphere = primitive._boundingSpheres[i];
+            length = primitive._boundingSpheres.length;
+            for (i = 0; i < length; ++i) {
+                boundingSphere = primitive._boundingSpheres[i];
                 if (defined(boundingSphere)) {
                     primitive._boundingSphereWC[i] = BoundingSphere.transform(boundingSphere, modelMatrix, primitive._boundingSphereWC[i]);
                     if (!frameState.scene3DOnly) {
@@ -1662,6 +1656,16 @@ define([
                 }
             }
         }
+    };
+
+    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+        //>>includeStart('debug', pragmas.debug);
+        if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
+            throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
+        }
+        //>>includeEnd('debug');
+
+        Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
 
         var boundingSpheres;
         if (frameState.mode === SceneMode.SCENE3D) {

@@ -691,8 +691,8 @@ define([
 
     function updateAndQueueCommands(classificationPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var primitive = classificationPrimitive._primitive;
+        Primitive._updateBoundingVolumes(primitive, frameState, modelMatrix);
 
-        /*
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = primitive._boundingSphereWC;
@@ -703,7 +703,6 @@ define([
         } else if (defined(primitive._boundingSphereMorph)) {
             boundingVolumes = primitive._boundingSphereMorph;
         }
-        */
 
         var commandList = frameState.commandList;
         var passes = frameState.passes;
@@ -712,7 +711,7 @@ define([
             for (var i = 0; i < colorLength; ++i) {
                 var colorCommand = colorCommands[i];
                 colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = undefined;//boundingVolumes[Math.floor(i / 3)];
+                colorCommand.boundingVolume = boundingVolumes[Math.floor(i / 3)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
@@ -726,10 +725,10 @@ define([
             pickCommands.length = length;
 
             for (var j = 0; j < length; ++j) {
-                //var pickOffset = pickOffsets[Math.floor(j / 3)];
+                var pickOffset = pickOffsets[Math.floor(j / 3)];
                 var pickCommand = pickCommands[j];
                 pickCommand.modelMatrix = modelMatrix;
-                pickCommand.boundingVolume = undefined;//boundingVolumes[pickOffset.index];
+                pickCommand.boundingVolume = boundingVolumes[pickOffset.index];
                 pickCommand.cull = cull;
 
                 commandList.push(pickCommand);
