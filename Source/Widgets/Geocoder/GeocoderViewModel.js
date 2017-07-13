@@ -154,7 +154,7 @@ define([
 
         /**
          * True if the geocoder should query as the user types to autocomplete
-         * @type {Booelan}
+         * @type {Boolean}
          * @default true
          */
         this.autoComplete = defaultValue(options.autocomplete, true);

@@ -2,7 +2,7 @@
 
 Our development culture is committed to testing.  Cesium is used in diverse use cases on a wide array of platforms so it is important for it to be well tested.
 
-As of Cesium 1.15, Cesium has over 7,000 tests with 93% code coverage.  Cesium has almost as much test code (94K lines) as engine code (98K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
+As of Cesium 1.35, Cesium has over 8,800 tests with 93% code coverage.  Cesium has as much test code (126K lines) as engine code (126K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
 
 All new code should have 100% code coverage and should pass all tests.  Always run the tests before opening a pull request.
 
