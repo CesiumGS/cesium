@@ -5,7 +5,7 @@ define([
     'use strict';
 
     /**
-     * A function to port GLSL shaders from GLSL ES 1.00 to GLSL ES 2.00
+     * A function to port GLSL shaders from GLSL ES 1.00 to GLSL ES 3.00
      *
      * This function is nowhere near comprehensive or complete. It just
      * handles some common cases.
