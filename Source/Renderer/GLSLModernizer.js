@@ -17,7 +17,6 @@ define([
      * @private
      */
     function glslModernizeShaderText(source, isFragmentShader) {
-        var mainFunctionRegex = /void\s+main\s*\((void)?\)/;
         var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
 
@@ -34,15 +33,6 @@ define([
                 break;
             }
         };
-        
-        if (outputDeclarationLine === -1) {
-            for (number = 0; number < splitSource.length; ++number) {
-                var line = splitSource[number];
-                if (mainFunctionRegex.exec(line)) {
-                    outputDeclarationLine = number;
-                }
-            };
-        }
 
         if (outputDeclarationLine === -1) {
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION nor a main function!');
