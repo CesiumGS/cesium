@@ -44,14 +44,18 @@ define([
         // searchString[singleCharacter]searchString
         function replaceInSource(str, replacement, strIsRegex) {
             var regex = str;
-            if (!defined(strIsRegex) || strIsRegex === false) {
+            if ((strIsRegex === undefined) || strIsRegex === false) {
                 var regexStr = "(^|[^\\w])(" + str + ")($|[^\\w])";
                 regex = new RegExp(regexStr, 'g');
             }
+            
             for (var number = 0; number < splitSource.length; ++number) {
-                splitSource[number] = splitSource[number].replace(regex, function (match, group1, group2, group3) {
-                    return group1 + replacement + group2;
-                });
+                var line = splitSource[number];
+                if (strIsRegex) {
+                    splitSource[number] = line.replace(regex, replacement);
+                } else {
+                    splitSource[number] = line.replace(regex, "$1" + replacement + "$3");
+                }
             }
         }
         
