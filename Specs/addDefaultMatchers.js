@@ -263,16 +263,16 @@ define([
 
             toPickPrimitive : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected, x, y, size) {
-                        return pickPrimitiveEquals(actual, expected, x, y, size);
+                    compare : function(actual, expected, x, y, width, height) {
+                        return pickPrimitiveEquals(actual, expected, x, y, width, height);
                     }
                 };
             },
 
             notToPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected, x, y, size) {
-                        return pickPrimitiveEquals(actual, undefined, x, y, size);
+                    compare : function(actual, expected, x, y, width, height) {
+                        return pickPrimitiveEquals(actual, undefined, x, y, width, height);
                     }
                 };
             },
@@ -467,7 +467,7 @@ define([
 
     function pickPrimitiveEquals(actual, expected, x, y, pickWidth, pickHeight) {
         var scene = actual;
-        var windowPosition = new Cartesian2(defaultValue(x,0), defaultValue(y,0));
+        var windowPosition = new Cartesian2(x,y);
         var result = scene.pick(windowPosition, pickWidth, pickHeight);
 
         if (!!window.webglStub) {

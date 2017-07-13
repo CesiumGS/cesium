@@ -2808,7 +2808,6 @@ define([
         // override the rectangle dimensions if defined
         rectangleWidth = defaultValue(width, 3.0);
         rectangleHeight = defaultValue(height, rectangleWidth);
-        scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
         var context = this._context;
         var us = context.uniformState;
@@ -2831,6 +2830,8 @@ define([
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.width = rectangleWidth;
+        scratchRectangle.height = rectangleHeight;
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
         updateEnvironment(this, passState);
