@@ -72,7 +72,7 @@ define([
                 }
             }
 
-            if (pixelDatatype == PixelDatatype.FLOAT) {
+            if (pixelDatatype === PixelDatatype.FLOAT) {
                 switch (pixelFormat) {
                     case PixelFormat.RGBA:
                         internalFormat = WebGLConstants.RGBA32F;
