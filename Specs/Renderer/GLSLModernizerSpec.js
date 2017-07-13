@@ -78,6 +78,91 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
+    it ('creates layout qualifier with swizzle', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#extension GL_EXT_draw_buffers : enable \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    gl_FragData[1].xyz = vec3(1.0); \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var expected0 = 'layout(location = 0) out vec4 czm_out0;';
+        var expected1 = 'layout(location = 1) out vec4 czm_out1;';
+        expect(output).toContain(expected0);
+        expect(output).toContain(expected1);
+    });
+
+    it ('removes old functions/variables from fragment shader', function() {
+        var old_fragment =
+            '#define OUTPUT_DECLARATION \n' +
+            '#extension GL_EXT_draw_buffers : enable \n' +
+            'uniform sampler2D example; \n' +
+            'uniform sampler2D exampleCube; \n' +
+            'uniform sampler2D example3D; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragData[0] = texture2D(example, v_textureCoordinates); \n' +
+            '    gl_FragData[1] = textureCube(exampleCube, v_textureCoordinates); \n' +
+            '    gl_FragData[2] = texture3D(example3D, v_textureCoordinates); \n' +
+            '    gl_FragDepthEXT = 0.0; \n' + 
+            '} \n';
+        
+        var output = glslModernizeShaderText(old_fragment, true);
+        
+        var expectedDepth = 'gl_FragDepth = 0.0;';
+        var expectedTexture2D = 'texture(example, v_textureCoordinates);';
+        var expectedTextureCube = 'texture(exampleCube, v_textureCoordinates);';
+        var expectedTexture3D = 'texture(example3D, v_textureCoordinates);';
+        var expectedIn = 'in vec2 v_textureCoordinates;';
+
+        var notExpectedDepth = 'gl_FragDepthEXT = 0.0;';
+        var notExpectedTexture2D = 'texture2D(example, v_textureCoordinates);';
+        var notExpectedTextureCube = 'textureCube(exampleCube, v_textureCoordinates);';
+        var notExpectedTexture3D = 'texture3D(example3D, v_textureCoordinates);';
+        var notExpectedVarying = 'varying vec2 v_textureCoordinates;';
+        
+        expect(output).toContain(expectedDepth);
+        expect(output).toContain(expectedTexture2D);
+        expect(output).toContain(expectedTextureCube);
+        expect(output).toContain(expectedTexture3D);
+        expect(output).toContain(expectedIn);
+
+        expect(output).not.toContain(notExpectedDepth);
+        expect(output).not.toContain(notExpectedTexture2D);
+        expect(output).not.toContain(notExpectedTextureCube);
+        expect(output).not.toContain(notExpectedTexture3D);
+        expect(output).not.toContain(notExpectedVarying);
+    });
+
+    it ('removes old functions/variables from vertex shader', function() {
+        var old_vertex =
+            '#define OUTPUT_DECLARATION \n' +
+            'attribute vec4 position; \n' +
+            'varying vec4 varyingVariable; \n';
+            'void main() \n' +
+            '{ \n' +
+            '    gl_Position = position; \n' +
+            '    varyingVariable = position.wzyx; \n' +
+            '} \n';
+        
+        var output = glslModernizeShaderText(old_vertex, false);
+        
+        var expectedOut = 'out vec4 varyingVariable;';
+        var expectedIn = 'in vec4 position;';
+
+        var notExpectedAttribute = 'attribute vec4 varyingVariable;';
+        var notExpectedVarying = 'varying vec2 varyingVariable;';
+        
+        expect(output).toContain(expectedOut);
+        expect(output).toContain(expectedIn);
+
+        expect(output).not.toContain(notExpectedAttribute);
+        expect(output).not.toContain(notExpectedVarying);
+    });
+
     it ('creates single layout qualifier under single branch, single condition', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
@@ -150,7 +235,7 @@ defineSuite([
         expect(output).not.toContain(notExpected);
     });
 
-    it ('creates multiple layout qualifier under multiple branches, multiple conditions (cascades)', function() {
+    it ('creates multiple layout qualifiers under multiple branches, multiple conditions (cascades)', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -160,7 +245,7 @@ defineSuite([
             '    #ifdef EXAMPLE_BRANCH \n' +
             '    gl_FragData[0] = vec4(0.0); \n' +
             '    #ifdef EXAMPLE_BRANCH1 \n' +
-            '    gl_FragData[1] = vec4(0.0); \n' +
+            '    gl_FragData[1] = vec4(1.0); \n' +
             '    #endif //EXAMPLE_BRANCH1 \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
@@ -171,5 +256,41 @@ defineSuite([
         var containsExpected0 = ((output.indexOf(expected0[0]) !== -1) && (output.indexOf(expected0[1]) !== -1));
         expect(output).toContain(expected0);
         expect(containsExpected0).toBe(true);
+    });
+
+    it ('creates single layout qualifier under multiple branches, single condition (else)', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #else \n' +
+            '    gl_FragData[0] = vec4(1.0); \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        expect(output).not.toContain(notExpected);
+    });
+
+    it ('creates branched layout qualifiers for gl_FragColor and gl_FragData', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #else \n' +
+            '    gl_FragColor = vec4(1.0); \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        var expected1 = '#ifndef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_fragColor;\n#endif';
+        expect(output).toContain(expected0);
+        expect(output).toContain(expected1);
     });
 });
