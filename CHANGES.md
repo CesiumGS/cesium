@@ -4,6 +4,7 @@ Change Log
 ### 1.36 - 2017-08-01
 
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
+* Added `ClassificationPrimitive` which defines a volume and draws the intersection of the volume and terrain or 3D Tiles. [#5625](https://github.com/AnalyticalGraphicsInc/cesium/pull/5625)
 
 ### 1.35.2 - 2017-07-11
 
