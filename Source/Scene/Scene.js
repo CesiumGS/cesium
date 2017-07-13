@@ -2793,8 +2793,8 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Number} [width=3] width of the pick rectangle
-     * @param {Number} [height=3] height of the pick rectangle
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -2805,7 +2805,7 @@ define([
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
-        // override the rectangle dimensions if defined
+
         rectangleWidth = defaultValue(width, 3.0);
         rectangleHeight = defaultValue(height, rectangleWidth);
 

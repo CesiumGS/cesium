@@ -465,10 +465,10 @@ define([
         };
     }
 
-    function pickPrimitiveEquals(actual, expected, x, y, pickWidth, pickHeight) {
+    function pickPrimitiveEquals(actual, expected, x, y, width, height) {
         var scene = actual;
-        var windowPosition = new Cartesian2(x,y);
-        var result = scene.pick(windowPosition, pickWidth, pickHeight);
+        var windowPosition = new Cartesian2(x, y);
+        var result = scene.pick(windowPosition, width, height);
 
         if (!!window.webglStub) {
             return {

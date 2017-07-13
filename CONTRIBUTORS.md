@@ -1,6 +1,7 @@
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
 ## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
+
 * [Analytical Graphics, Inc.](http://www.agi.com/)
    * [Patrick Cozzi](https://github.com/pjcozzi)
    * [Kristian Calhoun](https://github.com/kristiancalhoun)
