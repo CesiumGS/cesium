@@ -525,7 +525,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return this._textureFloat || this._webgl2;
+                return this._textureFloat || this._colorBufferFloat;
             }
         },
 
