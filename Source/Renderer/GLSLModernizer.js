@@ -1,6 +1,8 @@
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
     ], function(
+        defined,
         DeveloperError) {
     'use strict';
 
@@ -88,16 +90,35 @@ define([
             }
         }
 
-        function replaceInSource(regex, replacement) {
+        function replaceInSource(str, replacement, strIsRegex) {
+            var replaceAll = function(target, search, replacement) {
+                return target.split(search).join(replacement);
+            };
+
+            var regex = str;
+            if (!defined(strIsRegex) || strIsRegex === false) {
+                /*var regexStr = "(?:^.*[^\\w](" + str +
+                    ")[^\\w].*$|^(" + str +
+                    ")[^\\w].*$|^.*[^\\w](" + str +
+                    ")$|^(" + str + ")$)";
+                    regex = new RegExp(regexStr, 'g');*/
+                regex = new RegExp(str, 'g');
+            }
             for (var number = 0; number < splitSource.length; ++number) {
                 splitSource[number] = safeNameReplace(regex, splitSource[number], replacement);
+                //splitSource[number] = replaceAll(splitSource[number], regex, replacement);
             }
         }
         
-        function findInSource(regex) {
+        function findInSource(str) {
+            var regexStr = "(^.*[^\\w](" + str +
+                ")[^\\w].*$|^(" + str +
+                ")[^\\w].*$|^.*[^\\w](" + str +
+                ")$|^(" + str + ")$)";
+            var regex = new RegExp(regexStr, 'g');
             for (var number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
-                if (safeNameFind(regex, line) !== -1) {
+                if (regex.test(line)) {
                     return true;
                 }
             }
@@ -204,7 +225,7 @@ define([
 
         function removeExtension(name) {
             var regex = "#extension\\s+GL_" + name + "\\s+:\\s+[a-zA-Z0-9]+\\s*$";
-            replaceInSource(new RegExp(regex, "g"), "");
+            replaceInSource(new RegExp(regex, "g"), "", true);
         }
 
         var variableSet = [];
@@ -215,16 +236,16 @@ define([
             var regex = new RegExp(fragDataString, "g");
             if (regex.test(source)) {
                 setAdd(newOutput, variableSet);
-                replaceInSource(regex, newOutput);
+                replaceInSource(fragDataString, newOutput);
                 splitSource.splice(outputDeclarationLine, 0, "layout(location = " + i + ") out vec4 " + newOutput + ";");
                 outputDeclarationLine += 1;
             }
         }
 
         var czmFragColor = "czm_fragColor";
-        if (findInSource(/gl_FragColor/)) {
+        if (findInSource("gl_FragColor")) {
             setAdd(czmFragColor, variableSet);
-            replaceInSource(/gl_FragColor/, czmFragColor);
+            replaceInSource("gl_FragColor", czmFragColor);
             splitSource.splice(outputDeclarationLine, 0, "layout(location = 0) out vec4 czm_fragColor;");
             outputDeclarationLine += 1;
         }
@@ -276,18 +297,19 @@ define([
         removeExtension("EXT_draw_buffers");
         removeExtension("EXT_frag_depth");
 
-        replaceInSource(/texture2D/, "texture");
-        replaceInSource(/texture3D/, "texture");
-        replaceInSource(/textureCube/, "texture");
-        replaceInSource(/gl_FragDepthEXT/, "gl_FragDepth");
+        replaceInSource("texture2D", "texture");
+        replaceInSource("texture3D", "texture");
+        replaceInSource("textureCube", "texture");
+        replaceInSource("gl_FragDepthEXT", "gl_FragDepth");
 
         if (isFragmentShader) {
-            replaceInSource(/varying/, "in");
+            replaceInSource("varying", "in");
         } else {
-            replaceInSource(/attribute/, "in");
-            replaceInSource(/varying/, "out");
+            replaceInSource("attribute", "in");
+            replaceInSource("varying", "out");
         }
 
+        console.log(compileSource());
         return compileSource();
     }
 
