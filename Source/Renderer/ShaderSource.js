@@ -324,7 +324,7 @@ define([
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
-     * @param {Object} [context] The current rendering context
+     * @param {Context} context The current rendering context
      *
      * @returns {String} The combined shader string.
      */
@@ -335,7 +335,7 @@ define([
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
      *
-     * @param {Object} [context] The current rendering context
+     * @param {Context} context The current rendering context
      *
      * @returns {String} The combined shader string.
      */
