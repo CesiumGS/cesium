@@ -78,6 +78,28 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
+    it ('does not create layout qualifier for reserved word lookalike variables functions', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            'uniform sampler2D example; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    vec4 gl_FragData_ = vec4(0.0); \n' +
+            '    vec4 a_gl_FragData = vec4(0.0); \n' +
+            '    vec2 thisIsNotAGoodNameForAtexture2D = vec2(0.0); \n' +
+            '    vec4 gl_FragColor = texture2D(example, thisIsNotAGoodNameForAtexture2D); \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var expectedBadName = 'vec2 thisIsNotAGoodNameForAtexture2D';
+        var expectedVariable = 'vec4 a_gl_FragData = vec4(0.0);';
+        var expectedTextureCall = 'texture(example, thisIsNotAGoodNameForAtexture2D)';
+        var notExpectedLayout = 'layout(location = 0) out czm_out';
+        expect(output).toContain(expectedBadName);
+        expect(output).toContain(expectedVariable);
+        expect(output).toContain(expectedTextureCall);
+        expect(output).not.toContain(notExpectedLayout);
+    });
+
     it ('creates layout qualifier with swizzle', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
