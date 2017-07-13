@@ -78,7 +78,22 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
-    it ('creates layout qualifier under single condition', function() {
+    it ('creates single layout qualifier under single branch, single condition', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var expected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        expect(output).toContain(expected);
+    });
+
+    it ('creates multiple layout qualifiers under single branch, single condition', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -90,7 +105,71 @@ defineSuite([
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
         var output = glslModernizeShaderText(noQualifiers, true);
-        var expected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
-        expect(output).toContain(expected);
+        var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        var expected1 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 1) out vec4 czm_out1;\n#endif';
+        expect(output).toContain(expected0);
+        expect(output).toContain(expected1);
+    });
+
+    it ('creates multiple layout qualifiers under multiple branches, single condition (cancels)', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    gl_FragData[1] = vec4(1.0); \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '    #ifndef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    gl_FragData[1] = vec4(1.0); \n' +
+            '    #endif //!EXAMPLE_BRANCH \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        expect(output).not.toContain(notExpected);
+    });
+
+    it ('creates single layout qualifier under multiple branches, multiple conditions (cancels)', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            '#define EXAMPLE_BRANCH1 \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '    #ifdef EXAMPLE_BRANCH1 \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #endif //EXAMPLE_BRANCH1 \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        expect(output).not.toContain(notExpected);
+    });
+
+    it ('creates multiple layout qualifier under multiple branches, multiple conditions (cascades)', function() {
+        var noQualifiers =
+            '#define OUTPUT_DECLARATION \n' +
+            '#define EXAMPLE_BRANCH \n' +
+            '#define EXAMPLE_BRANCH1 \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    #ifdef EXAMPLE_BRANCH \n' +
+            '    gl_FragData[0] = vec4(0.0); \n' +
+            '    #ifdef EXAMPLE_BRANCH1 \n' +
+            '    gl_FragData[1] = vec4(0.0); \n' +
+            '    #endif //EXAMPLE_BRANCH1 \n' +
+            '    #endif //EXAMPLE_BRANCH \n' +
+            '} \n';
+        var output = glslModernizeShaderText(noQualifiers, true);
+        var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
+        var expected1 = ['#ifdef EXAMPLE_BRANCH \n#ifdef EXAMPLE_BRANCH1 \nlayout(location = 0) out vec4 czm_out0;\n#endif',
+                         '#ifdef EXAMPLE_BRANCH1 \n#ifdef EXAMPLE_BRANCH0 \nlayout(location = 0) out vec4 czm_out0;\n#endif'];
+        var containsExpected0 = ((output.indexOf(expected0[0]) !== -1) && (output.indexOf(expected0[1]) !== -1));
+        expect(output).toContain(expected0);
+        expect(containsExpected0).toBe(true);
     });
 });
