@@ -28,151 +28,38 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-function TourPlayer(viewer, datasource) {
-  this.datasource = datasource;
-  this.viewer = viewer;
-  this.activeScenePlayer = null;
-
-  if(this.datasource && this.datasource.kmlTours) {
-    this.tour = this.datasource.kmlTours[0];
-    this.playlist = this.tour.playlist;
-  }
-
-  this.players = {
-    'Wait': WaitPlayer,
-    'FlyTo': FlyToPlayer
-  };
-
-  this.tourStart = new Cesium.Event();
-  this.tourEnd = new Cesium.Event();
-  this.sceneStart = new Cesium.Event();
-  this.sceneEnd = new Cesium.Event();
-}
-
-TourPlayer.prototype.play = function(done) {
-  if(this.playlist) {
-    var self = this;
-    this.tourStart.raiseEvent();
-    chainPlaylist(this.playlist, this.playEntry.bind(this), function() {
-      // Clean player
-      self.activeScenePlayer = null;
-      self.tourEnd.raiseEvent();
-      if (done !== undefined) {
-          done();
-      }
-    });
-  }
-};
-
-TourPlayer.prototype.playEntry = function(entry, index, next) {
-  var PlayerConstructor = this.players[entry.entryType];
-  var context = {
-    player: this,
-    playlist: this.playlist,
-    index: index
-  };
-
-  this.activeScenePlayer = new PlayerConstructor(entry, function() {
-    this.sceneEnd.raiseEvent(entry.entryType, entry.duration);
-    next();
-  }.bind(this), context);
-
-  this.sceneStart.raiseEvent(entry.entryType, entry.duration);
-  this.activeScenePlayer.play();
-
-};
-
-/*
-Asynchronous array iterator
-*/
-function chainPlaylist(playlist, onEach, done) {
-  var playlistIndex = 0;
-
-  var next = function(success) {
-    if (success === undefined || success) {
-      var entry = playlist[playlistIndex++];
-      if (entry) {
-        onEach(entry, playlistIndex, next);
-      }
-      // We've done
-      else {
-        done();
-      }
-    }
-  };
-
-  // Make a first step
-  next();
-
-}
-
-//------------------------------------------------------------
-function WaitPlayer(scene, done, context) {
-  this.scene = scene;
-  this.done = done;
-  this.context = context;
-}
-
-WaitPlayer.prototype.play = function() {
-  // Just call the timeout
-  this.timer = setTimeout(this.done, this.scene.duration);
-};
-
-//------------------------------------------------------------
-function FlyToPlayer(scene, done, context) {
-  this.scene = scene;
-  this.done = done;
-  this.context = context;
-  this.camera = context.player.viewer.camera;
-}
-
-FlyToPlayer.prototype.play = function() {
-  var lookAt = this.scene.lookAt;
-  var target = lookAt.getBoundingSphere();
-  var offset = lookAt.getHeadingPitchRangeCameraOffset();
-
-  this.camera.flyToBoundingSphere(target, {
-    offset: offset,
-    duration: this.scene.duration,
-    complete: this.done
-  });
-};
-//============================================================
-
 var viewer = new Cesium.Viewer('cesiumContainer');
 var options = {
     camera : viewer.scene.camera,
     canvas : viewer.scene.canvas
 };
 
-Sandcastle.addToolbarMenu([{
-    text : 'Fly to eiffel tower',
-    onselect : function() {
-        viewer.dataSources.add(
-            Cesium.KmlDataSource.load('../../SampleData/kml/eiffel-tower-flyto.kml', options))
-        .then(function(dataSource){
-            var player = new TourPlayer(viewer, dataSource);
+var tour = null;
+viewer.dataSources.add(
+    Cesium.KmlDataSource.load('../../SampleData/kml/eiffel-tower-flyto.kml', options))
+.then(function(dataSource) {
+    tour = dataSource.kmlTours[0];
+    tour.tourStart.addEventListener(function() {
+        console.log('Start tour');
+    });
+    tour.tourEnd.addEventListener(function(terminated) {
+        console.log((terminated ? 'Trminate' : 'End') + ' tour');
+    });
+    tour.entryStart.addEventListener(function(entry) {
+        console.log('Play ' + entry.constructor.name + ' ('+ entry.duration + ')');
+    });
+    tour.entryEnd.addEventListener(function(entry, terminated) {
+        console.log((terminated ? 'Trminate' : 'End') + ' ' + entry.constructor.name);
+    });
+});
 
-                player.sceneStart.addEventListener(function(type, duration) {
-                  console.log('start', type, duration);
-                });
+Sandcastle.addToolbarButton('Play', function(){
+    tour.play(viewer);
+});
 
-                player.sceneEnd.addEventListener(function(type, duration) {
-                  console.log('end', type, duration);
-                });
-
-                player.tourStart.addEventListener(function() {
-                  console.log('Tour Start');
-                });
-
-                player.tourEnd.addEventListener(function() {
-                  console.log('Tour End');
-                });
-
-                player.play();
-        });
-    }
-}], 'toolbar');
+Sandcastle.addToolbarButton('Terminate', function(){
+    tour.stop();
+});
 
 Sandcastle.reset = function() {
     viewer.dataSources.removeAll();

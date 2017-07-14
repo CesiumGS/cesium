@@ -1,0 +1,51 @@
+define([
+        '../Core/defined'
+    ], function(
+        defined
+    ) {
+    'use strict';
+    /**
+     * @alias KmlTourWait
+     * @constructor
+     *
+     * @param {Number} duration entry duration
+     */
+    function KmlTourWait(duration) {
+        this.blocking = true;
+        this.duration = duration;
+
+        this.timeout = null;
+    }
+
+    /**
+     * Play this playlist entry
+     *
+     * @param {KmlTourWait~DoneCallback} done function which will be called when playback ends
+     */
+    KmlTourWait.prototype.play = function(done) {
+        this.activeCallback = done;
+        this.timeout = setTimeout(function() {
+            done(false);
+        }, this.duration * 1000);
+    };
+
+    /**
+     * Stop execution of curent entry, cancel curent timeout
+     */
+    KmlTourWait.prototype.stop = function() {
+        clearTimeout(this.timeout);
+        if (defined(this.activeCallback)) {
+            this.activeCallback(true);
+        }
+    };
+
+    /**
+     * A function which will be called when playback ends.
+     *
+     * @callback KmlTourWait~DoneCallback
+     * @param {Boolean} terminated true if {@link KmlTourWait#stop} was
+     * caled before entry done playback.
+     */
+
+    return KmlTourWait;
+});

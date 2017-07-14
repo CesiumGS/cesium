@@ -32,6 +32,8 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Core/HeadingPitchRoll',
+        '../Core/HeadingPitchRange',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
@@ -60,7 +62,10 @@ define([
         './TimeIntervalCollectionProperty',
         './WallGraphics',
         './KmlLookAt',
-        './KmlCamera'
+        './KmlCamera',
+        './KmlTour',
+        './KmlTourFlyTo',
+        './KmlTourWait'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -94,6 +99,8 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeadingPitchRoll,
+        HeadingPitchRange,
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
@@ -122,7 +129,10 @@ define([
         TimeIntervalCollectionProperty,
         WallGraphics,
         KmlLookAt,
-        KmlCamera) {
+        KmlCamera,
+        KmlTour,
+        KmlTourFlyTo,
+        KmlTourWait) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -1694,23 +1704,21 @@ define([
     var playlistNodeProcessors = {
         FlyTo: processTourFlyTo,
         Wait: processTourWait,
-        SoundCue: processTourSoundCue,
+        SoundCue: processTourUnsupportedNode,
         AnimatedUpdate: processTourUnsupportedNode,
         TourControl: processTourUnsupportedNode
     };
 
     function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         var name = queryStringValue(node, 'name', namespaces.kml);
-        var tour = {'name': name};
+        var id = queryStringAttribute(node, 'id');
+        var tour = new KmlTour(name, id);
 
         var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
         if(playlistNode) {
-            tour['playlist'] = [];
-
             var childNodes = playlistNode.childNodes;
             for(var i = 0; i < childNodes.length; i++) {
                 var entryNode = childNodes[i];
-
                 if (entryNode.localName) {
                     var playlistNodeProcessor = playlistNodeProcessors[entryNode.localName];
                     if (playlistNodeProcessor) {
@@ -1734,95 +1742,61 @@ define([
         console.log('KML Tour unsupported node ' + entryNode.localName);
     }
 
-    function processTourSoundCue(tour, entryNode) {
-        var entry = { 'entryType': 'SoundCue' };
-
-        // It's not defined in google kml touring specs does SoundCue has
-        // duration or not.
-        // Parse it in case player implementation wants
-        // to trim sound before linked sound file ends.
-        var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
-        if(duration !== null) {
-            entry['duration'] = duration;
-        }
-
-        var href = queryStringValue(entryNode, 'href', namespaces.kml);
-        if(href !== null) {
-            entry['href'] = href;
-        }
-
-        tour['playlist'].push(entry);
-    }
-
     function processTourWait(tour, entryNode) {
-        var waitEntry = { 'entryType': 'Wait' };
         var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
-        if(duration !== null) {
-            waitEntry['duration'] = duration;
-        }
-
-        tour['playlist'].push(waitEntry);
+        tour.addPlaylistEntry(new KmlTourWait(duration));
     }
 
     function processTourFlyTo(tour, entryNode) {
-
-        var flyToEntry = { 'entryType': 'FlyTo' };
-
         var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
-        if(duration !== null) {
-            flyToEntry['duration'] = duration;
-        }
-
         var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
-        if(flyToMode !== null) {
-            flyToEntry['flyToMode'] = flyToMode;
-        }
 
         var t = {kml: {}};
+
         processLookAt(entryNode, t);
         processCamera(entryNode, t);
 
-        if (defined(t.kml.lookAt)) {
-            flyToEntry['lookAt'] = t.kml.lookAt;
-        }
-        if (defined(t.kml.camera)) {
-            flyToEntry['camera'] = t.kml.camera;
-        }
+        var view = t.kml.lookAt || t.kml.camera;
 
-        tour['playlist'].push(flyToEntry);
+        var flyto = new KmlTourFlyTo(duration, flyToMode, view);
+        tour.addPlaylistEntry(flyto);
     }
 
     function processCamera(featureNode, entity) {
         var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
         if(defined(camera)) {
-            var result = {};
+            var lon = defaultValue(queryNumericValue(camera, 'longitude', namespaces.kml), 0.0);
+            var lat = defaultValue(queryNumericValue(camera, 'latitude', namespaces.kml), 0.0);
+            var altitude = defaultValue(queryNumericValue(camera, 'altitude', namespaces.kml), 0.0);
 
-            result.longitude = queryNumericValue(camera, 'longitude', namespaces.kml);
-            result.latitude = queryNumericValue(camera, 'latitude', namespaces.kml);
-            result.altitude = queryNumericValue(camera, 'altitude', namespaces.kml);
+            var heading = defaultValue(queryNumericValue(camera, 'heading', namespaces.kml), 0.0);
+            var tilt = defaultValue(queryNumericValue(camera, 'tilt', namespaces.kml), 0.0);
+            var roll = defaultValue(queryNumericValue(camera, 'roll', namespaces.kml), 0.0);
 
-            result.heading = queryNumericValue(camera, 'heading', namespaces.kml);
-            result.tilt = queryNumericValue(camera, 'tilt', namespaces.kml);
-            result.roll = queryNumericValue(camera, 'roll', namespaces.kml);
+            var position = Cartesian3.fromDegrees(lon, lat, altitude);
+            var hpr = HeadingPitchRoll.fromDegrees(heading, tilt - 90.0, roll);
 
-            entity.kml.camera = new KmlCamera(entity, result);
+            entity.kml.camera = new KmlCamera(position, hpr);
         }
     }
 
     function processLookAt(featureNode, entity) {
         var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
         if(defined(lookAt)) {
-            var result = {};
+            var lon = defaultValue(queryNumericValue(lookAt, 'longitude', namespaces.kml), 0.0);
+            var lat = defaultValue(queryNumericValue(lookAt, 'latitude', namespaces.kml), 0.0);
+            var altitude = defaultValue(queryNumericValue(lookAt, 'altitude', namespaces.kml), 0.0);
+            var heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            var tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            var range = defaultValue(queryNumericValue(lookAt, 'range', namespaces.kml), 0.0);
 
-            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
-            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
-            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+            tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
+            heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
 
-            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
-            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
-            result.range = queryNumericValue(lookAt, 'range', namespaces.kml);
+            var hpr = new HeadingPitchRange(heading, tilt - 90.0, range);
+            var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude);
 
-            entity.kml.lookAt = new KmlLookAt(entity, result);
+            entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
         }
     }
 
