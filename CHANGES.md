@@ -3,6 +3,11 @@ Change Log
 
 ### 1.36 - 2017-08-01
 
+* Deprecated
+   * Scene/OrthographicFrustum is deprecated. It has moved to Core/OrthographicFrustum in 1.36. Scene/OrthographicFrustum will be removed in 1.38.
+   * Scene/OrthographicOffCenterFrustum is deprecated. It has moved to Core/OrthographicOffCenterFrustum in 1.36. Scene/OrthographicOffCenterFrustum will be removed in 1.38.
+   * Scene/PerspectiveFrustum is deprecated. It has moved to Core/PerspectiveFrustum in 1.36. Scene/PerspectiveFrustum will be removed in 1.38.
+   * Scene/PerspectiveOffCenterFrustum is deprecated. It has moved to Core/PerspectiveOffCenterFrustum in 1.36. Scene/PerspectiveOffCenterFrustum will be removed in 1.38.
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 
