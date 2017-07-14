@@ -84,6 +84,9 @@ define([
         this.stencilViewEnabled = options.stencilViewEnabled;
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
         this.useTriangle = options.useTriangle;
+
+        this.rangeMin = 1e-6;
+        this.rangeMax = 5e-2;
     }
 
     function createSampler() {
@@ -322,6 +325,8 @@ define([
 
     function regionGrowingStage(processor, context, iteration) {
         var i = iteration % 2;
+        var rangeMin = processor.rangeMin;
+        var rangeMax = processor.rangeMax;
 
         var uniformMap = {
             pointCloud_colorTexture : function() {
@@ -334,7 +339,15 @@ define([
                 return processor._densityTexture;
             },
             rangeParameter : function() {
-                return processor.rangeParameter;
+                if (processor.useTriangle) {
+                    return processor.rangeParameter;
+                } else {
+                    if (processor.rangeParameter < rangeMin) {
+                        return 0.0;
+                    } else {
+                        return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
+                    }
+                }
             },
             densityHalfWidth : function() {
                 return processor.densityHalfWidth;
