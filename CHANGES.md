@@ -3,6 +3,10 @@ Change Log
 
 ### 1.36 - 2017-08-01
 
+* Breaking changes
+   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll, result)` was removed. Use `Quaternion.fromHeadingPitchRoll(hpr, result)` instead  where `hpr` is a `HeadingPitchRoll`.
+   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
+   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 * Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
