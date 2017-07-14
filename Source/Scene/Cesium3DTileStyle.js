@@ -235,7 +235,7 @@ define([
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
                 if (!defined(value)) {
                     this._show = undefined;
-				} else if (typeof value === 'boolean') {
+                } else if (typeof value === 'boolean') {
                     this._show = new Expression(String(value));
                 } else if (typeof value === 'string') {
                     this._show = new Expression(value, defines);
@@ -279,7 +279,7 @@ define([
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override color expression with a string
          * style.color = 'color("blue")';
-		 *
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override color expression with a condition
@@ -302,9 +302,9 @@ define([
             },
             set : function(value) {
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-				if (!defined(value)) {
+                if (!defined(value)) {
                     this._color = undefined;
-				} else if (typeof value === 'string') {
+                } else if (typeof value === 'string') {
                     this._color = new Expression(value, defines);
                 } else if (defined(value.conditions)) {
                     this._color = new ConditionsExpression(value, defines);
@@ -376,7 +376,7 @@ define([
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
                 if (!defined(value)) {
                     this._pointSize = undefined;
-				} else if (typeof value === 'number') {
+                } else if (typeof value === 'number') {
                     this._pointSize = new Expression(String(value));
                 } else if (typeof value === 'string') {
                     this._pointSize = new Expression(value, defines);
