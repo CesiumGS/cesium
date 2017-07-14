@@ -95,49 +95,17 @@ define([
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
+        that.color = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
+        that.show = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
+        that.pointSize = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
+
         that._colorShaderFunctionReady = !defined(styleJson.color);
         that._showShaderFunctionReady = !defined(styleJson.show);
         that._pointSizeShaderFunctionReady = !defined(styleJson.pointSize);
 
-        var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
-        var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
-
-        var defines = styleJson.defines;
-
-        var color;
-        if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, defines);
-        } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, defines);
-        }
-
-        that._color = color;
-
-        var show;
-        if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression), defines);
-        } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression, defines);
-        } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression, defines);
-        }
-
-        that._show = show;
-
-        var pointSize;
-        if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression), defines);
-        } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression, defines);
-        } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression, defines);
-        }
-
-        that._pointSize = pointSize;
-
         var meta = {};
         if (defined(styleJson.meta)) {
+            var defines = styleJson.defines;
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
@@ -240,13 +208,13 @@ define([
          * // Override show expression with a boolean
          * style.show = true;
          * };
-		 *
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override show expression with a string
          * style.show = '${Height} > 0';
          * };
-		 *
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override show expression with a condition
@@ -256,7 +224,7 @@ define([
          *         ['true', 'true']
          *     ];
          * };
-		 */
+         */
         show : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -268,12 +236,13 @@ define([
                 return this._show;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
                 if (typeof value === 'boolean') {
                     this._show = new Expression(String(value));
                 } else if (typeof value === 'string') {
-                    this._show = new Expression(value);
+                    this._show = new Expression(value, defines);
                 } else if (defined(value.conditions)) {
-                    this._show = new ConditionsExpression(value);
+                    this._show = new ConditionsExpression(value, defines);
                 } else {
                     this._show = value;
                 }
@@ -334,10 +303,11 @@ define([
                 return this._color;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
                 if (typeof value === 'string') {
-                    this._color = new Expression(value);
+                    this._color = new Expression(value, defines);
                 } else if (defined(value.conditions)) {
-                    this._color = new ConditionsExpression(value);
+                    this._color = new ConditionsExpression(value, defines);
                 } else {
                     this._color = value;
                 }
@@ -391,7 +361,7 @@ define([
          *         ['true', '2.0']
          *     ]
          * };
-		 */
+         */
         pointSize : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -403,12 +373,13 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
                 if (typeof value === 'number') {
                     this._pointSize = new Expression(String(value));
                 } else if (typeof value === 'string') {
-                    this._pointSize = new Expression(value);
+                    this._pointSize = new Expression(value, defines);
                 } else if (defined(value.conditions)) {
-                    this._pointSize = new ConditionsExpression(value);
+                    this._pointSize = new ConditionsExpression(value, defines);
                 } else {
                     this._pointSize = value;
                 }
