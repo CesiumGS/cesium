@@ -167,14 +167,12 @@ defineSuite([
 
     it('sets show values in setter', function() {
         var defines = {
-            'defines': {
-                'showFactor': 10
-            }
+            'showFactor': 10
         };
-        var style = new Cesium3DTileStyle(defines);
+        var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.show = '${height} * ${showFactor} >= 1000';
-        expect(style.show).toEqual(new Expression('${height} * 10 >= 1000'));
+        expect(style.show).toEqual(new Expression('${height} * ${showFactor} >= 1000', defines));
 
         style.show = false;
         expect(style.show).toEqual(new Expression('false'));
@@ -240,12 +238,10 @@ defineSuite([
     });
 
     it('sets color values in setter', function() {
-        var defines = {
-            'defines': {
-                'targetColor': 'red'
-            }
+        var defines = 
+            'targetColor': 'red'
         };
-        var style = new Cesium3DTileStyle(defines);
+        var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.color = 'color("${targetColor}")';
         expect(style.color).toEqual(new Expression('color("red")'));
@@ -322,11 +318,9 @@ defineSuite([
 
     it('sets pointSize values in setter', function() {
         var defines = {
-            'defines': {
-                'targetPointSize': '2.0'
-            }
+            'targetPointSize': '2.0'
         };
-        var style = new Cesium3DTileStyle(defines);
+        var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.pointSize = 2;
         expect(style.pointSize).toEqual(new Expression('2'));
