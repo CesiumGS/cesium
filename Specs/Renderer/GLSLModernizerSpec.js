@@ -78,7 +78,7 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
-    it ('does not create layout qualifier for reserved word lookalike variables functions', function() {
+    it ('does not create layout qualifier for reserved word lookalike variables', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             'uniform sampler2D example; \n' +
