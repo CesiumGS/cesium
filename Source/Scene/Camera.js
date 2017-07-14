@@ -1049,7 +1049,8 @@ define([
         camera._setTransform(localTransform);
 
         Cartesian3.clone(Cartesian3.ZERO, camera.position);
-        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
+        hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
+        hpr.pitch = -hpr.pitch;
 
         var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
@@ -1075,7 +1076,8 @@ define([
             }
             Cartesian3.clone(position, camera.position);
         }
-        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
+        hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
+        hpr.pitch = -hpr.pitch;
 
         var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
         var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
@@ -1116,8 +1118,8 @@ define([
         }
 
         if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            hpr.heading = hpr.heading  - CesiumMath.PI_OVER_TWO;
-            hpr.pitch = -CesiumMath.PI_OVER_TWO;
+            hpr.heading = -hpr.heading  + CesiumMath.PI_OVER_TWO;
+            hpr.pitch = CesiumMath.PI_OVER_TWO;
             hpr.roll =  0.0;
             var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
             var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
