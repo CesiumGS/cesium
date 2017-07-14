@@ -371,6 +371,11 @@ define([
          * <p>
          * The loaded {@link Cesium3DTile} is passed to the event listener.
          * </p>
+         * <p>
+         * This event is fired during the tileset traversal while the frame is being rendered
+         * so that updates to the tile take effect in the same frame.  Do not create or modify
+         * Cesium entities or primitives during the event listener.
+         * </p>
          *
          * @type {Event}
          * @default new Event()
