@@ -636,7 +636,8 @@ define([
             maxAbsRatio : 0.9,
             densityViewEnabled : false,
             stencilViewEnabled : false,
-            pointAttenuationMultiplier : 2.0
+            pointAttenuationMultiplier : 2.0,
+            useTriangle : false
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);

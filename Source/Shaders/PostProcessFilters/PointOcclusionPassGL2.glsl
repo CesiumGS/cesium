@@ -12,8 +12,8 @@
 #define neighborhoodSize 9
 #define numSectors 8
 
-#define PERIOD 1e-5
-#define USE_TRIANGLE
+#define trianglePeriod 1e-5
+#define useTriangle
 
 uniform float ONE;
 
@@ -296,7 +296,7 @@ void main() {
             // neighboring points are usually very similar.
             // On the other hand, the x-values and y-values are
             // usually fairly different.
-#ifdef USE_TRIANGLE
+#ifdef useTriangle
             // We can get even more accuracy by passing the 64-bit
             // distance into a triangle wave function that
             // uses 64-bit primitives internally. The region
@@ -333,7 +333,7 @@ void main() {
                                        mul_fp64(highPrecisionX, highPrecisionX),
                                        mul_fp64(highPrecisionY, highPrecisionY)),
                                    mul_fp64(highPrecisionZ, highPrecisionZ)));
-            float triangleResult = triangleFP64(highPrecisionLength, PERIOD);
+            float triangleResult = triangleFP64(highPrecisionLength, trianglePeriod);
             depthOut = czm_packDepth(triangleResult);
 #else
             depthOut = czm_packDepth(length(centerPosition));

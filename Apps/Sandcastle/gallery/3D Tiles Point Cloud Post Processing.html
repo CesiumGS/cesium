@@ -135,6 +135,10 @@ Sandcastle.addToggleButton('Enabled', true, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;
 });
 
+Sandcastle.addToggleButton('Use Triangle Wave', true, function(checked) {
+    tileset.pointCloudPostProcessorOptions.useTriangle = checked;
+});
+
 Sandcastle.addToggleButton('Density View', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.densityViewEnabled = checked;
 });

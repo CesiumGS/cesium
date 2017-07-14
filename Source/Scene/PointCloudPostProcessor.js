@@ -83,6 +83,7 @@ define([
         this.densityViewEnabled = options.densityViewEnabled;
         this.stencilViewEnabled = options.stencilViewEnabled;
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
+        this.useTriangle = options.useTriangle;
     }
 
     function createSampler() {
@@ -256,6 +257,12 @@ define([
             (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
             'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
+        );
+
+        pointOcclusionStr = replaceConstants(
+            pointOcclusionStr,
+            'useTriangle',
+            processor.useTriangle
         );
 
         var func = StencilFunction.EQUAL;
@@ -673,7 +680,8 @@ define([
             tileset.pointCloudPostProcessorOptions.maxAbsRatio !== this.maxAbsRatio ||
             tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
             tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
-            tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier) {
+            tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
+            tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -684,6 +692,7 @@ define([
             this.stencilViewEnabled = tileset.pointCloudPostProcessorOptions.stencilViewEnabled;
             this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
             this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
+            this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;
             dirty = true;
         }
 
