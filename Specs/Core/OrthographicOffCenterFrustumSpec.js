@@ -1,12 +1,12 @@
 defineSuite([
-        'Scene/PerspectiveFrustum',
+        'Core/OrthographicOffCenterFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix4'
     ], function(
-        PerspectiveFrustum,
+        OrthographicOffCenterFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -17,28 +17,25 @@ defineSuite([
     var frustum, planes;
 
     beforeEach(function() {
-        frustum = new PerspectiveFrustum();
+        frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
-        frustum.far = 2.0;
-        frustum.aspectRatio = 1.0;
-        frustum.fov = (Math.PI) / 3;
+        frustum.far = 3.0;
+        frustum.right = 1.0;
+        frustum.left = -1.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
-    it('out of range fov causes an exception', function() {
-        frustum.fov = -1.0;
-        expect(function() {
-            return frustum.projectionMatrix;
-        }).toThrowDeveloperError();
-
-        frustum.fov = CesiumMath.TWO_PI;
+    it('left greater than right causes an exception', function() {
+        frustum.left = frustum.right + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
     });
 
-    it('negative aspect ratio throws an exception', function() {
-        frustum.aspectRatio = -1.0;
+    it('bottom greater than top throws an exception', function() {
+        frustum.bottom = frustum.top + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -46,6 +43,11 @@ defineSuite([
 
     it('out of range near plane throws an exception', function() {
         frustum.near = -1.0;
+        expect(function() {
+            return frustum.projectionMatrix;
+        }).toThrowDeveloperError();
+
+        frustum.far = 3.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -78,86 +80,80 @@ defineSuite([
 
     it('get frustum left plane', function() {
         var leftPlane = planes[0];
-        var expectedResult = new Cartesian4(Math.sqrt(3.0) / 2.0, 0.0, -0.5, 0.0);
-        expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+        var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 1.0);
+        expect(leftPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum right plane', function() {
         var rightPlane = planes[1];
-        var expectedResult = new Cartesian4(-Math.sqrt(3.0) / 2.0, 0.0, -0.5, 0.0);
-        expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+        var expectedResult = new Cartesian4(-1.0, 0.0, 0.0, 1.0);
+        expect(rightPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum bottom plane', function() {
         var bottomPlane = planes[2];
-        var expectedResult = new Cartesian4(0.0, Math.sqrt(3.0) / 2.0, -0.5, 0.0);
-        expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+        var expectedResult = new Cartesian4(0.0, 1.0, 0.0, 1.0);
+        expect(bottomPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum top plane', function() {
         var topPlane = planes[3];
-        var expectedResult = new Cartesian4(0.0, -Math.sqrt(3.0) / 2.0, -0.5, 0.0);
-        expect(topPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON14);
+        var expectedResult = new Cartesian4(0.0, -1.0, 0.0, 1.0);
+        expect(topPlane).toEqual(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum near plane', function() {
         var nearPlane = planes[4];
         var expectedResult = new Cartesian4(0.0, 0.0, -1.0, -1.0);
-        expect(nearPlane).toEqual(expectedResult);
+        expect(nearPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
     it('get frustum far plane', function() {
         var farPlane = planes[5];
-        var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 2.0);
-        expect(farPlane).toEqual(expectedResult);
+        var expectedResult = new Cartesian4(0.0, 0.0, 1.0, 3.0);
+        expect(farPlane).toEqualEpsilon(expectedResult, CesiumMath.EPSILON4);
     });
 
-    it('get sseDenominator', function() {
-        expect(frustum.sseDenominator).toEqualEpsilon(1.1547, CesiumMath.EPSILON5);
-    });
-
-    it('get perspective projection matrix', function() {
+    it('get orthographic projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
-        var expected = Matrix4.computePerspectiveFieldOfView(frustum.fovy, frustum.aspectRatio, frustum.near, frustum.far, new Matrix4());
+        var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, new Matrix4());
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
-    it('get infinite perspective matrix', function() {
-        var top = frustum.near * Math.tan(0.5 * frustum.fovy);
-        var bottom = -top;
-        var right = frustum.aspectRatio * top;
-        var left = -right;
-        var near = frustum.near;
+    it('get pixel dimensions throws without canvas height', function() {
+       expect(function() {
+            return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());
+       }).toThrowDeveloperError();
+    });
 
-        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, new Matrix4());
-        expect(frustum.infiniteProjectionMatrix).toEqual(expected);
+    it('get pixel dimensions throws without canvas width', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(undefined, 1.0, 0.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws with canvas width less than or equal to zero', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(0.0, 1.0, 0.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws with canvas height less than or equal to zero', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, 0.0, 0.0, new Cartesian2());
+        }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions', function() {
-        var dimensions = new Cartesian2(1.0, 1.0);
-        var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, 1.0, new Cartesian2());
-        var expected = frustum._offCenterFrustum.getPixelDimensions(dimensions.x, dimensions.y, 1.0, new Cartesian2());
-        expect(pixelSize.x).toEqual(expected.x);
-        expect(pixelSize.y).toEqual(expected.y);
-    });
-
-    it('equals', function() {
-        var frustum2 = new PerspectiveFrustum();
-        frustum2.near = 1.0;
-        frustum2.far = 2.0;
-        frustum2.fov = (Math.PI) / 3.0;
-        frustum2.aspectRatio = 1.0;
-        expect(frustum.equals(frustum2)).toEqual(true);
-    });
-
-    it('equals undefined', function() {
-        expect(frustum.equals()).toEqual(false);
+        var pixelSize = frustum.getPixelDimensions(1.0, 1.0, 0.0, new Cartesian2());
+        expect(pixelSize.x).toEqual(2.0);
+        expect(pixelSize.y).toEqual(2.0);
     });
 
     it('throws with undefined frustum parameters', function() {
-        var frustum = new PerspectiveFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         expect(function() {
-            return frustum.infiniteProjectionMatrix;
+            return frustum.projectionMatrix;
         }).toThrowDeveloperError();
     });
 
@@ -167,7 +163,7 @@ defineSuite([
     });
 
     it('clone with result parameter', function() {
-        var result = new PerspectiveFrustum();
+        var result = new OrthographicOffCenterFrustum();
         var frustum2 = frustum.clone(result);
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);

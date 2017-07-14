@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/PerspectiveOffCenterFrustum',
+        'Core/PerspectiveOffCenterFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
