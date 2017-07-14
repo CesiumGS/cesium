@@ -82,28 +82,28 @@ defineSuite([
         });
     });
 
-    it('sets show value to default expression', function() {
+    it('sets show value to undefined if value not present', function() {
         var style = new Cesium3DTileStyle({});
-        expect(style.show).toEqual(new Expression('true'));
+        expect(style.show).toBeUndefined();
 
         style = new Cesium3DTileStyle();
-        expect(style.show).toEqual(new Expression('true'));
+        expect(style.show).toBeUndefined();
     });
 
-    it('sets color value to default expression', function() {
+    it('sets color value to undefined if value not present', function() {
         var style = new Cesium3DTileStyle({});
-        expect(style.color).toEqual(new Expression('color("#ffffff")'));
+        expect(style.color).toBeUndefined();
 
         style = new Cesium3DTileStyle();
-        expect(style.color).toEqual(new Expression('color("#ffffff")'));
+        expect(style.color).toBeUndefined();
     });
 
-    it('sets pointSize value to default expression', function() {
+    it('sets pointSize value to undefined if value not present', function() {
         var style = new Cesium3DTileStyle({});
-        expect(style.pointSize).toEqual(new Expression('1'));
+        expect(style.pointSize).toBeUndefined();
 
         style = new Cesium3DTileStyle();
-        expect(style.pointSize).toEqual(new Expression('1'));
+        expect(style.pointSize).toBeUndefined();
     });
 
     it('sets show value to expression', function() {
@@ -186,6 +186,9 @@ defineSuite([
 
         style.show = jsonExp;
         expect(style.show).toEqual(new ConditionsExpression(jsonExp, defines));
+
+        style.show = undefined;
+        expect(style.show).toBeUndefined();
     });
     
     it('sets color value to expression', function() {
@@ -235,6 +238,9 @@ defineSuite([
 
         style.color = condExp;
         expect(style.color).toEqual(condExp);
+
+        style.color = undefined;
+        expect(style.color).toBeUndefined();
     });
 
     it('sets color values in setter', function() {
@@ -314,6 +320,9 @@ defineSuite([
 
         style.pointSize = condExp;
         expect(style.pointSize).toEqual(condExp);
+
+        style.pointSize = undefined;
+        expect(style.pointSize).toBeUndefined();
     });
 
     it('sets pointSize values in setter', function() {

@@ -22,10 +22,6 @@ define([
         Expression) {
     'use strict';
 
-    var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
-    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
-    var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
-
     /**
      * A style that is applied to a {@link Cesium3DTileset}.
      * <p>
@@ -95,9 +91,9 @@ define([
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
-        that.color = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
-        that.show = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        that.pointSize = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
+        that.color = styleJson.color;
+        that.show = styleJson.show;
+        that.pointSize = styleJson.pointSize;
 
         that._colorShaderFunctionReady = !defined(styleJson.color);
         that._showShaderFunctionReady = !defined(styleJson.show);
@@ -237,7 +233,9 @@ define([
             },
             set : function(value) {
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (typeof value === 'boolean') {
+                if (!defined(value)) {
+                    this._show = undefined;
+				} else if (typeof value === 'boolean') {
                     this._show = new Expression(String(value));
                 } else if (typeof value === 'string') {
                     this._show = new Expression(value, defines);
@@ -304,7 +302,9 @@ define([
             },
             set : function(value) {
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (typeof value === 'string') {
+				if (!defined(value)) {
+                    this._color = undefined;
+				} else if (typeof value === 'string') {
                     this._color = new Expression(value, defines);
                 } else if (defined(value.conditions)) {
                     this._color = new ConditionsExpression(value, defines);
@@ -374,7 +374,9 @@ define([
             },
             set : function(value) {
                 var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (typeof value === 'number') {
+                if (!defined(value)) {
+                    this._pointSize = undefined;
+				} else if (typeof value === 'number') {
                     this._pointSize = new Expression(String(value));
                 } else if (typeof value === 'string') {
                     this._pointSize = new Expression(value, defines);
