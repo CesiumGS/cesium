@@ -2146,10 +2146,10 @@ define([
 
             Camera.clone(savedCamera, camera);
         } else {
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
             if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState);
+                executeCommandsInViewport(true, scene, passState, backgroundColor);
             } else {
+                updateAndClearFramebuffers(scene, passState, backgroundColor);
                 execute2DViewportCommands(scene, passState);
             }
         }
@@ -2277,7 +2277,7 @@ define([
         passState.viewport = originalViewport;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState) {
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
         var depthOnly = scene.frameState.passes.depth;
 
         if (!firstViewport && !depthOnly) {
@@ -2290,9 +2290,14 @@ define([
 
         createPotentiallyVisibleSet(scene);
 
-        if (firstViewport && !depthOnly) {
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
+        if (firstViewport) {
+            if (defined(backgroundColor)) {
+                updateAndClearFramebuffers(scene, passState, backgroundColor);
+            }
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
         }
 
         executeCommands(scene, passState);
