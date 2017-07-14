@@ -3055,6 +3055,7 @@ define([
         }
 
         var numFrustums = this.numberOfFrustums;
+        console.log('Number of frustums: ' + numFrustums);
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
             var pixels = context.readPixels({
@@ -3070,6 +3071,7 @@ define([
             var depth = Cartesian4.dot(packedDepth, packedDepthScale);
 
             if (depth > 0.0 && depth < 1.0) {
+                console.log('Depth: ' + depth);
                 var renderedFrustum = this._frustumCommandsList[i];
                 var height2D;
                 if (this.mode === SceneMode.SCENE2D) {
@@ -3082,6 +3084,8 @@ define([
                 } else {
                     frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                     frustum.far = renderedFrustum.far;
+                    console.log('Frustum near: ' + frustum.near);
+                    console.log('Frustum far: ' + frustum.far);
                     uniformState.updateFrustum(frustum);
                 }
 
