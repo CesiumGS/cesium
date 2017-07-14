@@ -537,12 +537,25 @@ define([
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
 
         var blendFS =
+            '#define EPS 1e-8 \n' +
+            '#extension GL_EXT_frag_depth : enable \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
+            'uniform sampler2D pointCloud_depthTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    gl_FragColor = color; \n' +
+            '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
+            '    if (length(rayDist) < EPS) { \n' +
+            '        discard;' +
+            '    } else { \n' +
+            '        float frustumLength = czm_clampedFrustum.y - czm_clampedFrustum.x; \n' +
+            '        float scaledRayDist = rayDist * frustumLength + czm_clampedFrustum.x; \n' +
+            '        vec4 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord))); \n' +
+            '        float depth = czm_eyeToWindowCoordinates(ray * scaledRayDist).z; \n' +
+            '        gl_FragColor = color; \n' +
+            '        gl_FragDepthEXT = depth; \n' +
+            '    }' +
             '} \n';
 
         var blendRenderState = RenderState.fromCache({
