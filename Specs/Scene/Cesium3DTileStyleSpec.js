@@ -244,7 +244,7 @@ defineSuite([
     });
 
     it('sets color values in setter', function() {
-        var defines = 
+        var defines = {
             'targetColor': 'red'
         };
         var style = new Cesium3DTileStyle({ 'defines': defines });
