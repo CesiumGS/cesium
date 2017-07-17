@@ -71,7 +71,7 @@ defineSuite([
 
         var expectedFSText = new ShaderSource({
             sources : [fs]
-        }).createCombinedFragmentShader(context.webgl2);
+        }).createCombinedFragmentShader(context);
 
         expect(sp._fragmentShaderText).toEqual(expectedFSText);
     });
