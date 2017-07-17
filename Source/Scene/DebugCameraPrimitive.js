@@ -191,7 +191,7 @@ define([
                 }
             }
 
-            var boundingSphere = new BoundingSphere.fromVertices(positions);
+            var boundingSphere = BoundingSphere.fromVertices(positions);
 
             var attributes = new GeometryAttributes();
             attributes.position = new GeometryAttribute({

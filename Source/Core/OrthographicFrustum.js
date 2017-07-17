@@ -1,9 +1,13 @@
 define([
+        './Check',
+        './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
         './OrthographicOffCenterFrustum'
     ], function(
+        Check,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -61,6 +65,43 @@ define([
         this.far = 500000000.0;
         this._far = this.far;
     }
+
+    OrthographicFrustum.packedLength = 4;
+
+    OrthographicFrustum.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.width;
+        array[startingIndex++] = value.aspectRatio;
+        array[startingIndex++] = value.near;
+        array[startingIndex] = value.far;
+
+        return array;
+    };
+
+    OrthographicFrustum.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new OrthographicFrustum();
+        }
+
+        result.width = array[startingIndex++];
+        result.aspectRatio = array[startingIndex++];
+        result.near = array[startingIndex++];
+        result.far = array[startingIndex];
+
+        return result;
+    };
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);

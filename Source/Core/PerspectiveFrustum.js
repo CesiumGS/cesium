@@ -1,9 +1,13 @@
 define([
+        './Check',
+        './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
         './PerspectiveOffCenterFrustum'
     ], function(
+        Check,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -85,6 +89,47 @@ define([
         this.yOffset = 0.0;
         this._yOffset = this.yOffset;
     }
+
+    PerspectiveFrustum.packedLength = 6;
+
+    PerspectiveFrustum.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.fov;
+        array[startingIndex++] = value.aspectRatio;
+        array[startingIndex++] = value.near;
+        array[startingIndex++] = value.far;
+        array[startingIndex++] = value.xOffset;
+        array[startingIndex] = value.yOffset;
+
+        return array;
+    };
+
+    PerspectiveFrustum.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new PerspectiveFrustum();
+        }
+
+        result.fov = array[startingIndex++];
+        result.aspectRatio = array[startingIndex++];
+        result.near = array[startingIndex++];
+        result.far = array[startingIndex++];
+        result.xOffset = array[startingIndex++];
+        result.yOffset = array[startingIndex];
+
+        return result;
+    };
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
