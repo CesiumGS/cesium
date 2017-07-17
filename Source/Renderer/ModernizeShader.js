@@ -53,7 +53,6 @@ define([
 
     function getVariablePreprocessorBranch(variablesThatWeCareAbout, splitSource) {
         var variableMap = {};
-        var negativeMap = {};
 
         var numVariablesWeCareAbout = variablesThatWeCareAbout.length;
         for (var a = 0; a < numVariablesWeCareAbout; ++a) {
@@ -78,9 +77,6 @@ define([
                 }
                 stack.pop();
                 stack.push(op);
-
-                negativeMap[top] = op;
-                negativeMap[op] = top;
             } else if (hasENDIF) {
                 stack.pop();
             } else if (!/layout/g.test(line)) {
