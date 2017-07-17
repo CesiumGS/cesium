@@ -35,7 +35,7 @@ defineSuite([
         var runFunc = function() {
             modernizeShader(noOutputDeclaration, true);
         };
-        expect(runFunc).toThrow();
+        expect(runFunc).toThrowDeveloperError();
     });
 
     it('creates layout qualifier for gl_FragColor', function() {
