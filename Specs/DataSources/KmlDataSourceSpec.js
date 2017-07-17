@@ -3,6 +3,9 @@ defineSuite([
         'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlCamera',
+        'DataSources/KmlTour',
+        'DataSources/KmlTourWait',
+        'DataSources/KmlTourFlyTo',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -21,6 +24,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RequestErrorEvent',
         'Core/RuntimeError',
+        'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
@@ -36,6 +41,9 @@ defineSuite([
         KmlDataSource,
         KmlLookAt,
         KmlCamera,
+        KmlTour,
+        KmlTourWait,
+        KmlTourFlyTo,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -54,6 +62,8 @@ defineSuite([
         Rectangle,
         RequestErrorEvent,
         RuntimeError,
+        HeadingPitchRange,
+        HeadingPitchRoll,
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
@@ -4248,13 +4258,9 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document xmlns="http://www.opengis.net/kml/2.2"\
                        xmlns:gx="http://www.google.com/kml/ext/2.2">\
-              <gx:Tour>\
+              <gx:Tour id="id_123">\
                 <name>Tour 1</name>\
                 <gx:Playlist>\
-                  <gx:SoundCue>\
-                    <gx:duration>1</gx:duration>\
-                    <href>http://dev.keyhole.com/codesite/AJsBlues.mp3</href>\
-                  </gx:SoundCue>\
                   <gx:Wait>\
                     <gx:duration>2</gx:duration>\
                   </gx:Wait>\
@@ -4268,17 +4274,16 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
             var tour = dataSource.kmlTours[0];
+            expect(tour).toBeInstanceOf(KmlTour);
             expect(tour.name).toEqual("Tour 1");
-            expect(tour.playlist.length).toEqual(3);
+            expect(tour.id).toEqual("id_123");
+            expect(tour.playlist.length).toEqual(2);
 
-            expect(tour.playlist[0].duration).toEqual(1);
-            expect(tour.playlist[0].entryType).toEqual("SoundCue");
+            expect(tour.playlist[0].duration).toEqual(2);
+            expect(tour.playlist[0]).toBeInstanceOf(KmlTourWait);
 
-            expect(tour.playlist[1].duration).toEqual(2);
-            expect(tour.playlist[1].entryType).toEqual("Wait");
-
-            expect(tour.playlist[2].duration).toEqual(3);
-            expect(tour.playlist[2].entryType).toEqual("FlyTo");
+            expect(tour.playlist[1].duration).toEqual(3);
+            expect(tour.playlist[1]).toBeInstanceOf(KmlTourFlyTo);
 
         });
     });
@@ -4326,25 +4331,16 @@ defineSuite([
 
             expect(flyto1.flyToMode).toEqual('bounce');
             expect(flyto1.duration).toEqual(5);
-            expect(flyto1.lookAt).toBeInstanceOf(KmlLookAt);
-
-            expect(flyto1.lookAt.longitude).toEqual(10.0);
-            expect(flyto1.lookAt.latitude).toEqual(20.0);
-            expect(flyto1.lookAt.altitude).toEqual(30);
-            expect(flyto1.lookAt.range).toEqual(40.0);
-            expect(flyto1.lookAt.tilt).toEqual(50.0);
-            expect(flyto1.lookAt.heading).toEqual(60.0);
+            expect(flyto1.view).toBeInstanceOf(KmlLookAt);
 
             expect(flyto2.duration).toEqual(4.1);
-            expect(flyto2.camera).toBeInstanceOf(KmlCamera);
+            expect(flyto2.view).toBeInstanceOf(KmlCamera);
 
-            expect(flyto2.camera.longitude).toEqual(170.0);
-            expect(flyto2.camera.latitude).toEqual(-43.0);
-            expect(flyto2.camera.altitude).toEqual(9700);
-            expect(flyto2.camera.heading).toEqual(-10.0);
-            expect(flyto2.camera.tilt).toEqual(33.5);
-            expect(flyto2.camera.roll).toEqual(20);
+            expect(flyto1.view.position).toBeInstanceOf(Cartesian3);
+            expect(flyto2.view.position).toBeInstanceOf(Cartesian3);
 
+            expect(flyto1.view.headingPitchRange).toBeInstanceOf(HeadingPitchRange);
+            expect(flyto2.view.headingPitchRoll).toBeInstanceOf(HeadingPitchRoll);
         });
     });
 
