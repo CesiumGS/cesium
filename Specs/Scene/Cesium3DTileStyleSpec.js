@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/Cesium3DTileStyle',
+	'Scene/Cesium3DTileStyle',
         'Core/Color',
         'Scene/ConditionsExpression',
         'Scene/Expression'
@@ -250,7 +250,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.color = 'color("${targetColor}")';
-        expect(style.color).toEqual(new Expression('color("red")'));
+        expect(style.color).toEqual(new Expression('color("${targetColor}")', defines));
 
         var jsonExp = {
             conditions : [
@@ -260,7 +260,7 @@ defineSuite([
         };
 
         style.color = jsonExp;
-        expect(style.color).toEqual(new ConditionsExpression(jsonExp));
+        expect(style.color).toEqual(new ConditionsExpression(jsonExp, defines));
     });
     
     it('sets pointSize value to expression', function() {
@@ -292,13 +292,6 @@ defineSuite([
             pointSize : jsonExp
         });
         expect(style.pointSize).toEqual(new ConditionsExpression(jsonExp));
-    });
-
-    it('sets pointSize to undefined if not a number, string, or conditional', function() {
-        var style = new Cesium3DTileStyle({
-            pointSize : true
-        });
-        expect(style.pointSize).toEqual(undefined);
     });
 
     it('sets pointSize expressions in setter', function() {
@@ -335,7 +328,7 @@ defineSuite([
         expect(style.pointSize).toEqual(new Expression('2'));
 
         style.pointSize = '${targetPointSize} + 1.0';
-        expect(style.pointSize).toEqual(new Expression('2.0 + 1.0'));
+        expect(style.pointSize).toEqual(new Expression('${targetPointSize} + 1.0', defines));
 
         var jsonExp = {
             conditions : [
@@ -452,7 +445,6 @@ defineSuite([
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.show.evaluate(frameState, feature2)).toEqual(false);
-        expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
     });
 
     it('applies show style with regexp and variables', function() {
@@ -462,7 +454,6 @@ defineSuite([
 
         expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.show.evaluate(frameState, feature2)).toEqual(false);
-        expect(style.color.evaluateColor(frameState, undefined)).toEqual(Color.WHITE);
     });
 
     it('applies show style with conditional', function() {
@@ -486,7 +477,6 @@ defineSuite([
         var style = new Cesium3DTileStyle({
             "color" : "(${Temperature} > 90) ? color('red') : color('white')"
         });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.WHITE);
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.RED);
     });
@@ -495,7 +485,6 @@ defineSuite([
         var style = new Cesium3DTileStyle({
             "color" : "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))"
         });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(new Color(38/255, 255/255, 82/255, 0.5));
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(new Color(255/255, 30/255, 30/255, 1.0));
     });
@@ -513,7 +502,6 @@ defineSuite([
                 ]
             }
         });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.RED);
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.LIME);
     });
@@ -531,7 +519,6 @@ defineSuite([
                 ]
             }
         });
-        expect(style.show.evaluate(frameState, feature1)).toEqual(true);
         expect(style.color.evaluateColor(frameState, feature1)).toEqual(Color.BLUE);
         expect(style.color.evaluateColor(frameState, feature2)).toEqual(Color.YELLOW);
     });
