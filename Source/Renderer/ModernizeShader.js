@@ -174,7 +174,7 @@ define([
             for (var care in variableMap) {
                 if (variableMap.hasOwnProperty(care)) {
                     var matchVar = new RegExp('(layout)[^]+(out)[^]+(' + care + ')[^]+', 'g');
-                    if (matchVar.exec(l) !== null) {
+                    if (matchVar.test(l)) {
                         lineAdds[l] = care;
                     }
                 }
