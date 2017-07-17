@@ -1,17 +1,17 @@
 defineSuite([
-    'Core/OrthographicFrustum',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Math',
-    'Core/Matrix4'
-], function(
-    OrthographicFrustum,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    CesiumMath,
-    Matrix4) {
+        'Scene/OrthographicFrustum',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix4'
+    ], function(
+        OrthographicFrustum,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix4) {
     'use strict';
 
     var frustum, planes;

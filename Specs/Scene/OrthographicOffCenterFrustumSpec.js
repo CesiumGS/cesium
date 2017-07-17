@@ -1,39 +1,41 @@
 defineSuite([
-    'Core/OrthographicFrustum',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Math',
-    'Core/Matrix4'
-], function(
-    OrthographicFrustum,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    CesiumMath,
-    Matrix4) {
+        'Scene/OrthographicOffCenterFrustum',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix4'
+    ], function(
+        OrthographicOffCenterFrustum,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix4) {
     'use strict';
 
     var frustum, planes;
 
     beforeEach(function() {
-        frustum = new OrthographicFrustum();
+        frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
         frustum.far = 3.0;
-        frustum.width = 2.0;
-        frustum.aspectRatio = 1.0;
+        frustum.right = 1.0;
+        frustum.left = -1.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
-    it('undefined width causes an exception', function() {
-        frustum.width = undefined;
+    it('left greater than right causes an exception', function() {
+        frustum.left = frustum.right + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
     });
 
-    it('undefined aspectRatio throws an exception', function() {
-        frustum.aspectRatio = undefined;
+    it('bottom greater than top throws an exception', function() {
+        frustum.bottom = frustum.top + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -114,7 +116,6 @@ defineSuite([
 
     it('get orthographic projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
-        frustum = frustum._offCenterFrustum;
         var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, new Matrix4());
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
@@ -150,7 +151,7 @@ defineSuite([
     });
 
     it('throws with undefined frustum parameters', function() {
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -162,7 +163,7 @@ defineSuite([
     });
 
     it('clone with result parameter', function() {
-        var result = new OrthographicFrustum();
+        var result = new OrthographicOffCenterFrustum();
         var frustum2 = frustum.clone(result);
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
