@@ -481,7 +481,7 @@ define([
         }
 
         this._pointSizeShaderFunctionReady = true;
-        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') ? undefined;
+        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
         return this._pointSizeShaderFunction;
     };
 
