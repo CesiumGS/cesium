@@ -1,5 +1,5 @@
 defineSuite([
-	'Scene/Cesium3DTileStyle',
+        'Scene/Cesium3DTileStyle',
         'Core/Color',
         'Scene/ConditionsExpression',
         'Scene/Expression'
