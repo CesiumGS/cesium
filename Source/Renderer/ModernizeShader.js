@@ -55,7 +55,8 @@ define([
         var variableMap = {};
         var negativeMap = {};
 
-        for (var a = 0; a < variablesThatWeCareAbout.length; ++a) {
+        var numVariablesWeCareAbout = variablesThatWeCareAbout.length;
+        for (var a = 0; a < numVariablesWeCareAbout; ++a) {
             var variableThatWeCareAbout = variablesThatWeCareAbout[a];
             variableMap[variableThatWeCareAbout] = [null];
         }
@@ -83,7 +84,7 @@ define([
             } else if (hasENDIF) {
                 stack.pop();
             } else if (!/layout/g.test(line)) {
-                for (var varIndex = 0; varIndex < variablesThatWeCareAbout.length; ++varIndex) {
+                for (var varIndex = 0; varIndex < numVariablesWeCareAbout; ++varIndex) {
                     var varName = variablesThatWeCareAbout[varIndex];
                     if (line.indexOf(varName) !== -1) {
                         if (variableMap[varName].length === 1 && variableMap[varName][0] === null) {
