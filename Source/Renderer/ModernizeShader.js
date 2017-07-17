@@ -22,7 +22,7 @@ define([
         var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
 
-        if (/#version 300 es/g.test(source) !== -1) {
+        if (/#version 300 es/g.test(source)) {
             return source;
         }
 
@@ -42,20 +42,20 @@ define([
 
         // Note that this fails if your string looks like
         // searchString[singleCharacter]searchString
-        function replaceInSource(str, replacement, strIsRegex) {
-            var regex = str;
-            if ((strIsRegex === undefined) || strIsRegex === false) {
-                var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
-                regex = new RegExp(regexStr, 'g');
-            }
+        function replaceInSourceString(str, replacement) {
+            var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
+            var regex = new RegExp(regexStr, 'g');
 
             for (var number = 0; number < splitSource.length; ++number) {
                 var line = splitSource[number];
-                if (strIsRegex) {
-                    splitSource[number] = line.replace(regex, replacement);
-                } else {
-                    splitSource[number] = line.replace(regex, '$1' + replacement + '$3');
-                }
+                splitSource[number] = line.replace(regex, '$1' + replacement + '$3');
+            }
+        }
+
+        function replaceInSourceRegex(regex, replacement) {
+            for (var number = 0; number < splitSource.length; ++number) {
+                var line = splitSource[number];
+                splitSource[number] = line.replace(regex, replacement);
             }
         }
 
@@ -142,7 +142,7 @@ define([
 
         function removeExtension(name) {
             var regex = '#extension\\s+GL_' + name + '\\s+:\\s+[a-zA-Z0-9]+\\s*$';
-            replaceInSource(new RegExp(regex, 'g'), '', true);
+            replaceInSourceRegex(new RegExp(regex, 'g'), '', true);
         }
 
         var variableSet = [];
@@ -153,7 +153,7 @@ define([
             var regex = new RegExp(fragDataString, 'g');
             if (regex.test(source)) {
                 setAdd(newOutput, variableSet);
-                replaceInSource(fragDataString, newOutput);
+                replaceInSourceString(fragDataString, newOutput);
                 splitSource.splice(outputDeclarationLine, 0, 'layout(location = ' + i + ') out vec4 ' + newOutput + ';');
                 outputDeclarationLine += 1;
             }
@@ -162,7 +162,7 @@ define([
         var czmFragColor = 'czm_fragColor';
         if (findInSource('gl_FragColor')) {
             setAdd(czmFragColor, variableSet);
-            replaceInSource('gl_FragColor', czmFragColor);
+            replaceInSourceString('gl_FragColor', czmFragColor);
             splitSource.splice(outputDeclarationLine, 0, 'layout(location = 0) out vec4 czm_fragColor;');
             outputDeclarationLine += 1;
         }
@@ -214,16 +214,16 @@ define([
         removeExtension('EXT_draw_buffers');
         removeExtension('EXT_frag_depth');
 
-        replaceInSource('texture2D', 'texture');
-        replaceInSource('texture3D', 'texture');
-        replaceInSource('textureCube', 'texture');
-        replaceInSource('gl_FragDepthEXT', 'gl_FragDepth');
+        replaceInSourceString('texture2D', 'texture');
+        replaceInSourceString('texture3D', 'texture');
+        replaceInSourceString('textureCube', 'texture');
+        replaceInSourceString('gl_FragDepthEXT', 'gl_FragDepth');
 
         if (isFragmentShader) {
-            replaceInSource('varying', 'in');
+            replaceInSourceString('varying', 'in');
         } else {
-            replaceInSource('attribute', 'in');
-            replaceInSource('varying', 'out');
+            replaceInSourceString('attribute', 'in');
+            replaceInSourceString('varying', 'out');
         }
 
         return compileSource();
