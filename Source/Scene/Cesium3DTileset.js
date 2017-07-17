@@ -626,7 +626,7 @@ define([
          *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0}
          */
         this.pointCloudPostProcessorOptions = {
-            enabled : true,
+            enabled : false,
             occlusionAngle : 0.1,
             rangeParameter : 0.001,
             neighborhoodHalfWidth : 4,
@@ -641,7 +641,7 @@ define([
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);
-        
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>

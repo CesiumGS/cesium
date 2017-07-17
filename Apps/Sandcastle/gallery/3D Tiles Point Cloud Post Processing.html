@@ -92,6 +92,7 @@ var url = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
+tileset.pointCloudPostProcessorOptions.enabled = true;
 inspectorViewModel.tileset = tileset;
 
 tileset.readyPromise.then(function() {
