@@ -4,7 +4,7 @@ defineSuite([
         modernizeShader) {
     'use strict';
 
-    it ('adds version string', function() {
+    it('adds version string', function() {
         var simple =
             '#define OUTPUT_DECLARATION \n' +
             'void main() \n' +
@@ -15,7 +15,7 @@ defineSuite([
         expect(output.split('\n')[0]).toEqual(expected);
     });
 
-    it ('removes extensions', function() {
+    it('removes extensions', function() {
         var extensions =
             '#define OUTPUT_DECLARATION \n' +
             '#extension GL_EXT_draw_buffers : enable \n' +
@@ -27,7 +27,7 @@ defineSuite([
         expect(output).not.toContain(notExpected);
     });
 
-    it ('throws exception if no output declaration', function() {
+    it('throws exception if no output declaration', function() {
          var noOutputDeclaration =
             'void main() \n' +
             '{ \n' +
@@ -38,7 +38,7 @@ defineSuite([
         expect(runFunc).toThrow();
     });
 
-    it ('creates layout qualifier for gl_FragColor', function() {
+    it('creates layout qualifier for gl_FragColor', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             'void main() \n' +
@@ -50,7 +50,7 @@ defineSuite([
         expect(output).toContain(expected);
     });
 
-    it ('creates layout qualifier for gl_FragData', function() {
+    it('creates layout qualifier for gl_FragData', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             'void main() \n' +
@@ -62,7 +62,7 @@ defineSuite([
         expect(output).toContain(expected);
     });
 
-    it ('creates layout qualifier for MRT', function() {
+    it('creates layout qualifier for MRT', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#extension GL_EXT_draw_buffers : enable \n' +
@@ -78,7 +78,7 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
-    it ('does not create layout qualifier for reserved word lookalike variables', function() {
+    it('does not create layout qualifier for reserved word lookalike variables', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             'uniform sampler2D example; \n' +
@@ -100,7 +100,7 @@ defineSuite([
         expect(output).not.toContain(notExpectedLayout);
     });
 
-    it ('creates layout qualifier with swizzle', function() {
+    it('creates layout qualifier with swizzle', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#extension GL_EXT_draw_buffers : enable \n' +
@@ -116,7 +116,7 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
-    it ('removes old functions/variables from fragment shader', function() {
+    it('removes old functions/variables from fragment shader', function() {
         var old_fragment =
             '#define OUTPUT_DECLARATION \n' +
             '#extension GL_EXT_draw_buffers : enable \n' +
@@ -159,7 +159,7 @@ defineSuite([
         expect(output).not.toContain(notExpectedVarying);
     });
 
-    it ('removes old functions/variables from vertex shader', function() {
+    it('removes old functions/variables from vertex shader', function() {
         var old_vertex =
             '#define OUTPUT_DECLARATION \n' +
             'attribute vec4 position; \n' +
@@ -185,7 +185,7 @@ defineSuite([
         expect(output).not.toContain(notExpectedVarying);
     });
 
-    it ('creates single layout qualifier under single branch, single condition', function() {
+    it('creates single layout qualifier under single branch, single condition', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -200,7 +200,7 @@ defineSuite([
         expect(output).toContain(expected);
     });
 
-    it ('creates multiple layout qualifiers under single branch, single condition', function() {
+    it('creates multiple layout qualifiers under single branch, single condition', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -218,7 +218,7 @@ defineSuite([
         expect(output).toContain(expected1);
     });
 
-    it ('creates multiple layout qualifiers under multiple branches, single condition (cancels)', function() {
+    it('creates multiple layout qualifiers under multiple branches, single condition (cancels)', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -238,7 +238,7 @@ defineSuite([
         expect(output).not.toContain(notExpected);
     });
 
-    it ('creates single layout qualifier under multiple branches, multiple conditions (cancels)', function() {
+    it('creates single layout qualifier under multiple branches, multiple conditions (cancels)', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -257,7 +257,7 @@ defineSuite([
         expect(output).not.toContain(notExpected);
     });
 
-    it ('creates multiple layout qualifiers under multiple branches, multiple conditions (cascades)', function() {
+    it('creates multiple layout qualifiers under multiple branches, multiple conditions (cascades)', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -279,7 +279,7 @@ defineSuite([
         expect(containsExpected0).toBe(true);
     });
 
-    it ('creates single layout qualifier under multiple branches, single condition (else)', function() {
+    it('creates single layout qualifier under multiple branches, single condition (else)', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
@@ -296,7 +296,7 @@ defineSuite([
         expect(output).not.toContain(notExpected);
     });
 
-    it ('creates branched layout qualifiers for gl_FragColor and gl_FragData', function() {
+    it('creates branched layout qualifiers for gl_FragColor and gl_FragData', function() {
         var noQualifiers =
             '#define OUTPUT_DECLARATION \n' +
             '#define EXAMPLE_BRANCH \n' +
