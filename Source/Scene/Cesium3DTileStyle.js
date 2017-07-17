@@ -95,10 +95,6 @@ define([
         that.show = styleJson.show;
         that.pointSize = styleJson.pointSize;
 
-        that._colorShaderFunctionReady = !defined(styleJson.color);
-        that._showShaderFunctionReady = !defined(styleJson.show);
-        that._pointSizeShaderFunctionReady = !defined(styleJson.pointSize);
-
         var meta = {};
         if (defined(styleJson.meta)) {
             var defines = styleJson.defines;
