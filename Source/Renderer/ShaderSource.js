@@ -2,7 +2,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Renderer/ModernizeShader',
+        '../Renderer/modernizeShader',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(

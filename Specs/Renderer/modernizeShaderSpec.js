@@ -1,5 +1,5 @@
 defineSuite([
-        'Renderer/ModernizeShader'
+        'Renderer/modernizeShader'
     ], function(
         modernizeShader) {
     'use strict';
