@@ -152,7 +152,7 @@ define([
             pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
             sampler: createSampler()
         });
-        
+
         for (i = 0; i < 2; ++i) {
             colorTextures[i] = new Texture({
                 context : context,
@@ -227,17 +227,17 @@ define([
 
     function replaceConstants(sourceStr, constantName, replacement) {
         var r;
-        if (typeof(replacement) === "boolean") {
+        if (typeof(replacement) === 'boolean') {
             if (replacement === false) {
                 r = '#define\\s' + constantName;
                 return sourceStr.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
-            } else {
-                return sourceStr;
             }
-        } else {
+                return sourceStr;
+
+        }
             r = '#define\\s' + constantName + '\\s([0-9.]+)';
             return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
-        }
+
     }
 
     function pointOcclusionStage(processor, context) {
@@ -274,7 +274,7 @@ define([
             zFail : StencilOperation.KEEP,
             zPass : StencilOperation.KEEP
         };
-        
+
         return context.createViewportQuadCommand(pointOcclusionStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
@@ -341,13 +341,13 @@ define([
             rangeParameter : function() {
                 if (processor.useTriangle) {
                     return processor.rangeParameter;
-                } else {
+                }
                     if (processor.rangeParameter < rangeMin) {
                         return 0.0;
-                    } else {
-                        return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
                     }
-                }
+                        return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
+
+
             },
             densityHalfWidth : function() {
                 return processor.densityHalfWidth;
@@ -383,7 +383,7 @@ define([
             zFail : StencilOperation.KEEP,
             zPass : StencilOperation.KEEP
         };
-        
+
         return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
@@ -585,7 +585,7 @@ define([
                 // The screen space pass should consider
                 // the stencil value, so we don't clear it
                 // here
-                if (name === "screenSpacePass") {
+                if (name === 'screenSpacePass') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -648,7 +648,7 @@ define([
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
- 
+
             var vs = shaderProgram.vertexShaderSource.clone();
             var fs = shaderProgram.fragmentShaderSource.clone();
 
@@ -656,7 +656,7 @@ define([
                 source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
                 return source;
             });
-            
+
             fs.sources = fs.sources.map(function(source) {
                 source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
                 source = source.replace(/gl_FragColor/g, 'gl_FragData[0]');
@@ -686,7 +686,7 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-        
+
         return shader;
     }
 
@@ -732,6 +732,12 @@ define([
         var i;
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
+
+        var attenuationMultiplier = this.pointAttenuationMultiplier;
+        var attenuationUniformFunction = function() {
+            return attenuationMultiplier;
+        };
+
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
             if (command.primitiveType !== PrimitiveType.POINTS) {
@@ -771,16 +777,13 @@ define([
                 // TODO: Even if the filter is disabled,
                 // point attenuation settings are not! Fix this behavior.
                 var derivedCommandUniformMap = derivedCommand.uniformMap;
-                var attenuationMultiplier = this.pointAttenuationMultiplier;
-                derivedCommandUniformMap['u_pointAttenuationMaxSize'] = function() {
-                    return attenuationMultiplier;
-                };
+                derivedCommandUniformMap['u_pointAttenuationMaxSize'] = attenuationUniformFunction;
                 derivedCommand.uniformMap = derivedCommandUniformMap;
-                
+
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
                 command.dirty = false;
             }
-            
+
             commandList[i] = derivedCommand;
         }
 
@@ -793,18 +796,14 @@ define([
         for (i = 0; i < length; ++i) {
             // So before each draw call, we should clean up the dirty
             // framebuffers that we left behind on the *previous* pass
-            if (i == 0) {
+            if (i === 0) {
                 commandList.push(clearCommands['screenSpacePass']);
-            } else {
-                if (i == 1) {
+            } else if (i === 1) {
                     commandList.push(clearCommands['densityEstimationPass']);
-                } else {
-                    if (i % 2 == 0)
-                        commandList.push(clearCommands['regionGrowingPassA']);
+                } else if (i % 2 === 0)
+                        {commandList.push(clearCommands['regionGrowingPassA']);}
                     else
-                        commandList.push(clearCommands['regionGrowingPassB']);
-                }
-            }
+                        {commandList.push(clearCommands['regionGrowingPassB']);}
 
             if (i >= 2) {
                 commandList.push(copyCommands[i % 2]);
@@ -815,7 +814,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-        
+
         commandList.push(clearCommands['prior']);
     };
 
