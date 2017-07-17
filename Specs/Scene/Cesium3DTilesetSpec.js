@@ -183,7 +183,7 @@ defineSuite([
     }
 
     function viewPointCloud() {
-        setZoom(5.0);
+        setZoom(10.0);
     }
 
     it('throws with undefined url', function() {
