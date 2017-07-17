@@ -51,12 +51,12 @@ define([
         }
     }
 
-    function getVariablePreprocessorBranch(variablesThatWeCareAbout, splitSource) {
+    function getVariablePreprocessorBranch(layoutVariables, splitSource) {
         var variableMap = {};
 
-        var numVariablesWeCareAbout = variablesThatWeCareAbout.length;
-        for (var a = 0; a < numVariablesWeCareAbout; ++a) {
-            var variableThatWeCareAbout = variablesThatWeCareAbout[a];
+        var numLayoutVariables = layoutVariables.length;
+        for (var a = 0; a < numLayoutVariables; ++a) {
+            var variableThatWeCareAbout = layoutVariables[a];
             variableMap[variableThatWeCareAbout] = [null];
         }
 
@@ -80,8 +80,8 @@ define([
             } else if (hasENDIF) {
                 stack.pop();
             } else if (!/layout/g.test(line)) {
-                for (var varIndex = 0; varIndex < numVariablesWeCareAbout; ++varIndex) {
-                    var varName = variablesThatWeCareAbout[varIndex];
+                for (var varIndex = 0; varIndex < numLayoutVariables; ++varIndex) {
+                    var varName = layoutVariables[varIndex];
                     if (line.indexOf(varName) !== -1) {
                         if (variableMap[varName].length === 1 && variableMap[varName][0] === null) {
                             variableMap[varName] = stack.slice();
