@@ -7,7 +7,7 @@ defineSuite([
     var mockContext = {
         webgl2 : false
     };
-    
+
     it('combines #defines', function() {
         var source = new ShaderSource({
             defines : ['A', 'B', '']

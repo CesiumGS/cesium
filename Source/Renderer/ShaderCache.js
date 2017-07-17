@@ -170,7 +170,7 @@ define([
         }
 
         var context = this._context;
-        
+
         var vertexShaderText = vertexShaderSource.createCombinedVertexShader(context);
         var fragmentShaderText = fragmentShaderSource.createCombinedFragmentShader(context);
 

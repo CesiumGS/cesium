@@ -129,11 +129,11 @@ defineSuite([
             '    gl_FragData[0] = texture2D(example, v_textureCoordinates); \n' +
             '    gl_FragData[1] = textureCube(exampleCube, v_textureCoordinates); \n' +
             '    gl_FragData[2] = texture3D(example3D, v_textureCoordinates); \n' +
-            '    gl_FragDepthEXT = 0.0; \n' + 
+            '    gl_FragDepthEXT = 0.0; \n' +
             '} \n';
-        
+
         var output = glslModernizeShaderText(old_fragment, true);
-        
+
         var expectedDepth = 'gl_FragDepth = 0.0;';
         var expectedTexture2D = 'texture(example, v_textureCoordinates);';
         var expectedTextureCube = 'texture(exampleCube, v_textureCoordinates);';
@@ -145,7 +145,7 @@ defineSuite([
         var notExpectedTextureCube = 'textureCube(exampleCube, v_textureCoordinates);';
         var notExpectedTexture3D = 'texture3D(example3D, v_textureCoordinates);';
         var notExpectedVarying = 'varying vec2 v_textureCoordinates;';
-        
+
         expect(output).toContain(expectedDepth);
         expect(output).toContain(expectedTexture2D);
         expect(output).toContain(expectedTextureCube);
@@ -163,21 +163,21 @@ defineSuite([
         var old_vertex =
             '#define OUTPUT_DECLARATION \n' +
             'attribute vec4 position; \n' +
-            'varying vec4 varyingVariable; \n';
+            'varying vec4 varyingVariable; \n' +
             'void main() \n' +
             '{ \n' +
             '    gl_Position = position; \n' +
             '    varyingVariable = position.wzyx; \n' +
             '} \n';
-        
+
         var output = glslModernizeShaderText(old_vertex, false);
-        
+
         var expectedOut = 'out vec4 varyingVariable;';
         var expectedIn = 'in vec4 position;';
 
         var notExpectedAttribute = 'attribute vec4 varyingVariable;';
         var notExpectedVarying = 'varying vec2 varyingVariable;';
-        
+
         expect(output).toContain(expectedOut);
         expect(output).toContain(expectedIn);
 
@@ -273,9 +273,8 @@ defineSuite([
             '} \n';
         var output = glslModernizeShaderText(noQualifiers, true);
         var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
-        var expected1 = ['#ifdef EXAMPLE_BRANCH \n#ifdef EXAMPLE_BRANCH1 \nlayout(location = 0) out vec4 czm_out0;\n#endif',
-                         '#ifdef EXAMPLE_BRANCH1 \n#ifdef EXAMPLE_BRANCH0 \nlayout(location = 0) out vec4 czm_out0;\n#endif'];
-        var containsExpected0 = ((output.indexOf(expected0[0]) !== -1) && (output.indexOf(expected0[1]) !== -1));
+        var expected1 = /#ifdef (EXAMPLE_BRANCH|EXAMPLE_BRANCH1)\s*\n\s*#ifdef (EXAMPLE_BRANCH1|EXAMPLE_BRANCH)\s*\n\s*layout\(location = 1\) out vec4 czm_out1;/g;
+        var containsExpected0 = expected1.test(output);
         expect(output).toContain(expected0);
         expect(containsExpected0).toBe(true);
     });
