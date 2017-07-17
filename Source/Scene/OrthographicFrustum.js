@@ -1,6 +1,6 @@
 define([
         '../Core/deprecationWarning',
-        '../Core/OrthographicOffCenterFrustum'
+        '../Core/OrthographicFrustum'
     ], function(
         deprecationWarning,
         OrthographicFrustum) {

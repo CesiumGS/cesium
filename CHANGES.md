@@ -3,13 +3,20 @@ Change Log
 
 ### 1.36 - 2017-08-01
 
+* Breaking changes
+   * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll, result)` was removed. Use `Quaternion.fromHeadingPitchRoll(hpr, result)` instead  where `hpr` is a `HeadingPitchRoll`.
+   * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
+   * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
 * Deprecated
-   * Scene/OrthographicFrustum is deprecated. It has moved to Core/OrthographicFrustum in 1.36. Scene/OrthographicFrustum will be removed in 1.38.
-   * Scene/OrthographicOffCenterFrustum is deprecated. It has moved to Core/OrthographicOffCenterFrustum in 1.36. Scene/OrthographicOffCenterFrustum will be removed in 1.38.
-   * Scene/PerspectiveFrustum is deprecated. It has moved to Core/PerspectiveFrustum in 1.36. Scene/PerspectiveFrustum will be removed in 1.38.
-   * Scene/PerspectiveOffCenterFrustum is deprecated. It has moved to Core/PerspectiveOffCenterFrustum in 1.36. Scene/PerspectiveOffCenterFrustum will be removed in 1.38.
+   * `Scene/CullingVolume` is deprecated and will be removed in 1.38. Use `Core/CullingVolume`.
+   * `Scene/OrthographicFrustum` is deprecated and will be removed in 1.38. Use `Core/OrthographicFrustum`.
+   * `Scene/OrthographicOffCenterFrustum` is deprecated and will be removed in 1.38. Use `Core/OrthographicOffCenterFrustum`.
+   * `Scene/PerspectiveFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveFrustum`.
+   * `Scene/PerspectiveOffCenterFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveOffCenterFrustum`.
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
+* Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
+* Fixed crash when using the `Cesium3DTilesInspectorViewModel` and removing a tileset [#5607](https://github.com/AnalyticalGraphicsInc/cesium/issues/5607)
 
 ### 1.35.2 - 2017-07-11
 

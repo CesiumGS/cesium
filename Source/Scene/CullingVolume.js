@@ -11,5 +11,11 @@ define([
         return new CullingVolume(planes);
     }
 
+    DeprecatedCullingVolume.fromBoundingSphere = CullingVolume.fromBoundingSphere;
+
+    DeprecatedCullingVolume.MASK_OUTSIDE = CullingVolume.MASK_OUTSIDE;
+    DeprecatedCullingVolume.MASK_INSIDE = CullingVolume.MASK_INSIDE;
+    DeprecatedCullingVolume.MASK_INDETERMINATE = CullingVolume.MASK_INDETERMINATE;
+
     return DeprecatedCullingVolume;
 });
