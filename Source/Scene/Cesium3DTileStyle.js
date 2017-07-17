@@ -437,7 +437,7 @@ define([
         }
 
         this._colorShaderFunctionReady = true;
-        this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
+        this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
         return this._colorShaderFunction;
     };
 
@@ -459,7 +459,7 @@ define([
         }
 
         this._showShaderFunctionReady = true;
-        this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
+        this._showShaderFunction = defined(this.show) ? this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool') : undefined;
         return this._showShaderFunction;
     };
 
@@ -481,7 +481,7 @@ define([
         }
 
         this._pointSizeShaderFunctionReady = true;
-        this._pointSizeShaderFunction = this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') ? undefined;
         return this._pointSizeShaderFunction;
     };
 
