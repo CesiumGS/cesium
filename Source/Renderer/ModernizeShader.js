@@ -6,6 +6,114 @@ define([
         DeveloperError) {
     'use strict';
 
+    // Note that this fails if your string looks like
+    // searchString[singleCharacter]searchString
+    function replaceInSourceString(str, replacement, splitSource) {
+        var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
+        var regex = new RegExp(regexStr, 'g');
+
+        for (var number = 0; number < splitSource.length; ++number) {
+            var line = splitSource[number];
+            splitSource[number] = line.replace(regex, '$1' + replacement + '$3');
+        }
+    }
+
+    function replaceInSourceRegex(regex, replacement, splitSource) {
+        for (var number = 0; number < splitSource.length; ++number) {
+            var line = splitSource[number];
+            splitSource[number] = line.replace(regex, replacement);
+        }
+    }
+
+    function findInSource(str, splitSource) {
+        var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
+        var regex = new RegExp(regexStr, 'g');
+        for (var number = 0; number < splitSource.length; ++number) {
+            var line = splitSource[number];
+            if (regex.test(line)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function compileSource(splitSource) {
+        var wholeSource = '';
+        for (var number = 0; number < splitSource.length; ++number) {
+            wholeSource += splitSource[number] + '\n';
+        }
+        return wholeSource;
+    }
+
+    function setAdd(variable, set1) {
+        if (set1.indexOf(variable) === -1) {
+            set1.push(variable);
+        }
+    }
+
+    function getVariablePreprocessorBranch(variablesThatWeCareAbout, splitSource) {
+        var variableMap = {};
+        var negativeMap = {};
+
+        for (var a = 0; a < variablesThatWeCareAbout.length; ++a) {
+            var variableThatWeCareAbout = variablesThatWeCareAbout[a];
+            variableMap[variableThatWeCareAbout] = [null];
+        }
+
+        var stack = [];
+        for (var i = 0; i < splitSource.length; ++i) {
+            var line = splitSource[i];
+            var hasIF = /(#ifdef|#if)/g.test(line);
+            var hasELSE = /#else/g.test(line);
+            var hasENDIF = /#endif/g.test(line);
+
+            if (hasIF) {
+                stack.push(line);
+            } else if (hasELSE) {
+                var top = stack[stack.length - 1];
+                var op = top.replace('ifdef', 'ifndef');
+                if (/if/g.test(op)) {
+                    op = op.replace(/(#if\s+)(\S*)([^]*)/, '$1!($2)$3');
+                }
+                stack.pop();
+                stack.push(op);
+
+                negativeMap[top] = op;
+                negativeMap[op] = top;
+            } else if (hasENDIF) {
+                stack.pop();
+            } else if (!/layout/g.test(line)) {
+                for (var varIndex = 0; varIndex < variablesThatWeCareAbout.length; ++varIndex) {
+                    var varName = variablesThatWeCareAbout[varIndex];
+                    if (line.indexOf(varName) !== -1) {
+                        if (variableMap[varName].length === 1 && variableMap[varName][0] === null) {
+                            variableMap[varName] = stack.slice();
+                        } else {
+                            variableMap[varName] = variableMap[varName].filter(function(x) {
+                                return stack.indexOf(x) >= 0;
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        for (var care in variableMap) {
+            if (variableMap.hasOwnProperty(care)) {
+                if (variableMap.length === 1 && variableMap[0] === null) {
+                    variableMap.splice(0, 1);
+                }
+            }
+        }
+
+        return variableMap;
+    }
+
+    function removeExtension(name, splitSource) {
+        var regex = '#extension\\s+GL_' + name + '\\s+:\\s+[a-zA-Z0-9]+\\s*$';
+        replaceInSourceRegex(new RegExp(regex, 'g'), '', splitSource);
+    }
+
     /**
      * A function to port GLSL shaders from GLSL ES 1.00 to GLSL ES 3.00
      *
@@ -40,111 +148,6 @@ define([
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION!');
         }
 
-        // Note that this fails if your string looks like
-        // searchString[singleCharacter]searchString
-        function replaceInSourceString(str, replacement) {
-            var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
-            var regex = new RegExp(regexStr, 'g');
-
-            for (var number = 0; number < splitSource.length; ++number) {
-                var line = splitSource[number];
-                splitSource[number] = line.replace(regex, '$1' + replacement + '$3');
-            }
-        }
-
-        function replaceInSourceRegex(regex, replacement) {
-            for (var number = 0; number < splitSource.length; ++number) {
-                var line = splitSource[number];
-                splitSource[number] = line.replace(regex, replacement);
-            }
-        }
-
-        function findInSource(str) {
-            var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
-            var regex = new RegExp(regexStr, 'g');
-            for (var number = 0; number < splitSource.length; ++number) {
-                var line = splitSource[number];
-                if (regex.test(line)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        function compileSource() {
-            var wholeSource = '';
-            for (var number = 0; number < splitSource.length; ++number) {
-                wholeSource += splitSource[number] + '\n';
-            }
-            return wholeSource;
-        }
-
-        function setAdd(variable, set1) {
-            if (set1.indexOf(variable) === -1)
-                {set1.push(variable);}
-        }
-
-        function getVariablePreprocessorBranch(variablesThatWeCareAbout) {
-            var variableMap = {};
-            var negativeMap = {};
-
-            for (var a = 0; a < variablesThatWeCareAbout.length; ++a) {
-                var variableThatWeCareAbout = variablesThatWeCareAbout[a];
-                variableMap[variableThatWeCareAbout] = [null];
-            }
-
-            var stack = [];
-            for (var i = 0; i < splitSource.length; ++i) {
-                var line = splitSource[i];
-                var hasIF = /(#ifdef|#if)/g.test(line);
-                var hasELSE = /#else/g.test(line);
-                var hasENDIF = /#endif/g.test(line);
-
-                if (hasIF) {
-                    stack.push(line);
-                } else if (hasELSE) {
-                    var top = stack[stack.length - 1];
-                    var op = top.replace('ifdef', 'ifndef');
-                    if (/if/g.test(op)) {
-                        op = op.replace(/(#if\s+)(\S*)([^]*)/, '$1!($2)$3');
-                    }
-                    stack.pop();
-                    stack.push(op);
-
-                    negativeMap[top] = op;
-                    negativeMap[op] = top;
-                } else if (hasENDIF) {
-                    stack.pop();
-                } else if (!/layout/g.test(line)) {
-                    for (var varIndex = 0; varIndex < variablesThatWeCareAbout.length; ++varIndex) {
-                        var varName = variablesThatWeCareAbout[varIndex];
-                        if (line.indexOf(varName) !== -1) {
-                            if (variableMap[varName].length === 1 && variableMap[varName][0] === null) {
-                                variableMap[varName] = stack.slice();
-                            } else {
-                                variableMap[varName] = variableMap[varName].filter(function(x) { return stack.indexOf(x) >= 0; });
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (var care in variableMap) {
-                if (variableMap.hasOwnProperty(care)) {
-                    if (variableMap.length === 1 && variableMap[0] === null) {
-                        variableMap.splice(0, 1);
-                    }
-                }
-            }
-
-            return variableMap;
-        }
-
-        function removeExtension(name) {
-            var regex = '#extension\\s+GL_' + name + '\\s+:\\s+[a-zA-Z0-9]+\\s*$';
-            replaceInSourceRegex(new RegExp(regex, 'g'), '', true);
-        }
-
         var variableSet = [];
 
         for (var i = 0; i < 10; i++) {
@@ -153,21 +156,21 @@ define([
             var regex = new RegExp(fragDataString, 'g');
             if (regex.test(source)) {
                 setAdd(newOutput, variableSet);
-                replaceInSourceString(fragDataString, newOutput);
+                replaceInSourceString(fragDataString, newOutput, splitSource);
                 splitSource.splice(outputDeclarationLine, 0, 'layout(location = ' + i + ') out vec4 ' + newOutput + ';');
                 outputDeclarationLine += 1;
             }
         }
 
         var czmFragColor = 'czm_fragColor';
-        if (findInSource('gl_FragColor')) {
+        if (findInSource('gl_FragColor', splitSource)) {
             setAdd(czmFragColor, variableSet);
-            replaceInSourceString('gl_FragColor', czmFragColor);
+            replaceInSourceString('gl_FragColor', czmFragColor, splitSource);
             splitSource.splice(outputDeclarationLine, 0, 'layout(location = 0) out vec4 czm_fragColor;');
             outputDeclarationLine += 1;
         }
 
-        var variableMap = getVariablePreprocessorBranch(variableSet);
+        var variableMap = getVariablePreprocessorBranch(variableSet, splitSource);
         var lineAdds = {};
         for (var c = 0; c < splitSource.length; c++) {
             var l = splitSource[c];
@@ -211,22 +214,22 @@ define([
             splitSource.splice(0, 0, versionThree);
         }
 
-        removeExtension('EXT_draw_buffers');
-        removeExtension('EXT_frag_depth');
+        removeExtension('EXT_draw_buffers', splitSource);
+        removeExtension('EXT_frag_depth', splitSource);
 
-        replaceInSourceString('texture2D', 'texture');
-        replaceInSourceString('texture3D', 'texture');
-        replaceInSourceString('textureCube', 'texture');
-        replaceInSourceString('gl_FragDepthEXT', 'gl_FragDepth');
+        replaceInSourceString('texture2D', 'texture', splitSource);
+        replaceInSourceString('texture3D', 'texture', splitSource);
+        replaceInSourceString('textureCube', 'texture', splitSource);
+        replaceInSourceString('gl_FragDepthEXT', 'gl_FragDepth', splitSource);
 
         if (isFragmentShader) {
-            replaceInSourceString('varying', 'in');
+            replaceInSourceString('varying', 'in', splitSource);
         } else {
-            replaceInSourceString('attribute', 'in');
-            replaceInSourceString('varying', 'out');
+            replaceInSourceString('attribute', 'in', splitSource);
+            replaceInSourceString('varying', 'out', splitSource);
         }
 
-        return compileSource();
+        return compileSource(splitSource);
     }
 
     return modernizeShader;
