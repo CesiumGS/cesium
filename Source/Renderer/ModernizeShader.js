@@ -145,14 +145,14 @@ define([
             throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION!');
         }
 
-        var variableSet = [];
+        var outputVariables = [];
 
         for (var i = 0; i < 10; i++) {
             var fragDataString = 'gl_FragData\\[' + i + '\\]';
             var newOutput = 'czm_out' + i;
             var regex = new RegExp(fragDataString, 'g');
             if (regex.test(source)) {
-                setAdd(newOutput, variableSet);
+                setAdd(newOutput, outputVariables);
                 replaceInSourceString(fragDataString, newOutput, splitSource);
                 splitSource.splice(outputDeclarationLine, 0, 'layout(location = ' + i + ') out vec4 ' + newOutput + ';');
                 outputDeclarationLine += 1;
@@ -161,13 +161,13 @@ define([
 
         var czmFragColor = 'czm_fragColor';
         if (findInSource('gl_FragColor', splitSource)) {
-            setAdd(czmFragColor, variableSet);
+            setAdd(czmFragColor, outputVariables);
             replaceInSourceString('gl_FragColor', czmFragColor, splitSource);
             splitSource.splice(outputDeclarationLine, 0, 'layout(location = 0) out vec4 czm_fragColor;');
             outputDeclarationLine += 1;
         }
 
-        var variableMap = getVariablePreprocessorBranch(variableSet, splitSource);
+        var variableMap = getVariablePreprocessorBranch(outputVariables, splitSource);
         var lineAdds = {};
         for (var c = 0; c < splitSource.length; c++) {
             var l = splitSource[c];
