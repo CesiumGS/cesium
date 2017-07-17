@@ -1,7 +1,7 @@
 defineSuite([
-        'Renderer/GLSLModernizer'
+        'Renderer/ModernizeShader'
     ], function(
-        glslModernizeShaderText) {
+        modernizeShader) {
     'use strict';
 
     it ('adds version string', function() {
@@ -10,7 +10,7 @@ defineSuite([
             'void main() \n' +
             '{ \n' +
             '} \n';
-        var output = glslModernizeShaderText(simple, true);
+        var output = modernizeShader(simple, true);
         var expected = '#version 300 es';
         expect(output.split('\n')[0]).toEqual(expected);
     });
@@ -22,7 +22,7 @@ defineSuite([
             'void main() \n' +
             '{ \n' +
             '} \n';
-        var output = glslModernizeShaderText(extensions, true);
+        var output = modernizeShader(extensions, true);
         var notExpected = '#extension GL_EXT_draw_buffers : enable \n';
         expect(output).not.toContain(notExpected);
     });
@@ -33,7 +33,7 @@ defineSuite([
             '{ \n' +
             '} \n';
         var runFunc = function() {
-            glslModernizeShaderText(noOutputDeclaration, true);
+            modernizeShader(noOutputDeclaration, true);
         };
         expect(runFunc).toThrow();
     });
@@ -45,7 +45,7 @@ defineSuite([
             '{ \n' +
             '    gl_FragColor = vec4(0.0); \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected = 'layout(location = 0) out vec4 czm_fragColor;';
         expect(output).toContain(expected);
     });
@@ -57,7 +57,7 @@ defineSuite([
             '{ \n' +
             '    gl_FragData[0] = vec4(0.0); \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected = 'layout(location = 0) out vec4 czm_out0;';
         expect(output).toContain(expected);
     });
@@ -71,7 +71,7 @@ defineSuite([
             '    gl_FragData[0] = vec4(0.0); \n' +
             '    gl_FragData[1] = vec4(1.0); \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected0 = 'layout(location = 0) out vec4 czm_out0;';
         var expected1 = 'layout(location = 1) out vec4 czm_out1;';
         expect(output).toContain(expected0);
@@ -89,7 +89,7 @@ defineSuite([
             '    vec2 thisIsNotAGoodNameForAtexture2D = vec2(0.0); \n' +
             '    vec4 gl_FragColor = texture2D(example, thisIsNotAGoodNameForAtexture2D); \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expectedBadName = 'vec2 thisIsNotAGoodNameForAtexture2D';
         var expectedVariable = 'vec4 a_gl_FragData = vec4(0.0);';
         var expectedTextureCall = 'texture(example, thisIsNotAGoodNameForAtexture2D)';
@@ -109,7 +109,7 @@ defineSuite([
             '    gl_FragData[0] = vec4(0.0); \n' +
             '    gl_FragData[1].xyz = vec3(1.0); \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected0 = 'layout(location = 0) out vec4 czm_out0;';
         var expected1 = 'layout(location = 1) out vec4 czm_out1;';
         expect(output).toContain(expected0);
@@ -132,7 +132,7 @@ defineSuite([
             '    gl_FragDepthEXT = 0.0; \n' +
             '} \n';
 
-        var output = glslModernizeShaderText(old_fragment, true);
+        var output = modernizeShader(old_fragment, true);
 
         var expectedDepth = 'gl_FragDepth = 0.0;';
         var expectedTexture2D = 'texture(example, v_textureCoordinates);';
@@ -170,7 +170,7 @@ defineSuite([
             '    varyingVariable = position.wzyx; \n' +
             '} \n';
 
-        var output = glslModernizeShaderText(old_vertex, false);
+        var output = modernizeShader(old_vertex, false);
 
         var expectedOut = 'out vec4 varyingVariable;';
         var expectedIn = 'in vec4 position;';
@@ -195,7 +195,7 @@ defineSuite([
             '    gl_FragData[0] = vec4(0.0); \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         expect(output).toContain(expected);
     });
@@ -211,7 +211,7 @@ defineSuite([
             '    gl_FragData[1] = vec4(1.0); \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         var expected1 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 1) out vec4 czm_out1;\n#endif';
         expect(output).toContain(expected0);
@@ -233,7 +233,7 @@ defineSuite([
             '    gl_FragData[1] = vec4(1.0); \n' +
             '    #endif //!EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         expect(output).not.toContain(notExpected);
     });
@@ -252,7 +252,7 @@ defineSuite([
             '    gl_FragData[0] = vec4(0.0); \n' +
             '    #endif //EXAMPLE_BRANCH1 \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         expect(output).not.toContain(notExpected);
     });
@@ -271,7 +271,7 @@ defineSuite([
             '    #endif //EXAMPLE_BRANCH1 \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         var expected1 = /#ifdef (EXAMPLE_BRANCH|EXAMPLE_BRANCH1)\s*\n\s*#ifdef (EXAMPLE_BRANCH1|EXAMPLE_BRANCH)\s*\n\s*layout\(location = 1\) out vec4 czm_out1;/g;
         var containsExpected0 = expected1.test(output);
@@ -291,7 +291,7 @@ defineSuite([
             '    gl_FragData[0] = vec4(1.0); \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var notExpected = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         expect(output).not.toContain(notExpected);
     });
@@ -308,7 +308,7 @@ defineSuite([
             '    gl_FragColor = vec4(1.0); \n' +
             '    #endif //EXAMPLE_BRANCH \n' +
             '} \n';
-        var output = glslModernizeShaderText(noQualifiers, true);
+        var output = modernizeShader(noQualifiers, true);
         var expected0 = '#ifdef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_out0;\n#endif';
         var expected1 = '#ifndef EXAMPLE_BRANCH \nlayout(location = 0) out vec4 czm_fragColor;\n#endif';
         expect(output).toContain(expected0);

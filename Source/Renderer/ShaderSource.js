@@ -2,14 +2,14 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Renderer/GLSLModernizer',
+        '../Renderer/ModernizeShader',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        glslModernizeShaderText,
+        modernizeShader,
         CzmBuiltins,
         AutomaticUniforms) {
     'use strict';
@@ -261,7 +261,7 @@ define([
 
         // modernize the source
         if (context.webgl2) {
-            result = glslModernizeShaderText(result, isFragmentShader, true);
+            result = modernizeShader(result, isFragmentShader, true);
         }
 
         return result;

@@ -18,7 +18,7 @@ define([
      *
      * @private
      */
-    function glslModernizeShaderText(source, isFragmentShader) {
+    function modernizeShader(source, isFragmentShader) {
         var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
 
@@ -229,5 +229,5 @@ define([
         return compileSource();
     }
 
-    return glslModernizeShaderText;
+    return modernizeShader;
 });
