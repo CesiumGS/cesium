@@ -22,7 +22,7 @@ define([
         var outputDeclarationRegex = /#define OUTPUT_DECLARATION/;
         var splitSource = source.split('\n');
 
-        if (source.search(/#version 300 es/g) !== -1) {
+        if (/#version 300 es/g.test(source) !== -1) {
             return source;
         }
 
@@ -37,7 +37,7 @@ define([
         }
 
         if (outputDeclarationLine === -1) {
-            throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION nor a main function!');
+            throw new DeveloperError('Could not find a #define OUTPUT_DECLARATION!');
         }
 
         // Note that this fails if your string looks like
