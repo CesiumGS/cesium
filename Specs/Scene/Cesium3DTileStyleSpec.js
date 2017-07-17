@@ -190,7 +190,7 @@ defineSuite([
         style.show = undefined;
         expect(style.show).toBeUndefined();
     });
-    
+
     it('sets color value to expression', function() {
         var style = new Cesium3DTileStyle({
             color : 'color("red")'
@@ -262,7 +262,7 @@ defineSuite([
         style.color = jsonExp;
         expect(style.color).toEqual(new ConditionsExpression(jsonExp, defines));
     });
-    
+
     it('sets pointSize value to expression', function() {
         var style = new Cesium3DTileStyle({
             pointSize : '2'
