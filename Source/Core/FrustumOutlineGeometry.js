@@ -59,6 +59,7 @@ define([
         var frustum = options.frustum;
         var orientation = options.orientation;
         var position = options.position;
+        var drawNearPlane = defaultValue(options._drawNearPlane, true);
 
         var frustumType;
         var frustumPackedLength;
@@ -74,13 +75,14 @@ define([
         this._frustum = frustum.clone();
         this._position = Cartesian3.clone(position);
         this._orientation = Quaternion.clone(orientation);
+        this._drawNearPlane = drawNearPlane;
         this._workerName = 'createFrustumOutlineGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength;
+        this.packedLength = 2 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength;
     }
 
     /**
@@ -116,6 +118,8 @@ define([
         Cartesian3.pack(value._position, array, startingIndex);
         startingIndex += Cartesian3.packedLength;
         Quaternion.pack(value._orientation, array, startingIndex);
+        startingIndex += Quaternion.packedLength;
+        array[startingIndex] = value._drawNearPlane ? 1.0 : 0.0;
 
         return array;
     };
@@ -153,12 +157,15 @@ define([
         var position = Cartesian3.unpack(array, startingIndex, scratchPackPosition);
         startingIndex += Cartesian3.packedLength;
         var orientation = Quaternion.unpack(array, startingIndex, scratchPackQuaternion);
+        startingIndex += Quaternion.packedLength;
+        var drawNearPlane = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             return new FrustumOutlineGeometry({
                 frustum : frustum,
                 position : position,
-                orientation : orientation
+                orientation : orientation,
+                _drawNearPlane : drawNearPlane
             });
         }
 
@@ -168,6 +175,7 @@ define([
         result._frustumType = frustumType;
         result._position = Cartesian3.clone(position, result._position);
         result._orientation = Quaternion.clone(orientation, result._orientation);
+        result._drawNearPlane = drawNearPlane;
 
         return result;
     };
@@ -179,9 +187,6 @@ define([
     var scratchXDirection = new Cartesian3();
     var scratchYDirection = new Cartesian3();
     var scratchZDirection = new Cartesian3();
-    var scratchNegativeX = new Cartesian3();
-    var scratchNegativeY = new Cartesian3();
-    var scratchNegativeZ = new Cartesian3();
 
     var frustumSplits = new Array(3);
 
@@ -207,6 +212,7 @@ define([
         var frustum = frustumGeometry._frustum;
         var position = frustumGeometry._position;
         var orientation = frustumGeometry._orientation;
+        var drawNearPlane = frustumGeometry._drawNearPlane;
 
         var rotationMatrix = Matrix3.fromQuaternion(orientation, scratchRotationMatrix);
         var x = Matrix3.getColumn(rotationMatrix, 0, scratchXDirection);
@@ -231,9 +237,14 @@ define([
             inverseView = Matrix4.inverseTransformation(view, scratchInverseMatrix);
         }
 
-        frustumSplits[0] = frustum.near;
-        frustumSplits[1] = frustum.far;
-        frustumSplits[2] = frustum.far + 1.0;
+        if (defined(inverseViewProjection)) {
+            frustumSplits[0] = frustum.near;
+            frustumSplits[1] = frustum.far;
+        } else {
+            frustumSplits[0] = 0.0;
+            frustumSplits[1] = frustum.near;
+            frustumSplits[2] = frustum.far;
+        }
 
         var i;
         var positions = new Float64Array(3 * 4 * 2);
@@ -288,11 +299,13 @@ define([
         var offset;
         var index;
 
-        var indices = new Uint16Array(8 * (2 + 1));
+        var numberOfPlanes = drawNearPlane ? 2 : 1;
+        var indices = new Uint16Array(8 * (numberOfPlanes + 1));
 
         // Build the near/far planes
-        for (i = 0; i < 2; ++i) {
-            offset = i * 8;
+        i = drawNearPlane ? 0 : 1;
+        for (; i < 2; ++i) {
+            offset = drawNearPlane ? i * 8 : 0;
             index = i * 4;
 
             indices[offset] = index;
@@ -307,7 +320,7 @@ define([
 
         // Build the sides of the frustums
         for (i = 0; i < 2; ++i) {
-            offset = (2 + i) * 8;
+            offset = (numberOfPlanes + i) * 8;
             index = i * 4;
 
             indices[offset] = index;

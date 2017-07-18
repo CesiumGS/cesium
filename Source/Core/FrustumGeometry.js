@@ -63,6 +63,7 @@ define([
         var orientation = options.orientation;
         var position = options.position;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var drawNearPlane = defaultValue(options._drawNearPlane, true);
 
         var frustumType;
         var frustumPackedLength;
@@ -78,6 +79,7 @@ define([
         this._frustum = frustum.clone();
         this._position = Cartesian3.clone(position);
         this._orientation = Quaternion.clone(orientation);
+        this._drawNearPlane = drawNearPlane;
         this._vertexFormat = vertexFormat;
         this._workerName = 'createFrustumGeometry';
 
@@ -85,7 +87,7 @@ define([
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength + VertexFormat.packedLength;
+        this.packedLength = 2 + frustumPackedLength + Cartesian3.packedLength + Quaternion.packedLength + VertexFormat.packedLength;
     }
 
     /**
@@ -123,6 +125,8 @@ define([
         Quaternion.pack(value._orientation, array, startingIndex);
         startingIndex += Quaternion.packedLength;
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
+        startingIndex += VertexFormat.packedLength;
+        array[startingIndex] = value._drawNearPlane ? 1.0 : 0.0;
 
         return array;
     };
@@ -163,13 +167,16 @@ define([
         var orientation = Quaternion.unpack(array, startingIndex, scratchPackQuaternion);
         startingIndex += Quaternion.packedLength;
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
+        startingIndex += VertexFormat.packedLength;
+        var drawNearPlane = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             return new FrustumGeometry({
                 frustum : frustum,
                 position : position,
                 orientation : orientation,
-                vertexFormat : vertexFormat
+                vertexFormat : vertexFormat,
+                _drawNearPlane : drawNearPlane
             });
         }
 
@@ -180,6 +187,7 @@ define([
         result._position = Cartesian3.clone(position, result._position);
         result._orientation = Quaternion.clone(orientation, result._orientation);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._drawNearPlane = drawNearPlane;
 
         return result;
     };
@@ -251,6 +259,7 @@ define([
         var frustum = frustumGeometry._frustum;
         var position = frustumGeometry._position;
         var orientation = frustumGeometry._orientation;
+        var drawNearPlane = frustumGeometry._drawNearPlane;
         var vertexFormat = frustumGeometry._vertexFormat;
 
         var rotationMatrix = Matrix3.fromQuaternion(orientation, scratchRotationMatrix);
@@ -276,11 +285,17 @@ define([
             inverseView = Matrix4.inverseTransformation(view, scratchInverseMatrix);
         }
 
-        frustumSplits[0] = frustum.near;
-        frustumSplits[1] = frustum.far;
-        frustumSplits[2] = frustum.far + 1.0;
+        if (defined(inverseViewProjection)) {
+            frustumSplits[0] = frustum.near;
+            frustumSplits[1] = frustum.far;
+        } else {
+            frustumSplits[0] = 0.0;
+            frustumSplits[1] = frustum.near;
+            frustumSplits[2] = frustum.far;
+        }
 
         var i;
+        var numberOfPlanes = drawNearPlane ? 6 : 5;
         var positions = new Float64Array(3 * 4 * 6);
 
         for (i = 0; i < 2; ++i) {
@@ -382,6 +397,10 @@ define([
         positions[offset + 10] = positions[3 * 3 + 1];
         positions[offset + 11] = positions[3 * 3 + 2];
 
+        if (!drawNearPlane) {
+            positions = positions.subarray(3 * 4);
+        }
+
         var attributes = new GeometryAttributes({
             position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
@@ -391,21 +410,29 @@ define([
         });
 
         if (defined(vertexFormat.normal) || defined(vertexFormat.tangent) || defined(vertexFormat.bitangent) || defined(vertexFormat.st)) {
-            var normals = defined(vertexFormat.normal) ? new Float32Array(3 * 4 * 6) : undefined;
-            var tangents = defined(vertexFormat.tangent) ? new Float32Array(3 * 4 * 6) : undefined;
-            var bitangents = defined(vertexFormat.bitangent) ? new Float32Array(3 * 4 * 6) : undefined;
-            var st = defined(vertexFormat.st) ? new Float32Array(2 * 4 * 6) : undefined;
+            var normals = defined(vertexFormat.normal) ? new Float32Array(3 * 4 * numberOfPlanes) : undefined;
+            var tangents = defined(vertexFormat.tangent) ? new Float32Array(3 * 4 * numberOfPlanes) : undefined;
+            var bitangents = defined(vertexFormat.bitangent) ? new Float32Array(3 * 4 * numberOfPlanes) : undefined;
+            var st = defined(vertexFormat.st) ? new Float32Array(2 * 4 * numberOfPlanes) : undefined;
 
             var negativeX = Cartesian3.negate(x, scratchNegativeX);
             var negativeY = Cartesian3.negate(y, scratchNegativeY);
             var negativeZ = Cartesian3.negate(z, scratchNegativeZ);
 
-            getAttributes(0, normals, tangents, bitangents, st, negativeZ, x, y); // near
-            getAttributes(3 * 4, normals, tangents, bitangents, st, z, negativeX, y); // far
-            getAttributes(3 * 4 * 2, normals, tangents, bitangents, st, negativeX, negativeZ, y); // -x
-            getAttributes(3 * 4 * 3, normals, tangents, bitangents, st, negativeY, negativeZ, negativeX); // -y
-            getAttributes(3 * 4 * 4, normals, tangents, bitangents, st, x, z, y); // +x
-            getAttributes(3 * 4 * 5, normals, tangents, bitangents, st, y, z, negativeX); // +y
+            offset = 0;
+            if (drawNearPlane) {
+                getAttributes(offset, normals, tangents, bitangents, st, negativeZ, x, y); // near
+                offset += 3 * 4;
+            }
+            getAttributes(offset, normals, tangents, bitangents, st, z, negativeX, y); // far
+            offset += 3 * 4;
+            getAttributes(offset, normals, tangents, bitangents, st, negativeX, negativeZ, y); // -x
+            offset += 3 * 4;
+            getAttributes(offset, normals, tangents, bitangents, st, negativeY, negativeZ, negativeX); // -y
+            offset += 3 * 4;
+            getAttributes(offset, normals, tangents, bitangents, st, x, z, y); // +x
+            offset += 3 * 4;
+            getAttributes(offset, normals, tangents, bitangents, st, y, z, negativeX); // +y
 
             if (defined(normals)) {
                 attributes.normal = new GeometryAttribute({
@@ -437,8 +464,8 @@ define([
             }
         }
 
-        var indices = new Uint16Array(6 * 6);
-        for (i = 0; i < 6; ++i) {
+        var indices = new Uint16Array(6 * numberOfPlanes);
+        for (i = 0; i < numberOfPlanes; ++i) {
             var indexOffset = i * 6;
             var index = i * 4;
 
