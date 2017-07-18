@@ -179,10 +179,6 @@ define([
         var variableMap = {};
 
         var numLayoutVariables = layoutVariables.length;
-        for (var a = 0; a < numLayoutVariables; ++a) {
-            var variableThatWeCareAbout = layoutVariables[a];
-            variableMap[variableThatWeCareAbout] = [null];
-        }
 
         var stack = [];
         for (var i = 0; i < splitSource.length; ++i) {
@@ -207,7 +203,7 @@ define([
                 for (var varIndex = 0; varIndex < numLayoutVariables; ++varIndex) {
                     var varName = layoutVariables[varIndex];
                     if (line.indexOf(varName) !== -1) {
-                        if (variableMap[varName].length === 1 && variableMap[varName][0] === null) {
+                        if (!defined(variableMap[varName])) {
                             variableMap[varName] = stack.slice();
                         } else {
                             variableMap[varName] = variableMap[varName].filter(function(x) {
@@ -215,14 +211,6 @@ define([
                             });
                         }
                     }
-                }
-            }
-        }
-
-        for (var variable in variableMap) {
-            if (variableMap.hasOwnProperty(variable)) {
-                if (variableMap.length === 1 && variableMap[0] === null) {
-                    variableMap.splice(0, 1);
                 }
             }
         }
