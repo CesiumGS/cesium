@@ -4354,6 +4354,8 @@ defineSuite([
                   </gx:AnimatedUpdate>\
                   <gx:TourControl>\
                   </gx:TourControl>\
+                  <gx:SoundCue>\
+                  </gx:SoundCue>\
                 </gx:Playlist>\
               </gx:Tour>\
             </Document>';
@@ -4365,6 +4367,7 @@ defineSuite([
             expect(dataSource.kmlTours[0].playlist.length).toEqual(0);
             expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node AnimatedUpdate');
             expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node TourControl');
+            expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node SoundCue');
         });
     });
 
