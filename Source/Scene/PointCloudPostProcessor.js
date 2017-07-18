@@ -694,11 +694,18 @@ define([
             }
         }
 
-        var testVS = 'attribute vec4 position; \n\n' +
+        var testVS = '#define EPS 1e-8 \n' +
+                     'attribute vec4 position; \n\n' +
+                     'uniform sampler2D pointCloud_depthTexture; \n' +
                      'void main()  \n' +
                      '{ \n' +
-                     '    gl_Position = position; \n' +
-                     '    gl_PointSize = 10.0; \n' +
+                     '    vec2 textureCoordinates = 0.5 * position.xy + vec2(0.5); \n' +
+                     '    if (czm_unpackDepth(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
+                     '        gl_Position = position; \n' +
+                     '        gl_PointSize = 10.0; \n' +
+                     '    } else {\n' +
+                     '        gl_Position = vec4(-10); \n' +
+                     '    } \n' +
                      '} \n';
         var testFS = 'void main() \n' +
                      '{ \n' +
@@ -722,6 +729,9 @@ define([
         var testPointArrayCommand = createPointArrayCommand(
             testVS, testFS, processor, context, {
                 uniformMap : {
+                    pointCloud_depthTexture: function() {
+                        return processor._depthTextures[1 - drawCommands.length % 2];
+                    }
                 },
                 renderState : testBlendRenderState,
                 pass : Pass.CESIUM_3D_TILE,
@@ -938,7 +948,7 @@ define([
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
 
-        //commandList.push(this._testPointArrayCommand);
+        commandList.push(this._testPointArrayCommand);
 
         commandList.push(clearCommands['prior']);
     };
