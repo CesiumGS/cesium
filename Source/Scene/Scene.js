@@ -671,8 +671,6 @@ define([
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
-        this._postProcessor = new PostProcessorScene();
-
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;

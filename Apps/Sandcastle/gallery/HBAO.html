@@ -26,36 +26,41 @@
         <table>
             <tbody>
                 <tr>
-                    <td>Lens Flare</td>
+                    <td>HBAO</td>
                     <td>
-                        <input type="checkbox" data-bind="checked: LensFlare_Show">
+                        <input type="checkbox" data-bind="checked: HBAOShow">
+                    </td>
+                </tr>
+                <tr>
+                    <td>HBAO Only</td>
+                    <td>
+                        <input type="checkbox" data-bind="checked: HBAOonly">
                     </td>
                 </tr>
                 <tr>
                     <td>Intensity</td>
                     <td>
-                        <input type="range" min="0" max="10" step="0.01" data-bind="value: LensFlare_Intensity, valueUpdate: 'input'">
+                        <input type="range" min="1" max="10" step="1" data-bind="value: HBAOintensity, valueUpdate: 'input'">
                     </td>
                 </tr>
                 <tr>
-                    <td>Distortion</td>
+                    <td>LenCap</td>
                     <td>
-                        <input type="range" min="1" max="20" step="0.01" data-bind="value: LensFlare_Distortion, valueUpdate: 'input'">
+                        <input type="range" min="0" max="1" step="0.01" data-bind="value: HBAOlenCap, valueUpdate: 'input'">
                     </td>
                 </tr>
                 <tr>
-                    <td>Dispersion</td>
+                    <td>StepSize</td>
                     <td>
-                        <input type="range" min="0" max="1" step="0.01" data-bind="value: LensFlare_Dispersion, valueUpdate: 'input'">
+                        <input type="range" min="1" max="10" step="0.01" data-bind="value: HBAOstepSize, valueUpdate: 'input'">
                     </td>
                 </tr>
                 <tr>
-                    <td>HaloWidth</td>
+                    <td>Bias</td>
                     <td>
-                        <input type="range" min="0" max="1" step="0.01" data-bind="value: LensFlare_HaloWidth, valueUpdate: 'input'">
+                        <input type="range" min="0" max="1" step="0.01" data-bind="value: HBAObias, valueUpdate: 'input'">
                     </td>
                 </tr>
-
             </tbody>
         </table>
     </div>
@@ -66,13 +71,29 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var postProcess = scene.postProcess;
+scene.globe.depthTestAgainstTerrain = true;
+scene.fxaa = false;
+
+var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+        url: 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4'
+}));
+
+tileset.readyPromise.then(function () {
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.4, boundingSphere.radius * 1.0));
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}).otherwise(function (error) {
+throw (error);
+});
+
 
 var viewModel = {
-    LensFlare_Show: false,
-    LensFlare_Intensity: 2.0,
-    LensFlare_Distortion: 10.0,
-    LensFlare_Dispersion: 0.4,
-    LensFlare_HaloWidth: 0.4,
+        HBAOShow: false,
+        HBAOonly: false,
+        HBAOintensity: 4.0,
+        HBAObias: 0.1,
+        HBAOlenCap: 0.1,
+        HBAOstepSize: 2.0
 };
 
 Cesium.knockout.track(viewModel);
@@ -85,12 +106,13 @@ for (var name in viewModel) {
 }
 
 function updatePostProcess() {
-    postProcess.lensFlare.show = Boolean(viewModel.LensFlare_Show);
-    postProcess.lensFlare._uniformValues.intensity = Number(viewModel.LensFlare_Intensity);
-    postProcess.lensFlare._uniformValues.distortion = Number(viewModel.LensFlare_Distortion);
-    postProcess.lensFlare._uniformValues.ghostDispersal = Number(viewModel.LensFlare_Dispersion);
-    postProcess.lensFlare._uniformValues.haloWidth = Number(viewModel.LensFlare_HaloWidth);
-    postProcess.lensFlare._uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
+    postProcess.HBAO.show = Boolean(viewModel.HBAOShow);
+    postProcess.HBAO.uniformValues.HBAOonly = Boolean(viewModel.HBAOonly);
+    postProcess.HBAO.uniformValues.intensity = Number(viewModel.HBAOintensity);
+    postProcess.HBAO.uniformValues.bias = Number(viewModel.HBAObias);
+    postProcess.HBAO.uniformValues.lenCap = Number(viewModel.HBAOlenCap);
+    postProcess.HBAO.uniformValues.stepSize = Number(viewModel.HBAOstepSize);
+    scene.fxaa = Boolean(viewModel.fxaaShow);
 }
 //Sandcastle_End
 Sandcastle.finishedLoading();
