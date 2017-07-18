@@ -27,11 +27,11 @@ define([
         }
 
         var outputDeclarationLine = -1;
-        var number;
-        for (number = 0; number < splitSource.length; ++number) {
-            var line = splitSource[number];
-            if (outputDeclarationRegex.exec(line)) {
-                outputDeclarationLine = number;
+        var i;
+        for (i = 0; i < splitSource.length; ++i) {
+            var line = splitSource[i];
+            if (outputDeclarationRegex.test(line)) {
+                outputDeclarationLine = i;
                 break;
             }
         }
@@ -42,7 +42,7 @@ define([
 
         var outputVariables = [];
 
-        for (var i = 0; i < 10; i++) {
+        for (i = 0; i < 10; i++) {
             var fragDataString = 'gl_FragData\\[' + i + '\\]';
             var newOutput = 'czm_out' + i;
             var regex = new RegExp(fragDataString, 'g');
@@ -64,8 +64,8 @@ define([
 
         var variableMap = getVariablePreprocessorBranch(outputVariables, splitSource);
         var lineAdds = {};
-        for (var c = 0; c < splitSource.length; c++) {
-            var l = splitSource[c];
+        for (i = 0; i < splitSource.length; i++) {
+            var l = splitSource[i];
             for (var care in variableMap) {
                 if (variableMap.hasOwnProperty(care)) {
                     var matchVar = new RegExp('(layout)[^]+(out)[^]+(' + care + ')[^]+', 'g');
@@ -95,9 +95,9 @@ define([
 
         var versionThree = '#version 300 es';
         var foundVersion = false;
-        for (number = 0; number < splitSource.length; number++) {
-            if (/#version/.test(splitSource[number])) {
-                splitSource[number] = versionThree;
+        for (i = 0; i < splitSource.length; i++) {
+            if (/#version/.test(splitSource[i])) {
+                splitSource[i] = versionThree;
                 foundVersion = true;
             }
         }
