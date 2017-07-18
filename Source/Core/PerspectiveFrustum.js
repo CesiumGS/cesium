@@ -90,8 +90,21 @@ define([
         this._yOffset = this.yOffset;
     }
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
     PerspectiveFrustum.packedLength = 6;
 
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {PerspectiveFrustum} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
     PerspectiveFrustum.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('value', value);
@@ -110,6 +123,14 @@ define([
         return array;
     };
 
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {PerspectiveFrustum} [result] The object into which to store the result.
+     * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
+     */
     PerspectiveFrustum.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);

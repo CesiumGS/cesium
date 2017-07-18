@@ -1,17 +1,19 @@
 defineSuite([
-    'Core/OrthographicFrustum',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Math',
-    'Core/Matrix4'
-], function(
-    OrthographicFrustum,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    CesiumMath,
-    Matrix4) {
+        'Core/OrthographicFrustum',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix4',
+        'Specs/createPackableSpecs'
+    ], function(
+        OrthographicFrustum,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix4,
+        createPackableSpecs) {
     'use strict';
 
     var frustum, planes;
@@ -167,4 +169,11 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+
+    var packableFrustum = new OrthographicFrustum();
+    packableFrustum.width = 1.0;
+    packableFrustum.aspectRatio = 2.0;
+    packableFrustum.near = 3.0;
+    packableFrustum.far = 4.0;
+    createPackableSpecs(OrthographicFrustum, packableFrustum, [1.0, 2.0, 3.0, 4.0]);
 });

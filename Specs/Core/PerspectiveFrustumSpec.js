@@ -4,14 +4,16 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
-        'Core/Matrix4'
+        'Core/Matrix4',
+        'Specs/createPackableSpecs'
     ], function(
         PerspectiveFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumMath,
-        Matrix4) {
+        Matrix4,
+        createPackableSpecs) {
     'use strict';
 
     var frustum, planes;
@@ -172,4 +174,13 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+
+    var packableFrustum = new PerspectiveFrustum();
+    packableFrustum.fov = 1.0;
+    packableFrustum.aspectRatio = 2.0;
+    packableFrustum.near = 3.0;
+    packableFrustum.far = 4.0;
+    packableFrustum.xOffset = 5.0;
+    packableFrustum.yOffset = 6.0;
+    createPackableSpecs(PerspectiveFrustum, packableFrustum, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 });

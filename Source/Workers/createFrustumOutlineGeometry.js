@@ -1,9 +1,9 @@
 define([
-    '../Core/defined',
-    '../Core/FrustumOutlineGeometry'
-], function(
-    defined,
-    FrustumOutlineGeometry) {
+        '../Core/defined',
+        '../Core/FrustumOutlineGeometry'
+    ], function(
+        defined,
+        FrustumOutlineGeometry) {
     'use strict';
 
     function createFrustumOutlineGeometry(frustumGeometry, offset) {
