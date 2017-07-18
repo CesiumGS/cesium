@@ -1,0 +1,239 @@
+{
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "children": [],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1
+          },
+          "indices": 0,
+          "mode": 4,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "animations": [
+    {
+      "samplers": [
+        {
+          "input": 2,
+          "interpolation": "LINEAR",
+          "output": 3
+        }
+      ],
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 0,
+            "path": "rotation"
+          }
+        }
+      ]
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 142,
+      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAABAAIAAAAAAAAAgD4AAAA/AABAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAD0/TQ/9P00PwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAPT9ND/0/TS/AAAAAAAAAAAAAAAAAACAPw=="
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 36,
+      "byteOffset": 0,
+      "byteStride": 0
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6,
+      "byteOffset": 36
+    },
+    {
+      "buffer": 0,
+      "byteLength": 100,
+      "byteOffset": 42,
+      "byteStride": 0
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 3,
+      "type": "SCALAR",
+      "max": [
+        2
+      ],
+      "min": [
+        0
+      ]
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 3,
+      "type": "VEC3",
+      "max": [
+        1,
+        1,
+        0
+      ],
+      "min": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 5,
+      "type": "SCALAR",
+      "max": [
+        1
+      ],
+      "min": [
+        0
+      ]
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 20,
+      "componentType": 5126,
+      "count": 5,
+      "type": "VEC4",
+      "max": [
+        0,
+        0,
+        1,
+        1
+      ],
+      "min": [
+        0,
+        0,
+        0,
+        -0.707
+      ]
+    }
+  ],
+  "asset": {
+    "version": "2.0"
+  },
+  "cameras": [],
+  "images": [],
+  "materials": [
+    {
+      "values": {
+        "emission": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ]
+      },
+      "technique": 0
+    }
+  ],
+  "programs": [
+    {
+      "attributes": [
+        "a_position"
+      ],
+      "vertexShader": 0,
+      "fragmentShader": 1
+    }
+  ],
+  "samplers": [],
+  "shaders": [
+    {
+      "type": 35633,
+      "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0OwoKdW5pZm9ybSBtYXQ0IHVfbW9kZWxWaWV3TWF0cml4Owp1bmlmb3JtIG1hdDQgdV9wcm9qZWN0aW9uTWF0cml4OwoKYXR0cmlidXRlIHZlYzMgYV9wb3NpdGlvbjsKCnZvaWQgbWFpbiAodm9pZCkKewogICAgZ2xfUG9zaXRpb24gPSB1X3Byb2plY3Rpb25NYXRyaXggKiB1X21vZGVsVmlld01hdHJpeCAqIHZlYzQoYV9wb3NpdGlvbiwgMS4wKTsKfQo="
+    },
+    {
+      "type": 35632,
+      "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0OwoKdW5pZm9ybSB2ZWM0IHVfZW1pc3Npb247Cgp2b2lkIG1haW4odm9pZCkKewogICAgZ2xfRnJhZ0NvbG9yID0gdV9lbWlzc2lvbjsKfQo="
+    }
+  ],
+  "skins": [],
+  "techniques": [
+    {
+      "attributes": {
+        "a_position": "position"
+      },
+      "parameters": {
+        "modelViewMatrix": {
+          "semantic": "MODELVIEW",
+          "type": 35676
+        },
+        "projectionMatrix": {
+          "semantic": "PROJECTION",
+          "type": 35676
+        },
+        "emission": {
+          "type": 35666,
+          "value": [
+            0.5,
+            0.5,
+            0.5,
+            1
+          ]
+        },
+        "position": {
+          "semantic": "POSITION",
+          "type": 35665
+        }
+      },
+      "states": {
+        "enable": [
+          2884,
+          2929
+        ]
+      },
+      "uniforms": {
+        "u_modelViewMatrix": "modelViewMatrix",
+        "u_projectionMatrix": "projectionMatrix",
+        "u_emission": "emission"
+      },
+      "program": 0
+    }
+  ],
+  "textures": [],
+  "extensionsUsed": [],
+  "extensionsRequired": [],
+  "scene": 0
+}
