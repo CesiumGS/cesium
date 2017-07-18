@@ -704,6 +704,7 @@ define([
 
         if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
+            createPointArray(processor, context);
         }
 
         if (!defined(drawCommands) || !defined(stencilCommands) || dirty) {
