@@ -1,4 +1,4 @@
-/*global define*/
+﻿/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -44,6 +44,14 @@ define([
          * @inheritdoc PostProcessLibrary#fxaa
          */
         this.fxaa = PostProcessLibrary.fxaa;
+        /**
+         * @inheritdoc PostProcessLibrary#lensFlare
+         */
+        this.lensFlare = PostProcessLibrary.lensFlare;
+         /**
+         * @inheritdoc PostProcessLibrary#HBAO
+         */
+        this.HBAO = PostProcessLibrary.HBAO;
 
         var stages = [
             this.blackAndWhite,
@@ -52,7 +60,9 @@ define([
             this.nightVision,
             this.textureOverlay,
             this.depthView,
-            this.fxaa
+            this.fxaa,
+            this.lensFlare,
+            this.HBAO            
         ];
 
         this._postProcess = new PostProcess({
