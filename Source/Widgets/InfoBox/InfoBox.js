@@ -1,7 +1,6 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Core/Color',
-        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -13,7 +12,6 @@ define([
     ], function(
         buildModuleUrl,
         Color,
-        defaultValue,
         defined,
         defineProperties,
         destroyObject,
@@ -31,12 +29,10 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Object with the following properties:
-     * @param {Boolean} [options.disableSecurity=false] If set to true, iFrame sandboxing will be disabled, allowing JavaScript and HTML to be executed.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    function InfoBox(container, options) {
+    function InfoBox(container) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -44,7 +40,6 @@ define([
         //>>includeEnd('debug')
 
         container = getElement(container);
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-infoBox';
@@ -90,10 +85,10 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         var frame = document.createElement('iframe');
         frame.className = 'cesium-infoBox-iframe';
-        if(!options.disableSecurity) {
-            frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
-        }
-        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
+        // if(!options.disableSecurity) {
+        //     frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
+        // }
+        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40)}, attr: {"sandbox": sandboxOptions}');
         frame.setAttribute('allowfullscreen', true);
         infoElement.appendChild(frame);
 
@@ -101,7 +96,6 @@ click: function () { closeClicked.raiseEvent(this); }');
         knockout.applyBindings(viewModel, infoElement);
 
         this._container = container;
-        this._disableSecurity = defaultValue(options.disableSecurity, false);
         this._element = infoElement;
         this._frame = frame;
         this._viewModel = viewModel;
@@ -185,7 +179,7 @@ click: function () { closeClicked.raiseEvent(this); }');
          *
          * @type {Boolean}
          */
-        disableSecurity : {
+        /*disableSecurity : {
             get : function() {
                 return this._disableSecurity;
             },
@@ -200,7 +194,7 @@ click: function () { closeClicked.raiseEvent(this); }');
                     this._frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms');
                 }
             }
-        },
+        },*/
 
         /**
          * Gets the view model.

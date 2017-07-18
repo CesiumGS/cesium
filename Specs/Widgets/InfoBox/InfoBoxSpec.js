@@ -27,7 +27,6 @@ defineSuite([
         infoBox = new InfoBox(testContainer);
         expect(infoBox.container).toBe(testContainer);
 
-        expect(infoBox.disableSecurity).toEqual(false);
         var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
         expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("text");
         expect(infoBox.frame.getAttribute("sandbox")).toEqual("allow-same-origin allow-popups allow-forms");
@@ -69,31 +68,18 @@ defineSuite([
         expect(infoBox.container.id).toBe(testContainer.id);
     });
 
-    it('constructor can disable security', function() {
-        infoBox = new InfoBox(testContainer, {
-            disableSecurity: true
-        });
-
-        expect(infoBox.container).toBe(testContainer);
-
-        expect(infoBox.disableSecurity).toEqual(true);
-        var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
-        expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("html");
-        expect(infoBox.frame.getAttribute("sandbox")).toEqual(null);
-
-        expect(infoBox.viewModel).toBeDefined();
-        expect(infoBox.isDestroyed()).toEqual(false);
-        infoBox.destroy();
-        expect(infoBox.isDestroyed()).toEqual(true);
-    });
-
     it('can set disableSecurity', function() {
         infoBox = new InfoBox(testContainer);
-        infoBox.disableSecurity = true;
-        expect(infoBox.disableSecurity).toEqual(true);
+
+        infoBox.viewModel.securityDisabled = true;
         var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
         expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("html");
         expect(infoBox.frame.getAttribute("sandbox")).toEqual(null);
+
+        infoBox.viewModel.securityDisabled = false;
+        var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
+        expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("text");
+        expect(infoBox.frame.getAttribute("sandbox")).toEqual("allow-same-origin allow-popups allow-forms");
     });
 
     it('throws if container is undefined', function() {

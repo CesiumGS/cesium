@@ -84,6 +84,12 @@ define([
                 return !defined(this.description) || this.description.length === 0;
             }
         });
+
+        this.sandboxOptions = undefined;
+        knockout.defineProperty(this, 'sandboxOptions', function() {
+            var disabled = this.securityDisabled ;
+            return disabled ? false :  'allow-same-origin allow-popups allow-forms';
+        });
     }
 
     /**
