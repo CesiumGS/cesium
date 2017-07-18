@@ -695,17 +695,15 @@ define([
         }
 
         var testVS = 'attribute vec4 position; \n\n' +
-                     'varying vec2 v_textureCoordinates; \n\n' +
                      'void main()  \n' +
                      '{ \n' +
                      '    gl_Position = position; \n' +
-                     '    v_textureCoordinates = position.xy / 2.0 + vec2(0.5); \n' +
                      '    gl_PointSize = 10.0; \n' +
                      '} \n';
-        var testFS = 'varying vec2 v_textureCoordinates; \n\n' +
-                     'void main() \n' +
+        var testFS = 'void main() \n' +
                      '{ \n' +
-                     '    gl_FragColor = vec4(vec3(v_textureCoordinates.x), 1.0); \n' +
+                     '    vec2 textureCoordinates = gl_FragCoord.xy / czm_viewport.zw; \n' +
+                     '    gl_FragColor = vec4(vec3(textureCoordinates.x), 1.0); \n' +
                      '} \n' +
                      ' \n';
 
