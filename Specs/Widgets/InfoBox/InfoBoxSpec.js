@@ -77,7 +77,7 @@ defineSuite([
         expect(infoBox.frame.getAttribute("sandbox")).toEqual(null);
 
         infoBox.viewModel.securityDisabled = false;
-        var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
+        title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
         expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("text");
         expect(infoBox.frame.getAttribute("sandbox")).toEqual("allow-same-origin allow-popups allow-forms");
     });
