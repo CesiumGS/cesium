@@ -1,9 +1,9 @@
-/*global define*/
 define([
         '../Core/buildModuleUrl',
         '../Core/defineProperties',
         '../Core/destroyObject',
         './PostProcess',
+        './PostProcessCompositeStage',
         './PostProcessStage',
         '../Shaders/PostProcessFilters/FXAA',
         '../ThirdParty/Shaders/FXAA3_11'
@@ -12,6 +12,7 @@ define([
         defineProperties,
         destroyObject,
         PostProcess,
+        PostProcessCompositeStage,
         PostProcessStage,
         FXAAFS,
         FXAA3_11) {
@@ -101,6 +102,15 @@ define([
         depthView : {
             get : function() {
                 return createDepthViewStage();
+            }
+        },
+
+        /**
+         * @private
+         */
+        compositeTest : {
+            get : function() {
+                return createCompositeTestStage();
             }
         }
     });
@@ -244,6 +254,32 @@ define([
         return new PostProcessStage({
             fragmentShader : fragmentShader
         });
+    }
+
+    function createCompositeTestStage() {
+        var darkenShader =
+            'uniform sampler2D u_colorTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main(void) \n' +
+            '{ \n' +
+            '    vec3 color = texture2D(u_colorTexture, v_textureCoordinates).rgb; \n' +
+            '    gl_FragColor = vec4(color * 0.5, 1.0); \n' +
+            '} \n';
+        var redShader =
+            'uniform sampler2D u_colorTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main(void) \n' +
+            '{ \n' +
+            '    float red = texture2D(u_colorTexture, v_textureCoordinates).r; \n' +
+            '    gl_FragColor = vec4(red, 0.0, 0.0, 1.0); \n' +
+            '} \n';
+        var darkenStage = new PostProcessStage({
+            fragmentShader : darkenShader
+        });
+        var redStage = new PostProcessStage({
+            fragmentShader : redShader
+        });
+        return new PostProcessCompositeStage([darkenStage, redStage]);
     }
 
     return PostProcessLibrary;

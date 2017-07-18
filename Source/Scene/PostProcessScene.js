@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -41,6 +40,10 @@ define([
          */
         this.depthView = PostProcessLibrary.depthView;
         /**
+         * @inheritdoc PostProcessLibrary#compositeTest
+         */
+        this.compositeTest = PostProcessLibrary.compositeTest;
+        /**
          * @inheritdoc PostProcessLibrary#fxaa
          */
         this.fxaa = PostProcessLibrary.fxaa;
@@ -52,6 +55,7 @@ define([
             this.nightVision,
             this.textureOverlay,
             this.depthView,
+            this.compositeTest,
             this.fxaa
         ];
 

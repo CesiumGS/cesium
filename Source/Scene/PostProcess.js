@@ -216,16 +216,22 @@ define([
         postProcess._innerStages = innerStages;
         postProcess._stagesEnabled = stagesEnabled;
 
-        var i;
-        var stage;
         var stages = postProcess._stages;
         var length = stages.length;
-        for (i = 0; i < length; ++i) {
-            stage = stages[i];
+        for (var i = 0; i < length; ++i) {
+            var stage = stages[i];
             var enabled = stage.show && stage.ready;
             stagesEnabled.push(enabled);
             if (enabled) {
-                innerStages.push(stage);
+                var subStages = stage.stages;
+                if (defined(subStages)) { // Is a PostProcessCompositeStage
+                    var subStagesLength = subStages.length;
+                    for (var j = 0; j < subStagesLength; ++j) {
+                        innerStages.push(subStages[j]);
+                    }
+                } else { // Is a PostProcessStage
+                    innerStages.push(stage);
+                }
             }
         }
 
