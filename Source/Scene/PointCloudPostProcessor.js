@@ -271,7 +271,7 @@ define([
         });
 
         pointArray = VertexArray.fromGeometry({
-            context : this,
+            context : context,
             geometry : geometry,
             attributeLocations : {
                 position : 0
