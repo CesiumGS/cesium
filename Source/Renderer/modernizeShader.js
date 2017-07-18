@@ -51,9 +51,9 @@ define([
         return wholeSource;
     }
 
-    function setAdd(variable, set1) {
-        if (set1.indexOf(variable) === -1) {
-            set1.push(variable);
+    function setAdd(variable, set) {
+        if (set.indexOf(variable) === -1) {
+            set.push(variable);
         }
     }
 
