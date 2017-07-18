@@ -5,10 +5,9 @@ Change Log
 
 * Fixed a bug where a Model's compressed textures were not being displayed. [#5596](https://github.com/AnalyticalGraphicsInc/cesium/pull/5596)
 * Fixed a bug where jsep was undefined when using webpack [#5593](https://github.com/AnalyticalGraphicsInc/cesium/issues/5593)
-* Make Entity mode matrix public via computeModelMatrix(). [#5584](https://github.com/AnalyticalGraphicsInc/cesium/pull/5584)
+* Added Entity.computeModelMatrix which returns the model matrix representing the entity's transformation. [#5584](https://github.com/AnalyticalGraphicsInc/cesium/pull/5584)
 
 ### 1.35 - 2017-07-05
-
 * Breaking changes
   * `JulianDate.fromIso8601` will default to midnight UTC if no time is provided to match the Javascript [`Date` specification](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date). You must specify a local time of midnight to achieve the old behavior.
 * Deprecated

@@ -241,6 +241,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('computeModelMatrix throws if no time specified.', function() {
+        var entity = new Entity();
+        expect(function() {
+            entity.computeModelMatrix();
+        }).toThrowDeveloperError();
+    });
+
     it('computeModelMatrix returns undefined when position is undefined.', function() {
         var entity = new Entity();
         entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
