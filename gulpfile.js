@@ -1040,6 +1040,11 @@ function createCesiumJs() {
         file = path.relative('Source', file);
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
+        if (moduleId === 'Scene/OrthographicFrustum' || moduleId === 'Scene/OrthographicOffCenterFrustum' ||
+            moduleId === 'Scene/PerspectiveFrustum' || moduleId === 'Scene/PerspectiveOffCenterFrustum' ||
+            moduleId === 'Scene/CullingVolume') {
+            return;
+        }
 
         var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {

@@ -7,7 +7,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
@@ -29,7 +28,6 @@ define([
         Check,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
@@ -317,7 +315,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransformOrResult=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
@@ -331,21 +329,15 @@ define([
      * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        // checks for required parameters happen in the called functions
-        if(fixedFrameTransformOrResult instanceof Matrix4){
-            result = fixedFrameTransformOrResult;
-            fixedFrameTransformOrResult = undefined;
-            deprecationWarning('Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
-        }
-        fixedFrameTransformOrResult = defaultValue(fixedFrameTransformOrResult,Transforms.eastNorthUpToFixedFrame);
+        fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = fixedFrameTransformOrResult(origin, ellipsoid, result);
+        result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
 
@@ -361,7 +353,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransformOrResult=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
+     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
@@ -375,16 +367,12 @@ define([
      * var hpr = new HeadingPitchRoll(heading, pitch, roll);
      * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransformOrResult, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        if (fixedFrameTransformOrResult instanceof Quaternion) {
-            result = fixedFrameTransformOrResult;
-            fixedFrameTransformOrResult = undefined;
-            deprecationWarning('Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)', 'The method was deprecated in Cesium 1.31 and will be removed in version 1.33. Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) where fixedFrameTransform is a a 4x4 transformation matrix (see Transforms.localFrameToFixedFrameGenerator)');
-        }
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid,fixedFrameTransformOrResult, scratchENUMatrix4);
+
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
