@@ -1,7 +1,7 @@
 defineSuite([
         'Widgets/ProjectionPicker/ProjectionPickerViewModel',
-        'Scene/OrthographicFrustum',
-        'Scene/PerspectiveFrustum',
+        'Core/OrthographicFrustum',
+        'Core/PerspectiveFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(

@@ -19,15 +19,15 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
         './MapMode2D',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -50,15 +50,15 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Quaternion,
         Ray,
         Rectangle,
         Transforms,
         CameraFlightPath,
         MapMode2D,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode) {
     'use strict';
 
