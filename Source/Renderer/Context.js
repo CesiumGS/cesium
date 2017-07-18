@@ -269,6 +269,7 @@ define([
 
         // Query and initialize extensions
         this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
+        this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
         this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
         this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
@@ -486,6 +487,20 @@ define([
         standardDerivatives : {
             get : function() {
                 return this._standardDerivatives || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_blend_minmax extension is supported.  This
+         * extension extends blending capabilities by adding two new blend equations:
+         * the minimum or maximum color components of the source and destination colors.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/}
+         */
+        blendMinmax : {
+            get : function() {
+                return this._blendMinmax || this._webgl2;
             }
         },
 
