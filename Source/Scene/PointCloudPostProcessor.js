@@ -23,6 +23,8 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
+        '../Scene/BlendEquation',
+        '../Scene/BlendFunction',
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
@@ -55,6 +57,8 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
+        BlendEquation,
+        BlendFunction,
         BlendingState,
         StencilFunction,
         StencilOperation,
@@ -83,6 +87,8 @@ define([
         this._blendCommand = undefined;
         this._clearCommands = undefined;
 
+        this._testPointArrayCommand = undefined;
+
         this.occlusionAngle = options.occlusionAngle;
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -95,7 +101,7 @@ define([
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
         this.useTriangle = options.useTriangle;
 
-        this.pointArray = undefined;
+        this._pointArray = undefined;
 
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
@@ -241,9 +247,7 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
 
-        var pointArray = processor.pointArray;
-
-        var vertexArr = new Float32Array(screenWidth * screenHeight);
+        var vertexArr = new Float32Array(screenWidth * screenHeight * 2);
 
         var xIncrement = 2.0 / screenWidth;
         var yIncrement = 2.0 / screenHeight;
@@ -270,7 +274,7 @@ define([
             primitiveType : PrimitiveType.POINTS
         });
 
-        pointArray = VertexArray.fromGeometry({
+        var pointArray = VertexArray.fromGeometry({
             context : context,
             geometry : geometry,
             attributeLocations : {
@@ -280,25 +284,30 @@ define([
             interleave : true
         });
 
-        processor.pointArray = pointArray;
+        processor._pointArray = pointArray;
     }
 
-    function createPointArrayCommand(vertexShaderSource, fragmentShaderSource, processor, context) {
-        if (!defined(processor.pointArray)) {
+    function createPointArrayCommand(vertexShaderSource, fragmentShaderSource, processor, context, overrides) {
+        if (!defined(processor._pointArray)) {
             createPointArray(processor, context);
         }
 
         return new DrawCommand({
-            vertexArray : this.pointArray,
+            vertexArray : processor._pointArray,
             primitiveType : PrimitiveType.POINTS,
+            renderState : overrides.renderState,
             shaderProgram : ShaderProgram.fromCache({
-                context : this,
+                context : context,
                 vertexShaderSource : vertexShaderSource,
                 fragmentShaderSource : fragmentShaderSource,
                 attributeLocations : {
                     position : 0
                 }
-            })
+            }),
+            uniformMap : overrides.uniformMap,
+            owner : overrides.owner,
+            framebuffer : overrides.framebuffer,
+            pass : overrides.pass
         });
     }
 
@@ -685,11 +694,49 @@ define([
             }
         }
 
+        var testVS = 'attribute vec4 position; \n\n' +
+                     'varying vec2 v_textureCoordinates; \n\n' +
+                     'void main()  \n' +
+                     '{ \n' +
+                     '    gl_Position = position; \n' +
+                     '    v_textureCoordinates = position.xy / 2.0 + vec2(0.5); \n' +
+                     '    gl_PointSize = 10.0; \n' +
+                     '} \n';
+        var testFS = 'varying vec2 v_textureCoordinates; \n\n' +
+                     'void main() \n' +
+                     '{ \n' +
+                     '    gl_FragColor = vec4(vec3(v_textureCoordinates.x), 1.0); \n' +
+                     '} \n' +
+                     ' \n';
+
+        var testBlendRenderState = RenderState.fromCache({
+            blending : {
+                enabled : true,
+                equationRgb : BlendEquation.MIN,
+                equationAlpha : BlendEquation.ADD,
+                functionSourceRgb : BlendFunction.ONE,
+                functionSourceAlpha : BlendFunction.ONE,
+                functionDestinationRgb : BlendFunction.ONE,
+                functionDestinationAlpha : BlendFunction.ZERO
+            }
+        });
+
+        var testPointArrayCommand = createPointArrayCommand(
+            testVS, testFS, processor, context, {
+                uniformMap : {
+                },
+                renderState : testBlendRenderState,
+                pass : Pass.CESIUM_3D_TILE,
+                owner : processor
+            }
+        );
+
         processor._drawCommands = drawCommands;
         processor._stencilCommands = stencilCommands;
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
         processor._copyCommands = copyCommands;
+        processor._testPointArrayCommand = testPointArrayCommand;
     }
 
     function createResources(processor, context, dirty) {
@@ -892,6 +939,8 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
+
+        commandList.push(this._testPointArrayCommand);
 
         commandList.push(clearCommands['prior']);
     };
