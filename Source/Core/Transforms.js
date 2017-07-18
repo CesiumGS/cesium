@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Cartesian2',
@@ -223,6 +222,7 @@ define([
      * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -245,6 +245,7 @@ define([
      * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -267,6 +268,7 @@ define([
      * <li>The <code>z</code> axis points in the local east direction.</li>
      * </ul>
      *
+     * @function
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -280,26 +282,27 @@ define([
     Transforms.northUpEastToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','up');
 
     /**
-    * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
-    * centered at the provided origin to the provided ellipsoid's fixed reference frame.
-    * The local axes are defined as:
-    * <ul>
-    * <li>The <code>x</code> axis points in the local north direction.</li>
-    * <li>The <code>y</code> axis points in the local west direction.</li>
-    * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
-    * </ul>
-    *
-    * @param {Cartesian3} origin The center point of the local reference frame.
-    * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-    * @param {Matrix4} [result] The object onto which to store the result.
-    * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-    *
-    * @example
-    * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
-    * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-    * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
-    */
-   Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
+     * Computes a 4x4 transformation matrix from a reference frame with an north-west-up axes
+     * centered at the provided origin to the provided ellipsoid's fixed reference frame.
+     * The local axes are defined as:
+     * <ul>
+     * <li>The <code>x</code> axis points in the local north direction.</li>
+     * <li>The <code>y</code> axis points in the local west direction.</li>
+     * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
+     * </ul>
+     *
+     * @function
+     * @param {Cartesian3} origin The center point of the local reference frame.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+     *
+      * @example
+     * // Get the transform from local north-West-Up at cartographic (0.0, 0.0) to Earth's fixed frame.
+     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var transform = Cesium.Transforms.northWestUpToFixedFrame(center);
+     */
+    Transforms.northWestUpToFixedFrame = Transforms.localFrameToFixedFrameGenerator('north','west');
 
     var scratchHPRQuaternion = new Quaternion();
     var scratchScale = new Cartesian3(1.0, 1.0, 1.0);

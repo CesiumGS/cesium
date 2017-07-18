@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/Cartesian2',
         'Core/clone',

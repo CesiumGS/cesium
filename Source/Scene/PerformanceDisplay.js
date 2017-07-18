@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -34,11 +33,11 @@ define([
         display.className = 'cesium-performanceDisplay';
         var fpsElement = document.createElement('div');
         fpsElement.className = 'cesium-performanceDisplay-fps';
-        this._fpsText = document.createTextNode("");
+        this._fpsText = document.createTextNode('');
         fpsElement.appendChild(this._fpsText);
         var msElement = document.createElement('div');
         msElement.className = 'cesium-performanceDisplay-ms';
-        this._msText = document.createTextNode("");
+        this._msText = document.createTextNode('');
         msElement.appendChild(this._msText);
         display.appendChild(msElement);
         display.appendChild(fpsElement);

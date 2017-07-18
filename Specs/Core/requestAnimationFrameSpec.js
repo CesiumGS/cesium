@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/requestAnimationFrame',
         'Core/cancelAnimationFrame',

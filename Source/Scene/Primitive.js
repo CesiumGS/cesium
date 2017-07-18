@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -36,8 +35,6 @@ define([
         './BatchTable',
         './CullFace',
         './DepthFunction',
-        './Material',
-        './PolylineMaterialAppearance',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -79,8 +76,6 @@ define([
         BatchTable,
         CullFace,
         DepthFunction,
-        Material,
-        PolylineMaterialAppearance,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -1484,6 +1479,9 @@ define([
         }
     }
 
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
     function getUniforms(primitive, appearance, material, frameState) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
@@ -1519,9 +1517,6 @@ define([
 
         return uniforms;
     }
-
-    var modifiedModelViewScratch = new Matrix4();
-    var rtcScratch = new Cartesian3();
 
     function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
         var uniforms = getUniforms(primitive, appearance, material, frameState);

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/BillboardCollection',
         'Core/BoundingRectangle',

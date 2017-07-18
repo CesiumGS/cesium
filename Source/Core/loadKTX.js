@@ -1,17 +1,16 @@
-/*global define*/
 define([
         '../ThirdParty/when',
+        './Check',
         './CompressedTextureBuffer',
         './defined',
-        './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
         './RuntimeError'
     ], function(
         when,
+        Check,
         CompressedTextureBuffer,
         defined,
-        DeveloperError,
         loadArrayBuffer,
         PixelFormat,
         RuntimeError) {
@@ -72,9 +71,7 @@ define([
      */
     function loadKTX(urlOrBuffer, headers, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(urlOrBuffer)) {
-            throw new DeveloperError('urlOrBuffer is required.');
-        }
+        Check.defined('urlOrBuffer', urlOrBuffer);
         //>>includeEnd('debug');
 
         var loadPromise;
@@ -195,10 +192,8 @@ define([
             if (numberOfMipmapLevels === 0) {
                 throw new RuntimeError('Generating mipmaps for a compressed texture is unsupported.');
             }
-        } else {
-            if (glBaseInternalFormat !== glFormat) {
-                throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
-            }
+        } else if (glBaseInternalFormat !== glFormat) {
+            throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
         }
 
         if (pixelDepth !== 0) {

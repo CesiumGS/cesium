@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/deprecationWarning',
         './GoogleEarthEnterpriseMapsProvider'
@@ -34,4 +33,3 @@ define([
 
     return GoogleEarthImageryProvider;
 });
-

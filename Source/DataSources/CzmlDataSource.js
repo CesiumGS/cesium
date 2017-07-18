@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -265,21 +264,21 @@ define([
             scratchSpherical.cone = unitSpherical[1];
             Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length / 3 * 4);
-            for (var i = 0, j = 0; i < length; i += 3, j += 4) {
-                result[j] = unitSpherical[i];
-
-                scratchSpherical.clock = unitSpherical[i + 1];
-                scratchSpherical.cone = unitSpherical[i + 2];
-                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-
-                result[j + 1] = scratchCartesian.x;
-                result[j + 2] = scratchCartesian.y;
-                result[j + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length / 3 * 4);
+        for (var i = 0, j = 0; i < length; i += 3, j += 4) {
+            result[j] = unitSpherical[i];
+
+            scratchSpherical.clock = unitSpherical[i + 1];
+            scratchSpherical.cone = unitSpherical[i + 2];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+            result[j + 1] = scratchCartesian.x;
+            result[j + 2] = scratchCartesian.y;
+            result[j + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertSphericalToCartesian(spherical) {
@@ -290,22 +289,22 @@ define([
             scratchSpherical.magnitude = spherical[2];
             Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = spherical[i];
-
-                scratchSpherical.clock = spherical[i + 1];
-                scratchSpherical.cone = spherical[i + 2];
-                scratchSpherical.magnitude = spherical[i + 3];
-                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = spherical[i];
+
+            scratchSpherical.clock = spherical[i + 1];
+            scratchSpherical.cone = spherical[i + 2];
+            scratchSpherical.magnitude = spherical[i + 3];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertCartographicRadiansToCartesian(cartographicRadians) {
@@ -316,22 +315,22 @@ define([
             scratchCartographic.height = cartographicRadians[2];
             Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = cartographicRadians[i];
-
-                scratchCartographic.longitude = cartographicRadians[i + 1];
-                scratchCartographic.latitude = cartographicRadians[i + 2];
-                scratchCartographic.height = cartographicRadians[i + 3];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = cartographicRadians[i];
+
+            scratchCartographic.longitude = cartographicRadians[i + 1];
+            scratchCartographic.latitude = cartographicRadians[i + 2];
+            scratchCartographic.height = cartographicRadians[i + 3];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function convertCartographicDegreesToCartesian(cartographicDegrees) {
@@ -342,22 +341,22 @@ define([
             scratchCartographic.height = cartographicDegrees[2];
             Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
             return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-        } else {
-            var result = new Array(length);
-            for (var i = 0; i < length; i += 4) {
-                result[i] = cartographicDegrees[i];
-
-                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
-                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                scratchCartographic.height = cartographicDegrees[i + 3];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-
-                result[i + 1] = scratchCartesian.x;
-                result[i + 2] = scratchCartesian.y;
-                result[i + 3] = scratchCartesian.z;
-            }
-            return result;
         }
+
+        var result = new Array(length);
+        for (var i = 0; i < length; i += 4) {
+            result[i] = cartographicDegrees[i];
+
+            scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+            scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+            scratchCartographic.height = cartographicDegrees[i + 3];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+
+            result[i + 1] = scratchCartesian.x;
+            result[i + 2] = scratchCartesian.y;
+            result[i + 3] = scratchCartesian.z;
+        }
+        return result;
     }
 
     function unwrapCartesianInterval(czmlInterval) {
@@ -496,10 +495,9 @@ define([
             return Uri;
         } else if (czmlInterval.hasOwnProperty('verticalOrigin')) {
             return VerticalOrigin;
-        } else {
-            // fallback case
-            return Object;
         }
+        // fallback case
+        return Object;
     }
 
     function unwrapInterval(type, czmlInterval, sourceUri, query) {
@@ -594,6 +592,10 @@ define([
             property.backwardExtrapolationDuration = backwardExtrapolationDuration;
         }
     }
+
+    var iso8601Scratch = {
+        iso8601 : undefined
+    };
 
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri, entityCollection, query) {
         var combinedInterval;
@@ -1222,10 +1224,6 @@ define([
         }
         entity.availability = intervals;
     }
-
-    var iso8601Scratch = {
-        iso8601 : undefined
-    };
 
     function processAlignedAxis(billboard, packetData, interval, sourceUri, entityCollection, query) {
         if (!defined(packetData)) {

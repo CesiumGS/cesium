@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './defined',
@@ -12,6 +11,17 @@ define([
         loadBlob,
         loadImage) {
     'use strict';
+
+    var xhrBlobSupported = (function() {
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
+        } catch (e) {
+            return false;
+        }
+    })();
 
     /**
      * Asynchronously loads the given image URL by first downloading it as a blob using
@@ -72,17 +82,6 @@ define([
             });
         });
     }
-
-    var xhrBlobSupported = (function() {
-        try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '#', true);
-            xhr.responseType = 'blob';
-            return xhr.responseType === 'blob';
-        } catch (e) {
-            return false;
-        }
-    })();
 
     return loadImageViaBlob;
 });

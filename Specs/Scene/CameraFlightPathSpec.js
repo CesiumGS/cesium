@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',

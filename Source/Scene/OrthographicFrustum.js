@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,13 +16,13 @@ define([
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
-     * @alias OrthographicOffCenterFrustum
+     * @alias OrthographicFrustum
      * @constructor
      *
      * @example
      * var maxRadii = ellipsoid.maximumRadius;
      *
-     * var frustum = new Cesium.OrthographicOffCenterFrustum();
+     * var frustum = new Cesium.OrthographicFrustum();
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
