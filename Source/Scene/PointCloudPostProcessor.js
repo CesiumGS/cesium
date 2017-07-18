@@ -1,9 +1,9 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/ComponentDatatype',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/PixelFormat',
