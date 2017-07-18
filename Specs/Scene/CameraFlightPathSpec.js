@@ -3,7 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Math',
-        'Scene/OrthographicOffCenterFrustum',
+        'Core/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(

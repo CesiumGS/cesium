@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/TimeDynamicImagery',
-    'Core/Clock',
-    'Core/ClockStep',
-    'Core/JulianDate',
-    'Core/Request',
-    'Core/RequestScheduler',
-    'Core/RequestType',
-    'Core/TimeIntervalCollection',
-    'ThirdParty/when'
-], function(
-    TimeDynamicImagery,
-    Clock,
-    ClockStep,
-    JulianDate,
-    Request,
-    RequestScheduler,
-    RequestType,
-    TimeIntervalCollection,
-    when) {
+        'Scene/TimeDynamicImagery',
+        'Core/Clock',
+        'Core/ClockStep',
+        'Core/JulianDate',
+        'Core/Request',
+        'Core/RequestScheduler',
+        'Core/RequestType',
+        'Core/TimeIntervalCollection',
+        'ThirdParty/when'
+    ], function(
+        TimeDynamicImagery,
+        Clock,
+        ClockStep,
+        JulianDate,
+        Request,
+        RequestScheduler,
+        RequestType,
+        TimeIntervalCollection,
+        when) {
     'use strict';
 
     var clock = new Clock({

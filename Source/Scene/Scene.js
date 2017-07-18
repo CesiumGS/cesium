@@ -9,6 +9,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -27,6 +28,10 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
+        '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
@@ -46,7 +51,6 @@ define([
         '../Renderer/Texture',
         './Camera',
         './CreditDisplay',
-        './CullingVolume',
         './DebugCameraPrimitive',
         './DepthPlane',
         './DeviceOrientationCameraController',
@@ -58,12 +62,8 @@ define([
         './JobScheduler',
         './MapMode2D',
         './OIT',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
         './PickDepth',
         './Primitive',
         './PrimitiveCollection',
@@ -85,6 +85,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -103,6 +104,10 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
+        PerspectiveOffCenterFrustum,
         PixelFormat,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
@@ -122,7 +127,6 @@ define([
         Texture,
         Camera,
         CreditDisplay,
-        CullingVolume,
         DebugCameraPrimitive,
         DepthPlane,
         DeviceOrientationCameraController,
@@ -134,12 +138,8 @@ define([
         JobScheduler,
         MapMode2D,
         OIT,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
         PerformanceDisplay,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
         PickDepth,
         Primitive,
         PrimitiveCollection,
@@ -2150,13 +2150,11 @@ define([
             executeCommands(scene, passState);
 
             Camera.clone(savedCamera, camera);
+        } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else {
             updateAndClearFramebuffers(scene, passState, backgroundColor);
-            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState);
-            } else {
-                execute2DViewportCommands(scene, passState);
-            }
+            execute2DViewportCommands(scene, passState);
         }
     }
 
@@ -2282,7 +2280,7 @@ define([
         passState.viewport = originalViewport;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState) {
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
         var depthOnly = scene.frameState.passes.depth;
 
         if (!firstViewport && !depthOnly) {
@@ -2295,9 +2293,14 @@ define([
 
         createPotentiallyVisibleSet(scene);
 
-        if (firstViewport && !depthOnly) {
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
+        if (firstViewport) {
+            if (defined(backgroundColor)) {
+                updateAndClearFramebuffers(scene, passState, backgroundColor);
+            }
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
         }
 
         executeCommands(scene, passState);
@@ -2798,16 +2801,21 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      */
-    Scene.prototype.pick = function(windowPosition) {
+    Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
+
+        rectangleWidth = defaultValue(width, 3.0);
+        rectangleHeight = defaultValue(height, rectangleWidth);
 
         var context = this._context;
         var us = context.uniformState;
@@ -2830,7 +2838,8 @@ define([
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
-
+        scratchRectangle.width = rectangleWidth;
+        scratchRectangle.height = rectangleHeight;
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
         updateEnvironment(this, passState);
