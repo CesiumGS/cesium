@@ -1524,15 +1524,14 @@ define([
     function parseTextures(model, context) {
         var gltf = model.gltf;
         var images = gltf.images;
-        var binary;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
-            binary = undefined;
-            uri = undefined;
+            var bufferViewId = gltfImage.bufferView;
+            uri = gltfImage.uri;
 
             // First check for a compressed texture
             if (defined(extras) && defined(extras.compressedImage3DTiles)) {
@@ -1542,52 +1541,44 @@ define([
                 var etc1 = extras.compressedImage3DTiles.etc1;
 
                 if (context.s3tc && defined(crunch)) {
-                    if (defined(crunch.extensions) && defined(crunch.extensions.KHR_binary_glTF)) {
-                        binary = crunch.extensions.KHR_binary_glTF;
+                    if (defined(crunch.bufferView)) {
+                        bufferViewId = crunch.bufferView;
                     } else {
                         uri = crunch.uri;
                     }
                 } else if (context.s3tc && defined(s3tc)) {
-                    if (defined(s3tc.extensions) && defined(s3tc.extensions.KHR_binary_glTF)) {
-                        binary = s3tc.extensions.KHR_binary_glTF;
+                    if (defined(s3tc.bufferView)) {
+                        bufferViewId = s3tc.bufferView;
                     } else {
                         uri = s3tc.uri;
                     }
                 } else if (context.pvrtc && defined(pvrtc)) {
-                    if (defined(pvrtc.extensions) && defined(pvrtc.extensions.KHR_binary_glTF)) {
-                        binary = pvrtc.extensions.KHR_binary_glTF;
+                    if (defined(pvrtc.bufferView)) {
+                        bufferViewId = pvrtc.bufferView;
                     } else {
                         uri = pvrtc.uri;
                     }
                 } else if (context.etc1 && defined(etc1)) {
-                    if (defined(etc1.extensions) && defined(etc1.extensions.KHR_binary_glTF)) {
-                        binary = etc1.extensions.KHR_binary_glTF;
+                    if (defined(etc1.bufferView)) {
+                        bufferViewId = etc1.bufferView;
                     } else {
                         uri = etc1.uri;
                     }
                 }
             }
 
-            // No compressed texture, so image references either uri (external or base64-encoded) or bufferView
-            if (!defined(binary) && !defined(uri)) {
-                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
-                    binary = gltfImage.extensions.KHR_binary_glTF;
-                } else {
-                    uri = new Uri(gltfImage.uri);
-                }
-            }
-
             // Image references either uri (external or base64-encoded) or bufferView
-            if (defined(binary)) {
+            if (defined(bufferViewId)) {
                 model._loadResources.texturesToCreateFromBufferView.enqueue({
                     id : id,
                     image : undefined,
-                    bufferView : binary.bufferView,
-                    mimeType : binary.mimeType
+                    bufferView : bufferViewId,
+                    mimeType : gltfImage.mimeType
                 });
             } else {
                 ++model._loadResources.pendingTextureLoads;
-                var imagePath = joinUrls(model._baseUri, uri);
+                uri = new Uri(uri);
+                var imagePath = joinUrls(model._baseUri, gltfImage.uri);
 
                 var promise;
                 if (ktxRegex.test(imagePath)) {
@@ -1597,7 +1588,7 @@ define([
                 } else {
                     promise = loadImage(imagePath);
                 }
-                promise.then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
         });
     }
