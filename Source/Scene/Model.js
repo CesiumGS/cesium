@@ -3164,7 +3164,7 @@ define([
                                 morphWeightsUniformName = name;
                             } else {
                                 // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model)
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
                             }
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material

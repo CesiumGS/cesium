@@ -140,7 +140,7 @@ define([
             wrapT : TextureWrap.CLAMP_TO_EDGE,
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        })
+        });
     }
 
     function createFramebuffer(processor, context) {

@@ -128,29 +128,27 @@ define([
 // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
             if ((times.length === 1) && (controlPoints.length === 1)) {
                 spline = new ConstantSpline(controlPoints[0]);
-            } else {
+            } else if (sampler.interpolation === 'LINEAR') {
 // END GLTF_SPEC
-                if (sampler.interpolation === 'LINEAR') {
-                    if (path === 'translation' || path === 'scale') {
-                        spline = new LinearSpline({
-                            times : times,
-                            points : controlPoints
-                        });
-                    } else if (path === 'rotation') {
-                        spline = new QuaternionSpline({
-                            times : times,
-                            points : controlPoints
-                        });
-                    } else if (path === 'weights') {
-                        spline = new WeightSpline({
-                            times : times,
-                            points : controlPoints
-                        });
-                    }
-                    // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
+                if (path === 'translation' || path === 'scale') {
+                    spline = new LinearSpline({
+                        times : times,
+                        points : controlPoints
+                    });
+                } else if (path === 'rotation') {
+                    spline = new QuaternionSpline({
+                        times : times,
+                        points : controlPoints
+                    });
+                } else if (path === 'weights') {
+                    spline = new WeightSpline({
+                        times : times,
+                        points : controlPoints
+                    });
                 }
-                // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
+                // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
             }
+            // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
 
             if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
