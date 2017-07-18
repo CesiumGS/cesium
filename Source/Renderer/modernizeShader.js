@@ -27,9 +27,9 @@ define([
         }
 
         var outputDeclarationLine = -1;
-        var i;
+        var i, line;
         for (i = 0; i < splitSource.length; ++i) {
-            var line = splitSource[i];
+            line = splitSource[i];
             if (outputDeclarationRegex.test(line)) {
                 outputDeclarationLine = i;
                 break;
@@ -65,12 +65,12 @@ define([
         var variableMap = getVariablePreprocessorBranch(outputVariables, splitSource);
         var lineAdds = {};
         for (i = 0; i < splitSource.length; i++) {
-            var l = splitSource[i];
+            line = splitSource[i];
             for (var care in variableMap) {
                 if (variableMap.hasOwnProperty(care)) {
                     var matchVar = new RegExp('(layout)[^]+(out)[^]+(' + care + ')[^]+', 'g');
-                    if (matchVar.test(l)) {
-                        lineAdds[l] = care;
+                    if (matchVar.test(line)) {
+                        lineAdds[line] = care;
                     }
                 }
             }
