@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/WallGeometryUpdater',
         'Core/Cartesian3',

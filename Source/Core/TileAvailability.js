@@ -1,19 +1,18 @@
-/*global define*/
 define([
-    './binarySearch',
-    './Cartographic',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Rectangle'
-], function(
-    binarySearch,
-    Cartographic,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Rectangle) {
-    "use strict";
+        './binarySearch',
+        './Cartographic',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Rectangle'
+    ], function(
+        binarySearch,
+        Cartographic,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Rectangle) {
+    'use strict';
 
     /**
      * Reports the availability of tiles in a {@link TilingScheme}.

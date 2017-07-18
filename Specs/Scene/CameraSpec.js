@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Camera',
         'Core/BoundingSphere',
@@ -13,14 +12,14 @@ defineSuite([
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
+        'Core/OrthographicFrustum',
+        'Core/OrthographicOffCenterFrustum',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
-        'Scene/OrthographicFrustum',
-        'Scene/OrthographicOffCenterFrustum',
-        'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
         'Scene/TweenCollection'
     ], function(
@@ -37,14 +36,14 @@ defineSuite([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Rectangle,
         Transforms,
         WebMercatorProjection,
         CameraFlightPath,
         MapMode2D,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode,
         TweenCollection) {
     'use strict';
@@ -2473,7 +2472,7 @@ defineSuite([
             destination: destination
         });
         camera.flyHome(0);
-        expect(camera.position).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-9183857.990445068, 3896182.1777645755, 1.0), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON8);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON8);
     });

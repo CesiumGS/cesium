@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -20,15 +19,15 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
         './MapMode2D',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -51,15 +50,15 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Quaternion,
         Ray,
         Rectangle,
         Transforms,
         CameraFlightPath,
         MapMode2D,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode) {
     'use strict';
 
@@ -1276,7 +1275,7 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             this.flyTo({
-                destination : Rectangle.MAX_VALUE,
+                destination : Camera.DEFAULT_VIEW_RECTANGLE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Model',
         'Core/Cartesian2',
@@ -22,6 +21,7 @@ defineSuite([
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -32,7 +32,6 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
-        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -59,6 +58,7 @@ defineSuite([
         CesiumMath,
         Matrix3,
         Matrix4,
+        PerspectiveFrustum,
         PrimitiveType,
         Transforms,
         WebGLConstants,
@@ -69,7 +69,6 @@ defineSuite([
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
-        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {

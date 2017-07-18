@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -476,7 +475,7 @@ define([
                 if (j < 0) {
                     throw new RuntimeError('Unmatched {.');
                 }
-                result += "czm_" + exp.substr(i + 2, j - (i + 2));
+                result += 'czm_' + exp.substr(i + 2, j - (i + 2));
                 exp = exp.substr(j + 1);
                 i = exp.indexOf('${');
             }
@@ -897,27 +896,27 @@ define([
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
             return evaluate(call, left);
         };
     }
 
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
-            var right = this._right.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
+            var right = this._right.evaluate(frameState, feature);
             return evaluate(call, left, right);
         };
     }
 
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
-            var right = this._right.evaluate(feature);
-            var test = this._test.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
+            var right = this._right.evaluate(frameState, feature);
+            var test = this._test.evaluate(frameState, feature);
             return evaluate(call, left, right, test);
         };
     }

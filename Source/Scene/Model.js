@@ -1,156 +1,155 @@
-/*global define*/
 define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
-        '../Core/getBaseUri',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
-        '../Core/IndexDatatype',
-        '../Core/joinUrls',
-        '../Core/loadArrayBuffer',
-        '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageFromTypedArray',
-        '../Core/loadKTX',
-        '../Core/loadText',
-        '../Core/Math',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Core/Quaternion',
-        '../Core/Queue',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../ThirdParty/GltfPipeline/addDefaults',
-        '../ThirdParty/GltfPipeline/addPipelineExtras',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseBinaryGltf',
-        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
-        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-        '../ThirdParty/GltfPipeline/removePipelineExtras',
-        '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './AttributeType',
-        './Axis',
-        './BlendingState',
-        './ColorBlendMode',
-        './getAttributeOrUniformBySemantic',
-        './HeightReference',
-        './JobType',
-        './ModelAnimationCache',
-        './ModelAnimationCollection',
-        './ModelMaterial',
-        './ModelMesh',
-        './ModelNode',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        clone,
-        Color,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        FeatureDetection,
-        getAbsoluteUri,
-        getBaseUri,
-        getMagic,
-        getStringFromTypedArray,
-        IndexDatatype,
-        joinUrls,
-        loadArrayBuffer,
-        loadCRN,
-        loadImage,
-        loadImageFromTypedArray,
-        loadKTX,
-        loadText,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        Quaternion,
-        Queue,
-        RuntimeError,
-        Transforms,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        Sampler,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        addDefaults,
-        addPipelineExtras,
-        ForEach,
-        numberOfComponentsForType,
-        parseBinaryGltf,
-        processModelMaterialsCommon,
-        processPbrMetallicRoughness,
-        removePipelineExtras,
-        updateVersion,
-        Uri,
-        when,
-        AttributeType,
-        Axis,
-        BlendingState,
-        ColorBlendMode,
-        getAttributeOrUniformBySemantic,
-        HeightReference,
-        JobType,
-        ModelAnimationCache,
-        ModelAnimationCollection,
-        ModelMaterial,
-        ModelMesh,
-        ModelNode,
-        SceneMode,
-        ShadowMode) {
+    '../Core/BoundingSphere',
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartesian4',
+    '../Core/Cartographic',
+    '../Core/clone',
+    '../Core/Color',
+    '../Core/combine',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/DistanceDisplayCondition',
+    '../Core/FeatureDetection',
+    '../Core/getAbsoluteUri',
+    '../Core/getBaseUri',
+    '../Core/getMagic',
+    '../Core/getStringFromTypedArray',
+    '../Core/IndexDatatype',
+    '../Core/joinUrls',
+    '../Core/loadArrayBuffer',
+    '../Core/loadCRN',
+    '../Core/loadImage',
+    '../Core/loadImageFromTypedArray',
+    '../Core/loadKTX',
+    '../Core/loadText',
+    '../Core/Math',
+    '../Core/Matrix2',
+    '../Core/Matrix3',
+    '../Core/Matrix4',
+    '../Core/PixelFormat',
+    '../Core/PrimitiveType',
+    '../Core/Quaternion',
+    '../Core/Queue',
+    '../Core/RuntimeError',
+    '../Core/Transforms',
+    '../Core/WebGLConstants',
+    '../Renderer/Buffer',
+    '../Renderer/BufferUsage',
+    '../Renderer/DrawCommand',
+    '../Renderer/Pass',
+    '../Renderer/RenderState',
+    '../Renderer/Sampler',
+    '../Renderer/ShaderProgram',
+    '../Renderer/ShaderSource',
+    '../Renderer/Texture',
+    '../Renderer/TextureMinificationFilter',
+    '../Renderer/TextureWrap',
+    '../Renderer/VertexArray',
+    '../ThirdParty/GltfPipeline/addDefaults',
+    '../ThirdParty/GltfPipeline/addPipelineExtras',
+    '../ThirdParty/GltfPipeline/ForEach',
+    '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+    '../ThirdParty/GltfPipeline/parseBinaryGltf',
+    '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+    '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
+    '../ThirdParty/GltfPipeline/removePipelineExtras',
+    '../ThirdParty/GltfPipeline/updateVersion',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    './AttributeType',
+    './Axis',
+    './BlendingState',
+    './ColorBlendMode',
+    './getAttributeOrUniformBySemantic',
+    './HeightReference',
+    './JobType',
+    './ModelAnimationCache',
+    './ModelAnimationCollection',
+    './ModelMaterial',
+    './ModelMesh',
+    './ModelNode',
+    './SceneMode',
+    './ShadowMode'
+], function(
+    BoundingSphere,
+    Cartesian2,
+    Cartesian3,
+    Cartesian4,
+    Cartographic,
+    clone,
+    Color,
+    combine,
+    defaultValue,
+    defined,
+    defineProperties,
+    destroyObject,
+    DeveloperError,
+    DistanceDisplayCondition,
+    FeatureDetection,
+    getAbsoluteUri,
+    getBaseUri,
+    getMagic,
+    getStringFromTypedArray,
+    IndexDatatype,
+    joinUrls,
+    loadArrayBuffer,
+    loadCRN,
+    loadImage,
+    loadImageFromTypedArray,
+    loadKTX,
+    loadText,
+    CesiumMath,
+    Matrix2,
+    Matrix3,
+    Matrix4,
+    PixelFormat,
+    PrimitiveType,
+    Quaternion,
+    Queue,
+    RuntimeError,
+    Transforms,
+    WebGLConstants,
+    Buffer,
+    BufferUsage,
+    DrawCommand,
+    Pass,
+    RenderState,
+    Sampler,
+    ShaderProgram,
+    ShaderSource,
+    Texture,
+    TextureMinificationFilter,
+    TextureWrap,
+    VertexArray,
+    addDefaults,
+    addPipelineExtras,
+    ForEach,
+    numberOfComponentsForType,
+    parseBinaryGltf,
+    processModelMaterialsCommon,
+    processPbrMetallicRoughness,
+    removePipelineExtras,
+    updateVersion,
+    Uri,
+    when,
+    AttributeType,
+    Axis,
+    BlendingState,
+    ColorBlendMode,
+    getAttributeOrUniformBySemantic,
+    HeightReference,
+    JobType,
+    ModelAnimationCache,
+    ModelAnimationCollection,
+    ModelMaterial,
+    ModelMesh,
+    ModelNode,
+    SceneMode,
+    ShadowMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -676,7 +675,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            silhouettePrograms: {},
+            silhouettePrograms : {},
             textures : {},
             samplers : {},
             renderStates : {}
@@ -1486,7 +1485,7 @@ define([
             } else if (defined(shader.extras._pipeline.source)) {
                 model._loadResources.shaders[id] = {
                     source : shader.extras._pipeline.source,
-                    bufferView: undefined
+                    bufferView : undefined
                 };
             } else {
                 ++model._loadResources.pendingShaderLoads;
@@ -1525,14 +1524,15 @@ define([
     function parseTextures(model, context) {
         var gltf = model.gltf;
         var images = gltf.images;
+        var binary;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
-            var bufferViewId = gltfImage.bufferView;
-            uri = gltfImage.uri;
+            binary = undefined;
+            uri = undefined;
 
             // First check for a compressed texture
             if (defined(extras) && defined(extras.compressedImage3DTiles)) {
@@ -1542,44 +1542,52 @@ define([
                 var etc1 = extras.compressedImage3DTiles.etc1;
 
                 if (context.s3tc && defined(crunch)) {
-                    if (defined(crunch.bufferView)) {
-                        bufferViewId = crunch.bufferView;
+                    if (defined(crunch.extensions) && defined(crunch.extensions.KHR_binary_glTF)) {
+                        binary = crunch.extensions.KHR_binary_glTF;
                     } else {
                         uri = crunch.uri;
                     }
                 } else if (context.s3tc && defined(s3tc)) {
-                    if (defined(s3tc.bufferView)) {
-                        bufferViewId = s3tc.bufferView;
+                    if (defined(s3tc.extensions) && defined(s3tc.extensions.KHR_binary_glTF)) {
+                        binary = s3tc.extensions.KHR_binary_glTF;
                     } else {
                         uri = s3tc.uri;
                     }
                 } else if (context.pvrtc && defined(pvrtc)) {
-                    if (defined(pvrtc.bufferView)) {
-                        bufferViewId = pvrtc.bufferView;
+                    if (defined(pvrtc.extensions) && defined(pvrtc.extensions.KHR_binary_glTF)) {
+                        binary = pvrtc.extensions.KHR_binary_glTF;
                     } else {
                         uri = pvrtc.uri;
                     }
                 } else if (context.etc1 && defined(etc1)) {
-                    if (defined(etc1.bufferView)) {
-                        bufferViewId = etc1.bufferView;
+                    if (defined(etc1.extensions) && defined(etc1.extensions.KHR_binary_glTF)) {
+                        binary = etc1.extensions.KHR_binary_glTF;
                     } else {
                         uri = etc1.uri;
                     }
                 }
             }
 
+            // No compressed texture, so image references either uri (external or base64-encoded) or bufferView
+            if (!defined(binary) && !defined(uri)) {
+                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
+                    binary = gltfImage.extensions.KHR_binary_glTF;
+                } else {
+                    uri = new Uri(gltfImage.uri);
+                }
+            }
+
             // Image references either uri (external or base64-encoded) or bufferView
-            if (defined(bufferViewId)) {
+            if (defined(binary)) {
                 model._loadResources.texturesToCreateFromBufferView.enqueue({
                     id : id,
                     image : undefined,
-                    bufferView : bufferViewId,
-                    mimeType : gltfImage.mimeType
+                    bufferView : binary.bufferView,
+                    mimeType : binary.mimeType
                 });
             } else {
                 ++model._loadResources.pendingTextureLoads;
-                uri = new Uri(uri);
-                var imagePath = joinUrls(model._baseUri, gltfImage.uri);
+                var imagePath = joinUrls(model._baseUri, uri);
 
                 var promise;
                 if (ktxRegex.test(imagePath)) {
@@ -1589,7 +1597,7 @@ define([
                 } else {
                     promise = loadImage(imagePath);
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
+                promise.then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
             }
         });
     }
@@ -1606,7 +1614,7 @@ define([
         return Matrix4.fromTranslationQuaternionRotationScale(
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
             Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
-            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
+            Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
     }
 
     function parseNodes(model) {
@@ -2272,10 +2280,10 @@ define([
              (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
              (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
-            (sampler.wrapS === TextureWrap.REPEAT) ||
-            (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-            (sampler.wrapT === TextureWrap.REPEAT) ||
-            (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+                           (sampler.wrapS === TextureWrap.REPEAT) ||
+                           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
+                           (sampler.wrapT === TextureWrap.REPEAT) ||
+                           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
 
         var tx;
         var source = gltfTexture.image;
@@ -2365,7 +2373,7 @@ define([
         var programAttributeLocations = program._attributeLocations;
 
         // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-        for (location in programVertexAttributes){
+        for (location in programVertexAttributes) {
             if (programVertexAttributes.hasOwnProperty(location)) {
                 var attribute = attributes[location];
                 index = programVertexAttributes[location].index;
@@ -2515,8 +2523,7 @@ define([
         }
         loadResources.createRuntimeAnimations = false;
 
-        model._runtime.animations = {
-        };
+        model._runtime.animations = {};
 
         var runtimeNodes = model._runtime.nodes;
         var animations = model.gltf.animations;
@@ -3755,7 +3762,7 @@ define([
                     var commandsLength = commands.length;
                     if (commandsLength > 0) {
                         // Node has meshes, which has primitives.  Update their commands.
-                        for (var j = 0 ; j < commandsLength; ++j) {
+                        for (var j = 0; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
                             var command = primitiveCommand.command;
                             Matrix4.clone(nodeMatrix, command.modelMatrix);
@@ -3875,7 +3882,7 @@ define([
 
                 var nodeCommands = n.commands;
                 var nodeCommandsLength = nodeCommands.length;
-                for (var j = 0 ; j < nodeCommandsLength; ++j) {
+                for (var j = 0; j < nodeCommandsLength; ++j) {
                     nodeCommands[j].show = show;
                 }
                 // if commandsLength is zero, the node has a light or camera
@@ -4349,7 +4356,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
-        return function (clampedPosition) {
+        return function(clampedPosition) {
             if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
                 var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
                 clampedCart.height += cartoPosition.height;
@@ -4560,7 +4567,7 @@ define([
                 }
             }
             if (loadResources.finished() ||
-                    (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
+                (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
                 this._state = ModelState.LOADED;
                 justLoaded = true;
             }
@@ -4620,11 +4627,11 @@ define([
 
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                (this._scale !== this.scale) ||
-                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale) ||
-                (this._heightReference !== this.heightReference) || this._heightChanged ||
-                modeChanged;
+                                        (this._scale !== this.scale) ||
+                                        (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
+                                        (this._maximumScale !== this.maximumScale) ||
+                                        (this._heightReference !== this.heightReference) || this._heightChanged ||
+                                        modeChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);

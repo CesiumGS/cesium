@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
@@ -131,59 +130,59 @@ define([
     //in KMZ files. Eventually, we can make this configurable by the end user so they can add
     //there own content types if they have KMZ files that require it.
     var MimeTypes = {
-        avi : "video/x-msvideo",
-        bmp : "image/bmp",
-        bz2 : "application/x-bzip2",
-        chm : "application/vnd.ms-htmlhelp",
-        css : "text/css",
-        csv : "text/csv",
-        doc : "application/msword",
-        dvi : "application/x-dvi",
-        eps : "application/postscript",
-        flv : "video/x-flv",
-        gif : "image/gif",
-        gz : "application/x-gzip",
-        htm : "text/html",
-        html : "text/html",
-        ico : "image/vnd.microsoft.icon",
-        jnlp : "application/x-java-jnlp-file",
-        jpeg : "image/jpeg",
-        jpg : "image/jpeg",
-        m3u : "audio/x-mpegurl",
-        m4v : "video/mp4",
-        mathml : "application/mathml+xml",
-        mid : "audio/midi",
-        midi : "audio/midi",
-        mov : "video/quicktime",
-        mp3 : "audio/mpeg",
-        mp4 : "video/mp4",
-        mp4v : "video/mp4",
-        mpeg : "video/mpeg",
-        mpg : "video/mpeg",
-        odp : "application/vnd.oasis.opendocument.presentation",
-        ods : "application/vnd.oasis.opendocument.spreadsheet",
-        odt : "application/vnd.oasis.opendocument.text",
-        ogg : "application/ogg",
-        pdf : "application/pdf",
-        png : "image/png",
-        pps : "application/vnd.ms-powerpoint",
-        ppt : "application/vnd.ms-powerpoint",
-        ps : "application/postscript",
-        qt : "video/quicktime",
-        rdf : "application/rdf+xml",
-        rss : "application/rss+xml",
-        rtf : "application/rtf",
-        svg : "image/svg+xml",
-        swf : "application/x-shockwave-flash",
-        text : "text/plain",
-        tif : "image/tiff",
-        tiff : "image/tiff",
-        txt : "text/plain",
-        wav : "audio/x-wav",
-        wma : "audio/x-ms-wma",
-        wmv : "video/x-ms-wmv",
-        xml : "application/xml",
-        zip : "application/zip",
+        avi : 'video/x-msvideo',
+        bmp : 'image/bmp',
+        bz2 : 'application/x-bzip2',
+        chm : 'application/vnd.ms-htmlhelp',
+        css : 'text/css',
+        csv : 'text/csv',
+        doc : 'application/msword',
+        dvi : 'application/x-dvi',
+        eps : 'application/postscript',
+        flv : 'video/x-flv',
+        gif : 'image/gif',
+        gz : 'application/x-gzip',
+        htm : 'text/html',
+        html : 'text/html',
+        ico : 'image/vnd.microsoft.icon',
+        jnlp : 'application/x-java-jnlp-file',
+        jpeg : 'image/jpeg',
+        jpg : 'image/jpeg',
+        m3u : 'audio/x-mpegurl',
+        m4v : 'video/mp4',
+        mathml : 'application/mathml+xml',
+        mid : 'audio/midi',
+        midi : 'audio/midi',
+        mov : 'video/quicktime',
+        mp3 : 'audio/mpeg',
+        mp4 : 'video/mp4',
+        mp4v : 'video/mp4',
+        mpeg : 'video/mpeg',
+        mpg : 'video/mpeg',
+        odp : 'application/vnd.oasis.opendocument.presentation',
+        ods : 'application/vnd.oasis.opendocument.spreadsheet',
+        odt : 'application/vnd.oasis.opendocument.text',
+        ogg : 'application/ogg',
+        pdf : 'application/pdf',
+        png : 'image/png',
+        pps : 'application/vnd.ms-powerpoint',
+        ppt : 'application/vnd.ms-powerpoint',
+        ps : 'application/postscript',
+        qt : 'video/quicktime',
+        rdf : 'application/rdf+xml',
+        rss : 'application/rss+xml',
+        rtf : 'application/rtf',
+        svg : 'image/svg+xml',
+        swf : 'application/x-shockwave-flash',
+        text : 'text/plain',
+        tif : 'image/tiff',
+        tiff : 'image/tiff',
+        txt : 'text/plain',
+        wav : 'audio/x-wav',
+        wma : 'audio/x-ms-wma',
+        wmv : 'video/x-ms-wmv',
+        xml : 'application/xml',
+        zip : 'application/zip',
 
         detectFromFilename : function(filename) {
             var ext = filename.toLowerCase();
@@ -1184,25 +1183,23 @@ define([
             } else if (defined(polygon)) {
                 wall.outlineColor = defined(polygon.material) ? polygon.material.color : Color.WHITE;
             }
-        } else {
-            if (dataSource._clampToGround && !canExtrude && tessellate) {
-                var corridor = new CorridorGraphics();
-                entity.corridor = corridor;
-                corridor.positions = coordinates;
-                if (defined(polyline)) {
-                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
-                    corridor.width = defaultValue(polyline.width, 1.0);
-                } else {
-                    corridor.material = Color.WHITE;
-                    corridor.width = 1.0;
-                }
+        } else if (dataSource._clampToGround && !canExtrude && tessellate) {
+            var corridor = new CorridorGraphics();
+            entity.corridor = corridor;
+            corridor.positions = coordinates;
+            if (defined(polyline)) {
+                corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
+                corridor.width = defaultValue(polyline.width, 1.0);
             } else {
-                polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-                entity.polyline = polyline;
-                polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-                if (!tessellate || canExtrude) {
-                    polyline.followSurface = false;
-                }
+                corridor.material = Color.WHITE;
+                corridor.width = 1.0;
+            }
+        } else {
+            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+            entity.polyline = polyline;
+            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+            if (!tessellate || canExtrude) {
+                polyline.followSurface = false;
             }
         }
 
@@ -1962,6 +1959,9 @@ define([
         }
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
+            var viewRefreshMode;
+            var viewBoundScale;
+            var queryString;
             if (defined(href)) {
                 var newSourceUri = href;
                 href = resolveHref(href, undefined, sourceUri, uriResolver, query);
@@ -1979,12 +1979,12 @@ define([
                     }
                 } else {
                     newSourceUri = href; // Not a data uri so use the fully qualified uri
-                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
-                    var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                    viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
+                    viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
                     var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
                     var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                     var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                    var queryString = makeQueryString(viewFormat, httpQuery);
+                    queryString = makeQueryString(viewFormat, httpQuery);
 
                     linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
                         viewBoundScale, dataSource._lastCameraView.bbox);
@@ -2064,13 +2064,11 @@ define([
                             } else {
                                 console.log('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                             }
+                        } else if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
+                            networkLinkInfo.refreshMode = RefreshMode.STOP;
+                            networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
                         } else {
-                            if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
-                                networkLinkInfo.refreshMode = RefreshMode.STOP;
-                                networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
-                            } else {
-                                console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
-                            }
+                            console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
                         }
 
                         if (defined(networkLinkInfo.refreshMode)) {
@@ -2641,7 +2639,8 @@ define([
             // Remove old entities
             entityCollection.suspendEvents();
             var entitiesCopy = entityCollection.values.slice();
-            for (var i=0;i<entitiesCopy.length;++i) {
+            var i;
+            for (i=0;i<entitiesCopy.length;++i) {
                 var entityToRemove = entitiesCopy[i];
                 if (entityToRemove.parent === networkLinkEntity) {
                     entityToRemove.parent = undefined;

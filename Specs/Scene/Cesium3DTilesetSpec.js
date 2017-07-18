@@ -1,8 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/CullingVolume',
         'Core/defaultValue',
         'Core/defined',
         'Core/getStringFromTypedArray',
@@ -11,6 +11,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Renderer/ClearCommand',
@@ -22,8 +23,6 @@ defineSuite([
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/CullFace',
-        'Scene/CullingVolume',
-        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -32,6 +31,7 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         Color,
+        CullingVolume,
         defaultValue,
         defined,
         getStringFromTypedArray,
@@ -40,6 +40,7 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PrimitiveType,
         RequestScheduler,
         ClearCommand,
@@ -51,8 +52,6 @@ defineSuite([
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         CullFace,
-        CullingVolume,
-        PerspectiveFrustum,
         Cesium3DTilesTester,
         createScene,
         pollToPromise,
@@ -276,7 +275,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var asset = tileset.asset;
             expect(asset).toBeDefined();
-            expect(asset.version).toEqual('0.0');
+            expect(asset.version).toEqual('1.0');
             expect(asset.tilesetVersion).toEqual('1.2.3');
 
             var properties = tileset.properties;
@@ -1443,6 +1442,7 @@ defineSuite([
             tileset.debugShowGeometricError = true;
             tileset.debugShowRenderingStatistics = true;
             tileset.debugShowMemoryUsage = true;
+            tileset.debugShowUrl = true;
             viewRootOnly();
             scene.renderForSpecs();
             expect(tileset._tileDebugLabels).toBeDefined();
@@ -1452,12 +1452,14 @@ defineSuite([
                            'Triangles: 120\n' +
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
-                           'Geometry Memory: 0.008';
+                           'Geometry Memory: 0.008\n' +
+                           'Url: parent.b3dm';
             expect(tileset._tileDebugLabels._labels[0].text).toEqual(expected);
 
             tileset.debugShowGeometricError = false;
             tileset.debugShowRenderingStatistics = false;
             tileset.debugShowMemoryUsage = false;
+            tileset.debugShowUrl = false;
             scene.renderForSpecs();
             expect(tileset._tileDebugLabels).not.toBeDefined();
         });
@@ -1469,6 +1471,7 @@ defineSuite([
             tileset.debugShowGeometricError = true;
             tileset.debugShowRenderingStatistics = true;
             tileset.debugShowMemoryUsage = true;
+            tileset.debugShowUrl = true;
             tileset.debugPickedTileLabelOnly = true;
 
             var scratchPosition = new Cartesian3(1.0, 1.0, 1.0);
@@ -1483,7 +1486,8 @@ defineSuite([
                            'Triangles: 120\n' +
                            'Features: 10\n' +
                            'Texture Memory: 0\n' +
-                           'Geometry Memory: 0.008';
+                           'Geometry Memory: 0.008\n' +
+                           'Url: parent.b3dm';
             expect(tileset._tileDebugLabels.get(0).text).toEqual(expected);
             expect(tileset._tileDebugLabels.get(0).position).toEqual(scratchPosition);
 

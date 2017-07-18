@@ -130,7 +130,11 @@ function reset() {
         }
     }
 
-    useCollection ? createCollection(instances) : createModels(instances);
+    if (useCollection) {
+        createCollection(instances);
+    } else {
+        createModels(instances);
+    }
 }
 
 // Scale picked instances

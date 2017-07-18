@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -163,7 +162,7 @@ define([
          * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
-        
+
         /**
          * Get or sets the enum Property specifying whether the wall
          * casts or receives shadows from each light source.

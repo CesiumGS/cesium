@@ -1,19 +1,18 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
         'Core/defined',
         'Core/Math',
+        'Scene/Cesium3DTileset',
+        'Scene/Cesium3DTileStyle',
         'Scene/Globe',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
         Cesium3DTilesInspectorViewModel,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
         defined,
         CesiumMath,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
         Globe,
         createScene,
         when) {
@@ -158,6 +157,13 @@ defineSuite([
             expect(viewModel.tileset.debugShowMemoryUsage).toBe(true);
             viewModel.showMemoryUsage = false;
             expect(viewModel.tileset.debugShowMemoryUsage).toBe(false);
+        });
+
+        it('showUrl', function() {
+            viewModel.showUrl = true;
+            expect(viewModel.tileset.debugShowUrl).toBe(true);
+            viewModel.showUrl = false;
+            expect(viewModel.tileset.debugShowUrl).toBe(false);
         });
     });
 

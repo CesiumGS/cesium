@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "Height": {
@@ -28,7 +28,7 @@
       4081608.4380407534,
       1
     ],
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "box": [
         0,

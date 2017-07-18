@@ -37,7 +37,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
-var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+var travisDeployUrl = 'http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/';
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -254,7 +254,7 @@ gulp.task('makeZipFile', ['release'], function() {
         nodir : true
     });
 
-    var indexSrc = gulp.src('index.release.html').pipe(gulpRename("index.html"));
+    var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
     return eventStream.merge(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
@@ -662,7 +662,6 @@ define(\'' + moduleId + '\', function() {\n\
     contents += '})();';
 
     var paths = '\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
@@ -978,7 +977,6 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return "' + contents + '";\n\
@@ -1019,7 +1017,6 @@ define(function() {\n\
 
     var fileContents = '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define([\n' +
                        contents.amdPath +
                        '\n    ], function(\n' +
@@ -1043,6 +1040,11 @@ function createCesiumJs() {
         file = path.relative('Source', file);
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
+        if (moduleId === 'Scene/OrthographicFrustum' || moduleId === 'Scene/OrthographicOffCenterFrustum' ||
+            moduleId === 'Scene/PerspectiveFrustum' || moduleId === 'Scene/PerspectiveOffCenterFrustum' ||
+            moduleId === 'Scene/CullingVolume') {
+            return;
+        }
 
         var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {
@@ -1057,11 +1059,10 @@ function createCesiumJs() {
     });
 
     var contents = '\
-/*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
   var Cesium = {\n\
-    VERSION : "' + version + '",\n\
+    VERSION : \'' + version + '\',\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\
@@ -1255,6 +1256,7 @@ function requirejsOptimize(name, config) {
 function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
-        stream.on('end', reject);
+        stream.on('end', resolve);
+        stream.on('error', reject);
     });
 }

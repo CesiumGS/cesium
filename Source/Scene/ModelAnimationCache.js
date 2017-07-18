@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AttributeType',
         '../Core/Cartesian3',

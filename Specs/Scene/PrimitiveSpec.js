@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Primitive',
         'Core/BoundingSphere',
@@ -17,6 +16,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PolygonGeometry',
         'Core/PrimitiveType',
         'Core/Rectangle',
@@ -26,7 +26,6 @@ defineSuite([
         'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
-        'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
         'Specs/BadGeometry',
         'Specs/createContext',
@@ -51,6 +50,7 @@ defineSuite([
         HeadingPitchRange,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PolygonGeometry,
         PrimitiveType,
         Rectangle,
@@ -60,7 +60,6 @@ defineSuite([
         Camera,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         SceneMode,
         BadGeometry,
         createContext,

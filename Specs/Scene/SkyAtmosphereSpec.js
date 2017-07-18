@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SkyAtmosphere',
         'Core/Cartesian3',

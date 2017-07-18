@@ -1,20 +1,19 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartographic',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './Math'
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         CesiumMath) {
     'use strict';
@@ -179,9 +178,7 @@ define([
         var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
 
         //>>includeStart('debug', pragmas.debug);
-        if (Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI) < 0.0125) {
-            throw new DeveloperError('geodesic position is not unique');
-        }
+        Check.typeOf.number.greaterThanOrEquals('value', Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI), 0.0125);
         //>>includeEnd('debug');
 
         vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
@@ -244,9 +241,7 @@ define([
         surfaceDistance : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(this._distance)) {
-                    throw new DeveloperError('set end positions before getting surfaceDistance');
-                }
+                Check.defined('distance', this._distance);
                 //>>includeEnd('debug');
 
                 return this._distance;
@@ -286,9 +281,7 @@ define([
         startHeading : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(this._distance)) {
-                    throw new DeveloperError('set end positions before getting startHeading');
-                }
+                Check.defined('distance', this._distance);
                 //>>includeEnd('debug');
 
                 return this._startHeading;
@@ -304,9 +297,7 @@ define([
         endHeading : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
-                if (!defined(this._distance)) {
-                    throw new DeveloperError('set end positions before getting endHeading');
-                }
+                Check.defined('distance', this._distance);
                 //>>includeEnd('debug');
 
                 return this._endHeading;
@@ -322,12 +313,8 @@ define([
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(start)) {
-            throw new DeveloperError('start cartographic position is required');
-        }
-        if (!defined(end)) {
-            throw new DeveloperError('end cartgraphic position is required');
-        }
+        Check.defined('start', start);
+        Check.defined('end', end);
         //>>includeEnd('debug');
 
         computeProperties(this, start, end, this._ellipsoid);
@@ -355,9 +342,7 @@ define([
      */
     EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._distance)) {
-            throw new DeveloperError('start and end must be set before calling function interpolateUsingSurfaceDistance');
-        }
+        Check.defined('distance', this._distance);
         //>>includeEnd('debug');
 
         var constants = this._constants;

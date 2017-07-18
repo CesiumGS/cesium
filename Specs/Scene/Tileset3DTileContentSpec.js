@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Tileset3DTileContent',
         'Core/Cartesian3',

@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "id": {
@@ -33,7 +33,7 @@
       ]
     },
     "geometricError": 70,
-    "refine": "add",
+    "refine": "ADD",
     "content": {
       "url": "parent.b3dm",
       "boundingVolume": {
@@ -60,7 +60,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "replace",
+        "refine": "REPLACE",
         "content": {
           "url": "parent.b3dm"
         },
@@ -77,7 +77,7 @@
               ]
             },
             "geometricError": 0,
-            "refine": "add",
+            "refine": "ADD",
             "content": {
               "url": "ll.b3dm"
             }
@@ -94,7 +94,7 @@
               ]
             },
             "geometricError": 0,
-            "refine": "replace",
+            "refine": "REPLACE",
             "content": {
               "url": "ur.b3dm"
             }
@@ -113,7 +113,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "add",
+        "refine": "ADD",
         "content": {
           "url": "parent.b3dm"
         },
@@ -130,7 +130,7 @@
               ]
             },
             "geometricError": 0,
-            "refine": "add",
+            "refine": "ADD",
             "content": {
               "url": "ul.b3dm"
             }
@@ -147,7 +147,7 @@
               ]
             },
             "geometricError": 0,
-            "refine": "replace",
+            "refine": "REPLACE",
             "content": {
               "url": "lr.b3dm"
             }
