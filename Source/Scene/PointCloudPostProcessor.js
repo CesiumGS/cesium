@@ -3,8 +3,12 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/ComponentDatatype',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
+        '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -18,6 +22,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
@@ -28,10 +33,14 @@ define([
         '../Shaders/PostProcessFilters/DensityEstimationPass'
     ], function(
         Color,
+        ComponentDatatype,
         defined,
         destroyObject,
+        Geometry,
+        GeometryAttribute,
         PixelFormat,
         PrimitiveType,
+        BufferUsage,
         ClearCommand,
         DrawCommand,
         Framebuffer,
@@ -45,6 +54,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         BlendingState,
         StencilFunction,
         StencilOperation,
@@ -84,6 +94,8 @@ define([
         this.stencilViewEnabled = options.stencilViewEnabled;
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
         this.useTriangle = options.useTriangle;
+
+        this.pointArray = undefined;
 
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
@@ -223,6 +235,71 @@ define([
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
+    }
+
+    function createPointArray(processor, context) {
+        var screenWidth = context.drawingBufferWidth;
+        var screenHeight = context.drawingBufferHeight;
+
+        var pointArray = processor.pointArray;
+
+        var vertexArr = new Float32Array(screenWidth * screenHeight);
+
+        var xIncrement = 2.0 / screenWidth;
+        var yIncrement = 2.0 / screenHeight;
+
+        var baryOffsetX = xIncrement / 2.0;
+        var baryOffsetY = yIncrement / 2.0;
+
+        var k = 0;
+        for (var i = -1.0; i < 1.0; i += xIncrement) {
+            for (var j = -1.0; j < 1.0; j += yIncrement) {
+                vertexArr[k++] = i + baryOffsetX;
+                vertexArr[k++] = j + baryOffsetY;
+            }
+        }
+
+        var geometry = new Geometry({
+            attributes: {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : vertexArr
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
+
+        pointArray = VertexArray.fromGeometry({
+            context : this,
+            geometry : geometry,
+            attributeLocations : {
+                position : 0
+            },
+            bufferUsage : BufferUsage.STATIC_DRAW,
+            interleave : true
+        });
+
+        processor.pointArray = pointArray;
+    }
+
+    function createPointArrayCommand(vertexShaderSource, fragmentShaderSource, processor, context) {
+        if (!defined(processor.pointArray)) {
+            createPointArray(processor, context);
+        }
+
+        return new DrawCommand({
+            vertexArray : this.pointArray,
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : ShaderProgram.fromCache({
+                context : this,
+                vertexShaderSource : vertexShaderSource,
+                fragmentShaderSource : fragmentShaderSource,
+                attributeLocations : {
+                    position : 0
+                }
+            })
+        });
     }
 
     function replaceConstants(sourceStr, constantName, replacement) {
