@@ -66,11 +66,11 @@ define([
         var lineAdds = {};
         for (i = 0; i < splitSource.length; i++) {
             line = splitSource[i];
-            for (var care in variableMap) {
-                if (variableMap.hasOwnProperty(care)) {
-                    var matchVar = new RegExp('(layout)[^]+(out)[^]+(' + care + ')[^]+', 'g');
+            for (var variable in variableMap) {
+                if (variableMap.hasOwnProperty(variable)) {
+                    var matchVar = new RegExp('(layout)[^]+(out)[^]+(' + variable + ')[^]+', 'g');
                     if (matchVar.test(line)) {
-                        lineAdds[line] = care;
+                        lineAdds[line] = variable;
                     }
                 }
             }
@@ -219,8 +219,8 @@ define([
             }
         }
 
-        for (var care in variableMap) {
-            if (variableMap.hasOwnProperty(care)) {
+        for (var variable in variableMap) {
+            if (variableMap.hasOwnProperty(variable)) {
                 if (variableMap.length === 1 && variableMap[0] === null) {
                     variableMap.splice(0, 1);
                 }
