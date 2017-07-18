@@ -12,24 +12,28 @@ define([
         var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
         var regex = new RegExp(regexStr, 'g');
 
-        for (var number = 0; number < splitSource.length; ++number) {
-            var line = splitSource[number];
-            splitSource[number] = line.replace(regex, '$1' + replacement + '$3');
+        var splitSourceLength = splitSource.length;
+        for (var i = 0; i < splitSourceLength; ++i) {
+            var line = splitSource[i];
+            splitSource[i] = line.replace(regex, '$1' + replacement + '$3');
         }
     }
 
     function replaceInSourceRegex(regex, replacement, splitSource) {
-        for (var number = 0; number < splitSource.length; ++number) {
-            var line = splitSource[number];
-            splitSource[number] = line.replace(regex, replacement);
+        var splitSourceLength = splitSource.length;
+        for (var i = 0; i < splitSourceLength; ++i) {
+            var line = splitSource[i];
+            splitSource[i] = line.replace(regex, replacement);
         }
     }
 
     function findInSource(str, splitSource) {
         var regexStr = '(^|[^\\w])(' + str + ')($|[^\\w])';
         var regex = new RegExp(regexStr, 'g');
-        for (var number = 0; number < splitSource.length; ++number) {
-            var line = splitSource[number];
+
+        var splitSourceLength = splitSource.length;
+        for (var i = 0; i < splitSourceLength; ++i) {
+            var line = splitSource[i];
             if (regex.test(line)) {
                 return true;
             }
@@ -39,8 +43,10 @@ define([
 
     function compileSource(splitSource) {
         var wholeSource = '';
-        for (var number = 0; number < splitSource.length; ++number) {
-            wholeSource += splitSource[number] + '\n';
+
+        var splitSourceLength = splitSource.length;
+        for (var i = 0; i < splitSourceLength; ++i) {
+            wholeSource += splitSource[i] + '\n';
         }
         return wholeSource;
     }
