@@ -4,7 +4,7 @@
 
 #define EPS 1e-8
 
-#define densityScaleFactor 32.0
+#define densityScaleFactor 10.0
 
 uniform sampler2D pointCloud_depthTexture;
 uniform float neighborhoodVectorSize;
@@ -43,14 +43,14 @@ void main() {
         float absRatio = length(neighborhoodAccum) /
                          length(absNeighborhoodAccum);
         if (int(closestNeighbor) <= neighborhoodHalfWidth &&
-            !(absRatio > maxAbsRatio &&
-             length(neighborhoodAccum) > neighborhoodVectorSize)) {
-            gl_FragData[0] = czm_packDepth(closestNeighbor /
-                                           densityScaleFactor);
+                !(absRatio > maxAbsRatio &&
+                  length(neighborhoodAccum) > neighborhoodVectorSize)) {
+            gl_FragData[0] = vec4(vec3(closestNeighbor /
+                                       densityScaleFactor), 1.0);
         } else {
-            gl_FragData[0] = czm_packDepth(0.0);
+            gl_FragData[0] = vec4(vec3(0.0), 1.0);
         }
     } else {
-        gl_FragData[0] = czm_packDepth(1.0 / densityScaleFactor);
+        gl_FragData[0] = vec4(vec3(1.0 / densityScaleFactor), 1.0);
     }
 }

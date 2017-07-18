@@ -512,7 +512,7 @@ define([
         var copyStageStr =
             '#extension GL_EXT_draw_buffers : enable \n' +
             '#define densityView \n' +
-            '#define densityScaleFactor 32.0 \n' +
+            '#define densityScaleFactor 10.0 \n' +
             '#define EPS 1e-6 \n' +
             'uniform int densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
@@ -525,7 +525,7 @@ define([
             '    float depth = czm_unpackDepth(rawDepth); \n' +
             '    if (depth > EPS) { \n' +
             '        #ifdef densityView \n' +
-            '        float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
@@ -561,12 +561,12 @@ define([
             '#define EPS 1e-8 \n' +
             '#define cutoff 0 \n' +
             '#define DELAY 0 \n' +
-            '#define densityScaleFactor 32.0 \n' +
+            '#define densityScaleFactor 10.0 \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '    float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '    if (float(cutoff - DELAY) + EPS > density) \n' +
             '        discard; \n' +
             '} \n';
@@ -938,7 +938,7 @@ define([
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
 
-        commandList.push(this._testPointArrayCommand);
+        //commandList.push(this._testPointArrayCommand);
 
         commandList.push(clearCommands['prior']);
     };

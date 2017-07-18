@@ -6,7 +6,7 @@
 #define neighborhoodSize 8
 #define EPS 1e-8
 #define SQRT2 1.414213562
-#define densityScaleFactor 32.0
+#define densityScaleFactor 10.0
 #define densityView
 #define stencilView
 #define DELAY 1
@@ -154,11 +154,12 @@ void main() {
 
     loadIntoArray(depthNeighbors, colorNeighbors);
 
-    float density = densityScaleFactor * czm_unpackDepth(
-                        texture2D(pointCloud_densityTexture, v_textureCoordinates));
+    float density = ceil(densityScaleFactor *
+                         texture2D(pointCloud_densityTexture, v_textureCoordinates).r);
 
     // If our depth value is invalid
     if (abs(depth) < EPS) {
+        // If the area that we want to region grow is sufficently sparse
         if (float(iterationNumber - DELAY) <= density + EPS) {
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
