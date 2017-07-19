@@ -72,17 +72,20 @@ define([
                 }
             }
 
-            if (pixelDatatype == PixelDatatype.FLOAT) {
+            if (pixelDatatype === PixelDatatype.FLOAT) {
                 switch (pixelFormat) {
-                case PixelFormat.RGBA:
-                    internalFormat = WebGLConstants.RGBA32F;
-                    break;
-                case PixelFormat.RG:
-                    internalFormat = WebGLConstants.RG32F;
-                    break;
-                case PixelFormat.R:
-                    internalFormat = WebGLConstants.R32F;
-                    break;
+                    case PixelFormat.RGBA:
+                        internalFormat = WebGLConstants.RGBA32F;
+                        break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB32F;
+                        break;
+                    case PixelFormat.RG:
+                        internalFormat = WebGLConstants.RG32F;
+                        break;
+                    case PixelFormat.R:
+                        internalFormat = WebGLConstants.R32F;
+                        break;
                 }
             }
         }

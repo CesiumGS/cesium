@@ -19,6 +19,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/OrthographicFrustum',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
@@ -38,11 +39,10 @@ define([
         '../Scene/Primitive',
         './GlobeSurfaceTile',
         './ImageryLayer',
-        './OrthographicFrustum',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
-], function(
+    ], function(
         BoundingSphere,
         BoxOutlineGeometry,
         Cartesian2,
@@ -63,6 +63,7 @@ define([
         CesiumMath,
         Matrix4,
         OrientedBoundingBox,
+        OrthographicFrustum,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
@@ -82,7 +83,6 @@ define([
         Primitive,
         GlobeSurfaceTile,
         ImageryLayer,
-        OrthographicFrustum,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
