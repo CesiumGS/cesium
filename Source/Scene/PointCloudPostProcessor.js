@@ -81,7 +81,9 @@ define([
         this._densityTexture = undefined;
         this._dirty = undefined;
         this._clearStencil = undefined;
-        this._drawCommands = undefined;
+        this._pointOcclusionCommand = undefined;
+        this._densityEstimationCommand = undefined;
+        this._regionGrowingCommands = undefined;
         this._stencilCommands = undefined;
         this._copyCommands = undefined;
         this._blendCommand = undefined;
@@ -681,16 +683,16 @@ define([
 
     function createCommands(processor, context) {
         var numRegionGrowingPasses = processor.numRegionGrowingPasses;
-        var drawCommands = new Array(numRegionGrowingPasses + 2);
+        var regionGrowingCommands = new Array(numRegionGrowingPasses);
         var stencilCommands = new Array(numRegionGrowingPasses);
         var copyCommands = new Array(2);
 
         var i;
-        drawCommands[0] = pointOcclusionStage(processor, context);
-        drawCommands[1] = densityEstimationStage(processor, context);
+        processor._pointOcclusionCommand = pointOcclusionStage(processor, context);
+        processor._densityEstimationCommand = densityEstimationStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
-            drawCommands[i + 2] = regionGrowingStage(processor, context, i);
+            regionGrowingCommands[i] = regionGrowingStage(processor, context, i);
             stencilCommands[i] = stencilMaskStage(processor, context, i);
         }
 
@@ -725,10 +727,10 @@ define([
 
         var blendUniformMap = {
             pointCloud_colorTexture: function() {
-                return processor._colorTextures[1 - drawCommands.length % 2];
+                return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
             pointCloud_depthTexture: function() {
-                return processor._depthTextures[1 - drawCommands.length % 2];
+                return processor._depthTextures[1 - numRegionGrowingPasses % 2];
             }
         };
 
@@ -780,7 +782,7 @@ define([
             }
         }
 
-        processor._drawCommands = drawCommands;
+        processor._regionGrowingCommands = regionGrowingCommands;
         processor._stencilCommands = stencilCommands;
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
@@ -791,7 +793,7 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
-        var drawCommands = processor._drawCommands;
+        var regionGrowingCommands = processor._regionGrowingCommands;
         var stencilCommands = processor._stencilCommands;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
@@ -802,7 +804,7 @@ define([
             createPointArray(processor, context);
         }
 
-        if (!defined(drawCommands) || !defined(stencilCommands) || dirty) {
+        if (!defined(regionGrowingCommands) || !defined(stencilCommands) || dirty) {
             createCommands(processor, context);
         }
 
@@ -961,28 +963,29 @@ define([
         }
 
         // Apply processing commands
-        var drawCommands = this._drawCommands;
+        var pointOcclusionCommand = this._pointOcclusionCommand;
+        var densityEstimationCommand = this._densityEstimationCommand;
+        var regionGrowingCommands = this._regionGrowingCommands;
         var copyCommands = this._copyCommands;
         var stencilCommands = this._stencilCommands;
         var clearCommands = this._clearCommands;
-        var length = drawCommands.length;
-        for (i = 0; i < length; ++i) {
-            // So before each draw call, we should clean up the dirty
-            // framebuffers that we left behind on the *previous* pass
-            if (i === 0) {
-                commandList.push(clearCommands['screenSpacePass']);
-            } else if (i === 1) {
-                    commandList.push(clearCommands['densityEstimationPass']);
-                } else if (i % 2 === 0)
-                        {commandList.push(clearCommands['regionGrowingPassA']);}
-                    else
-                        {commandList.push(clearCommands['regionGrowingPassB']);}
+        var numRegionGrowingCommands = regionGrowingCommands.length;
 
-            if (i >= 2) {
-                commandList.push(copyCommands[i % 2]);
-                commandList.push(stencilCommands[i - 2]);
+        commandList.push(clearCommands['screenSpacePass']);
+        commandList.push(pointOcclusionCommand);
+        commandList.push(clearCommands['densityEstimationPass']);
+        commandList.push(densityEstimationCommand);
+
+        for (i = 0; i < numRegionGrowingCommands; i++) {
+            if (i % 2 === 0) {
+                commandList.push(clearCommands['regionGrowingPassA']);
+            } else {
+                commandList.push(clearCommands['regionGrowingPassB']);
             }
-            commandList.push(drawCommands[i]);
+
+            commandList.push(copyCommands[i % 2]);
+            commandList.push(stencilCommands[i]);
+            commandList.push(regionGrowingCommands[i]);
         }
 
         // Blend final result back into the main FBO
