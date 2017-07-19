@@ -38,27 +38,31 @@ define([
     var ORTHOGRAPHIC = 1;
 
     /**
-     * A description of the outline of a frustum with the given position and orientation.
+     * A description of the outline of a frustum with the given the origin and orientation.
      *
      * @alias FrustumOutlineGeometry
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {PerspectiveFrustum|OrthographicFrustum} options.frustum The frustum.
-     * @param {Cartesian3} options.position The position of the frustum.
+     * @param {Cartesian3} options.origin The origin of the frustum.
      * @param {Quaternion} options.orientation The orientation of the frustum.
      */
     function FrustumOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('options', options);
         Check.typeOf.object('options.frustum', options.frustum);
-        Check.typeOf.object('options.position', options.position);
+        Check.typeOf.object('options.origin', options.origin);
         Check.typeOf.object('options.orientation', options.orientation);
         //>>includeEnd('debug');
 
         var frustum = options.frustum;
         var orientation = options.orientation;
-        var position = options.position;
+        var origin = options.origin;
+
+        // This is private because it is used by DebugCameraPrimitive to draw a multi-frustum by
+        // creating multiple FrustumOutlineGeometrys. This way the near plane of one frustum doesn't overlap
+        // the far plane of another.
         var drawNearPlane = defaultValue(options._drawNearPlane, true);
 
         var frustumType;
@@ -73,7 +77,7 @@ define([
 
         this._frustumType = frustumType;
         this._frustum = frustum.clone();
-        this._position = Cartesian3.clone(position);
+        this._origin = Cartesian3.clone(origin);
         this._orientation = Quaternion.clone(orientation);
         this._drawNearPlane = drawNearPlane;
         this._workerName = 'createFrustumOutlineGeometry';
@@ -115,7 +119,7 @@ define([
             startingIndex += OrthographicFrustum.packedLength;
         }
 
-        Cartesian3.pack(value._position, array, startingIndex);
+        Cartesian3.pack(value._origin, array, startingIndex);
         startingIndex += Cartesian3.packedLength;
         Quaternion.pack(value._orientation, array, startingIndex);
         startingIndex += Quaternion.packedLength;
@@ -127,7 +131,7 @@ define([
     var scratchPackPerspective = new PerspectiveFrustum();
     var scratchPackOrthographic = new OrthographicFrustum();
     var scratchPackQuaternion = new Quaternion();
-    var scratchPackPosition = new Cartesian3();
+    var scratchPackorigin = new Cartesian3();
 
     /**
      * Retrieves an instance from a packed array.
@@ -154,7 +158,7 @@ define([
             startingIndex += OrthographicFrustum.packedLength;
         }
 
-        var position = Cartesian3.unpack(array, startingIndex, scratchPackPosition);
+        var origin = Cartesian3.unpack(array, startingIndex, scratchPackorigin);
         startingIndex += Cartesian3.packedLength;
         var orientation = Quaternion.unpack(array, startingIndex, scratchPackQuaternion);
         startingIndex += Quaternion.packedLength;
@@ -163,7 +167,7 @@ define([
         if (!defined(result)) {
             return new FrustumOutlineGeometry({
                 frustum : frustum,
-                position : position,
+                origin : origin,
                 orientation : orientation,
                 _drawNearPlane : drawNearPlane
             });
@@ -173,7 +177,7 @@ define([
         result._frustum = frustum.clone(frustumResult);
 
         result._frustumType = frustumType;
-        result._position = Cartesian3.clone(position, result._position);
+        result._origin = Cartesian3.clone(origin, result._origin);
         result._orientation = Quaternion.clone(orientation, result._orientation);
         result._drawNearPlane = drawNearPlane;
 
@@ -210,7 +214,7 @@ define([
     FrustumOutlineGeometry.createGeometry = function(frustumGeometry) {
         var frustumType = frustumGeometry._frustumType;
         var frustum = frustumGeometry._frustum;
-        var position = frustumGeometry._position;
+        var origin = frustumGeometry._origin;
         var orientation = frustumGeometry._orientation;
         var drawNearPlane = frustumGeometry._drawNearPlane;
 
@@ -225,7 +229,7 @@ define([
 
         Cartesian3.negate(x, x);
 
-        var view = Matrix4.computeView(position, z, y, x, scratchViewMatrix);
+        var view = Matrix4.computeView(origin, z, y, x, scratchViewMatrix);
 
         var inverseView;
         var inverseViewProjection;
@@ -274,12 +278,12 @@ define([
                     var w = 1.0 / corner.w;
                     Cartesian3.multiplyByScalar(corner, w, corner);
 
-                    Cartesian3.subtract(corner, position, corner);
+                    Cartesian3.subtract(corner, origin, corner);
                     Cartesian3.normalize(corner, corner);
 
                     var fac = Cartesian3.dot(z, corner);
                     Cartesian3.multiplyByScalar(corner, frustumSplits[i] / fac, corner);
-                    Cartesian3.add(corner, position, corner);
+                    Cartesian3.add(corner, origin, corner);
                 }
 
                 positions[12 * i + j * 3] = corner.x;

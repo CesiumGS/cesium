@@ -48,7 +48,7 @@ var frustum = new Cesium.PerspectiveFrustum({
 
 var frustumGeometry = new Cesium.FrustumGeometry({
     frustum : frustum,
-    position : positionOnEllipsoid,
+    origin : positionOnEllipsoid,
     orientation : orientation,
     vertexFormat : Cesium.VertexFormat.POSITION_ONLY
 });
@@ -72,7 +72,7 @@ scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.FrustumOutlineGeometry({
             frustum : frustum,
-            position : positionOnEllipsoid,
+            origin : positionOnEllipsoid,
             orientation : orientation
         }),
         attributes : {
