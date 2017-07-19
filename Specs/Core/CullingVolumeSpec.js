@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/CullingVolume',
+        'Core/CullingVolume',
         'Core/AxisAlignedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian3',

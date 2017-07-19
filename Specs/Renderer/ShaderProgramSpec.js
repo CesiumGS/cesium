@@ -65,13 +65,13 @@ defineSuite([
 
         var expectedVSText = new ShaderSource({
             sources : [vs]
-        }).createCombinedVertexShader(context.webgl2);
+        }).createCombinedVertexShader(context);
 
         expect(sp._vertexShaderText).toEqual(expectedVSText);
 
         var expectedFSText = new ShaderSource({
             sources : [fs]
-        }).createCombinedFragmentShader(context.webgl2);
+        }).createCombinedFragmentShader(context);
 
         expect(sp._fragmentShaderText).toEqual(expectedFSText);
     });

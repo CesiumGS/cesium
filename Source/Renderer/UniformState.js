@@ -11,9 +11,9 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/OrthographicFrustum',
         '../Scene/SceneMode'
     ], function(
         BoundingRectangle,
@@ -28,9 +28,9 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        OrthographicFrustum,
         SceneMode) {
     'use strict';
 

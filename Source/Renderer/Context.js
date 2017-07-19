@@ -268,17 +268,15 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']) || this._webgl2;
+        this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
         this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
-        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']) || this._webgl2;
-        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']) || this._webgl2;
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']) || this._webgl2;
-        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']) || this._webgl2;
+        this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
+        this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
-        if (this._webgl2) {
-            this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float']);
-        }
+        this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
@@ -488,7 +486,7 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return this._standardDerivatives;
+                return this._standardDerivatives || this._webgl2;
             }
         },
 
@@ -529,7 +527,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return this._depthTexture;
+                return this._depthTexture || this._webgl2;
             }
         },
 
@@ -542,7 +540,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return this._textureFloat;
+                return this._textureFloat || this._colorBufferFloat;
             }
         },
 
@@ -616,7 +614,7 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return this._fragDepth;
+                return this._fragDepth || this._webgl2;
             }
         },
 
