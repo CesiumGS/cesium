@@ -20,7 +20,8 @@ Change Log
 * Fixed label positioning when height reference changes [#5609](https://github.com/AnalyticalGraphicsInc/cesium/issues/5609)
 * Fixed crash when using the `Cesium3DTilesInspectorViewModel` and removing a tileset [#5607](https://github.com/AnalyticalGraphicsInc/cesium/issues/5607)
 * Fixed polygon outline in Polygon Sandcastle demo [#5642](https://github.com/AnalyticalGraphicsInc/cesium/issues/5642)
-* Fixed issue where models would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
+* Fixed label positioning when using `HeightReference.CLAMP_TO_GROUND` and no position [#5648](https://github.com/AnalyticalGraphicsInc/cesium/pull/5648)
+* Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
 
 ### 1.35.2 - 2017-07-11
 
