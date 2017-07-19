@@ -12,12 +12,12 @@ uniform float maxAbsRatio;
 
 void main() {
     vec2 v_textureCoordinates = gl_FragCoord.xy / czm_viewport.zw;
-    float center = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                   v_textureCoordinates));
+    float depth = czm_unpackDepth(texture2D(pointCloud_depthTexture,
+                                            v_textureCoordinates));
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
     int densityValue = 0;
 
-    if (center < EPS) {
+    if (depth < EPS) {
         ivec2 centerValue = ivec2(int(mod(centerPos, czm_viewport.z)),
                                   int(centerPos) / int(czm_viewport.z));
         vec2 diff = vec2(pos - centerValue);
