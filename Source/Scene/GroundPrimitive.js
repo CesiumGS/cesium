@@ -124,6 +124,7 @@ define([
      * }));
      *
      * @see Primitive
+     * @see ClassificationPrimitive
      * @see GeometryInstance
      * @see Appearance
      */
@@ -143,6 +144,7 @@ define([
          * on the first attempt to render.
          * </p>
          *
+         * @readonly
          * @type {Array|GeometryInstance}
          *
          * @default undefined

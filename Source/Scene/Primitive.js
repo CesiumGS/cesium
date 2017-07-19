@@ -189,6 +189,8 @@ define([
      *
      * @see GeometryInstance
      * @see Appearance
+     * @see ClassificationPrimitive
+     * @see GroundPrimitive
      */
     function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -201,6 +203,7 @@ define([
          * Changing this property after the primitive is rendered has no effect.
          * </p>
          *
+         * @readonly
          * @type GeometryInstance[]|GeometryInstance
          *
          * @default undefined

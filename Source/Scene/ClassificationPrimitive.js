@@ -77,7 +77,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render. This can either be a single instance or an array of length one.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -110,6 +110,7 @@ define([
          * on the first attempt to render.
          * </p>
          *
+         * @readonly
          * @type {Array|GeometryInstance}
          *
          * @default undefined
@@ -148,6 +149,7 @@ define([
         this.debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
         this._debugShowShadowVolume = false;
 
+        // These are used by GroundPrimitive to augment the shader and uniform map.
         this._extruded = defaultValue(options._extruded, false);
         this._uniformMap = options._uniformMap;
 
