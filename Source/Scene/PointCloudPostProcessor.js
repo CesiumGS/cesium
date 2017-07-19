@@ -694,15 +694,16 @@ define([
             }
         }
 
-        var testVS = '#define EPS 1e-8 \n' +
+        var testVS = '#define EPS 1e-6 \n' +
+                     '#define kernelSize 9.0 \n\n' +
                      'attribute vec4 position; \n\n' +
                      'uniform sampler2D pointCloud_depthTexture; \n' +
                      'void main()  \n' +
                      '{ \n' +
                      '    vec2 textureCoordinates = 0.5 * position.xy + vec2(0.5); \n' +
-                     '    if (czm_unpackDepth(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
+                     '    if (length(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
                      '        gl_Position = position; \n' +
-                     '        gl_PointSize = 10.0; \n' +
+                     '        gl_PointSize = kernelSize; \n' +
                      '    } else {\n' +
                      '        gl_Position = vec4(-10); \n' +
                      '    } \n' +
@@ -713,6 +714,12 @@ define([
                      '    gl_FragColor = vec4(vec3(textureCoordinates.x), 1.0); \n' +
                      '} \n' +
                      ' \n';
+
+        testVS = replaceConstants(
+            testVS,
+            'kernelSize',
+            '10.0'
+        );
 
         var testBlendRenderState = RenderState.fromCache({
             blending : {
