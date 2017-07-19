@@ -27,6 +27,30 @@ defineSuite([
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
+    it('constructs', function() {
+        var options = {
+            width : 1.0,
+            aspectRatio : 2.0,
+            near : 3.0,
+            far : 4.0,
+            xOffset : 5.0,
+            yOffset : 6.0
+        };
+        var f = new OrthographicFrustum(options);
+        expect(f.width).toEqual(options.width);
+        expect(f.aspectRatio).toEqual(options.aspectRatio);
+        expect(f.near).toEqual(options.near);
+        expect(f.far).toEqual(options.far);
+    });
+
+    it('default constructs', function() {
+        var f = new OrthographicFrustum();
+        expect(f.width).toBeUndefined();
+        expect(f.aspectRatio).toBeUndefined();
+        expect(f.near).toEqual(1.0);
+        expect(f.far).toEqual(500000000.0);
+    });
+
     it('undefined width causes an exception', function() {
         frustum.width = undefined;
         expect(function() {
@@ -170,10 +194,10 @@ defineSuite([
         expect(frustum).toEqual(frustum2);
     });
 
-    var packableFrustum = new OrthographicFrustum();
-    packableFrustum.width = 1.0;
-    packableFrustum.aspectRatio = 2.0;
-    packableFrustum.near = 3.0;
-    packableFrustum.far = 4.0;
-    createPackableSpecs(OrthographicFrustum, packableFrustum, [1.0, 2.0, 3.0, 4.0]);
+    createPackableSpecs(OrthographicFrustum, new OrthographicFrustum({
+        width : 1.0,
+        aspectRatio : 2.0,
+        near : 3.0,
+        far : 4.0
+    }), [1.0, 2.0, 3.0, 4.0]);
 });

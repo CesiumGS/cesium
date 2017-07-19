@@ -23,17 +23,27 @@ define([
      * @alias PerspectiveFrustum
      * @constructor
      *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Number} [options.fov] The angle of the field of view (FOV), in radians.
+     * @param {Number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
+     * @param {Number} [options.near=1.0] The distance of the near plane.
+     * @param {Number} [options.far=500000000.0] The distance of the far plane.
+     * @param {Number} [options.xOffset=0.0] The offset in the x direction.
+     * @param {Number} [options.yOffset=0.0] The offset in the y direction.
      *
      * @example
-     * var frustum = new Cesium.PerspectiveFrustum();
-     * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
-     * frustum.fov = Cesium.Math.PI_OVER_THREE;
-     * frustum.near = 1.0;
-     * frustum.far = 2.0;
+     * var frustum = new Cesium.PerspectiveFrustum({
+     *     fov : Cesium.Math.PI_OVER_THREE,
+     *     aspectRatio : canvas.clientWidth / canvas.clientHeight
+     *     near : 1.0,
+     *     far : 1000.0
+     * });
      *
      * @see PerspectiveOffCenterFrustum
      */
-    function PerspectiveFrustum() {
+    function PerspectiveFrustum(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._offCenterFrustum = new PerspectiveOffCenterFrustum();
 
         /**
@@ -43,7 +53,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.fov = undefined;
+        this.fov = options.fov;
         this._fov = undefined;
         this._fovy = undefined;
 
@@ -54,7 +64,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.aspectRatio = undefined;
+        this.aspectRatio = options.aspectRatio;
         this._aspectRatio = undefined;
 
         /**
@@ -62,7 +72,7 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.near = 1.0;
+        this.near = defaultValue(options.near, 1.0);
         this._near = this.near;
 
         /**
@@ -70,7 +80,7 @@ define([
          * @type {Number}
          * @default 500000000.0
          */
-        this.far = 500000000.0;
+        this.far = defaultValue(options.far, 500000000.0);
         this._far = this.far;
 
         /**
@@ -78,7 +88,7 @@ define([
          * @type {Number}
          * @default 0.0
          */
-        this.xOffset = 0.0;
+        this.xOffset = defaultValue(options.xOffset, 0.0);
         this._xOffset = this.xOffset;
 
         /**
@@ -86,7 +96,7 @@ define([
          * @type {Number}
          * @default 0.0
          */
-        this.yOffset = 0.0;
+        this.yOffset = defaultValue(options.yOffset, 0.0);
         this._yOffset = this.yOffset;
     }
 

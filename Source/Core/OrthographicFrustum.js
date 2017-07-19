@@ -23,6 +23,12 @@ define([
      * @alias OrthographicFrustum
      * @constructor
      *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Number} [options.width] The width of the frustum in meters.
+     * @param {Number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
+     * @param {Number} [options.near=1.0] The distance of the near plane.
+     * @param {Number} [options.far=500000000.0] The distance of the far plane.
+     *
      * @example
      * var maxRadii = ellipsoid.maximumRadius;
      *
@@ -30,7 +36,9 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    function OrthographicFrustum() {
+    function OrthographicFrustum(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._offCenterFrustum = new OrthographicOffCenterFrustum();
 
         /**
@@ -38,7 +46,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.width = undefined;
+        this.width = options.width;
         this._width = undefined;
 
         /**
@@ -46,7 +54,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.aspectRatio = undefined;
+        this.aspectRatio = options.aspectRatio;
         this._aspectRatio = undefined;
 
         /**
@@ -54,7 +62,7 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.near = 1.0;
+        this.near = defaultValue(options.near, 1.0);
         this._near = this.near;
 
         /**
@@ -62,7 +70,7 @@ define([
          * @type {Number}
          * @default 500000000.0;
          */
-        this.far = 500000000.0;
+        this.far = defaultValue(options.far, 500000000.0);
         this._far = this.far;
     }
 

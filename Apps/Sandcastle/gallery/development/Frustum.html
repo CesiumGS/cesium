@@ -39,11 +39,12 @@ var rotation = Cesium.Matrix4.getRotation(enu, new Cesium.Matrix3());
 Cesium.Matrix3.multiply(rotation, Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO), rotation);
 var orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
 
-var frustum = new Cesium.PerspectiveFrustum();
-frustum.fov = Cesium.Math.toRadians(60.0);
-frustum.aspectRatio = scene.canvas.clientWidth / scene.canvas.clientHeight;
-frustum.near = 10.0;
-frustum.far = 50.0;
+var frustum = new Cesium.PerspectiveFrustum({
+    fov : Cesium.Math.toRadians(60.0),
+    aspectRatio : scene.canvas.clientWidth / scene.canvas.clientHeight,
+    near : 10.0,
+    far : 50.0
+});
 
 var frustumGeometry = new Cesium.FrustumGeometry({
     frustum : frustum,

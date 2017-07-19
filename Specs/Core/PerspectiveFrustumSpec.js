@@ -27,6 +27,34 @@ defineSuite([
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
+    it('constructs', function() {
+        var options = {
+            fov : 1.0,
+            aspectRatio : 2.0,
+            near : 3.0,
+            far : 4.0,
+            xOffset : 5.0,
+            yOffset : 6.0
+        };
+        var f = new PerspectiveFrustum(options);
+        expect(f.fov).toEqual(options.fov);
+        expect(f.aspectRatio).toEqual(options.aspectRatio);
+        expect(f.near).toEqual(options.near);
+        expect(f.far).toEqual(options.far);
+        expect(f.xOffset).toEqual(options.xOffset);
+        expect(f.yOffset).toEqual(options.yOffset);
+    });
+
+    it('default constructs', function() {
+        var f = new PerspectiveFrustum();
+        expect(f.fov).toBeUndefined();
+        expect(f.aspectRatio).toBeUndefined();
+        expect(f.near).toEqual(1.0);
+        expect(f.far).toEqual(500000000.0);
+        expect(f.xOffset).toEqual(0.0);
+        expect(f.yOffset).toEqual(0.0);
+    });
+
     it('out of range fov causes an exception', function() {
         frustum.fov = -1.0;
         expect(function() {
@@ -175,12 +203,12 @@ defineSuite([
         expect(frustum).toEqual(frustum2);
     });
 
-    var packableFrustum = new PerspectiveFrustum();
-    packableFrustum.fov = 1.0;
-    packableFrustum.aspectRatio = 2.0;
-    packableFrustum.near = 3.0;
-    packableFrustum.far = 4.0;
-    packableFrustum.xOffset = 5.0;
-    packableFrustum.yOffset = 6.0;
-    createPackableSpecs(PerspectiveFrustum, packableFrustum, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    createPackableSpecs(PerspectiveFrustum, new PerspectiveFrustum({
+        fov : 1.0,
+        aspectRatio : 2.0,
+        near : 3.0,
+        far : 4.0,
+        xOffset : 5.0,
+        yOffset : 6.0
+    }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
 });
