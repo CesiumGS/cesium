@@ -1,9 +1,13 @@
 define([
+        './Check',
+        './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
         './OrthographicOffCenterFrustum'
     ], function(
+        Check,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -19,6 +23,12 @@ define([
      * @alias OrthographicFrustum
      * @constructor
      *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Number} [options.width] The width of the frustum in meters.
+     * @param {Number} [options.aspectRatio] The aspect ratio of the frustum's width to it's height.
+     * @param {Number} [options.near=1.0] The distance of the near plane.
+     * @param {Number} [options.far=500000000.0] The distance of the far plane.
+     *
      * @example
      * var maxRadii = ellipsoid.maximumRadius;
      *
@@ -26,7 +36,9 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    function OrthographicFrustum() {
+    function OrthographicFrustum(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._offCenterFrustum = new OrthographicOffCenterFrustum();
 
         /**
@@ -34,7 +46,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.width = undefined;
+        this.width = options.width;
         this._width = undefined;
 
         /**
@@ -42,7 +54,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.aspectRatio = undefined;
+        this.aspectRatio = options.aspectRatio;
         this._aspectRatio = undefined;
 
         /**
@@ -50,7 +62,7 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.near = 1.0;
+        this.near = defaultValue(options.near, 1.0);
         this._near = this.near;
 
         /**
@@ -58,9 +70,67 @@ define([
          * @type {Number}
          * @default 500000000.0;
          */
-        this.far = 500000000.0;
+        this.far = defaultValue(options.far, 500000000.0);
         this._far = this.far;
     }
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    OrthographicFrustum.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {OrthographicFrustum} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
+    OrthographicFrustum.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.width;
+        array[startingIndex++] = value.aspectRatio;
+        array[startingIndex++] = value.near;
+        array[startingIndex] = value.far;
+
+        return array;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {OrthographicFrustum} [result] The object into which to store the result.
+     * @returns {OrthographicFrustum} The modified result parameter or a new OrthographicFrustum instance if one was not provided.
+     */
+    OrthographicFrustum.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('array', array);
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new OrthographicFrustum();
+        }
+
+        result.width = array[startingIndex++];
+        result.aspectRatio = array[startingIndex++];
+        result.near = array[startingIndex++];
+        result.far = array[startingIndex];
+
+        return result;
+    };
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
