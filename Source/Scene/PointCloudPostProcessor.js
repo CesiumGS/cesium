@@ -87,8 +87,6 @@ define([
         this._blendCommand = undefined;
         this._clearCommands = undefined;
 
-        this._testPointArrayCommand = undefined;
-
         this.occlusionAngle = options.occlusionAngle;
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -102,6 +100,16 @@ define([
         this.useTriangle = options.useTriangle;
 
         this._pointArray = undefined;
+
+        this._minBlend = {
+            enabled : true,
+            equationRgb : BlendEquation.MIN,
+            equationAlpha : BlendEquation.ADD,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ZERO
+        };
 
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
@@ -460,21 +468,11 @@ define([
             processor.densityHalfWidth
         );
 
-        var densityBlendRenderState = {
-            enabled : true,
-            equationRgb : BlendEquation.MIN,
-            equationAlpha : BlendEquation.ADD,
-            functionSourceRgb : BlendFunction.ONE,
-            functionSourceAlpha : BlendFunction.ONE,
-            functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ZERO
-        };
-
         return createPointArrayCommand(
             processor._depthTextures[0],
             '9.0',
             false,
-            densityBlendRenderState,
+            processor._minBlend,
             densityEstimationStr,
             processor,
             context, {
@@ -782,46 +780,11 @@ define([
             }
         }
 
-        var testFS = 'uniform float testUniform; \n' +
-                     'void main() \n' +
-                     '{ \n' +
-                     '    vec2 textureCoordinates = gl_FragCoord.xy / czm_viewport.zw; \n' +
-                     '    gl_FragColor = vec4(vec3(textureCoordinates.x), 1.0) + vec4(testUniform, 0.0, 0.0, 0.0); \n' +
-                     '} \n' +
-                     ' \n';
-
-        var testBlendRenderState = {
-            enabled : true,
-            equationRgb : BlendEquation.MIN,
-            equationAlpha : BlendEquation.ADD,
-            functionSourceRgb : BlendFunction.ONE,
-            functionSourceAlpha : BlendFunction.ONE,
-            functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ZERO
-        };
-
-        var testPointArrayCommand = createPointArrayCommand(
-            processor._depthTextures[1 - drawCommands.length % 2],
-            '9.0',
-            false,
-            testBlendRenderState,
-            testFS,
-            processor,
-            context, {
-                uniformMap : {
-                    testUniform : function () { return 0.5; }
-                },
-                pass : Pass.CESIUM_3D_TILE,
-                owner : processor
-            }
-        );
-
         processor._drawCommands = drawCommands;
         processor._stencilCommands = stencilCommands;
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
         processor._copyCommands = copyCommands;
-        processor._testPointArrayCommand = testPointArrayCommand;
     }
 
     function createResources(processor, context, dirty) {
@@ -1024,8 +987,6 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-
-        //commandList.push(this._testPointArrayCommand);
 
         commandList.push(clearCommands['prior']);
     };
