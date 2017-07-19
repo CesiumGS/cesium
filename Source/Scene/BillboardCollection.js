@@ -319,7 +319,7 @@ define([
         };
 
         var scene = this._scene;
-        if (defined(scene)) {
+        if (defined(scene) && defined(scene.terrainProviderChanged)) {
             this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
