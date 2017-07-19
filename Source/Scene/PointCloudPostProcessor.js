@@ -754,10 +754,11 @@ define([
             }
         }
 
-        var testFS = 'void main() \n' +
+        var testFS = 'uniform float testUniform; \n' +
+                     'void main() \n' +
                      '{ \n' +
                      '    vec2 textureCoordinates = gl_FragCoord.xy / czm_viewport.zw; \n' +
-                     '    gl_FragColor = vec4(vec3(textureCoordinates.x), 1.0); \n' +
+                     '    gl_FragColor = vec4(vec3(textureCoordinates.x), 1.0) + vec4(testUniform, 0.0, 0.0, 0.0); \n' +
                      '} \n' +
                      ' \n';
 
@@ -779,6 +780,9 @@ define([
             testFS,
             processor,
             context, {
+                uniformMap : {
+                    testUniform : function () { return 0.5; }
+                },
                 pass : Pass.CESIUM_3D_TILE,
                 owner : processor
             }
