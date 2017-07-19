@@ -4764,6 +4764,11 @@ define([
             destroy(this._rendererResources.vertexArrays);
         }
 
+        if (defined(this._removeUpdateHeightCallback)) {
+            this._removeUpdateHeightCallback();
+            this._removeUpdateHeightCallback = undefined;
+        }
+
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
