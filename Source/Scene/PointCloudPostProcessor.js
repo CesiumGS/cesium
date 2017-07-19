@@ -302,16 +302,20 @@ define([
         var vertexShaderSource =
                      '#define EPS 1e-6 \n' +
                      '#define kernelSize 9.0 \n\n' +
-                     'attribute vec4 position; \n\n' +
-                     'uniform sampler2D pointCloud_depthTexture; \n' +
+                     'attribute vec4 position; \n' +
+                     'varying float centerPos; \n\n' +
+                     'uniform sampler2D pointCloud_depthTexture; \n\n' +
                      'void main()  \n' +
                      '{ \n' +
                      '    vec2 textureCoordinates = 0.5 * position.xy + vec2(0.5); \n' +
+                     '    ivec2 screenSpaceCoordinates = ivec2(textureCoordinates * czm_viewport.zw); \n' +
                      '    if (length(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
                      '        gl_Position = position; \n' +
                      '        gl_PointSize = kernelSize; \n' +
+                     '        centerPos = float(screenSpaceCoordinates.x + screenSpaceCoordinates.y * int(czm_viewport.z)); \n' +
                      '    } else {\n' +
                      '        gl_Position = vec4(-10); \n' +
+                     '        centerPos = 0.0; \n' +
                      '    } \n' +
                      '} \n';
 
@@ -442,9 +446,6 @@ define([
 
     function densityEstimationStage(processor, context) {
         var uniformMap = {
-            pointCloud_depthTexture : function() {
-                return processor._depthTextures[0];
-            },
             neighborhoodVectorSize : function() {
                 return processor.neighborhoodVectorSize;
             },
@@ -459,14 +460,30 @@ define([
             processor.densityHalfWidth
         );
 
-        return context.createViewportQuadCommand(densityEstimationStr, {
-            uniformMap : uniformMap,
-            framebuffer : processor._framebuffers.densityEstimationPass,
-            renderState : RenderState.fromCache({
-            }),
-            pass : Pass.CESIUM_3D_TILE,
-            owner : processor
-        });
+        var densityBlendRenderState = {
+            enabled : true,
+            equationRgb : BlendEquation.MIN,
+            equationAlpha : BlendEquation.ADD,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ZERO
+        };
+
+        return createPointArrayCommand(
+            processor._depthTextures[0],
+            '9.0',
+            false,
+            densityBlendRenderState,
+            densityEstimationStr,
+            processor,
+            context, {
+                uniformMap : uniformMap,
+                framebuffer : processor._framebuffers.densityEstimationPass,
+                pass : Pass.CESIUM_3D_TILE,
+                owner : processor
+            }
+        );
     }
 
     function regionGrowingStage(processor, context, iteration) {
@@ -730,11 +747,22 @@ define([
             if (framebuffers.hasOwnProperty(name)) {
                 // The screen space pass should consider
                 // the stencil value, so we don't clear it
-                // here
+                // here. The density estimation pass uses
+                // min blending, so we need to set the default
+                // value to the maximum possible value
                 if (name === 'screenSpacePass') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else if (name === 'densityEstimationPass') {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(1.0, 1.0, 1.0, 1.0),
                         depth : 1.0,
                         renderState : RenderState.fromCache(),
                         pass : Pass.CESIUM_3D_TILE,
@@ -997,7 +1025,7 @@ define([
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
 
-        commandList.push(this._testPointArrayCommand);
+        //commandList.push(this._testPointArrayCommand);
 
         commandList.push(clearCommands['prior']);
     };
