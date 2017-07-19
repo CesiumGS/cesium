@@ -279,6 +279,19 @@ defineSuite([
         expect(dataSource.show).toBe(true);
     });
 
+    it('setting name raises changed event', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.changedEvent.addEventListener(spy);
+
+        var newName = 'chester';
+        dataSource.name = newName;
+        expect(dataSource.name).toEqual(newName);
+        expect(spy.calls.count()).toEqual(1);
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
     it('show sets underlying entity collection show.', function() {
         var dataSource = new GeoJsonDataSource();
 
