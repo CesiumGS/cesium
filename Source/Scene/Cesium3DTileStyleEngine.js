@@ -1,10 +1,7 @@
-/*global define*/
 define([
-        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties'
     ], function(
-        Color,
         defined,
         defineProperties) {
     'use strict';
@@ -68,17 +65,15 @@ define([
         var length = tiles.length;
         for (var i = 0; i < length; ++i) {
             var tile = tiles[i];
-            if (tile.selected) {
+            if (tile.selected && (tile.lastStyleTime !== lastStyleTime)) {
                 // Apply the style to this tile if it wasn't already applied because:
                 //   1) the user assigned a new style to the tileset
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
-                if (tile.lastStyleTime !== lastStyleTime) {
-                    var content = tile.content;
-                    tile.lastStyleTime = lastStyleTime;
-                    content.applyStyle(frameState, this._style);
-                    statistics.numberOfFeaturesStyled += content.featuresLength;
-                    ++statistics.numberOfTilesStyled;
-                }
+                var content = tile.content;
+                tile.lastStyleTime = lastStyleTime;
+                content.applyStyle(frameState, this._style);
+                statistics.numberOfFeaturesStyled += content.featuresLength;
+                ++statistics.numberOfTilesStyled;
             }
         }
     };

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -6,7 +5,6 @@ define([
         '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
-        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
@@ -27,7 +25,6 @@ define([
         Check,
         ColorGeometryInstanceAttribute,
         defaultValue,
-        defined,
         defineProperties,
         Ellipsoid,
         GeometryInstance,

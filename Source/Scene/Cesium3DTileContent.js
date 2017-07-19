@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
@@ -8,8 +7,11 @@ define([
     'use strict';
 
     /**
+     * The content of a tile in a {@link Cesium3DTileset}.
+     * <p>
      * Derived classes of this interface provide access to individual features in the tile.
      * Access derived objects through {@link Cesium3DTile#content}.
+     * </p>
      * <p>
      * This type describes an interface and is not intended to be instantiated directly.
      * </p>

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './ComponentDatatype',
         './defaultValue',
@@ -36,7 +35,7 @@ define([
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)
      *   }
      * });
-     * 
+     *
      * @see GeometryInstance
      * @see GeometryInstanceAttribute
      */

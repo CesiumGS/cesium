@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Color',
         '../../Core/defined',
@@ -17,8 +16,8 @@ define([
         subscribeAndEvaluate) {
     'use strict';
 
-    var svgNS = "http://www.w3.org/2000/svg";
-    var xlinkNS = "http://www.w3.org/1999/xlink";
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var xlinkNS = 'http://www.w3.org/1999/xlink';
 
     var widgetForDrag;
 
@@ -327,7 +326,7 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
-     * 
+     *
      * @see AnimationViewModel
      * @see Clock
      */

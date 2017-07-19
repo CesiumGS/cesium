@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -7,13 +6,14 @@ define([
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
         '../Core/Request',
+        '../Core/RequestState',
+        '../Core/RequestType',
         '../Core/TileProviderError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
-        './TerrainState',
-        './TileBoundingRegion'
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -22,13 +22,14 @@ define([
         IndexDatatype,
         OrientedBoundingBox,
         Request,
+        RequestState,
+        RequestType,
         TileProviderError,
         Buffer,
         BufferUsage,
         VertexArray,
         when,
-        TerrainState,
-        TileBoundingRegion) {
+        TerrainState) {
     'use strict';
 
     /**
@@ -54,6 +55,7 @@ define([
         this.mesh = undefined;
         this.vertexArray = undefined;
         this.upsampleDetails = upsampleDetails;
+        this.request = undefined;
     }
 
     TileTerrain.prototype.freeResources = function() {
@@ -90,9 +92,9 @@ define([
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, distance) {
+    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level, priorityFunction) {
         if (this.state === TerrainState.UNLOADED) {
-            requestTileGeometry(this, terrainProvider, x, y, level, distance);
+            requestTileGeometry(this, terrainProvider, x, y, level, priorityFunction);
         }
 
         if (this.state === TerrainState.RECEIVED) {
@@ -104,16 +106,26 @@ define([
         }
     };
 
-    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, distance) {
+    function requestTileGeometry(tileTerrain, terrainProvider, x, y, level, priorityFunction) {
         function success(terrainData) {
             tileTerrain.data = terrainData;
             tileTerrain.state = TerrainState.RECEIVED;
+            tileTerrain.request = undefined;
         }
 
         function failure() {
+            if (tileTerrain.request.state === RequestState.CANCELLED) {
+                // Cancelled due to low priority - try again later.
+                tileTerrain.data = undefined;
+                tileTerrain.state = TerrainState.UNLOADED;
+                tileTerrain.request = undefined;
+                return;
+            }
+
             // Initially assume failure.  handleError may retry, in which case the state will
             // change to RECEIVING or UNLOADED.
             tileTerrain.state = TerrainState.FAILED;
+            tileTerrain.request = undefined;
 
             var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
             terrainProvider._requestError = TileProviderError.handleError(
@@ -128,19 +140,23 @@ define([
         function doRequest() {
             // Request the terrain from the terrain provider.
             var request = new Request({
-                distance : distance
+                throttle : true,
+                throttleByServer : true,
+                type : RequestType.TERRAIN,
+                priorityFunction : priorityFunction
             });
+            tileTerrain.request = request;
             tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, request);
 
             // If the request method returns undefined (instead of a promise), the request
             // has been deferred.
             if (defined(tileTerrain.data)) {
                 tileTerrain.state = TerrainState.RECEIVING;
-
                 when(tileTerrain.data, success, failure);
             } else {
                 // Deferred - try again later.
                 tileTerrain.state = TerrainState.UNLOADED;
+                tileTerrain.request = undefined;
             }
         }
 

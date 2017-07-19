@@ -1,9 +1,6 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -12,11 +9,9 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
+        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -31,8 +26,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Cartesian4,
-        Cartographic,
         clone,
         Color,
         ComponentDatatype,
@@ -41,11 +34,9 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        CesiumMath,
-        Matrix3,
         Matrix4,
-        oneTimeWarning,
         PrimitiveType,
+        RuntimeError,
         Transforms,
         Buffer,
         BufferUsage,
@@ -81,7 +72,7 @@ define([
      * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
-     * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
+     * @param {Object} [options.requestType] The request type, used for request prioritization
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic=false] Hint if instance model matrices will be updated frequently.
@@ -124,12 +115,12 @@ define([
 
         this._instances = createInstances(this, options.instances);
 
-        // When the model instance collection is backed by an instanced 3d-tile,
+        // When the model instance collection is backed by an i3dm tile,
         // use its batch table resources to modify the shaders, attributes, and uniform maps.
         this._batchTable = options.batchTable;
 
         this._model = undefined;
-        this._vertexBufferData = undefined; // Hold onto the vertex buffer data when dynamic is true
+        this._vertexBufferTypedArray = undefined; // Hold onto the vertex buffer contents when dynamic is true
         this._vertexBuffer = undefined;
         this._batchIdBuffer = undefined;
         this._instancedUniformsByProgram = undefined;
@@ -262,12 +253,10 @@ define([
                                 if (supportedSemantics.indexOf(semantic) > -1) {
                                     uniformMap[uniformName] = semantic;
                                 } else {
-                                    //>>includeStart('debug', pragmas.debug);
-                                    throw new DeveloperError('Shader program cannot be optimized for instancing. ' +
+                                    throw new RuntimeError('Shader program cannot be optimized for instancing. ' +
                                         'Parameter "' + parameter + '" in program "' + programName +
                                         '" uses unsupported semantic "' + semantic + '"'
                                     );
-                                    //>>includeEnd('debug');
                                 }
                             }
                         }
@@ -481,19 +470,19 @@ define([
         };
     }
 
-    function getVertexBufferData(collection) {
+    function getVertexBufferTypedArray(collection) {
         var instances = collection._instances;
         var instancesLength = collection.length;
         var collectionCenter = collection._center;
         var vertexSizeInFloats = 12;
 
-        var bufferData = collection._vertexBufferData;
+        var bufferData = collection._vertexBufferTypedArray;
         if (!defined(bufferData)) {
             bufferData = new Float32Array(instancesLength * vertexSizeInFloats);
         }
         if (collection._dynamic) {
             // Hold onto the buffer data so we don't have to allocate new memory every frame.
-            collection._vertexBufferData = bufferData;
+            collection._vertexBufferTypedArray = bufferData;
         }
 
         for (var i = 0; i < instancesLength; ++i) {
@@ -563,17 +552,17 @@ define([
             });
         }
 
-        var vertexBufferData = getVertexBufferData(collection);
+        var vertexBufferTypedArray = getVertexBufferTypedArray(collection);
         collection._vertexBuffer = Buffer.createVertexBuffer({
             context : context,
-            typedArray : vertexBufferData,
+            typedArray : vertexBufferTypedArray,
             usage : dynamic ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW
         });
     }
 
     function updateVertexBuffer(collection) {
-        var vertexBufferData = getVertexBufferData(collection);
-        collection._vertexBuffer.copyFromArrayView(vertexBufferData);
+        var vertexBufferTypedArray = getVertexBufferTypedArray(collection);
+        collection._vertexBuffer.copyFromArrayView(vertexBufferTypedArray);
     }
 
     function createPickIds(collection, context) {
@@ -889,6 +878,10 @@ define([
     }
 
     ModelInstanceCollection.prototype.update = function(frameState) {
+        if (frameState.mode === SceneMode.MORPHING) {
+            return;
+        }
+
         if (!this.show) {
             return;
         }

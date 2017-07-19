@@ -1,14 +1,13 @@
-/*global define*/
 define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
@@ -21,12 +20,12 @@ define([
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
@@ -331,12 +330,8 @@ define([
         var width = options.width;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-        if (!defined(width)) {
-            throw new DeveloperError('options.width is required.');
-        }
+        Check.typeOf.object('options.positions', positions);
+        Check.typeOf.number('options.width', width);
         //>>includeEnd('debug');
 
         this._positions = positions;
@@ -366,12 +361,8 @@ define([
      */
     CorridorOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -417,9 +408,7 @@ define([
      */
     CorridorOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);

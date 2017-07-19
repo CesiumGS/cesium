@@ -1,14 +1,11 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
-        './defined',
-        './defineProperties',
-        './Check'
+        './defineProperties'
     ], function(
+        Check,
         defaultValue,
-        defined,
-        defineProperties,
-        Check) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -51,7 +48,7 @@ define([
          * @type Array
          * @readonly
          */
-        internalArray : {
+        values : {
             get : function() {
                 return this._array;
             }

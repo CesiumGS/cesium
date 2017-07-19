@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector',
         'Core/Ellipsoid',
@@ -74,7 +73,7 @@ defineSuite([
             viewModel.tileset = new Cesium3DTileset({
                 url : tilesetUrl
             });
-            return viewModel._tilesetLoaded;
+            return viewModel.tileset.readyPromise;
         });
 
         afterAll(function() {

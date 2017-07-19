@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -11,6 +10,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/combine',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -21,6 +21,8 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/PixelFormat',
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
@@ -43,11 +45,8 @@ define([
         '../Renderer/TextureWrap',
         './Camera',
         './CullFace',
-        './CullingVolume',
         './DebugCameraPrimitive',
-        './OrthographicOffCenterFrustum',
         './PerInstanceColorAppearance',
-        './PerspectiveFrustum',
         './Primitive',
         './ShadowMapShader'
     ], function(
@@ -62,6 +61,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         combine,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -72,6 +72,8 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         PixelFormat,
         Quaternion,
         SphereOutlineGeometry,
@@ -94,11 +96,8 @@ define([
         TextureWrap,
         Camera,
         CullFace,
-        CullingVolume,
         DebugCameraPrimitive,
-        OrthographicOffCenterFrustum,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         Primitive,
         ShadowMapShader) {
     'use strict';
@@ -1003,6 +1002,8 @@ define([
     var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
 
     function computeCascades(shadowMap, frameState) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -1127,8 +1128,6 @@ define([
     var scratchLightView = new Matrix4();
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
-    var scratchMin = new Cartesian3();
-    var scratchMax = new Cartesian3();
     var scratchTranslation = new Cartesian3();
 
     function fitShadowMapToScene(shadowMap, frameState) {

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -195,9 +194,7 @@ define([
                         backgroundBillboard.position = value;
                     }
 
-                    if (this._heightReference !== HeightReference.NONE) {
-                        this._updateClamping();
-                    }
+                    this._updateClamping();
                 }
             }
         },
@@ -965,22 +962,17 @@ define([
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
 
                 var glyphs = this._glyphs;
-                value = defaultValue(value, this._position);
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
                         glyph.billboard._clampedPosition = value;
-                        Cartesian3.clone(value, glyph.billboard._position);
-                        Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
                 }
                 var backgroundBillboard = this._backgroundBillboard;
                 if (defined(backgroundBillboard)) {
                     backgroundBillboard._clampedPosition = value;
-                    Cartesian3.clone(value, backgroundBillboard._position);
-                    Cartesian3.clone(value, backgroundBillboard._actualPosition);
                 }
             }
         },
