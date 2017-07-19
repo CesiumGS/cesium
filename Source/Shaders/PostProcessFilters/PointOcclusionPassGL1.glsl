@@ -263,8 +263,10 @@ void main() {
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
-    if (length(centerPosition) == 0.)
-        discard;
+    if (length(centerPosition) == 0.) {
+        gl_FragData[0] = vec4(0.0);
+        return;
+    }
 
     // We split our region of interest (the point of interest and its
     // neighbors)
