@@ -528,7 +528,7 @@ define([
         this._removeUpdateHeightCallback = undefined;
         var scene = options.scene;
         this._scene = scene;
-        if (defined(scene)) {
+        if (defined(scene) && defined(scene.terrainProviderChanged)) {
             scene.terrainProviderChanged.addEventListener(function() {
                 this._heightChanged = true;
             }, this);
