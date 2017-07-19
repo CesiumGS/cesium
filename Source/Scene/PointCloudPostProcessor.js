@@ -287,15 +287,69 @@ define([
         processor._pointArray = pointArray;
     }
 
-    function createPointArrayCommand(vertexShaderSource, fragmentShaderSource, processor, context, overrides) {
+    function createPointArrayCommand(depthTexture,
+                                     kernelSize,
+                                     useStencil,
+                                     blendingState,
+                                     fragmentShaderSource,
+                                     processor,
+                                     context,
+                                     overrides) {
         if (!defined(processor._pointArray)) {
             createPointArray(processor, context);
+        }
+
+        var vertexShaderSource =
+                     '#define EPS 1e-6 \n' +
+                     '#define kernelSize 9.0 \n\n' +
+                     'attribute vec4 position; \n\n' +
+                     'uniform sampler2D pointCloud_depthTexture; \n' +
+                     'void main()  \n' +
+                     '{ \n' +
+                     '    vec2 textureCoordinates = 0.5 * position.xy + vec2(0.5); \n' +
+                     '    if (length(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
+                     '        gl_Position = position; \n' +
+                     '        gl_PointSize = kernelSize; \n' +
+                     '    } else {\n' +
+                     '        gl_Position = vec4(-10); \n' +
+                     '    } \n' +
+                     '} \n';
+
+        var uniformMap = (defined(overrides.uniformMap)) ? overrides.uniformMap : {};
+        uniformMap.pointCloud_depthTexture = function () {
+            return depthTexture;
+        };
+
+        vertexShaderSource = replaceConstants(vertexShaderSource, 'kernelSize', kernelSize.toString());
+
+        var renderState = overrides.renderState;
+
+        if (!defined(overrides.renderState)) {
+            var func = StencilFunction.EQUAL;
+            var op = {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.KEEP
+            };
+            var stencilTest = {
+                enabled : true,
+                reference : 0,
+                mask : 1,
+                frontFunction : func,
+                backFunction : func,
+                frontOperation : op,
+                backOperation : op
+            };
+            renderState = RenderState.fromCache({
+                stencilTest : stencilTest,
+                blending : blendingState
+            });
         }
 
         return new DrawCommand({
             vertexArray : processor._pointArray,
             primitiveType : PrimitiveType.POINTS,
-            renderState : overrides.renderState,
+            renderState : renderState,
             shaderProgram : ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vertexShaderSource,
@@ -304,7 +358,7 @@ define([
                     position : 0
                 }
             }),
-            uniformMap : overrides.uniformMap,
+            uniformMap : uniformMap,
             owner : overrides.owner,
             framebuffer : overrides.framebuffer,
             pass : overrides.pass
@@ -694,20 +748,6 @@ define([
             }
         }
 
-        var testVS = '#define EPS 1e-6 \n' +
-                     '#define kernelSize 9.0 \n\n' +
-                     'attribute vec4 position; \n\n' +
-                     'uniform sampler2D pointCloud_depthTexture; \n' +
-                     'void main()  \n' +
-                     '{ \n' +
-                     '    vec2 textureCoordinates = 0.5 * position.xy + vec2(0.5); \n' +
-                     '    if (length(texture2D(pointCloud_depthTexture, textureCoordinates)) > EPS) { \n' +
-                     '        gl_Position = position; \n' +
-                     '        gl_PointSize = kernelSize; \n' +
-                     '    } else {\n' +
-                     '        gl_Position = vec4(-10); \n' +
-                     '    } \n' +
-                     '} \n';
         var testFS = 'void main() \n' +
                      '{ \n' +
                      '    vec2 textureCoordinates = gl_FragCoord.xy / czm_viewport.zw; \n' +
@@ -715,32 +755,24 @@ define([
                      '} \n' +
                      ' \n';
 
-        testVS = replaceConstants(
-            testVS,
-            'kernelSize',
-            '10.0'
-        );
-
-        var testBlendRenderState = RenderState.fromCache({
-            blending : {
-                enabled : true,
-                equationRgb : BlendEquation.MIN,
-                equationAlpha : BlendEquation.ADD,
-                functionSourceRgb : BlendFunction.ONE,
-                functionSourceAlpha : BlendFunction.ONE,
-                functionDestinationRgb : BlendFunction.ONE,
-                functionDestinationAlpha : BlendFunction.ZERO
-            }
-        });
+        var testBlendRenderState = {
+            enabled : true,
+            equationRgb : BlendEquation.MIN,
+            equationAlpha : BlendEquation.ADD,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ZERO
+        };
 
         var testPointArrayCommand = createPointArrayCommand(
-            testVS, testFS, processor, context, {
-                uniformMap : {
-                    pointCloud_depthTexture: function() {
-                        return processor._depthTextures[1 - drawCommands.length % 2];
-                    }
-                },
-                renderState : testBlendRenderState,
+            processor._depthTextures[1 - drawCommands.length % 2],
+            '9.0',
+            false,
+            testBlendRenderState,
+            testFS,
+            processor,
+            context, {
                 pass : Pass.CESIUM_3D_TILE,
                 owner : processor
             }
