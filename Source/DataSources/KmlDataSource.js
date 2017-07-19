@@ -2077,7 +2077,7 @@ define([
                             dataSource._networkLinks.set(networkLinkInfo.id, networkLinkInfo);
                         }
                     } else if (viewRefreshMode === 'onRegion'){
-						oneTime('kml-refrehMode-onRegion','KML - Unsupported viewRefreshMode: onRegion');
+						oneTimeWarning('kml-refrehMode-onRegion','KML - Unsupported viewRefreshMode: onRegion');
                     }
                 });
 
