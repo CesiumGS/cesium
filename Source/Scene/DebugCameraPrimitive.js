@@ -174,7 +174,7 @@ define([
                 planesPrimitives[i] = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : new FrustumGeometry({
-                            position : position,
+                            origin : position,
                             orientation : orientation,
                             frustum : frustum,
                             _drawNearPlane : i === 0
@@ -195,7 +195,7 @@ define([
                 outlinePrimitives[i] = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : new FrustumOutlineGeometry({
-                            position : position,
+                            origin : position,
                             orientation : orientation,
                             frustum : frustum,
                             _drawNearPlane : i === 0

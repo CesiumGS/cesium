@@ -25,7 +25,7 @@ defineSuite([
     it('constructor throws without frustum', function() {
         expect(function() {
             return new FrustumGeometry({
-                position : Cartesian3.ZERO,
+                origin : Cartesian3.ZERO,
                 orientation : Quaternion.IDENTITY
             });
         }).toThrowDeveloperError();
@@ -44,7 +44,7 @@ defineSuite([
         expect(function() {
             return new FrustumGeometry({
                 frustum : new PerspectiveFrustum(),
-                position : Cartesian3.ZERO
+                origin : Cartesian3.ZERO
             });
         }).toThrowDeveloperError();
     });
@@ -58,7 +58,7 @@ defineSuite([
 
         var m = FrustumGeometry.createGeometry(new FrustumGeometry({
             frustum : frustum,
-            position : Cartesian3.ZERO,
+            origin : Cartesian3.ZERO,
             orientation : Quaternion.IDENTITY,
             vertexFormat : VertexFormat.ALL
         }));
@@ -86,7 +86,7 @@ defineSuite([
 
     createPackableSpecs(FrustumGeometry, new FrustumGeometry({
         frustum : packableFrustum,
-        position : Cartesian3.ZERO,
+        origin : Cartesian3.ZERO,
         orientation : Quaternion.IDENTITY,
         vertexFormat : VertexFormat.POSITION_ONLY
     }), [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
