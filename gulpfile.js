@@ -123,6 +123,10 @@ gulp.task('clean', function(done) {
 
 gulp.task('requirejs', function(done) {
     var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+
+    // Disable module load timeout
+    config.waitSeconds = 0;
+
     requirejs.optimize(config, function() {
         done();
     }, done);
