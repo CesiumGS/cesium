@@ -663,9 +663,9 @@ define([
             var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
             var viewRefreshMode = queryStringValue(iconNode, 'viewRefreshMode', namespaces.kml);
             if (refreshMode === 'onInterval' || refreshMode === 'onExpire') {
-				oneTimeWarning('kml-refreshMode-' + refreshMode,'KML - Unsupported Icon refreshMode: ' + refreshMode);
+                oneTimeWarning('kml-refreshMode-' + refreshMode,'KML - Unsupported Icon refreshMode: ' + refreshMode);
             } else if (viewRefreshMode === 'onStop' || viewRefreshMode === 'onRegion') {
-				oneTimeWarning('kml-refreshMode-' + viewRefreshMode,'KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
+                oneTimeWarning('kml-refreshMode-' + viewRefreshMode,'KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
             }
 
             var viewBoundScale = defaultValue(queryStringValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
@@ -779,16 +779,16 @@ define([
                 polyline.width = queryNumericValue(node, 'width', namespaces.kml);
                 polyline.material = queryColorValue(node, 'color', namespaces.kml);
                 if (defined(queryColorValue(node, 'outerColor', namespaces.gx))) {
-					oneTimeWarning('kml-gx:outerColor','KML - gx:outerColor is not supported in a LineStyle');
+                    oneTimeWarning('kml-gx:outerColor','KML - gx:outerColor is not supported in a LineStyle');
                 }
                 if (defined(queryNumericValue(node, 'outerWidth', namespaces.gx))) {
-					oneTimeWarning('kml-gx:outerWidth','KML - gx:outerWidth is not supported in a LineStyle');
+                    oneTimeWarning('kml-gx:outerWidth','KML - gx:outerWidth is not supported in a LineStyle');
                 }
                 if (defined(queryNumericValue(node, 'physicalWidth', namespaces.gx))) {
-					oneTimeWarning('kml-gx:physicalWidth','KML - gx:physicalWidth is not supported in a LineStyle');
+                    oneTimeWarning('kml-gx:physicalWidth','KML - gx:physicalWidth is not supported in a LineStyle');
                 }
                 if (defined(queryBooleanValue(node, 'labelVisibility', namespaces.gx))) {
-					oneTimeWarning('kml-gx:labelVisibility','KML - gx:labelVisibility is not supported in a LineStyle');
+                    oneTimeWarning('kml-gx:labelVisibility','KML - gx:labelVisibility is not supported in a LineStyle');
                 }
             } else if (node.localName === 'PolyStyle') {
                 var polygon = targetEntity.polygon;
@@ -815,7 +815,7 @@ define([
             } else if (node.localName === 'ListStyle') {
                 var listItemType = queryStringValue(node, 'listItemType', namespaces.kml);
                 if (listItemType === 'radioFolder' || listItemType === 'checkOffOnly') {
-					oneTimeWarning('kml-listStyle-' + listItemType,'KML - Unsupported ListStyle with listItemType: ' + listItemType);
+                    oneTimeWarning('kml-listStyle-' + listItemType,'KML - Unsupported ListStyle with listItemType: ' + listItemType);
                 }
             }
         }
@@ -861,7 +861,7 @@ define([
                             applyStyle(dataSource, node, result, sourceUri, uriResolver, query);
                         }
                     } else {
-						oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
+                        oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
                     }
                 }
             }
@@ -970,7 +970,7 @@ define([
                                 }
                             }
                         } else {
-							oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
+                            oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
                         }
                     }
                 }
@@ -1025,19 +1025,19 @@ define([
         }
 
         if (gxAltitudeMode === 'clampToSeaFloor') {
-			oneTimeWarning('kml-gx:altitudeMode-clampToSeaFloor','KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            oneTimeWarning('kml-gx:altitudeMode-clampToSeaFloor','KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
             return HeightReference.CLAMP_TO_GROUND;
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor') {
-			oneTimeWarning('kml-gx:altitudeMode-relativeToSeaFloor','KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            oneTimeWarning('kml-gx:altitudeMode-relativeToSeaFloor','KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
             return HeightReference.RELATIVE_TO_GROUND;
         }
 
         if (defined(altitudeMode)) {
-			oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+            oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
         } else {
-			oneTimeWarning('kml-gx:altitudeMode-unknown','KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+            oneTimeWarning('kml-gx:altitudeMode-unknown','KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
         }
 
         // Clamp to ground is the default
@@ -1052,7 +1052,7 @@ define([
 
         if ((defined(altitudeMode) && altitudeMode !== 'clampToGround') || //
             (defined(gxAltitudeMode) && gxAltitudeMode !== 'clampToSeaFloor')) {
-			oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
+            oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
         // Clamp to ground is the default
@@ -1161,7 +1161,7 @@ define([
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         if (defined(queryNumericValue(geometryNode, 'drawOrder', namespaces.gx))) {
-			oneTimeWarning('kml-gx:drawOrder','KML - gx:drawOrder is not supported in LineStrings');
+            oneTimeWarning('kml-gx:drawOrder','KML - gx:drawOrder is not supported in LineStrings');
         }
 
         var coordinates = readCoordinates(coordinatesNode);
@@ -1263,7 +1263,7 @@ define([
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
 
         if (angleNodes.length > 0) {
-			oneTimeWarning('kml-gx:angles','KML - gx:angles are not supported in gx:Tracks');
+            oneTimeWarning('kml-gx:angles','KML - gx:angles are not supported in gx:Tracks');
         }
 
         var length = Math.min(coordNodes.length, timeNodes.length);
@@ -1420,7 +1420,7 @@ define([
         return hasGeometry;
     }
     function processUnsupportedGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
-		oneTimeWarning('kml-unsupportedGeometry','KML - Unsupported geometry: ' + geometryNode.localName);
+        oneTimeWarning('kml-unsupportedGeometry','KML - Unsupported geometry: ' + geometryNode.localName);
         return false;
     }
 
@@ -1432,10 +1432,10 @@ define([
         }
 
         if (defined(queryFirstNode(extendedDataNode, 'SchemaData', namespaces.kml))) {
-			oneTimeWarning('kml-schemaData','KML - SchemaData is unsupported');
+            oneTimeWarning('kml-schemaData','KML - SchemaData is unsupported');
         }
         if (defined(queryStringAttribute(extendedDataNode, 'xmlns:prefix'))) {
-			oneTimeWarning('kml-extendedData','KML - ExtendedData with xmlns:prefix is unsupported');
+            oneTimeWarning('kml-extendedData','KML - ExtendedData with xmlns:prefix is unsupported');
         }
 
         var result = {};
@@ -1616,13 +1616,13 @@ define([
         processDescription(featureNode, entity, styleEntity, uriResolver, dataSource._proxy, sourceUri);
 
         if (defined(queryFirstNode(featureNode, 'Camera', namespaces.kml))) {
-			oneTimeWarning('kml-camera','KML - Unsupported view: Camera');
+            oneTimeWarning('kml-camera','KML - Unsupported view: Camera');
         }
         if (defined(queryFirstNode(featureNode, 'LookAt', namespaces.kml))) {
-			oneTimeWarning('kml-lookAt','KML - Unsupported view: LookAt');
+            oneTimeWarning('kml-lookAt','KML - Unsupported view: LookAt');
         }
         if (defined(queryFirstNode(featureNode, 'Region', namespaces.kml))) {
-			oneTimeWarning('kml-region','KML - Placemark Regions are unsupported');
+            oneTimeWarning('kml-region','KML - Placemark Regions are unsupported');
         }
 
         return {
@@ -1741,7 +1741,7 @@ define([
         var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true, query);
         if (defined(href)) {
             if (isLatLonQuad) {
-				oneTimeWarning('kml-gx:LatLonQuad','KML - gx:LatLonQuad Icon does not support texture projection.');
+                oneTimeWarning('kml-gx:LatLonQuad','KML - gx:LatLonQuad Icon does not support texture projection.');
             }
             var x = queryNumericValue(iconNode, 'x', namespaces.gx);
             var y = queryNumericValue(iconNode, 'y', namespaces.gx);
@@ -1749,7 +1749,7 @@ define([
             var h = queryNumericValue(iconNode, 'h', namespaces.gx);
 
             if (defined(x) || defined(y) || defined(w) || defined(h)) {
-				oneTimeWarning('kml-groundOverlay-xywh','KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
+                oneTimeWarning('kml-groundOverlay-xywh','KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
             }
 
             geometry.material = href;
@@ -1766,25 +1766,25 @@ define([
                 //Use height above ellipsoid until we support MSL.
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode !== 'clampToGround'){
-				oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + altitudeMode);
+                oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + altitudeMode);
             }
             // else just use the default of 0 until we support 'clampToGround'
         } else {
             altitudeMode = queryStringValue(groundOverlay, 'altitudeMode', namespaces.gx);
             if (altitudeMode === 'relativeToSeaFloor') {
-				oneTimeWarning('kml-altitudeMode-relativeToSeaFloor','KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
+                oneTimeWarning('kml-altitudeMode-relativeToSeaFloor','KML - altitudeMode relativeToSeaFloor is currently not supported, treating as absolute.');
                 geometry.height = queryNumericValue(groundOverlay, 'altitude', namespaces.kml);
             } else if (altitudeMode === 'clampToSeaFloor') {
-				oneTimeWarning('kml-altitudeMode-clampToSeaFloor','KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
+                oneTimeWarning('kml-altitudeMode-clampToSeaFloor','KML - altitudeMode clampToSeaFloor is currently not supported, treating as clampToGround.');
             } else if (defined(altitudeMode)) {
-				oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + altitudeMode);
+                oneTimeWarning('kml-altitudeMode-unknown','KML - Unknown altitudeMode: ' + altitudeMode);
             }
         }
     }
 
     function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-		oneTimeWarning('kml-unsupportedFeature-' + node.localName,'KML - Unsupported feature: ' + node.localName);
+        oneTimeWarning('kml-unsupportedFeature-' + node.localName,'KML - Unsupported feature: ' + node.localName);
     }
 
     var RefreshMode = {
@@ -2061,10 +2061,10 @@ define([
                                     networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
                                     networkLinkInfo.time = date;
                                 } catch (e) {
-									oneTimeWarning('kml-refreshMode-onInterval-onExpire','KML - NetworkLinkControl expires is not a valid date');
+                                    oneTimeWarning('kml-refreshMode-onInterval-onExpire','KML - NetworkLinkControl expires is not a valid date');
                                 }
                             } else {
-								oneTimeWarning('kml-refreshMode-onExpire','KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+                                oneTimeWarning('kml-refreshMode-onExpire','KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                             }
                         } else if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
                             networkLinkInfo.refreshMode = RefreshMode.STOP;
@@ -2077,7 +2077,7 @@ define([
                             dataSource._networkLinks.set(networkLinkInfo.id, networkLinkInfo);
                         }
                     } else if (viewRefreshMode === 'onRegion'){
-						oneTimeWarning('kml-refrehMode-onRegion','KML - Unsupported viewRefreshMode: onRegion');
+                        oneTimeWarning('kml-refrehMode-onRegion','KML - Unsupported viewRefreshMode: onRegion');
                     }
                 });
 
@@ -2587,7 +2587,7 @@ define([
             var minRefreshPeriod = 0;
             if (hasNetworkLinkControl) {
                 if (defined(queryFirstNode(networkLinkControl, 'Update', namespaces.kml))) {
-					oneTimeWarning('kml-networkLinkControl-update','KML - NetworkLinkControl updates aren\'t supported.');
+                    oneTimeWarning('kml-networkLinkControl-update','KML - NetworkLinkControl updates aren\'t supported.');
                     networkLink.updating = false;
                     networkLinks.remove(networkLink.id);
                     return;
@@ -2616,11 +2616,11 @@ define([
                         }
                         networkLink.time = date;
                     } catch (e) {
-						oneTimeWarning('kml-networkLinkControl-expires','KML - NetworkLinkControl expires is not a valid date');
+                        oneTimeWarning('kml-networkLinkControl-expires','KML - NetworkLinkControl expires is not a valid date');
                         remove = true;
                     }
                 } else {
-					oneTimeWarning('kml-refreshMode-onExpire','KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+                    oneTimeWarning('kml-refreshMode-onExpire','KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                     remove = true;
                 }
             }
