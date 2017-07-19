@@ -17,7 +17,6 @@
 
 uniform float ONE;
 
-uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
 in vec2 v_textureCoordinates;
@@ -271,7 +270,7 @@ void main() {
 
                 // This horizon point is behind the current point. That means that it can't
                 // occlude the current point. So we ignore it and move on.
-                if (angle > maxAngle)
+                if (angle > maxAngle || angle <= 0.0)
                     continue;
                 // If we've found a horizon pixel, store it in the histogram
                 if (sh[sectors.x] > angle) {

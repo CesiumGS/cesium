@@ -16,7 +16,6 @@
 
 uniform float ONE;
 
-uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
 varying vec2 v_textureCoordinates;
@@ -331,7 +330,7 @@ void main() {
 
             // This horizon point is behind the current point. That means that it can't
             // occlude the current point. So we ignore it and move on.
-            if (angle > maxAngle)
+            if (angle > maxAngle || angle <= 0.0)
                 continue;
             // If we've found a horizon pixel, store it in the histogram
             if (readSectorHistogram(sectors.x, shFirst, shSecond) > angle) {
@@ -396,17 +395,17 @@ void main() {
         // the average delta, so it won't even be considered in
         // the region growing pass.
         vec2 hpl = lengthFP64(centerPosition);
-            float triangleResult = triangleFP64(hpl, trianglePeriod);
-            gl_FragData[0] = czm_packDepth(triangleResult);
+        float triangleResult = triangleFP64(hpl, trianglePeriod);
+        gl_FragData[0] = czm_packDepth(triangleResult);
 #else
-            vec2 lengthOfFrustum = subFP64(split(czm_clampedFrustum.y),
-                                           split(czm_clampedFrustum.x));
-            vec2 frustumStart = split(czm_clampedFrustum.x);
-            vec2 centerPositionLength = lengthFP64(centerPosition);
-            vec2 normalizedDepthFP64 = sumFP64(divFP64(centerPositionLength,
-                                               lengthOfFrustum),
-                                               frustumStart);
-            gl_FragData[0] = czm_packDepth(normalizedDepthFP64.x + normalizedDepthFP64.y);
+        vec2 lengthOfFrustum = subFP64(split(czm_clampedFrustum.y),
+                                       split(czm_clampedFrustum.x));
+        vec2 frustumStart = split(czm_clampedFrustum.x);
+        vec2 centerPositionLength = lengthFP64(centerPosition);
+        vec2 normalizedDepthFP64 = sumFP64(divFP64(centerPositionLength,
+                                           lengthOfFrustum),
+                                           frustumStart);
+        gl_FragData[0] = czm_packDepth(normalizedDepthFP64.x + normalizedDepthFP64.y);
 #endif
     }
 }

@@ -32,6 +32,8 @@ define([
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
+        '../Shaders/PostProcessFilters/SectorHistogramPass',
+        '../Shaders/PostProcessFilters/SectorGatheringPass',
         '../Shaders/PostProcessFilters/DensityEstimationPass'
     ], function(
         Color,
@@ -66,6 +68,8 @@ define([
         RegionGrowingPassGL1,
         PointOcclusionPassGL2,
         RegionGrowingPassGL2,
+        SectorHistogramPass,
+        SectorGatheringPass,
         DensityEstimationPass
     ) {
     'use strict';
@@ -78,13 +82,17 @@ define([
         this._colorTextures = undefined;
         this._ecTexture = undefined;
         this._depthTextures = undefined;
+        this._sectorTextures = undefined;
         this._densityTexture = undefined;
         this._dirty = undefined;
         this._clearStencil = undefined;
         this._pointOcclusionCommand = undefined;
         this._densityEstimationCommand = undefined;
+        this._sectorHistogramCommand = undefined;
+        this._sectorGatheringCommand = undefined;
         this._regionGrowingCommands = undefined;
         this._stencilCommands = undefined;
+        this._debugCommand = undefined;
         this._copyCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommands = undefined;
@@ -112,6 +120,14 @@ define([
             functionDestinationRgb : BlendFunction.ONE,
             functionDestinationAlpha : BlendFunction.ZERO
         };
+        this._addBlend = {
+            equationRgb : BlendEquation.ADD,
+            equationAlpha : BlendEquation.ADD,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ZERO
+        };
 
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
@@ -129,6 +145,8 @@ define([
     function destroyFramebuffers(processor) {
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
+        processor._sectorTextures[0].destroy();
+        processor._sectorTextures[1].destroy();
         processor._densityTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
@@ -152,6 +170,7 @@ define([
         var screenHeight = context.drawingBufferHeight;
 
         var colorTextures = new Array(2);
+        var sectorTextures = new Array(2);
         var depthTextures = new Array(3);
 
         var ecTexture = new Texture({
@@ -191,6 +210,15 @@ define([
                 sampler : createSampler()
             });
 
+            sectorTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT,
+                sampler : createSampler()
+            });
+
             depthTextures[i] = new Texture({
                 context : context,
                 width : screenWidth,
@@ -221,6 +249,12 @@ define([
                 depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
+            sectorHistogramPass : new Framebuffer({
+                context : context,
+                colorTextures : [sectorTextures[0], sectorTextures[1]],
+                depthStencilTexture: dirty,
+                destroyAttachments : false
+            }),
             stencilMask : new Framebuffer({
                 context : context,
                 depthStencilTexture: dirty,
@@ -247,6 +281,7 @@ define([
             })
         };
         processor._depthTextures = depthTextures;
+        processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
@@ -393,18 +428,13 @@ define([
                 return sourceStr.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
             }
                 return sourceStr;
-
         }
-            r = '#define\\s' + constantName + '\\s([0-9.]+)';
-            return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
-
+        r = '#define\\s' + constantName + '\\s([0-9.]+)';
+        return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     }
 
     function pointOcclusionStage(processor, context) {
         var uniformMap = {
-            pointCloud_colorTexture : function() {
-                return processor._colorTextures[0];
-            },
             pointCloud_ECTexture : function() {
                 return processor._ecTexture;
             },
@@ -436,6 +466,77 @@ define([
         };
 
         return context.createViewportQuadCommand(pointOcclusionStr, {
+            uniformMap : uniformMap,
+            framebuffer : processor._framebuffers.screenSpacePass,
+            renderState : RenderState.fromCache({
+                stencilTest : {
+                    enabled : true,
+                    reference : 0,
+                    mask : 1,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                }
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
+    function sectorHistogramStage(processor, context) {
+        var uniformMap = {
+        };
+
+        return createPointArrayCommand(
+            processor._ecTexture,
+            '9.0',
+            true,
+            processor._minBlend,
+            SectorHistogramPass,
+            processor,
+            context, {
+                uniformMap : uniformMap,
+                framebuffer : processor._framebuffers.sectorHistogramPass,
+                pass : Pass.CESIUM_3D_TILE,
+                owner : processor
+            }
+        );
+    }
+
+    function sectorGatheringStage(processor, context) {
+        var uniformMap = {
+            pointCloud_ECTexture : function() {
+                return processor._ecTexture;
+            },
+            sectorFirst : function() {
+                return processor._sectorTextures[0];
+            },
+            sectorSecond : function() {
+                return processor._sectorTextures[1];
+            },
+            occlusionAngle : function() {
+                return processor.occlusionAngle;
+            },
+            ONE : function() {
+                return 1.0;
+            }
+        };
+
+        var sectorGatheringStr = replaceConstants(
+            SectorGatheringPass,
+            'useTriangle',
+            processor.useTriangle
+        );
+
+        var func = StencilFunction.EQUAL;
+        var op = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
+
+        return context.createViewportQuadCommand(sectorGatheringStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
@@ -681,6 +782,35 @@ define([
         });
     }
 
+    function debugStage(processor, context) {
+        var uniformMap = {
+            debugTexture : function() {
+                return processor._sectorTextures[0];
+            },
+            debugTexture1 : function() {
+                return processor._sectorTextures[1];
+            }
+        };
+
+        var debugStageStr =
+            'uniform sampler2D debugTexture; \n' +
+            'uniform sampler2D debugTexture1; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    vec4 sh0 = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '    gl_FragColor = sh0; \n' +
+            '} \n';
+
+        return context.createViewportQuadCommand(debugStageStr, {
+            uniformMap : uniformMap,
+            renderState : RenderState.fromCache({
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
     function createCommands(processor, context) {
         var numRegionGrowingPasses = processor.numRegionGrowingPasses;
         var regionGrowingCommands = new Array(numRegionGrowingPasses);
@@ -690,6 +820,8 @@ define([
         var i;
         processor._pointOcclusionCommand = pointOcclusionStage(processor, context);
         processor._densityEstimationCommand = densityEstimationStage(processor, context);
+        processor._sectorHistogramCommand = sectorHistogramStage(processor, context);
+        processor._sectorGatheringCommand = sectorGatheringStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
             regionGrowingCommands[i] = regionGrowingStage(processor, context, i);
@@ -741,6 +873,8 @@ define([
             owner : processor
         });
 
+        var debugCommand = debugStage(processor, context, processor._sectorTextures[0]);
+
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
         for (var name in framebuffers) {
@@ -759,7 +893,8 @@ define([
                         pass : Pass.CESIUM_3D_TILE,
                         owner : processor
                     });
-                } else if (name === 'densityEstimationPass') {
+                } else if (name === 'densityEstimationPass' ||
+                           name === 'sectorHistogramPass') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(1.0, 1.0, 1.0, 1.0),
@@ -787,6 +922,7 @@ define([
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
         processor._copyCommands = copyCommands;
+        processor._debugCommand = debugCommand;
     }
 
     function createResources(processor, context, dirty) {
@@ -965,6 +1101,8 @@ define([
         // Apply processing commands
         var pointOcclusionCommand = this._pointOcclusionCommand;
         var densityEstimationCommand = this._densityEstimationCommand;
+        var sectorHistogramCommand = this._sectorHistogramCommand;
+        var sectorGatheringCommand = this._sectorGatheringCommand;
         var regionGrowingCommands = this._regionGrowingCommands;
         var copyCommands = this._copyCommands;
         var stencilCommands = this._stencilCommands;
@@ -972,7 +1110,10 @@ define([
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
-        commandList.push(pointOcclusionCommand);
+        //commandList.push(pointOcclusionCommand);
+        commandList.push(clearCommands['sectorHistogramPass']);
+        commandList.push(sectorHistogramCommand);
+        commandList.push(sectorGatheringCommand);
         commandList.push(clearCommands['densityEstimationPass']);
         commandList.push(densityEstimationCommand);
 
@@ -990,6 +1131,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
+        //commandList.push(this._debugCommand);
 
         commandList.push(clearCommands['prior']);
     };
