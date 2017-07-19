@@ -64,27 +64,33 @@
   ],
   "buffers": [
     {
-      "byteLength": 142,
-      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAABAAIAAAAAAAAAgD4AAAA/AABAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAD0/TQ/9P00PwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAPT9ND/0/TS/AAAAAAAAAAAAAAAAAACAPw=="
+      "uri": "data:application/octet-stream;base64,AAAAAAAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAAAAgD8AAAAAAAABAAIA",
+      "byteLength": 42,
+      "type": "arraybuffer"
+    },
+    {
+      "uri": "data:application/octet-stream;base64,AAAAAAAAgD4AAAA/AABAPwAAgD8AAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAD0/TQ/9P00PwAAAAAAAAAAAACAPwAAAAAAAAAAAAAAAPT9ND/0/TS/AAAAAAAAAAAAAAAAAACAPw==",
+      "byteLength": 100,
+      "type": "arraybuffer"
     }
   ],
   "bufferViews": [
     {
-      "buffer": 0,
+      "buffer": "0",
       "byteLength": 36,
       "byteOffset": 0,
-      "byteStride": 0
+      "target": 34962
     },
     {
-      "buffer": 0,
+      "buffer": "0",
       "byteLength": 6,
-      "byteOffset": 36
+      "byteOffset": 36,
+      "target": 34963
     },
     {
-      "buffer": 0,
+      "buffer": "1",
       "byteLength": 100,
-      "byteOffset": 42,
-      "byteStride": 0
+      "byteOffset": 0
     }
   ],
   "accessors": [
@@ -99,7 +105,8 @@
       ],
       "min": [
         0
-      ]
+      ],
+      "byteStride": 0
     },
     {
       "bufferView": 0,
@@ -116,7 +123,8 @@
         0,
         0,
         0
-      ]
+      ],
+      "byteStride": 0
     },
     {
       "bufferView": 2,
@@ -129,7 +137,8 @@
       ],
       "min": [
         0
-      ]
+      ],
+      "byteStride": 0
     },
     {
       "bufferView": 2,
@@ -148,7 +157,8 @@
         0,
         0,
         -0.707
-      ]
+      ],
+      "byteStride": 0
     }
   ],
   "asset": {

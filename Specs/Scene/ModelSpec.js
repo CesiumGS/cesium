@@ -440,7 +440,7 @@ defineSuite([
 
     it('rejects readyPromise on error', function() {
         var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+        invalidGltf.shaders[0].uri = 'invalid.glsl';
 
         var model = primitives.add(new Model({
             gltf : invalidGltf
