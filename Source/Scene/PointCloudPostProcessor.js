@@ -340,10 +340,16 @@ define([
                 frontOperation : op,
                 backOperation : op
             };
-            renderState = RenderState.fromCache({
-                stencilTest : stencilTest,
-                blending : blendingState
-            });
+            if (useStencil) {
+                renderState = RenderState.fromCache({
+                    stencilTest : stencilTest,
+                    blending : blendingState
+                });
+            } else {
+                renderState = RenderState.fromCache({
+                    blending : blendingState
+                });
+            }
         }
 
         return new DrawCommand({
