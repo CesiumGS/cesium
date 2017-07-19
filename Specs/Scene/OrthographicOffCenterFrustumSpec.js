@@ -121,9 +121,9 @@ defineSuite([
     });
 
     it('get pixel dimensions throws without canvas height', function() {
-       expect(function() {
+        expect(function() {
             return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());
-       }).toThrowDeveloperError();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws without canvas width', function() {
