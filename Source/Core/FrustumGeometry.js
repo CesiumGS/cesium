@@ -252,24 +252,15 @@ define([
         scratchFrustumCorners[i] = new Cartesian4();
     }
 
-    /**
-     * Computes the geometric representation of a frustum, including its vertices, indices, and a bounding sphere.
-     *
-     * @param {FrustumGeometry} frustumGeometry A description of the frustum.
-     * @returns {Geometry|undefined} The computed vertices and indices.
-     */
-    FrustumGeometry.createGeometry = function(frustumGeometry) {
-        var frustumType = frustumGeometry._frustumType;
-        var frustum = frustumGeometry._frustum;
-        var origin = frustumGeometry._origin;
-        var orientation = frustumGeometry._orientation;
-        var drawNearPlane = frustumGeometry._drawNearPlane;
-        var vertexFormat = frustumGeometry._vertexFormat;
-
+    FrustumGeometry._computeNearFarPlanes = function(origin, orientation, frustumType, frustum, positions, xDirection, yDirection, zDirection) {
         var rotationMatrix = Matrix3.fromQuaternion(orientation, scratchRotationMatrix);
-        var x = Matrix3.getColumn(rotationMatrix, 0, scratchXDirection);
-        var y = Matrix3.getColumn(rotationMatrix, 1, scratchYDirection);
-        var z = Matrix3.getColumn(rotationMatrix, 2, scratchZDirection);
+        var x = defaultValue(xDirection, scratchXDirection);
+        var y = defaultValue(yDirection, scratchYDirection);
+        var z = defaultValue(zDirection, scratchZDirection);
+
+        x = Matrix3.getColumn(rotationMatrix, 0, x);
+        y = Matrix3.getColumn(rotationMatrix, 1, y);
+        z = Matrix3.getColumn(rotationMatrix, 2, z);
 
         Cartesian3.normalize(x, x);
         Cartesian3.normalize(y, y);
@@ -298,11 +289,7 @@ define([
             frustumSplits[2] = frustum.far;
         }
 
-        var i;
-        var numberOfPlanes = drawNearPlane ? 6 : 5;
-        var positions = new Float64Array(3 * 4 * 6);
-
-        for (i = 0; i < 2; ++i) {
+        for (var i = 0; i < 2; ++i) {
             for (var j = 0; j < 4; ++j) {
                 var corner = Cartesian4.clone(frustumCornersNDC[j], scratchFrustumCorners[j]);
 
@@ -340,6 +327,25 @@ define([
                 positions[12 * i + j * 3 + 2] = corner.z;
             }
         }
+    };
+
+    /**
+     * Computes the geometric representation of a frustum, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {FrustumGeometry} frustumGeometry A description of the frustum.
+     * @returns {Geometry|undefined} The computed vertices and indices.
+     */
+    FrustumGeometry.createGeometry = function(frustumGeometry) {
+        var frustumType = frustumGeometry._frustumType;
+        var frustum = frustumGeometry._frustum;
+        var origin = frustumGeometry._origin;
+        var orientation = frustumGeometry._orientation;
+        var drawNearPlane = frustumGeometry._drawNearPlane;
+        var vertexFormat = frustumGeometry._vertexFormat;
+
+        var numberOfPlanes = drawNearPlane ? 6 : 5;
+        var positions = new Float64Array(3 * 4 * 6);
+        FrustumGeometry._computeNearFarPlanes(origin, orientation, frustumType, frustum, positions);
 
         // -x plane
         var offset = 3 * 4 * 2;
@@ -419,6 +425,10 @@ define([
             var bitangents = defined(vertexFormat.bitangent) ? new Float32Array(3 * 4 * numberOfPlanes) : undefined;
             var st = defined(vertexFormat.st) ? new Float32Array(2 * 4 * numberOfPlanes) : undefined;
 
+            var x = scratchXDirection;
+            var y = scratchYDirection;
+            var z = scratchZDirection;
+
             var negativeX = Cartesian3.negate(x, scratchNegativeX);
             var negativeY = Cartesian3.negate(y, scratchNegativeY);
             var negativeZ = Cartesian3.negate(z, scratchNegativeZ);
@@ -469,7 +479,7 @@ define([
         }
 
         var indices = new Uint16Array(6 * numberOfPlanes);
-        for (i = 0; i < numberOfPlanes; ++i) {
+        for (var i = 0; i < numberOfPlanes; ++i) {
             var indexOffset = i * 6;
             var index = i * 4;
 

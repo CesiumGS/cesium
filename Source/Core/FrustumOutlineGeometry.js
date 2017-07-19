@@ -6,6 +6,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './FrustumGeometry',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -23,6 +24,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        FrustumGeometry,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -184,27 +186,6 @@ define([
         return result;
     };
 
-    var scratchRotationMatrix = new Matrix3();
-    var scratchViewMatrix = new Matrix4();
-    var scratchInverseMatrix = new Matrix4();
-
-    var scratchXDirection = new Cartesian3();
-    var scratchYDirection = new Cartesian3();
-    var scratchZDirection = new Cartesian3();
-
-    var frustumSplits = new Array(3);
-
-    var frustumCornersNDC = new Array(4);
-    frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
-    frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
-    frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
-    frustumCornersNDC[3] = new Cartesian4(-1.0, 1.0, 1.0, 1.0);
-
-    var scratchFrustumCorners = new Array(4);
-    for (var i = 0; i < 4; ++i) {
-        scratchFrustumCorners[i] = new Cartesian4();
-    }
-
     /**
      * Computes the geometric representation of a frustum outline, including its vertices, indices, and a bounding sphere.
      *
@@ -218,79 +199,8 @@ define([
         var orientation = frustumGeometry._orientation;
         var drawNearPlane = frustumGeometry._drawNearPlane;
 
-        var rotationMatrix = Matrix3.fromQuaternion(orientation, scratchRotationMatrix);
-        var x = Matrix3.getColumn(rotationMatrix, 0, scratchXDirection);
-        var y = Matrix3.getColumn(rotationMatrix, 1, scratchYDirection);
-        var z = Matrix3.getColumn(rotationMatrix, 2, scratchZDirection);
-
-        Cartesian3.normalize(x, x);
-        Cartesian3.normalize(y, y);
-        Cartesian3.normalize(z, z);
-
-        Cartesian3.negate(x, x);
-
-        var view = Matrix4.computeView(origin, z, y, x, scratchViewMatrix);
-
-        var inverseView;
-        var inverseViewProjection;
-        if (frustumType === PERSPECTIVE) {
-            var projection = frustum.projectionMatrix;
-            var viewProjection = Matrix4.multiply(projection, view, scratchInverseMatrix);
-            inverseViewProjection = Matrix4.inverse(viewProjection, scratchInverseMatrix);
-        } else {
-            inverseView = Matrix4.inverseTransformation(view, scratchInverseMatrix);
-        }
-
-        if (defined(inverseViewProjection)) {
-            frustumSplits[0] = frustum.near;
-            frustumSplits[1] = frustum.far;
-        } else {
-            frustumSplits[0] = 0.0;
-            frustumSplits[1] = frustum.near;
-            frustumSplits[2] = frustum.far;
-        }
-
-        var i;
         var positions = new Float64Array(3 * 4 * 2);
-
-        for (i = 0; i < 2; ++i) {
-            for (var j = 0; j < 4; ++j) {
-                var corner = Cartesian4.clone(frustumCornersNDC[j], scratchFrustumCorners[j]);
-
-                if (!defined(inverseViewProjection)) {
-                    if (defined(frustum._offCenterFrustum)) {
-                        frustum = frustum._offCenterFrustum;
-                    }
-
-                    var near = frustumSplits[i];
-                    var far = frustumSplits[i + 1];
-
-                    corner.x = (corner.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;
-                    corner.y = (corner.y * (frustum.top - frustum.bottom) + frustum.bottom + frustum.top) * 0.5;
-                    corner.z = (corner.z * (near - far) - near - far) * 0.5;
-                    corner.w = 1.0;
-
-                    Matrix4.multiplyByVector(inverseView, corner, corner);
-                } else {
-                    corner = Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
-
-                    // Reverse perspective divide
-                    var w = 1.0 / corner.w;
-                    Cartesian3.multiplyByScalar(corner, w, corner);
-
-                    Cartesian3.subtract(corner, origin, corner);
-                    Cartesian3.normalize(corner, corner);
-
-                    var fac = Cartesian3.dot(z, corner);
-                    Cartesian3.multiplyByScalar(corner, frustumSplits[i] / fac, corner);
-                    Cartesian3.add(corner, origin, corner);
-                }
-
-                positions[12 * i + j * 3] = corner.x;
-                positions[12 * i + j * 3 + 1] = corner.y;
-                positions[12 * i + j * 3 + 2] = corner.z;
-            }
-        }
+        FrustumGeometry._computeNearFarPlanes(origin, orientation, frustumType, frustum, positions);
 
         var attributes = new GeometryAttributes({
             position : new GeometryAttribute({
@@ -307,7 +217,7 @@ define([
         var indices = new Uint16Array(8 * (numberOfPlanes + 1));
 
         // Build the near/far planes
-        i = drawNearPlane ? 0 : 1;
+        var i = drawNearPlane ? 0 : 1;
         for (; i < 2; ++i) {
             offset = drawNearPlane ? i * 8 : 0;
             index = i * 4;
