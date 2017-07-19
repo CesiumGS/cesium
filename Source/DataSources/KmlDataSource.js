@@ -663,9 +663,9 @@ define([
             var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
             var viewRefreshMode = queryStringValue(iconNode, 'viewRefreshMode', namespaces.kml);
             if (refreshMode === 'onInterval' || refreshMode === 'onExpire') {
-				oneTimeWarning('kml-refreshMode-onInterval-onExpire','KML - Unsupported Icon refreshMode: ' + refreshMode);
+				oneTimeWarning('kml-refreshMode-' + refreshMode,'KML - Unsupported Icon refreshMode: ' + refreshMode);
             } else if (viewRefreshMode === 'onStop' || viewRefreshMode === 'onRegion') {
-				oneTimeWarning('kml-refreshMode-onStop-onRegion','KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
+				oneTimeWarning('kml-refreshMode-' + viewRefreshMode,'KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
             }
 
             var viewBoundScale = defaultValue(queryStringValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
@@ -815,7 +815,7 @@ define([
             } else if (node.localName === 'ListStyle') {
                 var listItemType = queryStringValue(node, 'listItemType', namespaces.kml);
                 if (listItemType === 'radioFolder' || listItemType === 'checkOffOnly') {
-					oneTimeWarning('kml-listStyle-radioFolder-checkOffOnly','KML - Unsupported ListStyle with listItemType: ' + listItemType);
+					oneTimeWarning('kml-listStyle-' + listItemType,'KML - Unsupported ListStyle with listItemType: ' + listItemType);
                 }
             }
         }
@@ -861,7 +861,7 @@ define([
                             applyStyle(dataSource, node, result, sourceUri, uriResolver, query);
                         }
                     } else {
-						oneTimeWarning('kml-styleMap','KML - Unsupported StyleMap key: ' + key);
+						oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
                     }
                 }
             }
@@ -970,7 +970,7 @@ define([
                                 }
                             }
                         } else {
-							oneTimeWarning('kml-styleMap','KML - Unsupported StyleMap key: ' + key);
+							oneTimeWarning('kml-styleMap-' + key,'KML - Unsupported StyleMap key: ' + key);
                         }
                     }
                 }
@@ -1784,7 +1784,7 @@ define([
 
     function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-		oneTimeWarning('kml-unsupportedFeature','KML - Unsupported feature: ' + node.localName);
+		oneTimeWarning('kml-unsupportedFeature-' + node.localName,'KML - Unsupported feature: ' + node.localName);
     }
 
     var RefreshMode = {
