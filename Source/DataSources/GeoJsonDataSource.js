@@ -683,7 +683,7 @@ define([
 
     defineProperties(GeoJsonDataSource.prototype, {
         /**
-         * Gets a human-readable name for this instance.
+         * Gets or sets a human-readable name for this instance.
          * @memberof GeoJsonDataSource.prototype
          * @type {String}
          */
