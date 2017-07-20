@@ -158,7 +158,7 @@ float atanFast(in float x) {
 }
 
 float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
+    return x == 0.0 ? sign(y) * PI / 2.0 : atan2(y, x);
 }
 
 void modifySectorHistogram(in int index,
