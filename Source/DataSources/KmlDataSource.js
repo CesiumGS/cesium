@@ -2354,7 +2354,7 @@ define([
                 return this._name;
             },
             set : function(value) {
-                if(this._name !== value) {
+                if (this._name !== value) {
                     this._name = value;
                     this._changed.raiseEvent(this);
                 }
