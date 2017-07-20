@@ -22,7 +22,7 @@ script:
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
   - npm run clean
-  - npm run makeZipFile
+  - npm run makeZipFile -- --concurrency 2
   - npm pack
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
