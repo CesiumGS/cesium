@@ -160,7 +160,7 @@ float atanFast(in float x) {
 }
 
 float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
+    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y, x);
 }
 
 int getSector(in vec2 d) {

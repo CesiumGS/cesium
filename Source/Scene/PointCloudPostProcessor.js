@@ -114,11 +114,11 @@ define([
         this._minBlend = {
             enabled : true,
             equationRgb : BlendEquation.MIN,
-            equationAlpha : BlendEquation.ADD,
+            equationAlpha : BlendEquation.MIN,
             functionSourceRgb : BlendFunction.ONE,
             functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ZERO
+            functionDestinationAlpha : BlendFunction.ONE
         };
         this._addBlend = {
             equationRgb : BlendEquation.ADD,
@@ -799,7 +799,9 @@ define([
             'void main() \n' +
             '{ \n' +
             '    vec4 sh0 = texture2D(debugTexture, v_textureCoordinates); \n' +
-            '    gl_FragColor = sh0; \n' +
+            '    vec4 sh1 = texture2D(debugTexture1, v_textureCoordinates); \n' +
+            '    gl_FragColor = 0.1 * vec4(sh0.x + sh0.y + sh0.z * sh0.w + sh1.x + sh1.y + sh1.z + sh1.w); \n' +
+            //'    gl_FragColor = sh0; \n' +
             '} \n';
 
         return context.createViewportQuadCommand(debugStageStr, {

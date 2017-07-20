@@ -31,7 +31,7 @@ float atanFast(in float x) {
 }
 
 float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
+    return x == 0.0 ? sign(y) * PI / 2.0 : atan(y, x);
 }
 
 int getSector(in vec2 d) {
@@ -150,13 +150,14 @@ void main() {
     // |vec_1| * |vec_2| * cos(angle_between), and in this case,
     // the magnitude of both vectors is 1 because they are both
     // normalized.
-    float angle = acosFast(dotProduct);
+    float angle = acos(dotProduct);
 
     // This horizon point is behind the current point. That means that it can't
     // occlude the current point. So we ignore it and move on.
     if (angle > maxAngle || angle < 0.0) {
         gl_FragData[0] = vec4(1.0);
         gl_FragData[1] = vec4(1.0);
+        return;
     }
 
     // Normalize to [0, 1]
@@ -168,6 +169,6 @@ void main() {
     updateOutput(sectors.x, angle, sh0, sh1);
     updateOutput(sectors.y, angle, sh0, sh1);
 
-    gl_FragData[0] = sh0;
-    gl_FragData[1] = sh1;
+    gl_FragData[0] = vec4(sh0);
+    gl_FragData[1] = vec4(sh1);
 }
