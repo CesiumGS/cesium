@@ -152,7 +152,7 @@ defineSuite([
 
 
     it('setting name raises changed event', function() {
-        var dataSource = new KmlDataSource();
+        var dataSource = new KmlDataSource(options);
 
         var spy = jasmine.createSpy('changedEvent');
         dataSource.changedEvent.addEventListener(spy);
