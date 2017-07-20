@@ -7,8 +7,6 @@
 #define trianglePeriod 1e-5
 #define useTriangle
 
-#define boundsCheckAndAccumulate(angle) if (angle <= 0.0 || angle > maxAngle) { accumulator += maxAngle; } else { accumulator += angle; }
-
 uniform sampler2D sectorFirst;
 uniform sampler2D sectorSecond;
 uniform sampler2D pointCloud_ECTexture;
@@ -145,15 +143,8 @@ void main() {
     vec4 sh1 = texture2D(sectorFirst, v_textureCoordinates) * maxAngle;
     vec4 sh2 = texture2D(sectorSecond, v_textureCoordinates) * maxAngle;
 
-    float accumulator = 0.0;
-    boundsCheckAndAccumulate(sh1.x);
-    boundsCheckAndAccumulate(sh1.y);
-    boundsCheckAndAccumulate(sh1.z);
-    boundsCheckAndAccumulate(sh1.w);
-    boundsCheckAndAccumulate(sh2.x);
-    boundsCheckAndAccumulate(sh2.y);
-    boundsCheckAndAccumulate(sh2.z);
-    boundsCheckAndAccumulate(sh2.w);
+    float accumulator = sh1.x + sh1.y + sh1.z + sh1.w +
+                        sh2.x + sh2.y + sh2.z + sh2.w;
 
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
