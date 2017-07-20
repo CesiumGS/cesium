@@ -14,13 +14,16 @@ Change Log
    * `Scene/PerspectiveFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveOffCenterFrustum`.
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
+* Fixed issue where composite 3D Tiles that contained instanced 3D Tiles with an external model reference would fail to download the model.
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 * Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
+* Added setter for `GeoJsonDataSource.name` to specify a name for the datasource [#5653](https://github.com/AnalyticalGraphicsInc/cesium/issues/5653)
 * Fixed issue where scene would blink when labels were added. [#5537](https://github.com/AnalyticalGraphicsInc/cesium/issues/5537)
 * Fixed label positioning when height reference changes [#5609](https://github.com/AnalyticalGraphicsInc/cesium/issues/5609)
 * Fixed crash when using the `Cesium3DTilesInspectorViewModel` and removing a tileset [#5607](https://github.com/AnalyticalGraphicsInc/cesium/issues/5607)
 * Fixed polygon outline in Polygon Sandcastle demo [#5642](https://github.com/AnalyticalGraphicsInc/cesium/issues/5642)
 * Fixed label positioning when using `HeightReference.CLAMP_TO_GROUND` and no position [#5648](https://github.com/AnalyticalGraphicsInc/cesium/pull/5648)
+* Updated `Billboard`, `Label` and `PointPrimitive` constructors to clone `NearFarScale` parameters [#5654](https://github.com/AnalyticalGraphicsInc/cesium/pull/5654)
 * Added `FrustumGeometry` and `FrustumOutlineGeometry`. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 * Added an `options` parameter to the constructors of `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `OrthographicFrustum`, and `OrthographicOffCenterFrustum` to set properties. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 * Added `ClassificationPrimitive` which defines a volume and draws the intersection of the volume and terrain or 3D Tiles. [#5625](https://github.com/AnalyticalGraphicsInc/cesium/pull/5625)
