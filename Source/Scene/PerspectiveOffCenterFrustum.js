@@ -6,9 +6,9 @@ define([
         PerspectiveOffCenterFrustum) {
     'use strict';
 
-    function DeprecatedPerspectiveOffCenterFrustum() {
+    function DeprecatedPerspectiveOffCenterFrustum(options) {
         deprecationWarning('PerspectiveOffCenterFrustum', 'Scene/PerspectiveOffCenterFrustum is deprecated. It has moved to Core/PerspectiveOffCenterFrustum in 1.36. Scene/PerspectiveOffCenterFrustum will be removed in 1.38.');
-        return new PerspectiveOffCenterFrustum();
+        return new PerspectiveOffCenterFrustum(options);
     }
 
     return DeprecatedPerspectiveOffCenterFrustum;

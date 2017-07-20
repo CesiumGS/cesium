@@ -2,6 +2,7 @@ define([
         './Cartesian3',
         './Cartesian4',
         './CullingVolume',
+        './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
@@ -10,6 +11,7 @@ define([
         Cartesian3,
         Cartesian4,
         CullingVolume,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -25,6 +27,14 @@ define([
      * @alias OrthographicOffCenterFrustum
      * @constructor
      *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Number} [options.left] The left clipping plane distance.
+     * @param {Number} [options.right] The right clipping plane distance.
+     * @param {Number} [options.top] The top clipping plane distance.
+     * @param {Number} [options.bottom] The bottom clipping plane distance.
+     * @param {Number} [options.near=1.0] The near clipping plane distance.
+     * @param {Number} [options.far=500000000.0] The far clipping plane distance.
+     *
      * @example
      * var maxRadii = ellipsoid.maximumRadius;
      *
@@ -36,13 +46,15 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    function OrthographicOffCenterFrustum() {
+    function OrthographicOffCenterFrustum(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The left clipping plane.
          * @type {Number}
          * @default undefined
          */
-        this.left = undefined;
+        this.left = options.left;
         this._left = undefined;
 
         /**
@@ -50,7 +62,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.right = undefined;
+        this.right = options.right;
         this._right = undefined;
 
         /**
@@ -58,7 +70,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.top = undefined;
+        this.top = options.top;
         this._top = undefined;
 
         /**
@@ -66,7 +78,7 @@ define([
          * @type {Number}
          * @default undefined
          */
-        this.bottom = undefined;
+        this.bottom = options.bottom;
         this._bottom = undefined;
 
         /**
@@ -74,7 +86,7 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.near = 1.0;
+        this.near = defaultValue(options.near, 1.0);
         this._near = this.near;
 
         /**
@@ -82,7 +94,7 @@ define([
          * @type {Number}
          * @default 500000000.0;
          */
-        this.far = 500000000.0;
+        this.far = defaultValue(options.far, 500000000.0);
         this._far = this.far;
 
         this._cullingVolume = new CullingVolume();

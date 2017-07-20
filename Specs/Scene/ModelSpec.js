@@ -2521,6 +2521,23 @@ defineSuite([
             });
         });
 
+        it('removes the callback on destroy', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+                scene.renderForSpecs();
+
+                primitives.remove(model);
+                scene.renderForSpecs();
+                expect(scene.globe.callback).toBeUndefined();
+            });
+        });
+
         it('changing the terrain provider', function() {
             scene.globe = createMockGlobe();
             return loadModelJson(texturedBoxModel.gltf, {
@@ -2566,5 +2583,4 @@ defineSuite([
             });
         });
     });
-
 }, 'WebGL');
