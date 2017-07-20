@@ -21,6 +21,7 @@ Change Log
 * Fixed crash when using the `Cesium3DTilesInspectorViewModel` and removing a tileset [#5607](https://github.com/AnalyticalGraphicsInc/cesium/issues/5607)
 * Fixed polygon outline in Polygon Sandcastle demo [#5642](https://github.com/AnalyticalGraphicsInc/cesium/issues/5642)
 * Fixed label positioning when using `HeightReference.CLAMP_TO_GROUND` and no position [#5648](https://github.com/AnalyticalGraphicsInc/cesium/pull/5648)
+* Updated `Billboard`, `Label` and `PointPrimitive` constructors to clone NearFarScale parameters [#5654](https://github.com/AnalyticalGraphicsInc/cesium/pull/5654)
 * Added `FrustumGeometry` and `FrustumOutlineGeometry`. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 * Added an `options` parameter to the constructors of `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `OrthographicFrustum`, and `OrthographicOffCenterFrustum` to set properties. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 
