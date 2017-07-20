@@ -687,19 +687,62 @@ define([
     }
 
     function moveByteStrideToBufferView(gltf) {
+        var bufferViews = gltf.bufferViews;
+        var bufferViewsToDelete = {};
         ForEach.accessor(gltf, function(accessor) {
-            if (defined(accessor.byteStride)) {
-                var byteStride = accessor.byteStride;
-                if (byteStride !== 0) {
-                    var bufferView = gltf.bufferViews[accessor.bufferView];
-                    if (defined(bufferView.byteStride) && bufferView.byteStride !== byteStride) {
-                        // another accessor uses this with a different byte stride
-                        bufferView = clone(bufferView);
-                        accessor.bufferView = addToArray(gltf.bufferViews, bufferView);
-                    }
-                    bufferView.byteStride = byteStride;
+            var oldBufferViewId = accessor.bufferView;
+            if (!defined(bufferViewsToDelete[oldBufferViewId])) {
+                bufferViewsToDelete[oldBufferViewId] = true;
+            }
+            var bufferView = clone(bufferViews[oldBufferViewId]);
+            var accessorByteStride = accessor.byteStride;
+            if (defined(accessorByteStride)) {
+                bufferView.byteStride = accessorByteStride;
+                if (bufferView.byteStride !== 0) {
+                    bufferView.byteLength = accessor.count * bufferView.byteStride;
                 }
+                bufferView.byteOffset += accessor.byteOffset;
+                accessor.byteOffset = 0;
                 delete accessor.byteStride;
+            }
+            accessor.bufferView = addToArray(bufferViews, bufferView);
+        });
+
+        var bufferViewShiftMap = {};
+        var bufferViewRemovalCount = 0;
+        ForEach.bufferView(gltf, function(bufferView, bufferViewId) {
+            if (defined(bufferViewsToDelete[bufferViewId])) {
+                bufferViewRemovalCount++;
+            } else {
+                bufferViewShiftMap[bufferViewId] = bufferViewId - bufferViewRemovalCount;
+            }
+        });
+
+        var removedCount = 0;
+        for (var bufferViewId in bufferViewsToDelete) {
+            var index = parseInt(bufferViewId) - removedCount;
+            bufferViews.splice(index, 1);
+            removedCount++;
+        }
+
+        ForEach.accessor(gltf, function(accessor) {
+            var accessorBufferView = accessor.bufferView;
+            if (defined(accessorBufferView)) {
+                accessor.bufferView = bufferViewShiftMap[accessorBufferView];
+            }
+        });
+
+        ForEach.shader(gltf, function(shader) {
+            var shaderBufferView = shader.bufferView;
+            if (defined(shaderBufferView)) {
+                shader.bufferView = bufferViewShiftMap[shaderBufferView];
+            }
+        });
+
+        ForEach.image(gltf, function(image) {
+            var imageBufferView = image.bufferView;
+            if (defined(imageBufferView)) {
+                image.bufferView = bufferViewShiftMap[imageBufferView];
             }
         });
     }
