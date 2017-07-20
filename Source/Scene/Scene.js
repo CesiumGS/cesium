@@ -1901,15 +1901,6 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
-                globeDepth.update(context, passState);
-                globeDepth.executeCopyDepth(context, passState);
-            }
-
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                passState.framebuffer = fb;
-            }
-
             us.updatePass(Pass.CESIUM_3D_TILE);
             commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
             length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -1919,6 +1910,15 @@ define([
 
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
+            }
+
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+                globeDepth.update(context, passState);
+                globeDepth.executeCopyDepth(context, passState);
+            }
+
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                passState.framebuffer = fb;
             }
 
             us.updatePass(Pass.GROUND);
