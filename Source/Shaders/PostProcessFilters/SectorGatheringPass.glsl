@@ -143,8 +143,8 @@ void main() {
     vec4 sh1 = texture2D(sectorFirst, v_textureCoordinates) * maxAngle;
     vec4 sh2 = texture2D(sectorSecond, v_textureCoordinates) * maxAngle;
 
-    float accumulator = sh1.x + sh1.y + sh1.z + sh1.w +
-                        sh2.x + sh2.y + sh2.z + sh2.w;
+    vec4 ones = vec4(1.0);
+    float accumulator = dot(sh1, ones) + dot(sh2, ones);
 
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
