@@ -28,9 +28,7 @@ define([
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
-        '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
-        '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
         '../Shaders/PostProcessFilters/SectorHistogramPass',
         '../Shaders/PostProcessFilters/SectorGatheringPass',
@@ -64,9 +62,7 @@ define([
         BlendingState,
         StencilFunction,
         StencilOperation,
-        PointOcclusionPassGL1,
         RegionGrowingPassGL1,
-        PointOcclusionPassGL2,
         RegionGrowingPassGL2,
         SectorHistogramPass,
         SectorGatheringPass,
@@ -87,7 +83,6 @@ define([
         this._sectorLUTTexture = undefined;
         this._dirty = undefined;
         this._clearStencil = undefined;
-        this._pointOcclusionCommand = undefined;
         this._densityEstimationCommand = undefined;
         this._sectorHistogramCommand = undefined;
         this._sectorGatheringCommand = undefined;
@@ -493,57 +488,6 @@ define([
         return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     }
 
-    function pointOcclusionStage(processor, context) {
-        var uniformMap = {
-            pointCloud_ECTexture : function() {
-                return processor._ecTexture;
-            },
-            occlusionAngle : function() {
-                return processor.occlusionAngle;
-            },
-            ONE : function() {
-                return 1.0;
-            }
-        };
-
-        var pointOcclusionStr = replaceConstants(
-            (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
-            'neighborhoodHalfWidth',
-            processor.neighborhoodHalfWidth
-        );
-
-        pointOcclusionStr = replaceConstants(
-            pointOcclusionStr,
-            'useTriangle',
-            processor.useTriangle
-        );
-
-        var func = StencilFunction.EQUAL;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.KEEP
-        };
-
-        return context.createViewportQuadCommand(pointOcclusionStr, {
-            uniformMap : uniformMap,
-            framebuffer : processor._framebuffers.screenSpacePass,
-            renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 0,
-                    mask : 1,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
-            }),
-            pass : Pass.CESIUM_3D_TILE,
-            owner : processor
-        });
-    }
-
     function sectorHistogramStage(processor, context) {
         var neighborhoodSize = processor.neighborhoodHalfWidth * 2 + 1;
         var uniformMap = {
@@ -886,7 +830,6 @@ define([
         var copyCommands = new Array(2);
 
         var i;
-        processor._pointOcclusionCommand = pointOcclusionStage(processor, context);
         processor._densityEstimationCommand = densityEstimationStage(processor, context);
         processor._sectorHistogramCommand = sectorHistogramStage(processor, context);
         processor._sectorGatheringCommand = sectorGatheringStage(processor, context);
@@ -1167,7 +1110,6 @@ define([
         }
 
         // Apply processing commands
-        var pointOcclusionCommand = this._pointOcclusionCommand;
         var densityEstimationCommand = this._densityEstimationCommand;
         var sectorHistogramCommand = this._sectorHistogramCommand;
         var sectorGatheringCommand = this._sectorGatheringCommand;
@@ -1178,7 +1120,6 @@ define([
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
-        //commandList.push(pointOcclusionCommand);
         commandList.push(clearCommands['sectorHistogramPass']);
         commandList.push(sectorHistogramCommand);
         commandList.push(sectorGatheringCommand);
@@ -1199,7 +1140,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-        //commandList.push(this._debugCommand);
+        commandList.push(this._debugCommand);
 
         commandList.push(clearCommands['prior']);
     };

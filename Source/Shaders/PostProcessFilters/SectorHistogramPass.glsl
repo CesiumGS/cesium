@@ -20,6 +20,14 @@ uniform sampler2D pointCloud_depthTexture;
 uniform sampler2D sectorLUT;
 uniform float neighborhoodSize;
 
+float acosFast(in float inX) {
+    float x = abs(inX);
+    float res = ((C3 * x + C2) * x + C1) * x + C0; // p(x)
+    res *= sqrt(1.0 - x);
+
+    return (inX >= 0.0) ? res : PI - res;
+}
+
 ivec2 readSectors(in ivec2 sectorPosition) {
     int halfSize = int(neighborhoodSize / 2.0);
     vec2 texCoordinate = vec2(sectorPosition + ivec2(halfSize)) /
