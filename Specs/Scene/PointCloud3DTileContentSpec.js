@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
@@ -8,10 +7,10 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
-        'Scene/PerspectiveFrustum',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
@@ -24,10 +23,10 @@ defineSuite([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
+        PerspectiveFrustum,
         Transforms,
         Cesium3DTileStyle,
         Expression,
-        PerspectiveFrustum,
         Cesium3DTilesTester,
         createScene,
         when) {

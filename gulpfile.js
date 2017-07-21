@@ -46,8 +46,10 @@ var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
-//travis reports 32 cores but only has 3GB of memory, which causes the VM to run out.  Limit to 8 cores instead.
-var concurrency = Math.min(os.cpus().length, 8);
+var concurrency = yargs.argv.concurrency;
+if (!concurrency) {
+    concurrency = os.cpus().length;
+}
 
 //Since combine and minify run in parallel already, split concurrency in half when building both.
 //This can go away when gulp 4 comes out because it allows for synchronous tasks.
@@ -123,6 +125,10 @@ gulp.task('clean', function(done) {
 
 gulp.task('requirejs', function(done) {
     var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+
+    // Disable module load timeout
+    config.waitSeconds = 0;
+
     requirejs.optimize(config, function() {
         done();
     }, done);
@@ -662,7 +668,6 @@ define(\'' + moduleId + '\', function() {\n\
     contents += '})();';
 
     var paths = '\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
@@ -978,7 +983,6 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define(function() {\n\
     \'use strict\';\n\
     return "' + contents + '";\n\
@@ -1019,7 +1023,6 @@ define(function() {\n\
 
     var fileContents = '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
 define([\n' +
                        contents.amdPath +
                        '\n    ], function(\n' +
@@ -1043,6 +1046,11 @@ function createCesiumJs() {
         file = path.relative('Source', file);
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
+        if (moduleId === 'Scene/OrthographicFrustum' || moduleId === 'Scene/OrthographicOffCenterFrustum' ||
+            moduleId === 'Scene/PerspectiveFrustum' || moduleId === 'Scene/PerspectiveOffCenterFrustum' ||
+            moduleId === 'Scene/CullingVolume') {
+            return;
+        }
 
         var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
         if (moduleId.indexOf('Shaders/') === 0) {
@@ -1057,7 +1065,6 @@ function createCesiumJs() {
     });
 
     var contents = '\
-/*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   \'use strict\';\n\
   var Cesium = {\n\
@@ -1255,6 +1262,7 @@ function requirejsOptimize(name, config) {
 function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
-        stream.on('end', reject);
+        stream.on('end', resolve);
+        stream.on('error', reject);
     });
 }

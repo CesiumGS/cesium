@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/Check',
         '../../Core/defaultValue',
@@ -8,7 +7,7 @@ define([
         '../../ThirdParty/knockout',
         '../getElement',
         './Cesium3DTilesInspectorViewModel'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,
@@ -127,6 +126,7 @@ define([
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showGeometricError', 'Geometric Error'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showRenderingStatistics', 'Rendering Statistics'));
         tileDebugLabelsPanelContents.appendChild(makeCheckbox('showMemoryUsage', 'Memory Usage (MB)'));
+        tileDebugLabelsPanelContents.appendChild(makeCheckbox('showUrl', 'Url'));
 
         optimizationPanelContents.appendChild(makeCheckbox('skipLevelOfDetail', 'Skip Tile LODs'));
         var skipScreenSpaceErrorFactorContainer = document.createElement('div');

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Model',
         'Core/Cartesian2',
@@ -22,6 +21,7 @@ defineSuite([
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -32,7 +32,6 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
-        'Scene/PerspectiveFrustum',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -59,6 +58,7 @@ defineSuite([
         CesiumMath,
         Matrix3,
         Matrix4,
+        PerspectiveFrustum,
         PrimitiveType,
         Transforms,
         WebGLConstants,
@@ -69,7 +69,6 @@ defineSuite([
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
-        PerspectiveFrustum,
         createScene,
         pollToPromise,
         when) {
@@ -2522,6 +2521,23 @@ defineSuite([
             });
         });
 
+        it('removes the callback on destroy', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+                scene.renderForSpecs();
+
+                primitives.remove(model);
+                scene.renderForSpecs();
+                expect(scene.globe.callback).toBeUndefined();
+            });
+        });
+
         it('changing the terrain provider', function() {
             scene.globe = createMockGlobe();
             return loadModelJson(texturedBoxModel.gltf, {
@@ -2567,5 +2583,4 @@ defineSuite([
             });
         });
     });
-
 }, 'WebGL');

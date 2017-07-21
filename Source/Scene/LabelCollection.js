@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -107,6 +106,10 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.image = undefined;
+            if (defined(billboard._removeCallbackFunc)) {
+                billboard._removeCallbackFunc();
+                billboard._removeCallbackFunc = undefined;
+            }
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }

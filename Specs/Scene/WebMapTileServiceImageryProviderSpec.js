@@ -1,12 +1,18 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/WebMapTileServiceImageryProvider',
+        'Core/Clock',
+        'Core/ClockStep',
         'Core/Credit',
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
+        'Core/JulianDate',
         'Core/loadImage',
+        'Core/objectToQuery',
         'Core/queryToObject',
+        'Core/Request',
         'Core/RequestScheduler',
+        'Core/RequestState',
+        'Core/TimeIntervalCollection',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -16,12 +22,19 @@ defineSuite([
         'ThirdParty/Uri'
     ], function(
         WebMapTileServiceImageryProvider,
+        Clock,
+        ClockStep,
         Credit,
         DefaultProxy,
         GeographicTilingScheme,
+        JulianDate,
         loadImage,
+        objectToQuery,
         queryToObject,
+        Request,
         RequestScheduler,
+        RequestState,
+        TimeIntervalCollection,
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
@@ -166,6 +179,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
@@ -177,6 +191,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutLayer).toThrowDeveloperError();
     });
 
@@ -188,6 +203,7 @@ defineSuite([
                 tileMatrixSetID : 'someTMS'
             });
         }
+
         expect(createWithoutStyle).toThrowDeveloperError();
     });
 
@@ -199,7 +215,22 @@ defineSuite([
                 url : 'http://wmts.invalid'
             });
         }
+
         expect(createWithoutTMS).toThrowDeveloperError();
+    });
+
+    it('requires clock if times is specified', function() {
+        function createWithoutClock() {
+            return new WebMapTileServiceImageryProvider({
+                layer : 'someLayer',
+                style : 'someStyle',
+                url : 'http://wmts.invalid',
+                tileMatrixSetID : 'someTMS',
+                times : new TimeIntervalCollection()
+            });
+        }
+
+        expect(createWithoutClock).toThrowDeveloperError();
     });
 
     it('resolves readyPromise', function() {
@@ -400,5 +431,265 @@ defineSuite([
                 imagery.releaseReference();
             });
         });
+    });
+
+    it('tiles preload on requestImage as we approach the next time interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26')
+        });
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var entry;
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:56Z');
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                RequestScheduler.update();
+
+                // Test tile 0,0,0 was prefetched
+                var cache = provider._timeDynamicImagery._tileCache;
+                expect(cache['1']).toBeDefined();
+                entry = cache['1']['0-0-0'];
+                expect(entry).toBeDefined();
+                expect(entry.promise).toBeDefined();
+                return entry.promise;
+            })
+            .then(function() {
+                expect(entry.request).toBeDefined();
+                expect(entry.request.state).toEqual(RequestState.RECEIVED);
+            });
+    });
+
+    it('tiles preload onTick event as we approach the next time interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26')
+        });
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var entry;
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // Test tile 0,0,0 wasn't prefetched
+                var cache = provider._timeDynamicImagery._tileCache;
+                expect(cache['1']).toBeUndefined();
+
+                // Update the clock and process any requests
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:55Z');
+                clock.tick();
+                RequestScheduler.update();
+
+                // Test tile 0,0,0 was prefetched
+                expect(cache['1']).toBeDefined();
+                entry = cache['1']['0-0-0'];
+                expect(entry).toBeDefined();
+                expect(entry.promise).toBeDefined();
+                return entry.promise;
+            })
+            .then(function() {
+                expect(entry.request).toBeDefined();
+                expect(entry.request.state).toEqual(RequestState.RECEIVED);
+            });
+    });
+
+    it('reload is called once we cross into next interval', function() {
+        var times = TimeIntervalCollection.fromIso8601({
+            iso8601: '2017-04-26/2017-04-30/P1D',
+            dataCallback: function(interval, index) {
+                return {
+                    Time: JulianDate.toIso8601(interval.start)
+                };
+            }
+        });
+        var clock = new Clock({
+            currentTime : JulianDate.fromIso8601('2017-04-26'),
+            clockStep : ClockStep.TICK_DEPENDENT
+        });
+
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{Time}',
+            tileMatrixSetID : 'someTMS',
+            clock : clock,
+            times : times
+        });
+
+        provider._reload = jasmine.createSpy();
+        spyOn(provider._timeDynamicImagery, 'getFromCache').and.callThrough();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                clock.currentTime = JulianDate.fromIso8601('2017-04-26T23:59:59Z');
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                RequestScheduler.update();
+                clock.tick();
+
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                expect(provider._reload.calls.count()).toEqual(1);
+
+                var calls = provider._timeDynamicImagery.getFromCache.calls.all();
+                expect(calls.length).toBe(2);
+                expect(calls[0].returnValue).toBeUndefined();
+                expect(calls[1].returnValue).toBeDefined();
+            });
+    });
+
+    it('dimensions work with RESTful requests', function() {
+        var lastUrl;
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            lastUrl = url;
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid/{FOO}',
+            tileMatrixSetID : 'someTMS',
+            dimensions : {
+                FOO: 'BAR'
+            }
+        });
+
+        provider._reload = jasmine.createSpy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                expect(lastUrl).toEqual('http://wmts.invalid/BAR');
+                expect(provider._reload.calls.count()).toEqual(0);
+                provider.dimensions = {
+                    FOO : 'BAZ'
+                };
+                expect(provider._reload.calls.count()).toEqual(1);
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                expect(lastUrl).toEqual('http://wmts.invalid/BAZ');
+            });
+    });
+
+    it('dimensions work with KVP requests', function() {
+        var lastUrl;
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            lastUrl = url;
+            loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        var uri = new Uri('http://wmts.invalid/kvp');
+        var query = {
+            service: 'WMTS',
+            version: '1.0.0',
+            request: 'GetTile',
+            tilematrix : 0,
+            layer : 'someLayer',
+            style : 'someStyle',
+            tilerow : 0,
+            tilecol : 0,
+            tilematrixset : 'someTMS',
+            format : 'image/jpeg',
+            FOO : 'BAR'
+        };
+
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : query.layer,
+            style : query.style,
+            url : uri.toString(),
+            tileMatrixSetID : query.tilematrixset,
+            dimensions : {
+                FOO: query.FOO
+            }
+        });
+
+        provider._reload = jasmine.createSpy();
+
+        return pollToPromise(function() {
+            return provider.ready;
+        })
+            .then(function() {
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // Verify request is correct
+                uri.query = objectToQuery(query);
+                expect(lastUrl).toEqual(uri.toString());
+                expect(provider._reload.calls.count()).toEqual(0);
+
+                // Change value of FOO dimension
+                query.FOO = 'BAZ';
+                provider.dimensions = {
+                    FOO : query.FOO
+                };
+                expect(provider._reload.calls.count()).toEqual(1);
+                return provider.requestImage(0, 0, 0, new Request());
+            })
+            .then(function() {
+                // Verify request changed
+                uri.query = objectToQuery(query);
+                expect(lastUrl).toEqual(uri.toString());
+            });
     });
 });

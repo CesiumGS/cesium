@@ -1,18 +1,17 @@
-/*global define*/
 define([
-    './binarySearch',
-    './Cartographic',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Rectangle'
-], function(
-    binarySearch,
-    Cartographic,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Rectangle) {
+        './binarySearch',
+        './Cartographic',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Rectangle'
+    ], function(
+        binarySearch,
+        Cartographic,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Rectangle) {
     'use strict';
 
     /**

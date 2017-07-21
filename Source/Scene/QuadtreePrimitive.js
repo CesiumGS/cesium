@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -9,10 +8,10 @@ define([
         '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Math',
+        '../Core/OrthographicFrustum',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
-        './OrthographicFrustum',
         './QuadtreeOccluders',
         './QuadtreeTile',
         './QuadtreeTileLoadState',
@@ -28,10 +27,10 @@ define([
         Event,
         getTimestamp,
         CesiumMath,
+        OrthographicFrustum,
         Ray,
         Rectangle,
         Visibility,
-        OrthographicFrustum,
         QuadtreeOccluders,
         QuadtreeTile,
         QuadtreeTileLoadState,

@@ -1,40 +1,41 @@
-/*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Check',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
         '../Core/Event',
-        '../Core/Matrix4',
-        '../Core/Math',
         '../Core/JulianDate',
-        '../Core/Color',
+        '../Core/Math',
+        '../Core/Matrix4',
         './BillboardCollection',
-        './Particle',
-        './CircleEmitter'
+        './CircleEmitter',
+        './Particle'
     ], function(
+        Cartesian2,
+        Cartesian3,
         Check,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        Cartesian2,
-        Cartesian3,
         Event,
-        Matrix4,
-        CesiumMath,
         JulianDate,
-        Color,
+        CesiumMath,
+        Matrix4,
         BillboardCollection,
-        Particle,
-        CircleEmitter) {
+        CircleEmitter,
+        Particle) {
     'use strict';
 
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
+     *
+     * @alias ParticleSystem
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:

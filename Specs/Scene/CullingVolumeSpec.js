@@ -1,11 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/CullingVolume',
         'Core/AxisAlignedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Intersect',
-        'Scene/PerspectiveFrustum'
+        'Core/PerspectiveFrustum'
     ], function(
         CullingVolume,
         AxisAlignedBoundingBox,

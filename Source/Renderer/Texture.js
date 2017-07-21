@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/defaultValue',
@@ -70,6 +69,23 @@ define([
                     internalFormat = WebGLConstants.DEPTH_COMPONENT16;
                 } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
                     internalFormat = WebGLConstants.DEPTH_COMPONENT24;
+                }
+            }
+
+            if (pixelDatatype === PixelDatatype.FLOAT) {
+                switch (pixelFormat) {
+                    case PixelFormat.RGBA:
+                        internalFormat = WebGLConstants.RGBA32F;
+                        break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB32F;
+                        break;
+                    case PixelFormat.RG:
+                        internalFormat = WebGLConstants.RG32F;
+                        break;
+                    case PixelFormat.R:
+                        internalFormat = WebGLConstants.R32F;
+                        break;
                 }
             }
         }

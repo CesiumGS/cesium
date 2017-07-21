@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './equals',
         'Core/Cartesian2',
@@ -264,16 +263,16 @@ define([
 
             toPickPrimitive : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
-                        return pickPrimitiveEquals(actual, expected);
+                    compare : function(actual, expected, x, y, width, height) {
+                        return pickPrimitiveEquals(actual, expected, x, y, width, height);
                     }
                 };
             },
 
             notToPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
-                        return pickPrimitiveEquals(actual, undefined);
+                    compare : function(actual, expected, x, y, width, height) {
+                        return pickPrimitiveEquals(actual, undefined, x, y, width, height);
                     }
                 };
             },
@@ -466,9 +465,10 @@ define([
         };
     }
 
-    function pickPrimitiveEquals(actual, expected) {
+    function pickPrimitiveEquals(actual, expected, x, y, width, height) {
         var scene = actual;
-        var result = scene.pick(new Cartesian2(0, 0));
+        var windowPosition = new Cartesian2(x, y);
+        var result = scene.pick(windowPosition, width, height);
 
         if (!!window.webglStub) {
             return {

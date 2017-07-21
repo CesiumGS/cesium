@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/arrayFill',
         '../Core/Cartesian2',
@@ -1305,10 +1304,6 @@ define([
         // the shader knows not to cull vertices that were originally transparent
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
-
-        if (!translucentCommand) {
-            derivedCommand.pass = Pass.CESIUM_3D_TILE;
-        }
 
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {

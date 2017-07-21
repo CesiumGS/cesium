@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ParticleSystem',
         'Core/Cartesian3',

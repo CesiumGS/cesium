@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -644,6 +643,12 @@ define([
          * @readonly
          */
         this.cull = defaultValue(options.cull, true);
+
+        /**
+         * @private
+         * @readonly
+         */
+        this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
@@ -1611,7 +1616,7 @@ define([
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
-                    var imagePath = joinUrls(model._baseUri, gltfImage.uri);
+                    var imagePath = joinUrls(model._baseUri, uri);
 
                     var promise;
                     if (ktxRegex.test(imagePath)) {
@@ -3484,7 +3489,7 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
                 });
 
                 var pickCommand;
@@ -3523,7 +3528,7 @@ define([
                         uniformMap : pickUniformMap,
                         renderState : rs,
                         owner : owner,
-                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                        pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
                     });
                 }
 
@@ -4763,6 +4768,11 @@ define([
         // Vertex arrays are unique to this model, destroy here.
         if (defined(this._precreatedAttributes)) {
             destroy(this._rendererResources.vertexArrays);
+        }
+
+        if (defined(this._removeUpdateHeightCallback)) {
+            this._removeUpdateHeightCallback();
+            this._removeUpdateHeightCallback = undefined;
         }
 
         this._rendererResources = undefined;

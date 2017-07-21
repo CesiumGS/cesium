@@ -1,25 +1,24 @@
-/*global define*/
 define([
+        '../Core/CullingVolume',
         '../Core/defined',
         '../Core/freezeObject',
         '../Core/Intersect',
         '../Core/ManagedArray',
         '../Core/Math',
+        '../Core/OrthographicFrustum',
         './Cesium3DTileChildrenVisibility',
         './Cesium3DTileRefine',
-        './CullingVolume',
-        './OrthographicFrustum',
         './SceneMode'
     ], function(
+        CullingVolume,
         defined,
         freezeObject,
         Intersect,
         ManagedArray,
         CesiumMath,
+        OrthographicFrustum,
         Cesium3DTileChildrenVisibility,
         Cesium3DTileRefine,
-        CullingVolume,
-        OrthographicFrustum,
         SceneMode) {
     'use strict';
 

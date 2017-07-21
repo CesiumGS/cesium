@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './binarySearch',
         './defaultValue',
@@ -6,6 +5,9 @@ define([
         './defineProperties',
         './DeveloperError',
         './Event',
+        './GregorianDate',
+        './isLeapYear',
+        './Iso8601',
         './JulianDate',
         './TimeInterval'
     ], function(
@@ -15,6 +17,9 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GregorianDate,
+        isLeapYear,
+        Iso8601,
         JulianDate,
         TimeInterval) {
     'use strict';
@@ -617,7 +622,7 @@ define([
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
                 if (defined(mergeCallback) ||
-                   ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
+                    ((defined(dataComparer) && dataComparer(leftInterval.data, rightInterval.data)) ||
                     (!defined(dataComparer) && rightInterval.data === leftInterval.data))) {
 
                     var intersection = TimeInterval.intersect(leftInterval, rightInterval, new TimeInterval(), mergeCallback);
@@ -639,6 +644,379 @@ define([
             }
         }
         return result;
+    };
+
+    /**
+     * Creates a new instance from a JulianDate array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {JulianDate[]} options.julianDates An array of ISO 8601 dates.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromJulianDateArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.julianDates)) {
+            throw new DeveloperError('options.iso8601Array is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new TimeIntervalCollection();
+        }
+
+        var julianDates = options.julianDates;
+        var length = julianDates.length;
+        var dataCallback = options.dataCallback;
+
+        var isStartIncluded = defaultValue(options.isStartIncluded, true);
+        var isStopIncluded = defaultValue(options.isStopIncluded, true);
+        var leadingInterval = defaultValue(options.leadingInterval, false);
+        var trailingInterval = defaultValue(options.trailingInterval, false);
+        var interval;
+
+        // Add a default interval, which will only end up being used up to first interval
+        var startIndex = 0;
+        if (leadingInterval) {
+            ++startIndex;
+            interval = new TimeInterval({
+                start : Iso8601.MINIMUM_VALUE,
+                stop : julianDates[0],
+                isStartIncluded : true,
+                isStopIncluded : !isStartIncluded
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        for (var i = 0; i < length - 1; ++i) {
+            var startDate = julianDates[i];
+            var endDate = julianDates[i + 1];
+
+            interval = new TimeInterval({
+                start : startDate,
+                stop : endDate,
+                isStartIncluded : (result.length === startIndex) ? isStartIncluded : true,
+                isStopIncluded : (i === (length - 2)) ? isStopIncluded : false
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+
+            startDate = endDate;
+        }
+
+        if (trailingInterval) {
+            interval = new TimeInterval({
+                start : julianDates[length - 1],
+                stop : Iso8601.MAXIMUM_VALUE,
+                isStartIncluded : !isStopIncluded,
+                isStopIncluded : true
+            });
+            interval.data = defined(dataCallback) ? dataCallback(interval, result.length) : result.length;
+            result.addInterval(interval);
+        }
+
+        return result;
+    };
+
+    var scratchGregorianDate = new GregorianDate();
+    var monthLengths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+    /**
+     * Adds duration represented as a GregorianDate to a JulianDate
+     *
+     * @param {JulianDate} julianDate The date.
+     * @param {GregorianDate} duration An duration represented as a GregorianDate.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
+     *
+     * @private
+     */
+    function addToDate(julianDate, duration, result) {
+        if (!defined(result)) {
+            result = new JulianDate();
+        }
+        JulianDate.toGregorianDate(julianDate, scratchGregorianDate);
+
+        var millisecond = scratchGregorianDate.millisecond + duration.millisecond;
+        var second = scratchGregorianDate.second + duration.second;
+        var minute = scratchGregorianDate.minute + duration.minute;
+        var hour = scratchGregorianDate.hour + duration.hour;
+        var day = scratchGregorianDate.day + duration.day;
+        var month = scratchGregorianDate.month + duration.month;
+        var year = scratchGregorianDate.year + duration.year;
+
+        if (millisecond >= 1000) {
+            second += Math.floor(millisecond / 1000);
+            millisecond = millisecond % 1000;
+        }
+
+        if (second >= 60) {
+            minute += Math.floor(second / 60);
+            second = second % 60;
+        }
+
+        if (minute >= 60) {
+            hour += Math.floor(minute / 60);
+            minute = minute % 60;
+        }
+
+        if (hour >= 24) {
+            day += Math.floor(hour / 24);
+            hour = hour % 24;
+        }
+
+        // If days is greater than the month's length we need to remove those number of days,
+        //  readjust month and year and repeat until days is less than the month's length.
+        monthLengths[2] = isLeapYear(year) ? 29 : 28;
+        while ((day > monthLengths[month]) || (month >= 13)) {
+            if (day > monthLengths[month]) {
+                day -= monthLengths[month];
+                ++month;
+            }
+
+            if (month >= 13) {
+                --month;
+                year += Math.floor(month / 12);
+                month = month % 12;
+                ++month;
+            }
+
+            monthLengths[2] = isLeapYear(year) ? 29 : 28;
+        }
+
+        scratchGregorianDate.millisecond = millisecond;
+        scratchGregorianDate.second = second;
+        scratchGregorianDate.minute = minute;
+        scratchGregorianDate.hour = hour;
+        scratchGregorianDate.day = day;
+        scratchGregorianDate.month = month;
+        scratchGregorianDate.year = year;
+
+        return JulianDate.fromGregorianDate(scratchGregorianDate, result);
+    }
+
+    var scratchJulianDate = new JulianDate();
+    var durationRegex = /P(?:([\d.,]+)Y)?(?:([\d.,]+)M)?(?:([\d.,]+)W)?(?:([\d.,]+)D)?(?:T(?:([\d.,]+)H)?(?:([\d.,]+)M)?(?:([\d.,]+)S)?)?/;
+
+    /**
+     * Parses ISO8601 duration string
+     *
+     * @param {String} iso8601 An ISO 8601 duration.
+     * @param {GregorianDate} result An existing instance to use for the result.
+     * @returns {Boolean} True is parsing succeeded, false otherwise
+     *
+     * @private
+     */
+    function parseDuration(iso8601, result) {
+        if (!defined(iso8601) || iso8601.length === 0) {
+            return false;
+        }
+
+        // Reset object
+        result.year = 0;
+        result.month = 0;
+        result.day = 0;
+        result.hour = 0;
+        result.minute = 0;
+        result.second = 0;
+        result.millisecond = 0;
+
+        if (iso8601[0] === 'P') {
+            var matches = iso8601.match(durationRegex);
+            if (!defined(matches)) {
+                return false;
+            }
+            if (defined(matches[1])) { // Years
+                result.year = Number(matches[1].replace(',', '.'));
+            }
+            if (defined(matches[2])) { // Months
+                result.month = Number(matches[2].replace(',', '.'));
+            }
+            if (defined(matches[3])) { // Weeks
+                result.day = Number(matches[3].replace(',', '.')) * 7;
+            }
+            if (defined(matches[4])) { // Days
+                result.day += Number(matches[4].replace(',', '.'));
+            }
+            if (defined(matches[5])) { // Hours
+                result.hour = Number(matches[5].replace(',', '.'));
+            }
+            if (defined(matches[6])) { // Weeks
+                result.minute = Number(matches[6].replace(',', '.'));
+            }
+            if (defined(matches[7])) { // Seconds
+                var seconds = Number(matches[7].replace(',', '.'));
+                result.second = Math.floor(seconds);
+                result.millisecond = (seconds % 1) * 1000;
+            }
+        } else {
+            // They can technically specify the duration as a normal date with some caveats. Try our best to load it.
+            if (iso8601[iso8601.length - 1] !== 'Z') { // It's not a date, its a duration, so it always has to be UTC
+                iso8601 += 'Z';
+            }
+            JulianDate.toGregorianDate(JulianDate.fromIso8601(iso8601, scratchJulianDate), result);
+        }
+
+        // A duration of 0 will cause an infinite loop, so just make sure something is non-zero
+        return (result.year || result.month || result.day || result.hour ||
+                result.minute || result.second || result.millisecond);
+    }
+
+    var scratchDuration = new GregorianDate();
+    /**
+     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} time interval (start/end/duration).
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.iso8601 An ISO 8601 interval.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601 = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601)) {
+            throw new DeveloperError('options.iso8601 is required.');
+        }
+        //>>includeEnd('debug');
+
+        var dates = options.iso8601.split('/');
+        var start = JulianDate.fromIso8601(dates[0]);
+        var stop = JulianDate.fromIso8601(dates[1]);
+        var julianDates = [];
+
+        if (!parseDuration(dates[2], scratchDuration)) {
+            julianDates.push(start, stop);
+        } else {
+            var date = JulianDate.clone(start);
+            julianDates.push(date);
+            while (JulianDate.compare(date, stop) < 0) {
+                date = addToDate(date, scratchDuration);
+                var afterStop = (JulianDate.compare(stop, date) <= 0);
+                if (afterStop) {
+                    JulianDate.clone(stop, date);
+                }
+
+                julianDates.push(date);
+            }
+        }
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
+    };
+
+    /**
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} date array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String[]} options.iso8601Dates An array of ISO 8601 dates.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601DateArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.iso8601Dates)) {
+            throw new DeveloperError('options.iso8601Dates is required.');
+        }
+        //>>includeEnd('debug');
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : options.iso8601Dates.map(function(date) {
+                return JulianDate.fromIso8601(date);
+            }),
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
+    };
+
+    /**
+     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} duration array.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {JulianDate} options.epoch An date that the durations are relative to.
+     * @param {String} options.iso8601Durations An array of ISO 8601 durations.
+     * @param {Boolean} [options.relativeToPrevious=false] <code>true</code> if durations are relative to previous date, <code>false</code> if always relative to the epoch.
+     * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if start time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if stop time is included in the interval, <code>false</code> otherwise.
+     * @param {Boolean} [options.leadingInterval=false] <code>true</code> if you want to add a interval from Iso8601.MINIMUM_VALUE to start time,  <code>false</code> otherwise.
+     * @param {Boolean} [options.trailingInterval=false] <code>true</code> if you want to add a interval from stop time to Iso8601.MAXIMUM_VALUE,  <code>false</code> otherwise.
+     * @param {Function} [options.dataCallback] A function that will be return the data that is called with each interval before it is added to the collection. If unspecified, the data will be the index in the collection.
+     * @param {TimeIntervalCollection} [result] An existing instance to use for the result.
+     * @returns {TimeIntervalCollection} The modified result parameter or a new instance if none was provided.
+     */
+    TimeIntervalCollection.fromIso8601DurationArray = function(options, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.epoch)) {
+            throw new DeveloperError('options.epoch is required.');
+        }
+        if (!defined(options.iso8601Durations)) {
+            throw new DeveloperError('options.iso8601Durations is required.');
+        }
+        //>>includeEnd('debug');
+
+        var epoch = options.epoch;
+        var iso8601Durations = options.iso8601Durations;
+        var relativeToPrevious = defaultValue(options.relativeToPrevious, false);
+        var julianDates = [];
+        var date, previousDate;
+
+        var length = iso8601Durations.length;
+        for (var i = 0; i < length; ++i) {
+            // Allow a duration of 0 on the first iteration, because then it is just the epoch
+            if (parseDuration(iso8601Durations[i], scratchDuration) || i === 0) {
+                if (relativeToPrevious && defined(previousDate)) {
+                    date = addToDate(previousDate, scratchDuration);
+                } else {
+                    date = addToDate(epoch, scratchDuration);
+                }
+                julianDates.push(date);
+                previousDate = date;
+            }
+        }
+
+        return TimeIntervalCollection.fromJulianDateArray({
+            julianDates : julianDates,
+            isStartIncluded : options.isStartIncluded,
+            isStopIncluded : options.isStopIncluded,
+            leadingInterval : options.leadingInterval,
+            trailingInterval : options.trailingInterval,
+            dataCallback : options.dataCallback
+        }, result);
     };
 
     return TimeIntervalCollection;

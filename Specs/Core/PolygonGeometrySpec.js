@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/PolygonGeometry',
         'Core/BoundingSphere',

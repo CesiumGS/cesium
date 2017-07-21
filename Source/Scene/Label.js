@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -69,22 +68,47 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
-            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
-        }
-        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
-            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
-        }
-        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
-            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
-        }
-        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
-            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
-        }
         if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
             throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
         }
         //>>includeEnd('debug');
+
+        var translucencyByDistance = options.translucencyByDistance;
+        var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        var scaleByDistance = options.scaleByDistance;
+        var distanceDisplayCondition = options.distanceDisplayCondition;
+        if (defined(translucencyByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (translucencyByDistance.far <= translucencyByDistance.near) {
+                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+        }
+        if (defined(pixelOffsetScaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+                throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
+        }
+        if (defined(scaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (scaleByDistance.far <= scaleByDistance.near) {
+                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            scaleByDistance = NearFarScalar.clone(scaleByDistance);
+        }
+        if (defined(distanceDisplayCondition)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            }
+            //>>includeEnd('debug');
+            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+        }
 
         this._text = defaultValue(options.text, '');
         this._show = defaultValue(options.show, true);
@@ -103,11 +127,11 @@ define([
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._scale = defaultValue(options.scale, 1.0);
         this._id = options.id;
-        this._translucencyByDistance = options.translucencyByDistance;
-        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-        this._scaleByDistance = options.scaleByDistance;
+        this._translucencyByDistance = translucencyByDistance;
+        this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
+        this._scaleByDistance = scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._distanceDisplayCondition = distanceDisplayCondition;
         this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
 
         this._labelCollection = labelCollection;
@@ -195,9 +219,7 @@ define([
                         backgroundBillboard.position = value;
                     }
 
-                    if (this._heightReference !== HeightReference.NONE) {
-                        this._updateClamping();
-                    }
+                    this._updateClamping();
                 }
             }
         },
@@ -965,22 +987,17 @@ define([
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
 
                 var glyphs = this._glyphs;
-                value = defaultValue(value, this._position);
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
                         // Set all the private values here, because we already clamped to ground
                         //  so we don't want to do it again for every glyph
                         glyph.billboard._clampedPosition = value;
-                        Cartesian3.clone(value, glyph.billboard._position);
-                        Cartesian3.clone(value, glyph.billboard._actualPosition);
                     }
                 }
                 var backgroundBillboard = this._backgroundBillboard;
                 if (defined(backgroundBillboard)) {
                     backgroundBillboard._clampedPosition = value;
-                    Cartesian3.clone(value, backgroundBillboard._position);
-                    Cartesian3.clone(value, backgroundBillboard._actualPosition);
                 }
             }
         },

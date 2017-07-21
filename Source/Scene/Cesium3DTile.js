@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -130,7 +129,8 @@ define([
         this.geometricError = header.geometricError;
 
         if (!defined(this.geometricError)) {
-            throw new RuntimeError('geometricError must be defined');
+            this.geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
+            Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
 
         var refine;

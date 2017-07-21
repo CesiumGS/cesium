@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -115,6 +114,7 @@ define([
      * @param {Boolean} [options.debugShowGeometricError=false] For debugging only. When true, draws labels to indicate the geometric error of each tile.
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
+     * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.  See {@link https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status}
      *
@@ -319,116 +319,6 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = 0.5;
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * Determines if only the tiles from last frame should be used for rendering.  This
-         * effectively "freezes" the tileset to the previous frame so it is possible to zoom
-         * out and see what was rendered.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, assigns a random color to each tile.  This is useful for visualizing
-         * what models belong to what tiles, especially with additive refinement where models
-         * from parent tiles may be interleaved with models from child tiles.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, renders each tile's content as a wireframe.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugWireframe = defaultValue(options.debugWireframe, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, renders the bounding volume for each visible tile.  The bounding volume is
-         * white if the tile's content has an explicit bounding volume; otherwise, it
-         * is red.  Tiles that are not at final resolution are yellow.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, renders a blue bounding volume for each tile's content.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, renders the viewer request volume for each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the geometric error of each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowGeometricError = defaultValue(options.debugShowGeometricError, false);
-
-        this._tileDebugLabels = undefined;
-        this.debugPickedTileLabelOnly = false;
-        this.debugPickedTile = undefined;
-        this.debugPickPosition = undefined;
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the number of commands, points, triangles and features of each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowRenderingStatistics = defaultValue(options.debugShowRenderingStatistics, false);
-
-        /**
-         * This property is for debugging only; it is not optimized for production use.
-         * <p>
-         * When true, draws labels to indicate the geometry and texture memory usage of each tile.
-         * </p>
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -684,6 +574,11 @@ define([
          */
         this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
 
+        this._tileDebugLabels = undefined;
+        this.debugPickedTileLabelOnly = false;
+        this.debugPickedTile = undefined;
+        this.debugPickPosition = undefined;
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
@@ -716,6 +611,17 @@ define([
          * @default false
          */
         this.debugShowMemoryUsage = defaultValue(options.debugShowMemoryUsage, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, draws labels to indicate the url of each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowUrl = defaultValue(options.debugShowUrl, false);
 
         var that = this;
 
@@ -1449,6 +1355,11 @@ define([
             attributes += 2;
         }
 
+        if (tileset.debugShowUrl) {
+            labelString += '\nUrl: ' + tile._header.content.url;
+            attributes++;
+        }
+
         var newLabel = {
             text : labelString.substring(1),
             position : position,
@@ -1566,7 +1477,7 @@ define([
         // Number of commands added by each update above
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage) {
+        if (tileset.debugShowGeometricError || tileset.debugShowRenderingStatistics || tileset.debugShowMemoryUsage || tileset.debugShowUrl) {
             if (!defined(tileset._tileDebugLabels)) {
                 tileset._tileDebugLabels = new LabelCollection();
             }

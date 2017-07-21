@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -20,6 +19,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PolygonGeometry',
         'Core/PolylineGeometry',
         'Core/PolylineVolumeGeometry',
@@ -33,7 +33,6 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
-        'Scene/PerspectiveFrustum',
         'Scene/PolylineColorAppearance',
         'Scene/Primitive',
         'Scene/SceneMode',
@@ -60,6 +59,7 @@ defineSuite([
         GeometryInstance,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PolygonGeometry,
         PolylineGeometry,
         PolylineVolumeGeometry,
@@ -73,7 +73,6 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         Material,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         PolylineColorAppearance,
         Primitive,
         SceneMode,
