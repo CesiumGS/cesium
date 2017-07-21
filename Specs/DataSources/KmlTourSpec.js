@@ -6,7 +6,8 @@ defineSuite([
         'DataSources/KmlCamera',
         'DataSources/KmlLookAt',
         'Core/Cartesian3',
-        'Core/HeadingPitchRange'
+        'Core/HeadingPitchRange',
+        'Core/Math'
     ], function(
         KmlTour,
         KmlTourFlyTo,
@@ -14,13 +15,17 @@ defineSuite([
         KmlCamera,
         KmlLookAt,
         Cartesian3,
-        HeadingPitchRange
+        HeadingPitchRange,
+        CesiumMath
         ) {
     'use strict';
 
     function getLookAt() {
         var position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
-        var hpr = HeadingPitchRange.fromDegrees(10.0, 45.0, 10000);
+        var hpr = new HeadingPitchRange(
+            CesiumMath.toRadians(10.0),
+            CesiumMath.toRadians(45.0),
+            10000);
         return new KmlLookAt(position, hpr);
     }
 
@@ -28,8 +33,8 @@ defineSuite([
         var mockViewer = {};
         mockViewer.scene = {};
         mockViewer.scene.camera = {};
-        spyOn(mockViewer.scene.camera, 'flyTo');
-        spyOn(mockViewer.scene.camera, 'flyToBoundingSphere');
+        mockViewer.scene.camera.flyTo = jasmine.createSpy('flyTo');
+        mockViewer.scene.camera.flyToBoundingSphere = jasmine.createSpy('flyToBoundingSphere');
         return mockViewer;
     }
 
@@ -56,10 +61,12 @@ defineSuite([
         tour.addPlaylistEntry(wait);
         tour.addPlaylistEntry(flyTo);
 
-        tour.play(createMockViewer());
-        setTimeout(function(){
+        var mockViewer = createMockViewer();
+        tour.play(mockViewer);
+        setTimeout(function() {
             expect(wait.play).toHaveBeenCalled();
             expect(flyTo.play).toHaveBeenCalled();
+            expect(mockViewer.scene.camera.flyToBoundingSphere).toHaveBeenCalled();
         }, 250);
     });
 
@@ -81,19 +88,51 @@ defineSuite([
         tour.entryStart.addEventListener(entryStart);
         tour.entryEnd.addEventListener(entryEnd);
 
-        var mockViewer = {};
-        mockViewer.scene = {};
-        mockViewer.scene.camera = {};
-        spyOn(mockViewer.scene.camera, 'flyTo');
-        spyOn(mockViewer.scene.camera, 'flyToBoundingSphere');
-
         tour.play(createMockViewer());
-        setTimeout(function(){
+        setTimeout(function() {
             expect(tourStart).toHaveBeenCalled();
-            expect(tourEnd).toHaveBeenCalled();
+            expect(tourEnd).toHaveBeenCalledWith(false);
             expect(entryStart).toHaveBeenCalled();
             expect(entryEnd).toHaveBeenCalled();
         }, 250);
+    });
 
+    it('terminates playback', function(){
+        var tour = new KmlTour('test', 'test');
+        var wait = new KmlTourWait(60);
+        var flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
+
+        var tourStart = jasmine.createSpy('TourStart');
+        var tourEnd = jasmine.createSpy('TourEnd');
+        var entryStart = jasmine.createSpy('EntryStart');
+        var entryEnd = jasmine.createSpy('EntryEnd');
+
+        tour.addPlaylistEntry(wait);
+        tour.addPlaylistEntry(flyTo);
+
+        tour.tourStart.addEventListener(tourStart);
+        tour.tourEnd.addEventListener(tourEnd);
+        tour.entryStart.addEventListener(entryStart);
+        tour.entryEnd.addEventListener(entryEnd);
+
+        var mockViewer = createMockViewer();
+        tour.play(mockViewer);
+        setTimeout(function() {
+            tour.stop();
+            expect(tourStart).toHaveBeenCalled();
+            // Wait entry have been started
+            expect(entryStart).toHaveBeenCalledWith(wait);
+            // Wait entry have been terminated
+            expect(entryEnd).toHaveBeenCalledWith(wait, true);
+            expect(tourEnd).toHaveBeenCalledWith(true);
+
+            expect(entryStart.calls.count()).toEqual(1);
+            expect(entryEnd.calls.count()).toEqual(1);
+            expect(tourStart.calls.count()).toEqual(1);
+            expect(tourEnd.calls.count()).toEqual(1);
+
+            expect(mockViewer.scene.camera.flyTo.calls.count()).toEqual(0);
+            expect(mockViewer.scene.camera.flyToBoundingSphere.calls.count()).toEqual(0);
+        }, 5);
     });
 });
