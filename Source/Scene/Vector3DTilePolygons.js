@@ -78,7 +78,7 @@ define([
     /**
      * Renders a batch of pre-triangulated polygons draped on terrain.
      *
-     * @alias GroundPrimitiveBatch
+     * @alias Vector3DTilePolygons
      * @constructor
      *
      * @param {Object} options An object with following properties:
@@ -102,7 +102,7 @@ define([
      *
      * @private
      */
-    function GroundPrimitiveBatch(options) {
+    function Vector3DTilePolygons(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._batchTable = options.batchTable;
@@ -171,7 +171,13 @@ define([
         this._verticesPromise = undefined;
     }
 
-    defineProperties(GroundPrimitiveBatch.prototype, {
+    defineProperties(Vector3DTilePolygons.prototype, {
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Vector3DTilePolygons.prototype
+         * @type {Promise}
+         * @readonly
+         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
@@ -900,7 +906,7 @@ define([
      * @param {Boolean} enabled Whether to enable debug coloring.
      * @param {Color} color The debug color.
      */
-    GroundPrimitiveBatch.prototype.applyDebugSettings = function(enabled, color) {
+    Vector3DTilePolygons.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
@@ -911,7 +917,7 @@ define([
      * @param {Number} batchId The batch id of the polygon whose color has changed.
      * @param {Color} color The new polygon color.
      */
-    GroundPrimitiveBatch.prototype.updateCommands = function(batchId, color) {
+    Vector3DTilePolygons.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
 
@@ -978,7 +984,7 @@ define([
      *
      * @param {FrameState} frameState The current frame state.
      */
-    GroundPrimitiveBatch.prototype.update = function(frameState) {
+    Vector3DTilePolygons.prototype.update = function(frameState) {
         var context = frameState.context;
 
         createVertexArray(this, context);
@@ -1017,7 +1023,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
-    GroundPrimitiveBatch.prototype.isDestroyed = function() {
+    Vector3DTilePolygons.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -1034,7 +1040,7 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    GroundPrimitiveBatch.prototype.destroy = function() {
+    Vector3DTilePolygons.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
@@ -1042,5 +1048,5 @@ define([
         return destroyObject(this);
     };
 
-    return GroundPrimitiveBatch;
+    return Vector3DTilePolygons;
 });

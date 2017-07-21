@@ -21,10 +21,10 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './GroundPolylineBatch',
-        './GroundPrimitiveBatch',
         './LabelCollection',
         './LabelStyle',
         './PolylineCollection',
+        './Vector3DTilePolygons',
         './VerticalOrigin'
     ], function(
         AttributeCompression,
@@ -48,10 +48,10 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         GroundPolylineBatch,
-        GroundPrimitiveBatch,
         LabelCollection,
         LabelStyle,
         PolylineCollection,
+        Vector3DTilePolygons,
         VerticalOrigin) {
     'use strict';
 
@@ -416,7 +416,7 @@ define([
                 polygonMaximumHeights = new Float32Array(featureTableBinary.buffer, polygonMaximumHeightsByteOffset, numberOfPolygons);
             }
 
-            content._polygons = new GroundPrimitiveBatch({
+            content._polygons = new Vector3DTilePolygons({
                 positions : polygonPositions,
                 counts : counts,
                 indexCounts : indexCounts,
