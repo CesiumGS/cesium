@@ -21,7 +21,8 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/Vector3DTilePolylinesVS',
-        './BlendingState'
+        './BlendingState',
+        './Cesium3DTileFeature'
     ], function(
         AttributeCompression,
         Cartesian3,
@@ -45,7 +46,8 @@ define([
         VertexArray,
         PolylineCommon,
         Vector3DTilePolylinesVS,
-        BlendingState) {
+        BlendingState,
+        Cesium3DTileFeature) {
     'use strict';
 
     /**
@@ -231,7 +233,6 @@ define([
 
         primitive._positions = undefined;
         primitive._widths = undefined;
-        primitive._batchIds = undefined;
         primitive._counts = undefined;
 
         var indices = IndexDatatype.createTypedArray(size, positionsLength * 6 - 6);
@@ -455,6 +456,22 @@ define([
 
         frameState.commandList.push(primitive._pickCommand);
     }
+
+    /**
+     * Creates features for each polyline and places it at the batch id index of features.
+     *
+     * @param {Cesium3DTileset} tileset The tileset.
+     * @param {Vector3DTileContent} content The vector tile content.
+     * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
+     */
+    Vector3DTilePolylines.prototype.createFeatures = function(tileset, content, features) {
+        var batchIds = this._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds;
+            features[batchId] = new Cesium3DTileFeature(tileset, content, batchId);
+        }
+    };
 
     /**
      * Colors the entire tile when enabled is true. The resulting color will be (polyline batch table color * color).

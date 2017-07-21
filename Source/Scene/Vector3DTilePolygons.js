@@ -32,6 +32,7 @@ define([
         '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
         './BlendingState',
+        './Cesium3DTileFeature',
         './DepthFunction',
         './StencilFunction',
         './StencilOperation'
@@ -69,6 +70,7 @@ define([
         ShadowVolumeVS,
         when,
         BlendingState,
+        Cesium3DTileFeature,
         DepthFunction,
         StencilFunction,
         StencilOperation) {
@@ -123,6 +125,8 @@ define([
 
         // Typed array transferred from web worker and released after vbo creation.
         this._batchedPositions = undefined;
+        this._transferrableBatchIds = undefined;
+        this._vertexBatchIds = undefined;
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._minimumHeight = options.minimumHeight;
@@ -263,7 +267,7 @@ define([
             var indexCounts = primitive._indexCounts;
             var indices = primitive._indices;
 
-            var batchIds = primitive._batchIds;
+            var batchIds = primitive._transferrableBatchIds;
             var batchTableColors = primitive._batchTableColors;
 
             var packedBuffer = primitive._packedBuffer;
@@ -275,8 +279,8 @@ define([
                 indexCounts = primitive._indexCounts= primitive._indexCounts.slice();
                 indices = primitive._indices = primitive._indices.slice();
 
+                batchIds = primitive._transferrableBatchIds = new Uint32Array(primitive._batchIds);
                 batchTableColors = primitive._batchTableColors = new Uint32Array(batchIds.length);
-                batchIds = primitive._batchIds = new Uint32Array(primitive._batchIds);
                 var batchTable = primitive._batchTable;
 
                 var length = batchTableColors.length;
@@ -329,7 +333,7 @@ define([
 
                 // will be released
                 primitive._batchedPositions = new Float32Array(result.positions);
-                primitive._batchIds = new Uint32Array(result.batchIds);
+                primitive._vertexBatchIds = new Uint32Array(result.batchIds);
 
                 primitive._ready = true;
             });
@@ -343,7 +347,7 @@ define([
             });
             var idBuffer = Buffer.createVertexBuffer({
                 context : context,
-                typedArray : primitive._batchIds,
+                typedArray : primitive._vertexBatchIds,
                 usage : BufferUsage.STATIC_DRAW
             });
             var indexBuffer = Buffer.createIndexBuffer({
@@ -385,7 +389,8 @@ define([
             }
 
             primitive._batchedPositions = undefined;
-            primitive._batchIds = undefined;
+            primitive._transferrableBatchIds = undefined;
+            primitive._vertexBatchIds = undefined;
             primitive._verticesPromise = undefined;
 
             primitive._readyPromise.resolve();
@@ -898,6 +903,22 @@ define([
 
         primitive._pickCommandsDirty = false;
     }
+
+    /**
+     * Creates features for each polygon and places it at the batch id index of features.
+     *
+     * @param {Cesium3DTileset} tileset The tileset.
+     * @param {Vector3DTileContent} content The vector tile content.
+     * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
+     */
+    Vector3DTilePolygons.prototype.createFeatures = function(tileset, content, features) {
+        var batchIds = this._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            features[batchId] = new Cesium3DTileFeature(tileset, content, batchId);
+        }
+    };
 
     /**
      * Colors the entire tile when enabled is true. The resulting color will be (polygon batch table color * color).

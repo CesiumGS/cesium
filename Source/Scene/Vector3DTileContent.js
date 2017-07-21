@@ -13,7 +13,6 @@ define([
         '../Core/Rectangle',
         '../ThirdParty/when',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
         './LabelStyle',
         './Vector3DTilePoints',
         './Vector3DTilePolygons',
@@ -33,7 +32,6 @@ define([
         Rectangle,
         when,
         Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
         LabelStyle,
         Vector3DTilePoints,
         Vector3DTilePolygons,
@@ -463,23 +461,17 @@ define([
         var tileset = content._tileset;
         var featuresLength = content.featuresLength;
 
-        var billboardCollection;
-        var labelCollection;
-        var polylineCollection;
-        if (defined(content._points)) {
-            billboardCollection = content._points._billboardCollection;
-            labelCollection = content._points._labelCollection;
-            polylineCollection = content._points._polylineCollection;
-        }
-
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
-            for (var i = 0; i < featuresLength; ++i) {
-                if (defined(billboardCollection) && i < billboardCollection.length) {
-                    features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection, polylineCollection);
-                } else {
-                    features[i] = new Cesium3DTileFeature(tileset, content, i);
-                }
+
+            if (defined(content._polygons)) {
+                content._polygons.createFeatures(tileset, content, features);
+            }
+            if (defined(content._polylines)) {
+                content._polylines.createFeatures(tileset, content, features);
+            }
+            if (defined(content._points)) {
+                content._points.createFeatures(tileset, content, features);
             }
             content._features = features;
         }

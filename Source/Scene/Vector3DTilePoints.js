@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         './BillboardCollection',
+        './Cesium3DTileFeature',
         './LabelCollection',
         './PolylineCollection',
         './VerticalOrigin'
@@ -17,13 +18,16 @@ define([
         destroyObject,
         CesiumMath,
         BillboardCollection,
+        Cesium3DTileFeature,
         LabelCollection,
         PolylineCollection,
         VerticalOrigin) {
     'use strict';
 
     function Vector3DTilePoints(options) {
+        // released after the first update
         this._positions = options.positions;
+
         this._batchTable = options.batchTable;
         this._batchIds = options.batchIds;
 
@@ -88,7 +92,22 @@ define([
             var p = polylineCollection.add();
             p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
         }
+
+        primitive._positions = undefined;
     }
+
+    Vector3DTilePoints.prototype.createFeatures = function(tileset, content, features) {
+        var billboardCollection = this._billboardCollection;
+        var labelCollection = this._labelCollection;
+        var polylineCollection = this._polylineCollection;
+
+        var batchIds = this._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            features[batchId] = new Cesium3DTileFeature(tileset, content, batchId, billboardCollection, labelCollection, polylineCollection);
+        }
+    };
 
     /**
      * Colors the entire tile when enabled is true. The resulting color will be (batch table color * color).
