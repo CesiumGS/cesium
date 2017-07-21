@@ -125,6 +125,47 @@ define([
             functionDestinationAlpha : BlendFunction.ZERO
         };
 
+        this._testingFunc = StencilFunction.EQUAL;
+        this._testingOp = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
+        this._writeFunc = StencilFunction.ALWAYS;
+        this._writeOp = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.ZERO
+        };
+
+        this._positiveStencilTest = {
+            enabled : true,
+            reference : 0,
+            mask : 1,
+            frontFunction : this._testingFunc,
+            backFunction : this._testingFunc,
+            frontOperation : this._testingOp,
+            backOperation : this._testingOp
+        };
+        this._negativeStencilTest = {
+            enabled : true,
+            reference : 1,
+            mask : 1,
+            frontFunction : this._testingFunc,
+            backFunction : this._testingFunc,
+            frontOperation : this._testingOp,
+            backOperation : this._testingOp
+        };
+        this._stencilWrite = {
+            enabled : true,
+            reference : 1,
+            mask : 0,
+            frontFunction : this._writeFunc,
+            backFunction : this._writeFunc,
+            frontOperation : this._writeOp,
+            backOperation : this._writeOp
+        };
+
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
     }
@@ -540,26 +581,11 @@ define([
             processor.useTriangle
         );
 
-        var func = StencilFunction.EQUAL;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.KEEP
-        };
-
         return context.createViewportQuadCommand(sectorGatheringStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 0,
-                    mask : 1,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._positiveStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -652,26 +678,11 @@ define([
             processor.stencilViewEnabled
         );
 
-        var func = StencilFunction.EQUAL;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.KEEP
-        };
-
         return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 0,
-                    mask : 1,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._positiveStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -768,25 +779,11 @@ define([
 
         var framebuffer = processor._framebuffers.stencilMask;
 
-        var func = StencilFunction.ALWAYS;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.ZERO
-        };
         return context.createViewportQuadCommand(stencilMaskStageStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 1,
-                    mask : 0,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._stencilWrite
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -1076,22 +1073,8 @@ define([
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
 
-                var func = StencilFunction.ALWAYS;
-                var op = {
-                    fail: StencilOperation.KEEP,
-                    zFail: StencilOperation.KEEP,
-                    zPass: StencilOperation.ZERO
-                };
                 var derivedCommandRenderState = derivedCommand.renderState;
-                derivedCommandRenderState.stencilTest = {
-                    enabled : true,
-                    reference : 1,
-                    mask : 0,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                };
+                derivedCommandRenderState.stencilTest = this._stencilWrite;
                 derivedCommand.renderState = RenderState.fromCache(
                     derivedCommandRenderState
                 );
@@ -1140,7 +1123,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-        commandList.push(this._debugCommand);
+        //commandList.push(this._debugCommand);
 
         commandList.push(clearCommands['prior']);
     };

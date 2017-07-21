@@ -27,5 +27,5 @@ void main() {
     }
 
     gl_FragData[0] =
-        vec4(vec3(float(densityValue) / densityScaleFactor), 1.0);
+        vec4(float(densityValue) / densityScaleFactor, 0.0, 0.0, 0.0);
 }
