@@ -1,8 +1,11 @@
+/*global define*/
 define([
         './addToArray',
         './ForEach',
         './numberOfComponentsForType',
         './techniqueParameterForSemantic',
+        './webGLConstantToGlslType',
+        './glslTypeToWebGLConstant',
         '../../Core/clone',
         '../../Core/defined',
         '../../Core/defaultValue',
@@ -12,52 +15,102 @@ define([
         ForEach,
         numberOfComponentsForType,
         techniqueParameterForSemantic,
+        webGLConstantToGlslType,
+        glslTypeToWebGLConstant,
         clone,
         defined,
         defaultValue,
         WebGLConstants) {
     'use strict';
 
-    function webGLConstantToGlslType(webGLValue) {
-        switch (webGLValue) {
-            case WebGLConstants.FLOAT:
-                return 'float';
-            case WebGLConstants.FLOAT_VEC2:
-                return 'vec2';
-            case WebGLConstants.FLOAT_VEC3:
-                return 'vec3';
-            case WebGLConstants.FLOAT_VEC4:
-                return 'vec4';
-            case WebGLConstants.FLOAT_MAT2:
-                return 'mat2';
-            case WebGLConstants.FLOAT_MAT3:
-                return 'mat3';
-            case WebGLConstants.FLOAT_MAT4:
-                return 'mat4';
-            case WebGLConstants.SAMPLER_2D:
-                return 'sampler2D';
-        }
-    }
+    /**
+     * @private
+     */
+    function processModelMaterialsCommon(gltf, options) {
+        options = defaultValue(options, {});
 
-    function glslTypeToWebGLConstant(glslType) {
-        switch (glslType) {
-            case 'float':
-                return WebGLConstants.FLOAT;
-            case 'vec2':
-                return WebGLConstants.FLOAT_VEC2;
-            case 'vec3':
-                return WebGLConstants.FLOAT_VEC3;
-            case 'vec4':
-                return WebGLConstants.FLOAT_VEC4;
-            case 'mat2':
-                return WebGLConstants.FLOAT_MAT2;
-            case 'mat3':
-                return WebGLConstants.FLOAT_MAT3;
-            case 'mat4':
-                return WebGLConstants.FLOAT_MAT4;
-            case 'sampler2D':
-                return WebGLConstants.SAMPLER_2D;
+        if (!defined(gltf)) {
+            return undefined;
         }
+
+        var hasExtension = false;
+        var extensionsRequired = gltf.extensionsRequired;
+        var extensionsUsed = gltf.extensionsUsed;
+        if (defined(extensionsUsed)) {
+            var index = extensionsUsed.indexOf('KHR_materials_common');
+            if (index >= 0) {
+                extensionsUsed.splice(index, 1);
+                hasExtension = true;
+            }
+            if (defined(extensionsRequired)) {
+                index = extensionsRequired.indexOf('KHR_materials_common');
+                if (index >= 0) {
+                    extensionsRequired.splice(index, 1);
+                }
+            }
+        }
+
+        if (hasExtension) {
+            if (!defined(gltf.programs)) {
+                gltf.programs = [];
+            }
+            if (!defined(gltf.shaders)) {
+                gltf.shaders = [];
+            }
+            if (!defined(gltf.techniques)) {
+                gltf.techniques = [];
+            }
+            lightDefaults(gltf);
+
+            var lightParameters = generateLightParameters(gltf);
+
+            // Pre-processing to assign skinning info and address incompatibilities
+            splitIncompatibleSkins(gltf);
+
+            var techniques = {};
+            ForEach.material(gltf, function(material) {
+                if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
+                    var khrMaterialsCommon = material.extensions.KHR_materials_common;
+                    var techniqueKey = getTechniqueKey(khrMaterialsCommon);
+                    var technique = techniques[techniqueKey];
+                    if (!defined(technique)) {
+                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options.optimizeForCesium);
+                        techniques[techniqueKey] = technique;
+                    }
+
+                    // Take advantage of the fact that we generate techniques that use the
+                    // same parameter names as the extension values.
+                    material.values = {};
+                    var values = khrMaterialsCommon.values;
+                    for (var valueName in values) {
+                        if (values.hasOwnProperty(valueName)) {
+                            var value = values[valueName];
+                            material.values[valueName] = value;
+                        }
+                    }
+
+                    material.technique = technique;
+
+                    delete material.extensions.KHR_materials_common;
+                    if (Object.keys(material.extensions).length === 0) {
+                        delete material.extensions;
+                    }
+                }
+            });
+
+            if (defined(gltf.extensions)) {
+                delete gltf.extensions.KHR_materials_common;
+                if (Object.keys(gltf.extensions).length === 0) {
+                    delete gltf.extensions;
+                }
+            }
+
+            // If any primitives have semantics that aren't declared in the generated
+            // shaders, we want to preserve them.
+            ensureSemanticExistence(gltf);
+        }
+
+        return gltf;
     }
 
     function generateLightParameters(gltf) {
@@ -869,96 +922,6 @@ define([
                }
            });
         });
-    }
-
-    /**
-     * @private
-     */
-    function processModelMaterialsCommon(gltf, options) {
-        options = defaultValue(options, {});
-
-        if (!defined(gltf)) {
-            return undefined;
-        }
-
-        var hasExtension = false;
-        var extensionsRequired = gltf.extensionsRequired;
-        var extensionsUsed = gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            var index = extensionsUsed.indexOf('KHR_materials_common');
-            if (index >= 0) {
-                extensionsUsed.splice(index, 1);
-                hasExtension = true;
-            }
-            if (defined(extensionsRequired)) {
-                index = extensionsRequired.indexOf('KHR_materials_common');
-                if (index >= 0) {
-                    extensionsRequired.splice(index, 1);
-                }
-            }
-        }
-
-        if (hasExtension) {
-            if (!defined(gltf.programs)) {
-                gltf.programs = [];
-            }
-            if (!defined(gltf.shaders)) {
-                gltf.shaders = [];
-            }
-            if (!defined(gltf.techniques)) {
-                gltf.techniques = [];
-            }
-            lightDefaults(gltf);
-
-            var lightParameters = generateLightParameters(gltf);
-
-            // Pre-processing to assign skinning info and address incompatibilities
-            splitIncompatibleSkins(gltf);
-
-            var techniques = {};
-            ForEach.material(gltf, function(material) {
-                if (defined(material.extensions) && defined(material.extensions.KHR_materials_common)) {
-                    var khrMaterialsCommon = material.extensions.KHR_materials_common;
-                    var techniqueKey = getTechniqueKey(khrMaterialsCommon);
-                    var technique = techniques[techniqueKey];
-                    if (!defined(technique)) {
-                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options.optimizeForCesium);
-                        techniques[techniqueKey] = technique;
-                    }
-
-                    // Take advantage of the fact that we generate techniques that use the
-                    // same parameter names as the extension values.
-                    material.values = {};
-                    var values = khrMaterialsCommon.values;
-                    for (var valueName in values) {
-                        if (values.hasOwnProperty(valueName)) {
-                            var value = values[valueName];
-                            material.values[valueName] = value;
-                        }
-                    }
-
-                    material.technique = technique;
-
-                    delete material.extensions.KHR_materials_common;
-                    if (Object.keys(material.extensions).length === 0) {
-                        delete material.extensions;
-                    }
-                }
-            });
-
-            if (defined(gltf.extensions)) {
-                delete gltf.extensions.KHR_materials_common;
-                if (Object.keys(gltf.extensions).length === 0) {
-                    delete gltf.extensions;
-                }
-            }
-
-            // If any primitives have semantics that aren't declared in the generated
-            // shaders, we want to preserve them.
-            ensureSemanticExistence(gltf);
-        }
-
-        return gltf;
     }
 
     return processModelMaterialsCommon;

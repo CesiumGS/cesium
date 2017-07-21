@@ -250,7 +250,7 @@ define([
         };
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
-            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset') {
+            if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset' && topLevelId !== 'extensions') {
                 var objectMapping = {};
                 var object = gltf[topLevelId];
                 if (typeof(object) === 'object' && !Array.isArray(object)) {
@@ -336,11 +336,7 @@ define([
                 }
             });
         });
-        ForEach.skin(gltf, function(skin) {
-            if (defined(skin.inverseBindMatrices)) {
-                skin.inverseBindMatrices = globalMapping.accessors[skin.inverseBindMatrices];
-            }
-        });
+        var allSkeletons = [];
         ForEach.node(gltf, function(node) {
             var children = node.children;
             if (defined(children)) {
@@ -380,17 +376,8 @@ define([
                 var skeletons = node.skeletons;
                 var skeletonsLength = skeletons.length;
                 if (skeletonsLength > 0) {
-                    node.skeleton = globalMapping.nodes[skeletons[0]];
-                    for (i = 1; i < skeletonsLength; i++) {
-                        var skeletonNode = {
-                            skeleton: globalMapping.nodes[skeletons[i]]
-                        };
-                        var skeletonNodeId = addToArray(gltf.nodes, skeletonNode);
-                        if (!defined(children)) {
-                            children = [];
-                            node.children = children;
-                        }
-                        children.push(skeletonNodeId);
+                    for (i = 0; i < skeletonsLength; i++) {
+                        allSkeletons.push(globalMapping.nodes[skeletons[i]]);
                     }
                 }
                 delete node.skeletons;
@@ -398,6 +385,25 @@ define([
             if (defined(node.skin)) {
                 node.skin = globalMapping.skins[node.skin];
             }
+            if (defined(node.jointName)) {
+                delete(node.jointName);
+            }
+        });
+        ForEach.skin(gltf, function(skin) {
+            if (defined(skin.inverseBindMatrices)) {
+                skin.inverseBindMatrices = globalMapping.accessors[skin.inverseBindMatrices];
+            }
+            var joints = [];
+            var jointNames = skin.jointNames;
+            for (i = 0; i < jointNames.length; i++) {
+                var jointNodeIndex = globalMapping.nodes[jointNames[i]];
+                joints[i] = jointNodeIndex;
+                if (allSkeletons.includes(jointNodeIndex)) {
+                    skin.skeleton = jointNodeIndex;
+                }
+            }
+            skin.joints = joints;
+            delete skin.jointNames;
         });
         ForEach.scene(gltf, function(scene) {
             var sceneNodes = scene.nodes;
@@ -691,21 +697,23 @@ define([
         var bufferViewsToDelete = {};
         ForEach.accessor(gltf, function(accessor) {
             var oldBufferViewId = accessor.bufferView;
-            if (!defined(bufferViewsToDelete[oldBufferViewId])) {
-                bufferViewsToDelete[oldBufferViewId] = true;
-            }
-            var bufferView = clone(bufferViews[oldBufferViewId]);
-            var accessorByteStride = accessor.byteStride;
-            if (defined(accessorByteStride)) {
-                bufferView.byteStride = accessorByteStride;
-                if (bufferView.byteStride !== 0) {
-                    bufferView.byteLength = accessor.count * bufferView.byteStride;
+            if (defined(oldBufferViewId)) {
+                if (!defined(bufferViewsToDelete[oldBufferViewId])) {
+                    bufferViewsToDelete[oldBufferViewId] = true;
                 }
-                bufferView.byteOffset += accessor.byteOffset;
-                accessor.byteOffset = 0;
-                delete accessor.byteStride;
+                var bufferView = clone(bufferViews[oldBufferViewId]);
+                var accessorByteStride = accessor.byteStride;
+                if (defined(accessorByteStride)) {
+                    bufferView.byteStride = accessorByteStride;
+                    if (bufferView.byteStride !== 0) {
+                        bufferView.byteLength = accessor.count * bufferView.byteStride;
+                    }
+                    bufferView.byteOffset += accessor.byteOffset;
+                    accessor.byteOffset = 0;
+                    delete accessor.byteStride;
+                }
+                accessor.bufferView = addToArray(bufferViews, bufferView);
             }
-            accessor.bufferView = addToArray(bufferViews, bufferView);
         });
 
         var bufferViewShiftMap = {};
@@ -720,9 +728,11 @@ define([
 
         var removedCount = 0;
         for (var bufferViewId in bufferViewsToDelete) {
-            var index = parseInt(bufferViewId) - removedCount;
-            bufferViews.splice(index, 1);
-            removedCount++;
+            if (defined(bufferViewId)) {
+                var index = parseInt(bufferViewId) - removedCount;
+                bufferViews.splice(index, 1);
+                removedCount++;
+            }
         }
 
         ForEach.accessor(gltf, function(accessor) {

@@ -362,6 +362,26 @@ define([
         }
     }
 
+    function addDefaultByteOffsets(gltf) {
+        var accessors = gltf.accessors;
+
+        for (var i = 0; i < accessors.length; i++) {
+            var accessor = accessors[i];
+            if (!defined(accessor.byteOffset)) {
+                accessor.byteOffset = 0;
+            }
+        }
+
+        var bufferViews = gltf.bufferViews;
+
+        for (var j = 0; j < bufferViews.length; j++) {
+            var bufferView = bufferViews[j];
+            if (!defined(bufferView.byteOffset)) {
+                bufferView.byteOffset = 0;
+            }
+        }
+    }
+
     function enableDiffuseTransparency(gltf) {
         var materials = gltf.materials;
         var techniques = gltf.techniques;
@@ -474,24 +494,6 @@ define([
                             }
                         }
                     });
-                    var morphTargets = primitive.targets;
-                    for (var target in morphTargets) {
-                        var targetAttributes = morphTargets[target];
-                        for (var attribute in targetAttributes) {
-                            if (attribute !== 'extras') {
-                                var accessor = accessors[targetAttributes[attribute]];
-                                var bufferViewId = accessor.bufferView;
-                                if (needsTarget[bufferViewId]) {
-                                    var bufferView = bufferViews[bufferViewId];
-                                    if (defined(bufferView)) {
-                                        bufferView.target = WebGLConstants.ARRAY_BUFFER;
-                                        needsTarget[bufferViewId] = false;
-                                        shouldTraverse--;
-                                    }
-                                }
-                            }
-                        }
-                    }
                 });
                 if (shouldTraverse === 0) {
                     return true;
@@ -518,6 +520,7 @@ define([
         addDefaultsFromTemplate(gltf, gltfTemplate);
         addDefaultMaterial(gltf);
         addDefaultTechnique(gltf);
+        addDefaultByteOffsets(gltf);
         enableDiffuseTransparency(gltf);
         selectDefaultScene(gltf);
         inferBufferViewTargets(gltf);
