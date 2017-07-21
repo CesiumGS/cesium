@@ -116,7 +116,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = texture2D(pointCloud_depthTexture, neighborCoords).r;
+            float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
+                                             neighborCoords));
             vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
             if (pastCenter) {
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
@@ -184,7 +185,7 @@ void main() {
 
                 float weight =
                     (1.0 - rI / 2.0) *
-                    (1.0 - min(1.0, depthDelta / max(1e-5, rangeParameter)));
+                    (1.0 - min(1.0, depthDelta / max(1e-38, rangeParameter)));
 
                 depthAccum += neighbor * weight;
                 colorAccum += colorNeighbor * weight;

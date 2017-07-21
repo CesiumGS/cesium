@@ -165,10 +165,7 @@ void main() {
         // If the area that we want to region grow is sufficently sparse
         if (float(iterationNumber - DELAY) <= density + EPS) {
 #if neighborhoodFullWidth == 3
-            fastMedian3(depthNeighbors,
-                        colorNeighbors,
-                        finalDepth,
-                        finalColor);
+            fastMedian3(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #else
             genericMedianFinder(depthNeighbors, colorNeighbors, finalDepth, finalColor);
 #endif
