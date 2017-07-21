@@ -76,6 +76,7 @@ define([
         './PropertyArray',
         './PropertyBag',
         './RectangleGraphics',
+        './ReferenceEntity',
         './ReferenceProperty',
         './Rotation',
         './SampledPositionProperty',
@@ -164,6 +165,7 @@ define([
         PropertyArray,
         PropertyBag,
         RectangleGraphics,
+        ReferenceEntity,
         ReferenceProperty,
         Rotation,
         SampledPositionProperty,
@@ -183,6 +185,17 @@ define([
             referenceString = currentId + referenceString;
         }
         return ReferenceProperty.fromString(collection, referenceString);
+    }
+
+    function makeReferenceEntity(collection, referenceFrameString, currentReferenceFrame) {
+        if (referenceFrameString[0] === '#') {
+            referenceFrameString = referenceFrameString.slice(1);
+        }
+
+        if (currentReferenceFrame instanceof ReferenceEntity && currentReferenceFrame.targetCollection === collection && currentReferenceFrame.targetId === referenceFrameString) {
+            return currentReferenceFrame;
+        }
+        return new ReferenceEntity(collection, referenceFrameString);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -785,8 +798,13 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
         if (!isReference) {
-            if (defined(packetData.referenceFrame)) {
-                referenceFrame = ReferenceFrame[packetData.referenceFrame];
+            var packetReferenceFrame = packetData.referenceFrame;
+            if (defined(packetReferenceFrame)) {
+                referenceFrame = ReferenceFrame[packetReferenceFrame];
+                if (!defined(referenceFrame)) {
+                    var currentReferenceFrame = defined(property) && property.referenceFrame;
+                    referenceFrame = makeReferenceEntity(entityCollection, packetReferenceFrame, currentReferenceFrame);
+                }
             }
             referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
             unwrappedInterval = unwrapCartesianInterval(packetData);
