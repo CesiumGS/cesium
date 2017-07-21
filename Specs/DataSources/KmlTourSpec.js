@@ -54,18 +54,17 @@ defineSuite([
         var tour = new KmlTour('test', 'test');
         var wait = new KmlTourWait(0.1);
         var flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
-
-        spyOn(wait, 'play');
-        spyOn(flyTo, 'play');
-
         tour.addPlaylistEntry(wait);
         tour.addPlaylistEntry(flyTo);
+
+        var waitSpy = spyOn(wait, 'play').and.callThrough();
+        var flySpy = spyOn(flyTo, 'play').and.callThrough();
 
         var mockViewer = createMockViewer();
         tour.play(mockViewer);
         setTimeout(function() {
-            expect(wait.play).toHaveBeenCalled();
-            expect(flyTo.play).toHaveBeenCalled();
+            expect(waitSpy).toHaveBeenCalled();
+            expect(flySpy).toHaveBeenCalled();
             expect(mockViewer.scene.camera.flyToBoundingSphere).toHaveBeenCalled();
         }, 250);
     });
