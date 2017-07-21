@@ -1,8 +1,5 @@
-/*global define*/
 define([
-        '../Core/AttributeCompression',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,26 +7,19 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
-        '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
-        '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/Rectangle',
         '../ThirdParty/when',
-        './BillboardCollection',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
-        './LabelCollection',
         './LabelStyle',
-        './PolylineCollection',
+        './Vector3DTilePoints',
         './Vector3DTilePolygons',
-        './Vector3DTilePolylines',
-        './VerticalOrigin'
+        './Vector3DTilePolylines'
     ], function(
-        AttributeCompression,
         Cartesian3,
-        Cartographic,
         Color,
         defaultValue,
         defined,
@@ -37,22 +27,17 @@ define([
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
-        Ellipsoid,
         getMagic,
         getStringFromTypedArray,
-        CesiumMath,
         NearFarScalar,
         Rectangle,
         when,
-        BillboardCollection,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
-        LabelCollection,
         LabelStyle,
-        PolylineCollection,
+        Vector3DTilePoints,
         Vector3DTilePolygons,
-        Vector3DTilePolylines,
-        VerticalOrigin) {
+        Vector3DTilePolylines) {
     'use strict';
 
     /**
@@ -68,9 +53,7 @@ define([
 
         this._polygons = undefined;
         this._polylines = undefined;
-        this._billboardCollection = undefined;
-        this._labelCollection = undefined;
-        this._polylineCollection = undefined;
+        this._points = undefined;
 
         this._readyPromise = when.defer();
 
@@ -205,11 +188,6 @@ define([
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-
-    var maxShort = 32767;
-
-    var scratchCartographic = new Cartographic();
-    var scratchCartesian3 = new Cartesian3();
 
     function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -469,59 +447,33 @@ define([
         }
 
         if (numberOfPoints > 0) {
-            // TODO: ellipsoid
-            var ellipsoid = Ellipsoid.WGS84;
-
             var pointPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
-
-            content._billboardCollection = new BillboardCollection({ batchTable : batchTable });
-            content._labelCollection = new LabelCollection({ batchTable : batchTable });
-            content._polylineCollection = new PolylineCollection();
-
-            var uBuffer = pointPositions.subarray(0, numberOfPoints);
-            var vBuffer = pointPositions.subarray(numberOfPoints, 2 * numberOfPoints);
-            var heightBuffer = pointPositions.subarray(2 * numberOfPoints, 3 * numberOfPoints);
-            AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
-
-            for (i = 0; i < numberOfPoints; ++i) {
-                var id = pointBatchIds[i];
-
-                var u = uBuffer[i];
-                var v = vBuffer[i];
-                var height = heightBuffer[i];
-
-                var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-                var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-                var alt = CesiumMath.lerp(minHeight, maxHeight, height / maxShort);
-
-                var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchCartographic);
-                var position = ellipsoid.cartographicToCartesian(cartographic, scratchCartesian3);
-
-                var b = content._billboardCollection.add();
-                b.position = position;
-                b.verticalOrigin = VerticalOrigin.BOTTOM;
-                b._batchIndex = id;
-
-                var l = content._labelCollection.add();
-                l.text = ' ';
-                l.position = position;
-                l.verticalOrigin = VerticalOrigin.BOTTOM;
-                l._batchIndex = id;
-
-                var p = content._polylineCollection.add();
-                p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
-            }
+            content._points = new Vector3DTilePoints({
+                positions : pointPositions,
+                batchIds : pointBatchIds,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
+                rectangle : rectangle,
+                batchTable : batchTable
+            });
         }
     }
 
     function createFeatures(content) {
         var tileset = content._tileset;
         var featuresLength = content.featuresLength;
+
+        var billboardCollection;
+        var labelCollection;
+        var polylineCollection;
+        if (defined(content._points)) {
+            billboardCollection = content._points._billboardCollection;
+            labelCollection = content._points._labelCollection;
+            polylineCollection = content._points._polylineCollection;
+        }
+
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
-            var billboardCollection = content._billboardCollection;
-            var labelCollection = content._labelCollection;
-            var polylineCollection = content._polylineCollection;
             for (var i = 0; i < featuresLength; ++i) {
                 if (defined(billboardCollection) && i < billboardCollection.length) {
                     features[i] = new Cesium3DTileFeature(tileset, content, i, billboardCollection, labelCollection, polylineCollection);
@@ -565,8 +517,9 @@ define([
         if (defined(this._polylines)) {
             this._polylines.applyDebugSettings(enabled, color);
         }
-
-        //TODO: debug settings for points/billboards/labels
+        if (defined(this._points)) {
+            this._points.applyDebugSettings(enabled, color);
+        }
     };
 
     function clearStyle(content) {
@@ -690,19 +643,14 @@ define([
         if (defined(this._batchTable)) {
             this._batchTable.update(tileset, frameState);
         }
-
         if (defined(this._polygons)) {
             this._polygons.update(frameState);
         }
-
         if (defined(this._polylines)) {
             this._polylines.update(frameState);
         }
-
-        if (defined(this._billboardCollection)) {
-            this._billboardCollection.update(frameState);
-            this._labelCollection.update(frameState);
-            this._polylineCollection.update(frameState);
+        if (defined(this._points)) {
+            this._points.update(frameState);
         }
 
         if (!defined(this._polygonReadyPromise)) {
@@ -731,9 +679,7 @@ define([
     Vector3DTileContent.prototype.destroy = function() {
         this._polygons = this._polygons && this._polygons.destroy();
         this._polylines = this._polylines && this._polylines.destroy();
-        this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
-        this._labelCollection = this._labelCollection && this._labelCollection.destroy();
-        this._polylineCollection = this._polylineCollection && this._polylineCollection.destroy();
+        this._points = this._points && this._points.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };

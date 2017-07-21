@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
@@ -45,7 +44,7 @@ define([
         ShaderSource,
         VertexArray,
         PolylineCommon,
-        Vector3DTilePolylines,
+        Vector3DTilePolylinesVS,
         BlendingState) {
     'use strict';
 
