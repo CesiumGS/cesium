@@ -20,11 +20,11 @@ define([
         './BillboardCollection',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
-        './GroundPolylineBatch',
         './LabelCollection',
         './LabelStyle',
         './PolylineCollection',
         './Vector3DTilePolygons',
+        './Vector3DTilePolylines',
         './VerticalOrigin'
     ], function(
         AttributeCompression,
@@ -47,11 +47,11 @@ define([
         BillboardCollection,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
-        GroundPolylineBatch,
         LabelCollection,
         LabelStyle,
         PolylineCollection,
         Vector3DTilePolygons,
+        Vector3DTilePolylines,
         VerticalOrigin) {
     'use strict';
 
@@ -443,12 +443,18 @@ define([
             var polylineCountByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_COUNT.byteOffset;
             var polylineCounts = new Uint32Array(featureTableBinary.buffer, polylineCountByteOffset, numberOfPolylines);
 
-            var widths = new Array(numberOfPolylines);
-            for (i = 0; i < numberOfPolylines; ++i) {
-                widths[i] = 2.0;
+            var widths;
+            if (!defined(featureTableJson.POLYLINE_WIDTHS)) {
+                widths = new Array(numberOfPolylines);
+                for (i = 0; i < numberOfPolylines; ++i) {
+                    widths[i] = 2.0;
+                }
+            } else {
+                var polylineWidthsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_WIDTHS.byteOffset;
+                widths = new Uint16Array(featureTableBinary.buffer, polylineWidthsByteOffset, numberOfPolylines);
             }
 
-            content._polylines = new GroundPolylineBatch({
+            content._polylines = new Vector3DTilePolylines({
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,

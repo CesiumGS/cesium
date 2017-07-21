@@ -20,8 +20,8 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Shaders/GroundPolylineBatchVS',
         '../Shaders/PolylineCommon',
+        '../Shaders/Vector3DTilePolylinesVS',
         './BlendingState'
     ], function(
         AttributeCompression,
@@ -44,15 +44,15 @@ define([
         ShaderProgram,
         ShaderSource,
         VertexArray,
-        GroundPolylineBatchVS,
         PolylineCommon,
+        Vector3DTilePolylines,
         BlendingState) {
     'use strict';
 
     /**
      * Renders a batch of polylines that have been subdivided to be draped on terrain.
      *
-     * @alias GroundPolylineBatch
+     * @alias Vector3DTilePolylines
      * @constructor
      *
      * @param {Object} options An object with following properties:
@@ -69,7 +69,7 @@ define([
      *
      * @private
      */
-    function GroundPolylineBatch(options) {
+    function Vector3DTilePolylines(options) {
         // these arrays are all released after the first update.
         this._positions = options.positions;
         this._widths = options.widths;
@@ -383,7 +383,7 @@ define([
 
         var batchTable = primitive._batchTable;
 
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(GroundPolylineBatchVS);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(Vector3DTilePolylinesVS);
         var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS);
 
         var vs = new ShaderSource({
@@ -402,7 +402,7 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(GroundPolylineBatchVS);
+        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(Vector3DTilePolylinesVS);
         fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS);
 
         var pickVS = new ShaderSource({
@@ -463,7 +463,7 @@ define([
      * @param {Boolean} enabled Whether to enable debug coloring.
      * @param {Color} color The debug color.
      */
-    GroundPolylineBatch.prototype.applyDebugSettings = function(enabled, color) {
+    Vector3DTilePolylines.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
@@ -472,7 +472,7 @@ define([
      *
      * @param {FrameState} frameState The current frame state.
      */
-    GroundPolylineBatch.prototype.update = function(frameState) {
+    Vector3DTilePolylines.prototype.update = function(frameState) {
         var context = frameState.context;
 
         createVertexArray(this, context);
@@ -499,7 +499,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
-    GroundPolylineBatch.prototype.isDestroyed = function() {
+    Vector3DTilePolylines.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -516,12 +516,12 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    GroundPolylineBatch.prototype.destroy = function() {
+    Vector3DTilePolylines.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
-    return GroundPolylineBatch;
+    return Vector3DTilePolylines;
 });
