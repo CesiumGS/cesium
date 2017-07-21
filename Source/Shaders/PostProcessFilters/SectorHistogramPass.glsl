@@ -17,44 +17,15 @@ varying float centerPos;
 // This texture actually contains eye-space coordinates,
 // it just has to be called `pointCloud_depthTexture`
 uniform sampler2D pointCloud_depthTexture;
+uniform sampler2D sectorLUT;
+uniform float neighborhoodSize;
 
-float acosFast(in float inX) {
-    float x = abs(inX);
-    float res = ((C3 * x + C2) * x + C1) * x + C0; // p(x)
-    res *= sqrt(1.0 - x);
-
-    return (inX >= 0.0) ? res : PI - res;
-}
-
-float atanFast(in float x) {
-    return PI_4 * x - x * (abs(x) - 1.0) * (0.2447 + 0.0663 * abs(x));
-}
-
-float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atan(y, x);
-}
-
-int getSector(in vec2 d) {
-    float angle = (atan2(float(d.y), float(d.x)) + PI) / TAU;
-    return int(angle * float(numSectors));
-}
-
-// Subsamples the neighbor pixel and stores the sector number
-// in each component of the output
-ivec4 getSectors(in vec2 vi) {
-    return ivec4(getSector(vi + vec2(-0.5, 0.5)),
-                 getSector(vi + vec2(0.5, -0.5)),
-                 getSector(vi + vec2(0.5, 0.5)),
-                 getSector(vi + vec2(-0.5, -0.5)));
-}
-
-ivec2 collapseSectors(in ivec4 sectors) {
-    int first = sectors[0];
-    ivec2 collapsed = ivec2(first, first);
-    for (int i = 1; i < 4; i++)
-        if (sectors[i] != first)
-            collapsed.y = sectors[i];
-    return collapsed;
+ivec2 readSectors(in ivec2 sectorPosition) {
+    int halfSize = int(neighborhoodSize / 2.0);
+    vec2 texCoordinate = vec2(sectorPosition + ivec2(halfSize)) /
+                         float(halfSize * 2);
+    vec2 unscaled = texture2D(sectorLUT, texCoordinate).rg;
+    return ivec2(unscaled * float(numSectors));
 }
 
 void updateOutput(in int index,
@@ -131,7 +102,8 @@ void main() {
 
     // sectors contains both possible sectors that the
     // neighbor pixel could be in
-    ivec2 sectors = collapseSectors(getSectors(vec2(d)));
+    //ivec2 sectors = collapseSectors(getSectors(vec2(d)));
+    ivec2 sectors = readSectors(d);
 
     // This is the offset of the horizon point from the center in 3D
     // (a 3D analog of d)
@@ -150,7 +122,7 @@ void main() {
     // |vec_1| * |vec_2| * cos(angle_between), and in this case,
     // the magnitude of both vectors is 1 because they are both
     // normalized.
-    float angle = acos(dotProduct);
+    float angle = acosFast(dotProduct);
 
     // This horizon point is behind the current point. That means that it can't
     // occlude the current point. So we ignore it and move on.

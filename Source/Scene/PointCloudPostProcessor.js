@@ -84,6 +84,7 @@ define([
         this._depthTextures = undefined;
         this._sectorTextures = undefined;
         this._densityTexture = undefined;
+        this._sectorLUTTexture = undefined;
         this._dirty = undefined;
         this._clearStencil = undefined;
         this._pointOcclusionCommand = undefined;
@@ -147,6 +148,7 @@ define([
         processor._depthTextures[1].destroy();
         processor._sectorTextures[0].destroy();
         processor._sectorTextures[1].destroy();
+        processor._sectorLUTTexture.destroy();
         processor._densityTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
@@ -162,6 +164,46 @@ define([
         processor._depthTextures = undefined;
         processor._colorTextures = undefined;
         processor._framebuffers = undefined;
+    }
+
+    function generateSectorLUT(processor) {
+        function getSector(dx, dy, numSectors) {
+            var angle = (Math.atan2(dy, dx) + Math.PI) / (2.0 * Math.PI) - 1e-6;
+            return Math.trunc(angle * numSectors);
+        }
+
+        function collapseSectors(dx, dy, numSectors) {
+            var sectors = new Uint8Array(4);
+            sectors[0] = getSector(dx - 0.5, dy + 0.5, numSectors);
+            sectors[1] = getSector(dx + 0.5, dy - 0.5, numSectors);
+            sectors[2] = getSector(dx + 0.5, dy + 0.5, numSectors);
+            sectors[3] = getSector(dx - 0.5, dy - 0.5, numSectors);
+
+            var first = sectors[0];
+            var second = sectors[0];
+            sectors.forEach(function(element) {
+                if (element !== first) {
+                    second = element;
+                }
+            });
+            return new Array(first, second);
+        }
+
+        var numSectors = 8;
+        var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
+        var lut = new Uint8Array(lutSize * lutSize * 4);
+        var start = -Math.trunc(lutSize / 2);
+        var end = -start;
+        for (var i = start; i <= end; i++) {
+            for (var j = start; j <= end; j++) {
+                var offset = ((i + end) + (j + end) * lutSize) * 4;
+                var sectors = collapseSectors(i, j, numSectors);
+                lut[offset] = Math.trunc(256 * (sectors[0] / 8));
+                lut[offset + 1] = Math.trunc(256 * (sectors[1] / 8));
+            }
+        }
+
+        return lut;
     }
 
     function createFramebuffers(processor, context) {
@@ -189,6 +231,23 @@ define([
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
+        });
+
+        // Load the sector LUT that the point occlusion pass needs
+        var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
+        var sectorLUTTexture = new Texture({
+            context : context,
+            width : lutSize,
+            height : lutSize,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : createSampler()
+        });
+        var lutData = generateSectorLUT(processor);
+        sectorLUTTexture.copyFrom({
+            width : lutSize,
+            height : lutSize,
+            arrayBufferView : lutData
         });
 
         var dirty = new Texture({
@@ -283,6 +342,7 @@ define([
         processor._depthTextures = depthTextures;
         processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
+        processor._sectorLUTTexture = sectorLUTTexture;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
@@ -369,7 +429,7 @@ define([
             return depthTexture;
         };
 
-        vertexShaderSource = replaceConstants(vertexShaderSource, 'kernelSize', kernelSize.toString());
+        vertexShaderSource = replaceConstants(vertexShaderSource, 'kernelSize', kernelSize.toFixed(1));
 
         var renderState = overrides.renderState;
 
@@ -485,12 +545,19 @@ define([
     }
 
     function sectorHistogramStage(processor, context) {
+        var neighborhoodSize = processor.neighborhoodHalfWidth * 2 + 1;
         var uniformMap = {
+            sectorLUT : function() {
+                return processor._sectorLUTTexture;
+            },
+            neighborhoodSize : function() {
+                return neighborhoodSize;
+            }
         };
 
         return createPointArrayCommand(
             processor._ecTexture,
-            '9.0',
+            neighborhoodSize,
             true,
             processor._minBlend,
             SectorHistogramPass,
@@ -573,7 +640,7 @@ define([
 
         return createPointArrayCommand(
             processor._depthTextures[0],
-            '9.0',
+            processor.densityHalfWidth * 2 + 1,
             false,
             processor._minBlend,
             densityEstimationStr,
@@ -801,7 +868,6 @@ define([
             '    vec4 sh0 = texture2D(debugTexture, v_textureCoordinates); \n' +
             '    vec4 sh1 = texture2D(debugTexture1, v_textureCoordinates); \n' +
             '    gl_FragColor = 0.1 * vec4(sh0.x + sh0.y + sh0.z * sh0.w + sh1.x + sh1.y + sh1.z + sh1.w); \n' +
-            //'    gl_FragColor = sh0; \n' +
             '} \n';
 
         return context.createViewportQuadCommand(debugStageStr, {
