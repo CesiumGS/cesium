@@ -176,9 +176,9 @@ define([
         }
     });
 
-    function createColorChangedCallback(content, numberOfPolygons) {
+    function createColorChangedCallback(content) {
         return function(batchId, color) {
-            if (defined(content._polygons) && batchId < numberOfPolygons) {
+            if (defined(content._polygons)) {
                 content._polygons.updateCommands(batchId, color);
             }
         };
@@ -272,7 +272,7 @@ define([
         var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
 
         var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
-        var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content, numberOfPolygons));
+        var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content));
         content._batchTable = batchTable;
 
         if (totalPrimitives === 0) {
@@ -458,20 +458,18 @@ define([
     }
 
     function createFeatures(content) {
-        var tileset = content._tileset;
         var featuresLength = content.featuresLength;
-
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
 
             if (defined(content._polygons)) {
-                content._polygons.createFeatures(tileset, content, features);
+                content._polygons.createFeatures(content, features);
             }
             if (defined(content._polylines)) {
-                content._polylines.createFeatures(tileset, content, features);
+                content._polylines.createFeatures(content, features);
             }
             if (defined(content._points)) {
-                content._points.createFeatures(tileset, content, features);
+                content._points.createFeatures(content, features);
             }
             content._features = features;
         }

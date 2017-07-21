@@ -1,21 +1,13 @@
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        './HorizontalOrigin'
+        '../Core/defineProperties'
     ], function(
-        Cartesian3,
-        Cartographic,
         Color,
         defaultValue,
         defined,
-        defineProperties,
-        Ellipsoid,
-        HorizontalOrigin) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -53,28 +45,11 @@ define([
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
-    function Cesium3DTileFeature(tileset, content, batchId, billboardCollection, labelCollection, polylineCollection) {
+    function Cesium3DTileFeature(content, batchId) {
         this._content = content;
-        this._billboardCollection = billboardCollection;
-        this._labelCollection = labelCollection;
-        this._polylineCollection = polylineCollection;
-
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
-        this._billboardImage = undefined;
-        this._billboardColor = undefined;
-        this._billboardOutlineColor = undefined;
-        this._billboardOutlineWidth = undefined;
-        this._billboardSize = undefined;
-        this._pointSize = undefined;
-        this._pointColor = undefined;
-        this._pointSize = undefined;
-        this._pointOutlineColor = undefined;
-        this._pointOutlineWidth = undefined;
-        this._heightOffset = undefined;
     }
-
-    var scratchCartographic = new Cartographic();
 
     defineProperties(Cesium3DTileFeature.prototype, {
         /**
@@ -89,21 +64,10 @@ define([
          */
         show : {
             get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.show;
-                }
                 return this._content.batchTable.getShow(this._batchId);
             },
             set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    var billboard = this._billboardCollection.get(this._batchId);
-                    label.show = true;
-                    billboard.show = true;
-                } else {
-                    this._content.batchTable.setShow(this._batchId, value);
-                }
+                this._content.batchTable.setShow(this._batchId, value);
             }
         },
 
@@ -120,400 +84,13 @@ define([
          */
         color : {
             get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.fillColor;
-                }
-
                 if (!defined(this._color)) {
                     this._color = new Color();
                 }
                 return this._content.batchTable.getColor(this._batchId, this._color);
             },
             set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.fillColor = value;
-                    if (defined(this._polylineCollection)) {
-                        var polyline = this._polylineCollection.get(this._batchId);
-                        polyline.show = value.alpha > 0.0;
-                    }
-                } else {
-                    this._content.batchTable.setColor(this._batchId, value);
-                }
-            }
-        },
-
-        pointColor : {
-            get : function() {
-                return this._pointColor;
-            },
-            set : function(value) {
-                this._pointColor = Color.clone(value, this._pointColor);
-            }
-        },
-
-        /**
-         * Gets or sets the point size of this feature.
-         * <p>
-         * Only applied when the feature is a point feature and <code>image</code> is <code>undefined</code>.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Number}
-         */
-        pointSize : {
-            get : function() {
-                return this._pointSize;
-            },
-            set : function(value) {
-                this._pointSize = value;
-            }
-        },
-
-        pointOutlineColor : {
-            get : function() {
-                return this._pointOutlineColor;
-            },
-            set : function(value) {
-                this._pointOutlineColor = Color.clone(value, this._pointColor);
-            }
-        },
-
-        pointOutlineWidth : {
-            get : function() {
-                return this._pointOutlineWidth;
-            },
-            set : function(value) {
-                this._pointOutlineWidth = value;
-            }
-        },
-
-        /**
-         * Gets or sets the outline color of this feature.
-         * <p>
-         * Only applied when the feature is a point feature. The outline will be applied to the point if
-         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Color}
-         */
-        labelOutlineColor : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.outlineColor;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.outlineColor = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the outline width in pixels of this feature.
-         * <p>
-         * Only applied when the feature is a point feature. The outline width will be applied to the point if
-         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Color}
-         */
-        labelOutlineWidth : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.outlineWidth;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.outlineWidth = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the font of this feature.
-         * <p>
-         * Only applied when the feature is a point feature and <code>text</code> is defined.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {String}
-         */
-        font : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.font;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.font = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the fill and outline style of this feature.
-         * <p>
-         * Only applied when the feature is a point feature and <code>text</code> is defined.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {LabelStyle}
-         */
-        labelStyle : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.style;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.style = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the text for this feature.
-         * <p>
-         * Only applied when the feature is a point feature.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {String}
-         */
-        labelText : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.text;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    if (!defined(value)) {
-                        value = '';
-                    }
-                    var label = this._labelCollection.get(this._batchId);
-                    label.text = value;
-
-                    if (defined(value) && value !== '') {
-                        var billboard = this._billboardCollection.get(this._batchId);
-                        billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
-                        label.horizontalOrigin = HorizontalOrigin.LEFT;
-                    }
-                }
-            }
-        },
-
-        backgroundColor : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.backgroundColor;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.backgroundColor = value;
-                }
-            }
-        },
-
-        backgroundPadding : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.backgroundPadding;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.backgroundPadding = value;
-                }
-            }
-        },
-
-        backgroundEnabled : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.showBackground;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.showBackground = value;
-                }
-            }
-        },
-
-        scaleByDistance : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.scaleByDistance;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.scaleByDistance = value;
-                }
-            }
-        },
-
-        translucencyByDistance : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.translucencyByDistance;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.translucencyByDistance = value;
-                }
-            }
-        },
-
-        distanceDisplayCondition : {
-            get : function() {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.distanceDisplayCondition;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._labelCollection)) {
-                    var label = this._labelCollection.get(this._batchId);
-                    label.distanceDisplayCondition = value;
-                    if (defined(this._polylineCollection)) {
-                        var polyline = this._polylineCollection.get(this._batchId);
-                        polyline.distanceDisplayCondition = value;
-                    }
-                }
-            }
-        },
-
-        heightOffset : {
-            get : function() {
-                return this._heightOffset;
-            },
-            set : function(value) {
-                if (defined(this._billboardCollection)) {
-                    var billboard = this._billboardCollection.get(this._batchId);
-                    var label = this._labelCollection.get(this._batchId);
-                    var line = this._polylineCollection.get(this._batchId);
-
-                    var offset = defaultValue(this._heightOffset, 0.0);
-
-                    // TODO: ellipsoid
-                    var ellipsoid = Ellipsoid.WGS84;
-                    var cart = ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
-                    cart.height = cart.height - offset + value;
-                    var newPosition = ellipsoid.cartographicToCartesian(cart);
-
-                    billboard.position = newPosition;
-                    label.position = billboard.position;
-                    line.positions = [line.positions[0], newPosition];
-                }
-                this._heightOffset = value;
-            }
-        },
-
-        anchorLineEnabled : {
-            get : function() {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    return polyline.show;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.show = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the color for the anchor line.
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {Color}
-         *
-         * @default {@link Color.WHITE}
-         */
-        anchorLineColor : {
-            get : function() {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    return polyline.material.uniforms.color;
-                }
-                return undefined;
-            },
-            set : function(value) {
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.material.uniforms.color = value;
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the image of this feature.
-         * <p>
-         * Only applied when the feature is a point feature.
-         * </p>
-         *
-         * @memberof Cesium3DTileFeature.prototype
-         *
-         * @type {String}
-         */
-        image : {
-            get : function() {
-                return this._billboardImage;
-            },
-            set : function(value) {
-                this._billboardImage = value;
+                this._content.batchTable.setColor(this._batchId, value);
             }
         },
 
@@ -564,90 +141,6 @@ define([
             }
         }
     });
-
-    Cesium3DTileFeature.prototype._setBillboardImage = function() {
-        var billboardCollection = this._billboardCollection;
-        if (!defined(billboardCollection)) {
-            return;
-        }
-
-        var b = billboardCollection.get(this._batchId);
-
-        if (defined(this._billboardImage) && this._billboardImage !== b.image) {
-            b.image = this._billboardImage;
-            return;
-        }
-
-        if (defined(this._billboardImage)) {
-            return;
-        }
-
-        var newColor = this._pointColor;
-        var newOutlineColor = this._pointOutlineColor;
-        var newOutlineWidth = this._pointOutlineWidth;
-        var newPointSize = this._pointSize;
-
-        var currentColor = this._billboardColor;
-        var currentOutlineColor = this._billboardOutlineColor;
-        var currentOutlineWidth = this._billboardOutlineWidth;
-        var currentPointSize = this._billboardSize;
-
-        if (Color.equals(newColor, currentColor) && Color.equals(newOutlineColor, currentOutlineColor) &&
-            newOutlineWidth === currentOutlineWidth && newPointSize === currentPointSize) {
-            return;
-        }
-
-        this._billboardColor = Color.clone(newColor, this._billboardColor);
-        this._billboardOutlineColor = Color.clone(newOutlineColor, this._billboardOutlineColor);
-        this._billboardOutlineWidth = newOutlineWidth;
-        this._billboardSize = newPointSize;
-
-        var centerAlpha = newColor.alpha;
-        var cssColor = newColor.toCssColorString();
-        var cssOutlineColor = newOutlineColor.toCssColorString();
-        var textureId = JSON.stringify([cssColor, newPointSize, cssOutlineColor, newOutlineWidth]);
-
-        b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPointSize));
-    };
-
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
-        return function() {
-            var canvas = document.createElement('canvas');
-
-            var length = newPixelSize + (2 * cssOutlineWidth);
-            canvas.height = canvas.width = length;
-
-            var context2D = canvas.getContext('2d');
-            context2D.clearRect(0, 0, length, length);
-
-            if (cssOutlineWidth !== 0) {
-                context2D.beginPath();
-                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
-                context2D.closePath();
-                context2D.fillStyle = cssOutlineColor;
-                context2D.fill();
-                // Punch a hole in the center if needed.
-                if (centerAlpha < 1.0) {
-                    context2D.save();
-                    context2D.globalCompositeOperation = 'destination-out';
-                    context2D.beginPath();
-                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-                    context2D.closePath();
-                    context2D.fillStyle = 'black';
-                    context2D.fill();
-                    context2D.restore();
-                }
-            }
-
-            context2D.beginPath();
-            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-            context2D.closePath();
-            context2D.fillStyle = cssColor;
-            context2D.fill();
-
-            return canvas;
-        };
-    }
 
     /**
      * Returns whether the feature contains this property. This includes properties from this feature's

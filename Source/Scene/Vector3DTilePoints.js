@@ -9,7 +9,7 @@ define([
         '../Core/Math',
         '../Core/NearFarScalar',
         './BillboardCollection',
-        './Cesium3DTileFeature',
+        './Cesium3DTilePointFeature',
         './LabelCollection',
         './LabelStyle',
         './PolylineCollection',
@@ -25,7 +25,7 @@ define([
         CesiumMath,
         NearFarScalar,
         BillboardCollection,
-        Cesium3DTileFeature,
+        Cesium3DTilePointFeature,
         LabelCollection,
         LabelStyle,
         PolylineCollection,
@@ -107,11 +107,10 @@ define([
     /**
      * Creates features for each point and places it at the batch id index of features.
      *
-     * @param {Cesium3DTileset} tileset The tileset.
      * @param {Vector3DTileContent} content The vector tile content.
      * @param {Cesium3DTileFeature[]} features An array of features where the point features will be placed.
      */
-    Vector3DTilePoints.prototype.createFeatures = function(tileset, content, features) {
+    Vector3DTilePoints.prototype.createFeatures = function(content, features) {
         var billboardCollection = this._billboardCollection;
         var labelCollection = this._labelCollection;
         var polylineCollection = this._polylineCollection;
@@ -120,7 +119,7 @@ define([
         var length = batchIds.length;
         for (var i = 0; i < length; ++i) {
             var batchId = batchIds[i];
-            features[batchId] = new Cesium3DTileFeature(tileset, content, batchId, billboardCollection, labelCollection, polylineCollection);
+            features[batchId] = new Cesium3DTilePointFeature(content, batchId, billboardCollection, labelCollection, polylineCollection);
         }
     };
 

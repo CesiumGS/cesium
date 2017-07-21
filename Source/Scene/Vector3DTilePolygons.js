@@ -907,16 +907,15 @@ define([
     /**
      * Creates features for each polygon and places it at the batch id index of features.
      *
-     * @param {Cesium3DTileset} tileset The tileset.
      * @param {Vector3DTileContent} content The vector tile content.
      * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
      */
-    Vector3DTilePolygons.prototype.createFeatures = function(tileset, content, features) {
+    Vector3DTilePolygons.prototype.createFeatures = function(content, features) {
         var batchIds = this._batchIds;
         var length = batchIds.length;
         for (var i = 0; i < length; ++i) {
             var batchId = batchIds[i];
-            features[batchId] = new Cesium3DTileFeature(tileset, content, batchId);
+            features[batchId] = new Cesium3DTileFeature(content, batchId);
         }
     };
 
