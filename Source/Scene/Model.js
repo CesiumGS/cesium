@@ -4529,12 +4529,15 @@ define([
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
+                    var options = {
+                        optimizeForCesium: true
+                    };
                     updateVersion(this.gltf);
                     checkSupportedExtensions(this);
                     addPipelineExtras(this.gltf);
                     addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf);
-                    processPbrMetallicRoughness(this.gltf);
+                    processModelMaterialsCommon(this.gltf, options);
+                    processPbrMetallicRoughness(this.gltf, options);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
                     this._animationIds = getAnimationIds(this.gltf);
