@@ -1756,7 +1756,7 @@ defineSuite([
                 loadedColor = rgba;
             });
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 // Render scene to progressively load textures
                 scene.renderForSpecs();
                 // Textures have finished loading
@@ -1782,7 +1782,7 @@ defineSuite([
                 loadedColor = rgba;
             });
 
-            pollToPromise(function() {
+            return pollToPromise(function() {
                 // Render scene to progressively load textures (they should already be loaded)
                 scene.renderForSpecs();
                 // Textures have finished loading

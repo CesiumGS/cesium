@@ -393,8 +393,8 @@ define([
                 // Check if the diffuse texture/color is transparent
                 var diffuse = material.values.diffuse;
                 var diffuseTransparent = false;
-                if (diffuse.length === 1) {
-                    diffuseTransparent = gltf.images[gltf.textures[diffuse[0]].source].extras._pipeline.transparent;
+                if (defined(diffuse.index)) {
+                    diffuseTransparent = gltf.images[gltf.textures[diffuse.index].source].extras._pipeline.transparent;
                 } else {
                     diffuseTransparent = diffuse[3] < 1.0;
                 }

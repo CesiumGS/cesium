@@ -448,7 +448,9 @@ define([
                     }
                 }
                 else if (typeof value === 'string') {
-                    material.values[name] = [globalMapping.textures[value]];
+                    material.values[name] = {
+                        index : globalMapping.textures[value]
+                    };
                 }
             });
             var extensions = material.extensions;
@@ -522,16 +524,6 @@ define([
     function removeBufferType(gltf) {
         ForEach.buffer(gltf, function(buffer) {
             delete buffer.type;
-        });
-    }
-
-    function makeMaterialValuesArrays(gltf) {
-        ForEach.material(gltf, function(material) {
-            ForEach.materialValue(material, function(value, name) {
-                if (!Array.isArray(value)) {
-                    material.values[name] = [value];
-                }
-            });
         });
     }
 
@@ -824,8 +816,6 @@ define([
         requireAttributeSetIndex(gltf);
         // Add underscores to application-specific parameters
         underscoreApplicationSpecificSemantics(gltf);
-        // material.values should be arrays
-        makeMaterialValuesArrays(gltf);
         // technique.parameters.value should be arrays
         makeTechniqueValuesArrays(gltf);
         // remove scissor from techniques
