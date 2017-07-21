@@ -20,7 +20,7 @@ defineSuite([
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
     var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/';
-    var multipleInstancedTilesets = './Data/Cesium3DTiles/Composite/MultipleInstancedTilesets/';
+    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/compositeOfInstanced/';
 
     beforeAll(function() {
         scene = createScene();
@@ -81,25 +81,6 @@ defineSuite([
         });
     }
 
-    function expectRenderInstance(tileset) {
-        expect(scene).toPickAndCall(function(result) {
-            // Pick a building
-            var pickedBuilding = result;
-            expect(pickedBuilding).toBeDefined();
-
-            // Change the color of the picked building to yellow
-            pickedBuilding.color = Color.clone(Color.YELLOW, pickedBuilding.color);
-
-            // Expect the pixel color to be some shade of yellow
-            Cesium3DTilesTester.expectRender(scene, tileset, function(rgba) {
-                expect(rgba[0]).toBeGreaterThan(0);
-                expect(rgba[1]).toBeGreaterThan(0);
-                expect(rgba[2]).toEqual(0);
-                expect(rgba[3]).toEqual(255);
-            });
-        });
-    }
-
     it('throws with invalid version', function() {
         var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             version : 2
@@ -142,10 +123,7 @@ defineSuite([
     });
 
     it('renders multiple instanced tilesets', function() {
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 2.0));
-
-        return Cesium3DTilesTester.loadTileset(scene, multipleInstancedTilesets).then(expectRenderInstance);
+        return Cesium3DTilesTester.loadTileset(scene, compositeOfInstanced).then(expectRenderComposite);
     });
 
     it('destroys', function() {

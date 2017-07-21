@@ -115,7 +115,7 @@ define([
         this._dirty = false;
 
         // Undocumented options
-        this._cull = defaultValue(options.cull, true); // Undocumented option
+        this._cull = defaultValue(options.cull, true);
         this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._instances = createInstances(this, options.instances);

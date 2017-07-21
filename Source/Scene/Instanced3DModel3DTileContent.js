@@ -306,7 +306,7 @@ define([
             basePath : undefined,
             incrementallyLoadTextures : false,
             upAxis : content._tileset._gltfUpAxis,
-            opaquePass : Pass.CESIUM_3D_TILE
+            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
         };
 
         if (gltfFormat === 0) {
