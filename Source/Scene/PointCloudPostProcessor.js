@@ -81,6 +81,7 @@ define([
         this._sectorTextures = undefined;
         this._densityTexture = undefined;
         this._sectorLUTTexture = undefined;
+        this._aoTexture = undefined;
         this._dirty = undefined;
         this._clearStencil = undefined;
         this._densityEstimationCommand = undefined;
@@ -185,6 +186,7 @@ define([
         processor._sectorTextures[0].destroy();
         processor._sectorTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
+        processor._aoTexture.destroy();
         processor._densityTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
@@ -257,6 +259,15 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT,
+            sampler : createSampler()
+        });
+
+        var aoTexture = new Texture({
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
 
@@ -340,7 +351,7 @@ define([
             }),
             screenSpacePass : new Framebuffer({
                 context : context,
-                colorTextures : [depthTextures[0]],
+                colorTextures : [depthTextures[0], aoTexture],
                 depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
@@ -379,6 +390,7 @@ define([
         processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
         processor._sectorLUTTexture = sectorLUTTexture;
+        processor._aoTexture = aoTexture;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
@@ -639,6 +651,9 @@ define([
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
+            pointCloud_aoTexture : function() {
+                return processor._aoTexture;
+            },
             rangeParameter : function() {
                 if (processor.useTriangle) {
                     return processor.rangeParameter;
@@ -792,23 +807,24 @@ define([
 
     function debugStage(processor, context) {
         var uniformMap = {
-            debugTexture : function() {
-                return processor._sectorTextures[0];
-            },
-            debugTexture1 : function() {
-                return processor._sectorTextures[1];
+            aoTexture : function() {
+                return processor._aoTexture;
             }
         };
 
         var debugStageStr =
-            'uniform sampler2D debugTexture; \n' +
-            'uniform sampler2D debugTexture1; \n' +
+            '#define EPS 1e-8 \n' +
+            'uniform sampler2D aoTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 sh0 = texture2D(debugTexture, v_textureCoordinates); \n' +
-            '    vec4 sh1 = texture2D(debugTexture1, v_textureCoordinates); \n' +
-            '    gl_FragColor = 0.1 * vec4(sh0.x + sh0.y + sh0.z * sh0.w + sh1.x + sh1.y + sh1.z + sh1.w); \n' +
+            '    vec4 raw = texture2D(aoTexture, v_textureCoordinates); \n' +
+            '    float occlusion = czm_unpackDepth(raw); \n' +
+            '    if (occlusion > EPS) {\n ' +
+            '        gl_FragColor = vec4(occlusion); \n' +
+            '    } else { \n' +
+            '        gl_FragColor = vec4(1.0); \n' +
+            '    } \n' +
             '} \n';
 
         return context.createViewportQuadCommand(debugStageStr, {
@@ -1123,7 +1139,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-        //commandList.push(this._debugCommand);
+        commandList.push(this._debugCommand);
 
         commandList.push(clearCommands['prior']);
     };
