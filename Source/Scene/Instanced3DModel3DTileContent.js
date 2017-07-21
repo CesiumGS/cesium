@@ -21,6 +21,7 @@ define([
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
+        '../Renderer/Pass',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -48,6 +49,7 @@ define([
         RuntimeError,
         Transforms,
         TranslationRotationScale,
+        Pass,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -303,7 +305,8 @@ define([
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : content._tileset._gltfUpAxis
+            upAxis : content._tileset._gltfUpAxis,
+            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
         };
 
         if (gltfFormat === 0) {
