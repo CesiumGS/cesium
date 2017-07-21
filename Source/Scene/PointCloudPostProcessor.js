@@ -83,7 +83,6 @@ define([
         this._sectorLUTTexture = undefined;
         this._aoTexture = undefined;
         this._dirty = undefined;
-        this._clearStencil = undefined;
         this._densityEstimationCommand = undefined;
         this._sectorHistogramCommand = undefined;
         this._sectorGatheringCommand = undefined;
@@ -353,6 +352,11 @@ define([
                 context : context,
                 colorTextures : [depthTextures[0], aoTexture],
                 depthStencilTexture: dirty,
+                destroyAttachments : false
+            }),
+            aoBuffer : new Framebuffer({
+                context : context,
+                colorTextures : [aoTexture],
                 destroyAttachments : false
             }),
             sectorHistogramPass : new Framebuffer({
@@ -820,11 +824,7 @@ define([
             '{ \n' +
             '    vec4 raw = texture2D(aoTexture, v_textureCoordinates); \n' +
             '    float occlusion = czm_unpackDepth(raw); \n' +
-            '    if (occlusion > EPS) {\n ' +
-            '        gl_FragColor = vec4(occlusion); \n' +
-            '    } else { \n' +
-            '        gl_FragColor = vec4(1.0); \n' +
-            '    } \n' +
+            '    gl_FragColor = vec4(occlusion); \n' +
             '} \n';
 
         return context.createViewportQuadCommand(debugStageStr, {
@@ -918,7 +918,8 @@ define([
                         owner : processor
                     });
                 } else if (name === 'densityEstimationPass' ||
-                           name === 'sectorHistogramPass') {
+                           name === 'sectorHistogramPass' ||
+                           name === 'aoBuffer') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(1.0, 1.0, 1.0, 1.0),
@@ -1121,6 +1122,7 @@ define([
         commandList.push(clearCommands['screenSpacePass']);
         commandList.push(clearCommands['sectorHistogramPass']);
         commandList.push(sectorHistogramCommand);
+        commandList.push(clearCommands['aoBuffer']);
         commandList.push(sectorGatheringCommand);
         commandList.push(clearCommands['densityEstimationPass']);
         commandList.push(densityEstimationCommand);
