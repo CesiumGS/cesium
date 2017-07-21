@@ -70,6 +70,12 @@
             </td>
         </tr>
         <tr>
+            <td>Ambient Occlusion</td>
+            <td>
+                <input type="checkbox" data-bind="checked: ambientOcclusionShow">
+            </td>
+        </tr>
+        <tr>
             <td>FXAA</td>
             <td>
                 <input type="checkbox" data-bind="checked: fxaaShow">
@@ -98,6 +104,7 @@ var viewModel = {
     textureOverlayAlpha: 0.5,
     depthViewShow: false,
     compositeTestShow: false,
+    ambientOcclusionShow: false,
     fxaaShow: false
 };
 
@@ -119,8 +126,9 @@ function updatePostProcess() {
     postProcess.nightVision.show = Boolean(viewModel.nightVisionShow);
     postProcess.textureOverlay.show = Boolean(viewModel.textureOverlayShow);
     postProcess.textureOverlay.uniformValues.alpha = Number(viewModel.textureOverlayAlpha);
-    postProcess.compositeTest.show = Boolean(viewModel.compositeTestShow);
     postProcess.depthView.show = Boolean(viewModel.depthViewShow);
+    postProcess.compositeTest.show = Boolean(viewModel.compositeTestShow);
+    postProcess.ambientOcclusion.show = Boolean(viewModel.ambientOcclusionShow);
     scene.fxaa = Boolean(viewModel.fxaaShow);
 }
 //Sandcastle_End

@@ -35,8 +35,6 @@ define([
         //>>includeEnd('debug');
 
         this._fragmentShader = options.fragmentShader;
-        this._drawCommand = undefined;
-        this._ready = false;
 
         var texturesLength = 0;
         var uniformValues = options.uniformValues;
@@ -69,17 +67,29 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return this._textures.length === this._texturesLength;
             }
         },
 
         /**
          * Uniform values that modify the behavior of the post process stage.
+         * @memberof PostProcessStage.prototype
          * @type {Object}
          */
         uniformValues : {
             get : function() {
                 return this._uniformValues;
+            }
+        },
+
+        /**
+         * The fragment shader text used by the post process stage.
+         * @memberof PostProcessState.prototype
+         * @type {String}
+         */
+        fragmentShader : {
+            get : function() {
+                return this._fragmentShader;
             }
         }
     });
@@ -100,22 +110,19 @@ define([
     /**
      * @private
      */
-    PostProcessStage.prototype.update = function(frameState) {
+    PostProcessStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
         if (!this.show) {
             return;
         }
 
-        if (this._textures.length === this._texturesLength) {
-            this._ready = true;
-            return;
-        }
-
-        var uniformValues = this._uniformValues;
-        for (var name in uniformValues) {
-            if (uniformValues.hasOwnProperty(name)) {
-                var value = uniformValues[name];
-                if (typeof value === 'string') {
-                    uniformValues[name] = loadTexture(this, name, value, frameState);
+        if (!this.ready) {
+            var uniformValues = this._uniformValues;
+            for (var name in uniformValues) {
+                if (uniformValues.hasOwnProperty(name)) {
+                    var value = uniformValues[name];
+                    if (typeof value === 'string') {
+                        uniformValues[name] = loadTexture(this, name, value, frameState);
+                    }
                 }
             }
         }
@@ -141,7 +148,7 @@ define([
      * @private
      */
     PostProcessStage.prototype.destroy = function() {
-        destroyTextures();
+        destroyTextures(this);
         return destroyObject(this);
     };
 

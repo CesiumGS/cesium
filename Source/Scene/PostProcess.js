@@ -63,9 +63,11 @@ define([
         this._overwriteInput = defaultValue(options.overwriteInput, false);
         this._blendOutput = defaultValue(options.blendOutput, true);
 
+        this._drawCommands = undefined;
         this._framebuffers = undefined;
         this._colorTextures = undefined;
-        this._innerStages = undefined;
+        this._activeStages = undefined;
+        this._inactiveStages = undefined;
         this._cache = undefined;
         this._inputColorTexture = undefined;
         this._inputDepthTexture = undefined;
@@ -161,37 +163,21 @@ define([
     }
 
     function destroyDrawCommands(postProcess) {
-        var innerStages = postProcess._innerStages;
-        if (defined(innerStages)) {
-            var length = innerStages.length;
+        var drawCommands = postProcess._drawCommands;
+        if (defined(drawCommands)) {
+            var length = drawCommands.length;
             for (var i = 0; i < length; ++i) {
-                var stage = innerStages[i];
-                stage._drawCommand.shaderProgram.destroy();
-                stage._drawCommand = undefined;
+                drawCommands[i].shaderProgram.destroy();
             }
+            postProcess._drawCommands = undefined;
         }
     }
 
-    function createRenderState(blend) {
-        if (blend) {
-            return RenderState.fromCache({
-                blending : BlendingState.ALPHA_BLEND
-            });
-        }
-
-        return RenderState.fromCache();
-    }
-
-    function createDrawCommands(postProcess, context) {
-        var innerStages = postProcess._innerStages;
-        var length = innerStages.length;
+    function destroyStages(postProcess) {
+        var stages = postProcess._stages;
+        var length = stages.length;
         for (var i = 0; i < length; ++i) {
-            var stage = innerStages[i];
-            var renderState = (postProcess._blendOutput && (i === length - 1)) ? createRenderState(true) : createRenderState(false);
-            stage._drawCommand = context.createViewportQuadCommand(stage._fragmentShader, {
-                renderState : renderState,
-                owner : postProcess
-            });
+            stages[i].destroy();
         }
     }
 
@@ -211,9 +197,11 @@ define([
     }
 
     function createStages(postProcess, inputColorTexture, outputFramebuffer) {
-        var innerStages = [];
+        var activeStages = [];
+        var inactiveStages = [];
         var stagesEnabled = [];
-        postProcess._innerStages = innerStages;
+        postProcess._activeStages = activeStages;
+        postProcess._inactiveStages = inactiveStages;
         postProcess._stagesEnabled = stagesEnabled;
 
         var stages = postProcess._stages;
@@ -222,24 +210,20 @@ define([
             var stage = stages[i];
             var enabled = stage.show && stage.ready;
             stagesEnabled.push(enabled);
-            if (enabled) {
-                var subStages = stage.stages;
-                if (defined(subStages)) { // Is a PostProcessCompositeStage
-                    var subStagesLength = subStages.length;
-                    for (var j = 0; j < subStagesLength; ++j) {
-                        innerStages.push(subStages[j]);
-                    }
-                } else { // Is a PostProcessStage
-                    innerStages.push(stage);
-                }
+            var stagesGroup = enabled ? activeStages : inactiveStages;
+            var subStages = stage.stages;
+            if (defined(subStages)) { // Is a PostProcessCompositeStage
+                stagesGroup.push.apply(stagesGroup, subStages); // concat in place
+            } else { // Is a PostProcessStage
+                stagesGroup.push(stage);
             }
         }
 
         // Cannot read and write to the same framebuffer simultaneously, add a passthrough stage.
         var outputColorTexture = defined(outputFramebuffer) ? outputFramebuffer.getColorTexture(0) : undefined;
-        if (inputColorTexture === outputColorTexture && innerStages.length === 1) {
+        if (inputColorTexture === outputColorTexture && activeStages.length === 1) {
             var passthroughStage = createPassthroughStage();
-            innerStages.push(passthroughStage);
+            activeStages.push(passthroughStage);
         }
     }
 
@@ -253,8 +237,8 @@ define([
     }
 
     function createTextures(postProcess, inputColorTexture, context) {
-        var innerStages = postProcess._innerStages;
-        var length = CesiumMath.clamp(innerStages.length - 1, 0, 2);
+        var activeStages = postProcess._activeStages;
+        var length = CesiumMath.clamp(activeStages.length - 1, 0, 2);
         var colorTextures = new Array(length);
         postProcess._colorTextures = colorTextures;
 
@@ -283,13 +267,13 @@ define([
 
     function getUniformFunction(stage, name) {
         return function() {
-            return stage._uniformValues[name];
+            return stage.uniformValues[name];
         };
     }
 
     function createUniformMap(stage, colorTexture, depthTexture) {
         var uniformMap = {};
-        var uniformValues = stage._uniformValues;
+        var uniformValues = stage.uniformValues;
         for (var name in uniformValues) {
             if (uniformValues.hasOwnProperty(name)) {
                 var uniformName = 'u_' + name;
@@ -307,31 +291,55 @@ define([
         });
     }
 
-    function linkStages(postProcess, inputColorTexture, inputDepthTexture, outputFramebuffer) {
-        var innerStages = postProcess._innerStages;
+    function createRenderState(blend) {
+        if (blend) {
+            return RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND
+            });
+        }
+
+        return RenderState.fromCache();
+    }
+
+    function getCurrentColorTexture(postProcess, index) {
+        var inputColorTexture = postProcess._inputColorTexture;
         var colorTextures = postProcess._colorTextures;
+        if (index === 0) {
+            return inputColorTexture;
+        }
+        return colorTextures[(index + 1) % colorTextures.length];
+    }
+
+    function getCurrentFramebuffer(postProcess, index, length) {
+        var outputFramebuffer = postProcess._outputFramebuffer;
         var framebuffers = postProcess._framebuffers;
+        if (index === length - 1) {
+            return outputFramebuffer;
+        }
+        return  framebuffers[index % framebuffers.length];
+    }
 
-        var length = innerStages.length;
+    function createDrawCommands(postProcess, context) {
+        var activeStages = postProcess._activeStages;
+        var drawCommands = [];
+        postProcess._drawCommands = drawCommands;
+
+        var length = activeStages.length;
         for (var i = 0; i < length; ++i) {
-            var colorTexture;
-            if (i === 0) {
-                colorTexture = inputColorTexture;
-            } else {
-                colorTexture = colorTextures[(i + 1) % colorTextures.length];
-            }
+            var framebuffer = getCurrentFramebuffer(postProcess, i, length);
+            var colorTexture = getCurrentColorTexture(postProcess, i);
+            var depthTexture = postProcess._inputDepthTexture;
 
-            var framebuffer;
-            if (i === length - 1) {
-                framebuffer = outputFramebuffer;
-            } else {
-                framebuffer = framebuffers[i % framebuffers.length];
-            }
-
-            var stage = innerStages[i];
-            var drawCommand = stage._drawCommand;
-            drawCommand.uniformMap = createUniformMap(stage, colorTexture, inputDepthTexture);
-            drawCommand.framebuffer = framebuffer;
+            var stage = activeStages[i];
+            var renderState = (postProcess._blendOutput && (i === length - 1)) ? createRenderState(true) : createRenderState(false);
+            var uniformMap = createUniformMap(stage, colorTexture, depthTexture);
+            var drawCommand = context.createViewportQuadCommand(stage.fragmentShader, {
+                renderState : renderState,
+                uniformMap : uniformMap,
+                framebuffer : framebuffer,
+                owner : postProcess
+            });
+            drawCommands.push(drawCommand);
         }
     }
 
@@ -340,7 +348,7 @@ define([
         var screenHeight = context.drawingBufferHeight;
 
         var stages = postProcess._stages;
-        var innerStages = postProcess._innerStages;
+        var activeStages = postProcess._activeStages;
         var stagesEnabled = postProcess._stagesEnabled;
 
         if (inputColorTexture !== postProcess._inputColorTexture ||
@@ -352,7 +360,7 @@ define([
             return true;
         }
 
-        if (!defined(innerStages)) {
+        if (!defined(activeStages)) {
             return true;
         }
 
@@ -398,27 +406,34 @@ define([
         }
         this._cache = cache;
 
-        var i;
-        var stages = this._stages;
-        var length = stages.length;
-        for (i = 0; i < length; ++i) {
-            stages[i].update(frameState);
-        }
-
-        if (isDirty(this, inputColorTexture, inputDepthTexture, outputFramebuffer, context)) {
+        var dirty = isDirty(this, inputColorTexture, inputDepthTexture, outputFramebuffer, context);
+        if (dirty) {
             destroyDrawCommands(this);
             destroyFramebuffers(this);
             createStages(this, inputColorTexture, outputFramebuffer);
-            createDrawCommands(this, context);
             createTextures(this, inputColorTexture, context);
             createFramebuffers(this, context);
-            linkStages(this, inputColorTexture, inputDepthTexture, outputFramebuffer);
+            createDrawCommands(this, context);
         }
 
-        var innerStages = this._innerStages;
-        length = innerStages.length;
+        var i;
+        var length;
+        var activeStages = this._activeStages;
+        var inactiveStages = this._inactiveStages;
+        var drawCommands = this._drawCommands;
+
+        // Execute inactive stages so that they may become ready
+        length = inactiveStages.length;
         for (i = 0; i < length; ++i) {
-            innerStages[i]._drawCommand.execute(context);
+            inactiveStages[i].execute(frameState);
+        }
+
+        // Execute active stages and their associated draw commands
+        length = activeStages.length;
+        for (i = 0; i < length; ++i) {
+            var colorTexture = getCurrentColorTexture(this, i);
+            activeStages[i].execute(frameState, colorTexture, inputDepthTexture, dirty);
+            drawCommands[i].execute(frameState.context);
         }
     };
 
@@ -427,9 +442,10 @@ define([
     };
 
     PostProcess.prototype.destroy = function() {
-        destroyDrawCommands();
-        destroyTextures();
-        destroyFramebuffers();
+        destroyDrawCommands(this);
+        destroyTextures(this);
+        destroyFramebuffers(this);
+        destroyStages(this);
         return destroyObject(this);
     };
 

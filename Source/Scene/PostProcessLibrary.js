@@ -3,6 +3,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         './PostProcess',
+        './PostProcessAmbientOcclusionStage',
         './PostProcessCompositeStage',
         './PostProcessStage',
         '../Shaders/PostProcessFilters/FXAA',
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         PostProcess,
+        PostProcessAmbientOcclusionStage,
         PostProcessCompositeStage,
         PostProcessStage,
         FXAAFS,
@@ -111,6 +113,15 @@ define([
         compositeTest : {
             get : function() {
                 return createCompositeTestStage();
+            }
+        },
+
+        /**
+         * private
+         */
+        ambientOcclusion : {
+            get : function() {
+                return createAmbientOcclusionStage();
             }
         }
     });
@@ -280,6 +291,10 @@ define([
             fragmentShader : redShader
         });
         return new PostProcessCompositeStage([darkenStage, redStage]);
+    }
+
+    function createAmbientOcclusionStage() {
+        return new PostProcessAmbientOcclusionStage();
     }
 
     return PostProcessLibrary;

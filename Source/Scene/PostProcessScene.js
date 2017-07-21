@@ -44,6 +44,10 @@ define([
          */
         this.compositeTest = PostProcessLibrary.compositeTest;
         /**
+         * @inheritdoc PostProcessLibrary#ambientOcclusion
+         */
+        this.ambientOcclusion = PostProcessLibrary.ambientOcclusion;
+        /**
          * @inheritdoc PostProcessLibrary#fxaa
          */
         this.fxaa = PostProcessLibrary.fxaa;
@@ -56,6 +60,7 @@ define([
             this.textureOverlay,
             this.depthView,
             this.compositeTest,
+            this.ambientOcclusion,
             this.fxaa
         ];
 

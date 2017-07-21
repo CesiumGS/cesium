@@ -23,25 +23,16 @@ define([
         //>>includeEnd('debug');
 
         this._stages = stages;
-        var length = stages.length;
-        for (var i = 0; i < length; ++i) {
-            stages[i].show = true;
-        }
 
         /**
-         * Whether to show the post process stage.
-         * @type {Boolean}
-         * @default false
+         * @inheritDoc PostProcessStage#show
          */
         this.show = false;
     }
 
     defineProperties(PostProcessCompositeStage.prototype, {
         /**
-         * Whether the post process stage is ready.
-         * @memberof PostProcessCompositeStage.prototype
-         * @type {Boolean}
-         * @default false
+         * @inheritDoc PostProcessStage#ready
          */
         ready : {
             get : function() {
@@ -68,28 +59,14 @@ define([
     });
 
     /**
-     * @private
-     */
-    PostProcessCompositeStage.prototype.update = function(frameState) {
-        if (!this.show) {
-            return;
-        }
-        var stages = this._stages;
-        var length = stages.length;
-        for (var i = 0; i < length; ++i) {
-            stages[i].update(frameState);
-        }
-    };
-
-    /**
-     * @private
+     * @inheritdoc PostProcessStage#isDestroyed
      */
     PostProcessCompositeStage.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * @private
+     * @inheritdoc PostProcessStage#destroy
      */
     PostProcessCompositeStage.prototype.destroy = function() {
         var stages = this._stages;
