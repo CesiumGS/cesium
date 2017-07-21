@@ -930,6 +930,42 @@ define([
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
+    function clearStyle(polygons, features) {
+        var batchIds = polygons._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            var feature = features[batchId];
+
+            feature.show = true;
+            feature.color = Color.WHITE;
+        }
+    }
+
+    /**
+     * Apply a style to the content.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileStyle} style The style.
+     * @param {Cesium3DTileFeature[]} features The array of features.
+     */
+    Vector3DTilePolygons.prototype.applyStyle = function(frameState, style, features) {
+        if (!defined(style)) {
+            clearStyle(this, features);
+            return;
+        }
+
+        var batchIds = this._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            var feature = features[batchId];
+
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
+        }
+    };
+
     /**
      * Call when updating the color of a polygon with batchId changes color. The polygons will need to be re-batched
      * on the next update.

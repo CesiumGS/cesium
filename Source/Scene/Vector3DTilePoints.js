@@ -2,24 +2,32 @@ define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/DistanceDisplayCondition',
         '../Core/Math',
+        '../Core/NearFarScalar',
         './BillboardCollection',
         './Cesium3DTileFeature',
         './LabelCollection',
+        './LabelStyle',
         './PolylineCollection',
         './VerticalOrigin'
     ], function(
         AttributeCompression,
         Cartesian3,
         Cartographic,
+        Color,
         defined,
         destroyObject,
+        DistanceDisplayCondition,
         CesiumMath,
+        NearFarScalar,
         BillboardCollection,
         Cesium3DTileFeature,
         LabelCollection,
+        LabelStyle,
         PolylineCollection,
         VerticalOrigin) {
     'use strict';
@@ -96,6 +104,13 @@ define([
         primitive._positions = undefined;
     }
 
+    /**
+     * Creates features for each point and places it at the batch id index of features.
+     *
+     * @param {Cesium3DTileset} tileset The tileset.
+     * @param {Vector3DTileContent} content The vector tile content.
+     * @param {Cesium3DTileFeature[]} features An array of features where the point features will be placed.
+     */
     Vector3DTilePoints.prototype.createFeatures = function(tileset, content, features) {
         var billboardCollection = this._billboardCollection;
         var labelCollection = this._labelCollection;
@@ -117,6 +132,127 @@ define([
      */
     Vector3DTilePoints.prototype.applyDebugSettings = function(enabled, color) {
         // TODO
+    };
+
+    function clearStyle(polygons, features) {
+        var batchIds = polygons._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            var feature = features[batchId];
+
+            feature.show = true;
+            feature.color = Color.WHITE;
+            feature.pointSize = 8.0;
+            feature.pointColor = Color.WHITE;
+            feature.pointOutlineColor = Color.BLACK;
+            feature.pointOutlineWidth = 0.0;
+            feature.labelOutlineColor = Color.WHITE;
+            feature.labelOutlineWidth = 1.0;
+            feature.font = '30px sans-serif';
+            feature.labelStyle = LabelStyle.FILL;
+            feature.labelText = undefined;
+            feature.backgroundColor = undefined;
+            feature.backgroundPadding = undefined;
+            feature.backgroundEnabled = false;
+            feature.scaleByDistance = undefined;
+            feature.translucencyByDistance = undefined;
+            feature.distanceDisplayCondition = undefined;
+            feature.heightOffset = 0.0;
+            feature.anchorLineEnabled = false;
+            feature.anchorLineColor = Color.WHITE;
+            feature.image = undefined;
+
+            feature._setBillboardImage();
+        }
+    }
+
+    var scratchColor = new Color();
+    var scratchColor2 = new Color();
+    var scratchColor3 = new Color();
+    var scratchColor4 = new Color();
+    var scratchColor5 = new Color();
+    var scratchColor6 = new Color();
+
+    /**
+     * Apply a style to the content.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @param {Cesium3DTileStyle} style The style.
+     * @param {Cesium3DTileFeature[]} features The array of features.
+     */
+    Vector3DTilePoints.prototype.applyStyle = function(frameState, style, features) {
+        if (!defined(style)) {
+            clearStyle(this, features);
+            return;
+        }
+
+        var batchIds = this._batchIds;
+        var length = batchIds.length;
+        for (var i = 0; i < length; ++i) {
+            var batchId = batchIds[i];
+            var feature = features[batchId];
+
+            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+            feature.show = style.show.evaluate(frameState, feature);
+            feature.pointSize = style.pointSize.evaluate(frameState, feature);
+            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor2);
+            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor3);
+            feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
+            feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
+            feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
+            feature.font = style.font.evaluate(frameState, feature);
+            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+
+            if (defined(style.labelText)) {
+                feature.labelText = style.labelText.evaluate(frameState, feature);
+            } else {
+                feature.labelText = undefined;
+            }
+
+            if (defined(style.backgroundColor)) {
+                feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor5);
+            }
+
+            if (defined(style.backgroundPadding)) {
+                feature.backgroundPadding = style.backgroundPadding.evaluate(frameState, feature);
+            }
+
+            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+
+            if (defined(style.scaleByDistance)) {
+                var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
+                feature.scaleByDistance = new NearFarScalar(scaleByDistanceCart4.x, scaleByDistanceCart4.y, scaleByDistanceCart4.z, scaleByDistanceCart4.w);
+            } else {
+                feature.scaleBydistance = undefined;
+            }
+
+            if (defined(style.translucencyByDistance)) {
+                var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(frameState, feature);
+                feature.translucencyByDistance = new NearFarScalar(translucencyByDistanceCart4.x, translucencyByDistanceCart4.y, translucencyByDistanceCart4.z, translucencyByDistanceCart4.w);
+            } else {
+                feature.translucencyByDistance = undefined;
+            }
+
+            if (defined(style.distanceDisplayCondition)) {
+                var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
+                feature.distanceDisplatCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
+            } else {
+                feature.distanceDisplayCondition = undefined;
+            }
+
+            feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
+            feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
+            feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
+
+            if (defined(style.image)) {
+                feature.image = style.image.evaluate(frameState, feature);
+            } else {
+                feature.image = undefined;
+            }
+
+            feature._setBillboardImage();
+        }
     };
 
     /**

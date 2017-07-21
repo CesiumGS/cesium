@@ -514,117 +514,19 @@ define([
         }
     };
 
-    function clearStyle(content) {
-        var length = content._features.length;
-        for (var i = 0; i < length; ++i) {
-            var feature = content.getFeature(i);
-
-            feature.show = true;
-            feature.color = Color.WHITE;
-            feature.pointSize = 8.0;
-            feature.pointColor = Color.WHITE;
-            feature.pointOutlineColor = Color.BLACK;
-            feature.pointOutlineWidth = 0.0;
-            feature.labelOutlineColor = Color.WHITE;
-            feature.labelOutlineWidth = 1.0;
-            feature.font = '30px sans-serif';
-            feature.labelStyle = LabelStyle.FILL;
-            feature.labelText = undefined;
-            feature.backgroundColor = undefined;
-            feature.backgroundPadding = undefined;
-            feature.backgroundEnabled = false;
-            feature.scaleByDistance = undefined;
-            feature.translucencyByDistance = undefined;
-            feature.distanceDisplayCondition = undefined;
-            feature.heightOffset = 0.0;
-            feature.anchorLineEnabled = false;
-            feature.anchorLineColor = Color.WHITE;
-            feature.image = undefined;
-
-            feature._setBillboardImage();
-        }
-    }
-
-    var scratchColor = new Color();
-    var scratchColor2 = new Color();
-    var scratchColor3 = new Color();
-    var scratchColor4 = new Color();
-    var scratchColor5 = new Color();
-    var scratchColor6 = new Color();
-
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
         createFeatures(this);
-
-        if (!defined(style)) {
-            clearStyle(this);
-            return;
+        if (defined(this._polygons)) {
+            this._polygons.applyStyle(frameState, style, this._features);
         }
-
-        var length = this._features.length;
-        for (var i = 0; i < length; ++i) {
-            var feature = this.getFeature(i);
-            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
-            feature.show = style.show.evaluate(frameState, feature);
-            feature.pointSize = style.pointSize.evaluate(frameState, feature);
-            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor2);
-            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor3);
-            feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
-            feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
-            feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
-            feature.font = style.font.evaluate(frameState, feature);
-            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
-
-            if (defined(style.labelText)) {
-                feature.labelText = style.labelText.evaluate(frameState, feature);
-            } else {
-                feature.labelText = undefined;
-            }
-
-            if (defined(style.backgroundColor)) {
-                feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor5);
-            }
-
-            if (defined(style.backgroundPadding)) {
-                feature.backgroundPadding = style.backgroundPadding.evaluate(frameState, feature);
-            }
-
-            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
-
-            if (defined(style.scaleByDistance)) {
-                var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
-                feature.scaleByDistance = new NearFarScalar(scaleByDistanceCart4.x, scaleByDistanceCart4.y, scaleByDistanceCart4.z, scaleByDistanceCart4.w);
-            } else {
-                feature.scaleBydistance = undefined;
-            }
-
-            if (defined(style.translucencyByDistance)) {
-                var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(frameState, feature);
-                feature.translucencyByDistance = new NearFarScalar(translucencyByDistanceCart4.x, translucencyByDistanceCart4.y, translucencyByDistanceCart4.z, translucencyByDistanceCart4.w);
-            } else {
-                feature.translucencyByDistance = undefined;
-            }
-
-            if (defined(style.distanceDisplayCondition)) {
-                var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
-                feature.distanceDisplatCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
-            } else {
-                feature.distanceDisplayCondition = undefined;
-            }
-
-            feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
-            feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
-            feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
-
-            if (defined(style.image)) {
-                feature.image = style.image.evaluate(frameState, feature);
-            } else {
-                feature.image = undefined;
-            }
-
-            feature._setBillboardImage();
+        if (defined(this._polylines)) {
+            this._polylines.applyStyle(frameState, style, this._features);
+        }
+        if (defined(this._points)) {
+            this._points.applyStyle(frameState, style, this._features);
         }
     };
 
