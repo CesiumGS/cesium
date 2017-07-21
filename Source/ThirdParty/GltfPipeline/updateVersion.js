@@ -395,15 +395,17 @@ define([
             }
             var joints = [];
             var jointNames = skin.jointNames;
-            for (i = 0; i < jointNames.length; i++) {
-                var jointNodeIndex = globalMapping.nodes[jointNames[i]];
-                joints[i] = jointNodeIndex;
-                if (allSkeletons.includes(jointNodeIndex)) {
-                    skin.skeleton = jointNodeIndex;
+            if (defined(jointNames)) {
+                for (i = 0; i < jointNames.length; i++) {
+                    var jointNodeIndex = globalMapping.nodes[jointNames[i]];
+                    joints[i] = jointNodeIndex;
+                    if (allSkeletons.includes(jointNodeIndex)) {
+                        skin.skeleton = jointNodeIndex;
+                    }
                 }
+                skin.joints = joints;
+                delete skin.jointNames;
             }
-            skin.joints = joints;
-            delete skin.jointNames;
         });
         ForEach.scene(gltf, function(scene) {
             var sceneNodes = scene.nodes;
