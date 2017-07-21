@@ -136,7 +136,7 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
 
 void main() {
     vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    float depth = texture2D(pointCloud_depthTexture, v_textureCoordinates).r;
+    float depth = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates));
 
     vec4 finalColor = color;
     float finalDepth = depth;
