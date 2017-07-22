@@ -1870,7 +1870,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var zoomPromise = viewer._zoomPromise;
         var zoomOptions = defaultValue(viewer._zoomOptions, {});
 
-console.log('hey');
         //If zoomTarget was an ImageryLayer
         if (entities instanceof Rectangle) {
             var options = {
