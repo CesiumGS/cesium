@@ -1870,6 +1870,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var zoomPromise = viewer._zoomPromise;
         var zoomOptions = defaultValue(viewer._zoomOptions, {});
 
+console.log('hey');
         //If zoomTarget was an ImageryLayer
         if (entities instanceof Rectangle) {
             var options = {
@@ -1915,7 +1916,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
         var controller = scene.screenSpaceCameraController;
-        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
 
         if (!viewer._zoomIsFlight) {
             camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
