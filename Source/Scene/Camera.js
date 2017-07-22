@@ -2853,12 +2853,12 @@ define([
         return Math.max(right, top) * 1.50;
     }
 
-    var MINIMUM_ZOOM = 100.0;
-
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
+        
+        var MINIMUM_ZOOM = camera._scene.screenSpaceCameraController.minimumZoomDistance;
 
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
