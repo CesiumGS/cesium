@@ -1,5 +1,6 @@
 define([
         '../../Core/buildModuleUrl',
+        '../../Core/Check',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,6 +12,7 @@ define([
         './InfoBoxViewModel'
     ], function(
         buildModuleUrl,
+        Check,
         Color,
         defined,
         defineProperties,
@@ -34,9 +36,7 @@ define([
      */
     function InfoBox(container) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(container)) {
-            throw new DeveloperError('container is required.');
-        }
+        Check.defined('container', container);
         //>>includeEnd('debug')
 
         container = getElement(container);
