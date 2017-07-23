@@ -2857,14 +2857,20 @@ define([
         if (!defined(offset)) {
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
-        
-        var MINIMUM_ZOOM = camera._scene.screenSpaceCameraController.minimumZoomDistance;
 
+        var DEFAULT_ZOOM = 100.0;
+        var MINIMUM_ZOOM = camera._scene.screenSpaceCameraController.minimumZoomDistance;
+        var MAXIMUM_ZOOM = camera._scene.screenSpaceCameraController.maximumZoomDistance;
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            if (radius === 0.0) {
+            // If the minimumZoomDistance hasn't been set yet, it is equal to 1,
+            if (radius < MINIMUM_ZOOM && MINIMUM_ZOOM > 1) {
                 offset.range = MINIMUM_ZOOM;
+            } else if(radius > MAXIMUM_ZOOM) {
+                offset.range = MAXIMUM_ZOOM;
+            } else if(radius === 0) {
+                offset.range = DEFAULT_ZOOM;
             } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
                 offset.range = distanceToBoundingSphere2D(camera, radius);
             } else {
@@ -2950,7 +2956,6 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var scene2D = this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
         this._setTransform(Matrix4.IDENTITY);
         var offset = adjustBoundingSphereOffset(this, boundingSphere, options.offset);

@@ -1914,7 +1914,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewer.trackedEntity = undefined;
 
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-        var controller = scene.screenSpaceCameraController;
 
         if (!viewer._zoomIsFlight) {
             camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);
