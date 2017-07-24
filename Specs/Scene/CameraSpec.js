@@ -2607,8 +2607,8 @@ defineSuite([
 
     it('flyToBoundingSphere does not zoom closer than minimumZoomDistance', function() {
         scene.mode = SceneMode.SCENE3D;
-        var MIN_VALUE = 1000;
-        scene.screenSpaceCameraController.minimumZoomDistance = MIN_VALUE;
+        var minValue = 1000;
+        scene.screenSpaceCameraController.minimumZoomDistance = minValue;
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
 
@@ -2617,13 +2617,13 @@ defineSuite([
         });
 
         var distance = Cartesian3.distance(camera.position, sphere.center);
-        expect(CesiumMath.equalsEpsilon(distance, MIN_VALUE, 0.1)).toBe(true);
+        expect(CesiumMath.equalsEpsilon(distance, minValue, 0.1)).toBe(true);
     });
 
     it('flyToBoundingSphere does not zoom further than maximumZoomDistance', function() {
         scene.mode = SceneMode.SCENE3D;
-        var MAX_VALUE = 10000;
-        scene.screenSpaceCameraController.maximumZoomDistance = MAX_VALUE;
+        var maxValue = 10000;
+        scene.screenSpaceCameraController.maximumZoomDistance = maxValue;
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000);
 
@@ -2632,7 +2632,7 @@ defineSuite([
         });
 
         var distance = Cartesian3.distance(camera.position, sphere.center);
-        expect(CesiumMath.equalsEpsilon(distance, MAX_VALUE, 0.1)).toBe(true);
+        expect(CesiumMath.equalsEpsilon(distance, maxValue, 0.1)).toBe(true);
     });
 
     it('distanceToBoundingSphere', function() {

@@ -2858,19 +2858,19 @@ define([
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
-        var DEFAULT_ZOOM = 100.0;
-        var MINIMUM_ZOOM = camera._scene.screenSpaceCameraController.minimumZoomDistance;
-        var MAXIMUM_ZOOM = camera._scene.screenSpaceCameraController.maximumZoomDistance;
+        var defaultZoom = 100.0;
+        var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
+        var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
             // If the minimumZoomDistance hasn't been set yet, it is equal to 1,
-            if (radius < MINIMUM_ZOOM && MINIMUM_ZOOM > 1) {
-                offset.range = MINIMUM_ZOOM;
-            } else if(radius > MAXIMUM_ZOOM) {
-                offset.range = MAXIMUM_ZOOM;
+            if (radius < minimumZoom && minimumZoom > 1) {
+                offset.range = minimumZoom;
+            } else if(radius > maximumZoom) {
+                offset.range = maximumZoom;
             } else if(radius === 0) {
-                offset.range = DEFAULT_ZOOM;
+                offset.range = defaultZoom;
             } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
                 offset.range = distanceToBoundingSphere2D(camera, radius);
             } else {
