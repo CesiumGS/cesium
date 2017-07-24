@@ -1193,10 +1193,10 @@ define([
         for (i = 0; i < numRegionGrowingCommands; i++) {
             if (i % 2 === 0) {
                 commandList.push(clearCommands['regionGrowingPassA']);
-                //commandList.push(clearCommands['aoBufferA']);
+                commandList.push(clearCommands['aoBufferA']);
             } else {
                 commandList.push(clearCommands['regionGrowingPassB']);
-                //commandList.push(clearCommands['aoBufferB']);
+                commandList.push(clearCommands['aoBufferB']);
             }
 
             commandList.push(copyCommands[i % 2]);
