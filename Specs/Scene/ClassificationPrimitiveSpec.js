@@ -1,5 +1,7 @@
 defineSuite([
-        'Scene/GroundPrimitive',
+        'Scene/ClassificationPrimitive',
+        'Core/BoxGeometry',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
@@ -8,17 +10,21 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
         'Core/Math',
+        'Core/Matrix4',
         'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
+        'Core/Transforms',
         'Renderer/Pass',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GroundPrimitive,
+        ClassificationPrimitive,
+        BoxGeometry,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
@@ -27,10 +33,12 @@ defineSuite([
         GeometryInstance,
         HeadingPitchRange,
         CesiumMath,
+        Matrix4,
         PolygonGeometry,
         Rectangle,
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
+        Transforms,
         Pass,
         PerInstanceColorAppearance,
         Primitive,
@@ -39,15 +47,14 @@ defineSuite([
     'use strict';
 
     var scene;
-    var context;
 
     var ellipsoid;
     var rectangle;
 
     var depthColor;
-    var rectColor;
+    var boxColor;
 
-    var rectangleInstance;
+    var boxInstance;
     var primitive;
     var depthPrimitive;
 
@@ -55,19 +62,11 @@ defineSuite([
         scene = createScene();
         scene.fxaa = false;
 
-        context = scene.context;
-
         ellipsoid = Ellipsoid.WGS84;
-        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
-
-        // Leave ground primitive uninitialized
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
     });
 
     function MockGlobePrimitive(primitive) {
@@ -121,16 +120,22 @@ defineSuite([
         // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
         depthPrimitive = new MockGlobePrimitive(primitive);
 
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
-        rectColor = rectColorAttribute.value;
-        rectangleInstance = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : rectangle
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+
+        var dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
+        boxColor = boxColorAttribute.value;
+        boxInstance = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
             }),
-            id : 'rectangle',
+            modelMatrix : modelMatrix,
+            id : 'box',
             attributes : {
-                color : rectColorAttribute
+                color : boxColorAttribute
             }
         });
     });
@@ -142,7 +147,7 @@ defineSuite([
     });
 
     it('default constructs', function() {
-        primitive = new GroundPrimitive();
+        primitive = new ClassificationPrimitive();
         expect(primitive.geometryInstances).not.toBeDefined();
         expect(primitive.show).toEqual(true);
         expect(primitive.vertexCacheOptimize).toEqual(false);
@@ -158,7 +163,7 @@ defineSuite([
     it('constructs with options', function() {
         var geometryInstances = [];
 
-        primitive = new GroundPrimitive({
+        primitive = new ClassificationPrimitive({
             geometryInstances : geometryInstances,
             show : false,
             vertexCacheOptimize : true,
@@ -184,12 +189,12 @@ defineSuite([
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             releaseGeometryInstances : true,
             asynchronous : false
         });
@@ -201,12 +206,12 @@ defineSuite([
     });
 
     it('does not release geometry instances when releaseGeometryInstances is false', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             releaseGeometryInstances : false,
             asynchronous : false
         });
@@ -218,12 +223,12 @@ defineSuite([
     });
 
     it('adds afterRender promise to frame state', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             releaseGeometryInstances : false,
             asynchronous : false
         });
@@ -237,11 +242,11 @@ defineSuite([
     });
 
     it('does not render when geometryInstances is undefined', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
+        primitive = new ClassificationPrimitive({
             geometryInstances : undefined,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false
@@ -255,12 +260,12 @@ defineSuite([
     });
 
     it('does not render when show is false', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
@@ -282,12 +287,12 @@ defineSuite([
     });
 
     it('does not render other than for the color or pick pass', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
@@ -299,7 +304,7 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
-    function verifyGroundPrimitiveRender(primitive, color) {
+    function verifyClassificationPrimitiveRender(primitive, color) {
         scene.camera.setView({ destination : rectangle });
 
         scene.groundPrimitives.add(depthPrimitive);
@@ -313,87 +318,111 @@ defineSuite([
     }
 
     it('renders in 3D', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
     it('renders in Columbus view when scene3DOnly is false', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
         scene.morphToColumbusView(0);
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
         scene.morphTo2D(0);
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
     it('renders batched instances', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
-        var rectangleInstance1 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
             }),
-            id : 'rectangle1',
+            modelMatrix : modelMatrix,
+            id : 'box1',
             attributes : {
-                color : rectColorAttribute
-            }
-        });
-        var rectangleInstance2 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
-            }),
-            id : 'rectangle2',
-            attributes : {
-                color : rectColorAttribute
+                color : boxColorAttribute
             }
         });
 
-        primitive = new GroundPrimitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
+        Cartesian3.negate(direction, direction);
+        var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+        modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+
+        var boxInstance2 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box2',
+            attributes : {
+                color : boxColorAttribute
+            }
+        });
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1, boxInstance2],
             asynchronous : false
         });
-        verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
+        verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false,
             debugShowBoundingVolume : true
         });
@@ -409,12 +438,12 @@ defineSuite([
     });
 
     it('renders shadow volume with debugShowShadowVolume', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false,
             debugShowShadowVolume : true
         });
@@ -430,214 +459,142 @@ defineSuite([
     });
 
     it('get per instance attributes', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
         expect(attributes.color).toBeDefined();
     });
 
     it('modify color instance attribute', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
         scene.groundPrimitives.destroyPrimitives = true;
 
         var newColor = [255, 255, 255, 255];
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
         expect(attributes.color).toBeDefined();
         attributes.color = newColor;
 
-        verifyGroundPrimitiveRender(primitive, newColor);
+        verifyClassificationPrimitiveRender(primitive, newColor);
     });
 
     it('modify show instance attribute', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        rectangleInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+        boxInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
         scene.groundPrimitives.destroyPrimitives = true;
 
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
         expect(attributes.show).toBeDefined();
         attributes.show = [0];
 
-        verifyGroundPrimitiveRender(primitive, depthColor);
-    });
-
-    it('renders with distance display condition per instance attribute', function() {
-        if (!context.floatingPointTexture) {
-            return;
-        }
-
-        if (!GroundPrimitive.isSupported(scene)) {
-            return;
-        }
-
-        var near = 10000.0;
-        var far = 1000000.0;
-        var rect = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
-        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
-        depthColor = depthColorAttribute.value;
-        var primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
-                    rectangle : rectangle
-                }),
-                id : 'depth rectangle',
-                attributes : {
-                    color : depthColorAttribute
-                }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
-
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
-        var rectInstance = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : rectangle
-            }),
-            id : 'rect',
-            attributes : {
-                color : rectColorAttribute,
-                distanceDisplayCondition : new DistanceDisplayConditionGeometryInstanceAttribute(near, far)
-            }
-        });
-
-        primitive = new GroundPrimitive({
-            geometryInstances : rectInstance,
-            asynchronous : false
-        });
-
-        scene.groundPrimitives.add(depthPrimitive);
-        scene.groundPrimitives.add(primitive);
-        scene.camera.setView({ destination : rect });
-        scene.renderForSpecs();
-
-        var boundingSphere = primitive.getGeometryInstanceAttributes('rect').boundingSphere;
-        var center = boundingSphere.center;
-        var radius = boundingSphere.radius;
-
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius));
-        expect(scene).toRender([0, 0, 255, 255]);
-
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + near + 1.0));
-        expect(scene).notToRender([0, 0, 255, 255]);
-
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -CesiumMath.PI_OVER_TWO, radius + far + 1.0));
-        expect(scene).toRender([0, 0, 255, 255]);
+        verifyClassificationPrimitiveRender(primitive, depthColor);
     });
 
     it('get bounding sphere from per instance attribute', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
         expect(attributes.boundingSphere).toBeDefined();
     });
 
     it('getGeometryInstanceAttributes returns same object each time', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
-        var attributes2 = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
+        var attributes2 = primitive.getGeometryInstanceAttributes('box');
         expect(attributes).toBe(attributes2);
     });
 
     it('picking', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         expect(scene).toPickAndCall(function(result) {
-            expect(result.id).toEqual('rectangle');
+            expect(result.id).toEqual('box');
         });
     });
 
     it('does not pick when allowPicking is false', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             allowPicking : false,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         expect(scene).notToPick();
     });
 
     it('internally invalid asynchronous geometry resolves promise and sets ready', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
+        primitive = new ClassificationPrimitive({
             geometryInstances : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
@@ -667,11 +624,11 @@ defineSuite([
     });
 
     it('internally invalid synchronous geometry resolves promise and sets ready', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
+        primitive = new ClassificationPrimitive({
             geometryInstances : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
@@ -702,90 +659,137 @@ defineSuite([
     });
 
     it('update throws when batched instance colors are different', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
-        var rectangleInstance1 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
             }),
-            id : 'rectangle1',
+            modelMatrix : modelMatrix,
+            id : 'box1',
             attributes : {
-                color : rectColorAttribute
-            }
-        });
-        rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0));
-        var rectangleInstance2 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
-            }),
-            id : 'rectangle2',
-            attributes : {
-                color : rectColorAttribute
+                color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0))
             }
         });
 
-        primitive = new GroundPrimitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
+        Cartesian3.negate(direction, direction);
+        var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+        modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+
+        var boxInstance2 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box2',
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 1.0, 1.0))
+            }
+        });
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1, boxInstance2],
             asynchronous : false
         });
 
         expect(function() {
-            verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
+            verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
         }).toThrowDeveloperError();
     });
 
     it('update throws when one batched instance color is undefined', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        var rectColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
-        var rectangleInstance1 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, rectangle.south, rectangle.east, (rectangle.north + rectangle.south) * 0.5)
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
             }),
-            id : 'rectangle1',
+            modelMatrix : modelMatrix,
+            id : 'box1',
             attributes : {
-                color : rectColorAttribute
+                color : ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0))
             }
         });
-        var rectangleInstance2 = new GeometryInstance({
-            geometry : new RectangleGeometry({
-                ellipsoid : ellipsoid,
-                rectangle : new Rectangle(rectangle.west, (rectangle.north + rectangle.south) * 0.5, rectangle.east, rectangle.north)
+
+        Cartesian3.negate(direction, direction);
+        var origin2 = Cartesian3.add(origin, direction, new Cartesian3());
+        modelMatrix = Transforms.eastNorthUpToFixedFrame(origin2);
+
+        var boxInstance2 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
             }),
-            id : 'rectangle2'
+            modelMatrix : modelMatrix,
+            id : 'box2'
         });
 
-        primitive = new GroundPrimitive({
-            geometryInstances : [rectangleInstance1, rectangleInstance2],
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1, boxInstance2],
             asynchronous : false
         });
 
         expect(function() {
-            verifyGroundPrimitiveRender(primitive, rectColorAttribute.value);
+            verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
         }).toThrowDeveloperError();
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
-        var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+        var attributes = primitive.getGeometryInstanceAttributes('box');
 
         expect(function() {
             attributes.color = undefined;
@@ -793,12 +797,12 @@ defineSuite([
     });
 
     it('can disable picking when asynchronous', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : true,
             allowPicking : false
         });
@@ -812,7 +816,7 @@ defineSuite([
             }
             return primitive.ready;
         }).then(function() {
-            var attributes = primitive.getGeometryInstanceAttributes('rectangle');
+            var attributes = primitive.getGeometryInstanceAttributes('box');
             expect(function() {
                 attributes.color = undefined;
             }).toThrowDeveloperError();
@@ -820,16 +824,16 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes throws without id', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         expect(function() {
             primitive.getGeometryInstanceAttributes();
@@ -837,45 +841,45 @@ defineSuite([
     });
 
     it('getGeometryInstanceAttributes throws if update was not called', function() {
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
         expect(function() {
-            primitive.getGeometryInstanceAttributes('rectangle');
+            primitive.getGeometryInstanceAttributes('box');
         }).toThrowDeveloperError();
     });
 
     it('getGeometryInstanceAttributes returns undefined if id does not exist', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
             asynchronous : false
         });
 
-        verifyGroundPrimitiveRender(primitive, rectColor);
+        verifyClassificationPrimitiveRender(primitive, boxColor);
 
         expect(primitive.getGeometryInstanceAttributes('unknown')).not.toBeDefined();
     });
 
     it('isDestroyed', function() {
-        primitive = new GroundPrimitive();
+        primitive = new ClassificationPrimitive();
         expect(primitive.isDestroyed()).toEqual(false);
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
     });
 
     it('renders when using asynchronous pipeline', function() {
-        if (!GroundPrimitive.isSupported(scene)) {
+        if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
 
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance
         });
 
         var frameState = scene.frameState;
@@ -887,13 +891,13 @@ defineSuite([
             }
             return primitive.ready;
         }).then(function() {
-            verifyGroundPrimitiveRender(primitive, rectColor);
+            verifyClassificationPrimitiveRender(primitive, boxColor);
         });
     });
 
     it('destroy before asynchonous pipeline is complete', function() {
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance
         });
 
         var frameState = scene.frameState;
@@ -901,27 +905,5 @@ defineSuite([
 
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
-    });
-
-    it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
-        // Make it seem like initializeTerrainHeights was never called
-        var initPromise = GroundPrimitive._initPromise;
-        GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._initialized = false;
-
-        primitive = new GroundPrimitive({
-            geometryInstances : rectangleInstance,
-            asynchronous : false
-        });
-
-        if (GroundPrimitive.isSupported(scene)) {
-            expect(function() {
-                primitive.update(scene.frameState);
-            }).toThrowDeveloperError();
-        }
-
-        // Set back to initialized state
-        GroundPrimitive._initPromise = initPromise;
-        GroundPrimitive._initialized = true;
     });
 }, 'WebGL');
