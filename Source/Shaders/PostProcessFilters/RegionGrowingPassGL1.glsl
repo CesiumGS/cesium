@@ -256,5 +256,5 @@ void main() {
 #endif
 #endif
     gl_FragData[1] = czm_packDepth(finalDepth);
-    gl_FragData[2] = czm_packDepth(finalAO);
+    gl_FragData[2] = czm_packDepth(finalAO - 1e-7);
 }

@@ -769,6 +769,9 @@ define([
             '        #endif \n' +
             '        gl_FragData[1] = rawDepth; \n' +
             '        gl_FragData[2] = rawAO; \n' +
+            '    }  else { \n' +
+            '       gl_FragData[1] = czm_packDepth(0.0); ' +
+            '       gl_FragData[2] = czm_packDepth(1.0 - EPS); ' +
             '    } \n' +
             '} \n';
 

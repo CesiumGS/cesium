@@ -148,15 +148,17 @@ void main() {
     vec4 ones = vec4(1.0);
     float accumulator = dot(sh1, ones) + dot(sh2, ones);
 
+    vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
+
     // The solid angle is too small, so we occlude this point
-    if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
+    if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle) ||
+        length(centerPosition) < EPS) {
         gl_FragData[0] = vec4(0.0);
-        gl_FragData[1] = vec4(0.0);
+        gl_FragData[1] = vec4(1.0 - EPS);
     } else {
-        float occlusion = accumulator / (4.0 * PI);
+        float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
         gl_FragData[1] = czm_packDepth(occlusion);
 
-        vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
         // Write out the distance of the point
         //
         // We use the distance of the point rather than
