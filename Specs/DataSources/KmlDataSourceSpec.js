@@ -150,7 +150,6 @@ defineSuite([
         expect(dataSource.show).toBe(true);
     });
 
-
     it('setting name raises changed event', function() {
         var dataSource = new KmlDataSource(options);
 
