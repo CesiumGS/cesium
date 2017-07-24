@@ -4,6 +4,7 @@ define([
         './addToArray',
         './findAccessorMinMax',
         './ForEach',
+        './getAccessorByteStride',
         '../../Core/Cartesian3',
         '../../Core/Math',
         '../../Core/clone',
@@ -16,6 +17,7 @@ define([
         addToArray,
         findAccessorMinMax,
         ForEach,
+        getAccessorByteStride,
         Cartesian3,
         CesiumMath,
         clone,
@@ -698,11 +700,11 @@ define([
                     bufferViewsToDelete[oldBufferViewId] = true;
                 }
                 var bufferView = clone(bufferViews[oldBufferViewId]);
-                var accessorByteStride = accessor.byteStride;
+                var accessorByteStride = getAccessorByteStride(gltf, accessor);
                 if (defined(accessorByteStride)) {
                     bufferView.byteStride = accessorByteStride;
                     if (bufferView.byteStride !== 0) {
-                        bufferView.byteLength = accessor.count * bufferView.byteStride;
+                        bufferView.byteLength = accessor.count * accessorByteStride;
                     }
                     bufferView.byteOffset += accessor.byteOffset;
                     accessor.byteOffset = 0;
