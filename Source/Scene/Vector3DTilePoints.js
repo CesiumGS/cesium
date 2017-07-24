@@ -141,11 +141,11 @@ define([
             var feature = features[batchId];
 
             feature.show = true;
-            feature.color = Color.WHITE;
             feature.pointSize = 8.0;
             feature.pointColor = Color.WHITE;
             feature.pointOutlineColor = Color.BLACK;
             feature.pointOutlineWidth = 0.0;
+            feature.labelColor = Color.WHITE;
             feature.labelOutlineColor = Color.WHITE;
             feature.labelOutlineWidth = 1.0;
             feature.font = '30px sans-serif';
@@ -192,12 +192,12 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
             feature.show = style.show.evaluate(frameState, feature);
             feature.pointSize = style.pointSize.evaluate(frameState, feature);
-            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor2);
-            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor3);
+            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor);
+            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor2);
             feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
+            feature.labelColor = style.labelColor.evaluateColor(frameState, feature, scratchColor3);
             feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
             feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
             feature.font = style.font.evaluate(frameState, feature);

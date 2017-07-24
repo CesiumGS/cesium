@@ -84,6 +84,7 @@ define([
         this._pointSize = undefined;
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
+        this._labelColor = undefined;
         this._labelOutlineColor = undefined;
         this._labelOutlineWidth = undefined;
         this._font = undefined;
@@ -137,6 +138,7 @@ define([
         var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_POINT_SIZE_EXPRESSION);
         var pointOutlineColorExpression = defaultValue(styleJson.pointOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
         var pointOutlineWidthExpression = defaultValue(styleJson.pointOutlineWidth, DEFAULT_JSON_POINT_OUTLINE_WIDTH_EXPRESSION);
+        var labelColorExpression = defaultValue(styleJson.labelColor, DEFAULT_JSON_COLOR_EXPRESSION);
         var labelOutlineColorExpression = defaultValue(styleJson.labelOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
         var labelOutlineWidthExpression = defaultValue(styleJson.labelOutlineWidth, DEFAULT_JSON_LABEL_OUTLINE_WIDTH_EXPRESSION);
         var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_JSON_LABEL_STYLE_EXPRESSION);
@@ -214,6 +216,15 @@ define([
         }
 
         that._pointOutlineWidth = pointOutlineWidth;
+
+        var labelColor;
+        if (typeof labelColorExpression === 'string') {
+            labelColor = new Expression(labelColorExpression, defines);
+        } else if (defined(labelColorExpression.conditions)) {
+            labelColor = new ConditionsExpression(labelColorExpression, defines);
+        }
+
+        that._labelColor = labelColor;
 
         var labelOutlineColor;
         if (typeof labelOutlineColorExpression === 'string') {
@@ -518,6 +529,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         pointColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -576,6 +599,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         pointOutlineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -591,6 +626,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineWidth</code> property.
+         * <p>
+         * The expression must return a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         pointOutlineWidth : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -606,6 +653,45 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
+        labelColor : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelColor;
+            },
+            set : function(value) {
+                this._labelColor = value;
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         labelOutlineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -621,6 +707,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineWidth</code> property.
+         * <p>
+         * The expression must return a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         labelOutlineWidth : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -725,7 +823,7 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>text</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelText</code> property.
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
@@ -768,6 +866,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         backgroundColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -783,6 +893,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundPadding</code> property.
+         * <p>
+         * The expression must return a <code>Cartesian2</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         backgroundPadding : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -798,6 +920,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundEnabled</code> property.
+         * <p>
+         * The expression must return a <code>Boolean</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         backgroundEnabled : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -813,6 +947,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>scaleByDistance</code> property.
+         * <p>
+         * The expression must return a <code>Cartesian4</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         scaleByDistance : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -828,6 +974,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>translucencyByDistance</code> property.
+         * <p>
+         * The expression must return a <code>Cartesian4</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         translucencyByDistancee : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -843,6 +1001,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>distanceDisplayCondition</code> property.
+         * <p>
+         * The expression must return a <code>Cartesian2</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         distanceDisplayCondition : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -858,6 +1028,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>heightOffset</code> property.
+         * <p>
+         * The expression must return a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         heightOffset : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -873,6 +1055,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineEnabled</code> property.
+         * <p>
+         * The expression must return a <code>Boolean</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         anchorLineEnabled : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -888,6 +1082,18 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineColor</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
         anchorLineColor : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);

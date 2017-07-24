@@ -19,14 +19,13 @@ define([
     'use strict';
 
     /**
-     * A feature of a {@link Cesium3DTileset}.
+     * A point feature of a {@link Cesium3DTileset}.
      * <p>
      * Provides access to a feature's properties stored in the tile's batch table, as well
-     * as the ability to show/hide a feature and change its highlight color via
-     * {@link Cesium3DTileFeature#show} and {@link Cesium3DTileFeature#color}, respectively.
+     * as the ability to show/hide a feature and change its point properties
      * </p>
      * <p>
-     * Modifications to a <code>Cesium3DTileFeature</code> object have the lifetime of the tile's
+     * Modifications to a <code>Cesium3DTilePointFeature</code> object have the lifetime of the tile's
      * content.  If the tile's content is unloaded, e.g., due to it going out of view and needing
      * to free space in the cache for visible tiles, listen to the {@link Cesium3DTileset#tileUnload} event to save any
      * modifications. Also listen to the {@link Cesium3DTileset#tileVisible} event to reapply any modifications.
@@ -36,7 +35,7 @@ define([
      * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
      * </p>
      *
-     * @alias Cesium3DTileFeature
+     * @alias Cesium3DTilePointFeature
      * @constructor
      *
      * @example
@@ -60,7 +59,6 @@ define([
         this._polylineCollection = polylineCollection;
 
         this._batchId = batchId;
-        this._color = undefined;  // for calling getColor
         this._billboardImage = undefined;
         this._billboardColor = undefined;
         this._billboardOutlineColor = undefined;
@@ -81,7 +79,7 @@ define([
          * Gets or sets if the feature will be shown. This is set for all features
          * when a style's show is evaluated.
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Boolean}
          *
@@ -101,31 +99,15 @@ define([
         },
 
         /**
-         * Gets or sets the highlight color multiplied with the feature's color.  When
-         * this is white, the feature's color is not changed. This is set for all features
-         * when a style's color is evaluated.
+         * Gets or sets the point color of this feature.
+         * <p>
+         * Only applied when <code>image</code> is <code>undefined</code>.
+         * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Color}
-         *
-         * @default {@link Color.WHITE}
          */
-        color : {
-            get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.fillColor;
-            },
-            set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.fillColor = value;
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.show = value.alpha > 0.0;
-                }
-            }
-        },
-
         pointColor : {
             get : function() {
                 return this._pointColor;
@@ -138,10 +120,10 @@ define([
         /**
          * Gets or sets the point size of this feature.
          * <p>
-         * Only applied when the feature is a point feature and <code>image</code> is <code>undefined</code>.
+         * Only applied when <code>image</code> is <code>undefined</code>.
          * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Number}
          */
@@ -154,6 +136,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the point outline color of this feature.
+         * <p>
+         * Only applied when <code>image</code> is <code>undefined</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Color}
+         */
         pointOutlineColor : {
             get : function() {
                 return this._pointOutlineColor;
@@ -163,6 +155,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the point outline width in pixels of this feature.
+         * <p>
+         * Only applied when <code>image</code> is <code>undefined</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Number}
+         */
         pointOutlineWidth : {
             get : function() {
                 return this._pointOutlineWidth;
@@ -173,13 +175,36 @@ define([
         },
 
         /**
-         * Gets or sets the outline color of this feature.
+         * Gets or sets the label color of this feature.
          * <p>
-         * Only applied when the feature is a point feature. The outline will be applied to the point if
-         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
+         * The outline color will be applied to the label if <code>labelText</code> is defined.
          * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Color}
+         */
+        labelColor : {
+            get : function() {
+                var label = this._labelCollection.get(this._batchId);
+                return label.fillColor;
+            },
+            set : function(value) {
+                var label = this._labelCollection.get(this._batchId);
+                label.fillColor = value;
+
+                var polyline = this._polylineCollection.get(this._batchId);
+                polyline.show = value.alpha > 0.0;
+            }
+        },
+
+        /**
+         * Gets or sets the label outline color of this feature.
+         * <p>
+         * The outline color will be applied to the label if <code>labelText</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Color}
          */
@@ -197,11 +222,10 @@ define([
         /**
          * Gets or sets the outline width in pixels of this feature.
          * <p>
-         * Only applied when the feature is a point feature. The outline width will be applied to the point if
-         * <code>image</code> is undefined or to the <code>text</code> when it is defined.
+         * The outline width will be applied to the point if <code>labelText</code> is defined.
          * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Color}
          */
@@ -219,10 +243,10 @@ define([
         /**
          * Gets or sets the font of this feature.
          * <p>
-         * Only applied when the feature is a point feature and <code>text</code> is defined.
+         * Only applied when the <code>labelText</code> is defined.
          * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {String}
          */
@@ -240,10 +264,10 @@ define([
         /**
          * Gets or sets the fill and outline style of this feature.
          * <p>
-         * Only applied when the feature is a point feature and <code>text</code> is defined.
+         * Only applied when <code>labelText</code> is defined.
          * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {LabelStyle}
          */
@@ -260,11 +284,8 @@ define([
 
         /**
          * Gets or sets the text for this feature.
-         * <p>
-         * Only applied when the feature is a point feature.
-         * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {String}
          */
@@ -288,6 +309,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the background color of the text for this feature.
+         * <p>
+         * Only applied when <code>labelText</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Color}
+         */
         backgroundColor : {
             get : function() {
                 var label = this._labelCollection.get(this._batchId);
@@ -299,6 +330,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the background padding of the text for this feature.
+         * <p>
+         * Only applied when <code>labelText</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Cartesian2}
+         */
         backgroundPadding : {
             get : function() {
                     var label = this._labelCollection.get(this._batchId);
@@ -310,6 +351,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets whether to display the background of the text for this feature.
+         * <p>
+         * Only applied when <code>labelText</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Boolean}
+         */
         backgroundEnabled : {
             get : function() {
                     var label = this._labelCollection.get(this._batchId);
@@ -321,6 +372,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the near and far scaling properties for this feature.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {NearFarScalar}
+         */
         scaleByDistance : {
             get : function() {
                 var label = this._labelCollection.get(this._batchId);
@@ -332,6 +390,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the near and far translucency properties for this feature.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {NearFarScalar}
+         */
         translucencyByDistance : {
             get : function() {
                 var label = this._labelCollection.get(this._batchId);
@@ -343,6 +408,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the condition specifying at what distance from the camera that this feature will be displayed.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {DistanceDisplayCondition}
+         */
         distanceDisplayCondition : {
             get : function() {
                 var label = this._labelCollection.get(this._batchId);
@@ -358,6 +430,13 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the height offset in meters of this feature.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Number}
+         */
         heightOffset : {
             get : function() {
                 return this._heightOffset;
@@ -383,6 +462,16 @@ define([
             }
         },
 
+        /**
+         * Gets or sets whether the anchor line is displayed.
+         * <p>
+         * Only applied when <code>heightOffset</code> is defined.
+         * </p>
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Boolean}
+         */
         anchorLineEnabled : {
             get : function() {
                 var polyline = this._polylineCollection.get(this._batchId);
@@ -396,12 +485,13 @@ define([
 
         /**
          * Gets or sets the color for the anchor line.
+         * <p>
+         * Only applied when <code>heightOffset</code> is defined.
+         * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Color}
-         *
-         * @default {@link Color.WHITE}
          */
         anchorLineColor : {
             get : function() {
@@ -416,11 +506,8 @@ define([
 
         /**
          * Gets or sets the image of this feature.
-         * <p>
-         * Only applied when the feature is a point feature.
-         * </p>
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {String}
          */
@@ -436,7 +523,7 @@ define([
         /**
          * Gets the content of the tile containing the feature.
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Cesium3DTileContent}
          *
@@ -452,7 +539,7 @@ define([
         /**
          * Gets the tileset containing the feature.
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Cesium3DTileset}
          *
@@ -468,7 +555,7 @@ define([
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property. This returns
          * the tileset containing the feature.
          *
-         * @memberof Cesium3DTileFeature.prototype
+         * @memberof Cesium3DTilePointFeature.prototype
          *
          * @type {Cesium3DTileset}
          *
