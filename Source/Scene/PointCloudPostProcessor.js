@@ -81,14 +81,14 @@ define([
         this._sectorTextures = undefined;
         this._densityTexture = undefined;
         this._sectorLUTTexture = undefined;
-        this._aoTexture = undefined;
+        this._aoTextures = undefined;
         this._dirty = undefined;
         this._densityEstimationCommand = undefined;
         this._sectorHistogramCommand = undefined;
         this._sectorGatheringCommand = undefined;
         this._regionGrowingCommands = undefined;
         this._stencilCommands = undefined;
-        this._debugCommand = undefined;
+        this._aoCommand = undefined;
         this._copyCommands = undefined;
         this._blendCommand = undefined;
         this._clearCommands = undefined;
@@ -104,6 +104,8 @@ define([
         this.stencilViewEnabled = options.stencilViewEnabled;
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
         this.useTriangle = options.useTriangle;
+        this.enableAO = options.enableAO;
+        this.AOViewEnabled = options.AOViewEnabled;
 
         this._pointArray = undefined;
 
@@ -185,7 +187,8 @@ define([
         processor._sectorTextures[0].destroy();
         processor._sectorTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
-        processor._aoTexture.destroy();
+        processor._aoTextures[0].destroy();
+        processor._aoTextures[1].destroy();
         processor._densityTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
@@ -251,6 +254,7 @@ define([
         var colorTextures = new Array(2);
         var sectorTextures = new Array(2);
         var depthTextures = new Array(3);
+        var aoTextures = new Array(2);
 
         var ecTexture = new Texture({
             context : context,
@@ -258,15 +262,6 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT,
-            sampler : createSampler()
-        });
-
-        var aoTexture = new Texture({
-            context : context,
-            width : screenWidth,
-            height : screenHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
 
@@ -332,6 +327,15 @@ define([
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 sampler : createSampler()
             });
+
+            aoTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
         }
 
         // There used to be an explanation of how this worked here
@@ -350,13 +354,18 @@ define([
             }),
             screenSpacePass : new Framebuffer({
                 context : context,
-                colorTextures : [depthTextures[0], aoTexture],
+                colorTextures : [depthTextures[0], aoTextures[0]],
                 depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
-            aoBuffer : new Framebuffer({
+            aoBufferA : new Framebuffer({
                 context : context,
-                colorTextures : [aoTexture],
+                colorTextures : [aoTextures[1]],
+                destroyAttachments : false
+            }),
+            aoBufferB : new Framebuffer({
+                context : context,
+                colorTextures : [aoTextures[0]],
                 destroyAttachments : false
             }),
             sectorHistogramPass : new Framebuffer({
@@ -378,14 +387,16 @@ define([
             regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1],
-                                 depthTextures[1]],
+                                 depthTextures[1],
+                                 aoTextures[1]],
                 depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             regionGrowingPassB : new Framebuffer({
                 context: context,
                 colorTextures: [colorTextures[0],
-                                depthTextures[0]],
+                                depthTextures[0],
+                                aoTextures[0]],
                 depthStencilTexture: dirty,
                 destroyAttachments: false
             })
@@ -394,7 +405,7 @@ define([
         processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
         processor._sectorLUTTexture = sectorLUTTexture;
-        processor._aoTexture = aoTexture;
+        processor._aoTextures = aoTextures;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
@@ -656,7 +667,7 @@ define([
                 return processor._densityTexture;
             },
             pointCloud_aoTexture : function() {
-                return processor._aoTexture;
+                return processor._aoTextures[i];
             },
             rangeParameter : function() {
                 if (processor.useTriangle) {
@@ -716,6 +727,9 @@ define([
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[i];
             },
+            pointCloud_aoTexture : function() {
+                return processor._aoTextures[i];
+            },
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
@@ -736,11 +750,13 @@ define([
             'uniform int densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
+            'uniform sampler2D pointCloud_aoTexture; \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
             '    float depth = czm_unpackDepth(rawDepth); \n' +
             '    if (depth > EPS) { \n' +
             '        #ifdef densityView \n' +
@@ -750,6 +766,7 @@ define([
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
             '        gl_FragData[1] = rawDepth; \n' +
+            '        gl_FragData[2] = rawAO; \n' +
             '    } \n' +
             '} \n';
 
@@ -809,14 +826,14 @@ define([
         });
     }
 
-    function debugStage(processor, context) {
+    function aoStage(processor, context) {
         var uniformMap = {
             aoTexture : function() {
-                return processor._aoTexture;
+                return processor._aoTextures[0];
             }
         };
 
-        var debugStageStr =
+        var aoStageStr =
             '#define EPS 1e-8 \n' +
             'uniform sampler2D aoTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -827,7 +844,7 @@ define([
             '    gl_FragColor = vec4(occlusion); \n' +
             '} \n';
 
-        return context.createViewportQuadCommand(debugStageStr, {
+        return context.createViewportQuadCommand(aoStageStr, {
             uniformMap : uniformMap,
             renderState : RenderState.fromCache({
             }),
@@ -857,13 +874,31 @@ define([
 
         var blendFS =
             '#define EPS 1e-8 \n' +
+            '#define enableAO' +
             '#extension GL_EXT_frag_depth : enable \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
+            'uniform sampler2D pointCloud_aoTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n\n' +
+            'float sigmoid2(float x, float sharpness) { \n' +
+            '  if (x >= 1.0) return 1.0; \n' +
+            '  else if (x <= -1.0) return -1.0; \n' +
+            '  else { \n' +
+            '    if (sharpness < 0.0) sharpness -= 1.0; \n' +
+            ' \n' +
+            '    if (x > 0.0) return sharpness * x / (sharpness - x + 1.0); \n' +
+            '    else if (x < 0.0) return sharpness * x / (sharpness - abs(x) + 1.0); \n' +
+            '    else return 0.0; \n' +
+            '  } \n' +
+            '} \n\n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
+            '    #ifdef enableAO \n' +
+            '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
+            '    ao = clamp(sigmoid2(ao + 0.2, 0.2), 0.0, 1.0); \n' +
+            '    color.xyz = color.xyz * ao; \n' +
+            '    #endif // enableAO \n' +
             '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
             '    if (length(rayDist) < EPS) { \n' +
             '        discard;' +
@@ -881,13 +916,22 @@ define([
             blending : BlendingState.ALPHA_BLEND
         });
 
+        blendFS = replaceConstants(
+            blendFS,
+            'enableAO',
+            processor.enableAO
+        );
+
         var blendUniformMap = {
             pointCloud_colorTexture: function() {
                 return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
             pointCloud_depthTexture: function() {
                 return processor._depthTextures[1 - numRegionGrowingPasses % 2];
-            }
+            },
+            pointCloud_aoTexture: function() {
+                return processor._aoTextures[1 - numRegionGrowingPasses % 2];
+            },
         };
 
         var blendCommand = context.createViewportQuadCommand(blendFS, {
@@ -897,7 +941,7 @@ define([
             owner : processor
         });
 
-        var debugCommand = debugStage(processor, context, processor._sectorTextures[0]);
+        var aoCommand = aoStage(processor, context, processor._sectorTextures[0]);
 
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
@@ -919,7 +963,8 @@ define([
                     });
                 } else if (name === 'densityEstimationPass' ||
                            name === 'sectorHistogramPass' ||
-                           name === 'aoBuffer') {
+                           name === 'aoBufferA' ||
+                           name === 'aoBufferB') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(1.0, 1.0, 1.0, 1.0),
@@ -947,7 +992,7 @@ define([
         processor._blendCommand = blendCommand;
         processor._clearCommands = clearCommands;
         processor._copyCommands = copyCommands;
-        processor._debugCommand = debugCommand;
+        processor._aoCommand = aoCommand;
     }
 
     function createResources(processor, context, dirty) {
@@ -1043,7 +1088,9 @@ define([
             tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
             tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
             tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
-            tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle) {
+            tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle ||
+            tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
+            tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -1055,6 +1102,8 @@ define([
             this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
             this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
             this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;
+            this.enableAO = tileset.pointCloudPostProcessorOptions.enableAO;
+            this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
             dirty = true;
         }
 
@@ -1122,7 +1171,7 @@ define([
         commandList.push(clearCommands['screenSpacePass']);
         commandList.push(clearCommands['sectorHistogramPass']);
         commandList.push(sectorHistogramCommand);
-        commandList.push(clearCommands['aoBuffer']);
+        commandList.push(clearCommands['aoBufferB']);
         commandList.push(sectorGatheringCommand);
         commandList.push(clearCommands['densityEstimationPass']);
         commandList.push(densityEstimationCommand);
@@ -1130,8 +1179,10 @@ define([
         for (i = 0; i < numRegionGrowingCommands; i++) {
             if (i % 2 === 0) {
                 commandList.push(clearCommands['regionGrowingPassA']);
+                //commandList.push(clearCommands['aoBufferA']);
             } else {
                 commandList.push(clearCommands['regionGrowingPassB']);
+                //commandList.push(clearCommands['aoBufferB']);
             }
 
             commandList.push(copyCommands[i % 2]);
@@ -1141,7 +1192,9 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(this._blendCommand);
-        commandList.push(this._debugCommand);
+        if (this.AOViewEnabled && this.enableAO) {
+            commandList.push(this._aoCommand);
+        }
 
         commandList.push(clearCommands['prior']);
     };

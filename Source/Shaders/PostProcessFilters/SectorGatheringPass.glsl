@@ -1,3 +1,5 @@
+#extension GL_EXT_draw_buffers : enable
+
 #define TAU 6.28318530718
 #define PI 3.14159265359
 #define EPS 1e-6

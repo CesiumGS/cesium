@@ -140,12 +140,20 @@ Sandcastle.addToggleButton('Use Triangle Wave', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.useTriangle = checked;
 });
 
+Sandcastle.addToggleButton('Enable AO', true, function(checked) {
+    tileset.pointCloudPostProcessorOptions.enableAO = checked;
+});
+
 Sandcastle.addToggleButton('Density View', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.densityViewEnabled = checked;
 });
 
 Sandcastle.addToggleButton('Stencil View', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.stencilViewEnabled = checked;
+});
+
+Sandcastle.addToggleButton('AO View', false, function(checked) {
+    tileset.pointCloudPostProcessorOptions.AOViewEnabled = checked;
 });
 
 //Sandcastle_End

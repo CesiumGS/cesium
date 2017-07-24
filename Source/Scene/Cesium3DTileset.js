@@ -637,7 +637,9 @@ define([
             densityViewEnabled : false,
             stencilViewEnabled : false,
             pointAttenuationMultiplier : 2.0,
-            useTriangle : false
+            useTriangle : false,
+            enableAO : true,
+            AOViewEnabled : false
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);

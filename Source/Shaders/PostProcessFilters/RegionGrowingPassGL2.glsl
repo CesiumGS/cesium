@@ -13,6 +13,7 @@
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_densityTexture;
 uniform sampler2D pointCloud_depthTexture;
+uniform sampler2D pointCloud_aoTexture;
 uniform float rangeParameter;
 uniform int densityHalfWidth;
 uniform int iterationNumber;
