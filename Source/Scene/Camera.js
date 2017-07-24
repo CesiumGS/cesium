@@ -2864,18 +2864,14 @@ define([
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            // If the minimumZoomDistance hasn't been set yet, it is equal to 1,
-            if (radius < minimumZoom && minimumZoom > 1) {
-                offset.range = minimumZoom;
-            } else if(radius > maximumZoom) {
-                offset.range = maximumZoom;
-            } else if(radius === 0) {
+            if(radius === 0) {
                 offset.range = defaultZoom;
             } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
                 offset.range = distanceToBoundingSphere2D(camera, radius);
             } else {
                 offset.range = distanceToBoundingSphere3D(camera, radius);
             }
+            offset.range = CesiumMath.clamp(offset.range, minimumZoom, maximumZoom);
         }
 
         return offset;
