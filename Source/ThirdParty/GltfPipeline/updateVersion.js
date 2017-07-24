@@ -469,7 +469,9 @@ define([
                             }
                         }
                         else if (typeof value === 'string') {
-                            materialsCommon.values[name] = [globalMapping.textures[value]];
+                            materialsCommon.values[name] = {
+                                index: globalMapping.textures[value]
+                            };
                         }
                     });
                 }

@@ -702,6 +702,8 @@ define([
         // materials using KHR_materials_common with explicit type/value members
         if (defined(paramValue.value)) {
             value = paramValue.value;
+        } else if (defined(paramValue.index)) {
+            value = [paramValue.index];
         } else {
             value = paramValue;
         }
