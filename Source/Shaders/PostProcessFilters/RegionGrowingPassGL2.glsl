@@ -258,5 +258,5 @@ void main() {
 #endif
 #endif
     depthOut = czm_packDepth(finalDepth);
-    aoOut = czm_packDepth(finalAO);
+    aoOut = czm_packDepth(finalAO - 1e-7);
 }
