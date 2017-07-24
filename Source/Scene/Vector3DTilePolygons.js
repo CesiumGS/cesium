@@ -1,79 +1,33 @@
 define([
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/GeometryAttributes',
-        '../Core/GeometryInstance',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TaskProcessor',
-        '../Core/TranslationRotationScale',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
         '../ThirdParty/when',
-        './BlendingState',
-        './Cesium3DTileFeature',
-        './DepthFunction',
-        './StencilFunction',
-        './StencilOperation'
+        './Vector3DTilePrimitive'
     ], function(
         Cartesian3,
-        Cartographic,
         Color,
-        ColorGeometryInstanceAttribute,
-        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryInstance,
         IndexDatatype,
         Matrix4,
         OrientedBoundingBox,
-        PrimitiveType,
         Rectangle,
         TaskProcessor,
-        TranslationRotationScale,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        ShadowVolumeFS,
-        ShadowVolumeVS,
         when,
-        BlendingState,
-        Cesium3DTileFeature,
-        DepthFunction,
-        StencilFunction,
-        StencilOperation) {
+        Vector3DTilePrimitive) {
     'use strict';
 
     /**
@@ -133,7 +87,7 @@ define([
         this._maximumHeight = options.maximumHeight;
         this._polygonMinimumHeights = options.polygonMinimumHeights;
         this._polygonMaximumHeights = options.polygonMaximumHeights;
-        this._center = options.center;
+        this._center = defaultValue(options.center, Cartesian3.ZERO);
         this._rectangle = options.rectangle;
         this._isCartographic = options.isCartographic;
         this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
@@ -143,35 +97,14 @@ define([
 
         this._batchedIndices = undefined;
 
-        this._va = undefined;
-        this._sp = undefined;
-        this._spPick = undefined;
-        this._uniformMap = undefined;
-
-        // Only used with WebGL 2 to ping-pong ibos after copy.
-        this._vaSwap = undefined;
-
-        this._rsStencilPreloadPass = undefined;
-        this._rsStencilDepthPass = undefined;
-        this._rsColorPass = undefined;
-        this._rsPickPass = undefined;
-
-        this._commands = [];
-        this._pickCommands = [];
-
         this._pickObject = options.pickObject;
-
-        this._constantColor = Color.clone(Color.WHITE);
-        this._highlightColor = this._constantColor;
-
-        this._batchDirty = false;
-        this._pickCommandsDirty = true;
-        this._framesSinceLastRebatch = 0;
 
         this._ready = false;
         this._readyPromise = when.defer();
 
         this._verticesPromise = undefined;
+
+        this._primitive = undefined;
     }
 
     defineProperties(Vector3DTilePolygons.prototype, {
@@ -188,34 +121,34 @@ define([
         }
     });
 
-    function packBuffer(primitive) {
+    function packBuffer(polygons) {
         var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
 
         var offset = 0;
-        packedBuffer[offset++] = primitive._minimumHeight;
-        packedBuffer[offset++] = primitive._maximumHeight;
+        packedBuffer[offset++] = polygons._minimumHeight;
+        packedBuffer[offset++] = polygons._maximumHeight;
 
-        Cartesian3.pack(primitive._center, packedBuffer, offset);
+        Cartesian3.pack(polygons._center, packedBuffer, offset);
         offset += Cartesian3.packedLength;
 
-        Ellipsoid.pack(primitive._ellipsoid, packedBuffer, offset);
+        Ellipsoid.pack(polygons._ellipsoid, packedBuffer, offset);
         offset += Ellipsoid.packedLength;
 
-        Rectangle.pack(primitive._rectangle, packedBuffer, offset);
+        Rectangle.pack(polygons._rectangle, packedBuffer, offset);
         offset += Rectangle.packedLength;
 
-        packedBuffer[offset++] = primitive._isCartographic ? 1.0 : 0.0;
+        packedBuffer[offset++] = polygons._isCartographic ? 1.0 : 0.0;
 
-        Matrix4.pack(primitive._modelMatrix, packedBuffer, offset);
+        Matrix4.pack(polygons._modelMatrix, packedBuffer, offset);
 
         return packedBuffer;
     }
 
-    function unpackBuffer(primitive, packedBuffer) {
+    function unpackBuffer(polygons, packedBuffer) {
         var offset = 1;
 
         var numBVS = packedBuffer[offset++];
-        var bvs = primitive._boundingVolumes = new Array(numBVS);
+        var bvs = polygons._boundingVolumes = new Array(numBVS);
 
         for (var i = 0; i < numBVS; ++i) {
             bvs[i] = OrientedBoundingBox.unpack(packedBuffer, offset);
@@ -223,7 +156,7 @@ define([
         }
 
         var numBatchedIndices = packedBuffer[offset++];
-        var bis = primitive._batchedIndices = new Array(numBatchedIndices);
+        var bis = polygons._batchedIndices = new Array(numBatchedIndices);
 
         for (var j = 0; j < numBatchedIndices; ++j) {
             var color = Color.unpack(packedBuffer, offset);
@@ -248,40 +181,35 @@ define([
         }
     }
 
-    var attributeLocations = {
-        position : 0,
-        a_batchId : 1
-    };
-
     var createVerticesTaskProcessor = new TaskProcessor('createVerticesFromVectorTile');
     var scratchColor = new Color();
 
-    function createVertexArray(primitive, context) {
-        if (defined(primitive._va)) {
+    function createPrimitive(polygons) {
+        if (defined(polygons._primitive)) {
             return;
         }
 
-        if (!defined(primitive._verticesPromise)) {
-            var positions = primitive._positions;
-            var counts = primitive._counts;
-            var indexCounts = primitive._indexCounts;
-            var indices = primitive._indices;
+        if (!defined(polygons._verticesPromise)) {
+            var positions = polygons._positions;
+            var counts = polygons._counts;
+            var indexCounts = polygons._indexCounts;
+            var indices = polygons._indices;
 
-            var batchIds = primitive._transferrableBatchIds;
-            var batchTableColors = primitive._batchTableColors;
+            var batchIds = polygons._transferrableBatchIds;
+            var batchTableColors = polygons._batchTableColors;
 
-            var packedBuffer = primitive._packedBuffer;
+            var packedBuffer = polygons._packedBuffer;
 
             if (!defined(batchTableColors)) {
                 // Copy because they may be the views on the same buffer.
-                positions = primitive._positions = primitive._positions.slice();
-                counts = primitive._counts = primitive._counts.slice();
-                indexCounts = primitive._indexCounts= primitive._indexCounts.slice();
-                indices = primitive._indices = primitive._indices.slice();
+                positions = polygons._positions = polygons._positions.slice();
+                counts = polygons._counts = polygons._counts.slice();
+                indexCounts = polygons._indexCounts= polygons._indexCounts.slice();
+                indices = polygons._indices = polygons._indices.slice();
 
-                batchIds = primitive._transferrableBatchIds = new Uint32Array(primitive._batchIds);
-                batchTableColors = primitive._batchTableColors = new Uint32Array(batchIds.length);
-                var batchTable = primitive._batchTable;
+                batchIds = polygons._transferrableBatchIds = new Uint32Array(polygons._batchIds);
+                batchTableColors = polygons._batchTableColors = new Uint32Array(batchIds.length);
+                var batchTable = polygons._batchTable;
 
                 var length = batchTableColors.length;
                 for (var i = 0; i < length; ++i) {
@@ -289,7 +217,7 @@ define([
                     batchTableColors[i] = color.toRgba();
                 }
 
-                packedBuffer = primitive._packedBuffer = packBuffer(primitive);
+                packedBuffer = polygons._packedBuffer = packBuffer(polygons);
             }
 
             var transferrableObjects = [positions.buffer, counts.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer, packedBuffer.buffer];
@@ -303,605 +231,65 @@ define([
                 batchTableColors : batchTableColors.buffer
             };
 
-            var minimumHeights = primitive._polygonMinimumHeights;
-            var maximumHeights = primitive._polygonMaximumHeights;
+            var minimumHeights = polygons._polygonMinimumHeights;
+            var maximumHeights = polygons._polygonMaximumHeights;
             if (defined(minimumHeights) && defined(maximumHeights)) {
                 transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
                 parameters.minimumHeights = minimumHeights;
                 parameters.maximumHeights = maximumHeights;
             }
 
-            var verticesPromise = primitive._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
+            var verticesPromise = polygons._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
             if (!defined(verticesPromise)) {
                 // Postponed
                 return;
             }
 
             when(verticesPromise, function(result) {
-                primitive._positions = undefined;
-                primitive._counts = undefined;
-                primitive._polygonMinimumHeights = undefined;
-                primitive._polygonMaximumHeights = undefined;
+                polygons._positions = undefined;
+                polygons._counts = undefined;
+                polygons._polygonMinimumHeights = undefined;
+                polygons._polygonMaximumHeights = undefined;
 
                 var packedBuffer = new Float64Array(result.packedBuffer);
                 var indexDatatype = packedBuffer[0];
-                unpackBuffer(primitive, packedBuffer);
+                unpackBuffer(polygons, packedBuffer);
 
-                primitive._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ? new Uint16Array(result.indices) : new Uint32Array(result.indices);
-                primitive._indexOffsets = new Uint32Array(result.indexOffsets);
-                primitive._indexCounts = new Uint32Array(result.indexCounts);
+                polygons._indices = IndexDatatype.getSizeInBytes(indexDatatype) === 2 ? new Uint16Array(result.indices) : new Uint32Array(result.indices);
+                polygons._indexOffsets = new Uint32Array(result.indexOffsets);
+                polygons._indexCounts = new Uint32Array(result.indexCounts);
 
                 // will be released
-                primitive._batchedPositions = new Float32Array(result.positions);
-                primitive._vertexBatchIds = new Uint32Array(result.batchIds);
+                polygons._batchedPositions = new Float32Array(result.positions);
+                polygons._vertexBatchIds = new Uint32Array(result.batchIds);
 
-                primitive._ready = true;
+                polygons._ready = true;
             });
         }
 
-        if (primitive._ready && !defined(primitive._va)) {
-            var positionBuffer = Buffer.createVertexBuffer({
-                context : context,
-                typedArray : primitive._batchedPositions,
-                usage : BufferUsage.STATIC_DRAW
-            });
-            var idBuffer = Buffer.createVertexBuffer({
-                context : context,
-                typedArray : primitive._vertexBatchIds,
-                usage : BufferUsage.STATIC_DRAW
-            });
-            var indexBuffer = Buffer.createIndexBuffer({
-                context : context,
-                typedArray : primitive._indices,
-                usage : BufferUsage.DYNAMIC_DRAW,
-                indexDatatype : (primitive._indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT
+        if (polygons._ready && !defined(polygons._primitive)) {
+            polygons._primitive = new Vector3DTilePrimitive({
+                batchTable : polygons._batchTable,
+                positions : polygons._batchedPositions,
+                batchIds : polygons._batchIds,
+                vertexBatchIds : polygons._vertexBatchIds,
+                indices : polygons._indices,
+                indexOffsets : polygons._indexOffsets,
+                indexCounts : polygons._indexCounts,
+                batchedIndices : polygons._batchedIndices,
+                boundingVolume : polygons._boundingVolume,
+                boundingVolumes : polygons._boundingVolumes,
+                center : polygons._center,
+                pickObject : defaultValue(polygons._pickObject, polygons)
             });
 
-            var vertexAttributes = [{
-                index : attributeLocations.position,
-                vertexBuffer : positionBuffer,
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3
-            }, {
-                index : attributeLocations.a_batchId,
-                vertexBuffer : idBuffer,
-                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-                componentsPerAttribute : 1
-            }];
+            polygons._batchedPositions = undefined;
+            polygons._transferrableBatchIds = undefined;
+            polygons._vertexBatchIds = undefined;
+            polygons._verticesPromise = undefined;
 
-            primitive._va = new VertexArray({
-                context : context,
-                attributes : vertexAttributes,
-                indexBuffer : indexBuffer
-            });
-
-            if (context.webgl2) {
-                primitive._vaSwap = new VertexArray({
-                    context : context,
-                    attributes : vertexAttributes,
-                    indexBuffer : Buffer.createIndexBuffer({
-                        context : context,
-                        sizeInBytes : indexBuffer.sizeInBytes,
-                        usage : BufferUsage.DYNAMIC_DRAW,
-                        indexDatatype : indexBuffer.indexDatatype
-                    })
-                });
-            }
-
-            primitive._batchedPositions = undefined;
-            primitive._transferrableBatchIds = undefined;
-            primitive._vertexBatchIds = undefined;
-            primitive._verticesPromise = undefined;
-
-            primitive._readyPromise.resolve();
+            polygons._readyPromise.resolve();
         }
-    }
-
-    function createShaders(primitive, context) {
-        if (defined(primitive._sp)) {
-            return;
-        }
-
-        var batchTable = primitive._batchTable;
-
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(ShadowVolumeVS);
-        var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS);
-
-        var vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [vsSource]
-        });
-        var fs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [fsSource]
-        });
-
-        primitive._sp = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-
-        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(ShadowVolumeVS);
-        fsSource = batchTable.getPickFragmentShaderCallback()(ShadowVolumeFS);
-
-        var pickVS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [vsSource]
-        });
-        var pickFS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [fsSource]
-        });
-        primitive._spPick = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : pickVS,
-            fragmentShaderSource : pickFS,
-            attributeLocations : attributeLocations
-        });
-    }
-
-    var stencilPreloadRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.DECREMENT_WRAP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.INCREMENT_WRAP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    var stencilDepthRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS_OR_EQUAL
-        },
-        depthMask : false
-    };
-
-    var colorRenderState = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false,
-        blending : BlendingState.ALPHA_BLEND
-    };
-
-    var pickRenderState = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : 0,
-            mask : ~0
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    function createRenderStates(primitive) {
-        if (defined(primitive._rsStencilPreloadPass)) {
-            return;
-        }
-
-        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
-        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
-        primitive._rsColorPass = RenderState.fromCache(colorRenderState);
-        primitive._rsPickPass = RenderState.fromCache(pickRenderState);
-    }
-
-    var modifiedModelViewScratch = new Matrix4();
-    var rtcScratch = new Cartesian3();
-
-    function createUniformMap(primitive, context) {
-        if (defined(primitive._uniformMap)) {
-            return;
-        }
-
-        primitive._uniformMap = {
-            u_modifiedModelViewProjection : function() {
-                var viewMatrix = context.uniformState.view;
-                var projectionMatrix = context.uniformState.projection;
-                Matrix4.clone(viewMatrix, modifiedModelViewScratch);
-                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive._center, rtcScratch);
-                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
-                Matrix4.multiply(projectionMatrix, modifiedModelViewScratch, modifiedModelViewScratch);
-                return modifiedModelViewScratch;
-            },
-            u_highlightColor : function() {
-                return primitive._highlightColor;
-            }
-        };
-    }
-
-    function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds) {
-        var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
-
-        var batchedIdsLength = batchIds.length;
-        for (var j = 0; j < batchedIdsLength; ++j) {
-            var batchedId = batchIds[j];
-            var offset = offsets[batchedId];
-            var count = counts[batchedId];
-
-            var subarray = new indices.constructor(indices.buffer, sizeInBytes * offset, count);
-            newIndices.set(subarray, currentOffset);
-
-            offsets[batchedId] = currentOffset;
-            currentOffset += count;
-        }
-
-        return currentOffset;
-    }
-
-    function rebatchCPU(primitive, batchedIndices) {
-        var newIndices = new primitive._indices.constructor(primitive._indices.length);
-
-        var current = batchedIndices.pop();
-        var newBatchedIndices = [current];
-
-        var currentOffset = copyIndicesCPU(primitive._indices, newIndices, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
-
-        current.offset = 0;
-        current.count = currentOffset;
-
-        while (batchedIndices.length > 0) {
-            var next = batchedIndices.pop();
-            if (Color.equals(next.color, current.color)) {
-                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-                current.batchIds = current.batchIds.concat(next.batchIds);
-                current.count = currentOffset - current.offset;
-            } else {
-                var offset = currentOffset;
-                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-
-                next.offset = offset;
-                next.count = currentOffset - offset;
-                newBatchedIndices.push(next);
-                current = next;
-            }
-        }
-
-        primitive._va.indexBuffer.copyFromArrayView(newIndices);
-
-        primitive._indices = newIndices;
-        primitive._batchedIndices = newBatchedIndices;
-    }
-
-    function copyIndicesGPU(readBuffer, writeBuffer, currentOffset, offsets, counts, batchIds) {
-        var sizeInBytes = readBuffer.bytesPerIndex;
-
-        var batchedIdsLength = batchIds.length;
-        for (var j = 0; j < batchedIdsLength; ++j) {
-            var batchedId = batchIds[j];
-            var offset = offsets[batchedId];
-            var count = counts[batchedId];
-
-            writeBuffer.copyFromBuffer(readBuffer, offset * sizeInBytes, currentOffset * sizeInBytes, count * sizeInBytes);
-
-            offsets[batchedId] = currentOffset;
-            currentOffset += count;
-        }
-
-        return currentOffset;
-    }
-
-    function rebatchGPU(primitive, batchedIndices) {
-        var current = batchedIndices.pop();
-        var newBatchedIndices = [current];
-
-        var readBuffer = primitive._va.indexBuffer;
-        var writeBuffer = primitive._vaSwap.indexBuffer;
-
-        var currentOffset = copyIndicesGPU(readBuffer, writeBuffer, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
-
-        current.offset = 0;
-        current.count = currentOffset;
-
-        while (batchedIndices.length > 0) {
-            var next = batchedIndices.pop();
-            if (Color.equals(next.color, current.color)) {
-                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-                current.batchIds = current.batchIds.concat(next.batchIds);
-                current.count = currentOffset - current.offset;
-            } else {
-                var offset = currentOffset;
-                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
-                next.offset = offset;
-                next.count = currentOffset - offset;
-                newBatchedIndices.push(next);
-                current = next;
-            }
-        }
-
-        var temp = primitive._va;
-        primitive._va = primitive._vaSwap;
-        primitive._vaSwap = temp;
-
-        primitive._batchedIndices = newBatchedIndices;
-    }
-
-    function compareColors(a, b) {
-        return b.color.toRgba() - a.color.toRgba();
-    }
-
-    // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
-    // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
-    function rebatchCommands(primitive, context) {
-        if (!primitive._batchDirty) {
-            return false;
-        }
-
-        var batchedIndices = primitive._batchedIndices;
-        var length = batchedIndices.length;
-
-        var needToRebatch = false;
-        var colorCounts = {};
-
-        for (var i = 0; i < length; ++i) {
-            var color = batchedIndices[i].color;
-            var rgba = color.toRgba();
-            if (defined(colorCounts[rgba])) {
-                needToRebatch = true;
-                break;
-            } else {
-                colorCounts[rgba] = true;
-            }
-        }
-
-        if (!needToRebatch) {
-            primitive._batchDirty = false;
-            return false;
-        }
-
-        if (needToRebatch && primitive._framesSinceLastRebatch < 120) {
-            ++primitive._framesSinceLastRebatch;
-            return;
-        }
-
-        batchedIndices.sort(compareColors);
-
-        if (context.webgl2) {
-            rebatchGPU(primitive, batchedIndices);
-        } else {
-            rebatchCPU(primitive, batchedIndices);
-        }
-
-        primitive._framesSinceLastRebatch = 0;
-        primitive._batchDirty = false;
-        primitive._pickCommandsDirty = true;
-        return true;
-    }
-
-    function createColorCommands(primitive, context) {
-        if (defined(primitive._commands) && !rebatchCommands(primitive, context) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
-            return;
-        }
-
-        var batchedIndices = primitive._batchedIndices;
-        var length = batchedIndices.length;
-
-        var commands = primitive._commands;
-        commands.length = length * 3;
-
-        var vertexArray = primitive._va;
-        var sp = primitive._sp;
-        var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
-        var bv = primitive._boundingVolume;
-
-        var owner = primitive._pickObject;
-        if (!defined(owner)) {
-            owner = primitive;
-        }
-
-        for (var j = 0; j < length; ++j) {
-            var offset = batchedIndices[j].offset;
-            var count = batchedIndices[j].count;
-
-            var stencilPreloadCommand = commands[j * 3];
-            if (!defined(stencilPreloadCommand)) {
-                stencilPreloadCommand = commands[j * 3] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            stencilPreloadCommand.vertexArray = vertexArray;
-            stencilPreloadCommand.modelMatrix = modelMatrix;
-            stencilPreloadCommand.offset = offset;
-            stencilPreloadCommand.count = count;
-            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = sp;
-            stencilPreloadCommand.uniformMap = uniformMap;
-            stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.GROUND;
-
-            var stencilDepthCommand = commands[j * 3 + 1];
-            if (!defined(stencilDepthCommand)) {
-                stencilDepthCommand = commands[j * 3 + 1] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            stencilDepthCommand.vertexArray = vertexArray;
-            stencilDepthCommand.modelMatrix = modelMatrix;
-            stencilDepthCommand.offset = offset;
-            stencilDepthCommand.count = count;
-            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = sp;
-            stencilDepthCommand.uniformMap = uniformMap;
-            stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.GROUND;
-
-            var colorCommand = commands[j * 3 + 2];
-            if (!defined(colorCommand)) {
-                colorCommand = commands[j * 3 + 2] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            colorCommand.vertexArray = vertexArray;
-            colorCommand.modelMatrix = modelMatrix;
-            colorCommand.offset = offset;
-            colorCommand.count = count;
-            colorCommand.renderState = primitive._rsColorPass;
-            colorCommand.shaderProgram = sp;
-            colorCommand.uniformMap = uniformMap;
-            colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.GROUND;
-        }
-    }
-
-    function createPickCommands(primitive) {
-        if (!primitive._pickCommandsDirty) {
-            return;
-        }
-
-        var length = primitive._indexOffsets.length;
-        var pickCommands = primitive._pickCommands;
-        pickCommands.length = length * 3;
-
-        var vertexArray = primitive._va;
-        var sp = primitive._sp;
-        var spPick = primitive._spPick;
-        var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
-
-        var owner = primitive._pickObject;
-        if (!defined(owner)) {
-            owner = primitive;
-        }
-
-        for (var j = 0; j < length; ++j) {
-            var offset = primitive._indexOffsets[j];
-            var count = primitive._indexCounts[j];
-            var bv = primitive._boundingVolumes[j];
-
-            var stencilPreloadCommand = pickCommands[j * 3];
-            if (!defined(stencilPreloadCommand)) {
-                stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            stencilPreloadCommand.vertexArray = vertexArray;
-            stencilPreloadCommand.modelMatrix = modelMatrix;
-            stencilPreloadCommand.offset = offset;
-            stencilPreloadCommand.count = count;
-            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = sp;
-            stencilPreloadCommand.uniformMap = uniformMap;
-            stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.GROUND;
-
-            var stencilDepthCommand = pickCommands[j * 3 + 1];
-            if (!defined(stencilDepthCommand)) {
-                stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            stencilDepthCommand.vertexArray = vertexArray;
-            stencilDepthCommand.modelMatrix = modelMatrix;
-            stencilDepthCommand.offset = offset;
-            stencilDepthCommand.count = count;
-            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = sp;
-            stencilDepthCommand.uniformMap = uniformMap;
-            stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.GROUND;
-
-            var colorCommand = pickCommands[j * 3 + 2];
-            if (!defined(colorCommand)) {
-                colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : owner
-                });
-            }
-
-            colorCommand.vertexArray = vertexArray;
-            colorCommand.modelMatrix = modelMatrix;
-            colorCommand.offset = offset;
-            colorCommand.count = count;
-            colorCommand.renderState = primitive._rsPickPass;
-            colorCommand.shaderProgram = spPick;
-            colorCommand.uniformMap = uniformMap;
-            colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.GROUND;
-        }
-
-        primitive._pickCommandsDirty = false;
     }
 
     /**
@@ -911,12 +299,7 @@ define([
      * @param {Cesium3DTileFeature[]} features An array of features where the polygon features will be placed.
      */
     Vector3DTilePolygons.prototype.createFeatures = function(content, features) {
-        var batchIds = this._batchIds;
-        var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
-            var batchId = batchIds[i];
-            features[batchId] = new Cesium3DTileFeature(content, batchId);
-        }
+        this._primitive.createFeatures(content, features);
     };
 
     /**
@@ -926,20 +309,8 @@ define([
      * @param {Color} color The debug color.
      */
     Vector3DTilePolygons.prototype.applyDebugSettings = function(enabled, color) {
-        this._highlightColor = enabled ? color : this._constantColor;
+        this._primitive.applyDebugSettings(enabled, color);
     };
-
-    function clearStyle(polygons, features) {
-        var batchIds = polygons._batchIds;
-        var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
-            var batchId = batchIds[i];
-            var feature = features[batchId];
-
-            feature.show = true;
-            feature.color = Color.WHITE;
-        }
-    }
 
     /**
      * Apply a style to the content.
@@ -949,20 +320,7 @@ define([
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
     Vector3DTilePolygons.prototype.applyStyle = function(frameState, style, features) {
-        if (!defined(style)) {
-            clearStyle(this, features);
-            return;
-        }
-
-        var batchIds = this._batchIds;
-        var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
-            var batchId = batchIds[i];
-            var feature = features[batchId];
-
-            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
-            feature.show = style.show.evaluate(frameState, feature);
-        }
+        this._primitive.applyStyle(frameState, style, features);
     };
 
     /**
@@ -973,65 +331,7 @@ define([
      * @param {Color} color The new polygon color.
      */
     Vector3DTilePolygons.prototype.updateCommands = function(batchId, color) {
-        var offset = this._indexOffsets[batchId];
-        var count = this._indexCounts[batchId];
-
-        var batchedIndices = this._batchedIndices;
-        var length = batchedIndices.length;
-
-        var i;
-        for (i = 0; i < length; ++i) {
-            var batchedOffset = batchedIndices[i].offset;
-            var batchedCount = batchedIndices[i].count;
-
-            if (offset >= batchedOffset && offset < batchedOffset + batchedCount) {
-                break;
-            }
-        }
-
-        batchedIndices.push({
-            color : Color.clone(color),
-            offset : offset,
-            count : count,
-            batchIds : [batchId]
-        });
-
-        var startIds = [];
-        var endIds = [];
-
-        var batchIds = batchedIndices[i].batchIds;
-        var batchIdsLength = batchIds.length;
-
-        for (var j = 0; j < batchIdsLength; ++j) {
-            var id = batchIds[j];
-            if (id === batchId) {
-                continue;
-            }
-
-            if (this._indexOffsets[id] < offset) {
-                startIds.push(id);
-            } else {
-                endIds.push(id);
-            }
-        }
-
-        if (endIds.length !== 0) {
-            batchedIndices.push({
-                color : Color.clone(batchedIndices[i].color),
-                offset : offset + count,
-                count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count),
-                batchIds : endIds
-            });
-        }
-
-        if (startIds.length !== 0) {
-            batchedIndices[i].count = offset - batchedIndices[i].offset;
-            batchedIndices[i].batchIds = startIds;
-        } else {
-            batchedIndices.splice(i, 1);
-        }
-
-        this._batchDirty = true;
+        this._primitive.updateCommands(batchId, color);
     };
 
     /**
@@ -1040,33 +340,13 @@ define([
      * @param {FrameState} frameState The current frame state.
      */
     Vector3DTilePolygons.prototype.update = function(frameState) {
-        var context = frameState.context;
-
-        createVertexArray(this, context);
-        createShaders(this, context);
-        createRenderStates(this);
-        createUniformMap(this, context);
+        createPrimitive(this);
 
         if (!this._ready) {
             return;
         }
 
-        var passes = frameState.passes;
-        if (passes.render) {
-            createColorCommands(this, context);
-            var commandLength = this._commands.length;
-            for (var i = 0; i < commandLength; ++i) {
-                frameState.commandList.push(this._commands[i]);
-            }
-        }
-
-        if (passes.pick) {
-            createPickCommands(this);
-            var pickCommandLength = this._pickCommands.length;
-            for (var j = 0; j < pickCommandLength; ++j) {
-                frameState.commandList.push(this._pickCommands[j]);
-            }
-        }
+        this._primitive.update(frameState);
     };
 
     /**
@@ -1096,10 +376,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     Vector3DTilePolygons.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
-        this._sp = this._sp && this._sp.destroy();
-        this._spPick = this._spPick && this._spPick.destroy();
-        this._vaSwap = this._vaSwap && this._vaSwap.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 
