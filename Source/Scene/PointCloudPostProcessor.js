@@ -106,6 +106,8 @@ define([
         this.useTriangle = options.useTriangle;
         this.enableAO = options.enableAO;
         this.AOViewEnabled = options.AOViewEnabled;
+        this.sigmoidDomainOffset = options.sigmoidDomainOffset;
+        this.sigmoidSharpness = options.sigmoidSharpness;
 
         this._pointArray = undefined;
 
@@ -879,6 +881,8 @@ define([
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
             'uniform sampler2D pointCloud_aoTexture; \n' +
+            'uniform float sigmoidDomainOffset; \n' +
+            'uniform float sigmoidSharpness; \n' +
             'varying vec2 v_textureCoordinates; \n\n' +
             'float sigmoid2(float x, float sharpness) { \n' +
             '  if (x >= 1.0) return 1.0; \n' +
@@ -896,7 +900,7 @@ define([
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    #ifdef enableAO \n' +
             '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
-            '    ao = clamp(sigmoid2(ao + 0.2, 0.2), 0.0, 1.0); \n' +
+            '    ao = clamp(sigmoid2(ao + sigmoidDomainOffset, sigmoidSharpness), 0.0, 1.0); \n' +
             '    color.xyz = color.xyz * ao; \n' +
             '    #endif // enableAO \n' +
             '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
@@ -923,15 +927,21 @@ define([
         );
 
         var blendUniformMap = {
-            pointCloud_colorTexture: function() {
+            pointCloud_colorTexture : function() {
                 return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_depthTexture: function() {
+            pointCloud_depthTexture : function() {
                 return processor._depthTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_aoTexture: function() {
+            pointCloud_aoTexture : function() {
                 return processor._aoTextures[1 - numRegionGrowingPasses % 2];
             },
+            sigmoidDomainOffset : function() {
+                return processor.sigmoidDomainOffset;
+            },
+            sigmoidSharpness : function() {
+                return processor.sigmoidSharpness;
+            }
         };
 
         var blendCommand = context.createViewportQuadCommand(blendFS, {
@@ -1090,7 +1100,9 @@ define([
             tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
             tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle ||
             tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
-            tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled) {
+            tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
+            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -1104,6 +1116,8 @@ define([
             this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;
             this.enableAO = tileset.pointCloudPostProcessorOptions.enableAO;
             this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
+            this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
+            this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
             dirty = true;
         }
 
