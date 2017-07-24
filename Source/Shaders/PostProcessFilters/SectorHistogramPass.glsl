@@ -110,7 +110,6 @@ void main() {
 
     // sectors contains both possible sectors that the
     // neighbor pixel could be in
-    //ivec2 sectors = collapseSectors(getSectors(vec2(d)));
     ivec2 sectors = readSectors(d);
 
     // This is the offset of the horizon point from the center in 3D
