@@ -115,6 +115,22 @@ define([
         }
     };
 
+    ForEach.meshPrimitiveTargetAttribute = function(primitive, handler) {
+        var targets = primitive.targets;
+        if (defined(targets)) {
+            for (var targetId in targets) {
+                if (targets.hasOwnProperty(targetId)) {
+                    var target = targets[targetId];
+                    for (var attributeId in target) {
+                        if (target.hasOwnProperty(attributeId) && attributeId !== 'extras') {
+                            handler(target[attributeId], attributeId);
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     ForEach.node = function(gltf, handler) {
         ForEach.topLevel(gltf, 'nodes', handler);
     };

@@ -494,6 +494,17 @@ define([
                             }
                         }
                     });
+                    ForEach.meshPrimitiveTargetAttribute(primitive, function (targetAttribute) {
+                        var bufferViewId = accessors[targetAttribute].bufferView;
+                        if (needsTarget[bufferViewId]) {
+                            var bufferView = bufferViews[bufferViewId];
+                            if (defined(bufferView)) {
+                                bufferView.target = WebGLConstants.ARRAY_BUFFER;
+                                needsTarget[bufferViewId] = false;
+                                shouldTraverse--;
+                            }
+                        }
+                    });
                 });
                 if (shouldTraverse === 0) {
                     return true;
