@@ -119,7 +119,12 @@ define([
         var length = batchIds.length;
         for (var i = 0; i < length; ++i) {
             var batchId = batchIds[i];
-            features[batchId] = new Cesium3DTilePointFeature(content, batchId, billboardCollection, labelCollection, polylineCollection);
+
+            var billboard = billboardCollection.get(i);
+            var label = labelCollection.get(i);
+            var polyline = polylineCollection.get(i);
+
+            features[batchId] = new Cesium3DTilePointFeature(content, batchId, billboard, label, polyline);
         }
     };
 

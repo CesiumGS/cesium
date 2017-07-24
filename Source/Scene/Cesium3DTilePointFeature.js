@@ -52,11 +52,11 @@ define([
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
-    function Cesium3DTilePointFeature(content, batchId, billboardCollection, labelCollection, polylineCollection) {
+    function Cesium3DTilePointFeature(content, batchId, billboard, label, polyline) {
         this._content = content;
-        this._billboardCollection = billboardCollection;
-        this._labelCollection = labelCollection;
-        this._polylineCollection = polylineCollection;
+        this._billboard = billboard;
+        this._label = label;
+        this._polyline = polyline;
 
         this._batchId = batchId;
         this._billboardImage = undefined;
@@ -87,14 +87,12 @@ define([
          */
         show : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.show;
+                return this._label.show;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.show = value;
-                var billboard = this._billboardCollection.get(this._batchId);
-                billboard.show = value;
+                this._label.show = value;
+                this._billboard.show = value;
+                this._polyline.show = value;
             }
         },
 
@@ -151,7 +149,7 @@ define([
                 return this._pointOutlineColor;
             },
             set : function(value) {
-                this._pointOutlineColor = Color.clone(value, this._pointColor);
+                this._pointOutlineColor = Color.clone(value, this._pointOutlineColor);
             }
         },
 
@@ -186,15 +184,11 @@ define([
          */
         labelColor : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.fillColor;
+                return this._label.fillColor;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.fillColor = value;
-
-                var polyline = this._polylineCollection.get(this._batchId);
-                polyline.show = value.alpha > 0.0;
+                this._label.fillColor = value;
+                this._polyline.show = this._label.show && value.alpha > 0.0;
             }
         },
 
@@ -210,12 +204,10 @@ define([
          */
         labelOutlineColor : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.outlineColor;
+                return this._label.outlineColor;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.outlineColor = value;
+                this._label.outlineColor = value;
             }
         },
 
@@ -231,12 +223,10 @@ define([
          */
         labelOutlineWidth : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.outlineWidth;
+                return this._label.outlineWidth;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.outlineWidth = value;
+                this._label.outlineWidth = value;
             }
         },
 
@@ -252,12 +242,10 @@ define([
          */
         font : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.font;
+                return this._label.font;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.font = value;
+                this._label.font = value;
             }
         },
 
@@ -273,12 +261,10 @@ define([
          */
         labelStyle : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.style;
+                return this._label.style;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.style = value;
+                this._label.style = value;
             }
         },
 
@@ -291,20 +277,17 @@ define([
          */
         labelText : {
             get : function() {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.text;
+                return this._label.text;
             },
             set : function(value) {
                 if (!defined(value)) {
                     value = '';
                 }
-                var label = this._labelCollection.get(this._batchId);
-                label.text = value;
+                this._label.text = value;
 
                 if (defined(value) && value !== '') {
-                    var billboard = this._billboardCollection.get(this._batchId);
-                    billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
-                    label.horizontalOrigin = HorizontalOrigin.LEFT;
+                    this._billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
+                    this._label.horizontalOrigin = HorizontalOrigin.LEFT;
                 }
             }
         },
@@ -321,12 +304,10 @@ define([
          */
         backgroundColor : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.backgroundColor;
+                return this._label.backgroundColor;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.backgroundColor = value;
+                this._label.backgroundColor = value;
             }
         },
 
@@ -342,12 +323,10 @@ define([
          */
         backgroundPadding : {
             get : function() {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.backgroundPadding;
+                return this._label.backgroundPadding;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.backgroundPadding = value;
+                this._label.backgroundPadding = value;
             }
         },
 
@@ -363,12 +342,10 @@ define([
          */
         backgroundEnabled : {
             get : function() {
-                    var label = this._labelCollection.get(this._batchId);
-                    return label.showBackground;
+                return this._label.showBackground;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.showBackground = value;
+                this._label.showBackground = value;
             }
         },
 
@@ -381,12 +358,11 @@ define([
          */
         scaleByDistance : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.scaleByDistance;
+                return this._label.scaleByDistance;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.scaleByDistance = value;
+                this._label.scaleByDistance = value;
+                this._billboard.scaleByDistance = value;
             }
         },
 
@@ -399,12 +375,11 @@ define([
          */
         translucencyByDistance : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.translucencyByDistance;
+                return this._label.translucencyByDistance;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.translucencyByDistance = value;
+                this._label.translucencyByDistance = value;
+                this._billboard.translucencyByDistance = value;
             }
         },
 
@@ -417,16 +392,12 @@ define([
          */
         distanceDisplayCondition : {
             get : function() {
-                var label = this._labelCollection.get(this._batchId);
-                return label.distanceDisplayCondition;
+                return this._label.distanceDisplayCondition;
             },
             set : function(value) {
-                var label = this._labelCollection.get(this._batchId);
-                label.distanceDisplayCondition = value;
-                if (defined(this._polylineCollection)) {
-                    var polyline = this._polylineCollection.get(this._batchId);
-                    polyline.distanceDisplayCondition = value;
-                }
+                this._label.distanceDisplayCondition = value;
+                this._polyline.distanceDisplayCondition = value;
+                this._billboard.distanceDisplayCondition = value;
             }
         },
 
@@ -442,21 +413,17 @@ define([
                 return this._heightOffset;
             },
             set : function(value) {
-                var billboard = this._billboardCollection.get(this._batchId);
-                var label = this._labelCollection.get(this._batchId);
-                var line = this._polylineCollection.get(this._batchId);
-
                 var offset = defaultValue(this._heightOffset, 0.0);
 
                 // TODO: ellipsoid
                 var ellipsoid = Ellipsoid.WGS84;
-                var cart = ellipsoid.cartesianToCartographic(billboard.position, scratchCartographic);
+                var cart = ellipsoid.cartesianToCartographic(this._billboard.position, scratchCartographic);
                 cart.height = cart.height - offset + value;
                 var newPosition = ellipsoid.cartographicToCartesian(cart);
 
-                billboard.position = newPosition;
-                label.position = billboard.position;
-                line.positions = [line.positions[0], newPosition];
+                this._billboard.position = newPosition;
+                this._label.position = this._billboard.position;
+                this._polyline.positions = [this._polyline.positions[0], newPosition];
 
                 this._heightOffset = value;
             }
@@ -474,12 +441,10 @@ define([
          */
         anchorLineEnabled : {
             get : function() {
-                var polyline = this._polylineCollection.get(this._batchId);
-                return polyline.show;
+                return this._polyline.show;
             },
             set : function(value) {
-                var polyline = this._polylineCollection.get(this._batchId);
-                polyline.show = value;
+                this._polyline.show = value;
             }
         },
 
@@ -495,12 +460,10 @@ define([
          */
         anchorLineColor : {
             get : function() {
-                var polyline = this._polylineCollection.get(this._batchId);
-                return polyline.material.uniforms.color;
+                return this._polyline.material.uniforms.color;
             },
             set : function(value) {
-                var polyline = this._polylineCollection.get(this._batchId);
-                polyline.material.uniforms.color = value;
+                this._polyline.material.uniforms.color = value;
             }
         },
 
@@ -569,13 +532,7 @@ define([
     });
 
     Cesium3DTilePointFeature.prototype._setBillboardImage = function() {
-        var billboardCollection = this._billboardCollection;
-        if (!defined(billboardCollection)) {
-            return;
-        }
-
-        var b = billboardCollection.get(this._batchId);
-
+        var b = this._billboard;
         if (defined(this._billboardImage) && this._billboardImage !== b.image) {
             b.image = this._billboardImage;
             return;
