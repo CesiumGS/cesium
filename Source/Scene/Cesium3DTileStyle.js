@@ -170,6 +170,7 @@ define([
 
         /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property. Alternatively a boolean, string, or object defining a show style can be used.
+         * In case passed value is a boolean, string, or condition object value will be converted into an {Expression} or {ConditionsExpression}.
          * <p>
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
@@ -246,6 +247,7 @@ define([
 
         /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property. Alternatively a string or object defining a color style can be used.
+         * In case passed value is a string or condition object value will be converted into an {Expression} or {ConditionsExpression}.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -313,6 +315,7 @@ define([
 
         /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternatively a number, string, or object defining a pointSize style can be used.
+         * In case passed value is a number, string, or condition object value will be converted into an {Expression} or {ConditionsExpression}.
          * <p>
          * The expression must return or convert to a <code>Number</code>.
          * </p>
