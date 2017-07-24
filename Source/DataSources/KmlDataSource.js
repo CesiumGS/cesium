@@ -2344,7 +2344,7 @@ define([
 
     defineProperties(KmlDataSource.prototype, {
         /**
-         * Gets a human-readable name for this instance.
+         * Gets or sets a human-readable name for this instance.
          * This will be automatically be set to the KML document name on load.
          * @memberof KmlDataSource.prototype
          * @type {String}
@@ -2352,6 +2352,12 @@ define([
         name : {
             get : function() {
                 return this._name;
+            },
+            set : function(value) {
+                if (this._name !== value) {
+                    this._name = value;
+                    this._changed.raiseEvent(this);
+                }
             }
         },
         /**

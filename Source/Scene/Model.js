@@ -644,6 +644,12 @@ define([
          */
         this.cull = defaultValue(options.cull, true);
 
+        /**
+         * @private
+         * @readonly
+         */
+        this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
@@ -3483,7 +3489,7 @@ define([
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
                 });
 
                 var pickCommand;
@@ -3522,7 +3528,7 @@ define([
                         uniformMap : pickUniformMap,
                         renderState : rs,
                         owner : owner,
-                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                        pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
                     });
                 }
 
