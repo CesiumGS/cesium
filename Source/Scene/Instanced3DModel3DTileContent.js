@@ -21,6 +21,7 @@ define([
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
+        '../Renderer/Pass',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -48,6 +49,7 @@ define([
         RuntimeError,
         Transforms,
         TranslationRotationScale,
+        Pass,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -303,11 +305,16 @@ define([
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : content._tileset._gltfUpAxis
+            upAxis : content._tileset._gltfUpAxis,
+            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
+
+            // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
+            // This removes all white space and null characters from the end of the string.
+            gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
             collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;

@@ -13,6 +13,7 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/RequestType',
         '../Core/RuntimeError',
+        '../Renderer/Pass',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -33,6 +34,7 @@ define([
         getStringFromTypedArray,
         RequestType,
         RuntimeError,
+        Pass,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -280,7 +282,7 @@ define([
             batchTableBinaryByteLength = 0;
             featureTableJsonByteLength = 0;
             featureTableBinaryByteLength = 0;
-            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         } else if (batchTableBinaryByteLength >= 570425344) {
             // Second legacy check
             byteOffset -= sizeOfUint32;
@@ -289,7 +291,7 @@ define([
             batchTableBinaryByteLength = featureTableBinaryByteLength;
             featureTableJsonByteLength = 0;
             featureTableBinaryByteLength = 0;
-            deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-header', 'This b3dm header is using the legacy format [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength]. The new format is [featureTableJsonByteLength] [featureTableBinaryByteLength] [batchTableJsonByteLength] [batchTableBinaryByteLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         var featureTableJson;
@@ -352,6 +354,7 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by 3D Tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
             basePath : basePath,
             requestType : RequestType.TILES3D,
             modelMatrix : tile.computedTransform,

@@ -640,6 +640,12 @@ define([
          */
         this.cull = defaultValue(options.cull, true);
 
+        /**
+         * @private
+         * @readonly
+         */
+        this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
+
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
@@ -3478,7 +3484,7 @@ define([
                     uniformMap : pickUniformMap,
                     renderState : rs,
                     owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
                 });
             }
 
@@ -4787,6 +4793,11 @@ define([
         // Vertex arrays are unique to this model, destroy here.
         if (defined(this._precreatedAttributes)) {
             destroy(this._rendererResources.vertexArrays);
+        }
+
+        if (defined(this._removeUpdateHeightCallback)) {
+            this._removeUpdateHeightCallback();
+            this._removeUpdateHeightCallback = undefined;
         }
 
         this._rendererResources = undefined;
