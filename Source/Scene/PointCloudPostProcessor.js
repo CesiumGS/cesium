@@ -923,7 +923,7 @@ define([
         blendFS = replaceConstants(
             blendFS,
             'enableAO',
-            processor.enableAO
+            processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
         );
 
         var blendUniformMap = {
