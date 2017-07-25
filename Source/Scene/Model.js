@@ -346,7 +346,6 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
-     * @param {Boolean} [options.addBatchIdToGeneratedShaders=false] Determines if shaders generated for materials using the KHR_materials_common extension should include a batchId attribute. For models contained in b3dm tiles.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
@@ -390,15 +389,13 @@ define([
 
                     cachedGltf = new CachedGltf({
                         gltf : parsedGltf,
-                        ready : true,
-                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
+                        ready : true
                     });
                 } else {
                     // Normal glTF (JSON)
                     cachedGltf = new CachedGltf({
                         gltf : options.gltf,
-                        ready : true,
-                        addBatchIdToGeneratedShaders : options.addBatchIdToGeneratedShaders
+                        ready : true
                     });
                 }
 
@@ -623,6 +620,7 @@ define([
         this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         // Undocumented options
+        this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
@@ -4536,7 +4534,8 @@ define([
             if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
                     var options = {
-                        optimizeForCesium: true
+                        optimizeForCesium: true,
+                        addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
                     };
                     updateVersion(this.gltf);
                     checkSupportedExtensions(this);
