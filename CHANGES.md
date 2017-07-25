@@ -19,6 +19,7 @@ Change Log
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 * Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
 * Added ability to set a style's `color`, `show`, or `pointSize` with a string or object literal. `show` may also take a boolean and `pointSize` may take a number. [#5412](https://github.com/AnalyticalGraphicsInc/cesium/pull/5412)
+* Added setter for `KmlDataSource.name` to specify a name for the datasource [#5660](https://github.com/AnalyticalGraphicsInc/cesium/pull/5660).
 * Added setter for `GeoJsonDataSource.name` to specify a name for the datasource [#5653](https://github.com/AnalyticalGraphicsInc/cesium/issues/5653)
 * Fixed issue where scene would blink when labels were added. [#5537](https://github.com/AnalyticalGraphicsInc/cesium/issues/5537)
 * Fixed label positioning when height reference changes [#5609](https://github.com/AnalyticalGraphicsInc/cesium/issues/5609)
