@@ -48,6 +48,10 @@ define([
          */
         this.ambientOcclusion = PostProcessLibrary.ambientOcclusion;
         /**
+         * @inheritdoc PostProcessLibrary#depthOfField
+         */
+        this.depthOfField = PostProcessLibrary.depthOfField;
+        /**
          * @inheritdoc PostProcessLibrary#fxaa
          */
         this.fxaa = PostProcessLibrary.fxaa;
@@ -61,6 +65,7 @@ define([
             this.depthView,
             this.compositeTest,
             this.ambientOcclusion,
+            this.depthOfField,
             this.fxaa
         ];
 

@@ -4,6 +4,7 @@ define([
         '../Core/destroyObject',
         './PostProcess',
         './PostProcessAmbientOcclusionStage',
+        './PostProcessDepthOfFieldStage',
         './PostProcessCompositeStage',
         './PostProcessStage',
         '../Shaders/PostProcessFilters/FXAA',
@@ -14,6 +15,7 @@ define([
         destroyObject,
         PostProcess,
         PostProcessAmbientOcclusionStage,
+        PostProcessDepthOfFieldStage,
         PostProcessCompositeStage,
         PostProcessStage,
         FXAAFS,
@@ -122,6 +124,15 @@ define([
         ambientOcclusion : {
             get : function() {
                 return createAmbientOcclusionStage();
+            }
+        },
+
+        /**
+         * private
+         */
+        depthOfField : {
+            get : function() {
+                return createDepthOfFieldStage();
             }
         }
     });
@@ -295,6 +306,10 @@ define([
 
     function createAmbientOcclusionStage() {
         return new PostProcessAmbientOcclusionStage();
+    }
+
+    function createDepthOfFieldStage() {
+        return new PostProcessDepthOfFieldStage();
     }
 
     return PostProcessLibrary;

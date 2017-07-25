@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Change color of 3D models.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>        
+        <tr>
+            <td>Depth Of Field</td>
+            <td>
+                <input type="checkbox" data-bind="checked: DOFShow">
+            </td>
+        </tr>      
+        <tr>
+            <td>Focal Distance</td>
+            <td>
+                <input type="range" min="0.0" max="1000.0" step="1" data-bind="value: FocalDistance, valueUpdate: 'input'">
+            </td>
+        </tr>       
+        <tr>
+            <td>Kernel Size</td>
+            <td>
+                <input type="range" min="0" max="4" step="0.01" data-bind="value: KernelSize, valueUpdate: 'input'">
+            </td>
+        </tr>
+    </tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+var postProcess = scene.postProcess;
+scene.globe.depthTestAgainstTerrain = true;
+scene.fxaa = false;
+
+function createModel(url, x, y, height) {
+    //viewer.entities.removeAll();
+
+    var position = Cesium.Cartesian3.fromDegrees(x, y, height);
+    var heading = Cesium.Math.toRadians(0);
+    var pitch = 0;
+    var roll = 0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+
+    var entity = viewer.entities.add({
+        name : url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : url,
+            minimumPixelSize : 128,
+            maximumScale : 20000
+        }
+    });
+    viewer.trackedEntity = entity;
+}
+
+var viewModel = {   
+    DOFShow: false,  
+    FocalDistance: 5,   
+    KernelSize : 1.2
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+for (var name in viewModel) {
+    if (viewModel.hasOwnProperty(name)) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess); 
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99875, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.999, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99925, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.9995, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99975, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00025, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0005, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00075, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.001, 44.0503706, 100.0);        
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0015, 44.0503706, 100.0);
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00175, 44.0503706, 100.0);
+        
+        createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00125, 44.0503706, 100.0);
+        
+       
+    }
+}
+
+function updatePostProcess() {   
+    postProcess.depthOfField.show = Boolean(viewModel.DOFShow);
+    postProcess.depthOfField.uniformValues.focalDistance = Number(viewModel.FocalDistance);   
+    postProcess.depthOfField.dofBlurUniformValues.kernelSize = Number(viewModel.KernelSize);
+    scene.fxaa = Boolean(viewModel.fxaaShow);
+}
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

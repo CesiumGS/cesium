@@ -6,7 +6,11 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/loadImage',
-        '../Renderer/Texture'
+        '../Renderer/Texture',
+        '../Renderer/Sampler',   
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
     ], function(
         Check,
         clone,
@@ -15,7 +19,11 @@ define([
         defineProperties,
         destroyObject,
         loadImage,
-        Texture) {
+        Texture,
+        Sampler,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap) {
     'use strict';
 
     /**
@@ -94,12 +102,22 @@ define([
         }
     });
 
+    function createSampler() {
+        return new Sampler({
+            wrapS: TextureWrap.REPEAT,
+            wrapT: TextureWrap.REPEAT,
+            minificationFilter: TextureMinificationFilter.NEAREST,
+            magnificationFilter: TextureMagnificationFilter.NEAREST
+        });
+    }
+
     function loadTexture(stage, uniformName, imagePath, frameState) {
         return loadImage(imagePath).then(function(image) {
             frameState.afterRender.push(function() {
                 var texture = new Texture({
                     context : frameState.context,
-                    source : image
+                    source : image,
+                    sampler: createSampler()
                 });
                 stage._uniformValues[uniformName] = texture;
                 stage._textures.push(texture);
