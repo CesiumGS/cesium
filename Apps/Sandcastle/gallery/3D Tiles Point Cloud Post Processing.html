@@ -74,6 +74,20 @@
                 <input type="text" size="2" data-bind="value: pointAttenuationMultiplier">
             </td>
           </tr>
+          <tr>
+            <td>AO Sigmoid Domain Offset</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: sigmoidDomainOffset, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: sigmoidDomainOffset">
+            </td>
+          </tr>
+          <tr>
+            <td>AO Sigmoid Sharpness</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: sigmoidSharpness, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: sigmoidSharpness">
+            </td>
+          </tr>
         </tbody>
     </table>
 </div>
@@ -108,7 +122,9 @@ var viewModel = {
     neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
     neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
     maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
-    pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier
+    pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier,
+    sigmoidDomainOffset : tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset,
+    sigmoidSharpness : tileset.pointCloudPostProcessorOptions.sigmoidSharpness
 };
 Cesium.knockout.track(viewModel);
 
@@ -131,6 +147,8 @@ subscribeParameter('numRegionGrowingPasses');
 subscribeParameter('neighborhoodVectorSize');
 subscribeParameter('maxAbsRatio');
 subscribeParameter('pointAttenuationMultiplier');
+subscribeParameter('sigmoidDomainOffset');
+subscribeParameter('sigmoidSharpness');
 
 Sandcastle.addToggleButton('Enabled', true, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;
@@ -140,12 +158,20 @@ Sandcastle.addToggleButton('Use Triangle Wave', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.useTriangle = checked;
 });
 
+Sandcastle.addToggleButton('Enable AO', true, function(checked) {
+    tileset.pointCloudPostProcessorOptions.enableAO = checked;
+});
+
 Sandcastle.addToggleButton('Density View', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.densityViewEnabled = checked;
 });
 
 Sandcastle.addToggleButton('Stencil View', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.stencilViewEnabled = checked;
+});
+
+Sandcastle.addToggleButton('AO View', false, function(checked) {
+    tileset.pointCloudPostProcessorOptions.AOViewEnabled = checked;
 });
 
 //Sandcastle_End
