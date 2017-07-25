@@ -41,6 +41,13 @@ defineSuite([
             width: 10000
         }));
         expect(geometry).toBeUndefined();
+
+        geometry = CorridorGeometry.createGeometry(new CorridorGeometry({
+            positions :  [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
+                          new Cartesian3(-1349046.4811926484, -5062228.688739784, 3621885.0521561056)],
+            width: 10000
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('computes positions', function() {
