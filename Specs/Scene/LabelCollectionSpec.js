@@ -2227,6 +2227,23 @@ defineSuite([
             expect(l._clampedPosition).toBeUndefined();
             expect(l._glyphs[0].billboard._clampedPosition).toBeUndefined();
         });
+
+        it('clears the billboard height reference callback when the label is removed', function() {
+            scene.globe = createGlobe();
+            spyOn(scene.camera, 'update');
+            var l = labelsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                text: 't',
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            scene.renderForSpecs();
+            var billboard = l._glyphs[0].billboard;
+            expect(billboard._removeCallbackFunc).toBeDefined();
+            var spy = spyOn(billboard, '_removeCallbackFunc');
+            labelsWithHeight.remove(l);
+            expect(spy).toHaveBeenCalled();
+            expect(labelsWithHeight._spareBillboards[0]._removeCallbackFunc).not.toBeDefined();
+        });
     });
 
 }, 'WebGL');
