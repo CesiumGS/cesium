@@ -675,12 +675,10 @@ define([
                 if (processor.useTriangle) {
                     return processor.rangeParameter;
                 }
-                    if (processor.rangeParameter < rangeMin) {
-                        return 0.0;
-                    }
-                        return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
-
-
+                if (processor.rangeParameter < rangeMin) {
+                    return 0.0;
+                }
+                return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
             },
             densityHalfWidth : function() {
                 return processor.densityHalfWidth;
