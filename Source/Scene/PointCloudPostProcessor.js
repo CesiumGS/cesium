@@ -32,7 +32,8 @@ define([
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
         '../Shaders/PostProcessFilters/SectorHistogramPass',
         '../Shaders/PostProcessFilters/SectorGatheringPass',
-        '../Shaders/PostProcessFilters/DensityEstimationPass'
+        '../Shaders/PostProcessFilters/DensityEstimationPass',
+        '../Shaders/PostProcessFilters/EdgeCullingPass'
     ], function(
         Color,
         ComponentDatatype,
@@ -66,7 +67,8 @@ define([
         RegionGrowingPassGL2,
         SectorHistogramPass,
         SectorGatheringPass,
-        DensityEstimationPass
+        DensityEstimationPass,
+        EdgeCullingPass
     ) {
     'use strict';
 
@@ -80,10 +82,12 @@ define([
         this._depthTextures = undefined;
         this._sectorTextures = undefined;
         this._densityTexture = undefined;
+        this._edgeCullingTexture = undefined;
         this._sectorLUTTexture = undefined;
         this._aoTextures = undefined;
         this._dirty = undefined;
         this._densityEstimationCommand = undefined;
+        this._edgeCullingCommand = undefined;
         this._sectorHistogramCommand = undefined;
         this._sectorGatheringCommand = undefined;
         this._regionGrowingCommands = undefined;
@@ -121,12 +125,13 @@ define([
             functionDestinationAlpha : BlendFunction.ONE
         };
         this._addBlend = {
+            enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.ONE,
             functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ZERO
+            functionDestinationAlpha : BlendFunction.ONE
         };
 
         this._testingFunc = StencilFunction.EQUAL;
@@ -192,6 +197,7 @@ define([
         processor._aoTextures[0].destroy();
         processor._aoTextures[1].destroy();
         processor._densityTexture.destroy();
+        processor._edgeCullingTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
@@ -273,6 +279,15 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : createSampler()
+        });
+
+        var edgeCullingTexture = new Texture({
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT,
             sampler : createSampler()
         });
 
@@ -386,6 +401,11 @@ define([
                 colorTextures : [densityMap],
                 destroyAttachments : false
             }),
+            edgeCullingPass : new Framebuffer({
+                context : context,
+                colorTextures : [edgeCullingTexture],
+                destroyAttachments : false
+            }),
             regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1],
@@ -406,6 +426,7 @@ define([
         processor._depthTextures = depthTextures;
         processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
+        processor._edgeCullingTexture = edgeCullingTexture;
         processor._sectorLUTTexture = sectorLUTTexture;
         processor._aoTextures = aoTextures;
         processor._colorTextures = colorTextures;
@@ -499,21 +520,10 @@ define([
         var renderState = overrides.renderState;
 
         if (!defined(overrides.renderState)) {
-            var func = StencilFunction.EQUAL;
-            var op = {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.KEEP
-            };
-            var stencilTest = {
-                enabled : true,
-                reference : 0,
-                mask : 1,
-                frontFunction : func,
-                backFunction : func,
-                frontOperation : op,
-                backOperation : op
-            };
+            var stencilTest = processor._positiveStencilTest;
+            if (defined(overrides.stencilTest)) {
+                stencilTest = overrides.stencilTest;
+            }
             if (useStencil) {
                 renderState = RenderState.fromCache({
                     stencilTest : stencilTest,
@@ -628,6 +638,9 @@ define([
             },
             maxAbsRatio : function() {
                 return processor.maxAbsRatio;
+            },
+            pointCloud_edgeCullingTexture : function() {
+                return processor._edgeCullingTexture;
             }
         };
 
@@ -649,6 +662,33 @@ define([
                 framebuffer : processor._framebuffers.densityEstimationPass,
                 pass : Pass.CESIUM_3D_TILE,
                 owner : processor
+            }
+        );
+    }
+
+    function edgeCullingStage(processor, context) {
+        var uniformMap = {
+        };
+
+        var edgeCullingStr = replaceConstants(
+            EdgeCullingPass,
+            'neighborhoodHalfWidth',
+            processor.densityHalfWidth
+        );
+
+        return createPointArrayCommand(
+            processor._depthTextures[0],
+            processor.densityHalfWidth * 2 + 1,
+            true,
+            processor._addBlend,
+            edgeCullingStr,
+            processor,
+            context, {
+                uniformMap : uniformMap,
+                framebuffer : processor._framebuffers.edgeCullingPass,
+                pass : Pass.CESIUM_3D_TILE,
+                owner : processor,
+                stencilTest : processor._negativeStencilTest
             }
         );
     }
@@ -863,6 +903,7 @@ define([
         var copyCommands = new Array(2);
 
         var i;
+        processor._edgeCullingCommand = edgeCullingStage(processor, context);
         processor._densityEstimationCommand = densityEstimationStage(processor, context);
         processor._sectorHistogramCommand = sectorHistogramStage(processor, context);
         processor._sectorGatheringCommand = sectorGatheringStage(processor, context);
@@ -960,10 +1001,12 @@ define([
             if (framebuffers.hasOwnProperty(name)) {
                 // The screen space pass should consider
                 // the stencil value, so we don't clear it
-                // here. The density estimation pass uses
+                // here. Edge culling should only apply to invalid
+                // pixels. The density estimation pass uses
                 // min blending, so we need to set the default
                 // value to the maximum possible value
-                if (name === 'screenSpacePass') {
+                if (name === 'screenSpacePass' ||
+                    name === 'edgeCullingPass') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -1174,6 +1217,7 @@ define([
         }
 
         // Apply processing commands
+        var edgeCullingCommand = this._edgeCullingCommand;
         var densityEstimationCommand = this._densityEstimationCommand;
         var sectorHistogramCommand = this._sectorHistogramCommand;
         var sectorGatheringCommand = this._sectorGatheringCommand;
@@ -1188,6 +1232,8 @@ define([
         commandList.push(sectorHistogramCommand);
         commandList.push(clearCommands['aoBufferB']);
         commandList.push(sectorGatheringCommand);
+        commandList.push(clearCommands['edgeCullingPass']);
+        commandList.push(edgeCullingCommand);
         commandList.push(clearCommands['densityEstimationPass']);
         commandList.push(densityEstimationCommand);
 

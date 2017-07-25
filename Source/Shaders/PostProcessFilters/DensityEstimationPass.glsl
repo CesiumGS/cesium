@@ -7,6 +7,8 @@
 varying float centerPos;
 
 uniform sampler2D pointCloud_depthTexture;
+uniform sampler2D pointCloud_edgeCullingTexture;
+
 uniform float neighborhoodVectorSize;
 uniform float maxAbsRatio;
 
@@ -14,6 +16,10 @@ void main() {
     vec2 v_textureCoordinates = gl_FragCoord.xy / czm_viewport.zw;
     float depth = czm_unpackDepth(texture2D(pointCloud_depthTexture,
                                             v_textureCoordinates));
+    vec4 rawEdgeCull = texture2D(pointCloud_edgeCullingTexture,
+                                 v_textureCoordinates);
+    vec2 neighborhoodAccum = rawEdgeCull.xy;
+    vec2 absNeighborhoodAccum = rawEdgeCull.zw;
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
     int densityValue = 0;
 
@@ -26,6 +32,16 @@ void main() {
         densityValue = 1;
     }
 
-    gl_FragData[0] =
-        vec4(float(densityValue) / densityScaleFactor, 0.0, 0.0, 0.0);
+    float absNeighborhoodAccumLength = length(absNeighborhoodAccum);
+    float absRatio = 0.0;
+    if (absNeighborhoodAccumLength > EPS) {
+        absRatio = length(neighborhoodAccum) / absNeighborhoodAccumLength;
+    }
+    if (!(length(neighborhoodAccum) > neighborhoodVectorSize &&
+            absRatio > maxAbsRatio)) {
+        gl_FragData[0] = vec4(float(densityValue) / densityScaleFactor,
+                              0.0, 0.0, 0.0);
+    } else {
+        gl_FragData[0] = vec4(0.0);
+    }
 }
