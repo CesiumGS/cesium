@@ -30,7 +30,6 @@ defineSuite([
         var flyto = new KmlTourFlyTo(10, 'bounce', new KmlLookAt(position, hpr));
         var options = flyto.getCameraOptions();
 
-        expect(flyto.view.constructor.name).toEqual('KmlLookAt');
         expect(options.duration).toEqual(10);
         expect(options.complete).toBeUndefined();
         expect(options.easingFunction).toBeUndefined();
@@ -49,7 +48,6 @@ defineSuite([
         var flyto = new KmlTourFlyTo(10, 'bounce', new KmlCamera(position, hpr));
         var options = flyto.getCameraOptions();
 
-        expect(flyto.view.constructor.name).toEqual('KmlCamera');
         expect(options.duration).toEqual(10);
         expect(options.complete).toBeUndefined();
         expect(options.easingFunction).toBeUndefined();
@@ -99,7 +97,6 @@ defineSuite([
         return pollToPromise(function() {
             return doneSpy.calls.count() > 0;
         }).then(function() {
-            expect(flyto.view.constructor.name).toEqual('KmlCamera');
             expect(fakeCamera.flyTo).toHaveBeenCalled();
             expect(fakeCamera.flyTo.calls.mostRecent().args[0].destination).toBe(position);
             expect(fakeCamera.flyTo.calls.mostRecent().args[0].orientation).toBe(hpr);
@@ -130,7 +127,6 @@ defineSuite([
         return pollToPromise(function() {
             return doneSpy.calls.count() > 0;
         }).then(function() {
-            expect(flyto.view.constructor.name).toEqual('KmlLookAt');
             expect(fakeCamera.flyToBoundingSphere).toHaveBeenCalled();
             expect(fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.x).toEqual(position.x);
             expect(fakeCamera.flyToBoundingSphere.calls.mostRecent().args[0].center.y).toEqual(position.y);

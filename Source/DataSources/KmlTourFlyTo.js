@@ -88,11 +88,11 @@ define([
             options.easingFunction = EasingFunction.LINEAR_NONE;
         }
 
-        if (this.view.constructor.name === 'KmlCamera') {
+        if (this.view.headingPitchRoll) {
             options.destination = this.view.position;
             options.orientation = this.view.headingPitchRoll;
         }
-        else if (this.view.constructor.name === 'KmlLookAt') {
+        else if (this.view.headingPitchRange) {
             options.offset = this.view.headingPitchRange;
         }
 
