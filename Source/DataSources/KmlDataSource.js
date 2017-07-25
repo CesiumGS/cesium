@@ -1784,7 +1784,7 @@ define([
 
     function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context) {
         dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        oneTimeWarning('kml-unsupportedFeature-' + node.nodeName,'KML - Unsupported feature: ' + node.localName);
+        oneTimeWarning('kml-unsupportedFeature-' + node.nodeName,'KML - Unsupported feature: ' + node.nodeName);
     }
 
     var RefreshMode = {
