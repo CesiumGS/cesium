@@ -95,7 +95,7 @@ define([
                 byteOffset += chunkLength;
                 // Load JSON chunk
                 if (chunkType === 0x4E4F534A) {
-                    var jsonString = chunkBuffer.toString();
+                    var jsonString = getStringFromTypedArray(chunkBuffer);
                     gltf = JSON.parse(jsonString);
                     addPipelineExtras(gltf);
                 }
