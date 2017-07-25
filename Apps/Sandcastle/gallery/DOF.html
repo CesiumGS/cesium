@@ -33,13 +33,19 @@
         <tr>
             <td>Focal Distance</td>
             <td>
-                <input type="range" min="0.0" max="1000.0" step="1" data-bind="value: FocalDistance, valueUpdate: 'input'">
+                <input type="range" min="0.0" max="500.0" step="1" data-bind="value: FocalDistance, valueUpdate: 'input'">
             </td>
         </tr>       
         <tr>
             <td>Kernel Size</td>
             <td>
-                <input type="range" min="0" max="4" step="0.01" data-bind="value: KernelSize, valueUpdate: 'input'">
+                <input type="range" min="0" max="7" step="0.01" data-bind="value: KernelSize, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>Step Size</td>
+            <td>
+                <input type="range" min="1" max="10" step="0.1" data-bind="value: StepSize, valueUpdate: 'input'">
             </td>
         </tr>
     </tbody></table>
@@ -80,7 +86,8 @@ function createModel(url, x, y, height) {
 var viewModel = {   
     DOFShow: false,  
     FocalDistance: 5,   
-    KernelSize : 1.2
+    KernelSize : 3,
+    StepSize : 3
 };
 
 Cesium.knockout.track(viewModel);
@@ -112,9 +119,9 @@ function updatePostProcess() {
     postProcess.depthOfField.show = Boolean(viewModel.DOFShow);
     postProcess.depthOfField.uniformValues.focalDistance = Number(viewModel.FocalDistance);   
     postProcess.depthOfField.dofBlurUniformValues.kernelSize = Number(viewModel.KernelSize);
+    postProcess.depthOfField.dofBlurUniformValues.stepSize = Number(viewModel.StepSize);
     scene.fxaa = Boolean(viewModel.fxaaShow);
 }
-
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
