@@ -439,17 +439,18 @@ define([
 
         // Add base color to fragment shader
         if (defined(parameterValues.baseColorTexture)) {
-            fragmentShader += '    vec3 baseColor = texture2D(u_baseColorTexture, ' + v_texcoord + ').rgb;\n';
+            fragmentShader += '    vec4 baseColorWithAlpha = texture2D(u_baseColorTexture, ' + v_texcoord + ');\n';
             if (defined(parameterValues.baseColorFactor)) {
-                fragmentShader += '    baseColor *= u_baseColorFactor.rgb;\n';
+                fragmentShader += '    baseColorWithAlpha *= u_baseColorFactor;\n';
             }
         } else {
             if (defined(parameterValues.baseColorFactor)) {
-                fragmentShader += '    vec3 baseColor = u_baseColorFactor.rgb;\n';
+                fragmentShader += '    vec4 baseColorWithAlpha = u_baseColorFactor;\n';
             } else {
-                fragmentShader += '    vec3 baseColor = vec3(1.0);\n';
+                fragmentShader += '    vec4 baseColorWithAlpha = vec4(1.0);\n';
             }
         }
+        fragmentShader += '    vec3 baseColor = baseColorWithAlpha.rgb;\n';
         // Add metallic-roughness to fragment shader
         if (defined(parameterValues.metallicRoughnessTexture)) {
             fragmentShader += '    vec3 metallicRoughness = texture2D(u_metallicRoughnessTexture, ' + v_texcoord + ').rgb;\n';
@@ -532,11 +533,48 @@ define([
         }
 
         // Final color
-        fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
+        var alphaMode = material.alphaMode;
+        if (defined(alphaMode)) {
+            if (alphaMode === 'MASK') {
+                var alphaCutoff = material.alphaCutoff;
+                if (defined(alphaCutoff)) {
+                    fragmentShader += '    gl_FragColor = vec4(color, int(baseColorWithAlpha.a >= ' + alphaCutoff + '));\n';
+                } else {
+                    fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
+                }
+            } else if (alphaMode === 'BLEND') {
+                fragmentShader += '    gl_FragColor = vec4(color, baseColorWithAlpha.a);\n';
+            } else {
+                fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
+            }
+        } else {
+            fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
+        }
         fragmentShader += '}\n';
+        console.log(fragmentShader);
 
         var techniqueStates;
-        if (parameterValues.doubleSided) {
+        if (defined(alphaMode) && alphaMode !== 'OPAQUE') {
+            techniqueStates = {
+                enable: [
+                    WebGLConstants.DEPTH_TEST,
+                    WebGLConstants.BLEND
+                ],
+                functions: {
+                    depthMask : [false],
+                    blendEquationSeparate: [
+                        WebGLConstants.FUNC_ADD,
+                        WebGLConstants.FUNC_ADD
+                    ],
+                    blendFuncSeparate: [
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE_MINUS_SRC_ALPHA,
+                        WebGLConstants.ONE,
+                        WebGLConstants.ONE_MINUS_SRC_ALPHA
+                    ]
+                }
+            };
+        } else if (parameterValues.doubleSided) {
             techniqueStates = {
                 enable : [
                     WebGLConstants.DEPTH_TEST
