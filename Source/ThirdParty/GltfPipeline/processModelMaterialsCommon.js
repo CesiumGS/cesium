@@ -237,6 +237,12 @@ define([
             lights = gltf.extensions.KHR_materials_common.lights;
         }
         var parameterValues = khrMaterialsCommon.values;
+        if (defined(khrMaterialsCommon.transparent)) {
+            parameterValues['transparent'] = khrMaterialsCommon.transparent;
+        }
+        if (defined(khrMaterialsCommon.doubleSided)) {
+            parameterValues['doubleSided'] = khrMaterialsCommon.doubleSided;
+        }
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
 
         var hasSkinning = jointCount > 0;
@@ -746,9 +752,9 @@ define([
             }
         }
 
-        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, false);
+        var doubleSided = defaultValue(khrMaterialsCommon.doubleSided, defaultValue(khrMaterialsCommon.values.doubleSided, false));
         techniqueKey += doubleSided.toString() + ';';
-        var transparent = defaultValue(khrMaterialsCommon.transparent, false);
+        var transparent = defaultValue(khrMaterialsCommon.transparent, defaultValue(khrMaterialsCommon.values.transparent, false));
         techniqueKey += transparent.toString() + ';';
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
         techniqueKey += jointCount.toString() + ';';
