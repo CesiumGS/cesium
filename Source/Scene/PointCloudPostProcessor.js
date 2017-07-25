@@ -191,6 +191,7 @@ define([
     function destroyFramebuffers(processor) {
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
+        processor._ecTexture.destroy();
         processor._sectorTextures[0].destroy();
         processor._sectorTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
@@ -201,7 +202,6 @@ define([
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
-        processor._ecTexture.destroy();
         var framebuffers = processor._framebuffers;
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
@@ -209,9 +209,26 @@ define([
             }
         }
 
-        processor._depthTextures = undefined;
-        processor._colorTextures = undefined;
         processor._framebuffers = undefined;
+        processor._colorTextures = undefined;
+        processor._ecTexture = undefined;
+        processor._depthTextures = undefined;
+        processor._sectorTextures = undefined;
+        processor._densityTexture = undefined;
+        processor._edgeCullingTexture = undefined;
+        processor._sectorLUTTexture = undefined;
+        processor._aoTextures = undefined;
+        processor._dirty = undefined;
+        processor._densityEstimationCommand = undefined;
+        processor._edgeCullingCommand = undefined;
+        processor._sectorHistogramCommand = undefined;
+        processor._sectorGatheringCommand = undefined;
+        processor._regionGrowingCommands = undefined;
+        processor._stencilCommands = undefined;
+        processor._aoCommand = undefined;
+        processor._copyCommands = undefined;
+        processor._blendCommand = undefined;
+        processor._clearCommands = undefined;
     }
 
     function generateSectorLUT(processor) {
@@ -1055,6 +1072,7 @@ define([
         var colorTextures = processor._colorTextures;
         var regionGrowingCommands = processor._regionGrowingCommands;
         var stencilCommands = processor._stencilCommands;
+        var nowDirty = false;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
              (colorTextures[0].height !== screenHeight));
@@ -1062,6 +1080,7 @@ define([
         if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
             createPointArray(processor, context);
+            nowDirty = true;
         }
 
         if (!defined(regionGrowingCommands) || !defined(stencilCommands) || dirty) {
@@ -1069,14 +1088,18 @@ define([
         }
 
         if (resized) {
+            console.log('Resized!');
             destroyFramebuffers(processor);
             createFramebuffers(processor, context);
+            createPointArray(processor, context);
             createCommands(processor, context);
+            nowDirty = true;
         }
+        return nowDirty;
     }
 
     function processingSupported(context) {
-        return context.depthTexture;
+        return context.depthTexture && context.blendMinmax;
     }
 
     function getECShaderProgram(context, shaderProgram) {
@@ -1169,7 +1192,7 @@ define([
             return;
         }
 
-        createResources(this, frameState.context, dirty);
+        dirty |= createResources(this, frameState.context, dirty);
 
         // Render point cloud commands into an offscreen FBO.
         var i;
