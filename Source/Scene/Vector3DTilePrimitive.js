@@ -21,7 +21,8 @@ define([
         './Cesium3DTileFeature',
         './DepthFunction',
         './StencilFunction',
-        './StencilOperation'
+        './StencilOperation',
+        './Vector3DTileBatch'
     ], function(
         Cartesian3,
         Color,
@@ -45,7 +46,8 @@ define([
         Cesium3DTileFeature,
         DepthFunction,
         StencilFunction,
-        StencilOperation) {
+        StencilOperation,
+        Vector3DTileBatch) {
     'use strict';
 
     /**
@@ -60,13 +62,14 @@ define([
      * the indices for mesh n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
      * @param {Number[]} options.indexCounts The number of indices for each mesh.
      * @param {Number[]} options.indexOffsets The offset into the index buffer for each mesh.
-     * @param {Object[]} options.batchedIndices The index offset and count for each batch with the same color.
+     * @param {Vector3DTileBatch[]} options.batchedIndices The index offset and count for each batch with the same color.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched meshes.
      * @param {Number[]} options.batchIds The batch ids for each mesh.
      * @param {Uint16Array} options.vertexBatchIds The batch id for each vertex.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
      * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
+     * @param {Object} options.pickObject The object to return when picked.
      *
      * @private
      */
@@ -81,7 +84,7 @@ define([
         this._vertexBatchIds = options.vertexBatchIds;
 
         // These arrays are kept for re-batching indices based on colors.
-        // If WebGL 2 is supported, indices will be released and rebatching uses buffer-to-buffer copies.
+        // If WebGL 2 is supported, indices will be released and re-batching uses buffer-to-buffer copies.
         this._indices = options.indices;
         this._indexCounts = options.indexCounts;
         this._indexOffsets = options.indexOffsets;
@@ -776,12 +779,12 @@ define([
             }
         }
 
-        batchedIndices.push({
+        batchedIndices.push(new Vector3DTileBatch({
             color : Color.clone(color),
             offset : offset,
             count : count,
             batchIds : [batchId]
-        });
+        }));
 
         var startIds = [];
         var endIds = [];
@@ -803,12 +806,12 @@ define([
         }
 
         if (endIds.length !== 0) {
-            batchedIndices.push({
+            batchedIndices.push(new Vector3DTileBatch({
                 color : Color.clone(batchedIndices[i].color),
                 offset : offset + count,
                 count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count),
                 batchIds : endIds
-            });
+            }));
         }
 
         if (startIds.length !== 0) {

@@ -12,6 +12,7 @@ define([
         '../Core/Rectangle',
         '../Core/TaskProcessor',
         '../ThirdParty/when',
+        './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
         Cartesian3,
@@ -27,6 +28,7 @@ define([
         Rectangle,
         TaskProcessor,
         when,
+        Vector3DTileBatch,
         Vector3DTilePrimitive) {
     'use strict';
 
@@ -172,12 +174,12 @@ define([
                 batchIds[k] = packedBuffer[offset++];
             }
 
-            bis[j] = {
+            bis[j] = new Vector3DTileBatch({
                 color : color,
                 offset : indexOffset,
                 count : count,
                 batchIds : batchIds
-            };
+            });
         }
     }
 
