@@ -33,8 +33,18 @@ defineSuite([
         var mockViewer = {};
         mockViewer.scene = {};
         mockViewer.scene.camera = {};
-        mockViewer.scene.camera.flyTo = jasmine.createSpy('flyTo');
-        mockViewer.scene.camera.flyToBoundingSphere = jasmine.createSpy('flyToBoundingSphere');
+        mockViewer.scene.camera.flyTo = jasmine.createSpy('flyTo')
+            .and.callFake(function(options) {
+                if (options.complete) {
+                    options.complete();
+                }
+            });
+        mockViewer.scene.camera.flyToBoundingSphere = jasmine.createSpy('flyToBoundingSphere')
+            .and.callFake(function(boundingSphere, options) {
+                if (options.complete) {
+                    options.complete();
+                }
+            });
         return mockViewer;
     }
 
@@ -51,21 +61,26 @@ defineSuite([
     });
 
     it('calls entries play', function() {
+        var waitSpy = spyOn(KmlTourWait.prototype, 'play')
+            .and.callFake(function(callback) {
+                callback();
+            });
+        var flySpy = spyOn(KmlTourFlyTo.prototype, 'play')
+            .and.callFake(function(callback) {
+                callback();
+            });
+
         var tour = new KmlTour('test', 'test');
         var wait = new KmlTourWait(0.1);
         var flyTo = new KmlTourFlyTo(0.1, null, getLookAt());
         tour.addPlaylistEntry(wait);
         tour.addPlaylistEntry(flyTo);
 
-        var waitSpy = spyOn(wait, 'play').and.callThrough();
-        var flySpy = spyOn(flyTo, 'play').and.callThrough();
-
         var mockViewer = createMockViewer();
         tour.play(mockViewer);
         setTimeout(function() {
             expect(waitSpy).toHaveBeenCalled();
             expect(flySpy).toHaveBeenCalled();
-            expect(mockViewer.scene.camera.flyToBoundingSphere).toHaveBeenCalled();
         }, 250);
     });
 
