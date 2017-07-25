@@ -1584,7 +1584,7 @@ define([
             } else {
                 ++model._loadResources.pendingTextureLoads;
                 uri = new Uri(uri);
-                var imagePath = joinUrls(model._baseUri, gltfImage.uri);
+                var imagePath = joinUrls(model._baseUri, uri);
 
                 var promise;
                 if (ktxRegex.test(imagePath)) {
