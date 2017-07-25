@@ -7,7 +7,8 @@ defineSuite([
         'DataSources/KmlLookAt',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
-        'Core/Math'
+        'Core/Math',
+        'Specs/pollToPromise'
     ], function(
         KmlTour,
         KmlTourFlyTo,
@@ -16,7 +17,8 @@ defineSuite([
         KmlLookAt,
         Cartesian3,
         HeadingPitchRange,
-        CesiumMath
+        CesiumMath,
+        pollToPromise
         ) {
     'use strict';
 
@@ -78,10 +80,12 @@ defineSuite([
 
         var mockViewer = createMockViewer();
         tour.play(mockViewer);
-        setTimeout(function() {
+        return pollToPromise(function() {
+            return waitSpy.calls.count() > 0 && flySpy.calls.count() > 0;
+        }).then(function() {
             expect(waitSpy).toHaveBeenCalled();
             expect(flySpy).toHaveBeenCalled();
-        }, 250);
+        });
     });
 
     it('calls events', function(){
@@ -103,12 +107,14 @@ defineSuite([
         tour.entryEnd.addEventListener(entryEnd);
 
         tour.play(createMockViewer());
-        setTimeout(function() {
+        return pollToPromise(function() {
+            return tourEnd.calls.count() > 0;
+        }).then(function() {
             expect(tourStart).toHaveBeenCalled();
             expect(entryStart).toHaveBeenCalled();
             expect(entryEnd).toHaveBeenCalled();
             expect(tourEnd).toHaveBeenCalledWith(false);
-        }, 100);
+        });
     });
 
     it('terminates playback', function(){

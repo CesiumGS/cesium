@@ -38,7 +38,10 @@ define([
     KmlTourFlyTo.prototype.play = function(done, camera, cameraOptions) {
         this.activeCamera = camera;
         if (defined(done) && done !== null) {
+            var self = this;
             this.activeCallback = function(terminated) {
+                delete self.activeCallback;
+                delete self.activeCamera;
                 done(defined(terminated) ? false : terminated);
             };
         }
@@ -57,7 +60,9 @@ define([
      * Stop execution of curent entry. Cancel camera flyTo
      */
     KmlTourFlyTo.prototype.stop = function() {
-        this.activeCamera.cancelFlight();
+        if (defined(this.activeCamera)) {
+            this.activeCamera.cancelFlight();
+        }
         if (defined(this.activeCallback)) {
             this.activeCallback(true);
         }
