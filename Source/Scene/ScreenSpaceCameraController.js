@@ -14,6 +14,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -21,7 +22,6 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
-        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -41,6 +41,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Plane,
         Quaternion,
         Ray,
@@ -48,7 +49,6 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
-        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
