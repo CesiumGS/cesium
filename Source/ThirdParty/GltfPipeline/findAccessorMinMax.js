@@ -2,11 +2,13 @@
 define([
         './getAccessorByteStride',
         './numberOfComponentsForType',
+        '../../Core/arrayFill',
         '../../Core/ComponentDatatype',
         '../../Core/defined'
     ], function(
         getAccessorByteStride,
         numberOfComponentsForType,
+        arrayFill,
         ComponentDatatype,
         defined) {
     'use strict';
@@ -28,8 +30,8 @@ define([
         var buffers = gltf.buffers;
         var bufferViewId = accessor.bufferView;
         var numberOfComponents = numberOfComponentsForType(accessor.type);
-        var min = new Array(numberOfComponents).fill(Number.POSITIVE_INFINITY);
-        var max = new Array(numberOfComponents).fill(Number.NEGATIVE_INFINITY);
+        var min = arrayFill(new Array(numberOfComponents), Number.POSITIVE_INFINITY);
+        var max = arrayFill(new Array(numberOfComponents), Number.NEGATIVE_INFINITY);
         if (defined(bufferViewId) && defined(bufferViews) && bufferViews.hasOwnProperty(bufferViewId)) {
             var bufferView = bufferViews[bufferViewId];
             var bufferId = bufferView.buffer;
