@@ -74,7 +74,7 @@ define([
                     var techniqueKey = getTechniqueKey(khrMaterialsCommon);
                     var technique = techniques[techniqueKey];
                     if (!defined(technique)) {
-                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options.optimizeForCesium);
+                        technique = generateTechnique(gltf, khrMaterialsCommon, lightParameters, options);
                         techniques[techniqueKey] = technique;
                     }
 
@@ -227,7 +227,11 @@ define([
         return result;
     }
 
-    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, optimizeForCesium) {
+    function generateTechnique(gltf, khrMaterialsCommon, lightParameters, options) {
+        var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
+        var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
+        var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
+
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -260,7 +264,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix: {
-                semantic: 'MODELVIEW',
+                semantic: hasCesiumRTCExtension ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
                 type: WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix: {
@@ -437,6 +441,15 @@ define([
 
             vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
+        }
+
+        if (addBatchIdToGeneratedShaders) {
+            techniqueAttributes.a_batchId = 'batchId';
+            techniqueParameters.batchId = {
+                semantic: '_BATCHID',
+                type: WebGLConstants.FLOAT
+            };
+            vertexShader += 'attribute float a_batchId;\n';
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
