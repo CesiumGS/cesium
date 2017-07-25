@@ -186,17 +186,6 @@ define([
 
         that._pointColor = pointColor;
 
-        var pointSize;
-        if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression), defines);
-        } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression, defines);
-        } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression, defines);
-        }
-
-        that._pointSize = pointSize;
-
         var pointOutlineColor;
         if (typeof pointOutlineColorExpression === 'string') {
             pointOutlineColor = new Expression(pointOutlineColorExpression, defines);
@@ -373,6 +362,7 @@ define([
 
         var meta = {};
         if (defined(styleJson.meta)) {
+            var defines = styleJson.defines;
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
@@ -444,7 +434,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property. Alternatively a boolean, string, or object defining a show style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
@@ -469,6 +460,28 @@ define([
          *         return true;
          *     }
          * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a boolean
+         * style.show = true;
+         * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a string
+         * style.show = '${Height} > 0';
+         * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a condition
+         * style.show = {
+         *     conditions: [
+         *         ['${height} > 2', 'false'],
+         *         ['true', 'true']
+         *     ];
+         * };
          */
         show : {
             get : function() {
@@ -481,13 +494,25 @@ define([
                 return this._show;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._show = undefined;
+                } else if (typeof value === 'boolean') {
+                    this._show = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._show = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._show = new ConditionsExpression(value, defines);
+                } else {
+                    this._show = value;
+                }
                 this._showShaderFunctionReady = false;
-                this._show = value;
             }
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -512,6 +537,21 @@ define([
          *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
          *     }
          * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a string
+         * style.color = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a condition
+         * style.color = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         color : {
             get : function() {
@@ -524,8 +564,17 @@ define([
                 return this._color;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._color = undefined;
+                } else if (typeof value === 'string') {
+                    this._color = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._color = new ConditionsExpression(value, defines);
+                } else {
+                    this._color = value;
+                }
                 this._colorShaderFunctionReady = false;
-                this._color = value;
             }
         },
 
@@ -582,6 +631,26 @@ define([
          *         return 1.0;
          *     }
          * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a number
+         * style.pointSize = 1.0;
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a string
+         * style.pointSize = '${height} / 10';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a condition
+         * style.pointSize =  {
+         *     conditions : [
+         *         ['${height} > 2', '1.0'],
+         *         ['true', '2.0']
+         *     ]
+         * };
          */
         pointSize : {
             get : function() {
@@ -594,8 +663,19 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._pointSize = undefined;
+                } else if (typeof value === 'number') {
+                    this._pointSize = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._pointSize = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._pointSize = new ConditionsExpression(value, defines);
+                } else {
+                    this._pointSize = value;
+                }
                 this._pointSizeShaderFunctionReady = false;
-                this._pointSize = value;
             }
         },
 
@@ -1205,7 +1285,7 @@ define([
         }
 
         this._colorShaderFunctionReady = true;
-        this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
+        this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
         return this._colorShaderFunction;
     };
 
@@ -1227,7 +1307,7 @@ define([
         }
 
         this._showShaderFunctionReady = true;
-        this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
+        this._showShaderFunction = defined(this.show) ? this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool') : undefined;
         return this._showShaderFunction;
     };
 
@@ -1249,7 +1329,7 @@ define([
         }
 
         this._pointSizeShaderFunctionReady = true;
-        this._pointSizeShaderFunction = this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
         return this._pointSizeShaderFunction;
     };
 
