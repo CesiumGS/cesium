@@ -628,9 +628,9 @@ define([
         this.pointCloudPostProcessorOptions = {
             enabled : false,
             occlusionAngle : 0.1,
-            rangeParameter : 0.001,
+            rangeParameter : 0.0,
             neighborhoodHalfWidth : 4,
-            numRegionGrowingPasses : 4,
+            numRegionGrowingPasses : 5,
             densityHalfWidth : 4,
             neighborhoodVectorSize : 10.0,
             maxAbsRatio : 0.9,
