@@ -47,10 +47,10 @@ define([
         }
 
         var options = this.getCameraOptions(cameraOptions);
-        if (this.view.constructor.name === 'KmlCamera') {
+        if (this.view.headingPitchRoll) {
             camera.flyTo(options);
         }
-        else if (this.view.constructor.name === 'KmlLookAt') {
+        else if (this.view.headingPitchRange) {
             var target = new BoundingSphere(this.view.position);
             camera.flyToBoundingSphere(target, options);
         }
