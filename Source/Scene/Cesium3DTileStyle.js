@@ -1,5 +1,4 @@
 define([
-        '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
@@ -9,10 +8,8 @@ define([
         '../Core/RequestScheduler',
         '../ThirdParty/when',
         './ConditionsExpression',
-        './Expression',
-        './LabelStyle'
+        './Expression'
     ], function(
-        Cartesian3,
         clone,
         defaultValue,
         defined,
@@ -22,22 +19,8 @@ define([
         RequestScheduler,
         when,
         ConditionsExpression,
-        Expression,
-        LabelStyle) {
+        Expression) {
     'use strict';
-
-    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
-    var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
-    var DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION = 'color("#000000")';
-    var DEFAULT_POINT_SIZE_EXPRESSION = 8.0;
-    var DEFAULT_JSON_POINT_OUTLINE_WIDTH_EXPRESSION = 0.0;
-    var DEFAULT_JSON_LABEL_OUTLINE_WIDTH_EXPRESSION = 2.0;
-    var DEFAULT_JSON_LABEL_STYLE_EXPRESSION = LabelStyle.FILL;
-    var DEFAULT_JSON_FONT_EXPRESSION = '"30px sans-serif"';
-    var DEFAULT_JSON_BACKGROUND_ENABLED_EXPRESSION = false;
-    var DEFAULT_JSON_HEIGHT_OFFSET_EXPRESSION = 0.0;
-    var DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION = false;
-    var DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION = 'color("#ffffff")';
 
     /**
      * A style that is applied to a {@link Cesium3DTileset}.
@@ -128,237 +111,27 @@ define([
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
-        that._colorShaderFunctionReady = !defined(styleJson.color);
-        that._showShaderFunctionReady = !defined(styleJson.show);
-        that._pointSizeShaderFunctionReady = !defined(styleJson.pointSize);
-
-        var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
-        var pointColorExpression = defaultValue(styleJson.pointColor, DEFAULT_JSON_COLOR_EXPRESSION);
-        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_POINT_SIZE_EXPRESSION);
-        var pointOutlineColorExpression = defaultValue(styleJson.pointOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
-        var pointOutlineWidthExpression = defaultValue(styleJson.pointOutlineWidth, DEFAULT_JSON_POINT_OUTLINE_WIDTH_EXPRESSION);
-        var labelColorExpression = defaultValue(styleJson.labelColor, DEFAULT_JSON_COLOR_EXPRESSION);
-        var labelOutlineColorExpression = defaultValue(styleJson.labelOutlineColor, DEFAULT_JSON_OUTLINE_COLOR_EXPRESSION);
-        var labelOutlineWidthExpression = defaultValue(styleJson.labelOutlineWidth, DEFAULT_JSON_LABEL_OUTLINE_WIDTH_EXPRESSION);
-        var labelStyleExpression = defaultValue(styleJson.labelStyle, DEFAULT_JSON_LABEL_STYLE_EXPRESSION);
-        var fontExpression = defaultValue(styleJson.font, DEFAULT_JSON_FONT_EXPRESSION);
-        var labelTextExpression = styleJson.labelText;
-        var backgroundColorExpression = styleJson.backgroundColorExpression;
-        var backgroundPaddingExpression = styleJson.backgroundPadding;
-        var backgroundEnabledExpression = defaultValue(styleJson.backgroundEnabled, DEFAULT_JSON_BACKGROUND_ENABLED_EXPRESSION);
-        var scaleByDistanceExpression = styleJson.scaleByDistance;
-        var translucencyByDistanceExpression = styleJson.translucencyByDistance;
-        var distanceDisplayConditionExpression = styleJson.distanceDisplayCondition;
-        var heightOffsetExpression = defaultValue(styleJson.heightOffset, DEFAULT_JSON_HEIGHT_OFFSET_EXPRESSION);
-        var anchorLineEnabledExpression = defaultValue(styleJson.anchorLineEnabled, DEFAULT_JSON_ACHOR_LINE_ENABLED_EXPRESSION);
-        var anchorLineColorExpression = defaultValue(styleJson.anchorLineColor, DEFAULT_JSON_ANCHOR_LINE_COLOR_EXPRESSION);
-        var imageExpression = styleJson.image;
-
-        var defines = styleJson.defines;
-
-        var show;
-        if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression), defines);
-        } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression, defines);
-        } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression, defines);
-        }
-
-        that._show = show;
-
-        var color;
-        if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, defines);
-        } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, defines);
-        }
-
-        that._color = color;
-
-        var pointColor;
-        if (typeof pointColorExpression === 'string') {
-            pointColor = new Expression(pointColorExpression, defines);
-        } else if (defined(pointColorExpression.conditions)) {
-            pointColor = new ConditionsExpression(pointColorExpression, defines);
-        }
-
-        that._pointColor = pointColor;
-
-        var pointOutlineColor;
-        if (typeof pointOutlineColorExpression === 'string') {
-            pointOutlineColor = new Expression(pointOutlineColorExpression, defines);
-        } else if (defined(pointOutlineColorExpression.conditions)) {
-            pointOutlineColor = new ConditionsExpression(pointOutlineColorExpression, defines);
-        }
-
-        that._pointOutlineColor = pointOutlineColor;
-
-        var pointOutlineWidth;
-        if (typeof pointOutlineWidthExpression === 'number') {
-            pointOutlineWidth = new Expression(String(pointOutlineWidthExpression), defines);
-        } else if (typeof pointOutlineWidthExpression === 'string') {
-            pointOutlineWidth = new Expression(pointOutlineWidthExpression, defines);
-        } else if (defined(pointOutlineWidthExpression.conditions)) {
-            pointOutlineWidth = new ConditionsExpression(pointOutlineWidthExpression, defines);
-        }
-
-        that._pointOutlineWidth = pointOutlineWidth;
-
-        var labelColor;
-        if (typeof labelColorExpression === 'string') {
-            labelColor = new Expression(labelColorExpression, defines);
-        } else if (defined(labelColorExpression.conditions)) {
-            labelColor = new ConditionsExpression(labelColorExpression, defines);
-        }
-
-        that._labelColor = labelColor;
-
-        var labelOutlineColor;
-        if (typeof labelOutlineColorExpression === 'string') {
-            labelOutlineColor = new Expression(labelOutlineColorExpression, defines);
-        } else if (defined(labelOutlineColorExpression.conditions)) {
-            labelOutlineColor = new ConditionsExpression(labelOutlineColorExpression, defines);
-        }
-
-        that._labelOutlineColor = labelOutlineColor;
-
-        var labelOutlineWidth;
-        if (typeof labelOutlineWidthExpression === 'number') {
-            labelOutlineWidth = new Expression(String(labelOutlineWidthExpression), defines);
-        } else if (typeof labelOutlineWidthExpression === 'string') {
-            labelOutlineWidth = new Expression(labelOutlineWidthExpression, defines);
-        } else if (defined(labelOutlineWidthExpression.conditions)) {
-            labelOutlineWidth = new ConditionsExpression(labelOutlineWidthExpression, defines);
-        }
-
-        that._labelOutlineWidth = labelOutlineWidth;
-
-        var labelStyle;
-        if (typeof labelStyleExpression === 'number') {
-            labelStyle = new Expression(String(labelStyleExpression), defines);
-        } else if (typeof labelStyleExpression === 'string') {
-            labelStyle = new Expression(labelStyleExpression, defines);
-        } else if (defined(labelStyleExpression.conditions)) {
-            labelStyle = new ConditionsExpression(labelStyleExpression, defines);
-        }
-
-        that._labelStyle = labelStyle;
-
-        var font;
-        if (typeof fontExpression === 'string') {
-            font = new Expression(fontExpression, defines);
-        } else if (defined(fontExpression.conditions)) {
-            font = new ConditionsExpression(fontExpression, defines);
-        }
-
-        that._font = font;
-
-        var labelText;
-        if (typeof(labelTextExpression) === 'string') {
-            labelText = new Expression(labelTextExpression, defines);
-        } else if (defined(labelTextExpression) && defined(labelTextExpression.conditions)) {
-            labelText = new ConditionsExpression(labelTextExpression, defines);
-        }
-
-        that._labelText = labelText;
-
-        var backgroundColor;
-        if (typeof backgroundColorExpression === 'string') {
-            backgroundColor = new Expression(backgroundColorExpression, defines);
-        } else if (defined(backgroundColorExpression) && defined(backgroundColorExpression.conditions)) {
-            backgroundColor = new ConditionsExpression(backgroundColorExpression, defines);
-        }
-
-        that._backgroundColor = backgroundColor;
-
-        var backgroundPadding;
-        if (typeof backgroundPaddingExpression === 'string') {
-            backgroundPadding = new Expression(backgroundPaddingExpression, defines);
-        } else if (defined(backgroundPaddingExpression) && defined(backgroundPaddingExpression.conditions)) {
-            backgroundPadding = new ConditionsExpression(backgroundPaddingExpression, defines);
-        }
-
-        that._backgroundPadding = backgroundPadding;
-
-        var backgroundEnabled;
-        if (typeof backgroundEnabledExpression === 'boolean') {
-            backgroundEnabled = new Expression(String(backgroundEnabledExpression), defines);
-        } else if (typeof backgroundEnabledExpression === 'string') {
-            backgroundEnabled = new Expression(backgroundEnabledExpression, defines);
-        } else if (defined(backgroundEnabledExpression.conditions)) {
-            backgroundEnabled = new ConditionsExpression(backgroundEnabledExpression, defines);
-        }
-
-        that._backgroundEnabled = backgroundEnabled;
-
-        var scaleByDistance;
-        if (typeof scaleByDistanceExpression === 'string') {
-            scaleByDistance = new Expression(scaleByDistanceExpression, defines);
-        } else if (defined(scaleByDistanceExpression) && defined(scaleByDistanceExpression.conditions)) {
-            scaleByDistance = new ConditionsExpression(scaleByDistanceExpression, defines);
-        }
-
-        that._scaleByDistance = scaleByDistance;
-
-        var translucencyByDistance;
-        if (typeof translucencyByDistanceExpression === 'string') {
-            translucencyByDistance = new Expression(translucencyByDistanceExpression, defines);
-        } else if (defined(translucencyByDistanceExpression) && defined(translucencyByDistanceExpression.conditions)) {
-            translucencyByDistance = new ConditionsExpression(translucencyByDistanceExpression, defines);
-        }
-
-        that._translucencyByDistance = translucencyByDistance;
-
-        var distanceDisplayCondition;
-        if (typeof distanceDisplayConditionExpression === 'string') {
-            distanceDisplayCondition = new Expression(distanceDisplayConditionExpression, defines);
-        } else if (defined(distanceDisplayConditionExpression) && defined(distanceDisplayConditionExpression.conditions)) {
-            distanceDisplayCondition = new ConditionsExpression(distanceDisplayConditionExpression, defines);
-        }
-
-        that._distanceDisplayCondition = distanceDisplayCondition;
-
-        var heightOffset;
-        if (typeof heightOffsetExpression === 'number') {
-            heightOffset = new Expression(String(heightOffsetExpression), defines);
-        } else if (typeof heightOffsetExpression === 'string') {
-            heightOffset = new Expression(heightOffsetExpression, defines);
-        } else if (defined(heightOffsetExpression.conditions)) {
-            heightOffset  = new ConditionsExpression(heightOffsetExpression, defines);
-        }
-
-        that._heightOffset = heightOffset;
-
-        var anchorLineEnabled;
-        if (typeof anchorLineEnabledExpression === 'boolean') {
-            anchorLineEnabled = new Expression(String(anchorLineEnabledExpression), defines);
-        } else if (typeof anchorLineEnabledExpression === 'string') {
-            anchorLineEnabled = new Expression(anchorLineEnabledExpression, defines);
-        } else if (defined(anchorLineEnabledExpression.conditions)) {
-            anchorLineEnabled = new ConditionsExpression(anchorLineEnabledExpression, defines);
-        }
-
-        that._anchorLineEnabled = anchorLineEnabled;
-
-        var anchorLineColor;
-        if (typeof anchorLineColorExpression === 'string') {
-            anchorLineColor = new Expression(anchorLineColorExpression, defines);
-        } else if (defined(anchorLineColorExpression.conditions)) {
-            anchorLineColor = new ConditionsExpression(anchorLineColorExpression, defines);
-        }
-
-        that._anchorLineColor = anchorLineColor;
-
-        var image;
-        if (typeof(imageExpression) === 'string') {
-            image = new Expression(imageExpression, defines);
-        } else if (defined(imageExpression) && defined(imageExpression.conditions)) {
-            image = new ConditionsExpression(imageExpression, defines);
-        }
-
-        that._image = image;
+        that.show = styleJson.show;
+        that.color = styleJson.color;
+        that.pointColor = styleJson.pointColor;
+        that.pointOutlineColor = styleJson.pointOutlineColor;
+        that.pointOutlineWidth = styleJson.pointOutlineWidth;
+        that.labelColor = styleJson.labelColor;
+        that.labelOutlineColor = styleJson.labelOutlineColor;
+        that.labelOutlineWidth = styleJson.labelOutlineWidth;
+        that.labelStyle = styleJson.labelStyle;
+        that.font = styleJson.font;
+        that.labelText = styleJson.labelText;
+        that.backgroundColor = styleJson.backgroundColor;
+        that.backgroundPadding = styleJson.backgroundPadding;
+        that.backgroundEnabled = styleJson.backgroundEnabled;
+        that.scaleByDistance = styleJson.scaleByDistance;
+        that.translucencyByDistance = styleJson.translucencyByDistance;
+        that.distanceDisplayCondition = styleJson.distanceDisplayCondition;
+        that.heightOffset = styleJson.heightOffset;
+        that.anchorLineEnabled = styleJson.anchorLineEnabled;
+        that.anchorLineColor = styleJson.anchorLineColor;
+        that.image = styleJson.image;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -374,6 +147,20 @@ define([
         that._meta = meta;
 
         that._ready = true;
+    }
+
+    function getExpression(tileStyle, value) {
+        var defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT).defines;
+        if (!defined(value)) {
+            return undefined;
+        } else if (typeof value === 'boolean' || typeof value === 'number') {
+            return new Expression(String(value));
+        } else if (typeof value === 'string') {
+            return new Expression(value, defines);
+        } else if (defined(value.conditions)) {
+            return new ConditionsExpression(value, defines);
+        }
+        return value;
     }
 
     defineProperties(Cesium3DTileStyle.prototype, {
@@ -494,18 +281,7 @@ define([
                 return this._show;
             },
             set : function(value) {
-                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (!defined(value)) {
-                    this._show = undefined;
-                } else if (typeof value === 'boolean') {
-                    this._show = new Expression(String(value));
-                } else if (typeof value === 'string') {
-                    this._show = new Expression(value, defines);
-                } else if (defined(value.conditions)) {
-                    this._show = new ConditionsExpression(value, defines);
-                } else {
-                    this._show = value;
-                }
+                this._show = getExpression(this, value);
                 this._showShaderFunctionReady = false;
             }
         },
@@ -564,16 +340,7 @@ define([
                 return this._color;
             },
             set : function(value) {
-                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (!defined(value)) {
-                    this._color = undefined;
-                } else if (typeof value === 'string') {
-                    this._color = new Expression(value, defines);
-                } else if (defined(value.conditions)) {
-                    this._color = new ConditionsExpression(value, defines);
-                } else {
-                    this._color = value;
-                }
+                this._color = getExpression(this, value);
                 this._colorShaderFunctionReady = false;
             }
         },
@@ -601,7 +368,7 @@ define([
                 return this._pointColor;
             },
             set : function(value) {
-                this._pointColor = value;
+                this._pointColor = getExpression(this, value);
             }
         },
 
@@ -663,18 +430,7 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
-                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
-                if (!defined(value)) {
-                    this._pointSize = undefined;
-                } else if (typeof value === 'number') {
-                    this._pointSize = new Expression(String(value));
-                } else if (typeof value === 'string') {
-                    this._pointSize = new Expression(value, defines);
-                } else if (defined(value.conditions)) {
-                    this._pointSize = new ConditionsExpression(value, defines);
-                } else {
-                    this._pointSize = value;
-                }
+                this._pointSize = getExpression(this, value);
                 this._pointSizeShaderFunctionReady = false;
             }
         },
@@ -702,7 +458,7 @@ define([
                 return this._pointOutlineColor;
             },
             set : function(value) {
-                this._pointOutlineColor = value;
+                this._pointOutlineColor = getExpression(this, value);
             }
         },
 
@@ -729,7 +485,7 @@ define([
                 return this._pointOutlineWidth;
             },
             set : function(value) {
-                this._pointOutlineWidth = value;
+                this._pointOutlineWidth = getExpression(this, value);
             }
         },
 
@@ -756,7 +512,7 @@ define([
                 return this._labelColor;
             },
             set : function(value) {
-                this._labelColor = value;
+                this._labelColor = getExpression(this, value);
             }
         },
 
@@ -783,7 +539,7 @@ define([
                 return this._labelOutlineColor;
             },
             set : function(value) {
-                this._labelOutlineColor = value;
+                this._labelOutlineColor = getExpression(this, value);
             }
         },
 
@@ -810,7 +566,7 @@ define([
                 return this._labelOutlineWidth;
             },
             set : function(value) {
-                this._labelOutlineWidth = value;
+                this._labelOutlineWidth = getExpression(this, value);
             }
         },
 
@@ -854,7 +610,7 @@ define([
                 return this._font;
             },
             set : function(value) {
-                this._font = value;
+                this._font = getExpression(this, value);
             }
         },
 
@@ -898,7 +654,7 @@ define([
                 return this._labelStyle;
             },
             set : function(value) {
-                this._labelStyle = value;
+                this._labelStyle = getExpression(this, value);
             }
         },
 
@@ -942,7 +698,7 @@ define([
                 return this._labelText;
             },
             set : function(value) {
-                this._labelText = value;
+                this._labelStyle = getExpression(this, value);
             }
         },
 
@@ -969,7 +725,7 @@ define([
                 return this._backgroundColor;
             },
             set : function(value) {
-                this._backgroundColor = value;
+                this._backgroundColor = getExpression(this, value);
             }
         },
 
@@ -996,7 +752,7 @@ define([
                 return this._backgroundPadding;
             },
             set : function(value) {
-                this._backgroundPadding = value;
+                this._backgroundPadding = getExpression(this, value);
             }
         },
 
@@ -1023,7 +779,7 @@ define([
                 return this._backgroundEnabled;
             },
             set : function(value) {
-                this._backgroundEnabled = value;
+                this._backgroundEnabled = getExpression(this, value);
             }
         },
 
@@ -1050,7 +806,7 @@ define([
                 return this._scaleByDistance;
             },
             set : function(value) {
-                this._scaleByDistance = value;
+                this._scaleByDistance = getExpression(this, value);
             }
         },
 
@@ -1077,7 +833,7 @@ define([
                 return this._translucencyByDistance;
             },
             set : function(value) {
-                this._translucencyByDistance = value;
+                this._translucencyByDistance = getExpression(this, value);
             }
         },
 
@@ -1104,7 +860,7 @@ define([
                 return this._distanceDisplayCondition;
             },
             set : function(value) {
-                this._distanceDisplayCondition = value;
+                this._distanceDisplayCondition = getExpression(this, value);
             }
         },
 
@@ -1131,7 +887,7 @@ define([
                 return this._heightOffset;
             },
             set : function(value) {
-                this._heightOffset = value;
+                this._heightOffset = getExpression(this, value);
             }
         },
 
@@ -1158,7 +914,7 @@ define([
                 return this._anchorLineEnabled;
             },
             set : function(value) {
-                this._anchorLineEnabled = value;
+                this._anchorLineEnabled = getExpression(this, value);
             }
         },
 
@@ -1185,7 +941,7 @@ define([
                 return this._anchorLineColor;
             },
             set : function(value) {
-                this._anchorLineColor = value;
+                this._anchorLineColor = getExpression(this, value);
             }
         },
 
@@ -1229,7 +985,7 @@ define([
                 return this._image;
             },
             set : function(value) {
-                this._image = value;
+                this._image = getExpression(this, value);
             }
         },
 
