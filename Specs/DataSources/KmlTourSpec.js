@@ -105,9 +105,9 @@ defineSuite([
         tour.play(createMockViewer());
         setTimeout(function() {
             expect(tourStart).toHaveBeenCalled();
-            expect(tourEnd).toHaveBeenCalledWith(false);
             expect(entryStart).toHaveBeenCalled();
             expect(entryEnd).toHaveBeenCalled();
+            expect(tourEnd).toHaveBeenCalledWith(false);
         }, 250);
     });
 
