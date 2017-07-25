@@ -242,10 +242,10 @@ define([
         }
         var parameterValues = khrMaterialsCommon.values;
         if (defined(khrMaterialsCommon.transparent)) {
-            parameterValues['transparent'] = khrMaterialsCommon.transparent;
+            parameterValues.transparent = khrMaterialsCommon.transparent;
         }
         if (defined(khrMaterialsCommon.doubleSided)) {
-            parameterValues['doubleSided'] = khrMaterialsCommon.doubleSided;
+            parameterValues.doubleSided = khrMaterialsCommon.doubleSided;
         }
         var jointCount = defaultValue(khrMaterialsCommon.jointCount, 0);
 
