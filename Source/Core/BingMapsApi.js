@@ -25,7 +25,7 @@ define([
      *
      * @type {String}
      */
-    BingMapsApi.defaultKey = 'AsarFiDvISunWhi137V7l5Bu80baB73npU98oTyjqKOb7NbrkiuBPZfDxgXTrGtQ'; // For use on cesiumjs.org only
+    BingMapsApi.defaultKey = 'Ahb3XqOqdrFv84q7cYVUwFvDzkr2Wemkhj5j8IczhV4ZkUP3KMm9uuxng0aGzt-Z'; // For use on cesiumjs.org only
 
     var printedBingWarning = false;
     var errorCredit;
