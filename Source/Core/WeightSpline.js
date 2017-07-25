@@ -154,8 +154,8 @@ define([
         }
 
         for (var j = 0; j < this.count; j++) {
-            var index = (i * 2) + j;
-            result[j] = points[index] * (1.0 - u) + points[index + 2] * (u);
+            var index = (i * this.count) + j;
+            result[j] = points[index] * (1.0 - u) + points[index + this.count] * (u);
         }
 
         return result;
