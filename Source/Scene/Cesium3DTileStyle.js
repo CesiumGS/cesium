@@ -113,6 +113,7 @@ define([
 
         that.show = styleJson.show;
         that.color = styleJson.color;
+        that.pointSize = styleJson.pointSize;
         that.pointColor = styleJson.pointColor;
         that.pointOutlineColor = styleJson.pointOutlineColor;
         that.pointOutlineWidth = styleJson.pointOutlineWidth;
@@ -698,7 +699,7 @@ define([
                 return this._labelText;
             },
             set : function(value) {
-                this._labelStyle = getExpression(this, value);
+                this._labelText = getExpression(this, value);
             }
         },
 

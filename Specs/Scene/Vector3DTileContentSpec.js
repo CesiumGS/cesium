@@ -1,4 +1,5 @@
 /*global defineSuite*/
+/*
 defineSuite([
         'Scene/Vector3DTileContent',
         'Core/Cartesian3',
@@ -245,3 +246,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+*/
