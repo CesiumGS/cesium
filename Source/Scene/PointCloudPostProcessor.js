@@ -1088,7 +1088,6 @@ define([
         }
 
         if (resized) {
-            console.log('Resized!');
             destroyFramebuffers(processor);
             createFramebuffers(processor, context);
             createPointArray(processor, context);
