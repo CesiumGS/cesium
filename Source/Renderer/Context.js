@@ -274,7 +274,11 @@ define([
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
         this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
+
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+        this._timerQuery =
+            (!this._webgl2 && !!getExtension(gl, ['EXT_disjoint_timer_query'])) ||
+            (this._webgl2 && !!getExtension(gl, ['EXT_disjoint_timer_query_webgl2']));
 
         this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
 
@@ -664,6 +668,21 @@ define([
         debugShaders : {
             get : function() {
                 return this._debugShaders;
+            }
+        },
+
+        /**
+         * <code>true</code> if either the EXT_disjoint_timer_query extension is supported in WebGL 1 or the
+         * EXT_disjoint_timer_query_webgl2 extension is supported in WebGL 2. This extension provides support
+         * for timer queries.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_disjoint_timer_query/}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_disjoint_timer_query_webgl2/}
+         */
+        timerQuery : {
+            get : function() {
+                return this._timerQuery;
             }
         },
 
