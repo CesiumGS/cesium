@@ -1151,7 +1151,7 @@ define([
 
         // Check for use of v_angle in material shader
         if (this.material.shaderSource.search(/varying\s+float\s+v_angle;/g) !== -1) {
-            defines.push("POLYLINE_DASH");
+            defines.push('POLYLINE_DASH');
         }
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
