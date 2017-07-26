@@ -1741,7 +1741,7 @@ define([
     }
 
     function processTourUnsupportedNode(tour, entryNode) {
-        console.log('KML Tour unsupported node ' + entryNode.localName);
+        oneTimeWarning('KML Tour unsupported node ' + entryNode.localName);
     }
 
     function processTourWait(tour, entryNode) {

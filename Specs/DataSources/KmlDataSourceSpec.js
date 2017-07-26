@@ -4383,9 +4383,9 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
             expect(dataSource.kmlTours[0].playlist.length).toEqual(0);
-            expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node AnimatedUpdate');
-            expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node TourControl');
-            expect(console.log).toHaveBeenCalledWith('KML Tour unsupported node SoundCue');
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node AnimatedUpdate');
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node TourControl');
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node SoundCue');
         });
     });
 
