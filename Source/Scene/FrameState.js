@@ -150,6 +150,19 @@ define([
         this.creditDisplay = creditDisplay;
 
         /**
+         * An array of functions to be called at the start of the frame.  This array
+         * will be cleared at the start of each frame.
+         *
+         * @type {FrameState~BeforeRenderCallback[]}
+         *
+         * @example
+         * frameState.beforeRender.push(function() {
+         *   // take some action, raise an event, etc.
+         * });
+         */
+        this.beforeRender = [];
+
+        /**
          * An array of functions to be called at the end of the frame.  This array
          * will be cleared after each frame.
          * <p>

@@ -2540,6 +2540,14 @@ define([
         }
     }
 
+    function callBeforeRenderFunctions(frameState) {
+        var functions = frameState.beforeRender;
+        for (var i = 0, length = functions.length; i < length; ++i) {
+            functions[i]();
+        }
+        functions.length = 0;
+    }
+
     function callAfterRenderFunctions(frameState) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
@@ -2591,12 +2599,13 @@ define([
             scene._cameraStartFired = false;
         }
 
-        scene._preRender.raiseEvent(scene, time);
-        scene._jobScheduler.resetBudgets();
-
         var context = scene.context;
         var us = context.uniformState;
         var frameState = scene._frameState;
+
+        callBeforeRenderFunctions(frameState);
+        scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);

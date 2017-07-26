@@ -23,10 +23,9 @@ define([
         this._startQuery = startQuery;
         this._endQuery = endQuery;
 
-        frameState.afterRender.push(function() {
+        frameState.beforeRender.push(function() {
             var available = context.getQueryObject(endQuery, WebGLConstants.QUERY_RESULT_AVAILABLE_EXT);
             var disjoint = context.disjointTimerQuery;
-            console.log("Callback being called! Available: " + available + " disjoint: " + disjoint + " context: " + context);
             if (available && !disjoint) {
                 var timeStart = context.getQueryObject(startQuery, WebGLConstants.QUERY_RESULT_EXT);
                 var timeEnd = context.getQueryObject(endQuery, WebGLConstants.QUERY_RESULT_EXT);
