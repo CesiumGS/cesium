@@ -350,14 +350,14 @@ define([
                 glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
             }
 
-            createQuery = function() { webgl1TimerQuery.createQueryEXT(); };
-            deleteQuery = function(query) { webgl1TimerQuery.deleteQueryEXT(query); };
-            isQuery = function(query) { webgl1TimerQuery.isQueryEXT(query); };
-            beginQuery = function(target, query) { webgl1TimerQuery.beginQueryEXT(target, query); };
-            endQuery = function(target, query) { webgl1TimerQuery.endQueryEXT(target); };
-            queryCounter = function(query, target) { webgl1TimerQuery.queryCounter(query, target); };
-            getQuery = function(target, pname) { webgl1TimerQuery.getQueryEXT(target, pname); };
-            getQueryObject = function(query, pname) { webgl1TimerQuery.getQueryObjectEXT(query, pname); };
+            createQuery = function() { return webgl1TimerQuery.createQueryEXT(); };
+            deleteQuery = function(query) { return webgl1TimerQuery.deleteQueryEXT(query); };
+            isQuery = function(query) { return webgl1TimerQuery.isQueryEXT(query); };
+            beginQuery = function(target, query) { return webgl1TimerQuery.beginQueryEXT(target, query); };
+            endQuery = function(target, query) { return webgl1TimerQuery.endQueryEXT(target); };
+            queryCounter = function(query, target) { return webgl1TimerQuery.queryCounterEXT(query, target); };
+            getQuery = function(target, pname) { return webgl1TimerQuery.getQueryEXT(target, pname); };
+            getQueryObject = function(query, pname) { return webgl1TimerQuery.getQueryObjectEXT(query, pname); };
         }
 
         this.glCreateVertexArray = glCreateVertexArray;

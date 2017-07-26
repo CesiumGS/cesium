@@ -26,6 +26,7 @@ define([
         frameState.afterRender.push(function() {
             var available = context.getQueryObject(endQuery, WebGLConstants.QUERY_RESULT_AVAILABLE_EXT);
             var disjoint = context.disjointTimerQuery;
+            console.log("Callback being called! Available: " + available + " disjoint: " + disjoint + " context: " + context);
             if (available && !disjoint) {
                 var timeStart = context.getQueryObject(startQuery, WebGLConstants.QUERY_RESULT_EXT);
                 var timeEnd = context.getQueryObject(endQuery, WebGLConstants.QUERY_RESULT_EXT);
@@ -45,4 +46,6 @@ define([
     TimerQuery.prototype.end = function() {
         this._context.queryCounter(this._endQuery, WebGLConstants.TIMESTAMP_EXT);
     };
+
+    return TimerQuery;
 });

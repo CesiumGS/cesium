@@ -503,7 +503,7 @@ define([
          var useTimerQuery = defined(this._timerQuery) && context.timerQuery;
 
          if (useTimerQuery) {
-             this._timerQuery.start();
+             this._timerQuery.begin();
          }
 
          context.draw(this, passState);
