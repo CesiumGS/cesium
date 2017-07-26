@@ -106,7 +106,7 @@ var url = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1
 var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
     url : url
 }));
-tileset.pointCloudPostProcessorOptions.enabled = true;
+tileset.pointCloudPostProcessorOptions.enabled = false;
 inspectorViewModel.tileset = tileset;
 
 tileset.readyPromise.then(function() {
@@ -150,7 +150,7 @@ subscribeParameter('pointAttenuationMultiplier');
 subscribeParameter('sigmoidDomainOffset');
 subscribeParameter('sigmoidSharpness');
 
-Sandcastle.addToggleButton('Enabled', true, function(checked) {
+Sandcastle.addToggleButton('Enabled', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;
 });
 
