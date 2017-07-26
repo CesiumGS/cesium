@@ -277,11 +277,12 @@ define([
 
         var webgl1TimerQuery = getExtension(gl, ['EXT_disjoint_timer_query']);
         var webgl2TimerQuery = getExtension(gl, ['EXT_disjoint_timer_query_webgl2']);
+        if (!!webgl1TimerQuery && !webgl2TimerQuery) {
+            webgl2TimerQuery = webgl1TimerQuery;
+        }
 
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
-        this._timerQuery =
-            (!this._webgl2 && !!webgl1TimerQuery) ||
-            (this._webgl2 && !!webgl2TimerQuery);
+        this._timerQuery = !!webgl1TimerQuery || !!webgl2TimerQuery;
 
         this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
 
