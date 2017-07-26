@@ -312,7 +312,7 @@ define([
         var endQuery;
         var queryCounter;
         var getQuery;
-        var getQueryObject;
+        var getQueryParameter;
 
         var vertexArrayObject;
         var instancedArrays;
@@ -330,6 +330,15 @@ define([
             glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
 
             glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+
+            createQuery = function() { return gl.createQuery(); };
+            deleteQuery = function(query) { return gl.deleteQuery(query); };
+            isQuery = function(query) { return gl.isQuery(query); };
+            beginQuery = function(target, query) { return gl.beginQuery(target, query); };
+            endQuery = function(target) { return gl.endQuery(target); };
+            queryCounter = function(query, target) { return webgl2TimerQuery.queryCounterEXT(query, target); };
+            getQuery = function(target, pname) { return gl.getQuery(target, pname); };
+            getQueryParameter = function(query, pname) { return gl.getQueryParameter(query, pname); };
         } else {
             vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
             if (defined(vertexArrayObject)) {
@@ -354,10 +363,10 @@ define([
             deleteQuery = function(query) { return webgl1TimerQuery.deleteQueryEXT(query); };
             isQuery = function(query) { return webgl1TimerQuery.isQueryEXT(query); };
             beginQuery = function(target, query) { return webgl1TimerQuery.beginQueryEXT(target, query); };
-            endQuery = function(target, query) { return webgl1TimerQuery.endQueryEXT(target); };
+            endQuery = function(target) { return webgl1TimerQuery.endQueryEXT(target); };
             queryCounter = function(query, target) { return webgl1TimerQuery.queryCounterEXT(query, target); };
             getQuery = function(target, pname) { return webgl1TimerQuery.getQueryEXT(target, pname); };
-            getQueryObject = function(query, pname) { return webgl1TimerQuery.getQueryObjectEXT(query, pname); };
+            getQueryParameter = function(query, pname) { return webgl1TimerQuery.getQueryObjectEXT(query, pname); };
         }
 
         this.glCreateVertexArray = glCreateVertexArray;
@@ -377,7 +386,7 @@ define([
         this.endQuery = endQuery;
         this.queryCounter = queryCounter;
         this.getQuery = getQuery;
-        this.getQueryObject = getQueryObject;
+        this.getQueryParameter = getQueryParameter;
 
         this._vertexArrayObject = !!vertexArrayObject;
         this._instancedArrays = !!instancedArrays;
