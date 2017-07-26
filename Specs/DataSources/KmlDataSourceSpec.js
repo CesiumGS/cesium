@@ -4265,7 +4265,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(0);
             expect(console.warn.calls.count()).toEqual(1);
-            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported feature: Tour');
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported feature: gx:Tour');
         });
     });
 
