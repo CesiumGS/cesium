@@ -551,7 +551,6 @@ define([
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
         fragmentShader += '}\n';
-        console.log(fragmentShader);
 
         var techniqueStates;
         if (defined(alphaMode) && alphaMode !== 'OPAQUE') {
