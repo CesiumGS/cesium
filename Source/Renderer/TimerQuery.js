@@ -38,7 +38,7 @@ define([
     };
 
     TimerQuery.prototype.end = function() {
-        this._context.queryCounter(this._endQuery);
+        this._context.queryCounter(this._endQuery, WebGLConstants.TIMESTAMP_EXT);
     };
 
     return TimerQuery;
