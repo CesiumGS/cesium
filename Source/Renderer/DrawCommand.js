@@ -294,6 +294,27 @@ define([
         },
 
         /**
+         * The timer query that this DrawCommand is using.
+         * If this value is defined, the timer query will be used to
+         * measure how long the DrawCommand takes to execute.
+         *
+         * @memberof DrawCommand.prototype
+         * @type {Object}
+         * @default undefined
+         */
+        timerQuery : {
+            get : function() {
+                return this._timerQuery;
+            },
+            set : function(value) {
+                if (this._timerQuery !== value) {
+                    this._timerQuery = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
          * An object with functions whose names match the uniforms in the shader program
          * and return values to set those uniforms.
          *

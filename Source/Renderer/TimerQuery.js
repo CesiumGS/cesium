@@ -7,6 +7,9 @@ define([
     /**
      * Represents a timer query.
      *
+     *
+     * @param {Object} frameState The current FrameState.
+     * @param {Function} callback The callback to execute after the frame time is measured. Takes the frame time in millisecond as a parameter.
      * @private
      */
     function TimerQuery(frameState, callback) {
