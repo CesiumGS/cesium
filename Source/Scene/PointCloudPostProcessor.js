@@ -86,7 +86,8 @@ define([
         this._sectorLUTTexture = undefined;
         this._aoTextures = undefined;
         this._dirty = undefined;
-        this._densityEstimationCommand = undefined;
+        this._drawCommands = undefined;
+        /*this._densityEstimationCommand = undefined;
         this._edgeCullingCommand = undefined;
         this._sectorHistogramCommand = undefined;
         this._sectorGatheringCommand = undefined;
@@ -94,7 +95,7 @@ define([
         this._stencilCommands = undefined;
         this._aoCommand = undefined;
         this._copyCommands = undefined;
-        this._blendCommand = undefined;
+        this._blendCommand = undefined;*/
         this._clearCommands = undefined;
 
         this.occlusionAngle = options.occlusionAngle;
@@ -219,7 +220,8 @@ define([
         processor._sectorLUTTexture = undefined;
         processor._aoTextures = undefined;
         processor._dirty = undefined;
-        processor._densityEstimationCommand = undefined;
+        processor._drawCommands = undefined;
+        /*processor._densityEstimationCommand = undefined;
         processor._edgeCullingCommand = undefined;
         processor._sectorHistogramCommand = undefined;
         processor._sectorGatheringCommand = undefined;
@@ -228,7 +230,7 @@ define([
         processor._aoCommand = undefined;
         processor._copyCommands = undefined;
         processor._blendCommand = undefined;
-        processor._clearCommands = undefined;
+        processor._clearCommands = undefined;*/
     }
 
     function generateSectorLUT(processor) {
@@ -914,16 +916,17 @@ define([
     }
 
     function createCommands(processor, context) {
+        processor._drawCommands = {};
         var numRegionGrowingPasses = processor.numRegionGrowingPasses;
         var regionGrowingCommands = new Array(numRegionGrowingPasses);
         var stencilCommands = new Array(numRegionGrowingPasses);
         var copyCommands = new Array(2);
 
         var i;
-        processor._edgeCullingCommand = edgeCullingStage(processor, context);
-        processor._densityEstimationCommand = densityEstimationStage(processor, context);
-        processor._sectorHistogramCommand = sectorHistogramStage(processor, context);
-        processor._sectorGatheringCommand = sectorGatheringStage(processor, context);
+        processor._drawCommands.edgeCullingCommand = edgeCullingStage(processor, context);
+        processor._drawCommands.densityEstimationCommand = densityEstimationStage(processor, context);
+        processor._drawCommands.sectorHistogramCommand = sectorHistogramStage(processor, context);
+        processor._drawCommands.sectorGatheringCommand = sectorGatheringStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
             regionGrowingCommands[i] = regionGrowingStage(processor, context, i);
@@ -1058,20 +1061,20 @@ define([
             }
         }
 
-        processor._regionGrowingCommands = regionGrowingCommands;
-        processor._stencilCommands = stencilCommands;
-        processor._blendCommand = blendCommand;
+        processor._drawCommands.regionGrowingCommands = regionGrowingCommands;
+        processor._drawCommands.stencilCommands = stencilCommands;
+        processor._drawCommands.blendCommand = blendCommand;
+        processor._drawCommands.copyCommands = copyCommands;
+        processor._drawCommands.aoCommand = aoCommand;
         processor._clearCommands = clearCommands;
-        processor._copyCommands = copyCommands;
-        processor._aoCommand = aoCommand;
     }
 
     function createResources(processor, context, dirty) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
-        var regionGrowingCommands = processor._regionGrowingCommands;
-        var stencilCommands = processor._stencilCommands;
+        var regionGrowingCommands = (defined(processor._drawCommands)) ? processor._drawCommands.regionGrowingCommands : undefined;
+        var stencilCommands = (defined(processor._drawCommands)) ? processor._drawCommands.stencilCommands : undefined;
         var nowDirty = false;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
@@ -1239,14 +1242,16 @@ define([
         }
 
         // Apply processing commands
-        var edgeCullingCommand = this._edgeCullingCommand;
-        var densityEstimationCommand = this._densityEstimationCommand;
-        var sectorHistogramCommand = this._sectorHistogramCommand;
-        var sectorGatheringCommand = this._sectorGatheringCommand;
-        var regionGrowingCommands = this._regionGrowingCommands;
-        var copyCommands = this._copyCommands;
-        var stencilCommands = this._stencilCommands;
+        var edgeCullingCommand = this._drawCommands.edgeCullingCommand;
+        var densityEstimationCommand = this._drawCommands.densityEstimationCommand;
+        var sectorHistogramCommand = this._drawCommands.sectorHistogramCommand;
+        var sectorGatheringCommand = this._drawCommands.sectorGatheringCommand;
+        var regionGrowingCommands = this._drawCommands.regionGrowingCommands;
+        var copyCommands = this._drawCommands.copyCommands;
+        var stencilCommands = this._drawCommands.stencilCommands;
         var clearCommands = this._clearCommands;
+        var blendCommand = this._drawCommands.blendCommand;
+        var aoCommand = this._drawCommands.aoCommand;
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
@@ -1274,9 +1279,9 @@ define([
         }
 
         // Blend final result back into the main FBO
-        commandList.push(this._blendCommand);
+        commandList.push(blendCommand);
         if (this.AOViewEnabled && this.enableAO) {
-            commandList.push(this._aoCommand);
+            commandList.push(aoCommand);
         }
 
         commandList.push(clearCommands['prior']);
