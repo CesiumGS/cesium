@@ -293,6 +293,8 @@ define([
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         ContextLimits._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
 
+        this._disjointTimerQuery = gl.getParameter(WebGLConstants.GPU_DISJOINT_EXT);
+
         var glCreateVertexArray;
         var glBindVertexArray;
         var glDeleteVertexArray;
@@ -713,6 +715,12 @@ define([
         timerQuery : {
             get : function() {
                 return this._timerQuery;
+            }
+        },
+
+        disjointTimerQuery : {
+            get : function() {
+                return this._disjointTimerQuery;
             }
         },
 

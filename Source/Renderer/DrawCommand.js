@@ -38,6 +38,7 @@ define([
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
+        this._timerQuery = options.timerQuery;
 
         this.dirty = true;
         this.lastDirtyTime = 0;
@@ -498,8 +499,18 @@ define([
      * @param {Context} context The renderer context in which to draw.
      * @param {PassState} [passState] The state for the current render pass.
      */
-    DrawCommand.prototype.execute = function(context, passState) {
-        context.draw(this, passState);
+     DrawCommand.prototype.execute = function(context, passState) {
+         var useTimerQuery = defined(this._timerQuery) && context.timerQuery;
+
+         if (useTimerQuery) {
+             this._timerQuery.start();
+         }
+
+         context.draw(this, passState);
+
+         if (useTimerQuery) {
+             this._timerQuery.end();
+         }
     };
 
     return DrawCommand;
