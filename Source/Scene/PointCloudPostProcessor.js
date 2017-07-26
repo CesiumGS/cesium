@@ -87,15 +87,6 @@ define([
         this._aoTextures = undefined;
         this._dirty = undefined;
         this._drawCommands = undefined;
-        /*this._densityEstimationCommand = undefined;
-        this._edgeCullingCommand = undefined;
-        this._sectorHistogramCommand = undefined;
-        this._sectorGatheringCommand = undefined;
-        this._regionGrowingCommands = undefined;
-        this._stencilCommands = undefined;
-        this._aoCommand = undefined;
-        this._copyCommands = undefined;
-        this._blendCommand = undefined;*/
         this._clearCommands = undefined;
 
         this.occlusionAngle = options.occlusionAngle;
@@ -221,16 +212,6 @@ define([
         processor._aoTextures = undefined;
         processor._dirty = undefined;
         processor._drawCommands = undefined;
-        /*processor._densityEstimationCommand = undefined;
-        processor._edgeCullingCommand = undefined;
-        processor._sectorHistogramCommand = undefined;
-        processor._sectorGatheringCommand = undefined;
-        processor._regionGrowingCommands = undefined;
-        processor._stencilCommands = undefined;
-        processor._aoCommand = undefined;
-        processor._copyCommands = undefined;
-        processor._blendCommand = undefined;
-        processor._clearCommands = undefined;*/
     }
 
     function generateSectorLUT(processor) {
