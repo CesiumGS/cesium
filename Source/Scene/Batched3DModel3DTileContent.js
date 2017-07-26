@@ -13,6 +13,7 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/RequestType',
         '../Core/RuntimeError',
+        '../Renderer/Pass',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -33,6 +34,7 @@ define([
         getStringFromTypedArray,
         RequestType,
         RuntimeError,
+        Pass,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -352,6 +354,7 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by 3D Tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
             basePath : basePath,
             requestType : RequestType.TILES3D,
             modelMatrix : tile.computedTransform,
