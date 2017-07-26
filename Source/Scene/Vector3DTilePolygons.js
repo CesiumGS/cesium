@@ -215,7 +215,8 @@ define([
 
                 var length = batchTableColors.length;
                 for (var i = 0; i < length; ++i) {
-                    var color = batchTable.getColor(batchIds[i], scratchColor);
+                    //var color = batchTable.getColor(batchIds[i], scratchColor);
+                    var color = batchTable.getColor(i, scratchColor);
                     batchTableColors[i] = color.toRgba();
                 }
 
