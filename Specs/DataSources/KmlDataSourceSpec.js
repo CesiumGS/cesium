@@ -164,6 +164,19 @@ defineSuite([
         expect(dataSource.show).toBe(true);
     });
 
+    it('setting name raises changed event', function() {
+        var dataSource = new KmlDataSource(options);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.changedEvent.addEventListener(spy);
+
+        var newName = 'garfield';
+        dataSource.name = newName;
+        expect(dataSource.name).toEqual(newName);
+        expect(spy.calls.count()).toEqual(1);
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
     it('show sets underlying entity collection show.', function() {
         var dataSource = new KmlDataSource(options);
 
@@ -3977,7 +3990,7 @@ defineSuite([
         });
     });
 
-    it('GroundOverly Icon with refreshMode shows warning', function() {
+    it('GroundOverlay Icon with refreshMode shows warning', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <GroundOverlay>\
             <Icon>\
@@ -3986,12 +3999,12 @@ defineSuite([
             </Icon>\
         </GroundOverlay>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
+            expect(console.warn.calls.count()).toEqual(1);
+			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
         });
     });
 
@@ -4004,12 +4017,12 @@ defineSuite([
             </Icon>\
         </GroundOverlay>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported Icon viewRefreshMode: onStop');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon viewRefreshMode: onStop');
         });
     });
 
@@ -4025,12 +4038,12 @@ defineSuite([
           </GroundOverlay>\
         </Document>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
         });
     });
 
@@ -4055,15 +4068,15 @@ defineSuite([
           </Placemark>\
         </Document>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(4);
-            expect(console.log).toHaveBeenCalledWith('KML - gx:outerColor is not supported in a LineStyle');
-            expect(console.log).toHaveBeenCalledWith('KML - gx:outerWidth is not supported in a LineStyle');
-            expect(console.log).toHaveBeenCalledWith('KML - gx:physicalWidth is not supported in a LineStyle');
-            expect(console.log).toHaveBeenCalledWith('KML - gx:labelVisibility is not supported in a LineStyle');
+            expect(console.warn.calls.count()).toEqual(4);
+            expect(console.warn.calls.argsFor(0)[0]).toBe('KML - gx:outerColor is not supported in a LineStyle');
+            expect(console.warn.calls.argsFor(1)[0]).toBe('KML - gx:outerWidth is not supported in a LineStyle');
+            expect(console.warn.calls.argsFor(2)[0]).toBe('KML - gx:physicalWidth is not supported in a LineStyle');
+            expect(console.warn.calls.argsFor(3)[0]).toBe('KML - gx:labelVisibility is not supported in a LineStyle');
         });
     });
 
@@ -4077,12 +4090,12 @@ defineSuite([
             </Style>\
         </Folder>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported ListStyle with listItemType: radioFolder');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported ListStyle with listItemType: radioFolder');
         });
     });
 
@@ -4103,12 +4116,12 @@ defineSuite([
           </StyleMap>\
         </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported StyleMap key: highlighted');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported StyleMap key: highlighted');
         });
     });
 
@@ -4126,12 +4139,12 @@ defineSuite([
             </Placemark>\
           </Document>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - gx:drawOrder is not supported in LineStrings');
         });
     });
 
@@ -4146,12 +4159,12 @@ defineSuite([
               </gx:Track>\
             </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - gx:angles are not supported in gx:Tracks');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - gx:angles are not supported in gx:Tracks');
         });
     });
 
@@ -4161,12 +4174,12 @@ defineSuite([
               <Model></Model>\
             </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported geometry: Model');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported geometry: Model');
         });
     });
 
@@ -4183,13 +4196,13 @@ defineSuite([
               </ExtendedData>\
             </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(2);
-            expect(console.log).toHaveBeenCalledWith('KML - SchemaData is unsupported');
-            expect(console.log).toHaveBeenCalledWith('KML - ExtendedData with xmlns:prefix is unsupported');
+            expect(console.warn.calls.count()).toEqual(2);
+            expect(console.warn.calls.argsFor(0)[0]).toBe('KML - SchemaData is unsupported');
+            expect(console.warn.calls.argsFor(1)[0]).toBe('KML - ExtendedData with xmlns:prefix is unsupported');
         });
     });
 
@@ -4205,13 +4218,19 @@ defineSuite([
               <LookAt></LookAt>\
             </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
+<<<<<<< HEAD
             var placemark = dataSource.entities.values[0];
             expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
             expect(placemark.kml.lookAt).toBeInstanceOf(KmlLookAt);
+=======
+            expect(console.warn.calls.count()).toEqual(2);
+            expect(console.warn.calls.argsFor(0)[0]).toBe('KML - Unsupported view: Camera');
+            expect(console.warn.calls.argsFor(1)[0]).toBe('KML - Unsupported view: LookAt');
+>>>>>>> 769b09a072e80fb3351443f8cccebd3d17a2a767
         });
     });
 
@@ -4226,12 +4245,12 @@ defineSuite([
               <Region></Region>\
             </Placemark>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Placemark Regions are unsupported');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Placemark Regions are unsupported');
         });
     });
 
@@ -4244,12 +4263,12 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - Unsupported viewRefreshMode: onRegion');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported viewRefreshMode: onRegion');
         });
     });
 
@@ -4359,7 +4378,7 @@ defineSuite([
               </gx:Tour>\
             </Document>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.kmlTours.length).toEqual(1);
@@ -4379,12 +4398,12 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        spyOn(console, 'log').and.callThrough();
+        spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
-            expect(console.log.calls.count()).toEqual(1);
-            expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+            expect(console.warn.calls.count()).toEqual(1);
+            expect(console.warn).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
         });
     });
 

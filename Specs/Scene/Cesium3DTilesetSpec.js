@@ -1880,11 +1880,15 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
             // Check that the feature is red
             var sourceRed;
-            expect(scene).toRenderAndCall(function(rgba) {
+            var renderOptions = {
+                scene : scene,
+                time : new JulianDate(2457522.154792)
+            };
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 sourceRed = rgba[0];
             });
 
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[1]).toEqual(0);
                 expect(rgba[2]).toEqual(0);
@@ -1898,7 +1902,7 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'rgb(128, 128, 0)'
             });
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[0]).toBeLessThan(sourceRed);
                 expect(rgba[1]).toEqual(0);
@@ -1910,7 +1914,7 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'rgba(255, 255, 0, 0.5)'
             });
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[0]).toBeLessThan(sourceRed);
                 expect(rgba[1]).toEqual(0);
@@ -1927,7 +1931,7 @@ defineSuite([
             });
             var replaceRed;
             var replaceGreen;
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 replaceRed = rgba[0];
                 replaceGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(0);
@@ -1942,7 +1946,7 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'rgba(255, 255, 0, 0.5)'
             });
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[0]).toBeLessThan(255);
                 expect(rgba[1]).toBeGreaterThan(0);
@@ -1961,7 +1965,7 @@ defineSuite([
             });
             var mixRed;
             var mixGreen;
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 mixRed = rgba[0];
                 mixGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(replaceRed);
@@ -1974,7 +1978,7 @@ defineSuite([
 
             // Set colorBlendAmount to 0.25. Expect color to be closer to the source color.
             tileset.colorBlendAmount = 0.25;
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(mixRed);
                 expect(rgba[0]).toBeLessThan(sourceRed);
                 expect(rgba[1]).toBeGreaterThan(0);
@@ -1985,7 +1989,7 @@ defineSuite([
 
             // Set colorBlendAmount to 0.0. Expect color to equal the source color
             tileset.colorBlendAmount = 0.0;
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toEqual(sourceRed);
                 expect(rgba[1]).toEqual(0);
                 expect(rgba[2]).toEqual(0);
@@ -1994,7 +1998,7 @@ defineSuite([
 
             // Set colorBlendAmount to 1.0. Expect color to equal the style color
             tileset.colorBlendAmount = 1.0;
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toEqual(replaceRed);
                 expect(rgba[1]).toEqual(replaceGreen);
                 expect(rgba[2]).toEqual(0);
@@ -2006,7 +2010,7 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle({
                 color : 'rgba(255, 255, 0, 0.5)'
             });
-            expect(scene).toRenderAndCall(function(rgba) {
+            expect(renderOptions).toRenderAndCall(function(rgba) {
                 expect(rgba[0]).toBeGreaterThan(0);
                 expect(rgba[1]).toBeGreaterThan(0);
                 expect(rgba[2]).toEqual(0);

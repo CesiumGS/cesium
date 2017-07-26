@@ -20,7 +20,7 @@ defineSuite([
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
     var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/';
-    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/compositeOfInstanced/';
+    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/CompositeOfInstanced/';
 
     beforeAll(function() {
         scene = createScene();

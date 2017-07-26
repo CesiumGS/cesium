@@ -362,7 +362,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : BoxGeometry.fromDimensions(this._options),
-            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
     };
@@ -394,7 +394,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : BoxOutlineGeometry.fromDimensions(this._options),
-            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
@@ -555,7 +555,7 @@ define([
         }
 
         var options = this._options;
-        var modelMatrix = entity._getModelMatrix(time);
+        var modelMatrix = entity.computeModelMatrix(time);
         var dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
         if (!defined(modelMatrix) || !defined(dimensions)) {
             return;
