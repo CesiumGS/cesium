@@ -374,7 +374,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidGeometry(this._options),
-            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : attributes
         });
     };
@@ -407,7 +407,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : entity._getModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
@@ -589,7 +589,7 @@ define([
         }
 
         var radii = Property.getValueOrUndefined(ellipsoid.radii, time, radiiScratch);
-        var modelMatrix = entity._getModelMatrix(time, this._modelMatrix);
+        var modelMatrix = entity.computeModelMatrix(time, this._modelMatrix);
         if (!defined(modelMatrix) || !defined(radii)) {
             if (defined(this._primitive)) {
                 this._primitive.show = false;
