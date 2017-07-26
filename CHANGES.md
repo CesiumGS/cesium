@@ -19,6 +19,7 @@ Change Log
 * Fixed issue where composite 3D Tiles that contained instanced 3D Tiles with an external model reference would fail to download the model.
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
 * Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
+* Added `Entity.computeModelMatrix` which returns the model matrix representing the entity's transformation. [#5584](https://github.com/AnalyticalGraphicsInc/cesium/pull/5584)
 * Added ability to set a style's `color`, `show`, or `pointSize` with a string or object literal. `show` may also take a boolean and `pointSize` may take a number. [#5412](https://github.com/AnalyticalGraphicsInc/cesium/pull/5412)
 * Added setter for `KmlDataSource.name` to specify a name for the datasource [#5660](https://github.com/AnalyticalGraphicsInc/cesium/pull/5660).
 * Added setter for `GeoJsonDataSource.name` to specify a name for the datasource [#5653](https://github.com/AnalyticalGraphicsInc/cesium/issues/5653)
@@ -33,10 +34,10 @@ Change Log
 * Added `ClassificationPrimitive` which defines a volume and draws the intersection of the volume and terrain or 3D Tiles. [#5625](https://github.com/AnalyticalGraphicsInc/cesium/pull/5625)
 
 ### 1.35.2 - 2017-07-11
+
 * This is an npm-only release to fix an issue with using Cesium in Node.js.
 * Fixed a bug where Cesium would fail to load under Node.js and some webpack configurations. [#5593](https://github.com/AnalyticalGraphicsInc/cesium/issues/5593)
 * Fixed a bug where a Model's compressed textures were not being displayed. [#5596](https://github.com/AnalyticalGraphicsInc/cesium/pull/5596)
-* Added Entity.computeModelMatrix which returns the model matrix representing the entity's transformation. [#5584](https://github.com/AnalyticalGraphicsInc/cesium/pull/5584)
 * Fixed documentation for `OrthographicFrustum`. [#5586](https://github.com/AnalyticalGraphicsInc/cesium/issues/5586)
 
 ### 1.35.1 - 2017-07-05
@@ -44,6 +45,7 @@ Change Log
 * This is an npm-only release to fix a deployment issue with 1.35.  No code changes.
 
 ### 1.35 - 2017-07-05
+
 * Breaking changes
   * `JulianDate.fromIso8601` will default to midnight UTC if no time is provided to match the Javascript [`Date` specification](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date). You must specify a local time of midnight to achieve the old behavior.
 * Deprecated
