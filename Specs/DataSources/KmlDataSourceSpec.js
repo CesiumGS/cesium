@@ -4222,15 +4222,9 @@ defineSuite([
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-<<<<<<< HEAD
             var placemark = dataSource.entities.values[0];
             expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
             expect(placemark.kml.lookAt).toBeInstanceOf(KmlLookAt);
-=======
-            expect(console.warn.calls.count()).toEqual(2);
-            expect(console.warn.calls.argsFor(0)[0]).toBe('KML - Unsupported view: Camera');
-            expect(console.warn.calls.argsFor(1)[0]).toBe('KML - Unsupported view: LookAt');
->>>>>>> 769b09a072e80fb3351443f8cccebd3d17a2a767
         });
     });
 
