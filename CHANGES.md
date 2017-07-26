@@ -4,6 +4,7 @@ Change Log
 ### 1.37 - 2017-09-01
 
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
+* Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
 
 ### 1.36 - 2017-08-01
 
@@ -47,7 +48,6 @@ Change Log
 * Fixed a bug where Cesium would fail to load under Node.js and some webpack configurations. [#5593](https://github.com/AnalyticalGraphicsInc/cesium/issues/5593)
 * Fixed a bug where a Model's compressed textures were not being displayed. [#5596](https://github.com/AnalyticalGraphicsInc/cesium/pull/5596)
 * Fixed documentation for `OrthographicFrustum`. [#5586](https://github.com/AnalyticalGraphicsInc/cesium/issues/5586)
-* Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
 
 ### 1.35.1 - 2017-07-05
 
