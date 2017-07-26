@@ -1480,7 +1480,7 @@ define([
                 var bufferView = bufferViews[bufferViewId];
                 var bufferId = bufferView.buffer;
                 var buffer = buffers[bufferId];
-                var source = getStringFromTypedArray(buffer.extras._pipeline.source.subarray(bufferView.byteOffset, bufferView.byteOffset + bufferView.byteLength));
+                var source = getStringFromTypedArray(buffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteLength);
                 model._loadResources.shaders[id] = {
                     source : source,
                     bufferView : undefined

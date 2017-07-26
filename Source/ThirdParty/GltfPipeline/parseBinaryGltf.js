@@ -55,14 +55,15 @@ define([
             if (contentFormat !== 0) {
                 throw new DeveloperError('Binary glTF scene format is not JSON');
             }
-            var contentString = getStringFromTypedArray(data, 20, contentLength);
+
+            var jsonStart = 20;
+            var binaryStart = jsonStart + contentLength;
+
+            var contentString = getStringFromTypedArray(data, jsonStart, contentLength);
             gltf = JSON.parse(contentString);
 
-            // Clone the binary data into a new typed array to avoid keeping the whole ArrayBuffer in memory.
-            var binaryStart = 20 + contentLength;
-            var binaryLength = length - binaryStart;
-            var binaryData = new Uint8Array(binaryLength);
-            binaryData.set(data.subarray(binaryStart));
+            // Clone just the binary chunk so the underlying buffer can be freed
+            var binaryData = new Uint8Array(data.subarray(binaryStart, length));
 
             buffers = gltf.buffers;
             if (defined(buffers) && Object.keys(buffers).length > 0) {
@@ -96,7 +97,7 @@ define([
                 var chunkLength = chunkHeaderView[0];
                 var chunkType = chunkHeaderView[1];
                 byteOffset += 8;
-                var chunkBuffer = new Uint8Array(data.buffer, data.byteOffset + byteOffset, chunkLength);
+                var chunkBuffer = data.subarray(byteOffset, byteOffset + chunkLength);
                 byteOffset += chunkLength;
                 // Load JSON chunk
                 if (chunkType === 0x4E4F534A) {
@@ -106,7 +107,8 @@ define([
                 }
                 // Load Binary chunk
                 else if (chunkType === 0x004E4942) {
-                    binaryBuffer = chunkBuffer;
+                    // Clone just the binary chunk so the underlying buffer can be freed
+                    binaryBuffer = new Uint8Array(chunkBuffer);
                 }
             }
             if (defined(gltf) && defined(binaryBuffer)) {
