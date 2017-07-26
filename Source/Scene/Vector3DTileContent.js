@@ -7,8 +7,11 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
+        '../Core/Ellipsoid',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
+        '../Core/Math',
+        '../Core/Matrix4',
         '../Core/NearFarScalar',
         '../Core/Rectangle',
         '../ThirdParty/when',
@@ -26,8 +29,11 @@ define([
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
+        Ellipsoid,
         getMagic,
         getStringFromTypedArray,
+        CesiumMath,
+        Matrix4,
         NearFarScalar,
         Rectangle,
         when,
@@ -279,13 +285,6 @@ define([
             return;
         }
 
-        var center;
-        if (defined(featureTableJson.RTC_CENTER)) {
-            center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
-        } else {
-            center = Cartesian3.ZERO;
-        }
-
         var rectangle;
         if (defined(featureTableJson.RECTANGLE)) {
             rectangle = Rectangle.unpack(featureTableJson.RECTANGLE);
@@ -298,6 +297,24 @@ define([
         var format = defaultValue(featureTableJson.FORMAT, 0);
         var isCartographic = format === 0;
         var modelMatrix = content._tile.computedTransform;
+
+        var center;
+        /*
+        if (defined(featureTableJson.RTC_CENTER)) {
+            center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+        } else {
+            center = Cartesian3.ZERO;
+            */
+            center = Rectangle.center(rectangle);
+            if (isCartographic) {
+                center.height = CesiumMath.lerp(minHeight, maxHeight, 0.5);
+                center = Ellipsoid.WGS84.cartographicToCartesian(center);
+            } else {
+                center = Cartesian3.fromElements(center.longitude, center.latitude, 0.0);
+                center.z = CesiumMath.lerp(minHeight, maxHeight, 0.5);
+            }
+            Matrix4.multiplyByPoint(modelMatrix, center, center);
+        //}
 
         var polygonBatchIds;
         var polylineBatchIds;
