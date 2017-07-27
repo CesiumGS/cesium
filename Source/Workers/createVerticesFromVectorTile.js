@@ -6,11 +6,14 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidTangentPlane',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/PolygonPipeline',
         '../Core/Rectangle',
+        '../Core/WindingOrder',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -19,11 +22,14 @@ define([
         Color,
         defined,
         Ellipsoid,
+        EllipsoidTangentPlane,
         IndexDatatype,
         CesiumMath,
         Matrix4,
         OrientedBoundingBox,
+        PolygonPipeline,
         Rectangle,
+        WindingOrder,
         createTaskProcessorWorker) {
     'use strict';
 
@@ -266,8 +272,14 @@ define([
             var minLon = Number.POSITIVE_INFINITY;
             var maxLon = Number.NEGATIVE_INFINITY;
 
+            // TODO: potentially using an releasing a lot of memory here
+            var polygonPositions = [];
+            var bvPositions = [];
+
+            var position;
+
             for (j = 0; j < polygonCount; ++j) {
-                var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
                 Matrix4.multiplyByPoint(modelMatrix, position, position);
 
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
@@ -279,13 +291,29 @@ define([
                 minLon = Math.min(lon, minLon);
                 maxLon = Math.max(lon, maxLon);
 
-                var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
+                polygonPositions.push(Cartesian3.clone(scaledPosition));
+            }
+
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(polygonPositions, ellipsoid);
+            var positions2D = tangentPlane.projectPointsOntoPlane(polygonPositions);
+
+            var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (windingOrder === WindingOrder.CLOCKWISE) {
+                polygonPositions.reverse();
+            }
+
+            for (j = 0; j < polygonCount; ++j) {
+                position = polygonPositions[j];
+
+                var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMinimumHeight, scratchScaledNormal);
-                var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
+                var minHeightPosition = Cartesian3.add(position, scaledNormal, scratchMinHeightPosition);
 
                 scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMaximumHeight, scaledNormal);
-                var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
+                var maxHeightPosition = Cartesian3.add(position, scaledNormal, scratchMaxHeightPosition);
+
+                bvPositions.push(Cartesian3.clone(minHeightPosition), Cartesian3.clone(maxHeightPosition));
 
                 Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
                 Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
@@ -300,13 +328,17 @@ define([
                 batchIdIndex += 2;
             }
 
-            rectangle = scratchBVRectangle;
-            rectangle.west = minLon;
-            rectangle.east = maxLon;
-            rectangle.south = minLat;
-            rectangle.north = maxLat;
+            if (isCartographic) {
+                rectangle = scratchBVRectangle;
+                rectangle.west = minLon;
+                rectangle.east = maxLon;
+                rectangle.south = minLat;
+                rectangle.north = maxLat;
 
-            boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
+                boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
+            } else {
+                boundingVolumes[i] = OrientedBoundingBox.fromPoints(bvPositions);
+            }
 
             var indicesIndex = buffer.indexOffset;
 
