@@ -647,7 +647,7 @@ define([
             processor.densityHalfWidth * 2 + 1,
             false,
             processor._minBlend,
-            1.0,
+            processor.randomReductionFactor,
             densityEstimationStr,
             processor,
             context, {
@@ -674,7 +674,7 @@ define([
             processor.densityHalfWidth * 2 + 1,
             true,
             processor._addBlend,
-            1.0,
+            processor.randomReductionFactor,
             edgeCullingStr,
             processor,
             context, {
