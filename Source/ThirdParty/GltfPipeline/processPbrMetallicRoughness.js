@@ -108,6 +108,7 @@ define([
         if (hasSkinning) {
             skinningInfo = material.extras._pipeline.skinning;
         }
+        hasSkinning = defined(skinningInfo.type);
 
         var hasNormals = true;
         var hasTangents = false;

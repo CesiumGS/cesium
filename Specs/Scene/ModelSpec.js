@@ -117,6 +117,13 @@ defineSuite([
     var riggedSimpleQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
+    var groundVehicleUrl = './Data/Models/PBR/GroundVehicle/GroundVehicle.gltf';
+    var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
+    var boxAnimatedPbrUrl = './Data/Models/Pbr/BoxAnimated/BoxAnimated.gltf';
+    var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
+    var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
+    var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
+
     var texturedBoxModel;
     var cesiumAirModel;
     var animBoxesModel;
@@ -1934,6 +1941,84 @@ defineSuite([
 
     it('loads a glTF with WEB3D_quantized_attributes JOINT and WEIGHT', function() {
         return loadModel(riggedSimpleQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 without textures', function() {
+        return loadModel(boxPbrUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with textures', function() {
+        return loadModel(groundVehicleUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with node animation', function() {
+        return loadModel(boxAnimatedPbrUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with skinning', function() {
+        return loadModel(riggedSimplePbrUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with morph targets', function() {
+        return loadModel(animatedMorphCubeUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 with alphaMode set to OPAQUE', function() {
+        return loadJson(boxPbrUrl).then(function(gltf) {
+            gltf.materials[0].alphaMode = 'OPAQUE';
+
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('loads a glTF 2.0 with alphaMode set to MASK', function() {
+        return loadJson(boxPbrUrl).then(function(gltf) {
+            gltf.materials[0].alphaMode = 'MASK';
+            gltf.materials[0].alphaCutoff = 0.5;
+
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('loads a glTF 2.0 with alphaMode set to BLEND', function() {
+        return loadJson(boxPbrUrl).then(function(gltf) {
+            gltf.materials[0].alphaMode = 'BLEND';
+
+            return loadModelJson(gltf).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('loads a glTF 2.0 with doubleSided', function() {
+        return loadModel(twoSidedPlaneUrl).then(function(m) {
+            // var center = Matrix4.multiplyByPoint(m.modelMatrix, m.boundingSphere.center, new Cartesian3());
+            // scene.camera.lookAt(center, new Cartesian3(10.0, 10.0, 0.0));
             verifyRender(m);
             primitives.remove(m);
         });

@@ -1647,6 +1647,8 @@ define([
                 // Joint node
                 jointName : node.jointName,         // undefined when node is not a joint
 
+                weights : [],
+
                 // Graph pointers
                 children : [],                      // empty for leaf nodes
                 parents : [],                       // empty for root nodes
