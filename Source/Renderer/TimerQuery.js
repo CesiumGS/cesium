@@ -1,7 +1,9 @@
 define([
-        '../Core/WebGLConstants'
+        '../Core/WebGLConstants',
+        '../Core/oneTimeWarning'
     ], function(
-        WebGLConstants) {
+        WebGLConstants,
+        oneTimeWarning) {
     'use strict';
 
     /**
@@ -14,12 +16,17 @@ define([
      */
     function TimerQuery(frameState, callback) {
         var context = frameState.context;
+        if (!processingSupported(context)) {
+            oneTimeWarning('TimerQuery', 'Timer queries are not supported -- missing extension!');
+            return;
+        }
+
         var startQuery = context.createQuery();
         var endQuery = context.createQuery();
 
-        this._context = context;
         this._startQuery = startQuery;
         this._endQuery = endQuery;
+        this._context = context;
 
         frameState.beforeRender.push(function() {
             var available = context.getQueryParameter(endQuery, WebGLConstants.QUERY_RESULT_AVAILABLE_EXT);
@@ -36,12 +43,20 @@ define([
         });
     }
 
+    function processingSupported(context) {
+        return context.timerQuery;
+    }
+
     TimerQuery.prototype.begin = function() {
-        this._context.queryCounter(this._startQuery, WebGLConstants.TIMESTAMP_EXT);
+        if (processingSupported(this._context)) {
+            this._context.queryCounter(this._startQuery, WebGLConstants.TIMESTAMP_EXT);
+        }
     };
 
     TimerQuery.prototype.end = function() {
-        this._context.queryCounter(this._endQuery, WebGLConstants.TIMESTAMP_EXT);
+        if (processingSupported(this._context)) {
+            this._context.queryCounter(this._endQuery, WebGLConstants.TIMESTAMP_EXT);
+        }
     };
 
     return TimerQuery;
