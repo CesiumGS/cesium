@@ -108,14 +108,12 @@ define([
         return model.cacheKey + '//' + animationName + '/' + samplerName;
     }
 
- // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
     function ConstantSpline(value) {
         this._value = value;
     }
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };
- // END GLTF_SPEC
 
     ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, input, path, output) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
@@ -125,11 +123,9 @@ define([
             var times = input;
             var controlPoints = output;
 
-// GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
             if ((times.length === 1) && (controlPoints.length === 1)) {
                 spline = new ConstantSpline(controlPoints[0]);
             } else if (sampler.interpolation === 'LINEAR') {
-// END GLTF_SPEC
                 if (path === 'translation' || path === 'scale') {
                     spline = new LinearSpline({
                         times : times,
