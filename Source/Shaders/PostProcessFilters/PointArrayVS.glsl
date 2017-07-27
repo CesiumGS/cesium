@@ -23,7 +23,7 @@ void main() {
 #ifdef useReduction
         float reductionScalar = random(pseudoDepth.xyz);
         if (reductionScalar > reductionFactor) {
-            pointSize *= reductionScalar;
+            pointSize *= reductionScalar * reductionFactor;
         }
 #endif
         gl_PointSize = pointSize;
