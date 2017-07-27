@@ -25,7 +25,8 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <table>
-        <tbody><tr>
+      <tbody>
+          <tr>
             <td>Occlusion Angle</td>
             <td>
                 <input type="range" min="-1" max="1" step="0.05" data-bind="value: occlusionAngle, valueUpdate: 'input'">
@@ -162,17 +163,35 @@ Sandcastle.addToggleButton('Enable AO', true, function(checked) {
     tileset.pointCloudPostProcessorOptions.enableAO = checked;
 });
 
-Sandcastle.addToggleButton('Density View', false, function(checked) {
-    tileset.pointCloudPostProcessorOptions.densityViewEnabled = checked;
-});
-
-Sandcastle.addToggleButton('Stencil View', false, function(checked) {
-    tileset.pointCloudPostProcessorOptions.stencilViewEnabled = checked;
-});
-
-Sandcastle.addToggleButton('AO View', false, function(checked) {
-    tileset.pointCloudPostProcessorOptions.AOViewEnabled = checked;
-});
+Sandcastle.addToolbarMenu([{
+    text : 'Color View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.aoViewEnabled = false;
+    }
+}, {
+    text : 'Density View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = true;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.aoViewEnabled = false;
+    }
+}, {
+    text : 'Stencil View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = true;
+        tileset.pointCloudPostProcessorOptions.aoViewEnabled = false;
+    }
+}, {
+    text : 'AO View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.aoViewEnabled = true;
+    }
+}]);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
