@@ -106,6 +106,7 @@ define([
         this.AOViewEnabled = options.AOViewEnabled;
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
+        this.randomReductionFactor = options.randomReductionFactor;
 
         this._pointArray = undefined;
 
@@ -574,7 +575,7 @@ define([
             neighborhoodSize,
             true,
             processor._minBlend,
-            1.0,
+            processor.randomReductionFactor,
             SectorHistogramPass,
             processor,
             context, {
@@ -1145,7 +1146,8 @@ define([
             tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
             tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
             tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
-            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness) {
+            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
+            tileset.pointCloudPostProcessorOptions.randomReductionFactor !== this.randomReductionFactor) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -1161,6 +1163,7 @@ define([
             this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
             this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
             this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
+            this.randomReductionFactor = tileset.pointCloudPostProcessorOptions.randomReductionFactor;
             dirty = true;
         }
 
