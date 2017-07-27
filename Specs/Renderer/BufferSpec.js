@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/Buffer',
         'Core/IndexDatatype',
@@ -13,6 +12,7 @@ defineSuite([
 
     var context;
     var buffer;
+    var buffer2;
 
     beforeAll(function() {
         context = createContext();
@@ -23,8 +23,11 @@ defineSuite([
     });
 
     afterEach(function() {
-        if (buffer) {
+        if (buffer && !buffer.isDestroyed()) {
             buffer = buffer.destroy();
+        }
+        if (buffer2 && !buffer2.isDestroyed()) {
+            buffer2 = buffer2.destroy();
         }
     });
 
@@ -115,7 +118,7 @@ defineSuite([
     });
 
     it('can create a vertex buffer from a typed array', function() {
-        var typedArray = new Float32Array(3 * Float32Array.BYTES_PER_ELEMENT);
+        var typedArray = new Float32Array(3);
         typedArray[0] = 1.0;
         typedArray[1] = 2.0;
         typedArray[2] = 3.0;
@@ -249,7 +252,7 @@ defineSuite([
     });
 
     it('can create an index buffer from a typed array', function() {
-        var typedArray = new Uint16Array(3 * Uint16Array.BYTES_PER_ELEMENT);
+        var typedArray = new Uint16Array(3);
         typedArray[0] = 1;
         typedArray[1] = 2;
         typedArray[2] = 3;
@@ -275,6 +278,368 @@ defineSuite([
         expect(buffer.sizeInBytes).toEqual(6);
         expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
+    });
+
+    it('getBufferData throws without WebGL 2', function() {
+        if (context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var array = new Uint8Array(4);
+
+        expect(function() {
+            buffer.getBufferData(array);
+        }).toThrowDeveloperError();
+    });
+
+    it('getBufferData throws without arrayView', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.getBufferData(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('getBufferData throws with invalid sourceOffset', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var array = new Uint8Array(4);
+
+        expect(function() {
+            buffer.getBufferData(array, -1);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.getBufferData(array, 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('getBufferData throws with invalid destinationOffset', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var array = new Uint8Array(4);
+
+        expect(function() {
+            buffer.getBufferData(array, 0, -1);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.getBufferData(array, 0, 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('getBufferData throws with invalid length', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var array = new Uint8Array(4);
+
+        expect(function() {
+            buffer.getBufferData(array, 2, 0, 4);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.getBufferData(array, 0, 2, 4);
+        }).toThrowDeveloperError();
+    });
+
+    it('getBufferData reads from vertex buffer', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        var typedArray = new Uint8Array(4);
+        typedArray[0] = 1;
+        typedArray[1] = 2;
+        typedArray[2] = 3;
+        typedArray[3] = 4;
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var destArray = new Uint8Array(4);
+        buffer.getBufferData(destArray);
+
+        expect(destArray).toEqual(typedArray);
+    });
+
+    it('getBufferData reads from index buffer', function() {
+        if (!context.webgl2) {
+            return;
+        }
+        var typedArray = new Uint16Array(3);
+        typedArray[0] = 1;
+        typedArray[1] = 2;
+        typedArray[2] = 3;
+
+        buffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+
+        var destArray = new Uint16Array(3);
+        buffer.getBufferData(destArray);
+
+        expect(destArray).toEqual(typedArray);
+    });
+
+    it('copyFromBuffer throws without WebGL 2', function() {
+        if (context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 0, 4);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws without readBuffer', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(undefined, 0, 0, 4);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws with invalid readOffset', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, undefined, 0, 4);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, -1, 0, 4);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 5, 0, 4);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws with invalid writeOffset', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, undefined, 4);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, -1, 4);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 5, 4);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws with invalid sizeInBytes', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 0, undefined);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 0, -1);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 0, 0);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer2, 0, 0, 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws with one index buffer and the other is not an index buffer', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        var typedArray = new Uint16Array([0, 1, 2, 3, 4]);
+        buffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+        var typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray2,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer2.copyFromBuffer(buffer, 0, 0, typedArray.byteLength);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer throws when readBuffer is the same buffer and copy range overlaps', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 4,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        expect(function() {
+            buffer.copyFromBuffer(buffer, 0, 1, 2);
+        }).toThrowDeveloperError();
+        expect(function() {
+            buffer.copyFromBuffer(buffer, 1, 0, 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('copyFromBuffer with vertex buffers', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        var typedArray = new Float32Array([0.0, 1.0, 2.0, 3.0, 4.0]);
+        buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var typedArray2 = new Float32Array([5.0, 6.0, 7.0, 8.0, 9.0]);
+        buffer2 = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray2,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var destArray = new Float32Array(5);
+        buffer.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray);
+        buffer2.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray2);
+
+        buffer2.copyFromBuffer(buffer, 0, 0, typedArray.byteLength);
+        buffer2.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray);
+    });
+
+    it('copyFromBuffer with index buffers', function() {
+        if (!context.webgl2) {
+            return;
+        }
+
+        var typedArray = new Uint16Array([0, 1, 2, 3, 4]);
+        buffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+        var typedArray2 = new Uint16Array([5, 6, 7, 8, 9]);
+        buffer2 = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : typedArray2,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_SHORT
+        });
+
+        var destArray = new Uint16Array(5);
+        buffer.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray);
+        buffer2.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray2);
+
+        buffer2.copyFromBuffer(buffer, 0, 0, typedArray.byteLength);
+        buffer2.getBufferData(destArray);
+        expect(destArray).toEqual(typedArray);
     });
 
     it('destroys', function() {

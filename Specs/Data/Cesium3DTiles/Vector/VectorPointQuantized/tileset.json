@@ -1,0 +1,23 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "geometricError": 77067.33977995862,
+  "root": {
+    "refine": "replace",
+    "boundingVolume": {
+      "region": [
+        -1.3439035240356338,
+        0.6806784082777885,
+        -1.3264502315156903,
+        0.6981317007977318,
+        -100.0,
+        100.0
+      ]
+    },
+    "geometricError": 0,
+    "content": {
+      "url": "vectorPointQuantized.vctr"
+    }
+  }
+}

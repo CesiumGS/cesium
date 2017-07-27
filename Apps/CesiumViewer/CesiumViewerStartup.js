@@ -1,4 +1,5 @@
 /*global require*/
+/*eslint-disable strict*/
 require({
     baseUrl : '.',
     paths : {
