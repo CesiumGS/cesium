@@ -16,6 +16,8 @@ define([
      */
     function TimerQuery(frameState, callback) {
         var context = frameState.context;
+        this._context = context;
+
         if (!processingSupported(context)) {
             oneTimeWarning('TimerQuery', 'Timer queries are not supported -- missing extension!');
             return;
@@ -26,7 +28,6 @@ define([
 
         this._startQuery = startQuery;
         this._endQuery = endQuery;
-        this._context = context;
 
         frameState.beforeRender.push(function() {
             var available = context.getQueryParameter(endQuery, WebGLConstants.QUERY_RESULT_AVAILABLE_EXT);
