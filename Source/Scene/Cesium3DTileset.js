@@ -1028,7 +1028,7 @@ define([
     });
 
     /**
-     * MProvides a hook to override the method used to request the tileset json
+     * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
      */
     Cesium3DTileset.prototype.loadJson = function(tilesetUrl) {
