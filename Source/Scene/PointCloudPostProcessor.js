@@ -484,6 +484,7 @@ define([
                                      kernelSize,
                                      useStencil,
                                      blendingState,
+                                     reductionFactor,
                                      fragmentShaderSource,
                                      processor,
                                      context,
@@ -496,8 +497,15 @@ define([
         uniformMap.pointCloud_depthTexture = function () {
             return depthTexture;
         };
+        uniformMap.reductionFactor = function () {
+            return reductionFactor;
+        };
 
         var vertexShaderSource = replaceConstants(PointArrayVS, 'kernelSize', kernelSize.toFixed(1));
+
+        if (reductionFactor > 1.0 - 1e-6) {
+            vertexShaderSource = replaceConstants(vertexShaderSource, 'useReduction', false);
+        }
 
         var renderState = overrides.renderState;
 
@@ -566,6 +574,7 @@ define([
             neighborhoodSize,
             true,
             processor._minBlend,
+            1.0,
             SectorHistogramPass,
             processor,
             context, {
@@ -637,6 +646,7 @@ define([
             processor.densityHalfWidth * 2 + 1,
             false,
             processor._minBlend,
+            1.0,
             densityEstimationStr,
             processor,
             context, {
@@ -663,6 +673,7 @@ define([
             processor.densityHalfWidth * 2 + 1,
             true,
             processor._addBlend,
+            1.0,
             edgeCullingStr,
             processor,
             context, {
