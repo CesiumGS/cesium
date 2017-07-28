@@ -1292,11 +1292,11 @@ define([
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
-        commandList.push(pointOcclusionCommand);
         //commandList.push(clearCommands['sectorHistogramPass']);
         //commandList.push(sectorHistogramCommand);
         commandList.push(clearCommands['aoBufferB']);
         //commandList.push(sectorGatheringCommand);
+        commandList.push(pointOcclusionCommand);
         commandList.push(clearCommands['edgeCullingPass']);
         commandList.push(edgeCullingCommand);
         commandList.push(clearCommands['densityEstimationPass']);

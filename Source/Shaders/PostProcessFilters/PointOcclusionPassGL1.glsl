@@ -1,3 +1,4 @@
+#extension GL_EXT_draw_buffers : enable
 #extension GL_EXT_frag_depth : enable
 
 #define TAU 6.28318530718
@@ -236,11 +237,14 @@ void main() {
 
     // The position of this pixel in 3D (i.e the position of the point)
     vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
+    bool invalid = false;
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
-    if (length(centerPosition) == 0.)
-        discard;
+    if (length(centerPosition) < EPS) {
+        gl_FragData[0] = vec4(0.0);
+        gl_FragData[1] = vec4(1.0 - EPS);
+    }
 
     // We split our region of interest (the point of interest and its
     // neighbors)
@@ -284,7 +288,6 @@ void main() {
 
             // sectors contains both possible sectors that the
             // neighbor pixel could be in
-            //ivec2 sectors = collapseSectors(getSectors(vec2(d)));
             ivec2 sectors = readSectors(d);
 
             // This is the offset of the horizon point from the center in 3D
@@ -333,7 +336,11 @@ void main() {
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
         gl_FragData[0] = vec4(0.0);
+        gl_FragData[1] = vec4(1.0 - EPS);
     } else {
+        float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
+        gl_FragData[1] = czm_packDepth(occlusion);
+
         // Write out the distance of the point
         //
         // We use the distance of the point rather than
