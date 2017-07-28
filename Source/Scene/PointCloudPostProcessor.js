@@ -78,7 +78,6 @@ define([
         this._colorTextures = undefined;
         this._ecTexture = undefined;
         this._depthTextures = undefined;
-        this._sectorTextures = undefined;
         this._densityTexture = undefined;
         this._edgeCullingTexture = undefined;
         this._sectorLUTTexture = undefined;
@@ -182,8 +181,6 @@ define([
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
         processor._ecTexture.destroy();
-        processor._sectorTextures[0].destroy();
-        processor._sectorTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
         processor._aoTextures[0].destroy();
         processor._aoTextures[1].destroy();
@@ -203,7 +200,6 @@ define([
         processor._colorTextures = undefined;
         processor._ecTexture = undefined;
         processor._depthTextures = undefined;
-        processor._sectorTextures = undefined;
         processor._densityTexture = undefined;
         processor._edgeCullingTexture = undefined;
         processor._sectorLUTTexture = undefined;
@@ -258,7 +254,6 @@ define([
         var screenHeight = context.drawingBufferHeight;
 
         var colorTextures = new Array(2);
-        var sectorTextures = new Array(2);
         var depthTextures = new Array(3);
         var aoTextures = new Array(2);
 
@@ -325,15 +320,6 @@ define([
                 sampler : createSampler()
             });
 
-            sectorTextures[i] = new Texture({
-                context : context,
-                width : screenWidth,
-                height : screenHeight,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT,
-                sampler : createSampler()
-            });
-
             depthTextures[i] = new Texture({
                 context : context,
                 width : screenWidth,
@@ -383,12 +369,6 @@ define([
                 colorTextures : [aoTextures[0]],
                 destroyAttachments : false
             }),
-            sectorHistogramPass : new Framebuffer({
-                context : context,
-                colorTextures : [sectorTextures[0], sectorTextures[1]],
-                depthStencilTexture: dirty,
-                destroyAttachments : false
-            }),
             stencilMask : new Framebuffer({
                 context : context,
                 depthStencilTexture: dirty,
@@ -397,11 +377,6 @@ define([
             densityEstimationPass : new Framebuffer({
                 context : context,
                 colorTextures : [densityMap],
-                destroyAttachments : false
-            }),
-            edgeCullingPass : new Framebuffer({
-                context : context,
-                colorTextures : [edgeCullingTexture],
                 destroyAttachments : false
             }),
             regionGrowingPassA : new Framebuffer({
@@ -422,7 +397,6 @@ define([
             })
         };
         processor._depthTextures = depthTextures;
-        processor._sectorTextures = sectorTextures;
         processor._densityTexture = densityMap;
         processor._edgeCullingTexture = edgeCullingTexture;
         processor._sectorLUTTexture = sectorLUTTexture;
@@ -827,7 +801,7 @@ define([
             owner : processor
         });
 
-        var aoCommand = aoStage(processor, context, processor._sectorTextures[0]);
+        var aoCommand = aoStage(processor, context);
 
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
