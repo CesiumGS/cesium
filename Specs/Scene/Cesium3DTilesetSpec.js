@@ -1607,6 +1607,34 @@ defineSuite([
         });
     });
 
+    it('tile load event is raised', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.tileLoad.addEventListener(spyUpdate);
+            tileset.maximumMemoryUsage = 0;
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                // Root is loaded
+                expect(spyUpdate.calls.count()).toEqual(1);
+                expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
+                spyUpdate.calls.reset();
+
+                // Unload from cache
+                viewNothing();
+                scene.renderForSpecs();
+                expect(tileset.statistics.numberOfTilesWithContentReady).toEqual(0);
+
+                // Look at root again
+                viewRootOnly();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                    expect(spyUpdate.calls.count()).toEqual(1);
+                    expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
+                });
+            });
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var root = tileset._root;
