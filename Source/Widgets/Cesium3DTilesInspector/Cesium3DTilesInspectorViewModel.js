@@ -1014,7 +1014,7 @@ define([
                     // Restore original color to feature that is no longer selected
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
-                        currentFeature.color = this._style.color.evaluateColor(frameState, currentFeature, scratchColor);
+                        currentFeature.color = defined(this._style.color) ? this._style.color.evaluateColor(frameState, currentFeature, scratchColor) : Color.WHITE;
                     } else {
                         currentFeature.color = oldColor;
                     }
