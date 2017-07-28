@@ -636,14 +636,14 @@ define([
         this._cubeMap = context.defaultCubeMap;
         var that = this;
         // buildModuleURL
-        var texturePath = buildModuleUrl('Assets/Textures/Horizon/');
+        var texturePath = buildModuleUrl('Assets/Textures/SkyBox/');
         var paths = {
-            positiveX : texturePath + 'PositiveX.png',
-            negativeX : texturePath + 'PositiveX.png',
-            positiveY : texturePath + 'NegativeY.png',
-            negativeY : texturePath + 'PositiveY.png',
-            positiveZ : texturePath + 'PositiveX.png',
-            negativeZ : texturePath + 'PositiveX.png'
+            positiveX : texturePath + 'tycho2t3_80_px.jpg',
+            negativeX : texturePath + 'tycho2t3_80_mx.jpg',
+            positiveY : texturePath + 'tycho2t3_80_py.jpg',
+            negativeY : texturePath + 'tycho2t3_80_my.jpg',
+            positiveZ : texturePath + 'tycho2t3_80_pz.jpg',
+            negativeZ : texturePath + 'tycho2t3_80_mz.jpg'
         };
         loadCubeMap(context, paths).then(function(cubeMap) {
             that._cubeMap = cubeMap;

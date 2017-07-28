@@ -241,6 +241,9 @@ define([
         };
         vertexShader += 'attribute vec3 a_position;\n';
         vertexShader += 'varying vec3 v_positionEC;\n';
+        if (optimizeForCesium) {
+            vertexShader += 'varying vec3 v_positionWC;\n';
+        }
 
         // Morph Target Weighting
         vertexShaderMain += '    vec3 weightedPosition = a_position;\n';
@@ -276,13 +279,20 @@ define([
 
         // Final position computation
         if (hasSkinning) {
-            vertexShaderMain += '    vec4 position = u_modelViewMatrix * skinMatrix * vec4(weightedPosition, 1.0);\n';
+            vertexShaderMain += '    vec4 position = skinMatrix * vec4(weightedPosition, 1.0);\n';
         } else {
-            vertexShaderMain += '    vec4 position = u_modelViewMatrix * vec4(weightedPosition, 1.0);\n';
+            vertexShaderMain += '    vec4 position = vec4(weightedPosition, 1.0);\n';
         }
+        if (optimizeForCesium) {
+            vertexShaderMain += '    v_positionWC = (czm_model * position).xyz;\n';
+        }
+        vertexShaderMain += '    position = u_modelViewMatrix * position;\n';
         vertexShaderMain += '    v_positionEC = position.xyz;\n';
         vertexShaderMain += '    gl_Position = u_projectionMatrix * position;\n';
         fragmentShader += 'varying vec3 v_positionEC;\n';
+        if (optimizeForCesium) {
+            fragmentShader += 'varying vec3 v_positionWC;\n';
+        }
 
         // Final normal computation
         if (hasNormals) {
@@ -478,14 +488,27 @@ define([
         fragmentShader += '    vec3 v = -normalize(v_positionEC);\n';
 
         // Generate fragment shader's lighting block
-        fragmentShader += '    vec3 lightColor = vec3(1.0, 1.0, 1.0) * 2.0;\n';
+        fragmentShader += '    vec3 lightColor = vec3(1.0, 1.0, 1.0);\n';
         if (optimizeForCesium) {
             fragmentShader += '    vec3 l = normalize(czm_sunDirectionEC);\n';
         } else {
             fragmentShader += '    vec3 l = vec3(0.0, 0.0, 1.0);\n';
         }
         fragmentShader += '    vec3 h = normalize(v + l);\n';
-        fragmentShader += '    vec3 r = normalize(reflect(v, n));\n';
+        if (optimizeForCesium) {
+            fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
+            // Figure out if the reflection vector hits the ellipsoid
+            fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
+            fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
+            fragmentShader += '    float horizonDotNadir = 1.0 - ellipsoid.radii.x / vertexRadius;\n';
+            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
+            // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
+            fragmentShader += '    r.x = -r.x;\n';
+            fragmentShader += '    r = -normalize(czm_temeToPseudoFixed * r);\n';
+            fragmentShader += '    r.x = -r.x;\n';
+        } else {
+            fragmentShader += '    vec3 r = normalize(reflect(v, n));\n';
+        }
         fragmentShader += '    float NdotL = clamp(dot(n, l), 0.001, 1.0);\n';
         fragmentShader += '    float NdotV = abs(dot(n, v)) + 0.001;\n';
         fragmentShader += '    float NdotH = clamp(dot(n, h), 0.0, 1.0);\n';
@@ -509,12 +532,32 @@ define([
         fragmentShader += '    vec3 color = NdotL * lightColor * (diffuseContribution + specularContribution);\n';
 
         if (optimizeForCesium) {
-            fragmentShader += '    vec3 diffuseIrradiance = vec3(0.5);\n';
-            fragmentShader += '    vec3 specularIrradiance = textureCube(czm_cubeMap, r).rgb;\n';
-            fragmentShader += '    specularIrradiance = mix(specularIrradiance, diffuseIrradiance, roughness);\n'; // Fake LOD
+            fragmentShader += '    float inverseRoughness = 1.0 - roughness;\n';
+            fragmentShader += '    inverseRoughness *= inverseRoughness;\n';
+            fragmentShader += '    vec3 sceneSkyBox = textureCube(czm_cubeMap, r).rgb * inverseRoughness;\n';
+
+            fragmentShader += '    float atmosphereHeight = 0.05;\n';
+            fragmentShader += '    float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);\n';
+            fragmentShader += '    float farAboveHorizon = clamp(horizonDotNadir - blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
+            fragmentShader += '    float aroundHorizon = clamp(horizonDotNadir + blendRegionSize * 0.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
+            fragmentShader += '    float farBelowHorizon = clamp(horizonDotNadir + blendRegionSize * 1.5, 1.0e-10 - blendRegionSize, 0.99999);\n';
+            fragmentShader += '    float smoothstepHeight = smoothstep(0.0, atmosphereHeight, horizonDotNadir);\n';
+            fragmentShader += '    float lightScale = smoothstepHeight * 1.5 + 1.0;\n';
+
+            fragmentShader += '    vec3 diffuseIrradiance = mix(vec3(0.5), vec3(0.05), smoothstepHeight);\n';
+            fragmentShader += '    vec3 belowHorizonColor = mix(vec3(0.1, 0.2, 0.4), vec3(0.2, 0.5, 0.7), smoothstepHeight);\n';
+            fragmentShader += '    vec3 nadirColor = belowHorizonColor * 0.5;\n';
+            fragmentShader += '    vec3 aboveHorizonColor = vec3(0.8, 0.9, 0.95);\n';
+            fragmentShader += '    vec3 blueSkyColor = mix(vec3(0.09, 0.13, 0.24), aboveHorizonColor, reflectionDotNadir * inverseRoughness * 0.5 + 0.5);\n';
+            fragmentShader += '    vec3 zenithColor = mix(blueSkyColor, sceneSkyBox, smoothstepHeight);\n';
+
+            fragmentShader += '    vec3 specularIrradiance = mix(zenithColor, aboveHorizonColor, smoothstep(farAboveHorizon, aroundHorizon, reflectionDotNadir) * inverseRoughness);\n';
+            fragmentShader += '    specularIrradiance = mix(specularIrradiance, belowHorizonColor, smoothstep(aroundHorizon, farBelowHorizon, reflectionDotNadir) * inverseRoughness);\n';
+            fragmentShader += '    specularIrradiance = mix(specularIrradiance, nadirColor, smoothstep(farBelowHorizon, 1.0, reflectionDotNadir) * inverseRoughness);\n';
+
             fragmentShader += '    vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(NdotV, 1.0 - roughness)).rg;\n';
             fragmentShader += '    vec3 IBLColor = (diffuseIrradiance * diffuseColor) + (specularIrradiance * (specularColor * brdfLUT.x + brdfLUT.y));\n';
-            fragmentShader += '    color += IBLColor;\n';
+            fragmentShader += '    color = color * lightScale + IBLColor;\n';
         }
 
         if (defined(parameterValues.occlusionTexture)) {
