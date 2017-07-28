@@ -216,8 +216,7 @@ void main() {
             ivec2 pI = pos + d;
 
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
-            vec3 neighborPosition = texture(pointCloud_ECTexture,
-                                            vec2(pI) / czm_viewport.zw).xyz;
+            vec3 neighborPosition = texelFetch(pointCloud_ECTexture, ivec2(pI), 0).xyz;
 
             // If our horizon pixel doesn't exist, ignore it and move on
             if (length(neighborPosition) < EPS || pI == pos) {
