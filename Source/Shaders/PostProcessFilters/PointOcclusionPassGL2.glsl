@@ -23,6 +23,7 @@ uniform sampler2D sectorLUT;
 in vec2 v_textureCoordinates;
 
 layout(location = 0) out vec4 depthOut;
+layout(location = 1) out vec4 aoOut;
 
 // TODO: Include Uber copyright
 
@@ -159,7 +160,7 @@ float acosFast(in float inX) {
 ivec2 readSectors(in ivec2 sectorPosition) {
     vec2 texCoordinate = vec2(sectorPosition + ivec2(neighborhoodHalfWidth)) /
                          float(neighborhoodHalfWidth * 2);
-    vec2 unscaled = texture2D(sectorLUT, texCoordinate).rg;
+    vec2 unscaled = texture(sectorLUT, texCoordinate).rg;
     return ivec2(unscaled * float(numSectors));
 }
 
@@ -175,8 +176,8 @@ void main() {
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
     if (length(centerPosition) < EPS) {
-        gl_FragData[0] = vec4(0.0);
-        gl_FragData[1] = vec4(1.0 - EPS);
+        depthOut = vec4(0.0);
+        aoOut = vec4(1.0 - EPS);
     }
 
     // We split our region of interest (the point of interest and its
@@ -273,7 +274,11 @@ void main() {
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
         depthOut = vec4(0);
+        aoOut = vec4(1.0 - EPS);
     } else {
+        float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
+        aoOut = czm_packDepth(occlusion);
+
         // Write out the distance of the point
         //
         // We use the distance of the point rather than

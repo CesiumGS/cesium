@@ -641,8 +641,7 @@ define([
             enableAO : true,
             AOViewEnabled : false,
             sigmoidSharpness : 0.2,
-            sigmoidDomainOffset : 0.2,
-            randomReductionFactor : 1.0
+            sigmoidDomainOffset : 0.2
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);

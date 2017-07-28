@@ -28,15 +28,11 @@ define([
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
-        '../Shaders/PostProcessFilters/PointArrayVS',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
-        '../Shaders/PostProcessFilters/SectorHistogramPass',
-        '../Shaders/PostProcessFilters/SectorGatheringPass',
-        '../Shaders/PostProcessFilters/DensityEstimationPass',
-        '../Shaders/PostProcessFilters/EdgeCullingPass'
+        '../Shaders/PostProcessFilters/DensityEdgeCullPass',
     ], function(
         Color,
         ComponentDatatype,
@@ -66,15 +62,11 @@ define([
         BlendingState,
         StencilFunction,
         StencilOperation,
-        PointArrayVS,
         PointOcclusionPassGL1,
         PointOcclusionPassGL2,
         RegionGrowingPassGL1,
         RegionGrowingPassGL2,
-        SectorHistogramPass,
-        SectorGatheringPass,
-        DensityEstimationPass,
-        EdgeCullingPass
+        DensityEdgeCullPass
     ) {
     'use strict';
 
@@ -110,7 +102,6 @@ define([
         this.AOViewEnabled = options.AOViewEnabled;
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
-        this.randomReductionFactor = options.randomReductionFactor;
 
         this._pointArray = undefined;
 
@@ -441,115 +432,6 @@ define([
         processor._dirty = dirty;
     }
 
-    function createPointArray(processor, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
-
-        var vertexArr = new Float32Array(screenWidth * screenHeight * 2);
-
-        var xIncrement = 2.0 / screenWidth;
-        var yIncrement = 2.0 / screenHeight;
-
-        var baryOffsetX = xIncrement / 2.0;
-        var baryOffsetY = yIncrement / 2.0;
-
-        var k = 0;
-        for (var i = -1.0; i < 1.0; i += xIncrement) {
-            for (var j = -1.0; j < 1.0; j += yIncrement) {
-                vertexArr[k++] = i + baryOffsetX;
-                vertexArr[k++] = j + baryOffsetY;
-            }
-        }
-
-        var geometry = new Geometry({
-            attributes: {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : vertexArr
-                })
-            },
-            primitiveType : PrimitiveType.POINTS
-        });
-
-        var pointArray = VertexArray.fromGeometry({
-            context : context,
-            geometry : geometry,
-            attributeLocations : {
-                position : 0
-            },
-            bufferUsage : BufferUsage.STATIC_DRAW,
-            interleave : true
-        });
-
-        processor._pointArray = pointArray;
-    }
-
-    function createPointArrayCommand(depthTexture,
-                                     kernelSize,
-                                     useStencil,
-                                     blendingState,
-                                     reductionFactor,
-                                     fragmentShaderSource,
-                                     processor,
-                                     context,
-                                     overrides) {
-        if (!defined(processor._pointArray)) {
-            createPointArray(processor, context);
-        }
-
-        var uniformMap = (defined(overrides.uniformMap)) ? overrides.uniformMap : {};
-        uniformMap.pointCloud_depthTexture = function () {
-            return depthTexture;
-        };
-        uniformMap.reductionFactor = function () {
-            return reductionFactor;
-        };
-
-        var vertexShaderSource = replaceConstants(PointArrayVS, 'kernelSize', kernelSize.toFixed(1));
-
-        if (reductionFactor > 1.0 - 1e-6) {
-            vertexShaderSource = replaceConstants(vertexShaderSource, 'useReduction', false);
-        }
-
-        var renderState = overrides.renderState;
-
-        if (!defined(overrides.renderState)) {
-            var stencilTest = processor._positiveStencilTest;
-            if (defined(overrides.stencilTest)) {
-                stencilTest = overrides.stencilTest;
-            }
-            if (useStencil) {
-                renderState = RenderState.fromCache({
-                    stencilTest : stencilTest,
-                    blending : blendingState
-                });
-            } else {
-                renderState = RenderState.fromCache({
-                    blending : blendingState
-                });
-            }
-        }
-
-        return new DrawCommand({
-            vertexArray : processor._pointArray,
-            primitiveType : PrimitiveType.POINTS,
-            renderState : renderState,
-            shaderProgram : ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vertexShaderSource,
-                fragmentShaderSource : fragmentShaderSource,
-                attributeLocations : {
-                    position : 0
-                }
-            }),
-            uniformMap : uniformMap,
-            owner : overrides.owner,
-            framebuffer : overrides.framebuffer,
-            pass : overrides.pass
-        });
-    }
-
     function replaceConstants(sourceStr, constantName, replacement) {
         var r;
         if (typeof(replacement) === 'boolean') {
@@ -617,132 +499,33 @@ define([
         });
     }
 
-    function sectorHistogramStage(processor, context) {
-        var neighborhoodSize = processor.neighborhoodHalfWidth * 2 + 1;
+    function densityEdgeCullStage(processor, context) {
         var uniformMap = {
-            sectorLUT : function() {
-                return processor._sectorLUTTexture;
+            pointCloud_depthTexture : function() {
+                return processor._depthTextures[0];
             },
-            neighborhoodSize : function() {
-                return neighborhoodSize;
-            }
-        };
-
-        return createPointArrayCommand(
-            processor._ecTexture,
-            neighborhoodSize,
-            true,
-            processor._minBlend,
-            processor.randomReductionFactor,
-            SectorHistogramPass,
-            processor,
-            context, {
-                uniformMap : uniformMap,
-                framebuffer : processor._framebuffers.sectorHistogramPass,
-                pass : Pass.CESIUM_3D_TILE,
-                owner : processor
-            }
-        );
-    }
-
-    function sectorGatheringStage(processor, context) {
-        var uniformMap = {
-            pointCloud_ECTexture : function() {
-                return processor._ecTexture;
-            },
-            sectorFirst : function() {
-                return processor._sectorTextures[0];
-            },
-            sectorSecond : function() {
-                return processor._sectorTextures[1];
-            },
-            occlusionAngle : function() {
-                return processor.occlusionAngle;
-            },
-            ONE : function() {
-                return 1.0;
-            }
-        };
-
-        var sectorGatheringStr = replaceConstants(
-            SectorGatheringPass,
-            'useTriangle',
-            processor.useTriangle
-        );
-
-        return context.createViewportQuadCommand(sectorGatheringStr, {
-            uniformMap : uniformMap,
-            framebuffer : processor._framebuffers.screenSpacePass,
-            renderState : RenderState.fromCache({
-                stencilTest : processor._positiveStencilTest
-            }),
-            pass : Pass.CESIUM_3D_TILE,
-            owner : processor
-        });
-    }
-
-    function densityEstimationStage(processor, context) {
-        var uniformMap = {
             neighborhoodVectorSize : function() {
                 return processor.neighborhoodVectorSize;
             },
             maxAbsRatio : function() {
                 return processor.maxAbsRatio;
-            },
-            pointCloud_edgeCullingTexture : function() {
-                return processor._edgeCullingTexture;
             }
         };
 
-        var densityEstimationStr = replaceConstants(
-            DensityEstimationPass,
+        var densityEdgeCullStr = replaceConstants(
+            DensityEdgeCullPass,
             'neighborhoodHalfWidth',
             processor.densityHalfWidth
         );
 
-        return createPointArrayCommand(
-            processor._depthTextures[0],
-            processor.densityHalfWidth * 2 + 1,
-            false,
-            processor._minBlend,
-            processor.randomReductionFactor,
-            densityEstimationStr,
-            processor,
-            context, {
-                uniformMap : uniformMap,
-                framebuffer : processor._framebuffers.densityEstimationPass,
-                pass : Pass.CESIUM_3D_TILE,
-                owner : processor
-            }
-        );
-    }
-
-    function edgeCullingStage(processor, context) {
-        var uniformMap = {
-        };
-
-        var edgeCullingStr = replaceConstants(
-            EdgeCullingPass,
-            'neighborhoodHalfWidth',
-            processor.densityHalfWidth
-        );
-
-        return createPointArrayCommand(
-            processor._depthTextures[0],
-            processor.densityHalfWidth * 2 + 1,
-            true,
-            processor._addBlend,
-            processor.randomReductionFactor,
-            edgeCullingStr,
-            processor,
-            context, {
-                uniformMap : uniformMap,
-                framebuffer : processor._framebuffers.edgeCullingPass,
-                pass : Pass.CESIUM_3D_TILE,
-                owner : processor,
-                stencilTest : processor._negativeStencilTest
-            }
-        );
+        return context.createViewportQuadCommand(densityEdgeCullStr, {
+            uniformMap : uniformMap,
+            framebuffer : processor._framebuffers.densityEstimationPass,
+            renderState : RenderState.fromCache({
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
     }
 
     function regionGrowingStage(processor, context, iteration) {
@@ -956,11 +739,8 @@ define([
         var copyCommands = new Array(2);
 
         var i;
-        processor._drawCommands.edgeCullingCommand = edgeCullingStage(processor, context);
-        processor._drawCommands.densityEstimationCommand = densityEstimationStage(processor, context);
+        processor._drawCommands.densityEdgeCullCommand = densityEdgeCullStage(processor, context);
         processor._drawCommands.pointOcclusionCommand = pointOcclusionStage(processor, context);
-        processor._drawCommands.sectorHistogramCommand = sectorHistogramStage(processor, context);
-        processor._drawCommands.sectorGatheringCommand = sectorGatheringStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
             regionGrowingCommands[i] = regionGrowingStage(processor, context, i);
@@ -1055,12 +835,11 @@ define([
             if (framebuffers.hasOwnProperty(name)) {
                 // The screen space pass should consider
                 // the stencil value, so we don't clear it
-                // here. Edge culling should only apply to invalid
-                // pixels. The density estimation pass uses
-                // min blending, so we need to set the default
-                // value to the maximum possible value
-                if (name === 'screenSpacePass' ||
-                    name === 'edgeCullingPass') {
+                // here.
+                // Also we want to clear the AO buffer to white
+                // so that the pixels that never get region-grown
+                // do not appear black
+                if (name === 'screenSpacePass') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -1069,9 +848,7 @@ define([
                         pass : Pass.CESIUM_3D_TILE,
                         owner : processor
                     });
-                } else if (name === 'densityEstimationPass' ||
-                           name === 'sectorHistogramPass' ||
-                           name === 'aoBufferA' ||
+                } else if (name === 'aoBufferA' ||
                            name === 'aoBufferB') {
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
@@ -1116,7 +893,6 @@ define([
 
         if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
-            createPointArray(processor, context);
             nowDirty = true;
         }
 
@@ -1127,7 +903,6 @@ define([
         if (resized) {
             destroyFramebuffers(processor);
             createFramebuffers(processor, context);
-            createPointArray(processor, context);
             createCommands(processor, context);
             nowDirty = true;
         }
@@ -1205,8 +980,7 @@ define([
             tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
             tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
             tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
-            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
-            tileset.pointCloudPostProcessorOptions.randomReductionFactor !== this.randomReductionFactor) {
+            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -1222,7 +996,6 @@ define([
             this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
             this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
             this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
-            this.randomReductionFactor = tileset.pointCloudPostProcessorOptions.randomReductionFactor;
             dirty = true;
         }
 
@@ -1278,11 +1051,8 @@ define([
         }
 
         // Apply processing commands
-        var edgeCullingCommand = this._drawCommands.edgeCullingCommand;
-        var densityEstimationCommand = this._drawCommands.densityEstimationCommand;
+        var densityEdgeCullCommand = this._drawCommands.densityEdgeCullCommand;
         var pointOcclusionCommand = this._drawCommands.pointOcclusionCommand;
-        var sectorHistogramCommand = this._drawCommands.sectorHistogramCommand;
-        var sectorGatheringCommand = this._drawCommands.sectorGatheringCommand;
         var regionGrowingCommands = this._drawCommands.regionGrowingCommands;
         var copyCommands = this._drawCommands.copyCommands;
         var stencilCommands = this._drawCommands.stencilCommands;
@@ -1292,15 +1062,10 @@ define([
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
-        //commandList.push(clearCommands['sectorHistogramPass']);
-        //commandList.push(sectorHistogramCommand);
         commandList.push(clearCommands['aoBufferB']);
-        //commandList.push(sectorGatheringCommand);
         commandList.push(pointOcclusionCommand);
-        commandList.push(clearCommands['edgeCullingPass']);
-        commandList.push(edgeCullingCommand);
         commandList.push(clearCommands['densityEstimationPass']);
-        commandList.push(densityEstimationCommand);
+        commandList.push(densityEdgeCullCommand);
 
         for (i = 0; i < numRegionGrowingCommands; i++) {
             if (i % 2 === 0) {
