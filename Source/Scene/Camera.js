@@ -2865,7 +2865,7 @@ define([
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            if (radius === 0) {
+            if (radius === 0.0) {
                 offset.range = MINIMUM_ZOOM;
             } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
                 offset.range = distanceToBoundingSphere2D(camera, radius);
