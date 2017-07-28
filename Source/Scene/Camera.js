@@ -2853,19 +2853,20 @@ define([
         return Math.max(right, top) * 1.50;
     }
 
+    var MINIMUM_ZOOM = 100.0;
+
     function adjustBoundingSphereOffset(camera, boundingSphere, offset) {
         if (!defined(offset)) {
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
-        var defaultZoom = 100.0;
         var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
         var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
-            if(radius === 0) {
-                offset.range = defaultZoom;
+            if (radius === 0) {
+                offset.range = MINIMUM_ZOOM;
             } else if (camera.frustum instanceof OrthographicFrustum || camera._mode === SceneMode.SCENE2D) {
                 offset.range = distanceToBoundingSphere2D(camera, radius);
             } else {
