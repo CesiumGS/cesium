@@ -117,7 +117,7 @@ defineSuite([
     var riggedSimpleQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
-    var groundVehicleUrl = './Data/Models/PBR/GroundVehicle/GroundVehicle.gltf';
+    var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
     var boxAnimatedPbrUrl = './Data/Models/Pbr/BoxAnimated/BoxAnimated.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
@@ -1954,7 +1954,8 @@ defineSuite([
     });
 
     it('loads a glTF 2.0 with textures', function() {
-        return loadModel(groundVehicleUrl).then(function(m) {
+        return loadModel(boomBoxUrl).then(function(m) {
+            m.scale = 20.0; // Source model is very small, so scale up a bit
             verifyRender(m);
             primitives.remove(m);
         });
@@ -2015,11 +2016,37 @@ defineSuite([
         });
     });
 
-    it('loads a glTF 2.0 with doubleSided', function() {
+    function checkDoubleSided(model, doubleSided) {
+        var camera = scene.camera;
+        var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+        var range = 4.0 * model.boundingSphere.radius;
+
+        camera.lookAt(center, new HeadingPitchRange(0, -CesiumMath.PI_OVER_TWO, range));
+        expect(scene).notToRender([0, 0, 0, 255]);
+        camera.lookAt(center, new HeadingPitchRange(0, CesiumMath.PI_OVER_TWO, range));
+        if (doubleSided) {
+            expect(scene).notToRender([0, 0, 0, 255]);
+        } else {
+            expect(scene).toRender([0, 0, 0, 255]);
+        }
+    }
+
+    it('loads a glTF 2.0 with doubleSided set to false', function() {
+        return loadJson(twoSidedPlaneUrl).then(function(gltf) {
+            gltf.materials[0].doubleSided = false;
+            return loadModelJson(gltf).then(function(m) {
+                m.show = true;
+                checkDoubleSided(m, false);
+                primitives.remove(m);
+            });
+        });
+    });
+
+
+    it('loads a glTF 2.0 with doubleSided set to true', function() {
         return loadModel(twoSidedPlaneUrl).then(function(m) {
-            // var center = Matrix4.multiplyByPoint(m.modelMatrix, m.boundingSphere.center, new Cartesian3());
-            // scene.camera.lookAt(center, new Cartesian3(10.0, 10.0, 0.0));
-            verifyRender(m);
+            m.show = true;
+            checkDoubleSided(m, true);
             primitives.remove(m);
         });
     });
