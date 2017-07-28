@@ -147,12 +147,16 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 pastCenter = true;
                 continue;
             }
-            vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = czm_unpackDepth(texture(pointCloud_depthTexture,
-                                             neighborCoords));
-            float aoNeighbor = czm_unpackDepth(texture(pointCloud_aoTexture,
-                                               neighborCoords));
-            vec4 colorNeighbor = texture(pointCloud_colorTexture, neighborCoords);
+            ivec2 neighborCoords = d + ivec2(gl_FragCoord.xy);
+            float neighbor = czm_unpackDepth(texelFetch(pointCloud_depthTexture,
+                                             neighborCoords,
+                                             0));
+            float aoNeighbor = czm_unpackDepth(texelFetch(pointCloud_aoTexture,
+                                               neighborCoords,
+                                               0));
+            vec4 colorNeighbor = texelFetch(pointCloud_colorTexture,
+                                            neighborCoords,
+                                            0);
             if (pastCenter) {
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
                     neighbor;
