@@ -29,6 +29,8 @@ define([
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
         '../Shaders/PostProcessFilters/PointArrayVS',
+        '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
+        '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
         '../Shaders/PostProcessFilters/SectorHistogramPass',
@@ -65,6 +67,8 @@ define([
         StencilFunction,
         StencilOperation,
         PointArrayVS,
+        PointOcclusionPassGL1,
+        PointOcclusionPassGL2,
         RegionGrowingPassGL1,
         RegionGrowingPassGL2,
         SectorHistogramPass,
@@ -559,6 +563,60 @@ define([
         return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     }
 
+     function pointOcclusionStage(processor, context) {
+        var uniformMap = {
+            sectorLUT : function() {
+                return processor._sectorLUTTexture;
+            },
+            pointCloud_ECTexture : function() {
+                return processor._ecTexture;
+            },
+            occlusionAngle : function() {
+                return processor.occlusionAngle;
+            },
+            ONE : function() {
+                return 1.0;
+            }
+        };
+
+        var pointOcclusionStr = replaceConstants(
+            (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
+            'neighborhoodHalfWidth',
+            processor.neighborhoodHalfWidth
+        );
+
+        pointOcclusionStr = replaceConstants(
+            pointOcclusionStr,
+            'useTriangle',
+            processor.useTriangle
+        );
+
+        var func = StencilFunction.EQUAL;
+        var op = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
+
+        return context.createViewportQuadCommand(pointOcclusionStr, {
+            uniformMap : uniformMap,
+            framebuffer : processor._framebuffers.screenSpacePass,
+            renderState : RenderState.fromCache({
+                stencilTest : {
+                    enabled : true,
+                    reference : 0,
+                    mask : 1,
+                    frontFunction : func,
+                    backFunction : func,
+                    frontOperation : op,
+                    backOperation : op
+                }
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
     function sectorHistogramStage(processor, context) {
         var neighborhoodSize = processor.neighborhoodHalfWidth * 2 + 1;
         var uniformMap = {
@@ -900,6 +958,7 @@ define([
         var i;
         processor._drawCommands.edgeCullingCommand = edgeCullingStage(processor, context);
         processor._drawCommands.densityEstimationCommand = densityEstimationStage(processor, context);
+        processor._drawCommands.pointOcclusionCommand = pointOcclusionStage(processor, context);
         processor._drawCommands.sectorHistogramCommand = sectorHistogramStage(processor, context);
         processor._drawCommands.sectorGatheringCommand = sectorGatheringStage(processor, context);
 
@@ -1221,6 +1280,7 @@ define([
         // Apply processing commands
         var edgeCullingCommand = this._drawCommands.edgeCullingCommand;
         var densityEstimationCommand = this._drawCommands.densityEstimationCommand;
+        var pointOcclusionCommand = this._drawCommands.pointOcclusionCommand;
         var sectorHistogramCommand = this._drawCommands.sectorHistogramCommand;
         var sectorGatheringCommand = this._drawCommands.sectorGatheringCommand;
         var regionGrowingCommands = this._drawCommands.regionGrowingCommands;
@@ -1232,10 +1292,11 @@ define([
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
-        commandList.push(clearCommands['sectorHistogramPass']);
-        commandList.push(sectorHistogramCommand);
+        commandList.push(pointOcclusionCommand);
+        //commandList.push(clearCommands['sectorHistogramPass']);
+        //commandList.push(sectorHistogramCommand);
         commandList.push(clearCommands['aoBufferB']);
-        commandList.push(sectorGatheringCommand);
+        //commandList.push(sectorGatheringCommand);
         commandList.push(clearCommands['edgeCullingPass']);
         commandList.push(edgeCullingCommand);
         commandList.push(clearCommands['densityEstimationPass']);
