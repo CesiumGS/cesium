@@ -626,7 +626,7 @@ define([
         var that = this;
 
         // We don't know the distance of the tileset until tileset.json is loaded, so use the default distance for now
-        this.loadJson(tilesetUrl).then(function(tilesetJson) {
+        Cesium3DTileset.loadJson(tilesetUrl).then(function(tilesetJson) {
             that._root = that.loadTileset(tilesetUrl, tilesetJson);
             var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
             that._asset = tilesetJson.asset;
@@ -1031,7 +1031,7 @@ define([
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
      */
-    Cesium3DTileset.prototype.loadJson = function(tilesetUrl) {
+    Cesium3DTileset.loadJson = function(tilesetUrl) {
         return loadJson(tilesetUrl);
     };
 
