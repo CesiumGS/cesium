@@ -3355,8 +3355,8 @@ define([
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
-        this._brdfLUT = this._brdfLUT.destroy();
-        this._environmentMap = this._environmentMap.destroy();
+        this._brdfLUT = this._brdfLUT && this._brdfLUT.destroy();
+        this._environmentMap = this._environmentMap && this._environmentMap.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();

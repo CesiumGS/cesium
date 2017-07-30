@@ -87,7 +87,7 @@ define([
         var framebuffer = new Framebuffer({
             context : context,
             colorTextures : [colorTexture],
-            destroyAttachments : true
+            destroyAttachments : false
         });
 
         generator._framebuffer = framebuffer;
@@ -100,8 +100,8 @@ define([
             createFramebuffer(this, context);
             createCommand(this, context);
             this._drawCommand.execute(context);
-            delete this._framebuffer;
-            delete this._drawCommand;
+            this._framebuffer = this._framebuffer && this._framebuffer.destroy();
+            this._drawCommand.shaderProgram = this._drawCommand.shaderProgram && this._drawCommand.shaderProgram.destroy();
         }
     };
 
@@ -110,7 +110,7 @@ define([
     };
 
     BrdfLutGenerator.prototype.destroy = function() {
-        delete this._colorTexture;
+        this._colorTexture = this._colorTexture && this._colorTexture.destroy();
         return destroyObject(this);
     };
 
