@@ -89,7 +89,7 @@ define([
          *
          * @memberof WeightSpline.prototype
          *
-         * @type {Number[][]}
+         * @type {Number[]}
          * @readonly
          */
         weights : {
