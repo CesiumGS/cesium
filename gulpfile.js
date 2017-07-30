@@ -315,8 +315,8 @@ gulp.task('deploy-s3', function(done) {
     }
 
     var iface = readline.createInterface({
-        input : process.stdin,
-        output : process.stdout
+        input: process.stdin,
+        output: process.stdout
     });
 
     // prompt for confirmation
@@ -336,7 +336,7 @@ gulp.task('deploy-s3', function(done) {
 function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
-    var getCredentials = Promise.promisify(aws.config.getCredentials, {context : aws.config});
+    var getCredentials = Promise.promisify(aws.config.getCredentials, {context: aws.config});
     var concurrencyLimit = 2000;
 
     var s3 = new Promise.promisifyAll(new aws.S3({
@@ -579,17 +579,17 @@ function setStatus(state, targetUrl, description, context) {
 
     var requestPost = Promise.promisify(request.post);
     return requestPost({
-        url : 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
-        json : true,
-        headers : {
-            'Authorization' : 'token ' + process.env.TOKEN,
-            'User-Agent' : 'Cesium'
+        url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+        json: true,
+        headers: {
+            'Authorization': 'token ' + process.env.TOKEN,
+            'User-Agent': 'Cesium'
         },
-        body : {
-            state : state,
-            target_url : targetUrl,
-            description : description,
-            context : context
+        body: {
+            state: state,
+            target_url: targetUrl,
+            description: description,
+            context: context
         }
     });
 }
@@ -624,20 +624,20 @@ gulp.task('test', function(done) {
     }
 
     karma.start({
-        configFile : karmaConfigFile,
+        configFile: karmaConfigFile,
         browsers : browsers,
-        specReporter : {
-            suppressErrorSummary : false,
-            suppressFailed : false,
-            suppressPassed : suppressPassed,
-            suppressSkipped : true
+        specReporter: {
+            suppressErrorSummary: false,
+            suppressFailed: false,
+            suppressPassed: suppressPassed,
+            suppressSkipped: true
         },
         detectBrowsers : {
-            enabled : enableAllBrowsers
+            enabled: enableAllBrowsers
         },
-        files : files,
-        client : {
-            args : [includeCategory, excludeCategory, webglValidation, webglStub, release]
+        files: files,
+        client: {
+            args: [includeCategory, excludeCategory, webglValidation, webglStub, release]
         }
     }, function(e) {
         return done(failTaskOnError ? e : undefined);
