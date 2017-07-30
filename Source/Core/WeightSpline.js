@@ -1,20 +1,21 @@
-/*global define*/
 define([
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Spline'
+        './Check',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Spline'
 ], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Spline) {
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Spline) {
     'use strict';
 
     /**
-     * A spline that uses piecewise linear interpolation to create a curve.
+     * A spline that linearly interpolates over an array of weight values used by morph targets.
      *
      * @alias WeightSpline
      * @constructor
@@ -22,23 +23,21 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Number[]} options.points The array of floating-point control points given
+     * @param {Number[]} options.weights The array of floating-point control weights given. The weights are ordered such
+     *                that all weights for the targets are given in chronological order and order in which they appear in
+     *                the glTF from which the morph targets come. This means for 2 targets, weights = [w(0,0), w(0,1), w(1,0), w(1,1) ...]
+     *                where i and j in w(i,j) are the time indices and target indices, respectively.
      *
-     * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times.length must be a factor of points.length.
+     * @exception {DeveloperError} weights.length must be greater than or equal to 2.
+     * @exception {DeveloperError} times.length must be a factor of weights.length.
      *
      *
      * @example
      * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+     * var weights = [0.0, 1.0, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 1.0, 0.0]; //Two targets
      * var spline = new Cesium.WeightSpline({
      *     times : times,
-     *     points : [
-     *         [0.0, -1.0, 1.0],
-     *         [0.5, -0.5, 0.5],
-     *         [1.0, 0.0, 0.0],
-     *         [0.5, 0.5, -0.5],
-     *         [0.0, 1.0, -1.0]
-     *     ]
+     *     weights : weights
      * });
      *
      * var p0 = spline.evaluate(times[0]);
@@ -51,31 +50,28 @@ define([
     function WeightSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var points = options.points;
+        var weights = options.weights;
         var times = options.times;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points) || !defined(times)) {
-            throw new DeveloperError('points and times are required.');
-        }
-        if (points.length < 2) {
-            throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (points.length % times.length !== 0) {
-            throw new DeveloperError('times.length must be a factor of points.length.');
+        Check.defined('weights', weights);
+        Check.defined('times', times);
+        Check.typeOf.number.greaterThanOrEquals('weights.length', weights.length, 3);
+        if (weights.length % times.length !== 0) {
+            throw new DeveloperError('times.length must be a factor of weights.length.');
         }
         //>>includeEnd('debug');
 
         this._times = times;
-        this._points = points;
-        this._count = points.length / times.length;
+        this._weights = weights;
+        this._count = weights.length / times.length;
 
         this._lastTimeIndex = 0;
     }
 
     defineProperties(WeightSpline.prototype, {
         /**
-         * An array of times for the control points.
+         * An array of times for the control weights.
          *
          * @memberof WeightSpline.prototype
          *
@@ -89,30 +85,16 @@ define([
         },
 
         /**
-         * An array of floating-point array control points.
+         * An array of floating-point array control weights.
          *
          * @memberof WeightSpline.prototype
          *
          * @type {Number[][]}
          * @readonly
          */
-        points : {
+        weights : {
             get : function() {
-                return this._points;
-            }
-        },
-
-        /**
-         * The number of control point sets provided
-         *
-         * @memberof WeightSpline.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        count: {
-            get: function() {
-                return this._count;
+                return this._weights;
             }
         }
     });
@@ -143,19 +125,19 @@ define([
      *                             in the array <code>times</code>.
      */
     WeightSpline.prototype.evaluate = function(time, result) {
-        var points = this.points;
+        var weights = this.weights;
         var times = this.times;
 
         var i = this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
         var u = (time - times[i]) / (times[i + 1] - times[i]);
 
         if (!defined(result)) {
-            result = [];
+            result = new Array(this._count);
         }
 
-        for (var j = 0; j < this.count; j++) {
-            var index = (i * this.count) + j;
-            result[j] = points[index] * (1.0 - u) + points[index + this.count] * (u);
+        for (var j = 0; j < this._count; j++) {
+            var index = (i * this._count) + j;
+            result[j] = weights[index] * (1.0 - u) + weights[index + this._count] * u;
         }
 
         return result;

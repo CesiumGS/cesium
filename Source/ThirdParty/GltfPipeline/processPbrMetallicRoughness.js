@@ -31,7 +31,7 @@ define([
 
         var hasPbrMetallicRoughness = false;
         ForEach.material(gltf, function(material) {
-            if (material.hasOwnProperty('pbrMetallicRoughness')) {
+            if (defined(material.pbrMetallicRoughness)) {
                 hasPbrMetallicRoughness = true;
             }
         });
@@ -55,20 +55,14 @@ define([
             }
             var materials = [];
             ForEach.material(gltf, function(material) {
-                if (material.hasOwnProperty('pbrMetallicRoughness')) {
+                if (defined(material.pbrMetallicRoughness)) {
                     var pbrMetallicRoughness = material.pbrMetallicRoughness;
                     var technique = generateTechnique(gltf, material, options.optimizeForCesium);
 
-                    var values = pbrMetallicRoughness;
-                    for (var valueName in values) {
-                        if (values.hasOwnProperty(valueName)) {
-                            var value = values[valueName];
-                            values[valueName] = value;
-                        }
-                    }
-
-                    var newMaterial = {values : values};
-                    newMaterial.technique = technique;
+                    var newMaterial = {
+                        values : pbrMetallicRoughness,
+                        technique : technique
+                    };
                     materials.push(newMaterial);
                 }
             });
@@ -103,12 +97,8 @@ define([
         }
         var joints = (defined(skin)) ? skin.joints : [];
         var jointCount = joints.length;
-        var hasSkinning = jointCount > 0;
-        var skinningInfo = {};
-        if (hasSkinning) {
-            skinningInfo = material.extras._pipeline.skinning;
-        }
-        hasSkinning = defined(skinningInfo.type);
+        var skinningInfo = material.extras._pipeline.skinning;
+        var hasSkinning = defined(skinningInfo.type);
 
         var hasNormals = true;
         var hasTangents = false;
@@ -370,40 +360,38 @@ define([
         // Fragment shader lighting
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
-        var lambertianDiffuse = 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
-                                '{\n' +
-                                '    return baseColor / M_PI;\n' +
-                                '}\n\n';
+        fragmentShader += 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
+                          '{\n' +
+                          '    return baseColor / M_PI;\n' +
+                          '}\n\n';
 
-        var fresnelSchlick2 = 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
-                              '{\n' +
-                              '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
-                              '}\n\n';
+        fragmentShader += 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
+                          '{\n' +
+                          '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
+                          '}\n\n';
 
-        var fresnelSchlick = 'vec3 fresnelSchlick(float metalness, float VdotH) \n' +
-                             '{\n' +
-                             '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
-                             '}\n\n';
+        fragmentShader += 'vec3 fresnelSchlick(float metalness, float VdotH) \n' +
+                          '{\n' +
+                          '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
+                          '}\n\n';
 
-        var smithVisibilityG1 = 'float smithVisibilityG1(float NdotV, float roughness) \n' +
-                                '{\n' +
-                                '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
-                                '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
-                                '}\n\n';
+        fragmentShader += 'float smithVisibilityG1(float NdotV, float roughness) \n' +
+                          '{\n' +
+                          '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
+                          '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
+                          '}\n\n';
 
-        var smithVisibilityGGX = 'float smithVisibilityGGX(float roughness, float NdotL, float NdotV) \n' +
-                                 '{\n' +
-                                 '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
-                                 '}\n\n';
+        fragmentShader += 'float smithVisibilityGGX(float roughness, float NdotL, float NdotV) \n' +
+                          '{\n' +
+                          '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
+                          '}\n\n';
 
-        var GGX = 'float GGX(float roughness, float NdotH) \n' +
-                  '{\n' +
-                  '    float roughnessSquared = roughness * roughness;\n' +
-                  '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
-                  '    return roughnessSquared / (M_PI * f * f);\n' +
-                  '}\n\n';
-
-        fragmentShader += lambertianDiffuse + fresnelSchlick2 + fresnelSchlick + smithVisibilityG1 + smithVisibilityGGX + GGX;
+        fragmentShader += 'float GGX(float roughness, float NdotH) \n' +
+                          '{\n' +
+                          '    float roughnessSquared = roughness * roughness;\n' +
+                          '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
+                          '    return roughnessSquared / (M_PI * f * f);\n' +
+                          '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';
 
@@ -420,7 +408,10 @@ define([
                     fragmentShader += '    n = normalize(tbn * (2.0 * n - 1.0));\n';
                 } else {
                     // Add standard derivatives extension
-                    fragmentShader = '#ifdef GL_OES_standard_derivatives\n#extension GL_OES_standard_derivatives : enable\n#endif\n' + fragmentShader;
+                    fragmentShader = '#ifdef GL_OES_standard_derivatives\n' +
+                                     '#extension GL_OES_standard_derivatives : enable\n' +
+                                     '#endif\n' +
+                                     fragmentShader;
                     // Compute tangents
                     fragmentShader += '#ifdef GL_OES_standard_derivatives\n';
                     fragmentShader += '    vec3 pos_dx = dFdx(v_positionEC);\n';
@@ -534,7 +525,7 @@ define([
         if (optimizeForCesium) {
             fragmentShader += '    float inverseRoughness = 1.0 - roughness;\n';
             fragmentShader += '    inverseRoughness *= inverseRoughness;\n';
-            fragmentShader += '    vec3 sceneSkyBox = textureCube(czm_cubeMap, r).rgb * inverseRoughness;\n';
+            fragmentShader += '    vec3 sceneSkyBox = textureCube(czm_environmentMap, r).rgb * inverseRoughness;\n';
 
             fragmentShader += '    float atmosphereHeight = 0.05;\n';
             fragmentShader += '    float blendRegionSize = 0.1 * ((1.0 - inverseRoughness) * 8.0 + 1.1 - horizonDotNadir);\n';
@@ -674,13 +665,6 @@ define([
 
     function getPBRValueType(paramName, paramValue) {
         var value;
-
-        // Backwards compatibility for COLLADA2GLTF v1.0-draft
-        if (defined(paramValue.value)) {
-            value = paramValue.value;
-        } else {
-            value = paramValue;
-        }
 
         switch (paramName) {
             case 'baseColorFactor':

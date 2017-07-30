@@ -1436,6 +1436,21 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
+         *
+         * @alias czm_brdfLUT
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_brdfLUT;
+         *
+         * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
+         * float roughness = 0.5;
+         * float NdotV = dot(normal, view);
+         * vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(NdotV, 1.0 - roughness)).rg;
+         */
         czm_brdfLUT : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
@@ -1444,12 +1459,25 @@ define([
             }
         }),
 
-        // TODO: Docs
-        czm_cubeMap : new AutomaticUniform({
+        /**
+         * An automatic GLSL uniform containing the environment map used within the scene.
+         *
+         * @alias czm_environmentMap
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform samplerCube czm_environmentMap;
+         *
+         * // Example: Create a perfect reflection of the environment map on a  model
+         * float reflected = reflect(view, normal);
+         * vec4 reflectedColor = textureCube(czm_environmentMap, reflected);
+         */
+        czm_environmentMap : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_CUBE,
             getValue : function(uniformState) {
-                return uniformState.cubeMap;
+                return uniformState.environmentMap;
             }
         }),
 

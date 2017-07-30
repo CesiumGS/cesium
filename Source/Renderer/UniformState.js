@@ -153,7 +153,7 @@ define([
         this._backgroundColor = new Color();
 
         this._brdfLUT = new Sampler();
-        this._cubeMap = new Sampler();
+        this._environmentMap = new Sampler();
 
         this._fogDensity = undefined;
 
@@ -801,17 +801,25 @@ define([
             }
         },
 
-        // TODO: Docs
+        /**
+         * The look up texture used to find the BRDF for a material
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
         brdfLUT : {
             get : function() {
                 return this._brdfLUT;
             }
         },
 
-        // TODO: Docs
-        cubeMap : {
+        /**
+         * The environment map of the scene
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        environmentMap : {
             get : function() {
-                return this._cubeMap;
+                return this._environmentMap;
             }
         },
 
@@ -994,9 +1002,9 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        this._brdfLUT = frameState.brdfLUT;
+        this._brdfLUT = frameState.brdfLUT.colorTexture;
 
-        this._cubeMap = frameState.cubeMap;
+        this._environmentMap = frameState.environmentMap;
 
         this._fogDensity = frameState.fog.density;
 

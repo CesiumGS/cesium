@@ -365,7 +365,8 @@ define([
     function addDefaultByteOffsets(gltf) {
         var accessors = gltf.accessors;
 
-        for (var i = 0; i < accessors.length; i++) {
+        var accessorLength = accessors.length;
+        for (var i = 0; i < accessorLength; i++) {
             var accessor = accessors[i];
             if (!defined(accessor.byteOffset)) {
                 accessor.byteOffset = 0;
@@ -374,7 +375,8 @@ define([
 
         var bufferViews = gltf.bufferViews;
 
-        for (var j = 0; j < bufferViews.length; j++) {
+        var bufferViewsLength = bufferViews.length;
+        for (var j = 0; j < bufferViewsLength; j++) {
             var bufferView = bufferViews[j];
             if (!defined(bufferView.byteOffset)) {
                 bufferView.byteOffset = 0;

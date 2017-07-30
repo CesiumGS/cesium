@@ -52,7 +52,7 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        './BrdfLutProcessor',
+        './BrdfLutGenerator',
         './Camera',
         './CreditDisplay',
         './DebugCameraPrimitive',
@@ -132,7 +132,7 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
-        BrdfLutProcessor,
+        BrdfLutGenerator,
         Camera,
         CreditDisplay,
         DebugCameraPrimitive,
@@ -631,11 +631,10 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
-        this._brdfLUT = new BrdfLutProcessor();
+        this._brdfLUT = new BrdfLutGenerator();
 
-        this._cubeMap = context.defaultCubeMap;
+        this._environmentMap = context.defaultCubeMap;
         var that = this;
-        // buildModuleURL
         var texturePath = buildModuleUrl('Assets/Textures/SkyBox/');
         var paths = {
             positiveX : texturePath + 'tycho2t3_80_px.jpg',
@@ -645,9 +644,9 @@ define([
             positiveZ : texturePath + 'tycho2t3_80_pz.jpg',
             negativeZ : texturePath + 'tycho2t3_80_mz.jpg'
         };
-        loadCubeMap(context, paths).then(function(cubeMap) {
-            that._cubeMap = cubeMap;
-            cubeMap.sampler = new Sampler();
+        loadCubeMap(context, paths).then(function(environmentMap) {
+            that._environmentMap = environmentMap;
+            environmentMap.sampler = new Sampler();
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1306,8 +1305,8 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
-        frameState.brdfLUT = scene._brdfLUT._colorTexture;
-        frameState.cubeMap = scene._cubeMap;
+        frameState.brdfLUT = scene._brdfLUT;
+        frameState.environmentMap = scene._environmentMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -2647,8 +2646,6 @@ define([
             frameState.shadowMaps.push(shadowMap);
         }
 
-        scene._brdfLUT.update(frameState);
-
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
@@ -3358,6 +3355,8 @@ define([
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
+        this._brdfLUT = this._brdfLUT.destroy();
+        this._environmentMap = this._environmentMap.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();

@@ -117,7 +117,7 @@ defineSuite([
     var riggedSimpleQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
-    var groundVehicleUrl = './Data/Models/PBR/GroundVehicle/GroundVehicle.gltf';
+    var groundVehicleUrl = './Data/Models/PBR/GroundVehicle/GroundVehicle.glb';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
     var boxAnimatedPbrUrl = './Data/Models/Pbr/BoxAnimated/BoxAnimated.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
