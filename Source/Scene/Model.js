@@ -3442,7 +3442,7 @@ define([
                 uniformMap : uniformMap,
                 renderState : rs,
                 owner : owner,
-                pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
             });
 
             var pickCommand;
