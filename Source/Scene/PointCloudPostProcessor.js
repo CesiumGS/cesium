@@ -86,6 +86,7 @@ define([
         this._drawCommands = undefined;
         this._clearCommands = undefined;
 
+        this.densityScaleFactor = 10.0;
         this.occlusionAngle = options.occlusionAngle;
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -377,6 +378,7 @@ define([
             densityEstimationPass : new Framebuffer({
                 context : context,
                 colorTextures : [densityMap],
+                depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             regionGrowingPassA : new Framebuffer({
@@ -447,26 +449,11 @@ define([
             processor.useTriangle
         );
 
-        var func = StencilFunction.EQUAL;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.KEEP
-        };
-
         return context.createViewportQuadCommand(pointOcclusionStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 0,
-                    mask : 1,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._positiveStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -496,6 +483,7 @@ define([
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.densityEstimationPass,
             renderState : RenderState.fromCache({
+                stencilTest : processor._negativeStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -809,7 +797,8 @@ define([
             if (framebuffers.hasOwnProperty(name)) {
                 // The screen space pass should consider
                 // the stencil value, so we don't clear it
-                // here.
+                // here. 1.0 / densityScale is the base density
+                // for invalid pixels, so we clear to that.
                 // Also we want to clear the AO buffer to white
                 // so that the pixels that never get region-grown
                 // do not appear black
@@ -817,6 +806,15 @@ define([
                     clearCommands[name] = new ClearCommand({
                         framebuffer : framebuffers[name],
                         color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else if (name === 'densityEstimationPass') {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(1.0 / processor.densityScaleFactor, 0.0, 0.0, 0.0),
                         depth : 1.0,
                         renderState : RenderState.fromCache(),
                         pass : Pass.CESIUM_3D_TILE,
