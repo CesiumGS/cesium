@@ -249,6 +249,20 @@ define([
             skins: {},
             techniques: {}
         };
+
+        // Map joint names to id names
+        var jointName;
+        var jointNameToId = {};
+        var nodes = gltf.nodes;
+        for (var id in nodes) {
+            if (nodes.hasOwnProperty(id)) {
+                jointName = nodes[id].jointName;
+                if (defined(jointName)) {
+                    jointNameToId[jointName] = id;
+                }
+            }
+        }
+
         // Convert top level objects to arrays
         for (var topLevelId in gltf) {
             if (gltf.hasOwnProperty(topLevelId) && topLevelId !== 'extras' && topLevelId !== 'asset' && topLevelId !== 'extensions') {
@@ -265,6 +279,14 @@ define([
                 }
             }
         }
+
+        // Remap joint names to array indexes
+        for (jointName in jointNameToId) {
+            if (jointNameToId.hasOwnProperty(jointName)) {
+                jointNameToId[jointName] = globalMapping.nodes[jointNameToId[jointName]];
+            }
+        }
+
         // Fix references
         if (defined(gltf.scene)) {
             gltf.scene = globalMapping.scenes[gltf.scene];
@@ -337,7 +359,6 @@ define([
                 }
             });
         });
-        var allSkeletons = [];
         ForEach.node(gltf, function(node) {
             var children = node.children;
             if (defined(children)) {
@@ -373,13 +394,12 @@ define([
                 node.camera = globalMapping.cameras[node.camera];
             }
             if (defined(node.skeletons)) {
-                // Split out skeletons on nodes
+                // Assign skeletons to skins
                 var skeletons = node.skeletons;
                 var skeletonsLength = skeletons.length;
-                if (skeletonsLength > 0) {
-                    for (i = 0; i < skeletonsLength; i++) {
-                        allSkeletons.push(globalMapping.nodes[skeletons[i]]);
-                    }
+                if ((skeletonsLength > 0) && defined(node.skin)) {
+                    var skin = gltf.skins[globalMapping.skins[node.skin]];
+                    skin.skeleton = globalMapping.nodes[skeletons[0]];
                 }
                 delete node.skeletons;
             }
@@ -398,11 +418,7 @@ define([
             var jointNames = skin.jointNames;
             if (defined(jointNames)) {
                 for (i = 0; i < jointNames.length; i++) {
-                    var jointNodeIndex = globalMapping.nodes[jointNames[i]];
-                    joints[i] = jointNodeIndex;
-                    if (allSkeletons.includes(jointNodeIndex)) {
-                        skin.skeleton = jointNodeIndex;
-                    }
+                    joints[i] = jointNameToId[jointNames[i]];
                 }
                 skin.joints = joints;
                 delete skin.jointNames;
