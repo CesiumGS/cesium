@@ -132,6 +132,7 @@ define([
      *        source does not support picking features or if you don't want this provider's features to be pickable. Note
      *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
      *        property.
+     * @param {Object} [options.customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
      *
      *
      * @example
@@ -156,6 +157,15 @@ define([
      *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
      *          'width=256&height=256',
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+     * });
+     * // Using custom tags in your template url.
+     * var custom = new Cesium.UrlTemplateImageryProvider({
+     *    url : 'https://yoururl/{time}/{z}/{y}/{x}.png',
+     *    customTags : {
+     *        '{time}': function(imageryProvider, x, y , level) {
+     *            return '20171231'
+     *        }
+     *    }
      * });
      *
      * @see ArcGisMapServerImageryProvider
@@ -567,6 +577,15 @@ define([
                 credit = new Credit(credit);
             }
             that._credit = credit;
+
+            if (properties.customTags) {
+                for (var tag in properties.customTags) {
+                    if (properties.customTags.hasOwnProperty(tag)) {
+                        tags[tag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
+                        pickFeaturesTags[tag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
+                    }
+                }
+            }
 
             that._urlParts = urlTemplateToParts(that._url, tags); //eslint-disable-line no-use-before-define
             that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags); //eslint-disable-line no-use-before-define

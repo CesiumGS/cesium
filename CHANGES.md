@@ -37,6 +37,7 @@ Change Log
 * Fixed specular computation for certain models using the `KHR_materials_common` extension. [#5773](https://github.com/AnalyticalGraphicsInc/cesium/pull/5773)
 * Fixed a picking bug in the `3D Tiles Interactivity` Sandcastle demo. [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
 * Updated knockout from 3.4.0 to 3.4.2 [#5703](https://github.com/AnalyticalGraphicsInc/cesium/pull/5829)
+* Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL.
 
 ### 1.36 - 2017-08-01
 
