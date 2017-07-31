@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw the intersection of a volume and a photgrammetry dataset.">
     <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
@@ -181,7 +181,7 @@ tileset.readyPromise.then(function() {
     Sandcastle.addToolbarButton('Highlight building face', highlightBuilding);
     Sandcastle.addToolbarButton('Highlight trees', highlightTrees);
 
-    highlightBuilding();
+    highlightTrees();
 }).otherwise(function(error) {
     throw(error);
 });
@@ -220,7 +220,7 @@ handler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
