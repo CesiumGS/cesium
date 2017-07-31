@@ -52,6 +52,7 @@ define([
         '../ThirdParty/GltfPipeline/addDefaults',
         '../ThirdParty/GltfPipeline/addPipelineExtras',
         '../ThirdParty/GltfPipeline/ForEach',
+        '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
@@ -128,6 +129,7 @@ define([
         addDefaults,
         addPipelineExtras,
         ForEach,
+        getAccessorByteStride,
         numberOfComponentsForType,
         parseBinaryGltf,
         processModelMaterialsCommon,
@@ -2617,7 +2619,7 @@ define([
                                     componentDatatype : a.componentType,
                                     normalize : normalize,
                                     offsetInBytes : a.byteOffset,
-                                    strideInBytes : a.byteStride
+                                    strideInBytes : getAccessorByteStride(gltf, a)
                                 });
                             }
                         }

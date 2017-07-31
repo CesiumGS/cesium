@@ -119,7 +119,8 @@ defineSuite([
 
     var boomBoxUrl = './Data/Models/PBR/BoomBox/BoomBox.gltf';
     var boxPbrUrl = './Data/Models/PBR/Box/Box.gltf';
-    var boxAnimatedPbrUrl = './Data/Models/Pbr/BoxAnimated/BoxAnimated.gltf';
+    var boxAnimatedPbrUrl = './Data/Models/PBR/BoxAnimated/BoxAnimated.gltf';
+    var boxInterleavedPbrUrl = './Data/Models/PBR/BoxInterleaved/BoxInterleaved.gltf';
     var riggedSimplePbrUrl = './Data/Models/PBR/RiggedSimple/RiggedSimple.gltf';
     var animatedMorphCubeUrl = './Data/Models/PBR/AnimatedMorphCube/AnimatedMorphCube.gltf';
     var twoSidedPlaneUrl = './Data/Models/PBR/TwoSidedPlane/TwoSidedPlane.gltf';
@@ -2013,6 +2014,13 @@ defineSuite([
                 verifyRender(m);
                 primitives.remove(m);
             });
+        });
+    });
+
+    it('loads a glTF 2.0 with interleaved vertex attributes', function() {
+        return loadModel(boxInterleavedPbrUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
         });
     });
 
