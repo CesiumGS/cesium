@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './ForEach',
         '../../Core/defined'

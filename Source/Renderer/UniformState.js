@@ -152,7 +152,7 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLUT = new Sampler();
+        this._brdfLut = new Sampler();
         this._environmentMap = new Sampler();
 
         this._fogDensity = undefined;
@@ -806,9 +806,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Sampler}
          */
-        brdfLUT : {
+        brdfLut : {
             get : function() {
-                return this._brdfLUT;
+                return this._brdfLut;
             }
         },
 
@@ -1002,7 +1002,7 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        this._brdfLUT = frameState.brdfLUT.colorTexture;
+        this._brdfLut = frameState.brdfLutGenerator.colorTexture;
 
         this._environmentMap = frameState.environmentMap;
 

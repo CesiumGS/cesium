@@ -1,5 +1,4 @@
-/*global define*/
-define([
+Fdefine([
         './addPipelineExtras',
         './removeExtensionsUsed',
         './updateVersion',

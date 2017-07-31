@@ -1439,23 +1439,23 @@ define([
         /**
          * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
          *
-         * @alias czm_brdfLUT
+         * @alias czm_brdfLut
          * @glslUniform
          *
          * @example
          * // GLSL declaration
-         * uniform sampler2D czm_brdfLUT;
+         * uniform sampler2D czm_brdfLut;
          *
          * // Example: For a given roughness and NdotV value, find the material's BRDF information in the red and green channels
          * float roughness = 0.5;
          * float NdotV = dot(normal, view);
-         * vec2 brdfLUT = texture2D(czm_brdfLUT, vec2(NdotV, 1.0 - roughness)).rg;
+         * vec2 brdfLut = texture2D(czm_brdfLut, vec2(NdotV, 1.0 - roughness)).rg;
          */
-        czm_brdfLUT : new AutomaticUniform({
+        czm_brdfLut : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
             getValue : function(uniformState) {
-                return uniformState.brdfLUT;
+                return uniformState.brdfLut;
             }
         }),
 

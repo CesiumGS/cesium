@@ -631,7 +631,7 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
-        this._brdfLUT = new BrdfLutGenerator();
+        this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._environmentMap = context.defaultCubeMap;
         var that = this;
@@ -1305,7 +1305,7 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
-        frameState.brdfLUT = scene._brdfLUT;
+        frameState.brdfLutGenerator = scene._brdfLutGenerator;
         frameState.environmentMap = scene._environmentMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
@@ -3355,7 +3355,7 @@ define([
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
-        this._brdfLUT = this._brdfLUT && this._brdfLUT.destroy();
+        this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
         this._environmentMap = this._environmentMap && this._environmentMap.destroy();
 
         if (defined(this._globeDepth)) {

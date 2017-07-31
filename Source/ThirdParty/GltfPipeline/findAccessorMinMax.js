@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './getAccessorByteStride',
         './numberOfComponentsForType',

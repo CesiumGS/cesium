@@ -42,7 +42,7 @@ define([
          * The BRDF look up texture generator used for image-based lighting for PBR models
          * @type {BrdfLutGenerator}
          */
-        this.brdfLUT = undefined;
+        this.brdfLutGenerator = undefined;
 
         /**
          * The environment map used for image-based lighting for PBR models

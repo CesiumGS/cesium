@@ -144,7 +144,6 @@ define([
                 }
                 // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
             }
-            // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
 
             if (defined(model.cacheKey)) {
                 // Only cache when we can create a unique id
