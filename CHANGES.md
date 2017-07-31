@@ -7,6 +7,7 @@ Change Log
    * The function `Quaternion.fromHeadingPitchRoll(heading, pitch, roll, result)` was removed. Use `Quaternion.fromHeadingPitchRoll(hpr, result)` instead  where `hpr` is a `HeadingPitchRoll`.
    * The function `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
    * The function `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, result)` was removed. Use `Transforms.headingPitchRollQuaternion(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result)` instead where `fixedFrameTransform` is a a 4x4 transformation matrix (see `Transforms.localFrameToFixedFrameGenerator`).
+   * The `color`, `show`, and `pointSize` properties of `Cesium3DTileStyle` are no longer initialized with default values.
 * Deprecated
    * `Scene/CullingVolume` is deprecated and will be removed in 1.38. Use `Core/CullingVolume`.
    * `Scene/OrthographicFrustum` is deprecated and will be removed in 1.38. Use `Core/OrthographicFrustum`.
@@ -14,9 +15,13 @@ Change Log
    * `Scene/PerspectiveFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` is deprecated and will be removed in 1.38. Use `Core/PerspectiveOffCenterFrustum`.
 * Added ability to show tile urls in the 3D Tiles Inspector. [#5592](https://github.com/AnalyticalGraphicsInc/cesium/pull/5592)
+* Fixed a bug when reading CRN compressed textures with multiple mip levels. [#5618](https://github.com/AnalyticalGraphicsInc/cesium/pull/5618)
 * Fixed issue where composite 3D Tiles that contained instanced 3D Tiles with an external model reference would fail to download the model.
 * Added behavior to `Cesium3DTilesInspector` that selects the first tileset hovered over if no tilest is specified. [#5139](https://github.com/AnalyticalGraphicsInc/cesium/issues/5139)
+* Added `tileLoad` event to `Cesium3DTileset`. [#5628](https://github.com/AnalyticalGraphicsInc/cesium/pull/5628)
 * Added ability to provide a `width` and `height` to `scene.pick`. [#5602](https://github.com/AnalyticalGraphicsInc/cesium/pull/5602)
+* Added `Entity.computeModelMatrix` which returns the model matrix representing the entity's transformation. [#5584](https://github.com/AnalyticalGraphicsInc/cesium/pull/5584)
+* Added ability to set a style's `color`, `show`, or `pointSize` with a string or object literal. `show` may also take a boolean and `pointSize` may take a number. [#5412](https://github.com/AnalyticalGraphicsInc/cesium/pull/5412)
 * Added setter for `KmlDataSource.name` to specify a name for the datasource [#5660](https://github.com/AnalyticalGraphicsInc/cesium/pull/5660).
 * Added setter for `GeoJsonDataSource.name` to specify a name for the datasource [#5653](https://github.com/AnalyticalGraphicsInc/cesium/issues/5653)
 * Fixed issue where scene would blink when labels were added. [#5537](https://github.com/AnalyticalGraphicsInc/cesium/issues/5537)
@@ -29,6 +34,7 @@ Change Log
 * Added an `options` parameter to the constructors of `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `OrthographicFrustum`, and `OrthographicOffCenterFrustum` to set properties. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 * Added `ClassificationPrimitive` which defines a volume and draws the intersection of the volume and terrain or 3D Tiles. [#5625](https://github.com/AnalyticalGraphicsInc/cesium/pull/5625)
 * Added glTF 2.0 support, including physically-based material rendering, morph targets, and appropriate updating of glTF 1.0 models to 2.0. [#5641](https://github.com/AnalyticalGraphicsInc/cesium/pull/5641)
+* Fix for dynamic polylines with polyline dash material [#5681](https://github.com/AnalyticalGraphicsInc/cesium/pull/5681)
 
 ### 1.35.2 - 2017-07-11
 
@@ -74,6 +80,7 @@ Change Log
 * Updated glTF/glb MIME types. [#5420](https://github.com/AnalyticalGraphicsInc/cesium/issues/5420)
 * Added `Cesium.Math.randomBetween`.
 * Modified `defaultValue` to check for both `undefined` and `null`. [#5551](https://github.com/AnalyticalGraphicsInc/cesium/pull/5551)
+* The `throttleRequestByServer` function has been removed. Instead use `RequestScheduler.throttleRequest` to throttle requests.
 
 ### 1.34 - 2017-06-01
 
