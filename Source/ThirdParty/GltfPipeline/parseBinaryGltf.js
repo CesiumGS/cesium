@@ -1,4 +1,4 @@
-Fdefine([
+define([
         './addPipelineExtras',
         './removeExtensionsUsed',
         './updateVersion',

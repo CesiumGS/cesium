@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
@@ -24,6 +25,7 @@ define([
         Cartesian4,
         Cartographic,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         EncodedCartesian3,
@@ -1002,9 +1004,11 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        this._brdfLut = frameState.brdfLutGenerator.colorTexture;
+        var brdfLutGenerator = frameState.brdfLutGenerator;
+        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+        this._brdfLut = brdfLut;
 
-        this._environmentMap = frameState.environmentMap;
+        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
 
         this._fogDensity = frameState.fog.density;
 

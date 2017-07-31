@@ -851,15 +851,11 @@ define([
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain = '';
-
-            if (source.indexOf(batchIdAttributeName) === -1) {
-                newMain += 'attribute float ' + batchIdAttributeName + ';\n';
-            }
+            var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain +=
+                newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
                     'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
@@ -892,7 +888,7 @@ define([
                     '    tile_featureColor = featureProperties; \n' +
                     '}';
             } else {
-                newMain +=
+                newMain =
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -1098,15 +1094,11 @@ define([
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
-            var newMain = '';
-
-            if (source.indexOf(batchIdAttributeName) === -1) {
-                newMain += 'attribute float ' + batchIdAttributeName + ';\n';
-            }
+            var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
-                newMain +=
+                newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
@@ -1119,7 +1111,7 @@ define([
                     '    tile_featureSt = st; \n' +
                     '}';
             } else {
-                newMain +=
+                newMain =
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +

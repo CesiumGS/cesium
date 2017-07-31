@@ -633,7 +633,7 @@ define([
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
-        this._environmentMap = context.defaultCubeMap;
+        this._environmentMap = undefined;
         var that = this;
         var texturePath = buildModuleUrl('Assets/Textures/SkyBox/');
         var paths = {
