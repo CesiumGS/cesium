@@ -384,53 +384,6 @@ define([
         }
     }
 
-    function enableDiffuseTransparency(gltf) {
-        var materials = gltf.materials;
-        var techniques = gltf.techniques;
-
-        var materialsLength = materials.length;
-        for (var materialId = 0; materialId < materialsLength; materialId++) {
-            var material = materials[materialId];
-            if (defined(material.values) && defined(material.values.diffuse)) {
-                // Check if the diffuse texture/color is transparent
-                var diffuse = material.values.diffuse;
-                var diffuseTransparent = false;
-                if (defined(diffuse.index)) {
-                    diffuseTransparent = gltf.images[gltf.textures[diffuse.index].source].extras._pipeline.transparent;
-                } else {
-                    diffuseTransparent = diffuse[3] < 1.0;
-                }
-
-                var technique = techniques[material.technique];
-                var blendingEnabled = technique.states.enable.indexOf(WebGLConstants.BLEND) > -1;
-
-                // Override the technique's states if blending isn't already enabled
-                if (diffuseTransparent && !blendingEnabled) {
-                    technique.states = {
-                        enable: [
-                            WebGLConstants.DEPTH_TEST,
-                            WebGLConstants.BLEND
-                        ],
-                        depthMask: false,
-                        functions: {
-                            blendEquationSeparate: [
-                                WebGLConstants.FUNC_ADD,
-                                WebGLConstants.FUNC_ADD
-                            ],
-                            blendFuncSeparate: [
-                                WebGLConstants.ONE,
-                                WebGLConstants.ONE_MINUS_SRC_ALPHA,
-                                WebGLConstants.ONE,
-                                WebGLConstants.ONE_MINUS_SRC_ALPHA
-                            ]
-                        }
-                    };
-                }
-
-            }
-        }
-    }
-
     function selectDefaultScene(gltf) {
         var scenes = gltf.scenes;
 
@@ -534,7 +487,6 @@ define([
         addDefaultMaterial(gltf);
         addDefaultTechnique(gltf);
         addDefaultByteOffsets(gltf);
-        enableDiffuseTransparency(gltf);
         selectDefaultScene(gltf);
         inferBufferViewTargets(gltf);
         if (options.optimizeForCesium) {

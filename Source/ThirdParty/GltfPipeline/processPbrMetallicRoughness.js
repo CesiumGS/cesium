@@ -57,7 +57,7 @@ define([
             ForEach.material(gltf, function(material) {
                 if (defined(material.pbrMetallicRoughness)) {
                     var pbrMetallicRoughness = material.pbrMetallicRoughness;
-                    var technique = generateTechnique(gltf, material, options.optimizeForCesium);
+                    var technique = generateTechnique(gltf, material, options);
 
                     var newMaterial = {
                         values : pbrMetallicRoughness,
@@ -76,7 +76,11 @@ define([
         return gltf;
     }
 
-    function generateTechnique(gltf, material, optimizeForCesium) {
+    function generateTechnique(gltf, material, options) {
+        var optimizeForCesium = defaultValue(options.optimizeForCesium, false);
+        var hasCesiumRTCExtension = defined(gltf.extensions) && defined(gltf.extensions.CESIUM_RTC);
+        var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
+
         var techniques = gltf.techniques;
         var shaders = gltf.shaders;
         var programs = gltf.programs;
@@ -124,7 +128,7 @@ define([
         var techniqueParameters = {
             // Add matrices
             modelViewMatrix : {
-                semantic : 'MODELVIEW',
+                semantic : hasCesiumRTCExtension ? 'CESIUM_RTC_MODELVIEW' : 'MODELVIEW',
                 type : WebGLConstants.FLOAT_MAT4
             },
             projectionMatrix : {
@@ -351,6 +355,15 @@ define([
 
             vertexShader += 'attribute ' + attributeType + ' a_joint;\n';
             vertexShader += 'attribute ' + attributeType + ' a_weight;\n';
+        }
+
+        if (addBatchIdToGeneratedShaders) {
+            techniqueAttributes.a_batchId = 'batchId';
+            techniqueParameters.batchId = {
+                semantic: '_BATCHID',
+                type: WebGLConstants.FLOAT
+            };
+            vertexShader += 'attribute float a_batchId;\n';
         }
 
         vertexShader += 'void main(void) \n{\n';

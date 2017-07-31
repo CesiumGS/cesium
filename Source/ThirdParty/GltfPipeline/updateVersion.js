@@ -591,8 +591,10 @@ define([
                     if (mappedSemantics.hasOwnProperty(semantic)) {
                         var mappedSemantic = mappedSemantics[semantic];
                         var accessorId = primitive.attributes[semantic];
-                        delete primitive.attributes[semantic];
-                        primitive.attributes[mappedSemantic] = accessorId;
+                        if (defined(accessorId)) {
+                            delete primitive.attributes[semantic];
+                            primitive.attributes[mappedSemantic] = accessorId;
+                        }
                     }
                 }
             });
@@ -802,6 +804,8 @@ define([
         }
         var asset = gltf.asset;
         asset.version = '2.0';
+        // material.instanceTechnique properties should be directly on the material. instanceTechnique is a gltf 0.8 property but is seen in some 1.0 models.
+        updateInstanceTechniques(gltf);
         // animation.samplers now refers directly to accessors and animation.parameters should be removed
         removeAnimationSamplersIndirection(gltf);
         // top-level objects are now arrays referenced by index instead of id
@@ -814,8 +818,6 @@ define([
         requireByteLength(gltf);
         // byteStride moved from accessor to bufferView
         moveByteStrideToBufferView(gltf);
-        // accessor.min and accessor.max must be defined
-        requireAccessorMinMax(gltf);
         // buffer.type is unnecessary and should be removed
         removeBufferType(gltf);
         // TEXCOORD and COLOR attributes must be written with a set index (TEXCOORD_#)
