@@ -102,6 +102,7 @@ define([
         this.AOViewEnabled = options.AOViewEnabled;
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
+        this.dropoutFactor = options.dropoutFactor;
 
         this._pointArray = undefined;
 
@@ -431,6 +432,9 @@ define([
             },
             occlusionAngle : function() {
                 return processor.occlusionAngle;
+            },
+            dropoutFactor : function() {
+                return processor.dropoutFactor;
             },
             ONE : function() {
                 return 1.0;
@@ -952,7 +956,8 @@ define([
             tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
             tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
             tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
-            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness) {
+            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
+            tileset.pointCloudPostProcessorOptions.dropoutFactor !== this.dropoutFactor) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -968,6 +973,7 @@ define([
             this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
             this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
             this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
+            this.dropoutFactor = tileset.pointCloudPostProcessorOptions.dropoutFactor;
             dirty = true;
         }
 
