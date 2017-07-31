@@ -3,11 +3,17 @@
 #define EPS 1e-8
 
 #define densityScaleFactor 10.0
+#define dropoutEnabled
 
 uniform sampler2D pointCloud_depthTexture;
 uniform float neighborhoodVectorSize;
 uniform float maxAbsRatio;
+uniform float dropoutFactor;
 varying vec2 v_textureCoordinates;
+
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+}
 
 void main() {
     float center = czm_unpackDepth(texture2D(pointCloud_depthTexture,
@@ -19,13 +25,25 @@ void main() {
     vec2 absNeighborhoodAccum = vec2(0.0);
 
     if (center < EPS) {
+        float seed = random(v_textureCoordinates);
         for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
             for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
                 ivec2 d = ivec2(i, j);
                 ivec2 pI = pos + d;
+                vec2 normPI = vec2(pI) / czm_viewport.zw;
+
+#ifdef dropoutEnabled
+                // A cheap approximation of randomness -- local neighborhoods are not
+                // sufficiently random, but small changes in the seed yield different
+                // neighborhoods
+                if (fract(seed * dot(normPI, vec2(902433.23341, 303403.963351)))
+                        < dropoutFactor) {
+                    continue;
+                }
+#endif // dropoutEnabled
 
                 float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                                 vec2(pI) / czm_viewport.zw));
+                                                 normPI));
                 if (neighbor < EPS || pI == pos) {
                     continue;
                 }

@@ -14,6 +14,7 @@
 
 #define trianglePeriod 1e-2
 #define useTriangle
+#define dropoutEnabled
 
 uniform float ONE;
 
@@ -222,12 +223,15 @@ void main() {
             ivec2 pI = pos + d;
             vec2 normPI = vec2(pI) / czm_viewport.zw;
 
+#ifdef dropoutEnabled
             // A cheap approximation of randomness -- local neighborhoods are not
             // sufficiently random, but small changes in the seed yield different
             // neighborhoods
-            if (fract(seed * dot(normPI, vec2(902433.23341, 303403.963351))) < dropoutFactor) {
+            if (fract(seed * dot(normPI, vec2(902433.23341, 303403.963351)))
+                    < dropoutFactor) {
                 continue;
             }
+#endif //dropoutEnabled
 
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
             vec3 neighborPosition = texelFetch(pointCloud_ECTexture, ivec2(pI), 0).xyz;
