@@ -24,37 +24,30 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
+function startup(Cesium) {
+    'use strict';
 //Sandcastle_Begin
-// Set time
 var clock = new Cesium.Clock({
     startTime : Cesium.JulianDate.fromIso8601("2017-07-11T00:00:00Z"),
     stopTime : Cesium.JulianDate.fromIso8601("2017-07-11T24:00:00Z"),
     currentTime : Cesium.JulianDate.fromIso8601("2017-07-11T10:00:00Z"),
-    clockRange : Cesium.ClockRange.LOOP_STOP, // loop when we hit the end time
+    clockRange : Cesium.ClockRange.LOOP_STOP,
     clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-    multiplier : 1000 // how much time to advance each tick
+    multiplier : 1000
 });
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     clockViewModel : new Cesium.ClockViewModel(clock),
-    selectionIndicator : false,
-    shadows : false
+    selectionIndicator : false
 });
 
-// Toggle shadows
 Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
     viewer.shadows = checked;
 });
 
-// set lighting to true
 viewer.scene.globe.enableLighting = true;
-
-// Enable depth testing so things behind the terrain disappear.
 viewer.scene.globe.depthTestAgainstTerrain = true;
 
-// Add terrain
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
@@ -156,13 +149,13 @@ cesiumTerrainProviderMeshes.readyPromise.then(function() {
     }], 'toolbar');
 });
 //Sandcastle_End
-        Sandcastle.finishedLoading();
-    }
-    if (typeof Cesium !== "undefined") {
-        startup(Cesium);
-    } else if (typeof require === "function") {
-        require(["Cesium"], startup);
-    }
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
 </script>
 </body>
 </html>
