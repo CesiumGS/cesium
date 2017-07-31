@@ -214,24 +214,21 @@ void main() {
     // but this kind of statement is nice for a reference implementation
     vec3 viewer = vec3(0.0);
 
+    int width = neighborhoodHalfWidth;
+
+#ifdef dropoutEnabled
     float seed = random(v_textureCoordinates);
-    for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
-        for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
+    if (seed < dropoutFactor) {
+        width = int(float(width) * (1.0 - dropoutFactor));
+    }
+#endif //dropoutEnabled
+
+    for (int i = -width; i <= width; i++) {
+        for (int j = -width; j <= width; j++) {
             // d is the relative offset from the horizon pixel to the center pixel
             // in 2D
             ivec2 d = ivec2(i, j);
             ivec2 pI = pos + d;
-            vec2 normPI = vec2(pI) / czm_viewport.zw;
-
-#ifdef dropoutEnabled
-            // A cheap approximation of randomness -- local neighborhoods are not
-            // sufficiently random, but small changes in the seed yield different
-            // neighborhoods
-            if (fract(seed * dot(normPI, vec2(902433.23341, 303403.963351)))
-                    < dropoutFactor) {
-                continue;
-            }
-#endif //dropoutEnabled
 
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
             vec3 neighborPosition = texelFetch(pointCloud_ECTexture, ivec2(pI), 0).xyz;

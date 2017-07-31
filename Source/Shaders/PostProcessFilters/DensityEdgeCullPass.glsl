@@ -25,22 +25,25 @@ void main() {
     vec2 absNeighborhoodAccum = vec2(0.0);
 
     if (center < EPS) {
+        int width = neighborhoodHalfWidth;
+
+#ifdef dropoutEnabled
         float seed = random(v_textureCoordinates);
+        if (seed < dropoutFactor) {
+            width = int(float(width) * (1.0 - dropoutFactor));
+        }
+#endif //dropoutEnabled
+
+#ifdef dropoutEnabled
+        for (int i = -width; i <= width; i++) {
+            for (int j = -width; j <= width; j++) {
+#else
         for (int i = -neighborhoodHalfWidth; i <= neighborhoodHalfWidth; i++) {
             for (int j = -neighborhoodHalfWidth; j <= neighborhoodHalfWidth; j++) {
+#endif // dropoutEnabled
                 ivec2 d = ivec2(i, j);
                 ivec2 pI = pos + d;
                 vec2 normPI = vec2(pI) / czm_viewport.zw;
-
-#ifdef dropoutEnabled
-                // A cheap approximation of randomness -- local neighborhoods are not
-                // sufficiently random, but small changes in the seed yield different
-                // neighborhoods
-                if (fract(seed * dot(normPI, vec2(902433.23341, 303403.963351)))
-                        < dropoutFactor) {
-                    continue;
-                }
-#endif // dropoutEnabled
 
                 float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
                                                  normPI));
