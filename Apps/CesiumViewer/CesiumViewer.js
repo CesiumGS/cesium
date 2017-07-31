@@ -166,7 +166,7 @@ define([
     }
 
     var camera = viewer.camera;
-    function saveCamera() {
+    function saveCamera(camera) {
         var position = camera.positionCartographic;
         var hpr = '';
         if (defined(camera.heading)) {
@@ -180,7 +180,7 @@ define([
     if (endUserOptions.saveCamera !== 'false') {
         camera.moveStart.addEventListener(function() {
             if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, camera, 1000);
+                updateTimer = window.setInterval(saveCamera, 1000, camera);
             }
         });
         camera.moveEnd.addEventListener(function() {
