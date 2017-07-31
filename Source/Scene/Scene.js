@@ -633,22 +633,6 @@ define([
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
-        this._environmentMap = undefined;
-        var that = this;
-        var texturePath = buildModuleUrl('Assets/Textures/SkyBox/');
-        var paths = {
-            positiveX : texturePath + 'tycho2t3_80_px.jpg',
-            negativeX : texturePath + 'tycho2t3_80_mx.jpg',
-            positiveY : texturePath + 'tycho2t3_80_py.jpg',
-            negativeY : texturePath + 'tycho2t3_80_my.jpg',
-            positiveZ : texturePath + 'tycho2t3_80_pz.jpg',
-            negativeZ : texturePath + 'tycho2t3_80_mz.jpg'
-        };
-        loadCubeMap(context, paths).then(function(environmentMap) {
-            that._environmentMap = environmentMap;
-            environmentMap.sampler = new Sampler();
-        });
-
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -1306,7 +1290,7 @@ define([
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
         frameState.brdfLutGenerator = scene._brdfLutGenerator;
-        frameState.environmentMap = scene._environmentMap;
+        frameState.environmentMap = scene.skyBox && scene.skyBox._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -3356,7 +3340,6 @@ define([
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
-        this._environmentMap = this._environmentMap && this._environmentMap.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
