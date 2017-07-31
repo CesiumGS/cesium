@@ -181,6 +181,7 @@ define([
         camera.changed.addEventListener(function() {
             if (defined(updateTimer)) {
                 window.clearTimeout(updateTimer);
+                updateTimer = undefined;
             }
             updateTimer = window.setTimeout(saveCamera, 1000);
         });
