@@ -178,17 +178,12 @@ define([
 
     var updateTimer;
     if (endUserOptions.saveCamera !== 'false') {
-        camera.moveStart.addEventListener(function() {
-            if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, camera, 1000);
-            }
-        });
-        camera.moveEnd.addEventListener(function() {
+        camera.changed.addEventListener(function() {
             if (defined(updateTimer)) {
-                window.clearInterval(updateTimer);
+                window.clearTimeout(updateTimer);
                 updateTimer = undefined;
             }
-            saveCamera(camera);
+            updateTimer = window.setTimeout(saveCamera, 1000);
         });
     }
 
