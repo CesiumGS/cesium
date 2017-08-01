@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.37 - 2017-09-01
+
+* Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
+
 ### 1.36 - 2017-08-01
 
 * Breaking changes
