@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -34,6 +35,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -90,6 +92,9 @@ define([
 
         initialize(this, arrayBuffer, byteOffset);
     }
+
+    // This can be overridden for testing purposes
+    Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
         /**
@@ -292,8 +297,15 @@ define([
         if (gltfByteLength === 0) {
             throw new RuntimeError('glTF byte length is zero, i3dm must have a glTF to instance.');
         }
-        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
-        byteOffset += gltfByteLength;
+
+        var gltfView;
+        if (byteOffset % 4 === 0) {
+            gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
+        } else {
+            // Create a copy of the glb so that it is 4-byte aligned
+            Instanced3DModel3DTileContent._deprecationWarning('i3dm-glb-unaligned', 'The embedded glb is not aligned to a 4-byte boundary.');
+            gltfView = new Uint8Array(uint8Array.subarray(byteOffset, byteOffset + gltfByteLength));
+        }
 
         // Create model instance collection
         var collectionOptions = {
