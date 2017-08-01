@@ -7,8 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Math',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
+        '../Core/PerspectiveOffCenterFrustum',
         './SceneMode'
     ], function(
         Cartesian2,

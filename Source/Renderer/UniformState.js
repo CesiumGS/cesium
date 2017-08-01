@@ -1,36 +1,40 @@
 define([
+        './Sampler',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/OrthographicFrustum',
         '../Scene/SceneMode'
     ], function(
+        Sampler,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         EncodedCartesian3,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        OrthographicFrustum,
         SceneMode) {
     'use strict';
 
@@ -149,6 +153,9 @@ define([
         this._resolutionScale = 1.0;
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
+
+        this._brdfLut = new Sampler();
+        this._environmentMap = new Sampler();
 
         this._fogDensity = undefined;
 
@@ -797,6 +804,28 @@ define([
         },
 
         /**
+         * The look up texture used to find the BRDF for a material
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        brdfLut : {
+            get : function() {
+                return this._brdfLut;
+            }
+        },
+
+        /**
+         * The environment map of the scene
+         * @memberof UniformState.prototype
+         * @type {Sampler}
+         */
+        environmentMap : {
+            get : function() {
+                return this._environmentMap;
+            }
+        },
+
+        /**
          * @memberof UniformState.prototype
          * @type {Number}
          */
@@ -974,6 +1003,12 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+
+        var brdfLutGenerator = frameState.brdfLutGenerator;
+        var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
+        this._brdfLut = brdfLut;
+
+        this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
 
         this._fogDensity = frameState.fog.density;
 
