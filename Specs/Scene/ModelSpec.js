@@ -2115,8 +2115,20 @@ defineSuite([
         var context = scene.context;
         var uint32Supported = context._elementIndexUint;
         context._elementIndexUint = false;
-        return loadModel(boxUint32Indices).otherwise(function(e) {
+
+        var model = primitives.add(Model.fromGltf({
+            url : boxUint32Indices
+        }));
+
+        return pollToPromise(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            fail('should not resolve');
+        }).otherwise(function(e) {
             expect(e).toBeDefined();
+            primitives.remove(model);
             context._elementIndexUint = uint32Supported;
         });
     });
