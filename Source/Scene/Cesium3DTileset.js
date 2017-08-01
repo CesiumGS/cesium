@@ -663,7 +663,8 @@ define([
             AOViewEnabled : false,
             sigmoidSharpness : 0.2,
             sigmoidDomainOffset : 0.2,
-            dropoutFactor : 0.0
+            dropoutFactor : 0.0,
+            delay : 0
         };
 
         this._pointCloudPostProcessor = new PointCloudPostProcessor(this.pointCloudPostProcessorOptions);

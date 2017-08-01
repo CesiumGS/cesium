@@ -96,6 +96,13 @@
                 <input type="text" size="2" data-bind="value: dropoutFactor">
             </td>
           </tr>
+          <tr>
+            <td>Delay</td>
+            <td>
+                <input type="range" min="0" max="4" step="1" data-bind="value: delay, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: delay">
+            </td>
+          </tr>
         </tbody>
     </table>
 </div>
@@ -133,7 +140,8 @@ var viewModel = {
     pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier,
     sigmoidDomainOffset : tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset,
     sigmoidSharpness : tileset.pointCloudPostProcessorOptions.sigmoidSharpness,
-    dropoutFactor : tileset.pointCloudPostProcessorOptions.dropoutFactor
+    dropoutFactor : tileset.pointCloudPostProcessorOptions.dropoutFactor,
+    delay : tileset.pointCloudPostProcessorOptions.delay
 };
 Cesium.knockout.track(viewModel);
 
@@ -159,6 +167,7 @@ subscribeParameter('pointAttenuationMultiplier');
 subscribeParameter('sigmoidDomainOffset');
 subscribeParameter('sigmoidSharpness');
 subscribeParameter('dropoutFactor');
+subscribeParameter('delay');
 
 Sandcastle.addToggleButton('Enabled', false, function(checked) {
     tileset.pointCloudPostProcessorOptions.enabled = checked;

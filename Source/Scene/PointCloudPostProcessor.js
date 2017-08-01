@@ -103,6 +103,7 @@ define([
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
         this.dropoutFactor = options.dropoutFactor;
+        this.delay = options.delay;
 
         this._pointArray = undefined;
 
@@ -566,6 +567,12 @@ define([
             processor.stencilViewEnabled
         );
 
+        regionGrowingPassStr = replaceConstants(
+            regionGrowingPassStr,
+            'DELAY',
+            processor.delay
+        );
+
         return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
@@ -657,7 +664,7 @@ define([
         var stencilMaskStageStr =
             '#define EPS 1e-8 \n' +
             '#define cutoff 0 \n' +
-            '#define DELAY 0 \n' +
+            '#define DELAY 1 \n' +
             '#define densityScaleFactor 10.0 \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -672,6 +679,12 @@ define([
             stencilMaskStageStr,
             'cutoff',
             iteration
+        );
+
+        stencilMaskStageStr = replaceConstants(
+            stencilMaskStageStr,
+            'DELAY',
+            processor.delay
         );
 
         var framebuffer = processor._framebuffers.stencilMask;
@@ -974,7 +987,8 @@ define([
             tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
             tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
             tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
-            tileset.pointCloudPostProcessorOptions.dropoutFactor !== this.dropoutFactor) {
+            tileset.pointCloudPostProcessorOptions.dropoutFactor !== this.dropoutFactor ||
+            tileset.pointCloudPostProcessorOptions.delay !== this.delay) {
             this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
             this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
             this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
@@ -991,6 +1005,7 @@ define([
             this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
             this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
             this.dropoutFactor = tileset.pointCloudPostProcessorOptions.dropoutFactor;
+            this.delay = tileset.pointCloudPostProcessorOptions.delay;
             dirty = true;
         }
 
