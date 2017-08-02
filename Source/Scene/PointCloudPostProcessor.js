@@ -757,22 +757,14 @@ define([
             'uniform float sigmoidSharpness; \n' +
             'varying vec2 v_textureCoordinates; \n\n' +
             'float sigmoid2(float x, float sharpness) { \n' +
-            '  if (x >= 1.0) return 1.0; \n' +
-            '  else if (x <= -1.0) return -1.0; \n' +
-            '  else { \n' +
-            '    if (sharpness < 0.0) sharpness -= 1.0; \n' +
-            ' \n' +
-            '    if (x > 0.0) return sharpness * x / (sharpness - x + 1.0); \n' +
-            '    else if (x < 0.0) return sharpness * x / (sharpness - abs(x) + 1.0); \n' +
-            '    else return 0.0; \n' +
-            '  } \n' +
+            '    return sharpness * x / (sharpness - x + 1.0);' +
             '} \n\n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '    #ifdef enableAO \n' +
             '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
-            '    ao = clamp(sigmoid2(ao + sigmoidDomainOffset, sigmoidSharpness), 0.0, 1.0); \n' +
+            '    ao = clamp(sigmoid2(clamp(ao + sigmoidDomainOffset, 0.0, 1.0), sigmoidSharpness), 0.0, 1.0); \n' +
             '    color.xyz = color.xyz * ao; \n' +
             '    #endif // enableAO \n' +
             '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
