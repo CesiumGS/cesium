@@ -197,16 +197,45 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.show = style.show.evaluate(frameState, feature);
-            feature.pointSize = style.pointSize.evaluate(frameState, feature);
-            feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor);
-            feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor2);
-            feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
-            feature.labelColor = style.labelColor.evaluateColor(frameState, feature, scratchColor3);
-            feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
-            feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
-            feature.font = style.font.evaluate(frameState, feature);
-            feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            if (defined(style.show)) {
+                feature.show = style.show.evaluate(frameState, feature);
+            }
+
+            if (defined(style.pointSize)) {
+                feature.pointSize = style.pointSize.evaluate(frameState, feature);
+            }
+
+            if (defined(style.pointColor)) {
+                feature.pointColor = style.pointColor.evaluateColor(frameState, feature, scratchColor);
+            }
+
+            if (defined(style.pointOutlineColor)) {
+                feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor2);
+            }
+
+            if (defined(style.pointOutlineWidth)) {
+                feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
+            }
+
+            if (defined(style.labelColor)) {
+                feature.labelColor = style.labelColor.evaluateColor(frameState, feature, scratchColor3);
+            }
+
+            if (defined(style.labelOutlineColor)) {
+                feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
+            }
+
+            if (defined(style.labelOutlineWidth)) {
+                feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
+            }
+
+            if (defined(style.font)) {
+                feature.font = style.font.evaluate(frameState, feature);
+            }
+
+            if (defined(style.labelStyle)) {
+                feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+            }
 
             if (defined(style.labelText)) {
                 feature.labelText = style.labelText.evaluate(frameState, feature);
@@ -222,7 +251,9 @@ define([
                 feature.backgroundPadding = style.backgroundPadding.evaluate(frameState, feature);
             }
 
-            feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+            if (defined(style.backgroundEnabled)) {
+                feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+            }
 
             if (defined(style.scaleByDistance)) {
                 var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
@@ -245,9 +276,17 @@ define([
                 feature.distanceDisplayCondition = undefined;
             }
 
-            feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
-            feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
-            feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
+            if (defined(style.heightOffset)) {
+                feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
+            }
+
+            if (defined(style.anchorLineEnabled)) {
+                feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
+            }
+
+            if (defined(style.anchorLineColor)) {
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
+            }
 
             if (defined(style.image)) {
                 feature.image = style.image.evaluate(frameState, feature);
