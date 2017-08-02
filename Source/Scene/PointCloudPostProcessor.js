@@ -100,6 +100,7 @@ define([
         this.useTriangle = options.useTriangle;
         this.enableAO = options.enableAO;
         this.AOViewEnabled = options.AOViewEnabled;
+        this.depthViewEnabled = options.depthViewEnabled;
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
         this.dropoutFactor = options.dropoutFactor;
@@ -700,22 +701,22 @@ define([
         });
     }
 
-    function debugViewStage(processor, context) {
+        function debugViewStage(processor, context, texture) {
         var uniformMap = {
-            aoTexture : function() {
-                return processor._aoTextures[0];
+            debugTexture : function() {
+                return texture;
             }
         };
 
         var debugViewStageStr =
             '#define EPS 1e-8 \n' +
-            'uniform sampler2D aoTexture; \n' +
+            'uniform sampler2D debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 raw = texture2D(aoTexture, v_textureCoordinates); \n' +
-            '    float occlusion = czm_unpackDepth(raw); \n' +
-            '    gl_FragColor = vec4(occlusion); \n' +
+            '    vec4 raw = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '    float value = czm_unpackDepth(raw); \n' +
+            '    gl_FragColor = vec4(value); \n' +
             '} \n';
 
         return context.createViewportQuadCommand(debugViewStageStr, {
@@ -815,7 +816,12 @@ define([
             owner : processor
         });
 
-        var debugViewCommand = debugViewStage(processor, context);
+        var debugViewCommand;
+        if (processor.AOViewEnabled) {
+            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0]);
+        } else if (processor.depthViewEnabled) {
+            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0]);
+        }
 
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
@@ -972,6 +978,7 @@ define([
             tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
             tileset.pointCloudPostProcessorOptions.maxAbsRatio !== this.maxAbsRatio ||
             tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.depthViewEnabled !== this.depthViewEnabled ||
             tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
             tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
             tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle ||
@@ -988,6 +995,7 @@ define([
             this.densityHalfWidth = tileset.pointCloudPostProcessorOptions.densityHalfWidth;
             this.neighborhoodVectorSize = tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize;
             this.densityViewEnabled = tileset.pointCloudPostProcessorOptions.densityViewEnabled;
+            this.depthViewEnabled = tileset.pointCloudPostProcessorOptions.depthViewEnabled;
             this.stencilViewEnabled = tileset.pointCloudPostProcessorOptions.stencilViewEnabled;
             this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
             this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
@@ -1085,7 +1093,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(blendCommand);
-        if (this.AOViewEnabled && this.enableAO) {
+        if ((this.AOViewEnabled && this.enableAO) || this.depthViewEnabled) {
             commandList.push(debugViewCommand);
         }
 

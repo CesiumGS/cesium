@@ -184,6 +184,15 @@ Sandcastle.addToggleButton('Enable AO', true, function(checked) {
 Sandcastle.addToolbarMenu([{
     text : 'Color View',
     onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
+    }
+}, {
+    text : 'Depth View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = true;
         tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
@@ -191,6 +200,7 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'Density View',
     onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.densityViewEnabled = true;
         tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
@@ -198,6 +208,7 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'Stencil View',
     onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.stencilViewEnabled = true;
         tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
@@ -205,6 +216,7 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'AO View',
     onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
         tileset.pointCloudPostProcessorOptions.AOViewEnabled = true;

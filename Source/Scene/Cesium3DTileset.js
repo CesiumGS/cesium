@@ -678,6 +678,7 @@ define([
             pointAttenuationMultiplier : 2.0,
             useTriangle : false,
             enableAO : true,
+            depthViewEnabled : false,
             AOViewEnabled : false,
             sigmoidSharpness : 0.2,
             sigmoidDomainOffset : 0.2,
