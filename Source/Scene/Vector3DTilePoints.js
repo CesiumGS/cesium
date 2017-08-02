@@ -271,7 +271,7 @@ define([
 
             if (defined(style.distanceDisplayCondition)) {
                 var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
-                feature.distanceDisplatCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
+                feature.distanceDisplayCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
             } else {
                 feature.distanceDisplayCondition = undefined;
             }
