@@ -823,7 +823,7 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          */
-        translucencyByDistancee : {
+        translucencyByDistance : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
