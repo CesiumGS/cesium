@@ -4,7 +4,12 @@
 
 // emulated noperspective
 varying float v_WindowZ;
+
+#ifdef VECTOR_TILE
+uniform vec4 u_highlightColor;
+#else
 varying vec4 v_color;
+#endif
 
 void writeDepthClampedToFarPlane()
 {
@@ -15,6 +20,10 @@ void writeDepthClampedToFarPlane()
 
 void main(void)
 {
+#ifdef VECTOR_TILE
+    gl_FragColor = u_highlightColor;
+#else
     gl_FragColor = v_color;
+#endif
     writeDepthClampedToFarPlane();
 }

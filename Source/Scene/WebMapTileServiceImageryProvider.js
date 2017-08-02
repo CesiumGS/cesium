@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/combine',
         '../Core/Credit',
@@ -12,11 +11,13 @@ define([
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
+        '../Core/Request',
+        '../Core/RequestType',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './ImageryProvider',
-        './UrlTemplateImageryProvider'
+        './TimeDynamicImagery'
     ], function(
         combine,
         Credit,
@@ -30,12 +31,14 @@ define([
         objectToQuery,
         queryToObject,
         Rectangle,
+        Request,
+        RequestType,
         WebMercatorTilingScheme,
         Uri,
         when,
         ImageryProvider,
-        UrlTemplateImageryProvider) {
-    "use strict";
+        TimeDynamicImagery) {
+    'use strict';
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
@@ -51,6 +54,9 @@ define([
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
+     * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {Object} [options.dimensions] A object containing static dimensions and their values.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
@@ -65,6 +71,7 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -93,9 +100,32 @@ define([
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      *
+     * @example
+     * // Example 3. NASA time dynamic weather data (RESTful)
+     * var times = Cesium.TimeIntervalCollection.fromIso8601({
+     *     iso8601: '2015-07-30/2017-06-16/P1D',
+     *     dataCallback: function dataCallback(interval, index) {
+     *         return {
+     *             Time: Cesium.JulianDate.toIso8601(interval.start)
+     *         };
+     *     }
+     * });
+     * var weather = new Cesium.WebMapTileServiceImageryProvider({
+     *     url : 'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/AMSR2_Snow_Water_Equivalent/default/{Time}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
+     *     layer : 'AMSR2_Snow_Water_Equivalent',
+     *     style : 'default',
+     *     tileMatrixSetID : '2km',
+     *     maximumLevel : 5,
+     *     format : 'image/png',
+     *     clock: clock,
+     *     times: times,
+     *     credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+     * });
+     * viewer.imageryLayers.addImageryProvider(weather);
+     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -118,6 +148,9 @@ define([
         if (!defined(options.tileMatrixSetID)) {
             throw new DeveloperError('options.tileMatrixSetID is required.');
         }
+        if (defined(options.times) && !defined(options.clock)) {
+            throw new DeveloperError('options.times was specified, so options.clock is required.');
+        }
         //>>includeEnd('debug');
 
         this._url = options.url;
@@ -129,7 +162,7 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ellipsoid : options.ellipsoid});
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
 
@@ -138,6 +171,24 @@ define([
         this._maximumLevel = options.maximumLevel;
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+        this._dimensions = options.dimensions;
+
+        var that = this;
+        this._reload = undefined;
+        if (defined(options.times)) {
+            this._timeDynamicImagery = new TimeDynamicImagery({
+                clock : options.clock,
+                times : options.times,
+                requestImageFunction : function(x, y, level, request, interval) {
+                    return requestImage(that, x, y, level, request, interval);
+                },
+                reloadFunction : function() {
+                    if (defined(that._reload)) {
+                        that._reload();
+                    }
+                }
+            });
+        }
 
         this._readyPromise = when.resolve(true);
 
@@ -174,11 +225,14 @@ define([
         request : 'GetTile'
     });
 
-    function buildImageUrl(imageryProvider, col, row, level) {
+    function requestImage(imageryProvider, col, row, level, request, interval) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
         var url;
+        var key;
+        var staticDimensions = imageryProvider._dimensions;
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
         if (imageryProvider._url.indexOf('{') >= 0) {
             // resolve tile-URL template
@@ -190,6 +244,22 @@ define([
                 .replace('{TileRow}', row.toString())
                 .replace('{TileCol}', col.toString())
                 .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
+
+            if (defined(staticDimensions)) {
+                for (key in staticDimensions) {
+                    if (staticDimensions.hasOwnProperty(key)) {
+                        url = url.replace('{' + key + '}', staticDimensions[key]);
+                    }
+                }
+            }
+
+            if (defined(dynamicIntervalData)) {
+                for (key in dynamicIntervalData) {
+                    if (dynamicIntervalData.hasOwnProperty(key)) {
+                        url = url.replace('{' + key + '}', dynamicIntervalData[key]);
+                    }
+                }
+            }
         }
         else {
             // build KVP request
@@ -206,6 +276,22 @@ define([
             queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
             queryOptions.format = imageryProvider._format;
 
+            if (defined(staticDimensions)) {
+                for (key in staticDimensions) {
+                    if (staticDimensions.hasOwnProperty(key)) {
+                        queryOptions[key] = staticDimensions[key];
+                    }
+                }
+            }
+
+            if (defined(dynamicIntervalData)) {
+                for (key in dynamicIntervalData) {
+                    if (dynamicIntervalData.hasOwnProperty(key)) {
+                        queryOptions[key] = dynamicIntervalData[key];
+                    }
+                }
+            }
+
             uri.query = objectToQuery(queryOptions);
 
             url = uri.toString();
@@ -216,7 +302,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        return url;
+        return ImageryProvider.loadImage(imageryProvider, url, request);
     }
 
     defineProperties(WebMapTileServiceImageryProvider.prototype, {
@@ -370,7 +456,7 @@ define([
          * @readonly
          */
         ready : {
-            value: true
+            value : true
         },
 
         /**
@@ -412,6 +498,52 @@ define([
             get : function() {
                 return true;
             }
+        },
+        /**
+         * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Clock}
+         */
+        clock : {
+            get : function() {
+                return this._timeDynamicImagery.clock;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.clock = value;
+            }
+        },
+        /**
+         * Gets or sets a time interval collection that is used to get time dynamic parameters. The data of each
+         * TimeInterval is an object containing the keys and values of the properties that are used during
+         * tile requests.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {TimeIntervalCollection}
+         */
+        times : {
+            get : function() {
+                return this._timeDynamicImagery.times;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.times = value;
+            }
+        },
+        /**
+         * Gets or sets an object that contains static dimensions and their values.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Object}
+         */
+        dimensions : {
+            get : function() {
+                return this._dimensions;
+            },
+            set : function(value) {
+                if (this._dimensions !== value) {
+                    this._dimensions = value;
+                    if (defined(this._reload)) {
+                        this._reload();
+                    }
+                }
+            }
         }
     });
 
@@ -436,6 +568,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -443,12 +576,28 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        if (level < this._minimumRetrievingLevel) {
-          return UrlTemplateImageryProvider.transparentCanvas;
+    WebMapTileServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
+        var result;
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval;
+
+        // Try and load from cache
+        if (defined(timeDynamicImagery)) {
+            currentInterval = timeDynamicImagery.currentInterval;
+            result = timeDynamicImagery.getFromCache(x, y, level, request);
         }
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+
+        // Couldn't load from cache
+        if (!defined(result)) {
+            result = requestImage(this, x, y, level, request, currentInterval);
+        }
+
+        // If we are approaching an interval, preload this tile in the next interval
+        if (defined(result) && defined(timeDynamicImagery)) {
+            timeDynamicImagery.checkApproachingInterval(x, y, level, request);
+        }
+
+        return result;
     };
 
     /**

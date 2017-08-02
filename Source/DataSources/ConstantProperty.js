@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -78,12 +77,11 @@ define([
             var hasClone = isDefined && typeof value.clone === 'function';
             var hasEquals = isDefined && typeof value.equals === 'function';
 
-            this._hasClone = hasClone;
-            this._hasEquals = hasEquals;
-
             var changed = !hasEquals || !value.equals(oldValue);
             if (changed) {
-                this._value = !hasClone ? value : value.clone();
+                this._hasClone = hasClone;
+                this._hasEquals = hasEquals;
+                this._value = !hasClone ? value : value.clone(this._value);
                 this._definitionChanged.raiseEvent(this);
             }
         }

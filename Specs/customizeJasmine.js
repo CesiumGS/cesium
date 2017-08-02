@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Source/ThirdParty/when',
         'Specs/addDefaultMatchers',

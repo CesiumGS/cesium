@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
@@ -10,7 +9,7 @@ defineSuite([
     'use strict';
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : 'https://assets.agi.com/stk-terrain/world'
+        url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
     });
 
     it('queries heights', function() {
@@ -95,7 +94,7 @@ defineSuite([
 
     it('works for a dodgy point right near the edge of a tile', function() {
         var stkWorldTerrain = new CesiumTerrainProvider({
-            url : 'https://assets.agi.com/stk-terrain/world'
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
         });
 
         var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];

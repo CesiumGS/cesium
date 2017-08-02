@@ -1,14 +1,13 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
         'Core/Matrix4',
+        'Core/OrthographicFrustum',
+        'Core/OrthographicOffCenterFrustum',
         'Renderer/Pass',
         'Renderer/Texture',
-        'Scene/OrthographicFrustum',
-        'Scene/OrthographicOffCenterFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
@@ -19,10 +18,10 @@ defineSuite([
         Color,
         defaultValue,
         Matrix4,
-        Pass,
-        Texture,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
+        Pass,
+        Texture,
         SceneMode,
         createCamera,
         createContext,
@@ -1247,6 +1246,19 @@ defineSuite([
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_backgroundColor.r == 0.0, czm_backgroundColor.g == 0.25, czm_backgroundColor.b == 0.75, czm_backgroundColor.a == 1.0); ' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_minimumDisableDepthTestDistance', function() {
+        var frameState = createFrameState(context, createMockCamera());
+        context.uniformState.update(frameState);
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_minimumDisableDepthTestDistance == 0.0);' +
             '}';
         expect({
             context : context,

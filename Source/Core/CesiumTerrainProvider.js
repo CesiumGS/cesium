@@ -1,13 +1,14 @@
-/*global define*/
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
+        './AttributeCompression',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
         './defaultValue',
         './defined',
         './defineProperties',
+        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -19,19 +20,22 @@ define([
         './Math',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Request',
+        './RequestType',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileAvailability',
         './TileProviderError'
     ], function(
         Uri,
         when,
+        AttributeCompression,
         BoundingSphere,
         Cartesian3,
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -43,14 +47,15 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Request,
+        RequestType,
         TerrainProvider,
-        throttleRequestByServer,
         TileAvailability,
         TileProviderError) {
     'use strict';
 
     /**
-     * A {@link TerrainProvider} that access terrain data in a Cesium terrain format.
+     * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
      * The format is described on the
      * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Cesium-Terrain-Server|Cesium wiki}.
      *
@@ -70,7 +75,7 @@ define([
      * // Construct a terrain provider that uses per vertex normals for lighting
      * // to add shading detail to an imagery provider.
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/world',
+     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
      *     requestVertexNormals : true
      * });
      *
@@ -204,16 +209,16 @@ define([
                 that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
             }
 
-            var availableTiles = data.available;
+            that._availableTiles = data.available;
 
-            if (defined(availableTiles)) {
-                that._availability = new TileAvailability(that._tilingScheme, availableTiles.length);
+            if (defined(that._availableTiles)) {
+                that._availability = new TileAvailability(that._tilingScheme, that._availableTiles.length);
 
-                for (var level = 0; level < availableTiles.length; ++level) {
+                for (var level = 0; level < that._availableTiles.length; ++level) {
                     if (that._availableLevels && that._availableLevels.indexOf(level) === -1) {
-                        availableTiles[level] = [];
+                        that._availableTiles[level] = [];
                     }
-                    var rangesAtLevel = availableTiles[level];
+                    var rangesAtLevel = that._availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
 
                     for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
@@ -305,12 +310,11 @@ define([
             return {
                 Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
             };
-        } else {
-            var extensions = extensionsList.join('-');
-            return {
-                Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
-            };
         }
+        var extensions = extensionsList.join('-');
+        return {
+            Accept : 'application/vnd.quantized-mesh;extensions=' + extensions + ',application/octet-stream;q=0.9,*/*;q=0.01'
+        };
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -370,24 +374,7 @@ define([
         var vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
         var heightBuffer = encodedVertexBuffer.subarray(vertexCount * 2, 3 * vertexCount);
 
-        var i;
-        var u = 0;
-        var v = 0;
-        var height = 0;
-
-        function zigZagDecode(value) {
-            return (value >> 1) ^ (-(value & 1));
-        }
-
-        for (i = 0; i < vertexCount; ++i) {
-            u += zigZagDecode(uBuffer[i]);
-            v += zigZagDecode(vBuffer[i]);
-            height += zigZagDecode(heightBuffer[i]);
-
-            uBuffer[i] = u;
-            vBuffer[i] = v;
-            heightBuffer[i] = height;
-        }
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
 
         // skip over any additional padding that was added for 2/4 byte alignment
         if (pos % bytesPerIndex !== 0) {
@@ -403,7 +390,8 @@ define([
         // https://code.google.com/p/webgl-loader/source/browse/trunk/samples/loader.js?r=99#55
         // Copyright 2012 Google Inc., Apache 2.0 license.
         var highest = 0;
-        for (i = 0; i < indices.length; ++i) {
+        var length = indices.length;
+        for (var i = 0; i < length; ++i) {
             var code = indices[i];
             indices[i] = highest - code;
             if (code === 0) {
@@ -494,9 +482,8 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
+     *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -504,7 +491,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -527,8 +514,6 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-
         var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
             extensionList.push(this._littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
@@ -537,26 +522,27 @@ define([
             extensionList.push('watermask');
         }
 
-        function tileLoader(tileUrl) {
-            return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
+        if (typeof request === 'boolean') {
+            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
+            request = new Request({
+                throttle : request,
+                throttleByServer : request,
+                type : RequestType.TERRAIN
+            });
         }
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = throttleRequestByServer(url, tileLoader);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = tileLoader(url);
+
+        var promise = loadArrayBuffer(url, getRequestHeader(extensionList), request);
+
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;
         return when(promise, function(buffer) {
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
-            } else {
-                return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
             }
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
         });
     };
 

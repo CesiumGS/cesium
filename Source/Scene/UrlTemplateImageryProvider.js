@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -161,7 +160,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
@@ -268,7 +267,6 @@ define([
                 return this._urlSchemeZeroPadding;
             }
         },
-
 
         /**
          * Gets the URL template to use to use to pick features.  If this property is not specified,
@@ -623,8 +621,8 @@ define([
             }
             that._credit = credit;
 
-            that._urlParts = urlTemplateToParts(that._url, tags);
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
+            that._urlParts = urlTemplateToParts(that._url, tags); //eslint-disable-line no-use-before-define
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags); //eslint-disable-line no-use-before-define
             return true;
         });
     };
@@ -691,12 +689,13 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level) {
+    UrlTemplateImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
@@ -709,7 +708,7 @@ define([
         }
 
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, url, request);
     };
 
     /**
@@ -762,16 +761,20 @@ define([
                 return loadXML(url).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
                 return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url: url,
-                    responseType: format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
             }
+            return loadWithXhr({
+                url : url,
+                responseType : format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();
     };
+
+    var degreesScratchComputed = false;
+    var degreesScratch = new Rectangle();
+    var projectedScratchComputed = false;
+    var projectedScratch = new Rectangle();
 
     function buildImageUrl(imageryProvider, x, y, level) {
         degreesScratchComputed = false;
@@ -781,6 +784,10 @@ define([
             return partFunction(imageryProvider, x, y, level);
         });
     }
+
+    var ijScratchComputed = false;
+    var ijScratch = new Cartesian2();
+    var longitudeLatitudeProjectedScratchComputed = false;
 
     function buildPickFeaturesUrl(imageryProvider, x, y, level, longitude, latitude, format) {
         degreesScratchComputed = false;
@@ -900,9 +907,6 @@ define([
         return imageryProvider._subdomains[index];
     }
 
-    var degreesScratchComputed = false;
-    var degreesScratch = new Rectangle();
-
     function computeDegrees(imageryProvider, x, y, level) {
         if (degreesScratchComputed) {
             return;
@@ -936,9 +940,6 @@ define([
         computeDegrees(imageryProvider, x, y, level);
         return degreesScratch.north;
     }
-
-    var projectedScratchComputed = false;
-    var projectedScratch = new Rectangle();
 
     function computeProjected(imageryProvider, x, y, level) {
         if (projectedScratchComputed) {
@@ -978,9 +979,6 @@ define([
         return imageryProvider.tileHeight;
     }
 
-    var ijScratchComputed = false;
-    var ijScratch = new Cartesian2();
-
     function iTag(imageryProvider, x, y, level, longitude, latitude, format) {
         computeIJ(imageryProvider, x, y, level, longitude, latitude);
         return ijScratch.x;
@@ -1002,6 +1000,7 @@ define([
     }
 
     var rectangleScratch = new Rectangle();
+    var longitudeLatitudeProjectedScratch = new Cartesian3();
 
     function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
         if (ijScratchComputed) {
@@ -1025,9 +1024,6 @@ define([
         return CesiumMath.toDegrees(latitude);
     }
 
-    var longitudeLatitudeProjectedScratchComputed = false;
-    var longitudeLatitudeProjectedScratch = new Cartesian3();
-
     function longitudeProjectedTag(imageryProvider, x, y, level, longitude, latitude, format) {
         computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude);
         return longitudeLatitudeProjectedScratch.x;
@@ -1045,7 +1041,6 @@ define([
             return;
         }
 
-        var projected;
         if (imageryProvider.tilingScheme instanceof GeographicTilingScheme) {
             longitudeLatitudeProjectedScratch.x = CesiumMath.toDegrees(longitude);
             longitudeLatitudeProjectedScratch.y = CesiumMath.toDegrees(latitude);
@@ -1053,7 +1048,7 @@ define([
             var cartographic = cartographicScratch;
             cartographic.longitude = longitude;
             cartographic.latitude = latitude;
-            projected = imageryProvider.tilingScheme.projection.project(cartographic, longitudeLatitudeProjectedScratch);
+            imageryProvider.tilingScheme.projection.project(cartographic, longitudeLatitudeProjectedScratch);
         }
 
         longitudeLatitudeProjectedScratchComputed = true;
