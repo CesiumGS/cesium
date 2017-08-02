@@ -700,14 +700,14 @@ define([
         });
     }
 
-    function aoStage(processor, context) {
+    function debugViewStage(processor, context) {
         var uniformMap = {
             aoTexture : function() {
                 return processor._aoTextures[0];
             }
         };
 
-        var aoStageStr =
+        var debugViewStageStr =
             '#define EPS 1e-8 \n' +
             'uniform sampler2D aoTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -718,7 +718,7 @@ define([
             '    gl_FragColor = vec4(occlusion); \n' +
             '} \n';
 
-        return context.createViewportQuadCommand(aoStageStr, {
+        return context.createViewportQuadCommand(debugViewStageStr, {
             uniformMap : uniformMap,
             renderState : RenderState.fromCache({
             }),
@@ -815,7 +815,7 @@ define([
             owner : processor
         });
 
-        var aoCommand = aoStage(processor, context);
+        var debugViewCommand = debugViewStage(processor, context);
 
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
@@ -874,7 +874,7 @@ define([
         processor._drawCommands.stencilCommands = stencilCommands;
         processor._drawCommands.blendCommand = blendCommand;
         processor._drawCommands.copyCommands = copyCommands;
-        processor._drawCommands.aoCommand = aoCommand;
+        processor._drawCommands.debugViewCommand = debugViewCommand;
         processor._clearCommands = clearCommands;
     }
 
@@ -1060,7 +1060,7 @@ define([
         var stencilCommands = this._drawCommands.stencilCommands;
         var clearCommands = this._clearCommands;
         var blendCommand = this._drawCommands.blendCommand;
-        var aoCommand = this._drawCommands.aoCommand;
+        var debugViewCommand = this._drawCommands.debugViewCommand;
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
         commandList.push(clearCommands['screenSpacePass']);
@@ -1086,7 +1086,7 @@ define([
         // Blend final result back into the main FBO
         commandList.push(blendCommand);
         if (this.AOViewEnabled && this.enableAO) {
-            commandList.push(aoCommand);
+            commandList.push(debugViewCommand);
         }
 
         commandList.push(clearCommands['prior']);
