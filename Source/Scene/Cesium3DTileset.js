@@ -638,13 +638,31 @@ define([
         /**
          * This property handles options for the point cloud post processor
          * <p>
-         * TODO: Write documentation for these properties
+         * @param {Boolean} enabled Whether or not point cloud post processing will occur
+         * @param {Number} occlusionAngle The occlusion angle -- [0, 4 * pi] is represented by [-1, 1]
+         * @param {Number} rangeParameter The equivalent of the range sigma on a bilateral filter; range [0, 1]
+         * @param {Number} neighborhoodHalfWidth Half of the width of the point occlusion operator's kernel size minus 1
+         * @param {Number} densityHalfWidth Half of the width of the density estimation operator's kernel size minus 1
+         * @param {Number} neighborhoodVectorSize Parameter for the edge culling algorithm; decrease to make edge culling more aggressive
+         * @param {Number} maxAbsRatio Parameter for the edge culling algorithm; decrease to make edge culling more aggressive
+         * @param {Boolean} densityViewEnabled Whether or not the density view is enabled
+         * @param {Boolean} stencilViewEnabled Whether or not the stencil view is enabled
+         * @param {Boolean} pointAttenuationMultiplier The factor by which points at the near plane are larger than points at the far plane
+         * @param {Boolean} useTriangle Whether or not to use the triangle wave optimization
+         * @param {Boolean} enableAO Whether or not to blend with ambient occlusion
+         * @param {Boolean} AOViewEnabled Whether or not the ambient occlusion view is enabled
+         * @param {Number} sigmoidSharpness The "sharpness" of the sigmoid function used for AO; closer to 0 is sharper
+         * @param {Number} sigmoidDomainOffset The offset into the domain of the sigmoid function -- used for brightness control
+         * @param {Number} dropoutFactor Used to probabilistically tune the neighbor search; closer to 1.0 means smaller neighborhoods
+         * @param {Number} delay The number of iterations of blurring that valid pixels receive
          * </p>
          *
          * @type {Object}
          * @default {enabled : true, occlusionAngle : 0.1, rangeParameter : 1.0, neighborhoodHalfWidth : 4
          *           numRegionGrowingPasses : 4, densityHalfWidth : 4, neighborhoodVectorSize : 10.0, maxAbsRatio : 0.9
-         *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0}
+         *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0,
+         *           useTriangle : false, enableAO : true, AOViewEnabled : true, sigmoidSharpness : 0.2,
+         *           sigmoidDomainOffset : 0.2, dropoutFactor : 0.0, delay : 0}
          */
         this.pointCloudPostProcessorOptions = {
             enabled : false,
