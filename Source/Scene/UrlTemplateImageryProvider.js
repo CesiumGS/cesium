@@ -160,9 +160,9 @@ define([
      * });
      * // Using custom tags in your template url.
      * var custom = new Cesium.UrlTemplateImageryProvider({
-     *    url : 'https://yoururl/{time}/{z}/{y}/{x}.png',
+     *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
      *    customTags : {
-     *        '{time}': function(imageryProvider, x, y , level) {
+     *        Time: function(imageryProvider, x, y , level) {
      *            return '20171231'
      *        }
      *    }
@@ -578,11 +578,12 @@ define([
             }
             that._credit = credit;
 
-            if (properties.customTags) {
+            if (defined(properties.customTags)) {
                 for (var tag in properties.customTags) {
                     if (properties.customTags.hasOwnProperty(tag)) {
-                        tags[tag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
-                        pickFeaturesTags[tag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
+                        var targetTag = '{' + tag + '}';
+                        tags[targetTag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
+                        pickFeaturesTags[targetTag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
                     }
                 }
             }

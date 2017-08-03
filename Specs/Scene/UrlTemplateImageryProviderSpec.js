@@ -640,14 +640,14 @@ defineSuite([
             tilingScheme: new GeographicTilingScheme(),
             maximumLevel: 6,
             customTags: {
-                '{custom1}': function() { return 'foo';},
-                '{custom2}': function() { return 'bar';}
+                custom1: function() { return 'foo';},
+                custom2: function() { return 'bar';}
             }
         });
 
         return pollToPromise(function() {
             return provider.ready;
-        }).then(function() {console.error('spyon');
+        }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).toEqual('made/up/tms/server/foo/bar/2/1/3.PNG');
 
