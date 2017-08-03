@@ -12,7 +12,7 @@
 #define neighborhoodSize 9
 #define numSectors 8
 
-#define trianglePeriod 1e-2
+#define trianglePeriod 1.0
 #define useTriangle
 #define dropoutEnabled
 

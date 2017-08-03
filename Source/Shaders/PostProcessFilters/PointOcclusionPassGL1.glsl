@@ -12,7 +12,7 @@
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
 #define numSectors 8
 
-#define trianglePeriod 1e-5
+#define trianglePeriod 1.0
 #define useTriangle
 
 uniform float ONE;
