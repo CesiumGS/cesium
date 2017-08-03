@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "geometricError": 0,
   "root": {
@@ -15,7 +15,7 @@
       ]
     },
     "geometricError": 0,
-    "refine": "add",
+    "refine": "ADD",
     "content": {
       "url": "ll.b3dm"
     }

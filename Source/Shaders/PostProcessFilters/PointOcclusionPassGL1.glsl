@@ -1,3 +1,4 @@
+#extension GL_EXT_draw_buffers : enable
 #extension GL_EXT_frag_depth : enable
 
 #define TAU 6.28318530718
@@ -11,15 +12,14 @@
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
 #define numSectors 8
 
-
-#define PERIOD 1e-5
-#define USE_TRIANGLE
+#define trianglePeriod 1.0
+#define useTriangle
 
 uniform float ONE;
 
-uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_ECTexture;
 uniform float occlusionAngle;
+uniform sampler2D sectorLUT;
 varying vec2 v_textureCoordinates;
 
 // TODO: Include Uber copyright
@@ -69,7 +69,7 @@ vec2 quickTwoSum(float a, float b) {
     return vec2(sum, err);
 }
 
-vec2 sum_fp64(vec2 a, vec2 b) {
+vec2 sumFP64(vec2 a, vec2 b) {
     vec2 s, t;
     s = twoSum(a.x, b.x);
     t = twoSum(a.y, b.y);
@@ -80,7 +80,7 @@ vec2 sum_fp64(vec2 a, vec2 b) {
     return s;
 }
 
-vec2 sub_fp64(vec2 a, vec2 b) {
+vec2 subFP64(vec2 a, vec2 b) {
     vec2 s, t;
     s = twoSub(a.x, b.x);
     t = twoSub(a.y, b.y);
@@ -91,7 +91,7 @@ vec2 sub_fp64(vec2 a, vec2 b) {
     return s;
 }
 
-vec2 mul_fp64(vec2 a, vec2 b) {
+vec2 mulFP64(vec2 a, vec2 b) {
     vec2 prod = twoProd(a.x, b.x);
     // y component is for the error
     prod.y += a.x * b.y;
@@ -103,20 +103,32 @@ vec2 mul_fp64(vec2 a, vec2 b) {
 vec2 divFP64(in vec2 a, in vec2 b) {
     float xn = 1.0 / b.x;
     vec2 yn = a * xn;
-    float diff = (sub_fp64(a, mul_fp64(b, yn))).x;
+    float diff = (subFP64(a, mulFP64(b, yn))).x;
     vec2 prod = twoProd(xn, diff);
-    return sum_fp64(yn, prod);
+    return sumFP64(yn, prod);
 }
 
-vec2 sqrt_fp64(vec2 a) {
+vec2 sqrtFP64(in vec2 a) {
     if (a.x == 0.0 && a.y == 0.0) return vec2(0.0, 0.0);
     if (a.x < 0.0) return vec2(0.0 / 0.0, 0.0 / 0.0);
     float x = 1.0 / sqrt(a.x);
     float yn = a.x * x;
     vec2 yn_sqr = twoSqr(yn) * ONE;
-    float diff = sub_fp64(a, yn_sqr).x;
+    float diff = subFP64(a, yn_sqr).x;
     vec2 prod = twoProd(x * 0.5, diff);
-    return sum_fp64(vec2(yn, 0.0), prod);
+    return sumFP64(vec2(yn, 0.0), prod);
+}
+
+vec2 lengthFP64(in vec3 vec) {
+    vec2 highPrecisionX = split(vec.x);
+    vec2 highPrecisionY = split(vec.y);
+    vec2 highPrecisionZ = split(vec.z);
+    vec2 highPrecision =
+        sqrtFP64(sumFP64(sumFP64(
+                             mulFP64(highPrecisionX, highPrecisionX),
+                             mulFP64(highPrecisionY, highPrecisionY)),
+                         mulFP64(highPrecisionZ, highPrecisionZ)));
+    return highPrecision;
 }
 
 float triangle(in float x, in float period) {
@@ -127,10 +139,10 @@ float triangleFP64(in vec2 x, in float period) {
     float lowPrecision = x.x + x.y;
     vec2 floorTerm = split(floor(lowPrecision / period));
     vec2 periodHighPrecision = split(period);
-    vec2 term2 = mul_fp64(periodHighPrecision, floorTerm);
-    vec2 moduloTerm = sub_fp64(x, term2);
+    vec2 term2 = mulFP64(periodHighPrecision, floorTerm);
+    vec2 moduloTerm = subFP64(x, term2);
     vec2 normalized = divFP64(moduloTerm, periodHighPrecision);
-    normalized = sub_fp64(normalized, split(0.5));
+    normalized = subFP64(normalized, split(0.5));
     return abs(normalized.x + normalized.y) + EPS;
 }
 
@@ -140,14 +152,6 @@ float acosFast(in float inX) {
     res *= sqrt(1.0 - x);
 
     return (inX >= 0.0) ? res : PI - res;
-}
-
-float atanFast(in float x) {
-    return PI_4 * x - x * (abs(x) - 1.0) * (0.2447 + 0.0663 * abs(x));
-}
-
-float atan2(in float y, in float x) {
-    return x == 0.0 ? sign(y) * PI / 2.0 : atanFast(y / x);
 }
 
 void modifySectorHistogram(in int index,
@@ -219,27 +223,11 @@ float readSectorHistogram(in int index,
     }
 }
 
-int getSector(in vec2 d) {
-    float angle = (atan2(float(d.y), float(d.x)) + PI) / TAU;
-    return int(angle * float(numSectors));
-}
-
-// Subsamples the neighbor pixel and stores the sector number
-// in each component of the output
-ivec4 getSectors(in vec2 vi) {
-    return ivec4(getSector(vi + vec2(-0.5, 0.5)),
-                 getSector(vi + vec2(0.5, -0.5)),
-                 getSector(vi + vec2(0.5, 0.5)),
-                 getSector(vi + vec2(-0.5, -0.5)));
-}
-
-ivec2 collapseSectors(in ivec4 sectors) {
-    int first = sectors[0];
-    ivec2 collapsed = ivec2(first, first);
-    for (int i = 1; i < 4; i++)
-        if (sectors[i] != first)
-            collapsed.y = sectors[i];
-    return collapsed;
+ivec2 readSectors(in ivec2 sectorPosition) {
+    vec2 texCoordinate = vec2(sectorPosition + ivec2(neighborhoodHalfWidth)) /
+                         float(neighborhoodHalfWidth * 2);
+    vec2 unscaled = texture2D(sectorLUT, texCoordinate).rg;
+    return ivec2(unscaled * float(numSectors));
 }
 
 void main() {
@@ -249,11 +237,14 @@ void main() {
 
     // The position of this pixel in 3D (i.e the position of the point)
     vec3 centerPosition = texture2D(pointCloud_ECTexture, v_textureCoordinates).xyz;
+    bool invalid = false;
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
-    if (length(centerPosition) == 0.)
-        discard;
+    if (length(centerPosition) < EPS) {
+        gl_FragData[0] = vec4(0.0);
+        gl_FragData[1] = vec4(1.0 - EPS);
+    }
 
     // We split our region of interest (the point of interest and its
     // neighbors)
@@ -297,7 +288,7 @@ void main() {
 
             // sectors contains both possible sectors that the
             // neighbor pixel could be in
-            ivec2 sectors = collapseSectors(getSectors(vec2(d)));
+            ivec2 sectors = readSectors(d);
 
             // This is the offset of the horizon point from the center in 3D
             // (a 3D analog of d)
@@ -320,7 +311,7 @@ void main() {
 
             // This horizon point is behind the current point. That means that it can't
             // occlude the current point. So we ignore it and move on.
-            if (angle > maxAngle)
+            if (angle > maxAngle || angle <= 0.0)
                 continue;
             // If we've found a horizon pixel, store it in the histogram
             if (readSectorHistogram(sectors.x, shFirst, shSecond) > angle) {
@@ -344,8 +335,12 @@ void main() {
 
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
-        discard;
+        gl_FragData[0] = vec4(0.0);
+        gl_FragData[1] = vec4(1.0 - EPS);
     } else {
+        float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
+        gl_FragData[1] = czm_packDepth(occlusion);
+
         // Write out the distance of the point
         //
         // We use the distance of the point rather than
@@ -355,7 +350,7 @@ void main() {
         // neighboring points are usually very similar.
         // On the other hand, the x-values and y-values are
         // usually fairly different.
-#ifdef USE_TRIANGLE
+#ifdef useTriangle
         // We can get even more accuracy by passing the 64-bit
         // distance into a triangle wave function that
         // uses 64-bit primitives internally. The region
@@ -384,18 +379,18 @@ void main() {
         // is usually at least an order of magnitude greater than
         // the average delta, so it won't even be considered in
         // the region growing pass.
-        vec2 highPrecisionX = split(centerPosition.x);
-        vec2 highPrecisionY = split(centerPosition.y);
-        vec2 highPrecisionZ = split(centerPosition.z);
-        vec2 highPrecisionLength =
-            sqrt_fp64(sum_fp64(sum_fp64(
-                                   mul_fp64(highPrecisionX, highPrecisionX),
-                                   mul_fp64(highPrecisionY, highPrecisionY)),
-                               mul_fp64(highPrecisionZ, highPrecisionZ)));
-        float triangleResult = triangleFP64(highPrecisionLength, PERIOD);
+        vec2 hpl = lengthFP64(centerPosition);
+        float triangleResult = triangleFP64(hpl, trianglePeriod);
         gl_FragData[0] = czm_packDepth(triangleResult);
 #else
-        gl_FragData[0] = czm_packDepth(length(centerPosition));
+        vec2 lengthOfFrustum = subFP64(split(czm_clampedFrustum.y),
+                                       split(czm_clampedFrustum.x));
+        vec2 frustumStart = split(czm_clampedFrustum.x);
+        vec2 centerPositionLength = lengthFP64(centerPosition);
+        vec2 normalizedDepthFP64 = sumFP64(divFP64(centerPositionLength,
+                                           lengthOfFrustum),
+                                           frustumStart);
+        gl_FragData[0] = czm_packDepth(normalizedDepthFP64.x + normalizedDepthFP64.y);
 #endif
     }
 }

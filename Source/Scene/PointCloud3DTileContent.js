@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
@@ -10,10 +10,12 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
+        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -28,8 +30,10 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
@@ -40,10 +44,12 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         getStringFromTypedArray,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
+        RuntimeError,
         Transforms,
         Buffer,
         BufferUsage,
@@ -58,13 +64,23 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
+
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
 
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Points}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Implements the {@link Cesium3DTileContent} interface.
+     * </p>
      *
      * @alias PointCloud3DTileContent
      * @constructor
@@ -97,6 +113,9 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
+        // Used to determine how to attenuate points
+        this._pointAttenuationMaxSize = 1.0;
+
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -119,7 +138,7 @@ define([
         this._features = undefined;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         this.featurePropertiesDirty = false;
 
@@ -128,7 +147,7 @@ define([
 
     defineProperties(PointCloud3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featuresLength
          */
         featuresLength : {
             get : function() {
@@ -140,7 +159,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#pointsLength
          */
         pointsLength : {
             get : function() {
@@ -149,7 +168,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#trianglesLength
          */
         trianglesLength : {
             get : function() {
@@ -158,7 +177,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#geometryByteLength
          */
         geometryByteLength : {
             get : function() {
@@ -167,7 +186,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#texturesByteLength
          */
         texturesByteLength : {
             get : function() {
@@ -176,7 +195,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTableByteLength
          */
         batchTableByteLength : {
             get : function() {
@@ -188,7 +207,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#innerContents
          */
         innerContents : {
             get : function() {
@@ -197,7 +216,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#readyPromise
          */
         readyPromise : {
             get : function() {
@@ -206,7 +225,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tileset
          */
         tileset : {
             get : function() {
@@ -215,7 +234,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tile
          */
         tile : {
             get : function() {
@@ -224,7 +243,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#url
          */
         url : {
             get : function() {
@@ -233,11 +252,20 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTable
          */
         batchTable : {
             get : function() {
                 return this._batchTable;
+            }
+        },
+
+        /**
+         * @private
+         */
+        pointAttenuationMaxSize : {
+            get : function() {
+                return this._pointAttenuationMaxSize;
             }
         }
     });
@@ -251,23 +279,19 @@ define([
         var view = new DataView(arrayBuffer);
         byteOffset += sizeOfUint32;  // Skip magic
 
-        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Point Cloud tile version 1 is supported.  Version ' + version + ' is not.');
+            throw new RuntimeError('Only Point Cloud tile version 1 is supported.  Version ' + version + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         // Skip byteLength
         byteOffset += sizeOfUint32;
 
         var featureTableJsonByteLength = view.getUint32(byteOffset, true);
-        //>>includeStart('debug', pragmas.debug);
         if (featureTableJsonByteLength === 0) {
-            throw new DeveloperError('Feature table must have a byte length greater than zero');
+            throw new RuntimeError('Feature table must have a byte length greater than zero');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
@@ -306,11 +330,9 @@ define([
         var pointsLength = featureTable.getGlobalProperty('POINTS_LENGTH');
         featureTable.featuresLength = pointsLength;
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(pointsLength)) {
-            throw new DeveloperError('Feature table global property: POINTS_LENGTH must be defined');
+            throw new RuntimeError('Feature table global property: POINTS_LENGTH must be defined');
         }
-        //>>includeEnd('debug');
 
         // Get the positions
         var positions;
@@ -327,27 +349,21 @@ define([
             isQuantized = true;
 
             var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
-            //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeScale)) {
-                throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
+                throw new RuntimeError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
             }
-            //>>includeEnd('debug');
             content._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
 
             var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
-            //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeOffset)) {
-                throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
+                throw new RuntimeError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
             }
-            //>>includeEnd('debug');
             content._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
         }
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
-            throw new DeveloperError('Either POSITION or POSITION_QUANTIZED must be defined.');
+            throw new RuntimeError('Either POSITION or POSITION_QUANTIZED must be defined.');
         }
-        //>>includeEnd('debug');
 
         // Get the colors
         var colors;
@@ -389,11 +405,9 @@ define([
             batchIds = featureTable.getPropertyArray('BATCH_ID', ComponentDatatype.UNSIGNED_SHORT, 1);
 
             var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
-            //>>includeStart('debug', pragmas.debug);
             if (!defined(batchLength)) {
-                throw new DeveloperError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
+                throw new RuntimeError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
             }
-            //>>includeEnd('debug');
 
             if (defined(batchTableBinary)) {
                 // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
@@ -436,6 +450,8 @@ define([
         content._hasNormals = defined(normals);
         content._hasBatchIds = defined(batchIds);
     }
+
+    var scratchPointSizeAndTilesetTime = new Cartesian2();
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -507,17 +523,19 @@ define([
         }
 
         var uniformMap = {
-            u_pointSize : function() {
-                return content._pointSize;
+            u_pointAttenuationMaxSize : function() {
+                return content._pointAttenuationMaxSize;
+            },
+            u_pointSizeAndTilesetTime : function() {
+                scratchPointSizeAndTilesetTime.x = content._pointSize;
+                scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
+                return scratchPointSizeAndTilesetTime;
             },
             u_highlightColor : function() {
                 return content._highlightColor;
             },
             u_constantColor : function() {
                 return content._constantColor;
-            },
-            u_tilesetTime : function() {
-                return content._tileset.timeSinceLoad;
             }
         };
 
@@ -707,7 +725,9 @@ define([
             uniformMap : drawUniformMap,
             renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.CESIUM_3D_TILE,
-            owner : content
+            owner : content,
+            castShadows : false,
+            receiveShadows : false
         });
 
         content._pickCommand = new DrawCommand({
@@ -833,11 +853,9 @@ define([
         // Split default properties from user properties
         var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
 
-        //>>includeStart('debug', pragmas.debug);
         if (usesNormalSemantic && !hasNormals) {
-            throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
+            throw new RuntimeError('Style references the NORMAL semantic but the point cloud does not have normals');
         }
-        //>>includeEnd('debug');
 
         // Disable vertex attributes that aren't used in the style, enable attributes that are
         var styleableShaderAttributes = content._styleableShaderAttributes;
@@ -876,11 +894,9 @@ define([
         for (i = 0; i < length; ++i) {
             name = userProperties[i];
             attribute = styleableShaderAttributes[name];
-            //>>includeStart('debug', pragmas.debug);
             if (!defined(attribute)) {
-                throw new DeveloperError('Style references a property "' + name + '" that does not exist or is not styleable.');
+                throw new RuntimeError('Style references a property "' + name + '" that does not exist or is not styleable.');
             }
-            //>>includeEnd('debug');
 
             var componentCount = attribute.componentCount;
             var attributeName = 'czm_tiles3d_style_' + name;
@@ -897,10 +913,12 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
-                 'uniform float u_pointSize; \n' +
+                 'uniform float u_pointAttenuationMaxSize; \n' +
+                 'uniform vec2 u_pointSizeAndTilesetTime; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
-                 'uniform float u_tilesetTime; \n';
+                 'float u_pointSize; \n' +
+                 'float u_tilesetTime; \n';
 
         vs += attributeDeclarations;
 
@@ -948,7 +966,9 @@ define([
         }
 
         vs += 'void main() \n' +
-              '{ \n';
+              '{ \n' +
+              '    u_pointSize = u_pointSizeAndTilesetTime.x; \n' +
+              '    u_tilesetTime = u_pointSizeAndTilesetTime.y; \n';
 
         if (usesColors) {
             if (isTranslucent) {
@@ -1000,7 +1020,13 @@ define([
             vs += '    gl_PointSize = u_pointSize; \n';
         }
 
-        vs += '    color = color * u_highlightColor; \n';
+        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1.0); \n' +
+              '    position_EC.z *= -1.0; \n\n' +
+              '    float attenuationFactor = \n' +
+              '    ((position_EC.z - czm_clampedFrustum.x) /\n' +
+              '    (czm_clampedFrustum.y - czm_clampedFrustum.x)); \n' +
+              '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor); \n\n' +
+              '    color = color * u_highlightColor; \n';
 
         if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n' +
@@ -1076,13 +1102,8 @@ define([
             // Check if the shader compiles correctly. If not there is likely a syntax error with the style.
             drawCommand.shaderProgram._bind();
         } catch (error) {
-            //>>includeStart('debug', pragmas.debug);
-            // Turn the RuntimeError into a DeveloperError and rephrase it.
-            throw new DeveloperError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
-            //>>includeEnd('debug');
-
-            // In release silently ignore and recreate the shader without a style. Tell esLint to ignore this line.
-            createShaders(content, frameState, undefined);  // eslint-disable-line no-unreachable
+            // Rephrase the error.
+            throw new RuntimeError('Error generating style shader: this may be caused by a type mismatch, index out-of-bounds, or other syntax error.');
         }
     }
 
@@ -1099,7 +1120,7 @@ define([
     }
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#hasProperty
      */
     PointCloud3DTileContent.prototype.hasProperty = function(batchId, name) {
         if (defined(this._batchTable)) {
@@ -1114,35 +1135,35 @@ define([
      * In this context a feature refers to a group of points that share the same BATCH_ID.
      * For example all the points that represent a door in a house point cloud would be a feature.
      *
-     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
+     * Features are backed by a batch table and can be colored, shown/hidden, picked, etc like features
      * in b3dm and i3dm.
      *
      * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
      * are not accessible by getFeature. They are only used for dynamic styling.
      */
     PointCloud3DTileContent.prototype.getFeature = function(batchId) {
-        if (defined(this._batchTable)) {
-            var featuresLength = this.featuresLength;
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
-                throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
-            }
-            //>>includeEnd('debug');
-            createFeatures(this);
-            return this._features[batchId];
+        if (!defined(this._batchTable)) {
+            return undefined;
         }
-        return undefined;
+        var featuresLength = this.featuresLength;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
      */
     PointCloud3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : Color.WHITE;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyStyle
      */
     PointCloud3DTileContent.prototype.applyStyle = function(frameState, style) {
         if (defined(this._batchTable)) {
@@ -1156,7 +1177,7 @@ define([
     var scratchComputedMatrixIn2D = new Matrix4();
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#update
      */
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var modelMatrix = this._tile.computedTransform;
@@ -1210,6 +1231,9 @@ define([
             this._pickCommand.boundingVolume = boundingVolume;
         }
 
+        this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);
+        this._drawCommand.receiveShadows = ShadowMode.receiveShadows(tileset.shadows);
+
         if (this.backFaceCulling !== this._backFaceCulling) {
             this._backFaceCulling = this.backFaceCulling;
             createShaders(this, frameState, tileset.style);
@@ -1236,14 +1260,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     PointCloud3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     PointCloud3DTileContent.prototype.destroy = function() {
         var command = this._drawCommand;

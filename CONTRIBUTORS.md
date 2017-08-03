@@ -42,6 +42,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Mohamad Moneimne](https://github.com/moneimne)
    * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
+   * [Srinivas Kaza](https://github.com/AnimatedRNG)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -82,6 +83,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Joel Depooter](https://github.com/JDepooter)
 * [Bentley Systems, Inc.](https://www.bentley.com)
    * [Paul Connelly](https://github.com/pmconne)
+   * [Jason Crow](https://github.com/jason-crow)
 * [Flightradar24 AB](https://www.flightradar24.com)
    * [Aleksei Kalmykov](https://github.com/kalmykov)
 
@@ -145,3 +147,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Sravan Kumar Kilaru](https://github.com/kilarusravankumar)
 * [Ryan King](https://github.com/ryki2658)
 * [Jason Wohlgemuth](https://github.com/jhwohlgemuth)
+* [Hülya Yurtman](https://github.com/hulyayurtman)
+* [Esra ERİK](https://github.com/esraerik)
+* [Rishabh Shah](https://github.com/rms13)
+* [Rudraksha Shah](https://github.com/Rudraksha20)
+* [Cody Guldner](https://github.com/burn123)
+

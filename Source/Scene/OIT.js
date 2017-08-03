@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Color',
@@ -9,7 +8,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
-        '../Renderer/GLSLModernizer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderSource',
@@ -28,7 +26,6 @@ define([
         ClearCommand,
         DrawCommand,
         Framebuffer,
-        GLSLModernizer,
         PixelDatatype,
         RenderState,
         ShaderSource,
@@ -257,11 +254,6 @@ define([
                 uniformMap : uniformMap,
                 owner : this
             });
-            if (context.webgl2) {
-                this._compositeCommand.shaderProgram =
-                    GLSLModernizer.glslModernizeShaderProgram(
-                        context, this._compositeCommand.shaderProgram);
-            }
         }
 
         if (!defined(this._adjustTranslucentCommand)) {
@@ -284,11 +276,6 @@ define([
                     uniformMap : uniformMap,
                     owner : this
                 });
-                if (context.webgl2) {
-                    this._adjustTranslucentCommand.shaderProgram =
-                        GLSLModernizer.glslModernizeShaderProgram(
-                            context, this._adjustTranslucentCommand.shaderProgram);
-                }
             } else if (this._translucentMultipassSupport) {
                 fs = new ShaderSource({
                     sources : [AdjustTranslucentFS]
@@ -307,11 +294,6 @@ define([
                     uniformMap : uniformMap,
                     owner : this
                 });
-                if (context.webgl2) {
-                    this._adjustTranslucentCommand.shaderProgram =
-                        GLSLModernizer.glslModernizeShaderProgram(
-                            context, this._adjustTranslucentCommand.shaderProgram);
-                }
 
                 uniformMap = {
                     u_bgColor : function() {
@@ -326,11 +308,6 @@ define([
                     uniformMap : uniformMap,
                     owner : this
                 });
-                if (context.webgl2) {
-                    this._adjustAlphaCommand.shaderProgram =
-                        GLSLModernizer.glslModernizeShaderProgram(
-                            context, this._adjustAlphaCommand.shaderProgram);
-                }
             }
         }
 

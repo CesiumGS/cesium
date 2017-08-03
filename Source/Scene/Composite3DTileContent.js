@@ -1,26 +1,36 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/getMagic',
+        '../Core/RuntimeError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
+        FeatureDetection,
         getMagic,
+        RuntimeError,
         when) {
     'use strict';
+
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
 
     /**
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Implements the {@link Cesium3DTileContent} interface.
+     * </p>
      *
      * @alias Composite3DTileContent
      * @constructor
@@ -39,7 +49,7 @@ define([
 
     defineProperties(Composite3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
         featurePropertiesDirty : {
             get : function() {
@@ -123,8 +133,7 @@ define([
         },
 
         /**
-         * Gets the array of {@link Cesium3DTileContent} objects that represent the
-         * content of the composite's inner tiles, which can also be composites.
+         * @inheritdoc Cesium3DTileContent#innerContents
          */
         innerContents : {
             get : function() {
@@ -133,7 +142,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#readyPromise
          */
         readyPromise : {
             get : function() {
@@ -142,7 +151,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tileset
          */
         tileset : {
             get : function() {
@@ -151,7 +160,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tile
          */
         tile : {
             get : function() {
@@ -160,7 +169,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#url
          */
         url : {
             get : function() {
@@ -188,12 +197,10 @@ define([
         var view = new DataView(arrayBuffer);
         byteOffset += sizeOfUint32;  // Skip magic
 
-        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Composite Tile version 1 is supported. Version ' + version + ' is not.');
+            throw new RuntimeError('Only Composite Tile version 1 is supported. Version ' + version + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         // Skip byteLength
@@ -216,12 +223,9 @@ define([
                 var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
                 content._contents.push(innerContent);
                 contentPromises.push(innerContent.readyPromise);
+            } else {
+                throw new RuntimeError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
-            //>>includeStart('debug', pragmas.debug);
-            else {
-                throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
-            }
-            //>>includeEnd('debug');
 
             byteOffset += tileByteLength;
         }
@@ -250,7 +254,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
      */
     Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         var contents = this._contents;
@@ -261,7 +265,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyStyle
      */
     Composite3DTileContent.prototype.applyStyle = function(frameState, style) {
         var contents = this._contents;
@@ -272,7 +276,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#update
      */
     Composite3DTileContent.prototype.update = function(tileset, frameState) {
         var contents = this._contents;
@@ -283,14 +287,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     Composite3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     Composite3DTileContent.prototype.destroy = function() {
         var contents = this._contents;

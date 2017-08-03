@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
@@ -318,9 +317,6 @@ define([
             var hasViewFrom = defined(viewFromProperty);
 
             if (!hasViewFrom && defined(boundingSphere)) {
-                var controller = scene.screenSpaceCameraController;
-                controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
-
                 //The default HPR is not ideal for high altitude objects so
                 //we scale the pitch as we get further from the earth for a more
                 //downward view.

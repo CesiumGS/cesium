@@ -1,13 +1,17 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/PixelFormat',
+        '../Core/PrimitiveType',
+        '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
-        '../Renderer/GLSLModernizer',
         '../Renderer/Pass',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
@@ -18,23 +22,30 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
+        '../Scene/BlendEquation',
+        '../Scene/BlendFunction',
         '../Scene/BlendingState',
         '../Scene/StencilFunction',
         '../Scene/StencilOperation',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL1',
-        '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/PointOcclusionPassGL2',
+        '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
-        '../Shaders/PostProcessFilters/DensityEstimationPass'
+        '../Shaders/PostProcessFilters/DensityEdgeCullPass',
     ], function(
         Color,
+        ComponentDatatype,
         defined,
         destroyObject,
+        Geometry,
+        GeometryAttribute,
         PixelFormat,
+        PrimitiveType,
+        BufferUsage,
         ClearCommand,
         DrawCommand,
         Framebuffer,
-        GLSLModernizer,
         Pass,
         PixelDatatype,
         RenderState,
@@ -45,14 +56,17 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
+        BlendEquation,
+        BlendFunction,
         BlendingState,
         StencilFunction,
         StencilOperation,
         PointOcclusionPassGL1,
-        RegionGrowingPassGL1,
         PointOcclusionPassGL2,
+        RegionGrowingPassGL1,
         RegionGrowingPassGL2,
-        DensityEstimationPass
+        DensityEdgeCullPass
     ) {
     'use strict';
 
@@ -65,14 +79,14 @@ define([
         this._ecTexture = undefined;
         this._depthTextures = undefined;
         this._densityTexture = undefined;
+        this._edgeCullingTexture = undefined;
+        this._sectorLUTTexture = undefined;
+        this._aoTextures = undefined;
         this._dirty = undefined;
-        this._clearStencil = undefined;
         this._drawCommands = undefined;
-        this._stencilCommands = undefined;
-        this._copyCommands = undefined;
-        this._blendCommand = undefined;
         this._clearCommands = undefined;
 
+        this.densityScaleFactor = 10.0;
         this.occlusionAngle = options.occlusionAngle;
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -82,6 +96,80 @@ define([
         this.maxAbsRatio = options.maxAbsRatio;
         this.densityViewEnabled = options.densityViewEnabled;
         this.stencilViewEnabled = options.stencilViewEnabled;
+        this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
+        this.useTriangle = options.useTriangle;
+        this.enableAO = options.enableAO;
+        this.AOViewEnabled = options.AOViewEnabled;
+        this.depthViewEnabled = options.depthViewEnabled;
+        this.sigmoidDomainOffset = options.sigmoidDomainOffset;
+        this.sigmoidSharpness = options.sigmoidSharpness;
+        this.dropoutFactor = options.dropoutFactor;
+        this.delay = options.delay;
+
+        this._pointArray = undefined;
+
+        this._minBlend = {
+            enabled : true,
+            equationRgb : BlendEquation.MIN,
+            equationAlpha : BlendEquation.MIN,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ONE
+        };
+        this._addBlend = {
+            enabled : true,
+            equationRgb : BlendEquation.ADD,
+            equationAlpha : BlendEquation.ADD,
+            functionSourceRgb : BlendFunction.ONE,
+            functionSourceAlpha : BlendFunction.ONE,
+            functionDestinationRgb : BlendFunction.ONE,
+            functionDestinationAlpha : BlendFunction.ONE
+        };
+
+        this._testingFunc = StencilFunction.EQUAL;
+        this._testingOp = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.KEEP
+        };
+        this._writeFunc = StencilFunction.ALWAYS;
+        this._writeOp = {
+            fail : StencilOperation.KEEP,
+            zFail : StencilOperation.KEEP,
+            zPass : StencilOperation.ZERO
+        };
+
+        this._positiveStencilTest = {
+            enabled : true,
+            reference : 0,
+            mask : 1,
+            frontFunction : this._testingFunc,
+            backFunction : this._testingFunc,
+            frontOperation : this._testingOp,
+            backOperation : this._testingOp
+        };
+        this._negativeStencilTest = {
+            enabled : true,
+            reference : 1,
+            mask : 1,
+            frontFunction : this._testingFunc,
+            backFunction : this._testingFunc,
+            frontOperation : this._testingOp,
+            backOperation : this._testingOp
+        };
+        this._stencilWrite = {
+            enabled : true,
+            reference : 1,
+            mask : 0,
+            frontFunction : this._writeFunc,
+            backFunction : this._writeFunc,
+            frontOperation : this._writeOp,
+            backOperation : this._writeOp
+        };
+
+        this.rangeMin = 1e-6;
+        this.rangeMax = 5e-2;
     }
 
     function createSampler() {
@@ -96,11 +184,15 @@ define([
     function destroyFramebuffers(processor) {
         processor._depthTextures[0].destroy();
         processor._depthTextures[1].destroy();
+        processor._ecTexture.destroy();
+        processor._sectorLUTTexture.destroy();
+        processor._aoTextures[0].destroy();
+        processor._aoTextures[1].destroy();
         processor._densityTexture.destroy();
+        processor._edgeCullingTexture.destroy();
         processor._dirty.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
-        processor._ecTexture.destroy();
         var framebuffers = processor._framebuffers;
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
@@ -108,9 +200,56 @@ define([
             }
         }
 
-        processor._depthTextures = undefined;
-        processor._colorTextures = undefined;
         processor._framebuffers = undefined;
+        processor._colorTextures = undefined;
+        processor._ecTexture = undefined;
+        processor._depthTextures = undefined;
+        processor._densityTexture = undefined;
+        processor._edgeCullingTexture = undefined;
+        processor._sectorLUTTexture = undefined;
+        processor._aoTextures = undefined;
+        processor._dirty = undefined;
+        processor._drawCommands = undefined;
+    }
+
+    function generateSectorLUT(processor) {
+        function getSector(dx, dy, numSectors) {
+            var angle = (Math.atan2(dy, dx) + Math.PI) / (2.0 * Math.PI) - 1e-6;
+            return Math.trunc(angle * numSectors);
+        }
+
+        function collapseSectors(dx, dy, numSectors) {
+            var sectors = new Uint8Array(4);
+            sectors[0] = getSector(dx - 0.5, dy + 0.5, numSectors);
+            sectors[1] = getSector(dx + 0.5, dy - 0.5, numSectors);
+            sectors[2] = getSector(dx + 0.5, dy + 0.5, numSectors);
+            sectors[3] = getSector(dx - 0.5, dy - 0.5, numSectors);
+
+            var first = sectors[0];
+            var second = sectors[0];
+            sectors.forEach(function(element) {
+                if (element !== first) {
+                    second = element;
+                }
+            });
+            return new Array(first, second);
+        }
+
+        var numSectors = 8;
+        var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
+        var lut = new Uint8Array(lutSize * lutSize * 4);
+        var start = -Math.trunc(lutSize / 2);
+        var end = -start;
+        for (var i = start; i <= end; i++) {
+            for (var j = start; j <= end; j++) {
+                var offset = ((i + end) + (j + end) * lutSize) * 4;
+                var sectors = collapseSectors(i, j, numSectors);
+                lut[offset] = Math.trunc(256 * (sectors[0] / 8));
+                lut[offset + 1] = Math.trunc(256 * (sectors[1] / 8));
+            }
+        }
+
+        return lut;
     }
 
     function createFramebuffers(processor, context) {
@@ -120,6 +259,7 @@ define([
 
         var colorTextures = new Array(2);
         var depthTextures = new Array(3);
+        var aoTextures = new Array(2);
 
         var ecTexture = new Texture({
             context : context,
@@ -139,6 +279,32 @@ define([
             sampler : createSampler()
         });
 
+        var edgeCullingTexture = new Texture({
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT,
+            sampler : createSampler()
+        });
+
+        // Load the sector LUT that the point occlusion pass needs
+        var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
+        var sectorLUTTexture = new Texture({
+            context : context,
+            width : lutSize,
+            height : lutSize,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : createSampler()
+        });
+        var lutData = generateSectorLUT(processor);
+        sectorLUTTexture.copyFrom({
+            width : lutSize,
+            height : lutSize,
+            arrayBufferView : lutData
+        });
+
         var dirty = new Texture({
             context: context,
             width: screenWidth,
@@ -147,7 +313,7 @@ define([
             pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
             sampler: createSampler()
         });
-        
+
         for (i = 0; i < 2; ++i) {
             colorTextures[i] = new Texture({
                 context : context,
@@ -159,6 +325,15 @@ define([
             });
 
             depthTextures[i] = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
+
+            aoTextures[i] = new Texture({
                 context : context,
                 width : screenWidth,
                 height : screenHeight,
@@ -184,7 +359,18 @@ define([
             }),
             screenSpacePass : new Framebuffer({
                 context : context,
-                colorTextures : [depthTextures[0]],
+                colorTextures : [depthTextures[0], aoTextures[0]],
+                depthStencilTexture: dirty,
+                destroyAttachments : false
+            }),
+            aoBufferA : new Framebuffer({
+                context : context,
+                colorTextures : [aoTextures[1]],
+                destroyAttachments : false
+            }),
+            aoBufferB : new Framebuffer({
+                context : context,
+                colorTextures : [aoTextures[0]],
                 destroyAttachments : false
             }),
             stencilMask : new Framebuffer({
@@ -195,25 +381,31 @@ define([
             densityEstimationPass : new Framebuffer({
                 context : context,
                 colorTextures : [densityMap],
+                depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1],
-                                 depthTextures[1]],
+                                 depthTextures[1],
+                                 aoTextures[1]],
                 depthStencilTexture: dirty,
                 destroyAttachments : false
             }),
             regionGrowingPassB : new Framebuffer({
                 context: context,
                 colorTextures: [colorTextures[0],
-                                depthTextures[0]],
+                                depthTextures[0],
+                                aoTextures[0]],
                 depthStencilTexture: dirty,
                 destroyAttachments: false
             })
         };
         processor._depthTextures = depthTextures;
         processor._densityTexture = densityMap;
+        processor._edgeCullingTexture = edgeCullingTexture;
+        processor._sectorLUTTexture = sectorLUTTexture;
+        processor._aoTextures = aoTextures;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
         processor._dirty = dirty;
@@ -221,29 +413,30 @@ define([
 
     function replaceConstants(sourceStr, constantName, replacement) {
         var r;
-        if (typeof(replacement) === "boolean") {
+        if (typeof(replacement) === 'boolean') {
             if (replacement === false) {
                 r = '#define\\s' + constantName;
                 return sourceStr.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
-            } else {
-                return sourceStr;
             }
-        } else {
-            r = '#define\\s' + constantName + '\\s([0-9.]+)';
-            return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
+                return sourceStr;
         }
+        r = '#define\\s' + constantName + '\\s([0-9.]+)';
+        return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     }
 
-    function pointOcclusionStage(processor, context) {
+     function pointOcclusionStage(processor, context) {
         var uniformMap = {
-            pointCloud_colorTexture : function() {
-                return processor._colorTextures[0];
+            sectorLUT : function() {
+                return processor._sectorLUTTexture;
             },
             pointCloud_ECTexture : function() {
                 return processor._ecTexture;
             },
             occlusionAngle : function() {
                 return processor.occlusionAngle;
+            },
+            dropoutFactor : function() {
+                return processor.dropoutFactor;
             },
             ONE : function() {
                 return 1.0;
@@ -255,18 +448,32 @@ define([
             'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
         );
-        
+
+        pointOcclusionStr = replaceConstants(
+            pointOcclusionStr,
+            'useTriangle',
+            processor.useTriangle
+        );
+
+        if (processor.dropoutFactor < 1e-6) {
+            pointOcclusionStr = replaceConstants(
+                pointOcclusionStr,
+                'dropoutEnabled',
+                false);
+        }
+
         return context.createViewportQuadCommand(pointOcclusionStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
+                stencilTest : processor._positiveStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
         });
     }
 
-    function densityEstimationStage(processor, context) {
+    function densityEdgeCullStage(processor, context) {
         var uniformMap = {
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[0];
@@ -276,24 +483,30 @@ define([
             },
             maxAbsRatio : function() {
                 return processor.maxAbsRatio;
+            },
+            dropoutFactor : function() {
+                return processor.dropoutFactor;
             }
         };
 
-        var densityEstimationStr = replaceConstants(
-            DensityEstimationPass,
+        var densityEdgeCullStr = replaceConstants(
+            DensityEdgeCullPass,
             'neighborhoodHalfWidth',
             processor.densityHalfWidth
         );
 
-        if (context.webgl2) {
-            densityEstimationStr = GLSLModernizer.
-                glslModernizeShaderText(densityEstimationStr, true, true);
+        if (processor.dropoutFactor < 1e-6 || !context.webgl2) {
+            densityEdgeCullStr = replaceConstants(
+                densityEdgeCullStr,
+                'dropoutEnabled',
+                false);
         }
 
-        return context.createViewportQuadCommand(densityEstimationStr, {
+        return context.createViewportQuadCommand(densityEdgeCullStr, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.densityEstimationPass,
             renderState : RenderState.fromCache({
+                stencilTest : processor._negativeStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -302,6 +515,8 @@ define([
 
     function regionGrowingStage(processor, context, iteration) {
         var i = iteration % 2;
+        var rangeMin = processor.rangeMin;
+        var rangeMax = processor.rangeMax;
 
         var uniformMap = {
             pointCloud_colorTexture : function() {
@@ -313,8 +528,17 @@ define([
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
+            pointCloud_aoTexture : function() {
+                return processor._aoTextures[i];
+            },
             rangeParameter : function() {
-                return processor.rangeParameter;
+                if (processor.useTriangle) {
+                    return processor.rangeParameter;
+                }
+                if (processor.rangeParameter < rangeMin) {
+                    return 0.0;
+                }
+                return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
             },
             densityHalfWidth : function() {
                 return processor.densityHalfWidth;
@@ -334,36 +558,27 @@ define([
 
         regionGrowingPassStr = replaceConstants(
             regionGrowingPassStr,
-            'DENSITY_VIEW',
+            'densityView',
             processor.densityViewEnabled
         );
 
         regionGrowingPassStr = replaceConstants(
             regionGrowingPassStr,
-            'STENCIL_VIEW',
+            'stencilView',
             processor.stencilViewEnabled
         );
 
-        var func = StencilFunction.EQUAL;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.KEEP
-        };
-        
+        regionGrowingPassStr = replaceConstants(
+            regionGrowingPassStr,
+            'DELAY',
+            processor.delay
+        );
+
         return context.createViewportQuadCommand(regionGrowingPassStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 0,
-                    mask : 1,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._positiveStencilTest
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -377,6 +592,9 @@ define([
             },
             pointCloud_depthTexture : function() {
                 return processor._depthTextures[i];
+            },
+            pointCloud_aoTexture : function() {
+                return processor._aoTextures[i];
             },
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
@@ -392,37 +610,38 @@ define([
 
         var copyStageStr =
             '#extension GL_EXT_draw_buffers : enable \n' +
-            '#define DENSITY_VIEW \n' +
-            '#define densityScaleFactor 32.0 \n' +
+            '#define densityView \n' +
+            '#define densityScaleFactor 10.0 \n' +
             '#define EPS 1e-6 \n' +
             'uniform int densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_depthTexture; \n' +
+            'uniform sampler2D pointCloud_aoTexture; \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
             '    float depth = czm_unpackDepth(rawDepth); \n' +
             '    if (depth > EPS) { \n' +
-            '        #ifdef DENSITY_VIEW \n' +
-            '        float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
+            '        #ifdef densityView \n' +
+            '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
             '        gl_FragData[1] = rawDepth; \n' +
+            '        gl_FragData[2] = rawAO; \n' +
+            '    }  else { \n' +
+            '       gl_FragData[1] = czm_packDepth(0.0); ' +
+            '       gl_FragData[2] = czm_packDepth(1.0 - EPS); ' +
             '    } \n' +
             '} \n';
 
-        if (context.webgl2) {
-            copyStageStr = GLSLModernizer.
-                glslModernizeShaderText(copyStageStr,
-                                    true, true);
-        }
         copyStageStr = replaceConstants(
             copyStageStr,
-            'DENSITY_VIEW',
+            'densityView',
             processor.densityViewEnabled
         );
 
@@ -445,45 +664,64 @@ define([
 
         var stencilMaskStageStr =
             '#define EPS 1e-8 \n' +
-            '#define CUTOFF 0 \n' +
-            '#define DELAY 0 \n' +
-            '#define densityScaleFactor 32.0 \n' +
+            '#define cutoff 0 \n' +
+            '#define DELAY 1 \n' +
+            '#define densityScaleFactor 10.0 \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    float density = densityScaleFactor * czm_unpackDepth(texture2D(pointCloud_densityTexture, v_textureCoordinates)); \n' +
-            '    if (float(CUTOFF - DELAY) + EPS > density) \n' +
+            '    float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
+            '    if (float(cutoff - DELAY) + EPS > density) \n' +
             '        discard; \n' +
             '} \n';
 
         stencilMaskStageStr = replaceConstants(
             stencilMaskStageStr,
-            'CUTOFF',
+            'cutoff',
             iteration
+        );
+
+        stencilMaskStageStr = replaceConstants(
+            stencilMaskStageStr,
+            'DELAY',
+            processor.delay
         );
 
         var framebuffer = processor._framebuffers.stencilMask;
 
-        var func = StencilFunction.ALWAYS;
-        var op = {
-            fail : StencilOperation.KEEP,
-            zFail : StencilOperation.KEEP,
-            zPass : StencilOperation.ZERO
-        };
         return context.createViewportQuadCommand(stencilMaskStageStr, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
-                stencilTest : {
-                    enabled : true,
-                    reference : 1,
-                    mask : 0,
-                    frontFunction : func,
-                    backFunction : func,
-                    frontOperation : op,
-                    backOperation : op
-                }
+                stencilTest : processor._stencilWrite
+            }),
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+    }
+
+        function debugViewStage(processor, context, texture) {
+        var uniformMap = {
+            debugTexture : function() {
+                return texture;
+            }
+        };
+
+        var debugViewStageStr =
+            '#define EPS 1e-8 \n' +
+            'uniform sampler2D debugTexture; \n' +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    vec4 raw = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '    float value = czm_unpackDepth(raw); \n' +
+            '    gl_FragColor = vec4(value); \n' +
+            '} \n';
+
+        return context.createViewportQuadCommand(debugViewStageStr, {
+            uniformMap : uniformMap,
+            renderState : RenderState.fromCache({
             }),
             pass : Pass.CESIUM_3D_TILE,
             owner : processor
@@ -491,80 +729,83 @@ define([
     }
 
     function createCommands(processor, context) {
+        processor._drawCommands = {};
         var numRegionGrowingPasses = processor.numRegionGrowingPasses;
-        var drawCommands = new Array(numRegionGrowingPasses + 2);
+        var regionGrowingCommands = new Array(numRegionGrowingPasses);
         var stencilCommands = new Array(numRegionGrowingPasses);
         var copyCommands = new Array(2);
 
         var i;
-        drawCommands[0] = pointOcclusionStage(processor, context);
-        drawCommands[1] = densityEstimationStage(processor, context);
+        processor._drawCommands.densityEdgeCullCommand = densityEdgeCullStage(processor, context);
+        processor._drawCommands.pointOcclusionCommand = pointOcclusionStage(processor, context);
 
         for (i = 0; i < numRegionGrowingPasses; i++) {
-            drawCommands[i + 2] = regionGrowingStage(processor, context, i);
+            regionGrowingCommands[i] = regionGrowingStage(processor, context, i);
             stencilCommands[i] = stencilMaskStage(processor, context, i);
         }
 
         copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
-        
-        for (i = 0; i < drawCommands.length; i++) {
-            var shaderProgram = drawCommands[i].shaderProgram;
-            var vsSource = shaderProgram.vertexShaderSource.clone();
-            var fsSource = shaderProgram.fragmentShaderSource.clone();
-            var attributeLocations = shaderProgram._attributeLocations;
-            for (var a = 0; a < vsSource.sources.length; a++) {
-                if (context.webgl2) {
-                    vsSource.sources[a] = GLSLModernizer.glslModernizeShaderText(
-                        vsSource.sources[a], false, true);
-                }
-            }
-            drawCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
-                vertexShaderSource : vsSource,
-                fragmentShaderSource : fsSource,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        for (i = 0; i < copyCommands.length; i++) {
-            var copyProgram = copyCommands[i].shaderProgram;
-            var vsSourceCopy = copyProgram.vertexShaderSource.clone();
-            var fsSourceCopy = copyProgram.fragmentShaderSource.clone();
-            var attributeLocationsCopy =
-                copyProgram._attributeLocations;
-            for (var b = 0; b < vsSource.sources.length; b++) {
-                if (context.webgl2) {
-                    vsSourceCopy.sources[b] = GLSLModernizer.glslModernizeShaderText(
-                        vsSourceCopy.sources[b], false, true);
-                }
-            }
-
-            copyCommands[i].shaderProgram = context.shaderCache.getShaderProgram({
-                vertexShaderSource : vsSourceCopy,
-                fragmentShaderSource : fsSourceCopy,
-                attributeLocations : attributeLocationsCopy
-            });
-        }
 
         var blendFS =
+            '#define EPS 1e-8 \n' +
+            '#define enableAO' +
+            '#extension GL_EXT_frag_depth : enable \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
+            'uniform sampler2D pointCloud_depthTexture; \n' +
+            'uniform sampler2D pointCloud_aoTexture; \n' +
+            'uniform float sigmoidDomainOffset; \n' +
+            'uniform float sigmoidSharpness; \n' +
+            'varying vec2 v_textureCoordinates; \n\n' +
+            'float sigmoid(float x, float sharpness) { \n' +
+            '    return sharpness * x / (sharpness - x + 1.0);' +
+            '} \n\n' +
             'void main() \n' +
             '{ \n' +
             '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    gl_FragColor = color; \n' +
+            '    #ifdef enableAO \n' +
+            '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
+            '    ao = clamp(sigmoid(clamp(ao + sigmoidDomainOffset, 0.0, 1.0), sigmoidSharpness), 0.0, 1.0); \n' +
+            '    color.xyz = color.xyz * ao; \n' +
+            '    #endif // enableAO \n' +
+            '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
+            '    if (length(rayDist) < EPS) { \n' +
+            '        discard;' +
+            '    } else { \n' +
+            '        float frustumLength = czm_clampedFrustum.y - czm_clampedFrustum.x; \n' +
+            '        float scaledRayDist = rayDist * frustumLength + czm_clampedFrustum.x; \n' +
+            '        vec4 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord))); \n' +
+            '        float depth = czm_eyeToWindowCoordinates(ray * scaledRayDist).z; \n' +
+            '        gl_FragColor = color; \n' +
+            '        gl_FragDepthEXT = depth; \n' +
+            '    }' +
             '} \n';
 
         var blendRenderState = RenderState.fromCache({
             blending : BlendingState.ALPHA_BLEND
         });
 
+        blendFS = replaceConstants(
+            blendFS,
+            'enableAO',
+            processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
+        );
+
         var blendUniformMap = {
-            pointCloud_colorTexture: function() {
-                return processor._colorTextures[1 - drawCommands.length % 2];
+            pointCloud_colorTexture : function() {
+                return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_depthTexture: function() {
-                return processor._depthTextures[1 - drawCommands.length % 2];
+            pointCloud_depthTexture : function() {
+                return processor._depthTextures[1 - numRegionGrowingPasses % 2];
+            },
+            pointCloud_aoTexture : function() {
+                return processor._aoTextures[1 - numRegionGrowingPasses % 2];
+            },
+            sigmoidDomainOffset : function() {
+                return processor.sigmoidDomainOffset;
+            },
+            sigmoidSharpness : function() {
+                return processor.sigmoidSharpness;
             }
         };
 
@@ -575,44 +816,91 @@ define([
             owner : processor
         });
 
+        var debugViewCommand;
+        if (processor.AOViewEnabled) {
+            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0]);
+        } else if (processor.depthViewEnabled) {
+            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0]);
+        }
+
         var framebuffers = processor._framebuffers;
         var clearCommands = {};
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
-                clearCommands[name] = new ClearCommand({
-                    framebuffer : framebuffers[name],
-                    color : new Color(0.0, 0.0, 0.0, 0.0),
-                    depth : 1.0,
-                    stencil : 1.0,
-                    renderState : RenderState.fromCache(),
-                    pass : Pass.CESIUM_3D_TILE,
-                    owner : processor
-                });
+                // The screen space pass should consider
+                // the stencil value, so we don't clear it
+                // here. 1.0 / densityScale is the base density
+                // for invalid pixels, so we clear to that.
+                // Also we want to clear the AO buffer to white
+                // so that the pixels that never get region-grown
+                // do not appear black
+                if (name === 'screenSpacePass') {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else if (name === 'densityEstimationPass') {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(1.0 / processor.densityScaleFactor, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else if (name === 'aoBufferA' ||
+                           name === 'aoBufferB') {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(1.0, 1.0, 1.0, 1.0),
+                        depth : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                } else {
+                    clearCommands[name] = new ClearCommand({
+                        framebuffer : framebuffers[name],
+                        color : new Color(0.0, 0.0, 0.0, 0.0),
+                        depth : 1.0,
+                        stencil : 1.0,
+                        renderState : RenderState.fromCache(),
+                        pass : Pass.CESIUM_3D_TILE,
+                        owner : processor
+                    });
+                }
             }
         }
 
-        processor._drawCommands = drawCommands;
-        processor._stencilCommands = stencilCommands;
-        processor._blendCommand = blendCommand;
+        processor._drawCommands.regionGrowingCommands = regionGrowingCommands;
+        processor._drawCommands.stencilCommands = stencilCommands;
+        processor._drawCommands.blendCommand = blendCommand;
+        processor._drawCommands.copyCommands = copyCommands;
+        processor._drawCommands.debugViewCommand = debugViewCommand;
         processor._clearCommands = clearCommands;
-        processor._copyCommands = copyCommands;
     }
 
     function createResources(processor, context, dirty) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
-        var drawCommands = processor._drawCommands;
-        var stencilCommands = processor._stencilCommands;
+        var regionGrowingCommands = (defined(processor._drawCommands)) ? processor._drawCommands.regionGrowingCommands : undefined;
+        var stencilCommands = (defined(processor._drawCommands)) ? processor._drawCommands.stencilCommands : undefined;
+        var nowDirty = false;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
              (colorTextures[0].height !== screenHeight));
 
         if (!defined(colorTextures)) {
             createFramebuffers(processor, context);
+            nowDirty = true;
         }
 
-        if (!defined(drawCommands) || !defined(stencilCommands) || dirty) {
+        if (!defined(regionGrowingCommands) || !defined(stencilCommands) || dirty) {
             createCommands(processor, context);
         }
 
@@ -620,18 +908,20 @@ define([
             destroyFramebuffers(processor);
             createFramebuffers(processor, context);
             createCommands(processor, context);
+            nowDirty = true;
         }
+        return nowDirty;
     }
 
     function processingSupported(context) {
-        return context.depthTexture;
+        return context.depthTexture && context.blendMinmax;
     }
 
     function getECShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'EC');
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
- 
+
             var vs = shaderProgram.vertexShaderSource.clone();
             var fs = shaderProgram.fragmentShaderSource.clone();
 
@@ -639,7 +929,7 @@ define([
                 source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
                 return source;
             });
-            
+
             fs.sources = fs.sources.map(function(source) {
                 source = ShaderSource.replaceMain(source, 'czm_point_cloud_post_process_main');
                 source = source.replace(/gl_FragColor/g, 'gl_FragData[0]');
@@ -663,64 +953,86 @@ define([
                 '    gl_FragData[1] = vec4(v_positionECPS, 0); \n' +
                 '}');
 
-            if (context.webgl2) {
-                GLSLModernizer.glslModernizeShaderSource(vs, false);
-                GLSLModernizer.glslModernizeShaderSource(fs, true);
-            }
-
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'EC', {
                 vertexShaderSource : vs,
                 fragmentShaderSource : fs,
                 attributeLocations : attributeLocations
             });
         }
-        
+
         return shader;
     }
 
-    PointCloudPostProcessor.prototype.update = function(frameState, commandStart, options) {
+    PointCloudPostProcessor.prototype.update = function(frameState, commandStart, tileset) {
         if (!processingSupported(frameState.context)) {
             return;
         }
 
         var dirty = false;
         // Set options here
-        if (options.occlusionAngle !== this.occlusionAngle ||
-            options.rangeParameter !== this.rangeParameter ||
-            options.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
-            options.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
-            options.densityHalfWidth !== this.densityHalfWidth ||
-            options.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
-            options.maxAbsRatio !== this.maxAbsRatio ||
-            options.densityViewEnabled !== this.densityViewEnabled ||
-            options.stencilViewEnabled !== this.stencilViewEnabled) {
-            this.occlusionAngle = options.occlusionAngle;
-            this.rangeParameter = options.rangeParameter;
-            this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
-            this.numRegionGrowingPasses = options.numRegionGrowingPasses;
-            this.densityHalfWidth = options.densityHalfWidth;
-            this.neighborhoodVectorSize = options.neighborhoodVectorSize;
-            this.densityViewEnabled = options.densityViewEnabled;
-            this.stencilViewEnabled = options.stencilViewEnabled;
-            this.maxAbsRatio = options.maxAbsRatio;
+        if (tileset.pointCloudPostProcessorOptions.occlusionAngle !== this.occlusionAngle ||
+            tileset.pointCloudPostProcessorOptions.rangeParameter !== this.rangeParameter ||
+            tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
+            tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses !== this.numRegionGrowingPasses ||
+            tileset.pointCloudPostProcessorOptions.densityHalfWidth !== this.densityHalfWidth ||
+            tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
+            tileset.pointCloudPostProcessorOptions.maxAbsRatio !== this.maxAbsRatio ||
+            tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.depthViewEnabled !== this.depthViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
+            tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle ||
+            tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
+            tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
+            tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
+            tileset.pointCloudPostProcessorOptions.dropoutFactor !== this.dropoutFactor ||
+            tileset.pointCloudPostProcessorOptions.delay !== this.delay) {
+            this.occlusionAngle = tileset.pointCloudPostProcessorOptions.occlusionAngle;
+            this.rangeParameter = tileset.pointCloudPostProcessorOptions.rangeParameter;
+            this.neighborhoodHalfWidth = tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth;
+            this.numRegionGrowingPasses = tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses;
+            this.densityHalfWidth = tileset.pointCloudPostProcessorOptions.densityHalfWidth;
+            this.neighborhoodVectorSize = tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize;
+            this.densityViewEnabled = tileset.pointCloudPostProcessorOptions.densityViewEnabled;
+            this.depthViewEnabled = tileset.pointCloudPostProcessorOptions.depthViewEnabled;
+            this.stencilViewEnabled = tileset.pointCloudPostProcessorOptions.stencilViewEnabled;
+            this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
+            this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
+            this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;
+            this.enableAO = tileset.pointCloudPostProcessorOptions.enableAO;
+            this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
+            this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
+            this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
+            this.dropoutFactor = tileset.pointCloudPostProcessorOptions.dropoutFactor;
+            this.delay = tileset.pointCloudPostProcessorOptions.delay;
             dirty = true;
         }
 
-        if (!options.enabled) {
+        if (!tileset.pointCloudPostProcessorOptions.enabled) {
             return;
         }
 
-        createResources(this, frameState.context, dirty);
+        dirty |= createResources(this, frameState.context, dirty);
 
         // Render point cloud commands into an offscreen FBO.
         var i;
         var commandList = frameState.commandList;
         var commandEnd = commandList.length;
+
+        var attenuationMultiplier = this.pointAttenuationMultiplier;
+        var attenuationUniformFunction = function() {
+            return attenuationMultiplier;
+        };
+
         for (i = commandStart; i < commandEnd; ++i) {
             var command = commandList[i];
+            if (command.primitiveType !== PrimitiveType.POINTS) {
+                continue;
+            }
 
             var derivedCommand = command.derivedCommands.pointCloudProcessor;
-            if (!defined(derivedCommand) || command.dirty) {
+            if (!defined(derivedCommand) || command.dirty || dirty) {
                 derivedCommand = DrawCommand.shallowClone(command);
                 command.derivedCommands.pointCloudProcessor = derivedCommand;
 
@@ -728,44 +1040,63 @@ define([
                 derivedCommand.shaderProgram = getECShaderProgram(frameState.context, command.shaderProgram);
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
+
+                var derivedCommandRenderState = derivedCommand.renderState;
+                derivedCommandRenderState.stencilTest = this._stencilWrite;
+                derivedCommand.renderState = RenderState.fromCache(
+                    derivedCommandRenderState
+                );
+
+                // TODO: Even if the filter is disabled,
+                // point attenuation settings are not! Fix this behavior.
+                var derivedCommandUniformMap = derivedCommand.uniformMap;
+                derivedCommandUniformMap['u_pointAttenuationMaxSize'] = attenuationUniformFunction;
+                derivedCommand.uniformMap = derivedCommandUniformMap;
+
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
+                command.dirty = false;
             }
-            
+
             commandList[i] = derivedCommand;
         }
 
         // Apply processing commands
-        var drawCommands = this._drawCommands;
-        var copyCommands = this._copyCommands;
-        var stencilCommands = this._stencilCommands;
+        var densityEdgeCullCommand = this._drawCommands.densityEdgeCullCommand;
+        var pointOcclusionCommand = this._drawCommands.pointOcclusionCommand;
+        var regionGrowingCommands = this._drawCommands.regionGrowingCommands;
+        var copyCommands = this._drawCommands.copyCommands;
+        var stencilCommands = this._drawCommands.stencilCommands;
         var clearCommands = this._clearCommands;
-        var length = drawCommands.length;
-        for (i = 0; i < length; ++i) {
-            // So before each draw call, we should clean up the dirty
-            // framebuffers that we left behind on the *previous* pass
-            if (i == 0) {
-                commandList.push(clearCommands['screenSpacePass']);
+        var blendCommand = this._drawCommands.blendCommand;
+        var debugViewCommand = this._drawCommands.debugViewCommand;
+        var numRegionGrowingCommands = regionGrowingCommands.length;
+
+        commandList.push(clearCommands['screenSpacePass']);
+        commandList.push(clearCommands['aoBufferB']);
+        commandList.push(pointOcclusionCommand);
+        commandList.push(clearCommands['densityEstimationPass']);
+        commandList.push(densityEdgeCullCommand);
+
+        for (i = 0; i < numRegionGrowingCommands; i++) {
+            if (i % 2 === 0) {
+                commandList.push(clearCommands['regionGrowingPassA']);
+                commandList.push(clearCommands['aoBufferA']);
             } else {
-                if (i == 1) {
-                    commandList.push(clearCommands['densityEstimationPass']);
-                } else {
-                    if (i % 2 == 0)
-                        commandList.push(clearCommands['regionGrowingPassA']);
-                    else
-                        commandList.push(clearCommands['regionGrowingPassB']);
-                }
+                commandList.push(clearCommands['regionGrowingPassB']);
+                commandList.push(clearCommands['aoBufferB']);
             }
 
-            if (i >= 2) {
-                commandList.push(copyCommands[i % 2]);
-                commandList.push(stencilCommands[i - 2]);
-            }
-            commandList.push(drawCommands[i]);
+            commandList.push(copyCommands[i % 2]);
+            commandList.push(stencilCommands[i]);
+            commandList.push(regionGrowingCommands[i]);
         }
 
         // Blend final result back into the main FBO
-        commandList.push(this._blendCommand);
-        
+        commandList.push(blendCommand);
+        if ((this.AOViewEnabled && this.enableAO) || this.depthViewEnabled) {
+            commandList.push(debugViewCommand);
+        }
+
         commandList.push(clearCommands['prior']);
     };
 

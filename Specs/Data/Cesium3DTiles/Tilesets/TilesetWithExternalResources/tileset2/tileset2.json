@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "geometricError": 70,
   "root": {
@@ -15,7 +15,7 @@
       ]
     },
     "geometricError": 70,
-    "refine": "add",
+    "refine": "ADD",
     "children": [
       {
         "boundingVolume": {
@@ -29,7 +29,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "add",
+        "refine": "ADD",
         "content": {
           "url": "external.b3dm"
         },
@@ -64,7 +64,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "add",
+        "refine": "ADD",
         "content": {
           "url": "external.i3dm"
         },
@@ -99,7 +99,7 @@
           ]
         },
         "geometricError": 70,
-        "refine": "add",
+        "refine": "ADD",
         "content": {
           "url": "embed.i3dm"
         },

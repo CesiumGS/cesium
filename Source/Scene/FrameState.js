@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './SceneMode'
     ], function(
@@ -38,6 +37,18 @@ define([
          * @type {ShadowMap[]}
          */
         this.shadowMaps = [];
+
+        /**
+         * The BRDF look up texture generator used for image-based lighting for PBR models
+         * @type {BrdfLutGenerator}
+         */
+        this.brdfLutGenerator = undefined;
+
+        /**
+         * The environment map used for image-based lighting for PBR models
+         * @type {CubeMap}
+         */
+        this.environmentMap = undefined;
 
         /**
          * The current mode of the scene.

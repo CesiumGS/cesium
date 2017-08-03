@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-  - '4.3'
+  - "6"
 sudo: false
 before_script:
   - export DISPLAY=:99.0
@@ -12,16 +12,17 @@ script:
   - echo -en 'travis_fold:end:script.deployPending\\r'
 
   - echo 'eslint' && echo -en 'travis_fold:start:script.eslint\\r'
-  - npm run eslint -- --failTaskOnError
+  - npm run eslint
   - echo -en 'travis_fold:end:script.eslint\\r'
 
   - echo 'test webgl-stub' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run build
   - npm run test -- --browsers Electron --webgl-stub --failTaskOnError --suppressPassed
   - echo -en 'travis_fold:end:script.test\\r'
 
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
   - npm run clean
-  - npm run makeZipFile
+  - npm run makeZipFile -- --concurrency 2
   - npm pack
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 

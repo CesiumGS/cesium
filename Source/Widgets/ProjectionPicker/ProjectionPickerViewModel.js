@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Scene/OrthographicFrustum',
+        '../../Core/OrthographicFrustum',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../createCommand'

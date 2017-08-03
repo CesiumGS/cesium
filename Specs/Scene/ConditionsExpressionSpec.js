@@ -1,9 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ConditionsExpression',
+        'Core/Cartesian4',
         'Core/Color'
     ], function(
         ConditionsExpression,
+        Cartesian4,
         Color) {
     'use strict';
 
@@ -25,12 +26,12 @@ defineSuite([
         ]
     };
 
-    var additionalExpressions = {
+    var defines = {
         halfHeight: '${Height}/2',
         quarterHeight: '${Height}/4'
     };
 
-    var jsonExpWithAdditionalExpressions = {
+    var jsonExpWithDefines = {
         conditions : [
             ['${halfHeight} > 50 && ${halfHeight} < 100', 'color("blue")'],
             ['${quarterHeight} > 50 && ${quarterHeight} < 52', 'color("red")'],
@@ -50,11 +51,27 @@ defineSuite([
         expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
     });
 
-    it('evaluates conditional with additional expressions', function() {
-        var expression = new ConditionsExpression(jsonExpWithAdditionalExpressions, additionalExpressions);
+    it('evaluates conditional with defines', function() {
+        var expression = new ConditionsExpression(jsonExpWithDefines, defines);
         expect(expression.evaluateColor(frameState, new MockFeature(101))).toEqual(Color.BLUE);
         expect(expression.evaluateColor(frameState, new MockFeature(52))).toEqual(Color.LIME);
         expect(expression.evaluateColor(frameState, new MockFeature(3))).toEqual(Color.LIME);
+    });
+
+    it('evaluate takes result argument', function() {
+        var result = new Cartesian4();
+        var expression = new ConditionsExpression(jsonExpWithDefines, defines, result);
+        var value = expression.evaluate(frameState, new MockFeature(101), result);
+        expect(value).toEqual(new Cartesian4(0.0, 0.0, 1.0, 1.0));
+        expect(value).toBe(result);
+    });
+
+    it('evaluate takes a color result argument', function() {
+        var result = new Color();
+        var expression = new ConditionsExpression(jsonExpWithDefines, defines, result);
+        var value = expression.evaluate(frameState, new MockFeature(101), result);
+        expect(value).toEqual(Color.BLUE);
+        expect(value).toBe(result);
     });
 
     it('constructs and evaluates empty conditional', function() {

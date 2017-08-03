@@ -1,8 +1,7 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/Matrix4'
-], function(
+    ], function(
         defineProperties,
         Matrix4) {
     'use strict';
