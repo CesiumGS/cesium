@@ -33,6 +33,7 @@ define([
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
         '../Shaders/PostProcessFilters/DensityEdgeCullPass',
+        '../Shaders/PostProcessFilters/PointCloudPostProcessorBlendPass'
     ], function(
         Color,
         ComponentDatatype,
@@ -66,7 +67,8 @@ define([
         PointOcclusionPassGL2,
         RegionGrowingPassGL1,
         RegionGrowingPassGL2,
-        DensityEdgeCullPass
+        DensityEdgeCullPass,
+        PointCloudPostProcessorBlendPass
     ) {
     'use strict';
 
@@ -747,40 +749,6 @@ define([
         copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
 
-        var blendFS =
-            '#define EPS 1e-8 \n' +
-            '#define enableAO' +
-            '#extension GL_EXT_frag_depth : enable \n' +
-            'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_depthTexture; \n' +
-            'uniform sampler2D pointCloud_aoTexture; \n' +
-            'uniform float sigmoidDomainOffset; \n' +
-            'uniform float sigmoidSharpness; \n' +
-            'varying vec2 v_textureCoordinates; \n\n' +
-            'float sigmoid(float x, float sharpness) { \n' +
-            '    return sharpness * x / (sharpness - x + 1.0);' +
-            '} \n\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    #ifdef enableAO \n' +
-            '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
-            '    ao = clamp(sigmoid(clamp(ao + sigmoidDomainOffset, 0.0, 1.0), sigmoidSharpness), 0.0, 1.0); \n' +
-            '    color.xyz = color.xyz * ao; \n' +
-            '    #endif // enableAO \n' +
-            '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
-            '    if (length(rayDist) < EPS) { \n' +
-            '        discard;' +
-            '    } else { \n' +
-            '        float frustumLength = czm_clampedFrustum.y - czm_clampedFrustum.x; \n' +
-            '        float scaledRayDist = rayDist * frustumLength + czm_clampedFrustum.x; \n' +
-            '        vec3 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord)).xyz); \n' +
-            '        float depth = czm_eyeToWindowCoordinates(vec4(ray * scaledRayDist, 1.0)).z; \n' +
-            '        gl_FragColor = color; \n' +
-            '        gl_FragDepthEXT = depth; \n' +
-            '    }' +
-            '} \n';
-
         var blendRenderState = RenderState.fromCache({
             blending : BlendingState.ALPHA_BLEND,
             depthMask : true,
@@ -789,8 +757,8 @@ define([
             }
         });
 
-        blendFS = replaceConstants(
-            blendFS,
+        var blendFS = replaceConstants(
+            PointCloudPostProcessorBlendPass,
             'enableAO',
             processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
         );
