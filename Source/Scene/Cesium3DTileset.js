@@ -650,6 +650,7 @@ define([
          * @param {Boolean} pointAttenuationMultiplier The factor by which points at the near plane are larger than points at the far plane
          * @param {Boolean} useTriangle Whether or not to use the triangle wave optimization
          * @param {Boolean} enableAO Whether or not to blend with ambient occlusion
+         * @param {Boolean} depthViewEnabled Whether or not the depth view is enabled
          * @param {Boolean} AOViewEnabled Whether or not the ambient occlusion view is enabled
          * @param {Number} sigmoidSharpness The "sharpness" of the sigmoid function used for AO; closer to 0 is sharper
          * @param {Number} sigmoidDomainOffset The offset into the domain of the sigmoid function -- used for brightness control
@@ -661,7 +662,7 @@ define([
          * @default {enabled : true, occlusionAngle : 0.1, rangeParameter : 1.0, neighborhoodHalfWidth : 4
          *           numRegionGrowingPasses : 4, densityHalfWidth : 4, neighborhoodVectorSize : 10.0, maxAbsRatio : 0.9
          *           densityViewEnabled : false, stencilViewEnabled : false, pointAttenuationMultiplier : 2.0,
-         *           useTriangle : false, enableAO : true, AOViewEnabled : true, sigmoidSharpness : 0.2,
+         *           useTriangle : false, enableAO : true, depthViewEnabled : false, AOViewEnabled : true, sigmoidSharpness : 0.2,
          *           sigmoidDomainOffset : 0.2, dropoutFactor : 0.0, delay : 0}
          */
         this.pointCloudPostProcessorOptions = {
