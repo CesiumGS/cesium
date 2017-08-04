@@ -778,6 +778,9 @@ define([
             },
             sigmoidSharpness : function() {
                 return processor.sigmoidSharpness;
+            },
+            ONE : function() {
+                return 1.0;
             }
         };
 
