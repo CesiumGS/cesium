@@ -176,19 +176,11 @@ define([
         history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
     }
 
-    var updateTimer;
+    var timeout;
     if (endUserOptions.saveCamera !== 'false') {
-        camera.moveStart.addEventListener(function() {
-            if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, camera, 1000);
-            }
-        });
-        camera.moveEnd.addEventListener(function() {
-            if (defined(updateTimer)) {
-                window.clearInterval(updateTimer);
-                updateTimer = undefined;
-            }
-            saveCamera(camera);
+        camera.changed.addEventListener(function() {
+            window.clearTimeout(timeout);
+            timeout = window.setTimeout(saveCamera, 1000);
         });
     }
 

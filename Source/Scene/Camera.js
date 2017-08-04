@@ -2860,6 +2860,8 @@ define([
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
+        var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
+        var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
@@ -2870,6 +2872,7 @@ define([
             } else {
                 offset.range = distanceToBoundingSphere3D(camera, radius);
             }
+            offset.range = CesiumMath.clamp(offset.range, minimumZoom, maximumZoom);
         }
 
         return offset;
@@ -2950,7 +2953,6 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var scene2D = this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
         this._setTransform(Matrix4.IDENTITY);
         var offset = adjustBoundingSphereOffset(this, boundingSphere, options.offset);
