@@ -749,13 +749,20 @@ define([
         copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
 
-        var blendRenderState = RenderState.fromCache({
-            blending : BlendingState.ALPHA_BLEND,
-            depthMask : true,
-            depthTest : {
-                enabled : true
-            }
-        });
+        var blendRenderState;
+        if (processor.useTriangle) {
+            blendRenderState = RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND
+            });
+        } else {
+            blendRenderState = RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : true,
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
 
         var blendFS = replaceConstants(
             PointCloudPostProcessorBlendPass,

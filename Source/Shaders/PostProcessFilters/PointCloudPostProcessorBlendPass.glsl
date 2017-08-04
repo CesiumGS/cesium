@@ -113,7 +113,7 @@ void main() {
 
         vec3 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord)).xyz);
         float depth = czm_eyeToWindowCoordinates(vec4(ray * scaledRayDist, 1.0)).z;
-        gl_FragColor = vec4(vec3(depth), 1.0);
+        gl_FragColor = color;
         gl_FragDepthEXT = depth;
     }
 }
