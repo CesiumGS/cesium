@@ -775,18 +775,18 @@ define([
             '        float frustumLength = czm_clampedFrustum.y - czm_clampedFrustum.x; \n' +
             '        float scaledRayDist = rayDist * frustumLength + czm_clampedFrustum.x; \n' +
             '        vec3 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord)).xyz); \n' +
-            '        float depth = czm_eyeToWindowCoordinates(vec4(ray * scaledRayDist, 0)).z; \n' +
+            '        float depth = czm_eyeToWindowCoordinates(vec4(ray * scaledRayDist, 1.0)).z; \n' +
             '        gl_FragColor = color; \n' +
             '        gl_FragDepthEXT = depth; \n' +
             '    }' +
             '} \n';
 
         var blendRenderState = RenderState.fromCache({
-            blending : BlendingState.ALPHA_BLEND/*,
+            blending : BlendingState.ALPHA_BLEND,
             depthMask : true,
             depthTest : {
                 enabled : true
-            }*/
+            }
         });
 
         blendFS = replaceConstants(
