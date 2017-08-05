@@ -756,11 +756,11 @@ define([
             });
         } else {
             blendRenderState = RenderState.fromCache({
-                blending : BlendingState.ALPHA_BLEND,
+                blending : BlendingState.ALPHA_BLEND/*,
                 depthMask : true,
                 depthTest : {
                     enabled : true
-                }
+                }*/
             });
         }
 
