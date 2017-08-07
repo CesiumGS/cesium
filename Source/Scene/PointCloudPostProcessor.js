@@ -331,7 +331,7 @@ define([
                 width : screenWidth,
                 height : screenHeight,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                pixelDatatype : PixelDatatype.FLOAT,
                 sampler : createSampler()
             });
 
@@ -623,20 +623,19 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 depth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
             '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
-            '    float depth = czm_unpackDepth(rawDepth); \n' +
-            '    if (depth > EPS) { \n' +
+            '    if (length(depth) > EPS) { \n' +
             '        #ifdef densityView \n' +
             '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
-            '        gl_FragData[1] = rawDepth; \n' +
+            '        gl_FragData[1] = depth; \n' +
             '        gl_FragData[2] = rawAO; \n' +
             '    }  else { \n' +
-            '       gl_FragData[1] = czm_packDepth(0.0); ' +
+            '       gl_FragData[1] = vec4(0.0); ' +
             '       gl_FragData[2] = czm_packDepth(1.0 - EPS); ' +
             '    } \n' +
             '} \n';
@@ -756,11 +755,11 @@ define([
             });
         } else {
             blendRenderState = RenderState.fromCache({
-                blending : BlendingState.ALPHA_BLEND/*,
+                blending : BlendingState.ALPHA_BLEND,
                 depthMask : true,
                 depthTest : {
                     enabled : true
-                }*/
+                }
             });
         }
 

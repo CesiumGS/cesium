@@ -16,8 +16,8 @@ float random(vec2 st) {
 }
 
 void main() {
-    float center = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                   v_textureCoordinates));
+    float center = length(texture2D(pointCloud_depthTexture,
+                                    v_textureCoordinates));
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
 
     float closestNeighbor = float(neighborhoodHalfWidth) + 1.0;
@@ -45,8 +45,8 @@ void main() {
                 ivec2 pI = pos + d;
                 vec2 normPI = vec2(pI) / czm_viewport.zw;
 
-                float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                                 normPI));
+                float neighbor = length(texture2D(pointCloud_depthTexture,
+                                                  normPI));
                 if (neighbor < EPS || pI == pos) {
                     continue;
                 }

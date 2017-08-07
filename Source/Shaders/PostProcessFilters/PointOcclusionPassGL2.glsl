@@ -292,8 +292,9 @@ void main() {
     } else {
         float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
         aoOut = czm_packDepth(occlusion);
+        depthOut = vec4(centerPosition, 0.0);
 
-        // Write out the distance of the point
+        /*// Write out the distance of the point
         //
         // We use the distance of the point rather than
         // the linearized depth. This is because we want
@@ -302,7 +303,7 @@ void main() {
         // neighboring points are usually very similar.
         // On the other hand, the x-values and y-values are
         // usually fairly different.
-#ifdef useTriangle
+        #ifdef useTriangle
         // We can get even more accuracy by passing the 64-bit
         // distance into a triangle wave function that
         // uses 64-bit primitives internally. The region
@@ -334,7 +335,7 @@ void main() {
         vec2 hpl = lengthFP64(centerPosition);
         float triangleResult = triangleFP64(hpl, trianglePeriod);
         depthOut = czm_packDepth(triangleResult);
-#else
+        #else
         vec2 lengthOfFrustum = subFP64(split(czm_clampedFrustum.y),
                                        split(czm_clampedFrustum.x));
         vec2 frustumStart = split(czm_clampedFrustum.x);
@@ -343,6 +344,6 @@ void main() {
                                            lengthOfFrustum),
                                            frustumStart);
         depthOut = czm_packDepth(normalizedDepthFP64.x + normalizedDepthFP64.y);
-#endif
+        #endif*/
     }
 }

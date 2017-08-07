@@ -340,57 +340,6 @@ void main() {
     } else {
         float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
         gl_FragData[1] = czm_packDepth(occlusion);
-
-        // Write out the distance of the point
-        //
-        // We use the distance of the point rather than
-        // the linearized depth. This is because we want
-        // to encode as much information about position disparities
-        // between points as we can, and the z-values of
-        // neighboring points are usually very similar.
-        // On the other hand, the x-values and y-values are
-        // usually fairly different.
-#ifdef useTriangle
-        // We can get even more accuracy by passing the 64-bit
-        // distance into a triangle wave function that
-        // uses 64-bit primitives internally. The region
-        // growing pass only cares about deltas between
-        // different pixels, so we just have to ensure that
-        // the period of triangle function is greater than that
-        // of the largest possible delta can arise between
-        // different points.
-        //
-        // The triangle function is C0 continuous, which avoids
-        // artifacts from discontinuities. That said, I have noticed
-        // some inexplicable artifacts occasionally, so please
-        // disable this optimization if that becomes an issue.
-        //
-        // It's important that the period of the triangle function
-        // is at least two orders of magnitude greater than
-        // the average depth delta that we are likely to come
-        // across. The triangle function works because we have
-        // some assumption of locality in the depth domain.
-        // Massive deltas break that locality -- but that's
-        // actually not an issue. Deltas that are larger than
-        // the period function will be "wrapped around", and deltas
-        // that are much larger than the period function may be
-        // "wrapped around" many times. A similar process occurs
-        // in many random number generators. The resulting delta
-        // is usually at least an order of magnitude greater than
-        // the average delta, so it won't even be considered in
-        // the region growing pass.
-        vec2 hpl = lengthFP64(centerPosition);
-        float triangleResult = triangleFP64(hpl, trianglePeriod);
-        gl_FragData[0] = czm_packDepth(triangleResult);
-#else
-        vec2 lengthOfFrustum = subFP64(split(czm_clampedFrustum.y),
-                                       split(czm_clampedFrustum.x));
-        vec2 frustumStart = split(czm_clampedFrustum.x);
-        vec2 centerPositionLength = lengthFP64(centerPosition);
-        vec2 normalizedDepthFP64 = sumFP64(divFP64(centerPositionLength,
-                                           lengthOfFrustum),
-                                           frustumStart);
-        gl_FragData[0] = czm_packDepth(normalizedDepthFP64.x + normalizedDepthFP64.y);
-#endif
+        gl_FragData[0] = vec4(centerPosition, 0.0);
     }
 }
