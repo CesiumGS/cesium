@@ -702,7 +702,7 @@ define([
         });
     }
 
-        function debugViewStage(processor, context, texture) {
+    function debugViewStage(processor, context, texture, unpack) {
         var uniformMap = {
             debugTexture : function() {
                 return texture;
@@ -715,10 +715,18 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 raw = texture2D(debugTexture, v_textureCoordinates); \n' +
-            '    float value = czm_unpackDepth(raw); \n' +
+            '    vec4 value = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '#ifdef unpack \n' +
+            '    value = vec4(czm_unpackDepth(value)); \n' +
+            '#endif // unpack \n' +
             '    gl_FragColor = vec4(value); \n' +
             '} \n';
+
+        debugViewStageStr = replaceConstants(
+            debugViewStageStr,
+            'unpack',
+            unpack
+        );
 
         return context.createViewportQuadCommand(debugViewStageStr, {
             uniformMap : uniformMap,
@@ -799,9 +807,9 @@ define([
 
         var debugViewCommand;
         if (processor.AOViewEnabled) {
-            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0]);
+            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0], true);
         } else if (processor.depthViewEnabled) {
-            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0]);
+            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0], false);
         }
 
         var framebuffers = processor._framebuffers;
