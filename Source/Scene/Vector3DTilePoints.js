@@ -10,6 +10,7 @@ define([
         '../Core/NearFarScalar',
         './BillboardCollection',
         './Cesium3DTilePointFeature',
+        './HorizontalOrigin',
         './LabelCollection',
         './LabelStyle',
         './PolylineCollection',
@@ -26,6 +27,7 @@ define([
         NearFarScalar,
         BillboardCollection,
         Cesium3DTilePointFeature,
+        HorizontalOrigin,
         LabelCollection,
         LabelStyle,
         PolylineCollection,
@@ -167,6 +169,8 @@ define([
             feature.anchorLineColor = Color.WHITE;
             feature.image = undefined;
             feature.disableDepthTestDistance = 0.0;
+            feature.origin = HorizontalOrigin.CENTER;
+            feature.labelOrigin = HorizontalOrigin.CENTER;
 
             feature._setBillboardImage();
         }
@@ -297,6 +301,14 @@ define([
 
             if (defined(style.disableDepthTestDistance)) {
                 feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(frameState, feature);
+            }
+
+            if (defined(style.origin)) {
+                feature.origin = style.origin.evaluate(frameState, feature);
+            }
+
+            if (defined(style.labelOrigin)) {
+                feature.labelOrigin = style.labelOrigin.evaluate(frameState, feature);
             }
 
             feature._setBillboardImage();

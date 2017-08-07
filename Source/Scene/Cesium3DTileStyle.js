@@ -84,6 +84,8 @@ define([
         this._anchorLineColor = undefined;
         this._image = undefined;
         this._disableDepthTestDistance = undefined;
+        this._origin = undefined;
+        this._labelOrigin = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -135,6 +137,8 @@ define([
         that.anchorLineColor = styleJson.anchorLineColor;
         that.image = styleJson.image;
         that.disableDepthTestDistance = styleJson.disableDepthTestDistance;
+        that.origin = styleJson.origin;
+        that.labelOrigin = styleJson.labelOrigin;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -1016,6 +1020,94 @@ define([
             },
             set : function(value) {
                 this._disableDepthTestDistance = getExpression(this, value);
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>origin</code> property.
+         * <p>
+         * The expression must return or convert to a <code>HorizontalOrigin</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     origin : HorizontalOrigin.LEFT
+         * });
+         * style.origin.evaluate(frameState, feature); // returns a Cesium.HorizontalOrigin
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelStyle expression with a custom function
+         * style.origin = {
+         *     evaluate : function(frameState, feature) {
+         *         return HorizontalOrigin.CENTER;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        origin : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._origin;
+            },
+            set : function(value) {
+                this._origin = getExpression(this, value);
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOrigin</code> property.
+         * <p>
+         * The expression must return or convert to a <code>HorizontalOrigin</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     labelOrigin : HorizontalOrigin.LEFT
+         * });
+         * style.labelOrigin.evaluate(frameState, feature); // returns a Cesium.HorizontalOrigin
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelStyle expression with a custom function
+         * style.labelOrigin = {
+         *     evaluate : function(frameState, feature) {
+         *         return HorizontalOrigin.CENTER;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        labelOrigin : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._labelOrigin;
+            },
+            set : function(value) {
+                this._labelOrigin = getExpression(this, value);
             }
         },
 

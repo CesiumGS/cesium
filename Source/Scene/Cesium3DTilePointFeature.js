@@ -284,11 +284,6 @@ define([
                     value = '';
                 }
                 this._label.text = value;
-
-                if (defined(value) && value !== '') {
-                    this._billboard.horizontalOrigin = HorizontalOrigin.RIGHT;
-                    this._label.horizontalOrigin = HorizontalOrigin.LEFT;
-                }
             }
         },
 
@@ -497,6 +492,38 @@ define([
             set : function(value) {
                 this._label.disableDepthTestDistance = value;
                 this._billboard.disableDepthTestDistance = value;
+            }
+        },
+
+        /**
+         * Gets or sets the distance where the depth testing will be enabled.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {HorizontalOrigin}
+         */
+        origin : {
+            get : function() {
+                return this._billboard.horizontalOrigin;
+            },
+            set : function(value) {
+                this._billboard.horizontalOrigin = value;
+            }
+        },
+
+        /**
+         * Gets or sets the distance where the depth testing will be enabled.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {HorizontalOrigin}
+         */
+        labelOrigin : {
+            get : function() {
+                return this._label.horizontalOrigin;
+            },
+            set : function(value) {
+                this._label.horizontalOrigin = value;
             }
         },
 
