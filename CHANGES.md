@@ -41,8 +41,6 @@ Change Log
 * Updated `Billboard`, `Label` and `PointPrimitive` constructors to clone `NearFarScale` parameters [#5654](https://github.com/AnalyticalGraphicsInc/cesium/pull/5654)
 * Added `FrustumGeometry` and `FrustumOutlineGeometry`. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
 * Added an `options` parameter to the constructors of `PerspectiveFrustum`, `PerspectiveOffCenterFrustum`, `OrthographicFrustum`, and `OrthographicOffCenterFrustum` to set properties. [#5649](https://github.com/AnalyticalGraphicsInc/cesium/pull/5649)
-* Added `ClassificationPrimitive` which defines a volume and draws the intersection of the volume and terrain or 3D Tiles. [#5625](https://github.com/AnalyticalGraphicsInc/cesium/pull/5625)
-* Fix for dynamic polylines with polyline dash material [#5681](https://github.com/AnalyticalGraphicsInc/cesium/pull/5681)
 
 ### 1.35.2 - 2017-07-11
 
