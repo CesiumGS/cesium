@@ -484,6 +484,23 @@ define([
         },
 
         /**
+         * Gets or sets the distance where the depth testing will be enabled.
+         *
+         * @memberof Cesium3DTilePointFeature.prototype
+         *
+         * @type {Number}
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._label.disableDepthTestDistance;
+            },
+            set : function(value) {
+                this._label.disableDepthTestDistance = value;
+                this._billboard.disableDepthTestDistance = value;
+            }
+        },
+
+        /**
          * Gets the content of the tile containing the feature.
          *
          * @memberof Cesium3DTilePointFeature.prototype

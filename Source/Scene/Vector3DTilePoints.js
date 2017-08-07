@@ -166,6 +166,7 @@ define([
             feature.anchorLineEnabled = false;
             feature.anchorLineColor = Color.WHITE;
             feature.image = undefined;
+            feature.disableDepthTestDistance = 0.0;
 
             feature._setBillboardImage();
         }
@@ -292,6 +293,10 @@ define([
                 feature.image = style.image.evaluate(frameState, feature);
             } else {
                 feature.image = undefined;
+            }
+
+            if (defined(style.disableDepthTestDistance)) {
+                feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(frameState, feature);
             }
 
             feature._setBillboardImage();

@@ -83,6 +83,7 @@ define([
         this._anchorLineEnabled = undefined;
         this._anchorLineColor = undefined;
         this._image = undefined;
+        this._disableDepthTestDistance = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
@@ -133,6 +134,7 @@ define([
         that.anchorLineEnabled = styleJson.anchorLineEnabled;
         that.anchorLineColor = styleJson.anchorLineColor;
         that.image = styleJson.image;
+        that.disableDepthTestDistance = styleJson.disableDepthTestDistance;
 
         var meta = {};
         if (defined(styleJson.meta)) {
@@ -987,6 +989,33 @@ define([
             },
             set : function(value) {
                 this._image = getExpression(this, value);
+            }
+        },
+
+        /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>disableDepthTestDistance</code> property.
+         * <p>
+         * The expression must return a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                this._disableDepthTestDistance = getExpression(this, value);
             }
         },
 
