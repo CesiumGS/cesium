@@ -429,38 +429,20 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders[0].uri = 'invalid.glsl';
+        return loadJson(boomBoxUrl).then(function(gltf) {
+            gltf.images[0].uri = 'invalid.png';
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
 
-        var model = primitives.add(new Model({
-            gltf : invalidGltf
-        }));
+            scene.renderForSpecs();
 
-        scene.renderForSpecs();
-
-        return model.readyPromise.then(function(model) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(model.ready).toEqual(false);
-            primitives.remove(model);
-        });
-    });
-
-    it('rejects readyPromise on error', function() {
-        var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders[0].uri = 'invalid.glsl';
-
-        var model = primitives.add(new Model({
-            gltf : invalidGltf
-        }));
-
-        scene.renderForSpecs();
-
-        return model.readyPromise.then(function(model) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(model.ready).toEqual(false);
-            primitives.remove(model);
+            return model.readyPromise.then(function(model) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(model.ready).toEqual(false);
+                primitives.remove(model);
+            });
         });
     });
 

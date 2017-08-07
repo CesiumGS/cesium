@@ -4593,7 +4593,6 @@ define([
                 cachedResources.samplers = resources.samplers;
                 cachedResources.renderStates = resources.renderStates;
                 cachedResources.ready = true;
-                removePipelineExtras(this.gltf);
 
                 // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
                 this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
