@@ -5,8 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        './HorizontalOrigin'
+        '../Core/Ellipsoid'
     ], function(
         Cartesian3,
         Cartographic,
@@ -14,8 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        Ellipsoid,
-        HorizontalOrigin) {
+        Ellipsoid) {
     'use strict';
 
     /**

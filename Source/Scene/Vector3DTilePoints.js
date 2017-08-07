@@ -170,7 +170,7 @@ define([
             feature.image = undefined;
             feature.disableDepthTestDistance = 0.0;
             feature.origin = HorizontalOrigin.CENTER;
-            feature.labelOrigin = HorizontalOrigin.CENTER;
+            feature.labelOrigin = HorizontalOrigin.LEFT;
 
             feature._setBillboardImage();
         }
