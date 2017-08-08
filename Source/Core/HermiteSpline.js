@@ -176,6 +176,7 @@ define([
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function HermiteSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
