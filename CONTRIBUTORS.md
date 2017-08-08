@@ -151,3 +151,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Esra ERİK](https://github.com/esraerik)
 * [Rishabh Shah](https://github.com/rms13)
 * [Rudraksha Shah](https://github.com/Rudraksha20)
+* [Cody Guldner](https://github.com/burn123)
+

@@ -2605,6 +2605,36 @@ defineSuite([
         expect(distance).toBeLessThan(sphere.radius * 3.0);
     });
 
+    it('flyToBoundingSphere does not zoom closer than minimumZoomDistance', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var minValue = 1000;
+        scene.screenSpaceCameraController.minimumZoomDistance = minValue;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
+
+        camera.flyToBoundingSphere(sphere, {
+            duration : 0.0
+        });
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(CesiumMath.equalsEpsilon(distance, minValue, 0.1)).toBe(true);
+    });
+
+    it('flyToBoundingSphere does not zoom further than maximumZoomDistance', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var maxValue = 10000;
+        scene.screenSpaceCameraController.maximumZoomDistance = maxValue;
+
+        var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 100000);
+
+        camera.flyToBoundingSphere(sphere, {
+            duration : 0.0
+        });
+
+        var distance = Cartesian3.distance(camera.position, sphere.center);
+        expect(CesiumMath.equalsEpsilon(distance, maxValue, 0.1)).toBe(true);
+    });
+
     it('distanceToBoundingSphere', function() {
         scene.mode = SceneMode.SCENE3D;
 
