@@ -5,6 +5,7 @@ Change Log
 
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
 * Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
+* Fixed issue where the `Model` glTF cache loses reference to the model's buffer data. [#5720](https://github.com/AnalyticalGraphicsInc/cesium/issues/5720)
 
 ### 1.36 - 2017-08-01
 
