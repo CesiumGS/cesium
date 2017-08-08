@@ -256,7 +256,7 @@ void main() {
             finalEC = ecAccum / normalization;
             finalColor = colorAccum / normalization;
             finalAO = aoAccum / normalization;
-         }
+        }
     }
 
 #ifdef densityView
