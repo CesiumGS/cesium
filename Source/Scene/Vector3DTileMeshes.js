@@ -33,6 +33,13 @@ define([
         this._batchTable = options.batchTable;
 
         this._primitive = undefined;
+
+        /**
+         * Draws the wireframe of the classification meshes.
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = false;
     }
 
     var scratchPosition = new Cartesian3();
@@ -178,6 +185,7 @@ define([
         if (!defined(this._primitive)) {
             createPrimitive(this);
         }
+        this._primitive.debugWireframe = this.debugWireframe;
         this._primitive.update(frameState);
     };
 

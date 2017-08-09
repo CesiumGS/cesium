@@ -616,6 +616,7 @@ define([
             this._points.update(frameState);
         }
         if (defined(this._meshes)) {
+            this._meshes.debugWireframe = this._tileset.debugWireframe;
             this._meshes.update(frameState);
         }
 

@@ -107,6 +107,13 @@ define([
         this._verticesPromise = undefined;
 
         this._primitive = undefined;
+
+        /**
+         * Draws the wireframe of the classification meshes.
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = false;
     }
 
     defineProperties(Vector3DTilePolygons.prototype, {
@@ -349,6 +356,7 @@ define([
             return;
         }
 
+        this._primitive.debugWireframe = this.debugWireframe;
         this._primitive.update(frameState);
     };
 
