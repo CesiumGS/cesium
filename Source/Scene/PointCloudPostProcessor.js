@@ -711,6 +711,7 @@ define([
 
         var debugViewStageStr =
             '#define EPS 1e-8 \n' +
+            '#define unpack \n' +
             'uniform sampler2D debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
