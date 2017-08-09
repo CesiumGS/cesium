@@ -281,7 +281,7 @@ define([
         var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
         var numberOfMeshes = defaultValue(featureTableJson.MESHES_LENGTH, 0);
 
-        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
+        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints + numberOfMeshes;
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content));
         content._batchTable = batchTable;
 
@@ -303,12 +303,10 @@ define([
         var modelMatrix = content._tile.computedTransform;
 
         var center;
-        /*
         if (defined(featureTableJson.RTC_CENTER)) {
             center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+            Matrix4.multiplyByPoint(modelMatrix, center, center);
         } else {
-            center = Cartesian3.ZERO;
-            */
             center = Rectangle.center(rectangle);
             if (isCartographic) {
                 center.height = CesiumMath.lerp(minHeight, maxHeight, 0.5);
@@ -318,7 +316,7 @@ define([
                 center.z = CesiumMath.lerp(minHeight, maxHeight, 0.5);
             }
             Matrix4.multiplyByPoint(modelMatrix, center, center);
-        //}
+        }
 
         var polygonBatchIds;
         var polylineBatchIds;
@@ -514,10 +512,8 @@ define([
                 indexOffsets : meshIndexOffsets,
                 indexCounts : meshIndexCounts,
                 batchIds : meshBatchIds,
-                minimumHeight : minHeight,
-                maximumHeight : maxHeight,
                 center : center,
-                rectangle : rectangle,
+                modelMatrix : modelMatrix,
                 batchTable : batchTable
             });
         }

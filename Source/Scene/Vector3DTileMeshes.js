@@ -1,5 +1,6 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -9,6 +10,7 @@ define([
         './Vector3DTilePrimitive'
     ], function(
         Cartesian3,
+        Color,
         defaultValue,
         defined,
         destroyObject,
@@ -26,11 +28,8 @@ define([
         this._indexOffsets = options.indexOffsets;
         this._indexCounts = options.indexCounts;
         this._batchIds = options.batchIds;
-        this._minimumHeight = options.minimumHeight;
-        this._maximumHeight = options.maximumHeight;
         this._center = options.center;
         this._modelMatrix = options.modelMatrix;
-        this._rectangle = options.rectangle;
         this._batchTable = options.batchTable;
 
         this._primitive = undefined;
@@ -42,14 +41,6 @@ define([
         var buffer = meshes._buffer;
         var byteOffset = meshes._byteOffset;
 
-        var rectangle = meshes.rectangle;
-        var west = rectangle.west;
-        var east = rectangle.east;
-        var south = rectangle.south;
-        var north = rectangle.north;
-
-        var minHeight = meshes._minimumHeight;
-        var maxHeight = meshes._maximumHeight;
         var center = meshes._center;
         var modelMatrix = meshes._modelMatrix;
 
@@ -71,18 +62,14 @@ define([
         var positions = new Float32Array(positionCount * 3);
         var vertexBatchIds = new Uint16Array(positionCount);
 
-        var positionsByteLength = 3 * positionCount * Float32Array.BYTES_PER_ELEMENT;
-        var encodedPositions = new Float32Array(buffer, byteOffset, 3 * positionCount);
-        var encodedIndices = new Uint32Array(buffer, byteOffset + positionsByteLength, indicesLength);
+        var encodedIndices = new Uint32Array(buffer, byteOffset, indicesLength);
+        var encodedPositions = new Float32Array(buffer, byteOffset + indicesLength * Uint32Array.BYTES_PER_ELEMENT, 3 * positionCount);
 
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
             var position = Cartesian3.unpack(encodedPositions, i, scratchPosition);
-            position.x = CesiumMath.lerp(west, east, position.x);
-            position.y = CesiumMath.lerp(south, north, position.y);
-            position.y = CesiumMath.lerp(minHeight, maxHeight, position.y);
 
-            Matrix4.multiply(modelMatrix, position, position);
+            Matrix4.multiplyByPoint(modelMatrix, position, position);
             Cartesian3.subtract(position, center, position);
 
             Cartesian3.pack(position, positions, i);
@@ -106,9 +93,11 @@ define([
             batchedIndices[i] = new Vector3DTileBatch({
                 offset : indexOffset,
                 count : count,
-                color : batchTable.getColor(batchId),
+                color : batchTable.getColor(batchId, new Color()),
                 batchIds : [batchId]
             });
+
+            indexOffset += count;
         }
 
         meshes._primitive = new Vector3DTilePrimitive({
@@ -120,8 +109,8 @@ define([
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
             batchedIndices : batchedIndices,
-            //boundingVolume : polygons._boundingVolume,
-            //boundingVolumes : polygons._boundingVolumes,
+            boundingVolume : undefined, // TODO
+            boundingVolumes : [], // TODO
             center : center,
             pickObject : defaultValue(meshes._pickObject, meshes)
         });
@@ -133,11 +122,8 @@ define([
         meshes._indexOffsets = undefined;
         meshes._indexCounts = undefined;
         meshes._batchIds = undefined;
-        meshes._minimumHeight = undefined;
-        meshes._maximumHeight = undefined;
         meshes._center = undefined;
         meshes._modelMatrix = undefined;
-        meshes._rectangle = undefined;
         meshes._batchTable = undefined;
     }
 
