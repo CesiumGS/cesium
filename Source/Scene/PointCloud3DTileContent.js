@@ -113,9 +113,6 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
-        // Used to determine how to attenuate points
-        this._pointAttenuationMaxSize = 1.0;
-
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -125,6 +122,7 @@ define([
 
         this._highlightColor = Color.clone(Color.WHITE);
         this._pointSize = 1.0;
+        this._pointAttenuationMaxSize = 1.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
@@ -259,15 +257,6 @@ define([
                 return this._batchTable;
             }
         },
-
-        /**
-         * @private
-         */
-        pointAttenuationMaxSize : {
-            get : function() {
-                return this._pointAttenuationMaxSize;
-            }
-        }
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
@@ -781,7 +770,7 @@ define([
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 positionWC, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
@@ -994,7 +983,7 @@ define([
         } else {
             vs += '    vec3 position = a_position; \n';
         }
-        vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
+        vs += '    vec3 positionWC = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
@@ -1007,23 +996,23 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, positionWC, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, position_absolute, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, positionWC, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, positionWC, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
 
-        vs += '    vec4 position_EC = czm_view * vec4(position_absolute, 1.0); \n' +
-              '    position_EC.z *= -1.0; \n\n' +
+        vs += '    vec4 positionEC = czm_view * vec4(positionWC, 1.0); \n' +
+              '    positionEC.z *= -1.0; \n\n' +
               '    float attenuationFactor = \n' +
-              '    ((position_EC.z - czm_clampedFrustum.x) /\n' +
+              '    ((positionEC.z - czm_clampedFrustum.x) /\n' +
               '    (czm_clampedFrustum.y - czm_clampedFrustum.x)); \n' +
               '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor); \n\n' +
               '    color = color * u_highlightColor; \n';
