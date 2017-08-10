@@ -7,6 +7,8 @@ Change Log
 * Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
 * Fixed issue where the `Model` glTF cache loses reference to the model's buffer data. [#5720](https://github.com/AnalyticalGraphicsInc/cesium/issues/5720)
 * Fixed some issues with `disableDepthTestDistance` [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501) [#5331](https://github.com/AnalyticalGraphicsInc/cesium/issues/5331) [#5621](https://github.com/AnalyticalGraphicsInc/cesium/issues/5621)
+* Fixed `Entity` shadowing when `Entity` is drawn with `Primitive` [#1825](https://github.com/AnalyticalGraphicsInc/cesium/issues/1825)
+
 
 ### 1.36 - 2017-08-01
 
