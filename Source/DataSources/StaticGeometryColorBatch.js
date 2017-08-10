@@ -7,6 +7,7 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './MaterialProperty',
@@ -20,6 +21,7 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
+        ShadowMode,
         BoundingSphereState,
         ColorMaterialProperty,
         MaterialProperty,
@@ -158,6 +160,7 @@ define([
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
+                        flat: this.shadows === ShadowMode.DISABLED,
                         translucent : this.translucent,
                         closed : this.closed
                     }),
