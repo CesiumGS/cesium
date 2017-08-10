@@ -66,10 +66,12 @@
     "karma-spec-reporter": "^0.0.31",
     "mime": "^1.3.4",
     "mkdirp": "^0.5.1",
+    "prepush": "^3.1.0",
     "request": "^2.79.0",
     "rimraf": "^2.6.1",
     "yargs": "^8.0.1"
   },
+  "prepush" : [ "gulp eslint --failTaskOnError" ],
   "scripts": {
     "start": "node server.js",
     "startPublic": "node server.js --public",
