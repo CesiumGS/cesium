@@ -1557,8 +1557,7 @@ define([
         // Number of commands added by each update above
         statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
 
-        if (addedCommandsLength > 0) {
-            // TODO : only do this if the tileset is purely point clouds.
+        if (tileset.pointCloudPostProcessorOptions.enabled && (addedCommandsLength > 0)) {
             tileset._pointCloudPostProcessor.update(frameState, numberOfInitialCommands, tileset);
         }
 

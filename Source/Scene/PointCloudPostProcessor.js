@@ -993,10 +993,6 @@ define([
             dirty = true;
         }
 
-        if (!tileset.pointCloudPostProcessorOptions.enabled) {
-            return;
-        }
-
         dirty |= createResources(this, frameState.context, dirty);
 
         // Render point cloud commands into an offscreen FBO.
