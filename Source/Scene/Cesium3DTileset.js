@@ -1030,6 +1030,8 @@ define([
     /**
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
+     * @param {String} tilesetUrl, the url of the json file to be fetched
+     * @returns {Promise<Object>} A promise that resolves with the fetched json data
      */
     Cesium3DTileset.loadJson = function(tilesetUrl) {
         return loadJson(tilesetUrl);
