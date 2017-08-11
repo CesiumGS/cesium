@@ -141,6 +141,7 @@ define([
      * @see HermiteSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function CatmullRomSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
