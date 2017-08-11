@@ -76,7 +76,10 @@ void main (void)
     l = min(l, czm_luminance(rgb));
 #endif
 
+    // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
     float atmosphereAlpha = clamp((v_radii.y - length(czm_viewerPositionWC)) / (v_radii.y - v_radii.x), 0.0, 1.0);
+
+    // Alter alpha based on time of day (0.0 = night , 1.0 = day)
     float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
 
