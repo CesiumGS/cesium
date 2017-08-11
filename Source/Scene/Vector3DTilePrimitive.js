@@ -111,6 +111,7 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+        this._rsWireframe = undefined;
 
         this._commands = [];
         this._pickCommands = [];
