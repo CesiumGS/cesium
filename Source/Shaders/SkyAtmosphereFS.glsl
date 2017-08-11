@@ -76,7 +76,6 @@ void main (void)
     l = min(l, czm_luminance(rgb));
 #endif
 
-    // need to create the same varyings as in stk
     float atmosphereAlpha = clamp((v_radii.y - length(czm_viewerPositionWC)) / (v_radii.y - v_radii.x), 0.0, 1.0);
     float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
     atmosphereAlpha *= pow(nightAlpha, 0.5);
