@@ -37,6 +37,8 @@
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
+
 const float g = -0.95;
 const float g2 = g * g;
 
@@ -44,6 +46,7 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
 varying vec3 v_positionEC;
+varying vec2 v_radii;
 
 void main (void)
 {
@@ -73,5 +76,10 @@ void main (void)
     l = min(l, czm_luminance(rgb));
 #endif
 
-    gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, czm_morphTime));
+    // need to create the same varyings as in stk
+    float atmosphereAlpha = clamp((v_radii.y - length(czm_viewerPositionWC)) / (v_radii.y - v_radii.x), 0.0, 1.0);
+    float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;
+    atmosphereAlpha *= pow(nightAlpha, 0.5);
+
+    gl_FragColor = vec4(rgb, mix(rgb.b, 1.0, atmosphereAlpha) * smoothstep(0.0, 1.0, czm_morphTime));
 }
