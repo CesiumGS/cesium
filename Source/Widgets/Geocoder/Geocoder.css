@@ -1,6 +1,6 @@
 .cesium-viewer-geocoderContainer .cesium-geocoder-input {
-  border: solid 1px #444;
-  background-color: rgba(40, 40, 40, 0.7);
+  border: none;
+  background-color: transparent;
   color: white;
   display: inline-block;
   vertical-align: middle;
@@ -15,8 +15,7 @@
 }
 
 .cesium-viewer-geocoderContainer:hover .cesium-geocoder-input {
-  border-color: #aef;
-  box-shadow: 0 0 8px #fff;
+    border-color: #aef;
 }
 
 .cesium-viewer-geocoderContainer .cesium-geocoder-input:focus {
@@ -61,7 +60,7 @@
 }
 
 .cesium-geocoder-searchButton {
-  background-color: #303336;
+  background-color: rgba(0,60,136,0.3);
   display: inline-block;
   position: absolute;
   cursor: pointer;
@@ -70,7 +69,7 @@
   right: 1px;
   height: 30px;
   vertical-align: middle;
-  fill: #edffff;
+  fill: rgba(256,256,256,0.5);
 }
 
 .cesium-geocoder-searchButton:hover {
