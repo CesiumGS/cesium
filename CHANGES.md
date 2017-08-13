@@ -1,5 +1,10 @@
 Change Log
 ==========
+###1.36 - 2017-08-13
+
+* Removed `Scene/PerspectiveFrustum`, `Scene/PerspectiveOffCenterFrustum`, `Scene/OrthographicFrustum`, `Scene/OrthographicOffCenterFrustum`, `Scene/CullingVolume`.
+* Removed code from `gulpfile.js`.
+* Removed related test files `Scene/PerspectiveFrustumSpecs`,  `Scene/PerspectiveOffCenterFrustumSpecs`, `Scene/OrthographicFrustumSpecs`, `Scene/OrthographicOffCenterFrustumSpecs`, `Scene/CullingVolumeSpecs`.
 
 ### 1.37 - 2017-09-01
 
