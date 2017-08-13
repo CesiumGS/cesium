@@ -46,7 +46,6 @@ varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
 varying vec3 v_positionEC;
-varying vec2 v_radii;
 
 void main (void)
 {
@@ -77,7 +76,7 @@ void main (void)
 #endif
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)
-    float atmosphereAlpha = clamp((v_radii.y - length(czm_viewerPositionWC)) / (v_radii.y - v_radii.x), 0.0, 1.0);
+    float atmosphereAlpha = clamp((u_cameraAndRadiiAndDynamicAtmosphereColor.y - length(czm_viewerPositionWC)) / (u_cameraAndRadiiAndDynamicAtmosphereColor.y - u_cameraAndRadiiAndDynamicAtmosphereColor.z), 0.0, 1.0);
 
     // Alter alpha based on time of day (0.0 = night , 1.0 = day)
     float nightAlpha = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.0, 1.0) : 1.0;

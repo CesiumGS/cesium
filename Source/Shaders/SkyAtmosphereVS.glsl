@@ -56,7 +56,6 @@ const float fSamples = 2.0;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
-varying vec2 v_radii;
 
 float scale(float cosAngle)
 {
@@ -127,6 +126,5 @@ void main(void)
     v_mieColor = frontColor * KmESun;
     v_rayleighColor = frontColor * (InvWavelength * KrESun);
     v_toCamera = czm_viewerPositionWC - positionV3;
-    v_radii = u_cameraAndRadiiAndDynamicAtmosphereColor.zy;
     gl_Position = czm_modelViewProjection * position;
 }
