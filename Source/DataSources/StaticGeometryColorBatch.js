@@ -160,7 +160,7 @@ define([
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
-                        flat: this.shadows === ShadowMode.DISABLED,
+                        flat: this.shadows === ShadowMode.DISABLED || this.shadows === ShadowMode.CAST_ONLY,
                         translucent : this.translucent,
                         closed : this.closed
                     }),
