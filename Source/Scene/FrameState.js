@@ -296,6 +296,9 @@ define([
          * @type {Number}
          */
         this.minimumDisableDepthTestDistance = undefined;
+
+        this.invertClassification = false;
+        this.invertClassificationAlpha = undefined;
     }
 
     /**

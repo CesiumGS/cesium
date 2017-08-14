@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="A sample photgrammetry dataset rendered with 3D Tiles.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table><tbody>
+<tr>
+    <td>wireframe enabled</td>
+    <td><input type="checkbox" data-bind="checked: enabled"></td>
+</tr>
+</tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
+}));
+
+var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : 'http://localhost:8002/tilesets/meshTest/'
+}));
+
+classification.readyPromise.then(function(tileset) {
+    var boundingSphere = tileset.boundingSphere;
+    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : "rgba(255, 0, 0, 0.5)"
+    });
+}).otherwise(function(error) {
+    throw(error);
+});
+
+/*
+var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+var current = {
+    feature : undefined,
+    originalColor : new Cesium.Color()
+};
+
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function(movement) {
+    var pickedFeature = viewer.scene.pick(movement.endPosition);
+
+    if (Cesium.defined(current.feature) && (current.feature !== pickedFeature)) {
+        // Restore original color to feature that is no longer selected
+
+        // This assignment is necessary to work with the set property
+        current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
+        current.feature = undefined;
+    }
+
+    if (Cesium.defined(pickedFeature) && (pickedFeature !== current.feature)) {
+        current.feature = pickedFeature;
+        Cesium.Color.clone(pickedFeature.color, current.originalColor);
+
+        // Highlight newly selected feature
+        pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+var viewModel = {
+    enabled : false
+};
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
+    function(newValue) {
+        classification.debugWireframe = newValue;
+    }
+);
+*/
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

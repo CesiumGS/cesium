@@ -159,6 +159,8 @@ define([
 
         this._fogDensity = undefined;
 
+        this._invertClassificationAlpha = undefined;
+
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
         this._geometricToleranceOverMeter = undefined;
@@ -847,6 +849,12 @@ define([
             get : function() {
                 return this._minimumDisableDepthTestDistance;
             }
+        },
+
+        invertClassificationAlpha : {
+            get : function() {
+                return this._invertClassificationAlpha;
+            }
         }
     });
 
@@ -1011,6 +1019,8 @@ define([
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
 
         this._fogDensity = frameState.fog.density;
+
+        this._invertClassificationAlpha = frameState.invertClassificationAlpha;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);

@@ -1588,6 +1588,14 @@ define([
             getValue : function(uniformState) {
                 return uniformState.minimumDisableDepthTestDistance;
             }
+        }),
+
+        czm_invertedClassificationAlpha : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.invertClassificationAlpha;
+            }
         })
     };
 

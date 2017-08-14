@@ -569,7 +569,7 @@ define([
         passState.framebuffer = framebuffer;
     }
 
-    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertedClassification) {
         var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
@@ -584,20 +584,27 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            var derivedCommand;
+            if (invertedClassification) {
+                derivedCommand = command.derivedCommands.inverted.oit.translucentCommand;
+            } else if (shadowsEnabled && command.receiveShadows) {
+                derivedCommand = command.derivedCommands.oit.shadows.translucentCommand;
+            } else {
+                derivedCommand = command.derivedCommands.oit.translucentCommand;
+            }
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
     }
 
-    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
+    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands, invertedClassification) {
         if (this._translucentMRTSupport) {
-            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands);
+            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands, invertedClassification);
             return;
         }
 
-        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands);
+        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands, invertedClassification);
     };
 
     OIT.prototype.execute = function(context, passState) {
