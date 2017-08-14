@@ -231,7 +231,7 @@ defineSuite([
         // override loadJson and replace incorrect url with correct url
         Cesium3DTileset.loadJson = function(tilesetUrl) {
             return originalLoadJson(path);
-        }
+        };
 
         // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
         var tileset = new Cesium3DTileset({
