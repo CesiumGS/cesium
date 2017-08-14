@@ -207,7 +207,48 @@ defineSuite([
         });
     });
 
-    it('rejects readyPromise with invalid tileset version', function() {
+    it('loads json with static loadJson method', function() {
+        var tilesetJson = {
+            asset : {
+                version : 2.0
+            }
+        };
+
+        var uri = 'data:text/plain;base64,' + btoa(JSON.stringify(tilesetJson));
+
+        Cesium3DTileset.loadJson(uri).then(function(result) {
+            expect(result).toEqual(tilesetJson);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+    it('static method loadJson is used in Cesium3DTileset constructor', function() {
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
+
+        var originalLoadJson = Cesium3DTileset.loadJson;
+
+        // override loadJson and replace incorrect url with correct url
+        Cesium3DTileset.loadJson = function(tilesetUrl) {
+            return originalLoadJson(path);
+        };
+
+        // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
+        var tileset = new Cesium3DTileset({
+            url : 'invalid.json'
+        });
+
+        // restore original version
+        Cesium3DTileset.loadJson = originalLoadJson;
+
+        return tileset.readyPromise.then(function() {
+            expect(tileset.ready).toEqual(true);
+        }).otherwise(function(error) {
+            fail('should not fail');
+        });
+    });
+
+     it('rejects readyPromise with invalid tileset version', function() {
         var tilesetJson = {
             asset : {
                 version : 2.0
@@ -1604,6 +1645,34 @@ defineSuite([
             expect(tileset._root.visibility(scene.frameState, CullingVolume.MASK_INDETERMINATE)).not.toEqual(CullingVolume.MASK_OUTSIDE);
             expect(spyUpdate.calls.count()).toEqual(1);
             expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
+        });
+    });
+
+    it('tile load event is raised', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.tileLoad.addEventListener(spyUpdate);
+            tileset.maximumMemoryUsage = 0;
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                // Root is loaded
+                expect(spyUpdate.calls.count()).toEqual(1);
+                expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
+                spyUpdate.calls.reset();
+
+                // Unload from cache
+                viewNothing();
+                scene.renderForSpecs();
+                expect(tileset.statistics.numberOfTilesWithContentReady).toEqual(0);
+
+                // Look at root again
+                viewRootOnly();
+                return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset).then(function() {
+                    expect(spyUpdate.calls.count()).toEqual(1);
+                    expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
+                });
+            });
         });
     });
 
