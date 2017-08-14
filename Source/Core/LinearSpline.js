@@ -47,6 +47,7 @@ define([
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function LinearSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

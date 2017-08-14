@@ -17,6 +17,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTileBatchTable',
         './LabelStyle',
+        './Vector3DTileMeshes',
         './Vector3DTilePoints',
         './Vector3DTilePolygons',
         './Vector3DTilePolylines'
@@ -39,6 +40,7 @@ define([
         when,
         Cesium3DTileBatchTable,
         LabelStyle,
+        Vector3DTileMeshes,
         Vector3DTilePoints,
         Vector3DTilePolygons,
         Vector3DTilePolylines) {
@@ -58,6 +60,7 @@ define([
         this._polygons = undefined;
         this._polylines = undefined;
         this._points = undefined;
+        this._meshes = undefined;
 
         this._readyPromise = when.defer();
 
@@ -276,8 +279,9 @@ define([
         var numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
         var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
         var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+        var numberOfMeshes = defaultValue(featureTableJson.MESHES_LENGTH, 0);
 
-        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
+        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints + numberOfMeshes;
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content));
         content._batchTable = batchTable;
 
@@ -299,12 +303,10 @@ define([
         var modelMatrix = content._tile.computedTransform;
 
         var center;
-        /*
         if (defined(featureTableJson.RTC_CENTER)) {
             center = Cartesian3.unpack(featureTableJson.RTC_CENTER);
+            Matrix4.multiplyByPoint(modelMatrix, center, center);
         } else {
-            center = Cartesian3.ZERO;
-            */
             center = Rectangle.center(rectangle);
             if (isCartographic) {
                 center.height = CesiumMath.lerp(minHeight, maxHeight, 0.5);
@@ -314,11 +316,12 @@ define([
                 center.z = CesiumMath.lerp(minHeight, maxHeight, 0.5);
             }
             Matrix4.multiplyByPoint(modelMatrix, center, center);
-        //}
+        }
 
         var polygonBatchIds;
         var polylineBatchIds;
         var pointBatchIds;
+        var meshBatchIds;
         var i;
 
         if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
@@ -336,7 +339,12 @@ define([
             pointBatchIds = new Uint16Array(featureTableBinary.buffer, pointBatchIdsByteOffset, numberOfPoints);
         }
 
-        if (!defined(polygonBatchIds) && !defined(polylineBatchIds) && !defined(pointBatchIds)) {
+        if (numberOfMeshes > 0 && defined(featureTableJson.MESH_BATCH_IDS)) {
+            var meshBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.MESH_BATCH_IDS.byteOffset;
+            meshBatchIds = new Uint16Array(featureTableBinary.buffer, meshBatchIdsByteOffset, numberOfMeshes);
+        }
+
+        if (!defined(polygonBatchIds) || !defined(polylineBatchIds) || !defined(pointBatchIds) || !defined(meshBatchIds)) {
             var maxId = -1;
 
             if (defined(polygonBatchIds)) {
@@ -354,6 +362,12 @@ define([
             if (defined(pointBatchIds)) {
                 for (i = 0; i < numberOfPoints; ++i) {
                     maxId = Math.max(maxId, pointBatchIds[i]);
+                }
+            }
+
+            if (defined(meshBatchIds)) {
+                for (i = 0; i < numberOfMeshes; ++i) {
+                    maxId = Math.max(maxId, meshBatchIds[i]);
                 }
             }
 
@@ -377,6 +391,13 @@ define([
                 pointBatchIds = new Uint16Array(numberOfPoints);
                 for (i = 0; i < numberOfPoints; ++i) {
                     pointBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(meshBatchIds) && numberOfMeshes > 0) {
+                meshBatchIds = new Uint16Array(numberOfMeshes);
+                for (i = 0; i < numberOfMeshes; ++i) {
+                    meshBatchIds[i] = maxId++;
                 }
             }
         }
@@ -463,12 +484,36 @@ define([
 
         if (numberOfPoints > 0) {
             var pointPositions = new Uint16Array(arrayBuffer, byteOffset, pointsPositionByteLength / sizeOfUint16);
+            byteOffset += pointsPositionByteLength;
+
             content._points = new Vector3DTilePoints({
                 positions : pointPositions,
                 batchIds : pointBatchIds,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
                 rectangle : rectangle,
+                batchTable : batchTable
+            });
+        }
+
+        if (numberOfMeshes > 0) {
+            var meshIndexOffsetsByteOffset = featureTableBinary.byteOffset + featureTableJson.MESH_INDEX_OFFSETS.byteOffset;
+            var meshIndexOffsets = new Uint32Array(featureTableBinary.buffer, meshIndexOffsetsByteOffset, numberOfMeshes);
+
+            var meshIndexCountsByteOffset = featureTableBinary.byteOffset + featureTableJson.MESH_INDEX_COUNTS.byteOffset;
+            var meshIndexCounts = new Uint32Array(featureTableBinary.buffer, meshIndexCountsByteOffset, numberOfMeshes);
+
+            var meshPositionCount = featureTableJson.MESH_POSITION_COUNT;
+
+            content._meshes = new Vector3DTileMeshes({
+                buffer : arrayBuffer,
+                byteOffset : byteOffset,
+                positionCount : meshPositionCount,
+                indexOffsets : meshIndexOffsets,
+                indexCounts : meshIndexCounts,
+                batchIds : meshBatchIds,
+                center : center,
+                modelMatrix : modelMatrix,
                 batchTable : batchTable
             });
         }
@@ -487,6 +532,9 @@ define([
             }
             if (defined(content._points)) {
                 content._points.createFeatures(content, features);
+            }
+            if (defined(content._meshes)) {
+                content._meshes.createFeatures(content, features);
             }
             content._features = features;
         }
@@ -527,6 +575,9 @@ define([
         if (defined(this._points)) {
             this._points.applyDebugSettings(enabled, color);
         }
+        if (defined(this._meshes)) {
+            this._meshes.applyDebugSettings(enabled, color);
+        }
     };
 
     /**
@@ -542,6 +593,9 @@ define([
         }
         if (defined(this._points)) {
             this._points.applyStyle(frameState, style, this._features);
+        }
+        if (defined(this._meshes)) {
+            this._meshes.applyStyle(frameState, style, this._features);
         }
     };
 
@@ -560,6 +614,10 @@ define([
         }
         if (defined(this._points)) {
             this._points.update(frameState);
+        }
+        if (defined(this._meshes)) {
+            this._meshes.debugWireframe = this._tileset.debugWireframe;
+            this._meshes.update(frameState);
         }
 
         if (!defined(this._polygonReadyPromise)) {
@@ -589,6 +647,7 @@ define([
         this._polygons = this._polygons && this._polygons.destroy();
         this._polylines = this._polylines && this._polylines.destroy();
         this._points = this._points && this._points.destroy();
+        this._meshes = this._meshes && this._meshes.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };

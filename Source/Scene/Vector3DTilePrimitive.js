@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
+        '../Core/PrimitiveType',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -32,6 +33,7 @@ define([
         destroyObject,
         IndexDatatype,
         Matrix4,
+        PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -109,6 +111,7 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+        this._rsWireframe = undefined;
 
         this._commands = [];
         this._pickCommands = [];
@@ -119,6 +122,14 @@ define([
         this._batchDirty = false;
         this._pickCommandsDirty = true;
         this._framesSinceLastRebatch = 0;
+
+        /**
+         * Draw the wireframe of the classification meshes.
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugWireframe = false;
+        this._debugWireframe = this.debugWireframe;
     }
 
     var attributeLocations = {
@@ -828,6 +839,53 @@ define([
         this._batchDirty = true;
     };
 
+    function queueCommands(frameState, commands) {
+        var commandList = frameState.commandList;
+        var commandLength = commands.length;
+        for (var i = 0; i < commandLength; ++i) {
+            commandList.push(commands[i]);
+        }
+    }
+
+    function queueWireframeCommands(frameState, commands) {
+        var commandList = frameState.commandList;
+        var commandLength = commands.length;
+        for (var i = 0; i < commandLength; i += 3) {
+            commandList.push(commands[i + 2]);
+        }
+    }
+
+    function updateWireframe(primitive) {
+        if (primitive.debugWireframe === primitive._debugWireframe) {
+            return;
+        }
+
+        if (!defined(primitive._rsWireframe)) {
+            primitive._rsWireframe = RenderState.fromCache({});
+        }
+
+        var rs;
+        var type;
+
+        if (primitive.debugWireframe) {
+            rs = primitive._rsWireframe;
+            type = PrimitiveType.LINES;
+        } else {
+            rs = primitive._rsColorPass;
+            type = PrimitiveType.TRIANGLES;
+        }
+
+        var commands = primitive._commands;
+        var commandLength = commands.length;
+        for (var i = 0; i < commandLength; i += 3) {
+            var command = commands[i + 2];
+            command.renderState = rs;
+            command.primitiveType = type;
+        }
+
+        primitive._debugWireframe = primitive.debugWireframe;
+    }
+
     /**
      * Updates the batches and queues the commands for rendering.
      *
@@ -844,18 +902,18 @@ define([
         var passes = frameState.passes;
         if (passes.render) {
             createColorCommands(this, context);
-            var commandLength = this._commands.length;
-            for (var i = 0; i < commandLength; ++i) {
-                frameState.commandList.push(this._commands[i]);
+            updateWireframe(this);
+
+            if (this._debugWireframe) {
+                queueWireframeCommands(frameState, this._commands);
+            } else {
+                queueCommands(frameState, this._commands);
             }
         }
 
         if (passes.pick) {
             createPickCommands(this);
-            var pickCommandLength = this._pickCommands.length;
-            for (var j = 0; j < pickCommandLength; ++j) {
-                frameState.commandList.push(this._pickCommands[j]);
-            }
+            queueCommands(frameState, this._pickCommands);
         }
     };
 

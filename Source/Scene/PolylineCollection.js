@@ -1144,14 +1144,22 @@ define([
         }
 
         var defines = ['DISTANCE_DISPLAY_CONDITION'];
+
+        var fs = new ShaderSource({
+            sources : [this.material.shaderSource, PolylineFS]
+        });
+
+        // Check for use of v_polylineAngle in material shader
+        if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
+            defines.push('POLYLINE_DASH');
+        }
+
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
             defines : defines,
             sources : [PolylineCommon, vsSource]
         });
-        var fs = new ShaderSource({
-            sources : [this.material.shaderSource, PolylineFS]
-        });
+
         var fsPick = new ShaderSource({
             sources : fs.sources,
             pickColorQualifier : 'varying'
