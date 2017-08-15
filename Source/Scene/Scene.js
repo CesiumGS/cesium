@@ -1374,9 +1374,9 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        //if (!scene.frameState.passes.pick) {
+        if (!scene.frameState.passes.pick) {
             updateDerivedCommands(scene, command);
-        //}
+        }
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1946,6 +1946,7 @@ define([
             }
 
             clearDepth.execute(context, passState);
+            scene._stencilClearCommand.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -2909,6 +2910,7 @@ define([
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
+        frameState.invertClassification = false;
         frameState.passes.pick = true;
 
         us.update(frameState);
@@ -3033,8 +3035,7 @@ define([
                 'void main()\n' +
                 '{\n' +
                 '    czm_3d_tiles_translucent_main();\n' +
-                //'    gl_FragColor.a *= czm_invertedClassificationAlpha;\n' +
-                '    gl_FragColor.a = czm_invertedClassificationAlpha;\n' +
+                '    gl_FragColor.a *= czm_invertedClassificationAlpha;\n' +
                 '}\n');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, inverted3DTileTranslucentKeyword, {

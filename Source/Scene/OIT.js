@@ -586,7 +586,11 @@ define([
             var command = commands[j];
             var derivedCommand;
             if (invertedClassification) {
-                derivedCommand = command.derivedCommands.inverted.oit.translucentCommand;
+                var inverted = command.derivedCommands.inverted;
+                if (!defined(inverted)) {
+                    continue;
+                }
+                derivedCommand = inverted.oit.translucentCommand;
             } else if (shadowsEnabled && command.receiveShadows) {
                 derivedCommand = command.derivedCommands.oit.shadows.translucentCommand;
             } else {
