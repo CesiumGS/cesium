@@ -1798,8 +1798,8 @@ define([
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            if (invertedClassification) {
-                command = command.derivedCommands.invert.inverted3DTileTranslucentCommand;
+            if (invertedClassification && defined(command.derivedCommands.inverted)) {
+                command = command.derivedCommands.inverted.inverted3DTileTranslucentCommand;
             }
             executeFunction(command, scene, context, passState);
         }
