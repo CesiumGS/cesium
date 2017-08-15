@@ -507,6 +507,26 @@ define([
                     delete image.extensions;
                 }
             }
+            if (defined(image.extras)) {
+                var compressedImages = image.extras.compressedImage3DTiles;
+                for (var type in compressedImages) {
+                    if (compressedImages.hasOwnProperty(type)) {
+                        var compressedImage = compressedImages[type];
+                        var compressedExtensions = compressedImage.extensions;
+                        if (defined(compressedExtensions)) {
+                            var compressedBinaryGltf = compressedExtensions.KHR_binary_glTF;
+                            if (defined(compressedBinaryGltf)) {
+                                compressedImage.bufferView = globalMapping.bufferViews[compressedBinaryGltf.bufferView];
+                                compressedImage.mimeType = compressedBinaryGltf.mimeType;
+                                delete compressedExtensions.KHR_binary_glTF;
+                            }
+                            if (Object.keys(extensions).length === 0) {
+                                delete compressedImage.extensions;
+                            }
+                        }
+                    }
+                }
+            }
         });
         ForEach.texture(gltf, function(texture) {
             if (defined(texture.sampler)) {
@@ -768,6 +788,18 @@ define([
             var imageBufferView = image.bufferView;
             if (defined(imageBufferView)) {
                 image.bufferView = bufferViewShiftMap[imageBufferView];
+            }
+            if (defined(image.extras)) {
+                var compressedImages = image.extras.compressedImage3DTiles;
+                for (var type in compressedImages) {
+                    if (compressedImages.hasOwnProperty(type)) {
+                        var compressedImage = compressedImages[type];
+                        var compressedImageBufferView = compressedImage.bufferView;
+                        if (defined(compressedImageBufferView)) {
+                            compressedImage.bufferView = bufferViewShiftMap[compressedImageBufferView];
+                        }
+                    }
+                }
             }
         });
     }
