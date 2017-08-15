@@ -89,6 +89,10 @@ define([
             featureInfo.configureNameFromProperties(feature.properties);
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
+            if (defined(json.crs) && !defined(feature.crs)) {
+                feature.crs = json.crs;
+            }
+
             // If this is a point feature, use the coordinates of the point.
             if (defined(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
