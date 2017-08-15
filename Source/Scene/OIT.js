@@ -533,9 +533,10 @@ define([
         return result;
     };
 
-    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands, invertedClassification) {
         var command;
         var derivedCommand;
+        var inverted;
         var j;
 
         var context = scene.context;
@@ -554,7 +555,17 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            if (invertedClassification) {
+                inverted = command.derivedCommands.inverted;
+                if (!defined(inverted)) {
+                    continue;
+                }
+                derivedCommand = inverted.oit.translucentCommand;
+            } else if (shadowsEnabled && command.receiveShadows) {
+                derivedCommand = command.derivedCommands.oit.shadows.translucentCommand;
+            } else {
+                derivedCommand = command.derivedCommands.oit.translucentCommand;
+            }
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -562,7 +573,17 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
+            if (invertedClassification) {
+                inverted = command.derivedCommands.inverted;
+                if (!defined(inverted)) {
+                    continue;
+                }
+                derivedCommand = inverted.oit.alphaCommand;
+            } else if (shadowsEnabled && command.receiveShadows) {
+                derivedCommand = command.derivedCommands.oit.shadows.alphaCommand;
+            } else {
+                derivedCommand = command.derivedCommands.oit.alphaCommand;
+            }
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
