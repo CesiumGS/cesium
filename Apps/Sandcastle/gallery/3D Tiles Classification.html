@@ -25,8 +25,19 @@
 <div id="toolbar">
 <table><tbody>
 <tr>
-    <td>wireframe enabled</td>
-    <td><input type="checkbox" data-bind="checked: enabled"></td>
+    <td>show volume</td>
+    <td><input type="checkbox" data-bind="checked: enabled" /></td>
+</tr>
+<tr>
+    <td>invert classification</td>
+    <td><input type="checkbox" data-bind="checked: inverted" /></td>
+</tr>
+<tr>
+    <td>inverted alpha</td>
+    <td>
+        <input type="range" min="0.0" max="0.99" step="0.01" data-bind="value: invertedAlpha, valueUpdate: 'input'">
+        <input type="text" size="3" data-bind="value: invertedAlpha">
+    </td>
 </tr>
 </tbody></table>
 </div>
@@ -84,7 +95,9 @@ handler.setInputAction(function(movement) {
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 var viewModel = {
-    enabled : false
+    enabled : classification.debugWireframe,
+    inverted : viewer.scene.invertClassification,
+    invertedAlpha : viewer.scene.invertClassificationAlpha
 };
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
@@ -93,6 +106,16 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
     function(newValue) {
         classification.debugWireframe = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
+    function(newValue) {
+        viewer.scene.invertClassification = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(
+    function(newValue) {
+        viewer.scene.invertClassificationAlpha = newValue;
     }
 );
 //Sandcastle_End
