@@ -851,6 +851,12 @@ define([
             }
         },
 
+        /**
+         * The alpha of unclassified 3D Tiles.
+         *
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
         invertClassificationAlpha : {
             get : function() {
                 return this._invertClassificationAlpha;

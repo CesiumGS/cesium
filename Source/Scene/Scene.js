@@ -641,7 +641,19 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
-        this.invertClassification = true;
+        /**
+         * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render opaque and
+         * unclassified 3D Tile geometry will render translucent with the alpha set to {@link Scene#invertClassificationAlpha}.
+         * @type {Boolean}
+         * @default false
+         */
+        this.invertClassification = false;
+
+        /**
+         * The alpha of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * @type {Number}
+         * @default 0.5
+         */
         this.invertClassificationAlpha = 0.5;
 
         this._brdfLutGenerator = new BrdfLutGenerator();
@@ -1956,6 +1968,9 @@ define([
             }
 
             if (!scene.frameState.invertClassification || picking) {
+                // Common/fastest path. Draw 3D Tiles and classification normally.
+
+                // Draw 3D Tiles
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -1967,6 +1982,7 @@ define([
                     scene._stencilClearCommand.execute(context, passState);
                 }
 
+                // Draw classifications. Modifies 3D Tiles and terrain color.
                 us.updatePass(Pass.GROUND);
                 commands = frustumCommands.commands[Pass.GROUND];
                 length = frustumCommands.indices[Pass.GROUND];
@@ -1974,6 +1990,9 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
             } else {
+                // Inverted classification. Apply alpha to unclassified geometry and classified geometry opaque.
+
+                // Depth only pass
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -1981,6 +2000,7 @@ define([
                     executeCommand(commands[j], scene, context, passState, undefined, true);
                 }
 
+                // Set stencil
                 us.updatePass(Pass.GROUND);
                 commands = frustumCommands.commands[Pass.GROUND];
                 length = frustumCommands.indices[Pass.GROUND];
@@ -1988,6 +2008,7 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
+                // Draw opaque 3D Tiles where classified
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2037,6 +2058,7 @@ define([
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
             if (scene.frameState.invertClassification && !picking) {
+                // Draw translucent 3D Tiles where unclassified
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];

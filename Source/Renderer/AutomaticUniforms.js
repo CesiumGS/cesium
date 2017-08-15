@@ -1590,6 +1590,12 @@ define([
             }
         }),
 
+        /**
+         * An automatic GLSL uniform that will be the alpha of unclassified 3D Tiles.
+         *
+         * @alias czm_invertedClassificationAlpha
+         * @glslUniform
+         */
         czm_invertedClassificationAlpha : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
