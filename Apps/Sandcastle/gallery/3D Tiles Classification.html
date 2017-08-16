@@ -70,7 +70,8 @@ classification.readyPromise.then(function(tileset) {
 var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
 var current = {
     feature : undefined,
-    originalColor : new Cesium.Color()
+    originalColor : new Cesium.Color(),
+    originalShow : undefined
 };
 
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -82,15 +83,18 @@ handler.setInputAction(function(movement) {
 
         // This assignment is necessary to work with the set property
         current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
+        current.feature.show = current.originalShow;
         current.feature = undefined;
     }
 
     if (Cesium.defined(pickedFeature) && (pickedFeature !== current.feature)) {
         current.feature = pickedFeature;
         Cesium.Color.clone(pickedFeature.color, current.originalColor);
+        current.originalShow = pickedFeature.show;
 
         // Highlight newly selected feature
         pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
+        pickedFeature.show = true;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -111,6 +115,10 @@ Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
 Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
     function(newValue) {
         viewer.scene.invertClassification = newValue;
+        classification.style = new Cesium.Cesium3DTileStyle({
+            color : 'rgba(255, 0, 0, 0.5)',
+            //show : !newValue
+        });
     }
 );
 Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(

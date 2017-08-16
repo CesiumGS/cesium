@@ -101,6 +101,7 @@ define([
 
         this._va = undefined;
         this._sp = undefined;
+        this._spStencil = undefined;
         this._spPick = undefined;
         this._uniformMap = undefined;
 
@@ -216,6 +217,22 @@ define([
         });
 
         primitive._sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        vs = new ShaderSource({
+            defines : ['VECTOR_TILE'],
+            sources : [ShadowVolumeVS]
+        });
+        fs = new ShaderSource({
+            defines : ['VECTOR_TILE'],
+            sources : [ShadowVolumeFS]
+        });
+
+        primitive._spStencil = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
@@ -557,6 +574,7 @@ define([
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
+        var spStencil = primitive._spStencil;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
@@ -582,7 +600,7 @@ define([
             stencilPreloadCommand.offset = offset;
             stencilPreloadCommand.count = count;
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = sp;
+            stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
@@ -599,7 +617,7 @@ define([
             stencilDepthCommand.offset = offset;
             stencilDepthCommand.count = count;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = sp;
+            stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
@@ -633,7 +651,8 @@ define([
         pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
-        var sp = primitive._sp;
+        //var sp = primitive._sp;
+        var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
@@ -660,7 +679,7 @@ define([
             stencilPreloadCommand.offset = offset;
             stencilPreloadCommand.count = count;
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = sp;
+            stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
@@ -677,7 +696,7 @@ define([
             stencilDepthCommand.offset = offset;
             stencilDepthCommand.count = count;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = sp;
+            stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
@@ -847,15 +866,6 @@ define([
         }
     }
 
-    function queueInvertCommands(frameState, commands) {
-        // Only set stencil buffer for classified geometry, skip color draw command.
-        var commandList = frameState.commandList;
-        var commandLength = commands.length;
-        for (var i = 0; i < commandLength; i += 3) {
-            commandList.push(commands[i], commands[i + 1]);
-        }
-    }
-
     function queueWireframeCommands(frameState, commands) {
         var commandList = frameState.commandList;
         var commandLength = commands.length;
@@ -915,8 +925,6 @@ define([
 
             if (this._debugWireframe) {
                 queueWireframeCommands(frameState, this._commands);
-            } else if (frameState.invertClassification) {
-                queueInvertCommands(frameState, this._commands);
             } else {
                 queueCommands(frameState, this._commands);
             }
