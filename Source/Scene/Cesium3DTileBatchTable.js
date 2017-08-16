@@ -1181,6 +1181,46 @@ define([
         };
     };
 
+    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallbackIgnoreShow = function(batchIdAttributeName) {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        var that = this;
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                '}';
+
+            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallbackIgnoreShow = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'uniform sampler2D tile_pickTexture; \n' +
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
+                '}';
+
+            return renamedSource + '\n' + newMain;
+        };
+    };
+
     Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
             return;

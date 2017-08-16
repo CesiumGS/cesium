@@ -239,8 +239,8 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(ShadowVolumeVS);
-        fsSource = batchTable.getPickFragmentShaderCallback()(ShadowVolumeFS);
+        vsSource = batchTable.getPickVertexShaderCallbackIgnoreShow('a_batchId')(ShadowVolumeVS);
+        fsSource = batchTable.getPickFragmentShaderCallbackIgnoreShow()(ShadowVolumeFS);
 
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],

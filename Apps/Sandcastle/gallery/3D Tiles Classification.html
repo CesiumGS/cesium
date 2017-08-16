@@ -117,7 +117,7 @@ Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
         viewer.scene.invertClassification = newValue;
         classification.style = new Cesium.Cesium3DTileStyle({
             color : 'rgba(255, 0, 0, 0.5)',
-            //show : !newValue
+            show : !newValue
         });
     }
 );
