@@ -652,23 +652,20 @@ define([
         var commandsIgnoreShow = primitive._commandsIgnoreShow;
         var spStencil = primitive._spStencil;
 
-        var length = commands.length;
-        commandsIgnoreShow.length = length;
+        var commandsLength = commands.length;
+        var length = commandsIgnoreShow.length = commandsLength / 3 * 2;
 
-        for (var j = 0; j < length; j += 3) {
-            var command = commands[j];
-            var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(command, commandsIgnoreShow[j]);
+        var commandIndex = 0;
+        for (var j = 0; j < length; j += 2) {
+            var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(commands[commandIndex], commandsIgnoreShow[j]);
             commandIgnoreShow.shaderProgram = spStencil;
             commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
 
-            command = commands[j + 1];
-            commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(command, commandsIgnoreShow[j + 1]);
+            commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(commands[commandIndex + 1], commandsIgnoreShow[j + 1]);
             commandIgnoreShow.shaderProgram = spStencil;
             commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
 
-            command = commands[j + 2];
-            commandIgnoreShow = commandsIgnoreShow[j + 2] = DrawCommand.shallowClone(command, commandsIgnoreShow[j + 2]);
-            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+            commandIndex += 3;
         }
 
         primitive._commandsDirty = false;

@@ -2004,9 +2004,8 @@ define([
                 us.updatePass(Pass.GROUND_IGNORE_SHOW);
                 commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
                 length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
-                for (j = 0; j < length; j += 3) {
+                for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
-                    executeCommand(commands[j + 1], scene, context, passState);
                 }
 
                 // Draw opaque 3D Tiles where classified
@@ -2032,9 +2031,8 @@ define([
                 us.updatePass(Pass.GROUND_IGNORE_SHOW);
                 commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
                 length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
-                for (j = 0; j < length; j += 3) {
+                for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
-                    executeCommand(commands[j + 1], scene, context, passState);
                 }
             }
 
