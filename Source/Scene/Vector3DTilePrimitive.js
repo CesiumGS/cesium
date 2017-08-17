@@ -115,6 +115,7 @@ define([
         this._rsWireframe = undefined;
 
         this._commands = [];
+        this._commandsIgnoreShow = [];
         this._pickCommands = [];
 
         this._constantColor = Color.clone(Color.WHITE);
@@ -574,7 +575,6 @@ define([
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
-        var spStencil = primitive._spStencil;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
@@ -600,7 +600,7 @@ define([
             stencilPreloadCommand.offset = offset;
             stencilPreloadCommand.count = count;
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilPreloadCommand.shaderProgram = spStencil;
+            stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.pass = Pass.GROUND;
@@ -617,7 +617,7 @@ define([
             stencilDepthCommand.offset = offset;
             stencilDepthCommand.count = count;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            stencilDepthCommand.shaderProgram = spStencil;
+            stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.pass = Pass.GROUND;
@@ -639,6 +639,39 @@ define([
             colorCommand.boundingVolume = bv;
             colorCommand.pass = Pass.GROUND;
         }
+
+        primitive._commandsDirty = true;
+    }
+
+    function createColorCommandsIgnoreShow(primitive, frameState) {
+        if (!frameState.invertClassification || (defined(primitive._commandsIgnoreShow) && !primitive._commandsDirty)) {
+            return;
+        }
+
+        var commands = primitive._commands;
+        var commandsIgnoreShow = primitive._commandsIgnoreShow;
+        var spStencil = primitive._spStencil;
+
+        var length = commands.length;
+        commandsIgnoreShow.length = length;
+
+        for (var j = 0; j < length; j += 3) {
+            var command = commands[j];
+            var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(command, commandsIgnoreShow[j]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+
+            command = commands[j + 1];
+            commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(command, commandsIgnoreShow[j + 1]);
+            commandIgnoreShow.shaderProgram = spStencil;
+            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+
+            command = commands[j + 2];
+            commandIgnoreShow = commandsIgnoreShow[j + 2] = DrawCommand.shallowClone(command, commandsIgnoreShow[j + 2]);
+            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+        }
+
+        primitive._commandsDirty = false;
     }
 
     function createPickCommands(primitive) {
@@ -651,7 +684,6 @@ define([
         pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
-        //var sp = primitive._sp;
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = Matrix4.IDENTITY;
@@ -858,11 +890,21 @@ define([
         this._batchDirty = true;
     };
 
-    function queueCommands(frameState, commands) {
+    function queueCommands(frameState, commands, commandsIgnoreShow) {
         var commandList = frameState.commandList;
         var commandLength = commands.length;
-        for (var i = 0; i < commandLength; ++i) {
+        var i;
+        for (i = 0; i < commandLength; ++i) {
             commandList.push(commands[i]);
+        }
+
+        if (!frameState.invertClassification || !defined(commandsIgnoreShow)) {
+            return;
+        }
+
+        commandLength = commandsIgnoreShow.length;
+        for (i = 0; i < commandLength; ++i) {
+            commandList.push(commandsIgnoreShow[i]);
         }
     }
 
@@ -921,12 +963,13 @@ define([
         var passes = frameState.passes;
         if (passes.render) {
             createColorCommands(this, context);
+            createColorCommandsIgnoreShow(this, frameState);
             updateWireframe(this);
 
             if (this._debugWireframe) {
                 queueWireframeCommands(frameState, this._commands);
             } else {
-                queueCommands(frameState, this._commands);
+                queueCommands(frameState, this._commands, this._commandsIgnoreShow);
             }
         }
 

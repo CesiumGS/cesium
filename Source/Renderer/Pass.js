@@ -21,11 +21,12 @@ define([
         COMPUTE : 1,
         GLOBE : 2,
         CESIUM_3D_TILE : 3,
-        GROUND : 4,
-        OPAQUE : 5,
-        TRANSLUCENT : 6,
-        OVERLAY : 7,
-        NUMBER_OF_PASSES : 8
+        GROUND_IGNORE_SHOW : 4,
+        GROUND : 5,
+        OPAQUE : 6,
+        TRANSLUCENT : 7,
+        OVERLAY : 8,
+        NUMBER_OF_PASSES : 9
     };
 
     return freezeObject(Pass);

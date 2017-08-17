@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passGround = 4.0;
+const float czm_passGround = 5.0;

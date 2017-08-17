@@ -2001,9 +2001,9 @@ define([
                 }
 
                 // Set stencil
-                us.updatePass(Pass.GROUND);
-                commands = frustumCommands.commands[Pass.GROUND];
-                length = frustumCommands.indices[Pass.GROUND];
+                us.updatePass(Pass.GROUND_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
                 for (j = 0; j < length; j += 3) {
                     executeCommand(commands[j], scene, context, passState);
                     executeCommand(commands[j + 1], scene, context, passState);
@@ -2029,9 +2029,9 @@ define([
                 }
 
                 // Reset stencil
-                us.updatePass(Pass.GROUND);
-                commands = frustumCommands.commands[Pass.GROUND];
-                length = frustumCommands.indices[Pass.GROUND];
+                us.updatePass(Pass.GROUND_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
                 for (j = 0; j < length; j += 3) {
                     executeCommand(commands[j], scene, context, passState);
                     executeCommand(commands[j + 1], scene, context, passState);
