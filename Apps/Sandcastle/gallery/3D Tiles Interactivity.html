@@ -45,7 +45,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-
 var viewModel = {
     rightClickAction: 'annotate',
     middleClickAction: 'hide'
@@ -112,18 +111,20 @@ handler.setInputAction(function(movement) {
 function annotate(movement, feature) {
     if (scene.pickPositionSupported) {
         var cartesian = scene.pickPosition(movement.position);
-        var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-        var height = cartographic.height.toFixed(2) + ' m';
+        if(Cesium.defined(cartesian)){
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            var height = cartographic.height.toFixed(2) + ' m';
 
-        annotations.add({
-            position : cartesian,
-            text : height,
-            showBackground : true,
-            font : '14px monospace',
-            horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            disableDepthTestDistance : Number.POSITIVE_INFINITY
-        });
+            annotations.add({
+                position : cartesian,
+                text : height,
+                showBackground : true,
+                font : '14px monospace',
+                horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                disableDepthTestDistance : Number.POSITIVE_INFINITY
+            });
+        }
     }
 }
 

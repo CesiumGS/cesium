@@ -1,5 +1,9 @@
 Change Log
 ==========
+### 1.36 - 2017-08-17
+
+* Breaking changes
+   * `3D Tiles Interactivity` added check if cartesian is defined before continuing
 
 ### 1.36 - 2017-08-01
 
