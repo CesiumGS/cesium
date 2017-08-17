@@ -1,5 +1,9 @@
 Change Log
 ==========
+### 1.36 - 2017-08-17
+
+* Breaking changes
+   *`CZML Reference Properties` reference property changed as fillColor-reference from outlineColor-reference.
 
 ### 1.36 - 2017-08-01
 
