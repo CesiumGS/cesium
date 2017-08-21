@@ -19,6 +19,7 @@ define([
      * @param {KmlCamera|KmlLookAt} view KmlCamera or KmlLookAt
      */
     function KmlTourFlyTo(duration, flyToMode, view) {
+        this.type = 'KmlTourFlyTo';
         this.blocking = true;
         this.activeCamera = null;
         this.activeCallback = null;

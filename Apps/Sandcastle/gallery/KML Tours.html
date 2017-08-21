@@ -46,10 +46,10 @@ viewer.dataSources.add(
         console.log((terminated ? 'Trminate' : 'End') + ' tour');
     });
     tour.entryStart.addEventListener(function(entry) {
-        console.log('Play ' + entry.constructor.name + ' ('+ entry.duration + ')');
+        console.log('Play ' + entry.type + ' ('+ entry.duration + ')');
     });
     tour.entryEnd.addEventListener(function(entry, terminated) {
-        console.log((terminated ? 'Trminate' : 'End') + ' ' + entry.constructor.name);
+        console.log((terminated ? 'Trminate' : 'End') + ' ' + entry.type);
     });
 });
 

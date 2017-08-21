@@ -11,6 +11,7 @@ define([
      * @param {Number} duration entry duration
      */
     function KmlTourWait(duration) {
+        this.type = 'KmlTourWait';
         this.blocking = true;
         this.duration = duration;
 
