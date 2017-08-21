@@ -41,6 +41,7 @@ define([
         this._center = options.center;
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
+        this._boundingVolume = options.boundingVolume;
 
         this._primitive = undefined;
 
@@ -314,7 +315,7 @@ define([
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
             batchedIndices : batchedIndices,
-            boundingVolume : undefined, // TODO
+            boundingVolume : geometries._boundingVolume,
             boundingVolumes : [], // TODO
             center : center,
             pickObject : defaultValue(geometries._pickObject, geometries)
@@ -331,6 +332,7 @@ define([
         geometries._center = undefined;
         geometries._modelMatrix = undefined;
         geometries._batchTable = undefined;
+        geometries._boundingVolume = undefined;
     }
 
     /**

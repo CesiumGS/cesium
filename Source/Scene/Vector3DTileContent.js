@@ -193,6 +193,12 @@ define([
             if (defined(content._polygons)) {
                 content._polygons.updateCommands(batchId, color);
             }
+            if (defined(content._meshes)) {
+                content._meshes.updateCommands(batchId, color);
+            }
+            if (defined(content._geometries)) {
+                content._geometries.updateCommands(batchId, color);
+            }
         };
     }
 
@@ -626,7 +632,8 @@ define([
                 batchIds : batchIds.meshes,
                 center : center,
                 modelMatrix : modelMatrix,
-                batchTable : batchTable
+                batchTable : batchTable,
+                boundingVolume : content._tile._boundingVolume.boundingVolume
             });
         }
 
@@ -667,7 +674,8 @@ define([
                 sphereBatchIds : batchIds.spheres,
                 center : center,
                 modelMatrix : modelMatrix,
-                batchTable : batchTable
+                batchTable : batchTable,
+                boundingVolume : content._tile._boundingVolume.boundingVolume
             });
         }
     }
