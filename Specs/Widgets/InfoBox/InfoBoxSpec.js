@@ -25,6 +25,7 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         infoBox = new InfoBox(testContainer);
+        expect(infoBox.allowScripts).toBe(false);
         expect(infoBox.container).toBe(testContainer);
         expect(infoBox.viewModel).toBeDefined();
         expect(infoBox.isDestroyed()).toEqual(false);

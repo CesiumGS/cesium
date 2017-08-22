@@ -78,6 +78,7 @@ click: function () { closeClicked.raiseEvent(this); }');
         var viewModel = new InfoBoxViewModel();
         knockout.applyBindings(viewModel, infoElement);
 
+        this._allowScripts = false;
         this._container = container;
         this._element = infoElement;
         this._frame = frame;
@@ -140,6 +141,33 @@ click: function () { closeClicked.raiseEvent(this); }');
     }
 
     defineProperties(InfoBox.prototype, {
+        /**
+         * A flag that allows scripts to run inside the infobox from the string.
+         * Due to security issues default is false, and it must be explicitly set after infobox creation.
+         * @memberof InfoBox.prototype
+         *
+         * @type {Boolean}
+         *
+         * @example
+         * var viewer = new Cesium.Viewer('cesiumContainer');
+         * viewer.infoBox.allowScripts = true; // now you can set entity descriptions with <script> tags to be parsed
+         */
+        allowScripts: {
+            get: function() {
+                return this._allowScripts;
+            },
+            set: function(val) {
+                this._allowScripts = val;
+                // change sandbox properties
+                if (val === true) {
+                    this.frame.sandbox.add('allow-scripts');
+                    this.frame.sandbox.add('allow-modals');
+                } else {
+                    this.frame.sandbox.remove('allow-scripts');
+                    this.frame.sandbox.remove('allow-modals');
+                }
+            }
+        },
         /**
          * Gets the parent container.
          * @memberof InfoBox.prototype
