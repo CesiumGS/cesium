@@ -112,7 +112,6 @@ define([
             distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
         }
 
-        this._text = defaultValue(options.text, '');
         this._show = defaultValue(options.show, true);
         this._font = defaultValue(options.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
@@ -135,7 +134,6 @@ define([
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = distanceDisplayCondition;
         this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
-        this._rtl = defaultValue(options.rtl, false);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -149,6 +147,9 @@ define([
         this._mode = undefined;
 
         this._clusterShow = true;
+
+        this._rtl = defaultValue(options.rtl, false);
+        this.text = defaultValue(options.text, '');
 
         this._updateClamping();
     }

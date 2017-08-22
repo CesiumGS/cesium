@@ -1866,9 +1866,10 @@ defineSuite([
         it('should reverse text when there is only hebrew characters and rtl is true', function() {
            var text = 'שלום';
            var label = labels.add({
-               text : text
+               text : text,
+               rtl: true
            });
-           label.rtl = true;
+
            scene.renderForSpecs();
 
            expect(label.rtl).toEqual(true);
