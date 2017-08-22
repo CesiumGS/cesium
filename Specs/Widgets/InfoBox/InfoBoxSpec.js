@@ -1,10 +1,12 @@
 defineSuite([
         'Widgets/InfoBox/InfoBox',
         'Core/defined',
+        'Core/oneTimeWarning',
         'Specs/pollToPromise'
     ], function(
         InfoBox,
         defined,
+        oneTimeWarning,
         pollToPromise) {
     'use strict';
 
@@ -21,6 +23,49 @@ defineSuite([
             infoBox = infoBox.destroy();
         }
         document.body.removeChild(testContainer);
+    });
+
+    describe('stringToHtml tests', function() {
+
+        var element;
+        beforeEach(function() {
+            element = document.createElement('div');
+            element.id = 'testElement';
+            spyOn(element, 'appendChild').and.callFake(function(x) {
+                element.append(x);
+            });
+            element.testFunction = function(arg){};
+            spyOn(element, 'testFunction');
+        });
+
+       it('should exist', function() {
+           expect(InfoBox.stringToHtml).toBeDefined();
+       });
+
+       it('should set the HTML of the frame when no script tag is available', function() {
+           var s = '<div>string</div>';
+           InfoBox.stringToHtml(s, element);
+           expect(element.innerHTML).toBe(s);
+           expect(element.appendChild).not.toHaveBeenCalled();
+       });
+
+       describe('Handle script tags', function() {
+           var elementString = '<script>testElement.testFunction();</script>';
+           it('should set the HTML content of the frame', function() {
+               InfoBox.stringToHtml(elementString, element);
+               expect(element.innerHTML).toBe(elementString);
+           });
+
+           it('should run appendChild with contextualFragment if supported', function(){
+               document.body.append(element);
+               InfoBox.stringToHtml(elementString, element);
+               expect(element.appendChild).toHaveBeenCalled();
+               expect(element.appendChild.calls.mostRecent().args[0].nodeType).toEqual(11);
+               expect(element.testFunction).toHaveBeenCalled();
+           });
+       });
+
+
     });
 
     it('constructor sets expected values', function() {
