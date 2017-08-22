@@ -5,6 +5,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/oneTimeWarning',
         '../../ThirdParty/knockout',
         '../getElement',
         '../subscribeAndEvaluate',
@@ -16,6 +17,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        oneTimeWarning,
         knockout,
         getElement,
         subscribeAndEvaluate,
@@ -233,6 +235,19 @@ click: function () { closeClicked.raiseEvent(this); }');
     };
 
     InfoBox.stringToHtml = function stringToHtml(s, frame) {
+        // if we don't have a script tag - in case the method was used as static...
+        if (s.indexOf('<script') > -1) {
+            // we have a script tag - let's handle it
+            // check for modern browsers
+            if (defined(document.createRange) && defined(document.createRange().createContextualFragment)) {
+                var fragment = document.createRange().createContextualFragment(s);
+                frame.appendChild(fragment);
+                return;
+            }
+            oneTimeWarning('Infobox content script not supported', 'Infobox content script not supported');
+        }
+
+
         frame.innerHTML = s;
 
     };
