@@ -1,9 +1,8 @@
 Change Log
 ==========
-### 1.36 - 2017-08-17
+### 1.37 - 2017-09-01
 
-* Breaking changes
-   * `3D Tiles Interactivity` added check if cartesian is defined before continuing
+* Fixed a bug where developer error was thrown in Sandcastle example [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
 
 ### 1.36 - 2017-08-01
 
