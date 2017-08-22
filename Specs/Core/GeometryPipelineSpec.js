@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/GeometryPipeline',
         'Core/AttributeCompression',
@@ -345,7 +344,7 @@ defineSuite([
                 }
             });
 
-            geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
+            GeometryPipeline.reorderForPreVertexCache(geometry);
         }).toThrowDeveloperError();
     });
 

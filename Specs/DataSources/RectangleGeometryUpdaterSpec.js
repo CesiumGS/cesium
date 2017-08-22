@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/RectangleGeometryUpdater',
         'Core/Cartesian3',

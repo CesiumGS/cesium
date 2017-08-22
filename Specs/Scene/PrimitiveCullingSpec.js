@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
@@ -7,6 +6,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/loadImage',
         'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Transforms',
@@ -16,7 +16,6 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
-        'Scene/PerspectiveFrustum',
         'Scene/PolylineCollection',
         'Scene/Primitive',
         'Scene/SceneMode',
@@ -30,6 +29,7 @@ defineSuite([
         GeometryInstance,
         loadImage,
         CesiumMath,
+        PerspectiveFrustum,
         Rectangle,
         RectangleGeometry,
         Transforms,
@@ -39,7 +39,6 @@ defineSuite([
         LabelCollection,
         Material,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
         PolylineCollection,
         Primitive,
         SceneMode,

@@ -367,6 +367,7 @@ require({
         }
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+        /*eslint-disable new-cap*/
         if (!JSHINT(getScriptFromEditor(false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
@@ -378,6 +379,7 @@ require({
                 }
             }
         }
+        /*eslint-enable new-cap*/
     }
 
     function scheduleHint() {
@@ -545,7 +547,8 @@ require({
         var headNodes = bucketDoc.head.childNodes;
         var node;
         var nodes = [];
-        for (var i = 0, len = headNodes.length; i < len; ++i) {
+        var i, len;
+        for (i = 0, len = headNodes.length; i < len; ++i) {
             node = headNodes[i];
             // header is included in blank frame.
             if (node.tagName === 'SCRIPT' && node.src.indexOf('Sandcastle-header.js') < 0) {
@@ -882,6 +885,8 @@ require({
         showGallery();
         scheduleHintNoChange();
     });
+
+    var searchContainer;
 
     function hideSearchContainer() {
         if (dom.byId('searchContainer')) {
@@ -1289,7 +1294,6 @@ require({
         });
     }
 
-    var searchContainer;
     when(promise).then(function() {
         dom.byId('searchDemos').appendChild(galleryErrorMsg);
         searchContainer = registry.byId('searchContainer');

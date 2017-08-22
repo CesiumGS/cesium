@@ -1,42 +1,41 @@
-/*global define*/
 define([
-    '../Core/AxisAlignedBoundingBox',
-    '../Core/BoundingSphere',
-    '../Core/Cartesian2',
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/Ellipsoid',
-    '../Core/EllipsoidalOccluder',
-    '../Core/Math',
-    '../Core/Matrix4',
-    '../Core/OrientedBoundingBox',
-    '../Core/Rectangle',
-    '../Core/RuntimeError',
-    '../Core/TerrainEncoding',
-    '../Core/Transforms',
-    '../Core/WebMercatorProjection',
-    './createTaskProcessorWorker'
-], function(
-    AxisAlignedBoundingBox,
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    defaultValue,
-    defined,
-    Ellipsoid,
-    EllipsoidalOccluder,
-    CesiumMath,
-    Matrix4,
-    OrientedBoundingBox,
-    Rectangle,
-    RuntimeError,
-    TerrainEncoding,
-    Transforms,
-    WebMercatorProjection,
-    createTaskProcessorWorker) {
+        '../Core/AxisAlignedBoundingBox',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
+        '../Core/Math',
+        '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
+        '../Core/Rectangle',
+        '../Core/RuntimeError',
+        '../Core/TerrainEncoding',
+        '../Core/Transforms',
+        '../Core/WebMercatorProjection',
+        './createTaskProcessorWorker'
+    ], function(
+        AxisAlignedBoundingBox,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        defaultValue,
+        defined,
+        Ellipsoid,
+        EllipsoidalOccluder,
+        CesiumMath,
+        Matrix4,
+        OrientedBoundingBox,
+        Rectangle,
+        RuntimeError,
+        TerrainEncoding,
+        Transforms,
+        WebMercatorProjection,
+        createTaskProcessorWorker) {
     'use strict';
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -63,7 +62,7 @@ define([
 
         var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
             parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
-            parameters.includeWebMercatorT);
+            parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold);
         var vertices = statistics.vertices;
         transferableObjects.push(vertices.buffer);
         var indices = statistics.indices;
@@ -84,15 +83,13 @@ define([
         };
     }
 
-    var negativeElevationFactor = -Math.pow(2, 32);
-    var negativeElevationThreshold = CesiumMath.EPSILON12;
     var scratchCartographic = new Cartographic();
     var scratchCartesian = new Cartesian3();
     var minimumScratch = new Cartesian3();
     var maximumScratch = new Cartesian3();
     var matrix4Scratch = new Matrix4();
 
-    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT) {
+    function processBuffer(buffer, relativeToCenter, ellipsoid, rectangle, nativeRectangle, exaggeration, skirtHeight, includeWebMercatorT, negativeAltitudeExponentBias, negativeElevationThreshold) {
         var geographicWest;
         var geographicSouth;
         var geographicEast;
@@ -149,7 +146,8 @@ define([
         var size = 0;
         var indicesSize = 0;
         var quadSize;
-        for (var quad = 0; quad < 4; ++quad) {
+        var quad;
+        for (quad = 0; quad < 4; ++quad) {
             var o = offset;
             quadSize = dv.getUint32(o, true);
             o += sizeOfUint32;
@@ -243,7 +241,7 @@ define([
                 // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
                 // by -2^32 to get the real negative altitude value.
                 if (height < negativeElevationThreshold) {
-                    height *= negativeElevationFactor;
+                    height *= negativeAltitudeExponentBias;
                 }
                 height *= exaggeration;
 
@@ -311,7 +309,7 @@ define([
             }
 
             var facesElementCount = numFaces * 3;
-            for (i = 0; i < facesElementCount; ++i, ++indicesOffset) {
+            for (var j = 0; j < facesElementCount; ++j, ++indicesOffset) {
                 indices[indicesOffset] = indicesMapping[dv.getUint16(offset, true)];
                 offset += sizeOfUint16;
             }
@@ -396,13 +394,13 @@ define([
         var vertices = new Float32Array(size * encoding.getStride());
 
         var bufferIndex = 0;
-        for (var j = 0; j < size; ++j) {
-            bufferIndex = encoding.encode(vertices, bufferIndex, positions[j], uvs[j], heights[j], undefined, webMercatorTs[j]);
+        for (var k = 0; k < size; ++k) {
+            bufferIndex = encoding.encode(vertices, bufferIndex, positions[k], uvs[k], heights[k], undefined, webMercatorTs[k]);
         }
 
         return {
             vertices : vertices,
-            indices : Uint16Array.from(indices),
+            indices : new Uint16Array(indices),
             maximumHeight : maxHeight,
             minimumHeight : minHeight,
             encoding : encoding,

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -45,10 +44,6 @@ define([
                     return cesiumInspector;
                 }
             }
-        });
-
-        viewer.scene.postRender.addEventListener(function() {
-            viewer.cesiumInspector.viewModel.update();
         });
     }
 

@@ -1,19 +1,18 @@
-/*global define*/
 define([
-    './binarySearch',
-    './Cartographic',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Rectangle'
-], function(
-    binarySearch,
-    Cartographic,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Rectangle) {
-    "use strict";
+        './binarySearch',
+        './Cartographic',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Rectangle'
+    ], function(
+        binarySearch,
+        Cartographic,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Rectangle) {
+    'use strict';
 
     /**
      * Reports the availability of tiles in a {@link TilingScheme}.
@@ -313,7 +312,8 @@ define([
         var maxLevel = 0;
 
         // Find the deepest quadtree node containing this point.
-        while (true) {
+        var found = false;
+        while (!found) {
             var nw = node._nw && rectangleContainsPosition(node._nw.extent, position);
             var ne = node._ne && rectangleContainsPosition(node._ne.extent, position);
             var sw = node._sw && rectangleContainsPosition(node._sw.extent, position);
@@ -345,7 +345,7 @@ define([
             } else if (se) {
                 node = node._se;
             } else {
-                break;
+                found = true;
             }
         }
 

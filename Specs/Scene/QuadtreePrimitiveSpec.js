@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/QuadtreePrimitive',
         'Core/Cartesian3',

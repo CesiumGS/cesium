@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GroundPrimitive',
         'Core/Color',
@@ -153,6 +152,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
         expect(primitive.debugShowBoundingVolume).toEqual(false);
+        expect(primitive.debugShowShadowVolume).toEqual(false);
     });
 
     it('constructs with options', function() {
@@ -167,7 +167,8 @@ defineSuite([
             releaseGeometryInstances : false,
             allowPicking : false,
             asynchronous : false,
-            debugShowBoundingVolume : true
+            debugShowBoundingVolume : true,
+            debugShowShadowVolume : true
         });
 
         expect(primitive.geometryInstances).toEqual(geometryInstances);
@@ -179,6 +180,7 @@ defineSuite([
         expect(primitive.allowPicking).toEqual(false);
         expect(primitive.asynchronous).toEqual(false);
         expect(primitive.debugShowBoundingVolume).toEqual(true);
+        expect(primitive.debugShowShadowVolume).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {

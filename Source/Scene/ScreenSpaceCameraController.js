@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -15,6 +14,7 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -22,7 +22,6 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
-        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -42,6 +41,7 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Plane,
         Quaternion,
         Ray,
@@ -49,7 +49,6 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
-        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -838,7 +837,7 @@ define([
     var translateCVEndPos = new Cartesian3();
     var translatCVDifference = new Cartesian3();
     var translateCVOrigin = new Cartesian3();
-    var translateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var translateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var translateCVStartMouse = new Cartesian2();
     var translateCVEndMouse = new Cartesian2();
 
@@ -920,12 +919,13 @@ define([
     var rotateCVTransform = new Matrix4();
     var rotateCVVerticalTransform = new Matrix4();
     var rotateCVOrigin = new Cartesian3();
-    var rotateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var rotateCVPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var rotateCVCartesian3 = new Cartesian3();
     var rotateCVCart = new Cartographic();
     var rotateCVOldTransform = new Matrix4();
     var rotateCVQuaternion = new Quaternion();
     var rotateCVMatrix = new Matrix3();
+    var tilt3DCartesian3 = new Cartesian3();
 
     function rotateCV(controller, startPosition, movement) {
         if (defined(movement.angleAndHeight)) {
@@ -1242,9 +1242,10 @@ define([
     }
 
     var scratchStrafeRay = new Ray();
-    var scratchStrafePlane = new Plane(Cartesian3.ZERO, 0.0);
+    var scratchStrafePlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var scratchStrafeIntersection = new Cartesian3();
     var scratchStrafeDirection = new Cartesian3();
+    var scratchMousePos = new Cartesian3();
 
     function strafe(controller, startPosition, movement) {
         var scene = controller._scene;
@@ -1279,7 +1280,6 @@ define([
 
     var spin3DPick = new Cartesian3();
     var scratchCartographic = new Cartographic();
-    var scratchMousePos = new Cartesian3();
     var scratchRadii = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchLookUp = new Cartesian3();
@@ -1334,11 +1334,10 @@ define([
                 pan3D(controller, startPosition, movement, ellipsoid);
             }
             return;
-        } else {
-            controller._looking = false;
-            controller._rotating = false;
-            controller._strafing = false;
         }
+        controller._looking = false;
+        controller._rotating = false;
+        controller._strafing = false;
 
         if (defined(globe) && height < controller._minimumPickingTerrainHeight) {
             if (defined(mousePos)) {
@@ -1558,7 +1557,6 @@ define([
     var tilt3DVerticalCenter = new Cartesian3();
     var tilt3DTransform = new Matrix4();
     var tilt3DVerticalTransform = new Matrix4();
-    var tilt3DCartesian3 = new Cartesian3();
     var tilt3DOldTransform = new Matrix4();
     var tilt3DQuaternion = new Quaternion();
     var tilt3DMatrix = new Matrix3();

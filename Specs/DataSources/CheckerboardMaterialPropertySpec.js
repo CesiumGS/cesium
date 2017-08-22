@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/CheckerboardMaterialProperty',
         'Core/Cartesian2',

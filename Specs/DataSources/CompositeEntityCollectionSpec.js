@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/CompositeEntityCollection',
         'Core/Iso8601',

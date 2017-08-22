@@ -76,7 +76,7 @@ var viewModel = {
     downLayer : null,
     selectedLayer : null,
     isSelectableLayer : function(layer) {
-        return baseLayers.indexOf(layer) >= 0;
+        return this.baseLayers.indexOf(layer) >= 0;
     },
     raise : function(layer, index) {
         imageryLayers.raise(layer);
@@ -99,9 +99,9 @@ var viewModel = {
         return layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
     }
 };
-Cesium.knockout.track(viewModel);
-
 var baseLayers = viewModel.baseLayers;
+
+Cesium.knockout.track(viewModel);
 
 function setupLayers() {
     // Create all the base layers that this example will support.

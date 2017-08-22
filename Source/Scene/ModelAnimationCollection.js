@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/clone',
         '../Core/defaultValue',
@@ -213,7 +212,6 @@ define([
             options.name = animationIds[i];
             scheduledAnimations.push(this.add(options));
         }
-
         return scheduledAnimations;
     };
 
@@ -415,17 +413,15 @@ define([
                     frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
                 }
                 animationOccured = true;
-            } else {
+            } else if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                 // ANIMATING -> STOPPED state transition?
-                if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
-                    scheduledAnimation._state = ModelAnimationState.STOPPED;
-                    if (scheduledAnimation.stop.numberOfListeners > 0) {
-                        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
-                    }
+                scheduledAnimation._state = ModelAnimationState.STOPPED;
+                if (scheduledAnimation.stop.numberOfListeners > 0) {
+                    frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
+                }
 
-                    if (scheduledAnimation.removeOnStop) {
-                        animationsToRemove.push(scheduledAnimation);
-                    }
+                if (scheduledAnimation.removeOnStop) {
+                    animationsToRemove.push(scheduledAnimation);
                 }
             }
         }

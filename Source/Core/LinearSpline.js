@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './defaultValue',
@@ -44,10 +43,11 @@ define([
      * });
      *
      * var p0 = spline.evaluate(times[0]);
-     * 
+     *
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function LinearSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
