@@ -1,52 +1,57 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainProvider',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/defined',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/loadImage',
-    'Core/loadWithXhr',
-    'Core/Math',
-    'Core/TerrainProvider',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainProvider,
-    DefaultProxy,
-    defaultValue,
-    defined,
-    Ellipsoid,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTerrainData,
-    loadImage,
-    loadWithXhr,
-    CesiumMath,
-    TerrainProvider,
-    pollToPromise,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Core/Request',
+        'Core/RequestScheduler',
+        'Core/TerrainProvider',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainProvider,
+        DefaultProxy,
+        defaultValue,
+        defined,
+        Ellipsoid,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTerrainData,
+        GoogleEarthEnterpriseTileInformation,
+        loadImage,
+        loadWithXhr,
+        CesiumMath,
+        Request,
+        RequestScheduler,
+        TerrainProvider,
+        pollToPromise,
+        when) {
     'use strict';
 
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            var t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            var t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '0'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '1'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '2'] = t;
 
-            t = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            t = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
             t.ancestorHasTerrain = true;
             this._tileInfo[quadKey + '3'] = t;
 
@@ -71,6 +76,16 @@ defineSuite([
             });
         });
     }
+
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
+        });
+    }
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;
@@ -150,6 +165,28 @@ defineSuite([
         expect(terrainProvider.getLevelMaximumGeometricError(0)).toBeGreaterThan(0.0);
         expect(terrainProvider.getLevelMaximumGeometricError(0)).toEqualEpsilon(terrainProvider.getLevelMaximumGeometricError(1) * 2.0, CesiumMath.EPSILON10);
         expect(terrainProvider.getLevelMaximumGeometricError(1)).toEqualEpsilon(terrainProvider.getLevelMaximumGeometricError(2) * 2.0, CesiumMath.EPSILON10);
+    });
+
+    it('readyPromise rejects if there isn\'t terrain', function() {
+        installMockGetQuadTreePacket();
+
+        var metadata = new GoogleEarthEnterpriseMetadata({
+            url : 'made/up/url'
+        });
+
+        metadata.terrainPresent = false;
+
+        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+            metadata : metadata
+        });
+
+        return terrainProvider.readyPromise
+            .then(function() {
+                fail('Server does not have terrain, so we shouldn\'t resolve.');
+            })
+            .otherwise(function() {
+                expect(terrainProvider.ready).toBe(false);
+            });
     });
 
     it('logo is undefined if credit is not provided', function() {
@@ -250,6 +287,10 @@ defineSuite([
             var deferreds = [];
             var loadRealTile = true;
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                if (url.indexOf('dbRoot.v5') !== -1) {
+                    return deferred.reject(); // Just reject dbRoot file and use defaults.
+                }
+
                 if (loadRealTile) {
                     loadRealTile = false;
                     return loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
@@ -276,17 +317,15 @@ defineSuite([
                     });
                 })
                 .then(function() {
-                    var promise = terrainProvider.requestTileGeometry(1, 2, 3);
-                    expect(promise).toBeDefined();
-                    return promise;
-                })
-                .then(function(terrainData) {
-                    expect(terrainData).toBeDefined();
-                    for (var i = 0; i < 10; ++i) {
-                        promises.push(terrainProvider.requestTileGeometry(i, i, i));
+                    var promise;
+                    for (var i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                        promise = terrainProvider.requestTileGeometry(i, i, i, createRequest());
+                        promises.push(promise);
                     }
+                    RequestScheduler.update();
+                    expect(promise).toBeDefined();
 
-                    return terrainProvider.requestTileGeometry(1, 2, 3);
+                    return terrainProvider.requestTileGeometry(1, 2, 3, createRequest());
                 })
                 .then(function(terrainData) {
                     expect(terrainData).toBeUndefined();

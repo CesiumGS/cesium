@@ -1,14 +1,13 @@
-/*global define*/
 define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
@@ -21,12 +20,12 @@ define([
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
@@ -40,6 +39,13 @@ define([
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
+
+    function scaleToSurface(positions, ellipsoid) {
+        for (var i = 0; i < positions.length; i++) {
+            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
+        }
+        return positions;
+    }
 
     function combine(computedPositions, cornerType) {
         var wallIndices = [];
@@ -331,12 +337,8 @@ define([
         var width = options.width;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-        if (!defined(width)) {
-            throw new DeveloperError('options.width is required.');
-        }
+        Check.typeOf.object('options.positions', positions);
+        Check.typeOf.number('options.width', width);
         //>>includeEnd('debug');
 
         this._positions = positions;
@@ -366,12 +368,8 @@ define([
      */
     CorridorOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -417,9 +415,7 @@ define([
      */
     CorridorOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -473,14 +469,15 @@ define([
         var width = corridorOutlineGeometry._width;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
+        var ellipsoid = corridorOutlineGeometry._ellipsoid;
 
+        positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
 
-        var ellipsoid = corridorOutlineGeometry._ellipsoid;
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,

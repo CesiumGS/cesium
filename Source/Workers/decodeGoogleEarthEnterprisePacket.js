@@ -1,14 +1,15 @@
-/*global define*/
 define([
-    '../Core/RuntimeError',
-    '../Core/GoogleEarthEnterpriseMetadata',
-    './createTaskProcessorWorker',
-    '../ThirdParty/pako_inflate'
-], function(
-    RuntimeError,
-    GoogleEarthEnterpriseMetadata,
-    createTaskProcessorWorker,
-    pako) {
+        '../Core/decodeGoogleEarthEnterpriseData',
+        '../Core/GoogleEarthEnterpriseTileInformation',
+        '../Core/RuntimeError',
+        '../ThirdParty/pako_inflate',
+        './createTaskProcessorWorker'
+    ], function(
+        decodeGoogleEarthEnterpriseData,
+        GoogleEarthEnterpriseTileInformation,
+        RuntimeError,
+        pako,
+        createTaskProcessorWorker) {
     'use strict';
 
     // Datatype sizes
@@ -18,7 +19,8 @@ define([
 
     var Types = {
         METADATA : 0,
-        TERRAIN : 1
+        TERRAIN : 1,
+        DBROOT : 2
     };
 
     Types.fromString = function(s) {
@@ -26,13 +28,15 @@ define([
             return Types.METADATA;
         } else if (s === 'Terrain') {
             return Types.TERRAIN;
+        } else if (s === 'DbRoot') {
+            return Types.DBROOT;
         }
     };
 
-    function decodeGoogleEarthEnterpriseTerrainPacket(parameters, transferableObjects) {
+    function decodeGoogleEarthEnterprisePacket(parameters, transferableObjects) {
         var type = Types.fromString(parameters.type);
         var buffer = parameters.buffer;
-        GoogleEarthEnterpriseMetadata.decode(buffer);
+        decodeGoogleEarthEnterpriseData(parameters.key, buffer);
 
         var uncompressedTerrain = uncompressPacket(buffer);
         buffer = uncompressedTerrain.buffer;
@@ -43,6 +47,11 @@ define([
                 return processMetadata(buffer, length, parameters.quadKey);
             case Types.TERRAIN:
                 return processTerrain(buffer, length, transferableObjects);
+            case Types.DBROOT:
+                transferableObjects.push(buffer);
+                return {
+                    buffer : buffer
+                };
         }
 
     }
@@ -129,13 +138,13 @@ define([
 
             offset += 8; // Ignore image neighbors for now
 
-            // Data providers aren't used
-            ++offset; // Image provider
-            ++offset; // Terrain provider
+            // Data providers
+            var imageProvider = dv.getUint8(offset++);
+            var terrainProvider = dv.getUint8(offset++);
             offset += sizeOfUint16; // 4 byte align
 
-            instances.push(new GoogleEarthEnterpriseMetadata.TileInformation(bitfield, cnodeVersion,
-                imageVersion, terrainVersion));
+            instances.push(new GoogleEarthEnterpriseTileInformation(bitfield, cnodeVersion,
+                imageVersion, terrainVersion, imageProvider, terrainProvider));
         }
 
         var tileInfo = [];
@@ -241,5 +250,5 @@ define([
         return uncompressedPacket;
     }
 
-    return createTaskProcessorWorker(decodeGoogleEarthEnterpriseTerrainPacket);
+    return createTaskProcessorWorker(decodeGoogleEarthEnterprisePacket);
 });

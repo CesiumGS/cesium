@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './SceneMode'
     ], function(
@@ -9,23 +8,26 @@ define([
      * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
-     * @param {Context} context The rendering context.
+     * @param {Context} context The rendering context
      * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
+     * @param {JobScheduler} jobScheduler The job scheduler
      *
      * @alias FrameState
      * @constructor
      *
      * @private
      */
-    function FrameState(context, creditDisplay) {
+    function FrameState(context, creditDisplay, jobScheduler) {
         /**
          * The rendering context.
+         *
          * @type {Context}
          */
         this.context = context;
 
         /**
          * An array of rendering commands.
+         *
          * @type {DrawCommand[]}
          */
         this.commandList = [];
@@ -37,7 +39,20 @@ define([
         this.shadowMaps = [];
 
         /**
+         * The BRDF look up texture generator used for image-based lighting for PBR models
+         * @type {BrdfLutGenerator}
+         */
+        this.brdfLutGenerator = undefined;
+
+        /**
+         * The environment map used for image-based lighting for PBR models
+         * @type {CubeMap}
+         */
+        this.environmentMap = undefined;
+
+        /**
          * The current mode of the scene.
+         *
          * @type {SceneMode}
          * @default {@link SceneMode.SCENE3D}
          */
@@ -68,6 +83,13 @@ define([
         this.time = undefined;
 
         /**
+         * The job scheduler.
+         *
+         * @type {JobScheduler}
+         */
+        this.jobScheduler = jobScheduler;
+
+        /**
          * The map projection to use in 2D and Columbus View modes.
          *
          * @type {MapProjection}
@@ -77,6 +99,7 @@ define([
 
         /**
          * The current camera.
+         *
          * @type {Camera}
          * @default undefined
          */
@@ -84,6 +107,7 @@ define([
 
         /**
          * The culling volume.
+         *
          * @type {CullingVolume}
          * @default undefined
          */
@@ -91,6 +115,7 @@ define([
 
         /**
          * The current occluder.
+         *
          * @type {Occluder}
          * @default undefined
          */
@@ -108,12 +133,14 @@ define([
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
+             *
              * @type {Boolean}
              * @default false
              */
             render : false,
             /**
              * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+             *
              * @type {Boolean}
              * @default false
              */
@@ -129,6 +156,7 @@ define([
 
         /**
         * The credit display.
+         *
         * @type {CreditDisplay}
         */
         this.creditDisplay = creditDisplay;
@@ -154,6 +182,7 @@ define([
 
         /**
          * Gets whether or not to optimized for 3D only.
+         *
          * @type {Boolean}
          * @default false
          */
@@ -168,12 +197,14 @@ define([
             enabled : false,
             /**
              * A positive number used to mix the color and fog color based on camera distance.
+             *
              * @type {Number}
              * @default undefined
              */
             density : undefined,
             /**
              * A scalar used to modify the screen space error of geometry partially in fog.
+             *
              * @type {Number}
              * @default undefined
              */
@@ -181,9 +212,10 @@ define([
         };
 
         /**
-        * A scalar used to exaggerate the terrain.
-        * @type {Number}
-        */
+         * A scalar used to exaggerate the terrain.
+         * @type {Number}
+         * @default 1.0
+         */
         this.terrainExaggeration = 1.0;
 
         this.shadowHints = {
@@ -268,6 +300,7 @@ define([
 
     /**
      * A function that will be called at the end of the frame.
+     *
      * @callback FrameState~AfterRenderCallback
      */
 

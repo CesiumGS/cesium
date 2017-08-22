@@ -1,50 +1,55 @@
-/*global defineSuite*/
 defineSuite([
-    'Scene/GoogleEarthEnterpriseImageryProvider',
-    'Core/DefaultProxy',
-    'Core/defaultValue',
-    'Core/defined',
-    'Core/GeographicTilingScheme',
-    'Core/GoogleEarthEnterpriseMetadata',
-    'Core/loadImage',
-    'Core/loadWithXhr',
-    'Core/Rectangle',
-    'Scene/DiscardMissingTileImagePolicy',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseImageryProvider,
-    DefaultProxy,
-    defaultValue,
-    defined,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    loadImage,
-    loadWithXhr,
-    Rectangle,
-    DiscardMissingTileImagePolicy,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    when) {
+        'Scene/GoogleEarthEnterpriseImageryProvider',
+        'Core/decodeGoogleEarthEnterpriseData',
+        'Core/DefaultProxy',
+        'Core/defaultValue',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseMetadata',
+        'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Rectangle',
+        'Core/RequestScheduler',
+        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseImageryProvider,
+        decodeGoogleEarthEnterpriseData,
+        DefaultProxy,
+        defaultValue,
+        defined,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTileInformation,
+        loadImage,
+        loadWithXhr,
+        Rectangle,
+        RequestScheduler,
+        DiscardMissingTileImagePolicy,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        when) {
     'use strict';
 
-    var oldDecode;
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
+
     beforeAll(function() {
-        oldDecode = GoogleEarthEnterpriseMetadata.decode;
-        GoogleEarthEnterpriseMetadata.decode = function(data) {
-            return data;
-        };
+        decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
     });
 
     afterAll(function() {
-        GoogleEarthEnterpriseMetadata.decode = oldDecode;
+        decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;
     });
 
     var imageryProvider;
@@ -68,10 +73,10 @@ defineSuite([
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
             quadKey = defaultValue(quadKey, '');
-            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
-            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseMetadata.TileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '0'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '1'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '2'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
+            this._tileInfo[quadKey + '3'] = new GoogleEarthEnterpriseTileInformation(0xFF, 1, 1, 1);
 
             return when();
         });
@@ -127,6 +132,28 @@ defineSuite([
             expect(imageryProvider.ready).toBe(false);
             expect(e.message).toContain(url);
         });
+    });
+
+    it('readyPromise rejects if there isn\'t imagery', function() {
+        installMockGetQuadTreePacket();
+
+        var metadata = new GoogleEarthEnterpriseMetadata({
+            url : 'made/up/url'
+        });
+
+        metadata.imageryPresent = false;
+
+        imageryProvider = new GoogleEarthEnterpriseImageryProvider({
+            metadata : metadata
+        });
+
+        return imageryProvider.readyPromise
+            .then(function() {
+                fail('Server does not have imagery, so we shouldn\'t resolve.');
+            })
+            .otherwise(function() {
+                expect(imageryProvider.ready).toBe(false);
+            });
     });
 
     it('returns false for hasAlphaChannel', function() {
@@ -237,6 +264,9 @@ defineSuite([
             if (tries < 3) {
                 error.retry = true;
             }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
         });
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -257,6 +287,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;

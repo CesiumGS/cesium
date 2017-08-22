@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/CorridorGeometryUpdater',
         'Core/Cartesian3',

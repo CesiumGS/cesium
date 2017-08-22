@@ -1,20 +1,19 @@
-/*global define*/
 define([
         './Cartesian2',
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Math',
         './Rectangle'
     ], function(
         Cartesian2,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         GeographicProjection,
         CesiumMath,
@@ -104,7 +103,7 @@ define([
     };
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      *
      * @param {Rectangle} rectangle The rectangle to transform.
@@ -115,9 +114,7 @@ define([
      */
     GeographicTilingScheme.prototype.rectangleToNativeRectangle = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
+        Check.defined('rectangle', rectangle);
         //>>includeEnd('debug');
 
         var west = CesiumMath.toDegrees(rectangle.west);
@@ -137,7 +134,7 @@ define([
     };
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      *
      * @param {Number} x The integer x coordinate of the tile.
