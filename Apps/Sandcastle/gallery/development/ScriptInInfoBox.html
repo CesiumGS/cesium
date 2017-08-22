@@ -29,9 +29,10 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.infoBox.allowScripts = true; // now the info box can have scripts
-var redPolygon = viewer.entities.add({
+    var redDesc = '<script>alert("x");<\/script>';
+    var redPolygon = viewer.entities.add({
     name : 'Red polygon on surface',
-    description: '<script>alert("Hello Red");</script>',
+    description: redDesc,
     polygon : {
         hierarchy : Cesium.Cartesian3.fromDegreesArray([-115.0, 37.0,
                                                         -115.0, 32.0,
