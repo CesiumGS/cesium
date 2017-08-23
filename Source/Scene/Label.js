@@ -286,6 +286,7 @@ define([
 
                 if (this.rtl) {
                     if (this._originalValue === value) {
+                        value = this._text;
                         return;
                     }
                     this._originalValue = value;
