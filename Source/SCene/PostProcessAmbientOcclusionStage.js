@@ -196,14 +196,63 @@ define([
             '  return normalize(cross(d2, d1)); ' +
             '} \n' +
 
+            //Reconstruct Normal Without Edge Removation
+            'vec3 GetNormalXedge(vec3 posInCamera, float depthU, float depthD, float depthL, float depthR, vec2 pixelSize) \n' +
+            '{ \n' +
+           
+            '    vec4 posInCameraUp = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates - vec2(0.0, pixelSize.y)), depthU, 1.0); \n' +
+            '    posInCameraUp = posInCameraUp / posInCameraUp.w; \n' +
+            '    vec4 posInCameraDown = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates + vec2(0.0, pixelSize.y)), depthD, 1.0); \n' +
+            '    posInCameraDown = posInCameraDown / posInCameraDown.w; \n' +
+            '    vec4 posInCameraLeft = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates - vec2(pixelSize.x, 0.0)), depthL, 1.0); \n' +
+            '    posInCameraLeft = posInCameraLeft / posInCameraLeft.w; \n' +
+            '    vec4 posInCameraRight = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates + vec2(pixelSize.x, 0.0)), depthR, 1.0); \n' +
+            '    posInCameraRight = posInCameraRight / posInCameraRight.w; \n' +          
+            '    vec3 UC = posInCamera.xyz - posInCameraUp.xyz; \n' +
+		    '    vec3 DC = posInCameraDown.xyz - posInCamera.xyz; \n' +
+		    '    vec3 LC = posInCamera.xyz - posInCameraLeft.xyz; \n' +
+		    '    vec3 RC = posInCameraRight.xyz - posInCamera.xyz; \n' +
+		    '    vec3 DX; \n' +
+		    '    vec3 DY; \n' +
+
+		    '    if (length(UC) < length(DC)) \n' +
+		    '    { \n' +
+		    '	    DY = UC; \n' +
+		    '    } \n' +
+		    '    else \n' +
+		    '    { \n' +
+		    '	    DY = DC; \n' +
+		    '    } \n' +
+
+		    '    if (length(LC) < length(RC)) \n' +
+		    '    { \n' +
+		    '	    DX = LC; \n' +
+		    '    } \n' +
+		    '    else \n' +
+		    '    { \n' +
+		    '	   DX = RC; \n' +
+		    '    } \n' +
+
+            '    return normalize(cross(DY, DX)); ' +
+            '} \n' +
+
             'void main(void) \n' +
             '{ \n' +
            
             '    float depth = texture2D(u_depthTexture, v_textureCoordinates).r; \n' +
+         
+
             '    vec4 posInCamera = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates), depth, 1.0); \n' +
             '    posInCamera = posInCamera / posInCamera.w; \n' +
-            '    vec3 normalInCamera = GetNormal(posInCamera.xyz); \n' +
-           
+            'if(posInCamera.z < 1000.0) \n' + 
+            '{ \n' + 
+            '    vec2 pixelSize = 1.0 / czm_viewport.zw; \n' +
+            '    float depthU = texture2D(u_depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y)).r; \n' +
+            '    float depthD = texture2D(u_depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y)).r; \n' +
+            '    float depthL = texture2D(u_depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0)).r; \n' +
+            '    float depthR = texture2D(u_depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r; \n' +
+            '    vec3 normalInCamera = GetNormalXedge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize); \n' +
+            //'    vec3 normalInCamera = GetNormal(posInCamera.xyz); \n' +
             '    float AO = 0.0; \n' +
             '    vec2 sampleDirection = vec2(1.0, 0.0); \n' +
             '    float gapAngle = 90.0; \n' +
@@ -264,7 +313,10 @@ define([
             ' AO /= float(4); \n' +
             ' AO = 1.0 - clamp(AO, 0.0, 1.0); \n' +
             ' AO = pow(AO, u_intensity); \n' +
-            ' gl_FragColor = vec4(vec3(AO), 1.0); \n' +            
+            ' gl_FragColor = vec4(vec3(AO), 1.0); \n' + 
+            '} \n' + 
+            'else \n' + 
+            '  gl_FragColor = vec4(1.0); \n' +     
             '} \n';
 
         var aoBlurXShader =
