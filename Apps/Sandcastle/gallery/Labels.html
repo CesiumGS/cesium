@@ -121,6 +121,17 @@ function scaleByDistance() {
     });
 }
 
+function setRtl() {
+    Sandcastle.declare(setRtl);
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'שלום',
+            rtl : true
+        }
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Add label',
     onselect : function() {
@@ -156,6 +167,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         scaleByDistance();
         Sandcastle.highlight(scaleByDistance);
+    }
+}, {
+    text : 'Set rtl',
+    onselect : function() {
+        setRtl();
+        Sandcastle.highlight(setRtl);
     }
 }]);
 

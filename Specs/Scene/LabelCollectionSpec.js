@@ -1840,6 +1840,43 @@ defineSuite([
             expect(newlinesBbox.height).toBeGreaterThan(originalBbox.height);
         });
 
+        it('should not modify text when rtl is false', function() {
+           var text = 'bla bla bla';
+           var label = labels.add({
+               text : text
+           });
+           scene.renderForSpecs();
+
+           expect(label.rtl).toEqual(false);
+           expect(label.text).toEqual(text);
+        });
+
+        it('should not modify text when rtl is true and there is no hebrew characters', function() {
+           var text = 'bla bla bla';
+           var label = labels.add({
+               text : text,
+               rtl : true
+           });
+           scene.renderForSpecs();
+
+           expect(label.rtl).toEqual(true);
+           expect(label.text).toEqual(text);
+        });
+
+        it('should reverse text when there is only hebrew characters and rtl is true', function() {
+           var text = 'שלום';
+           var label = labels.add({
+               text : text,
+               rtl: true
+           });
+
+           scene.renderForSpecs();
+
+           expect(label.rtl).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(text.split('').reverse().join(''));
+        });
+
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {

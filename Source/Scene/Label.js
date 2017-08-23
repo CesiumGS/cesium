@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
+        '../Core/freezeObject',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -24,6 +25,7 @@ define([
         defineProperties,
         DeveloperError,
         DistanceDisplayCondition,
+        freezeObject,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -146,6 +148,9 @@ define([
         this._mode = undefined;
 
         this._clusterShow = true;
+
+        this._rtl = defaultValue(options.rtl, false);
+        this.text = defaultValue(options.text, '');
 
         this._updateClamping();
     }
@@ -278,6 +283,15 @@ define([
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
+
+                if (this.rtl) {
+                    if (this._originalValue === value) {
+                        value = this._text;
+                        return;
+                    }
+                    this._originalValue = value;
+                    value = this.reverseRtl(value);
+                }
 
                 if (this._text !== value) {
                     this._text = value;
@@ -1030,6 +1044,42 @@ define([
                     }
                 }
             }
+        },
+
+        /**
+         * Determines whether or not run the reverseRtl algorithm on the text of the label
+         * @memberof Label.prototype
+         * @type {Boolean}
+         * @default false
+         *
+         * @example
+         * // Example 1.
+         * // Set a label's rtl during init
+         * var myLabelEntity = viewer.entities.add({
+         *   id: 'my label',
+         *   text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
+         *   rtl: true
+         * });
+         *
+         * @example
+         * // Example 2.
+         * var myLabelEntity = viewer.entities.add({
+         *   id: 'my label',
+         *   text: 'English text'
+         * });
+         * // Set a label's rtl after init
+         * myLabelEntity.rtl = true;
+         * myLabelEntity.text = 'טקסט חדש'
+         */
+        rtl : {
+            get : function() {
+                return this._rtl;
+            },
+            set : function(value) {
+                if (this._rtl !== value) {
+                    this._rtl = value;
+                }
+            }
         }
     });
 
@@ -1194,6 +1244,172 @@ define([
      */
     Label.prototype.isDestroyed = function() {
         return false;
+    };
+
+    function declareTypes() {
+        var TextTypes = {
+            LTR : 0,
+            RTL : 1,
+            WEAK : 2,
+            BRACKETS : 3
+        };
+        return freezeObject(TextTypes);
+    }
+
+    function convertTextToTypes(text, rtlDir, rtlChars) {
+        var ltrChars = /[a-zA-Z0-9]/;
+        var bracketsChars = /[()[\]{}<>]/;
+        var parsedText = [];
+        var word = '';
+        var types = declareTypes();
+        var lastType = rtlDir ? types.RTL : types.LTR;
+        var currentType = '';
+        var textLength = text.length;
+        for (var textIndex = 0; textIndex < textLength; ++textIndex) {
+            var character = text.charAt(textIndex);
+            if (rtlChars.test(character)) {
+                currentType = types.RTL;
+            }
+            else if (ltrChars.test(character)) {
+                currentType = types.LTR;
+            }
+            else if (bracketsChars.test(character)) {
+                currentType = types.BRACKETS;
+            }
+            else {
+                currentType = types.WEAK;
+            }
+
+            if (lastType === currentType && currentType !== types.BRACKETS) {
+                word += character;
+            }
+            else {
+                parsedText.push({Type : lastType, Word : word});
+                lastType = currentType;
+                word = character;
+            }
+        }
+        parsedText.push({Type : currentType, Word : word});
+        return parsedText;
+    }
+
+    function reverseWord(word) {
+        return word.split('').reverse().join('');
+    }
+
+    function spliceWord(result, pointer, word) {
+        return result.slice(0, pointer) + word + result.slice(pointer);
+    }
+
+    function reverseBrackets(bracket) {
+        switch(bracket) {
+            case '(':
+                return ')';
+            case ')':
+                return '(';
+            case '[':
+                return ']';
+            case ']':
+                return '[';
+            case '{':
+                return '}';
+            case '}':
+                return '{';
+            case '<':
+                return '>';
+            case '>':
+                return '<';
+        }
+    }
+
+    /**
+     *
+     * @param {String} text the text to parse and reorder
+     * @returns {String} the text as rtl direction
+     */
+    Label.prototype.reverseRtl = function(value) {
+        var rtlChars = /[א-ת]/;
+        var texts = value.split('\n');
+        var result = '';
+        for (var i = 0; i < texts.length; i++) {
+            var text = texts[i];
+            var rtlDir = rtlChars.test(text.charAt(0));
+            var parsedText = convertTextToTypes(text, rtlDir, rtlChars);
+
+            var types = declareTypes();
+
+            var splicePointer = 0;
+            for(var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
+                var subText = parsedText[wordIndex];
+                var reverse = subText.Type === types.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+                if(rtlDir) {
+                    if (subText.Type === types.RTL) {
+                        result = reverseWord(subText.Word) + result;
+                        splicePointer = 0;
+                    }
+                    else if (subText.Type === types.LTR) {
+                        result = spliceWord(result,splicePointer, subText.Word);
+                        splicePointer += subText.Word.length;
+                    }
+                    else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
+                        if (parsedText[wordIndex -1].Type === types.RTL) {
+                            result = reverse + result;
+                            splicePointer = 0;
+                        }
+                        else if (parsedText.length > wordIndex +1) {
+                                if (parsedText[wordIndex +1].Type === types.RTL) {
+                                    result = reverse + result;
+                                    splicePointer = 0;
+                                }
+                                else {
+                                    result = spliceWord(result,splicePointer, subText.Word);
+                                    splicePointer += subText.Word.length;
+                                }
+                            }
+                            else {
+                                result = spliceWord(result,splicePointer, subText.Word);
+                            }
+                    }
+                }
+                else if (subText.Type === types.RTL) {
+                        result = spliceWord(result, splicePointer, reverseWord(subText.Word));
+                    }
+                    else if (subText.Type === types.LTR) {
+                        result += subText.Word;
+                        splicePointer = result.length;
+                    }
+                    else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
+                        if (wordIndex > 0) {
+                            if (parsedText[wordIndex -1].Type === types.RTL) {
+                                if (parsedText.length > wordIndex +1) {
+                                    if (parsedText[wordIndex +1].Type === types.LTR) {
+                                        result += subText.Word;
+                                        splicePointer = result.length;
+                                    }
+                                    else if (parsedText[wordIndex +1].Type === types.RTL) {
+                                        result = spliceWord(result, splicePointer, reverse);
+                                    }
+                                }
+                                else {
+                                    result += subText.Word;
+                                }
+                            }
+                            else {
+                                result += subText.Word;
+                                splicePointer = result.length;
+                            }
+                        }
+                        else {
+                            result += subText.Word;
+                            splicePointer = result.length;
+                        }
+                    }
+            }
+            if (i < texts.length - 1) {
+                result += '\n';
+            }
+        }
+        return result;
     };
 
     return Label;
