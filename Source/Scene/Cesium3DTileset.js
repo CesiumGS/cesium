@@ -1787,6 +1787,8 @@ define([
             }
         }
 
+        this._pointCloudPostProcessor.destroy();
+
         this._root = undefined;
         return destroyObject(this);
     };
