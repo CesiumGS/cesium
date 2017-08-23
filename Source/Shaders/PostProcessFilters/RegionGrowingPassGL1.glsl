@@ -134,7 +134,8 @@ void genericMedianFinder(in float[neighborhoodSize] neighbors,
     outColor = vec4(1, 0, 0, 1);
 }
 
-void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
+void loadIntoArray(inout vec4[neighborhoodSize] ecNeighbors,
+                   inout float[neighborhoodSize] depthNeighbors,
                    inout float[neighborhoodSize] aoNeighbors,
                    inout vec4[neighborhoodSize] colorNeighbors) {
     bool pastCenter = false;
@@ -146,12 +147,15 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            float neighbor = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                             neighborCoords));
+            vec4 neighborEC = texture2D(pointCloud_depthTexture,
+                                        neighborCoords);
+            float neighbor = length(neighborEC);
             float aoNeighbor = czm_unpackDepth(texture2D(pointCloud_aoTexture,
                                                neighborCoords));
             vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
             if (pastCenter) {
+                ecNeighbors[(j + 1) * neighborhoodFullWidth + i] =
+                    neighborEC;
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i] =
                     neighbor;
                 aoNeighbors[(j + 1) * neighborhoodFullWidth + i] =
@@ -159,6 +163,8 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
                 colorNeighbors[(j + 1) * neighborhoodFullWidth + i] =
                     colorNeighbor;
             } else {
+                ecNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
+                    neighborEC;
                 depthNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
                     neighbor;
                 aoNeighbors[(j + 1) * neighborhoodFullWidth + i + 1] =
@@ -172,15 +178,16 @@ void loadIntoArray(inout float[neighborhoodSize] depthNeighbors,
 
 void main() {
     vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    float depth = czm_unpackDepth(texture2D(pointCloud_depthTexture,
-                                            v_textureCoordinates));
+    vec4 ec = texture2D(pointCloud_depthTexture, v_textureCoordinates);
+    float depth = length(ec);
     float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture,
                                          v_textureCoordinates));
 
     vec4 finalColor = color;
-    float finalDepth = depth;
     float finalAO = ao;
+    vec4 finalEC = ec;
 
+    vec4 ecNeighbors[neighborhoodSize];
     float depthNeighbors[neighborhoodSize];
     float aoNeighbors[neighborhoodSize];
     vec4 colorNeighbors[neighborhoodSize];
@@ -194,7 +201,7 @@ void main() {
     rIs[6] = 1.0;
     rIs[7] = SQRT2;
 
-    loadIntoArray(depthNeighbors, aoNeighbors, colorNeighbors);
+    loadIntoArray(ecNeighbors, depthNeighbors, aoNeighbors, colorNeighbors);
 
     float density = ceil(densityScaleFactor *
                          texture2D(pointCloud_densityTexture, v_textureCoordinates).r);
@@ -203,6 +210,7 @@ void main() {
     if (abs(depth) < EPS) {
         // If the area that we want to region grow is sufficently sparse
         if (float(iterationNumber - DELAY) <= density + EPS) {
+            float finalDepth = depth;
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors, aoNeighbors, colorNeighbors,
                         finalDepth, finalAO, finalColor);
@@ -210,37 +218,42 @@ void main() {
             genericMedianFinder(depthNeighbors, aoNeighbors, colorNeighbors,
                                 finalDepth, finalAO, finalColor);
 #endif
+            for (int i = 0; i < neighborhoodSize; i++) {
+                if (abs(depthNeighbors[i] - finalDepth) < EPS) {
+                    finalEC = ecNeighbors[i];
+                }
+            }
         }
     }
     // Otherwise if our depth value is valid
     else {
-        float depthAccum = 0.0;
+        vec4 ecAccum = vec4(0.0);
         float aoAccum = 0.0;
         vec4 colorAccum = vec4(0);
         float normalization = 0.0;
 
         for (int i = 0; i < neighborhoodSize; i++) {
-            float neighbor = depthNeighbors[i];
+            vec4 ecNeighbor = ecNeighbors[i];
             float aoNeighbor = aoNeighbors[i];
             vec4 colorNeighbor = colorNeighbors[i];
             float rI = rIs[i];
 
-            if (abs(neighbor) > EPS) {
-                float depthDelta = abs(neighbor - depth);
+            if (length(ecNeighbor) > EPS) {
+                float ecDelta = length(ecNeighbor - ec);
 
                 float weight =
                     (1.0 - rI / 2.0) *
-                    (1.0 - min(1.0, depthDelta / max(1e-38, rangeParameter)));
+                    (1.0 - min(1.0, ecDelta / max(1e-38, rangeParameter)));
 
-                depthAccum += neighbor * weight;
+                ecAccum += ecNeighbor * weight;
                 aoAccum += aoNeighbor * weight;
                 colorAccum += colorNeighbor * weight;
                 normalization += weight;
             }
         }
 
-        if (abs(depthAccum) > EPS) {
-            finalDepth = depthAccum / normalization;
+        if (length(ecAccum) > EPS) {
+            finalEC = ecAccum / normalization;
             finalColor = colorAccum / normalization;
             finalAO = aoAccum / normalization;
         }
@@ -255,6 +268,6 @@ void main() {
     gl_FragData[0] = finalColor;
 #endif
 #endif
-    gl_FragData[1] = czm_packDepth(finalDepth);
+    gl_FragData[1] = finalEC;
     gl_FragData[2] = czm_packDepth(finalAO - 1e-7);
 }

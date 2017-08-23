@@ -522,8 +522,8 @@ define([
         this._removeUpdateHeightCallback = undefined;
         var scene = options.scene;
         this._scene = scene;
-        if (defined(scene)) {
-            scene.terrainProviderChanged.addEventListener(function() {
+        if (defined(scene) && defined(scene.terrainProviderChanged)) {
+            this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(function() {
                 this._heightChanged = true;
             }, this);
         }
@@ -4797,6 +4797,11 @@ define([
         if (defined(this._removeUpdateHeightCallback)) {
             this._removeUpdateHeightCallback();
             this._removeUpdateHeightCallback = undefined;
+        }
+
+        if (defined(this._terrainProviderChangedCallback)) {
+            this._terrainProviderChangedCallback();
+            this._terrainProviderChangedCallback = undefined;
         }
 
         this._rendererResources = undefined;

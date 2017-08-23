@@ -33,6 +33,7 @@ define([
         '../Shaders/PostProcessFilters/RegionGrowingPassGL1',
         '../Shaders/PostProcessFilters/RegionGrowingPassGL2',
         '../Shaders/PostProcessFilters/DensityEdgeCullPass',
+        '../Shaders/PostProcessFilters/PointCloudPostProcessorBlendPass'
     ], function(
         Color,
         ComponentDatatype,
@@ -66,7 +67,8 @@ define([
         PointOcclusionPassGL2,
         RegionGrowingPassGL1,
         RegionGrowingPassGL2,
-        DensityEdgeCullPass
+        DensityEdgeCullPass,
+        PointCloudPostProcessorBlendPass
     ) {
     'use strict';
 
@@ -329,7 +331,7 @@ define([
                 width : screenWidth,
                 height : screenHeight,
                 pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                pixelDatatype : PixelDatatype.FLOAT,
                 sampler : createSampler()
             });
 
@@ -437,9 +439,6 @@ define([
             },
             dropoutFactor : function() {
                 return processor.dropoutFactor;
-            },
-            ONE : function() {
-                return 1.0;
             }
         };
 
@@ -621,20 +620,19 @@ define([
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 rawDepth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 depth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
             '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
-            '    float depth = czm_unpackDepth(rawDepth); \n' +
-            '    if (depth > EPS) { \n' +
+            '    if (length(depth) > EPS) { \n' +
             '        #ifdef densityView \n' +
             '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
-            '        gl_FragData[1] = rawDepth; \n' +
+            '        gl_FragData[1] = depth; \n' +
             '        gl_FragData[2] = rawAO; \n' +
             '    }  else { \n' +
-            '       gl_FragData[1] = czm_packDepth(0.0); ' +
+            '       gl_FragData[1] = vec4(0.0); ' +
             '       gl_FragData[2] = czm_packDepth(1.0 - EPS); ' +
             '    } \n' +
             '} \n';
@@ -701,7 +699,7 @@ define([
         });
     }
 
-        function debugViewStage(processor, context, texture) {
+    function debugViewStage(processor, context, texture, unpack) {
         var uniformMap = {
             debugTexture : function() {
                 return texture;
@@ -710,14 +708,23 @@ define([
 
         var debugViewStageStr =
             '#define EPS 1e-8 \n' +
+            '#define unpack \n' +
             'uniform sampler2D debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 raw = texture2D(debugTexture, v_textureCoordinates); \n' +
-            '    float value = czm_unpackDepth(raw); \n' +
+            '    vec4 value = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '#ifdef unpack \n' +
+            '    value = vec4(czm_unpackDepth(value)); \n' +
+            '#endif // unpack \n' +
             '    gl_FragColor = vec4(value); \n' +
             '} \n';
+
+        debugViewStageStr = replaceConstants(
+            debugViewStageStr,
+            'unpack',
+            unpack
+        );
 
         return context.createViewportQuadCommand(debugViewStageStr, {
             uniformMap : uniformMap,
@@ -747,46 +754,23 @@ define([
         copyCommands[0] = copyRegionGrowingColorStage(processor, context, 0);
         copyCommands[1] = copyRegionGrowingColorStage(processor, context, 1);
 
-        var blendFS =
-            '#define EPS 1e-8 \n' +
-            '#define enableAO' +
-            '#extension GL_EXT_frag_depth : enable \n' +
-            'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_depthTexture; \n' +
-            'uniform sampler2D pointCloud_aoTexture; \n' +
-            'uniform float sigmoidDomainOffset; \n' +
-            'uniform float sigmoidSharpness; \n' +
-            'varying vec2 v_textureCoordinates; \n\n' +
-            'float sigmoid(float x, float sharpness) { \n' +
-            '    return sharpness * x / (sharpness - x + 1.0);' +
-            '} \n\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
-            '    #ifdef enableAO \n' +
-            '    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates)); \n' +
-            '    ao = clamp(sigmoid(clamp(ao + sigmoidDomainOffset, 0.0, 1.0), sigmoidSharpness), 0.0, 1.0); \n' +
-            '    color.xyz = color.xyz * ao; \n' +
-            '    #endif // enableAO \n' +
-            '    float rayDist = czm_unpackDepth(texture2D(pointCloud_depthTexture, v_textureCoordinates)); \n' +
-            '    if (length(rayDist) < EPS) { \n' +
-            '        discard;' +
-            '    } else { \n' +
-            '        float frustumLength = czm_clampedFrustum.y - czm_clampedFrustum.x; \n' +
-            '        float scaledRayDist = rayDist * frustumLength + czm_clampedFrustum.x; \n' +
-            '        vec4 ray = normalize(czm_windowToEyeCoordinates(vec4(gl_FragCoord))); \n' +
-            '        float depth = czm_eyeToWindowCoordinates(ray * scaledRayDist).z; \n' +
-            '        gl_FragColor = color; \n' +
-            '        gl_FragDepthEXT = depth; \n' +
-            '    }' +
-            '} \n';
+        var blendRenderState;
+        if (processor.useTriangle) {
+            blendRenderState = RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND
+            });
+        } else {
+            blendRenderState = RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND,
+                depthMask : true,
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
 
-        var blendRenderState = RenderState.fromCache({
-            blending : BlendingState.ALPHA_BLEND
-        });
-
-        blendFS = replaceConstants(
-            blendFS,
+        var blendFS = replaceConstants(
+            PointCloudPostProcessorBlendPass,
             'enableAO',
             processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
         );
@@ -818,9 +802,9 @@ define([
 
         var debugViewCommand;
         if (processor.AOViewEnabled) {
-            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0]);
+            debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0], true);
         } else if (processor.depthViewEnabled) {
-            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0]);
+            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0], false);
         }
 
         var framebuffers = processor._framebuffers;
@@ -1007,10 +991,6 @@ define([
             this.dropoutFactor = tileset.pointCloudPostProcessorOptions.dropoutFactor;
             this.delay = tileset.pointCloudPostProcessorOptions.delay;
             dirty = true;
-        }
-
-        if (!tileset.pointCloudPostProcessorOptions.enabled) {
-            return;
         }
 
         dirty |= createResources(this, frameState.context, dirty);
