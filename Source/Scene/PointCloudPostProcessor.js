@@ -271,19 +271,17 @@ define([
 
         // Load the sector LUT that the point occlusion pass needs
         var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
+        var lutData = generateSectorLUT(processor);
         var sectorLUTTexture = new Texture({
             context : context,
-            width : lutSize,
-            height : lutSize,
+            source : {
+                width : lutSize,
+                height : lutSize,
+                arrayBufferView : lutData
+            },
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
-        });
-        var lutData = generateSectorLUT(processor);
-        sectorLUTTexture.copyFrom({
-            width : lutSize,
-            height : lutSize,
-            arrayBufferView : lutData
         });
 
         var dirty = new Texture({
