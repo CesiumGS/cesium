@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Color',
@@ -22,7 +21,9 @@ define([
     function validateBlendEquation(blendEquation) {
         return ((blendEquation === WebGLConstants.FUNC_ADD) ||
                 (blendEquation === WebGLConstants.FUNC_SUBTRACT) ||
-                (blendEquation === WebGLConstants.FUNC_REVERSE_SUBTRACT));
+                (blendEquation === WebGLConstants.FUNC_REVERSE_SUBTRACT) ||
+                (blendEquation === WebGLConstants.MIN) ||
+                (blendEquation === WebGLConstants.MAX));
     }
 
     function validateBlendFunction(blendFunction) {

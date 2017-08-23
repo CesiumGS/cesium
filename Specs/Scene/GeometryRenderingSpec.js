@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -20,6 +19,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Core/PolygonGeometry',
         'Core/PolylineGeometry',
         'Core/PolylineVolumeGeometry',
@@ -59,6 +59,7 @@ defineSuite([
         GeometryInstance,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         PolygonGeometry,
         PolylineGeometry,
         PolylineVolumeGeometry,
@@ -88,12 +89,21 @@ defineSuite([
         scene = createScene();
         scene.frameState.scene3DOnly = false;
         scene.primitives.destroyPrimitives = false;
-        
+
         ellipsoid = Ellipsoid.WGS84;
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+
+        var camera = scene.camera;
+        camera.frustum = new PerspectiveFrustum();
+        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        camera.frustum.fov = CesiumMath.toRadians(60.0);
     });
 
     afterEach(function() {

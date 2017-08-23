@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/OrthographicFrustum',
         'Core/Cartesian2',
@@ -21,22 +20,20 @@ defineSuite([
         frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 3.0;
-        frustum.right = 1.0;
-        frustum.left = -1.0;
-        frustum.top = 1.0;
-        frustum.bottom = -1.0;
+        frustum.width = 2.0;
+        frustum.aspectRatio = 1.0;
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Y).planes;
     });
 
-    it('left greater than right causes an exception', function() {
-        frustum.left = frustum.right + 1.0;
+    it('undefined width causes an exception', function() {
+        frustum.width = undefined;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
     });
 
-    it('bottom greater than top throws an exception', function() {
-        frustum.bottom = frustum.top + 1.0;
+    it('undefined aspectRatio throws an exception', function() {
+        frustum.aspectRatio = undefined;
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrowDeveloperError();
@@ -117,14 +114,15 @@ defineSuite([
 
     it('get orthographic projection matrix', function() {
         var projectionMatrix = frustum.projectionMatrix;
+        frustum = frustum._offCenterFrustum;
         var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, new Matrix4());
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('get pixel dimensions throws without canvas height', function() {
-       expect(function() {
+        expect(function() {
             return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());
-       }).toThrowDeveloperError();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws without canvas width', function() {

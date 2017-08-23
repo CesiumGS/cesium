@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ShadowMap',
         'Core/BoundingSphere',
@@ -14,6 +13,7 @@ defineSuite([
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
+        'Core/OrthographicOffCenterFrustum',
         'Core/PixelFormat',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -24,7 +24,6 @@ defineSuite([
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
-        'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/ShadowMode',
@@ -46,6 +45,7 @@ defineSuite([
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
+        OrthographicOffCenterFrustum,
         PixelFormat,
         Transforms,
         WebGLConstants,
@@ -56,7 +56,6 @@ defineSuite([
         Camera,
         Globe,
         Model,
-        OrthographicFrustum,
         PerInstanceColorAppearance,
         Primitive,
         ShadowMode,
@@ -297,7 +296,7 @@ defineSuite([
         var center = new Cartesian3.fromRadians(longitude, latitude, height);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
 
-        var frustum = new OrthographicFrustum();
+        var frustum = new OrthographicOffCenterFrustum();
         frustum.left = -50.0;
         frustum.right = 50.0;
         frustum.bottom = -50.0;
@@ -494,9 +493,7 @@ defineSuite([
         // Move the camera into the shadowed area
         scene.camera.moveRight(0.2);
 
-        var shadowedColor;
         renderAndCall(function(rgba) {
-            shadowedColor = rgba;
             expect(rgba).not.toEqual(backgroundColor);
             expect(rgba).not.toEqual(unshadowedColor);
         });
@@ -712,7 +709,6 @@ defineSuite([
         ];
 
         for (var i = 0; i < 6; ++i) {
-            /* jshint loopfunc: true */
             var box = scene.primitives.add(Model.fromGltf({
                 url : boxUrl,
                 modelMatrix : Transforms.headingPitchRollToFixedFrame(origins[i], new HeadingPitchRoll()),
@@ -725,14 +721,14 @@ defineSuite([
             // Render without shadows
             scene.shadowMap.enabled = false;
             var unshadowedColor;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 unshadowedColor = rgba;
                 expect(rgba).not.toEqual(backgroundColor);
             });
 
             // Render with shadows
             scene.shadowMap.enabled = true;
-            renderAndCall(function(rgba) {
+            renderAndCall(function(rgba) { //eslint-disable-line no-loop-func
                 expect(rgba).not.toEqual(backgroundColor);
                 expect(rgba).not.toEqual(unshadowedColor);
             });

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Material',
         'Core/Cartesian3',
@@ -196,6 +195,10 @@ defineSuite([
 
     it('draws PolylineArrow built-in material', function() {
         verifyPolylineMaterial('PolylineArrow');
+    });
+
+    it('draws PolylineDash built-in material', function() {
+        verifyPolylineMaterial('PolylineDash');
     });
 
     it('draws PolylineGlow built-in material', function() {

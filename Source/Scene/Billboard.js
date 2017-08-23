@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -77,19 +76,47 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
-            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
-        }
-        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
-            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
-        }
-        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
-            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
-        }
-        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
-            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
+        if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
+            throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
         }
         //>>includeEnd('debug');
+
+        var translucencyByDistance = options.translucencyByDistance;
+        var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        var scaleByDistance = options.scaleByDistance;
+        var distanceDisplayCondition = options.distanceDisplayCondition;
+        if (defined(translucencyByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (translucencyByDistance.far <= translucencyByDistance.near) {
+                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+        }
+        if (defined(pixelOffsetScaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+                throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
+        }
+        if (defined(scaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (scaleByDistance.far <= scaleByDistance.near) {
+                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            scaleByDistance = NearFarScalar.clone(scaleByDistance);
+        }
+        if (defined(distanceDisplayCondition)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            }
+            //>>includeEnd('debug');
+            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+        }
 
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
@@ -106,11 +133,12 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
         this._width = options.width;
         this._height = options.height;
-        this._scaleByDistance = options.scaleByDistance;
-        this._translucencyByDistance = options.translucencyByDistance;
-        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._scaleByDistance = scaleByDistance;
+        this._translucencyByDistance = translucencyByDistance;
+        this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._distanceDisplayCondition = distanceDisplayCondition;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -178,7 +206,8 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
-    Billboard.NUMBER_OF_PROPERTIES = 15;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
+    Billboard.NUMBER_OF_PROPERTIES = 16;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -234,7 +263,6 @@ define([
                 if (!Cartesian3.equals(position, value)) {
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
-
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
@@ -749,6 +777,30 @@ define([
         },
 
         /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof Billboard.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        disableDepthTestDistance : {
+            get : function() {
+                return this._disableDepthTestDistance;
+            },
+            set : function(value) {
+                if (this._disableDepthTestDistance !== value) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(value) || value < 0.0) {
+                        throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
+                    }
+                    //>>includeEnd('debug');
+                    this._disableDepthTestDistance = value;
+                    makeDirty(this, DISABLE_DEPTH_DISTANCE);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -927,6 +979,7 @@ define([
 
         var position = ellipsoid.cartesianToCartographic(owner._position);
         if (!defined(position)) {
+            owner._actualClampedPosition = undefined;
             return;
         }
 
@@ -1186,15 +1239,26 @@ define([
         }
         //>>includeEnd('debug');
 
-        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        // pixel offset for screen space computation is the pixelOffset + screen space translate
         Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        var actualPosition = this._getActualPosition();
+        var position = this._position;
+        if (defined(this._clampedPosition)) {
+            position = this._clampedPosition;
+            if (scene.mode !== SceneMode.SCENE3D) {
+                // position needs to be in world coordinates
+                var projection = scene.mapProjection;
+                var ellipsoid = projection.ellipsoid;
+                var cart = projection.unproject(position, scratchCartographic);
+                position = ellipsoid.cartographicToCartesian(cart, scratchCartesian3);
+                modelMatrix = Matrix4.IDENTITY;
+            }
+        }
 
-        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
-                this._eyeOffset, scratchPixelOffset, scene, result);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, position,
+            this._eyeOffset, scratchPixelOffset, scene, result);
         return windowCoordinates;
     };
 
@@ -1267,7 +1331,8 @@ define([
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
-               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
+               this._disableDepthTestDistance === other._disableDepthTestDistance;
     };
 
     Billboard.prototype._destroy = function() {

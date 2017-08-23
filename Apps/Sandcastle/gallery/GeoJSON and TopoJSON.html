@@ -54,7 +54,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 
         //Get the array of entities
         var entities = dataSource.entities.values;
-        
+
         var colorHash = {};
         for (var i = 0; i < entities.length; i++) {
             //For each entity, create a random color based on the state name.
@@ -69,7 +69,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
                 });
                 colorHash[name] = color;
             }
-            
+
             //Set the polygon material to our random color.
             entity.polygon.material = color;
             //Remove the outlines.
@@ -89,7 +89,7 @@ Sandcastle.addToolbarButton('Custom styling', function() {
 //Reset the scene when switching demos.
 Sandcastle.reset = function() {
     viewer.dataSources.removeAll();
-  
+
     //Set the camera to a US centered tilted view and switch back to moving in world coordinates.
     viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-98.0, 40.0), new Cesium.Cartesian3(0.0, -4790000.0, 3930000.0));
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

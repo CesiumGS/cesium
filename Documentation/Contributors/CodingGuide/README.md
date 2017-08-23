@@ -14,6 +14,7 @@ To some extent, this guide can be summarized as _make new code similar to existi
 
 * [Naming](#naming)
 * [Formatting](#formatting)
+* [Linting](#linting)
 * [Units](#units)
 * [Basic Code Construction](#basic-code-construction)
 * [Functions](#functions)
@@ -135,6 +136,29 @@ function Model(options) {
 
 * Text files, including JavaScript files, end with a newline to minimize the noise in diffs.
 
+## Linting
+
+For syntax and style guidelines, we use the [ESLint](http://eslint.org/docs/rules/) recommended settings as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium), which is maintained as part of the Cesium repository and also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js). 
+
+* When disabling linting for one line, use `//eslint-disable-line`:
+```js
+function exit(warningMessage) {
+    window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
+}
+```
+
+* When disabling linting for blocks of code, place `eslint-disable` comments on new lines and as close to the associated code as possible:
+```js
+/*eslint-disable no-empty*/
+try {
+    lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
+} catch(ex) {
+}
+/*eslint-enable no-empty*/
+```
+
+* See [Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments) for more examples.
+
 ## Units
 
 * Cesium uses SI units:
@@ -239,7 +263,6 @@ if (defined(u)) {
 ```
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
@@ -290,12 +313,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -571,12 +594,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     var tiles = this._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -587,12 +610,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -672,13 +695,13 @@ Model.prototype.update = function(frameState) {
 
 It is convenient for the constructor function to be at the top of the file even if it requires that helper functions rely on **hoisting**, for example, `Cesium3DTileset.js`,
 ```javascript
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
@@ -687,16 +710,16 @@ is better written as
 ```javascript
 function Cesium3DTileset(options) {
     // ...
-    loadTilesJson(this, options.url, function(data) {
+    loadTileset(this, options.url, function(data) {
        // ...
     });
 };
 
-function loadTilesJson(tileset, tilesJson, done) {
+function loadTileset(tileset, tilesJson, done) {
     // ...
 }
 ```
-even though it relies on implicitly hoisting the `loadTilesJson` function to the top of the file.
+even though it relies on implicitly hoisting the `loadTileset` function to the top of the file.
 
 ## Design
 
@@ -800,7 +823,7 @@ When using a subscription, always be sure to [dispose the subscription](https://
 ```
 fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) { ... });
 // ...then later...
-fullscreenSubscription.dispose(); 
+fullscreenSubscription.dispose();
 ```
 
 ## GLSL

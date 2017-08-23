@@ -35,7 +35,6 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 **/
-/*global define*/
 define(function() {
     /*jshint strict:false*/
 /*
