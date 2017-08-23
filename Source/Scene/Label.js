@@ -1051,6 +1051,25 @@ define([
          * @memberof Label.prototype
          * @type {Boolean}
          * @default false
+         *
+         * @example
+         * // Example 1.
+         * // Set a label's rtl during init
+         * var myLabelEntity = viewer.entities.add({
+         *   id: 'my label',
+         *   text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
+         *   rtl: true
+         * });
+         *
+         * @example
+         * // Example 2.
+         * var myLabelEntity = viewer.entities.add({
+         *   id: 'my label',
+         *   text: 'English text'
+         * });
+         * // Set a label's rtl after init
+         * myLabelEntity.rtl = true;
+         * myLabelEntity.text = 'טקסט חדש'
          */
         rtl : {
             get : function() {
