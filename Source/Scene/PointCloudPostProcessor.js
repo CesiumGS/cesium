@@ -108,27 +108,6 @@ define([
         this.dropoutFactor = options.dropoutFactor;
         this.delay = options.delay;
 
-        this._pointArray = undefined;
-
-        this._minBlend = {
-            enabled : true,
-            equationRgb : BlendEquation.MIN,
-            equationAlpha : BlendEquation.MIN,
-            functionSourceRgb : BlendFunction.ONE,
-            functionSourceAlpha : BlendFunction.ONE,
-            functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ONE
-        };
-        this._addBlend = {
-            enabled : true,
-            equationRgb : BlendEquation.ADD,
-            equationAlpha : BlendEquation.ADD,
-            functionSourceRgb : BlendFunction.ONE,
-            functionSourceAlpha : BlendFunction.ONE,
-            functionDestinationRgb : BlendFunction.ONE,
-            functionDestinationAlpha : BlendFunction.ONE
-        };
-
         this._testingFunc = StencilFunction.EQUAL;
         this._testingOp = {
             fail : StencilOperation.KEEP,
