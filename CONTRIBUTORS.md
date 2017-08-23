@@ -88,6 +88,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Aleksei Kalmykov](https://github.com/kalmykov)
 * [webiks](https://www.webiks.com)
   * [Hod Bauer](https://github.com/hodbauer)
+  * [Yonatan Kra](https://github.com/yonatankra)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -154,4 +155,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Rishabh Shah](https://github.com/rms13)
 * [Rudraksha Shah](https://github.com/Rudraksha20)
 * [Cody Guldner](https://github.com/burn123)
+* [Yonatan Kra](https://github.com/yonatankra)
 
