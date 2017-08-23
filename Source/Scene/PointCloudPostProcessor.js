@@ -84,7 +84,7 @@ define([
         this._edgeCullingTexture = undefined;
         this._sectorLUTTexture = undefined;
         this._aoTextures = undefined;
-        this._dirty = undefined;
+        this._stencilMaskTexture = undefined;
         this._drawCommands = undefined;
         this._clearCommands = undefined;
 
@@ -171,7 +171,7 @@ define([
         processor._aoTextures[1].destroy();
         processor._densityTexture.destroy();
         processor._edgeCullingTexture.destroy();
-        processor._dirty.destroy();
+        processor._stencilMaskTexture.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
         var framebuffers = processor._framebuffers;
@@ -284,7 +284,7 @@ define([
             sampler : createSampler()
         });
 
-        var dirty = new Texture({
+        var stencilMaskTexture = new Texture({
             context: context,
             width: screenWidth,
             height: screenHeight,
@@ -333,13 +333,13 @@ define([
                     colorTextures[0],
                     ecTexture
                 ],
-                depthStencilTexture : dirty,
+                depthStencilTexture : stencilMaskTexture,
                 destroyAttachments : false
             }),
             screenSpacePass : new Framebuffer({
                 context : context,
                 colorTextures : [depthTextures[0], aoTextures[0]],
-                depthStencilTexture: dirty,
+                depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
             }),
             aoBufferA : new Framebuffer({
@@ -354,13 +354,13 @@ define([
             }),
             stencilMask : new Framebuffer({
                 context : context,
-                depthStencilTexture: dirty,
+                depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
             }),
             densityEstimationPass : new Framebuffer({
                 context : context,
                 colorTextures : [densityMap],
-                depthStencilTexture: dirty,
+                depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
             }),
             regionGrowingPassA : new Framebuffer({
@@ -368,7 +368,7 @@ define([
                 colorTextures : [colorTextures[1],
                                  depthTextures[1],
                                  aoTextures[1]],
-                depthStencilTexture: dirty,
+                depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
             }),
             regionGrowingPassB : new Framebuffer({
@@ -376,7 +376,7 @@ define([
                 colorTextures: [colorTextures[0],
                                 depthTextures[0],
                                 aoTextures[0]],
-                depthStencilTexture: dirty,
+                depthStencilTexture: stencilMaskTexture,
                 destroyAttachments: false
             })
         };
@@ -387,7 +387,7 @@ define([
         processor._aoTextures = aoTextures;
         processor._colorTextures = colorTextures;
         processor._ecTexture = ecTexture;
-        processor._dirty = dirty;
+        processor._stencilMaskTexture = stencilMaskTexture;
     }
 
     function replaceConstants(sourceStr, constantName, replacement) {
