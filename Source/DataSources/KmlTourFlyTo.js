@@ -108,7 +108,7 @@ define([
      * @callback KmlTourFlyTo~DoneCallback
      *
      * @param {Boolean} terminated true if {@link KmlTourFlyTo#stop} was
-     * caled before entry done playback.
+     * called before entry done playback.
      */
 
     return KmlTourFlyTo;

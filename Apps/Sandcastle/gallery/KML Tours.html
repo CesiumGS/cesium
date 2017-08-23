@@ -43,13 +43,13 @@ viewer.dataSources.add(
         console.log('Start tour');
     });
     tour.tourEnd.addEventListener(function(terminated) {
-        console.log((terminated ? 'Trminate' : 'End') + ' tour');
+        console.log((terminated ? 'Terminate' : 'End') + ' tour');
     });
     tour.entryStart.addEventListener(function(entry) {
         console.log('Play ' + entry.type + ' ('+ entry.duration + ')');
     });
     tour.entryEnd.addEventListener(function(entry, terminated) {
-        console.log((terminated ? 'Trminate' : 'End') + ' ' + entry.type);
+        console.log((terminated ? 'Terminate' : 'End') + ' ' + entry.type);
     });
 });
 

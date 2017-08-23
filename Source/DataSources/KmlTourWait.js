@@ -47,7 +47,7 @@ define([
      *
      * @callback KmlTourWait~DoneCallback
      * @param {Boolean} terminated true if {@link KmlTourWait#stop} was
-     * caled before entry done playback.
+     * called before entry done playback.
      */
 
     return KmlTourWait;
