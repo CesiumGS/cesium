@@ -1,5 +1,10 @@
 defineSuite([
         'DataSources/KmlDataSource',
+        'DataSources/KmlLookAt',
+        'DataSources/KmlCamera',
+        'DataSources/KmlTour',
+        'DataSources/KmlTourWait',
+        'DataSources/KmlTourFlyTo',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,6 +23,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RequestErrorEvent',
         'Core/RuntimeError',
+        'Core/HeadingPitchRange',
+        'Core/HeadingPitchRoll',
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
@@ -31,6 +38,11 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         KmlDataSource,
+        KmlLookAt,
+        KmlCamera,
+        KmlTour,
+        KmlTourWait,
+        KmlTourFlyTo,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -49,6 +61,8 @@ defineSuite([
         Rectangle,
         RequestErrorEvent,
         RuntimeError,
+        HeadingPitchRange,
+        HeadingPitchRoll,
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
@@ -346,8 +360,8 @@ defineSuite([
         dataSource.unsupportedNodeEvent.addEventListener(spy);
 
         return dataSource.load('Data/KML/unsupported.kml').then(function() {
-            var nodeNames = ['PhotoOverlay', 'ScreenOverlay', 'Tour'];
-            expect(spy.calls.count()).toEqual(3);
+            var nodeNames = ['PhotoOverlay', 'ScreenOverlay'];
+            expect(spy.calls.count()).toEqual(2);
             for (var i = 0; i < nodeNames.length; i++) {
                 var args = spy.calls.argsFor(i);
                 expect(args.length).toEqual(7);
@@ -4192,7 +4206,7 @@ defineSuite([
         });
     });
 
-    it('Features with an AbstractView show warnings', function() {
+    it('Parse Camera and LookAt on features', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <LineString>\
@@ -4208,9 +4222,9 @@ defineSuite([
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
-            expect(console.warn.calls.count()).toEqual(2);
-            expect(console.warn.calls.argsFor(0)[0]).toBe('KML - Unsupported view: Camera');
-            expect(console.warn.calls.argsFor(1)[0]).toBe('KML - Unsupported view: LookAt');
+            var placemark = dataSource.entities.values[0];
+            expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
+            expect(placemark.kml.lookAt).toBeInstanceOf(KmlLookAt);
         });
     });
 
@@ -4252,20 +4266,120 @@ defineSuite([
         });
     });
 
-    it('Having a gx:Tour shows warning)', function() {
+    it('Tour: reads gx:Tour)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Tour id="id_123">\
+                <name>Tour 1</name>\
+                <gx:Playlist>\
+                  <gx:Wait>\
+                    <gx:duration>2</gx:duration>\
+                  </gx:Wait>\
+                  <gx:FlyTo>\
+                    <gx:duration>3</gx:duration>\
+                  </gx:FlyTo>\
+                </gx:Playlist>\
+              </gx:Tour>\
+            </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.kmlTours.length).toEqual(1);
+            var tour = dataSource.kmlTours[0];
+            expect(tour).toBeInstanceOf(KmlTour);
+            expect(tour.name).toEqual("Tour 1");
+            expect(tour.id).toEqual("id_123");
+            expect(tour.playlist.length).toEqual(2);
+
+            expect(tour.playlist[0].duration).toEqual(2);
+            expect(tour.playlist[0]).toBeInstanceOf(KmlTourWait);
+
+            expect(tour.playlist[1].duration).toEqual(3);
+            expect(tour.playlist[1]).toBeInstanceOf(KmlTourFlyTo);
+
+        });
+    });
+
+    it('Tour: reads LookAt and Camera', function(){
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document xmlns="http://www.opengis.net/kml/2.2"\
                        xmlns:gx="http://www.google.com/kml/ext/2.2">\
               <gx:Tour>\
+                <gx:Playlist>\
+                  <gx:FlyTo>\
+                    <gx:duration>5</gx:duration>\
+                    <gx:flyToMode>bounce</gx:flyToMode>\
+                    <LookAt>\
+                        <longitude>10</longitude>\
+                        <latitude>20</latitude>\
+                        <altitude>30</altitude>\
+                        <range>40</range>\
+                        <tilt>50</tilt>\
+                        <heading>60</heading>\
+                    </LookAt>\
+                  </gx:FlyTo>\
+                  <gx:FlyTo>\
+                    <gx:duration>4.1</gx:duration>\
+                    <Camera>\
+                      <longitude>170.0</longitude>\
+                      <latitude>-43.0</latitude>\
+                      <altitude>9700</altitude>\
+                      <heading>-10.0</heading>\
+                      <tilt>33.5</tilt>\
+                      <roll>20</roll>\
+                    </Camera>\
+                  </gx:FlyTo>\
+                </gx:Playlist>\
+              </gx:Tour>\
+            </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.kmlTours.length).toEqual(1);
+            var tour = dataSource.kmlTours[0];
+            expect(tour.playlist.length).toEqual(2);
+
+            var flyto1 = tour.playlist[0];
+            var flyto2 = tour.playlist[1];
+
+            expect(flyto1.flyToMode).toEqual('bounce');
+            expect(flyto1.duration).toEqual(5);
+            expect(flyto1.view).toBeInstanceOf(KmlLookAt);
+
+            expect(flyto2.duration).toEqual(4.1);
+            expect(flyto2.view).toBeInstanceOf(KmlCamera);
+
+            expect(flyto1.view.position).toBeInstanceOf(Cartesian3);
+            expect(flyto2.view.position).toBeInstanceOf(Cartesian3);
+
+            expect(flyto1.view.headingPitchRange).toBeInstanceOf(HeadingPitchRange);
+            expect(flyto2.view.headingPitchRoll).toBeInstanceOf(HeadingPitchRoll);
+        });
+    });
+
+    it('Tour: log KML Tour unsupported nodes', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Tour>\
+                <gx:Playlist>\
+                  <gx:AnimatedUpdate>\
+                  </gx:AnimatedUpdate>\
+                  <gx:TourControl>\
+                  </gx:TourControl>\
+                  <gx:SoundCue>\
+                  </gx:SoundCue>\
+                </gx:Playlist>\
               </gx:Tour>\
             </Document>';
 
         spyOn(console, 'warn').and.callThrough();
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
-            expect(dataSource.entities.values.length).toEqual(0);
-            expect(console.warn.calls.count()).toEqual(1);
-            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported feature: gx:Tour');
+            expect(dataSource.kmlTours.length).toEqual(1);
+            expect(dataSource.kmlTours[0].playlist.length).toEqual(0);
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node AnimatedUpdate');
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node TourControl');
+            expect(console.warn).toHaveBeenCalledWith('KML Tour unsupported node SoundCue');
         });
     });
 
