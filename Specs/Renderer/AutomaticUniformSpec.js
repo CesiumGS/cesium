@@ -1080,13 +1080,27 @@ defineSuite([
         }).contextToRender();
     });
 
-    it('has czm_pass and czm_passGround', function() {
+    it('has czm_pass and czm_passTerrainClassification', function() {
         var us = context.uniformState;
-        us.updatePass(Pass.GROUND);
+        us.updatePass(Pass.TERRAIN_CLASSIFICATION);
 
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_pass == czm_passGround);' +
+            '  gl_FragColor = vec4(czm_pass == czm_passTerrainClassification);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_pass and czm_passCesium3DTileClassification', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passCesium3DTileClassification);' +
             '}';
         expect({
             context : context,
