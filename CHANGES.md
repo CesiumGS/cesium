@@ -13,6 +13,7 @@ Change Log
 * Added `Cesium3DTileset.loadJson` to support overriding the default tileset loading behavior. [#5685](https://github.com/AnalyticalGraphicsInc/cesium/pull/5685)
 * Fixed loading of binary glTFs containing CRN or KTX textures. [#5753](https://github.com/AnalyticalGraphicsInc/cesium/pull/5753)
 * Fixed depth picking on 3D Tiles. [#5676](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
+* Fixed glTF model translucency bug. [#5731](https://github.com/AnalyticalGraphicsInc/cesium/issues/5731)
 * Added `classificationType` to `ClassificationPrimitive` and `GroundPrimitive` to choose whether terrain, 3D Tiles, or both are classified. [#5683](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
 
 ### 1.36 - 2017-08-01
