@@ -285,12 +285,12 @@ define([
         });
 
         var stencilMaskTexture = new Texture({
-            context: context,
-            width: screenWidth,
-            height: screenHeight,
-            pixelFormat: PixelFormat.DEPTH_STENCIL,
-            pixelDatatype: PixelDatatype.UNSIGNED_INT_24_8,
-            sampler: createSampler()
+            context : context,
+            width : screenWidth,
+            height : screenHeight,
+            pixelFormat : PixelFormat.DEPTH_STENCIL,
+            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+            sampler : createSampler()
         });
 
         for (i = 0; i < 2; ++i) {
@@ -372,12 +372,12 @@ define([
                 destroyAttachments : false
             }),
             regionGrowingPassB : new Framebuffer({
-                context: context,
-                colorTextures: [colorTextures[0],
-                                depthTextures[0],
-                                aoTextures[0]],
-                depthStencilTexture: stencilMaskTexture,
-                destroyAttachments: false
+                context : context,
+                colorTextures : [colorTextures[0],
+                                 depthTextures[0],
+                                 aoTextures[0]],
+                depthStencilTexture : stencilMaskTexture,
+                destroyAttachments : false
             })
         };
         processor._depthTextures = depthTextures;
