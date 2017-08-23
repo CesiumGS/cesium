@@ -285,6 +285,10 @@ define([
                 //>>includeEnd('debug');
 
                 if (this.rtl) {
+                    if (this._originalValue === value) {
+                        return;
+                    }
+                    this._originalValue = value;
                     value = this.reverseRtl(value);
                 }
 
