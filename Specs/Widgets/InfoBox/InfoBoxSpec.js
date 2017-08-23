@@ -27,13 +27,11 @@ defineSuite([
 
     describe('stringToHtml tests', function() {
 
-        var element;
+        var element, mySpy;
         beforeEach(function() {
             element = document.createElement('div');
             element.id = 'testElement';
-            spyOn(element, 'appendChild').and.callFake(function(x) {
-                element.append(x);
-            });
+            spyOn(element, 'appendChild').and.callThrough();
             element.testFunction = function(arg){};
             spyOn(element, 'testFunction');
         });
