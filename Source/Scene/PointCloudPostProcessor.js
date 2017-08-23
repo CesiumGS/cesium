@@ -193,29 +193,29 @@ define([
         processor._drawCommands = undefined;
     }
 
+    function getSector(dx, dy, numSectors) {
+        var angle = (Math.atan2(dy, dx) + Math.PI) / (2.0 * Math.PI) - 1e-6;
+        return Math.trunc(angle * numSectors);
+    }
+
+    function collapseSectors(dx, dy, numSectors) {
+        var sectors = new Uint8Array(4);
+        sectors[0] = getSector(dx - 0.5, dy + 0.5, numSectors);
+        sectors[1] = getSector(dx + 0.5, dy - 0.5, numSectors);
+        sectors[2] = getSector(dx + 0.5, dy + 0.5, numSectors);
+        sectors[3] = getSector(dx - 0.5, dy - 0.5, numSectors);
+
+        var first = sectors[0];
+        var second = sectors[0];
+        sectors.forEach(function(element) {
+            if (element !== first) {
+                second = element;
+            }
+        });
+        return [first, second];
+    }
+
     function generateSectorLUT(processor) {
-        function getSector(dx, dy, numSectors) {
-            var angle = (Math.atan2(dy, dx) + Math.PI) / (2.0 * Math.PI) - 1e-6;
-            return Math.trunc(angle * numSectors);
-        }
-
-        function collapseSectors(dx, dy, numSectors) {
-            var sectors = new Uint8Array(4);
-            sectors[0] = getSector(dx - 0.5, dy + 0.5, numSectors);
-            sectors[1] = getSector(dx + 0.5, dy - 0.5, numSectors);
-            sectors[2] = getSector(dx + 0.5, dy + 0.5, numSectors);
-            sectors[3] = getSector(dx - 0.5, dy - 0.5, numSectors);
-
-            var first = sectors[0];
-            var second = sectors[0];
-            sectors.forEach(function(element) {
-                if (element !== first) {
-                    second = element;
-                }
-            });
-            return new Array(first, second);
-        }
-
         var numSectors = 8;
         var lutSize = processor.neighborhoodHalfWidth * 2 + 1;
         var lut = new Uint8Array(lutSize * lutSize * 4);
