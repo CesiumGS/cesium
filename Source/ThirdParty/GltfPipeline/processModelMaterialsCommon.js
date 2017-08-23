@@ -452,7 +452,8 @@ define([
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
-            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
+            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess) &&
+            (techniqueParameters.shininess > 0.0);
 
         // Generate lighting code blocks
         var hasNonAmbientLights = false;
