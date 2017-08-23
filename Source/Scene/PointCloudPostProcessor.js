@@ -239,7 +239,7 @@ define([
         var screenHeight = context.drawingBufferHeight;
 
         var colorTextures = new Array(2);
-        var depthTextures = new Array(3);
+        var depthTextures = new Array(2);
         var aoTextures = new Array(2);
 
         var ecTexture = new Texture({
