@@ -45,6 +45,8 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = true;
 
 var viewModel = {
     rightClickAction: 'annotate',
@@ -56,7 +58,6 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-var scene = viewer.scene;
 var annotations = scene.primitives.add(new Cesium.LabelCollection());
 
 // Set the initial camera view to look at Manhattan
