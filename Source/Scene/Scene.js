@@ -1936,9 +1936,9 @@ define([
                 passState.framebuffer = fb;
             }
 
-            us.updatePass(Pass.GROUND);
-            commands = frustumCommands.commands[Pass.GROUND];
-            length = frustumCommands.indices[Pass.GROUND];
+            us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
@@ -1961,16 +1961,16 @@ define([
                 scene._stencilClearCommand.execute(context, passState);
             }
 
-            us.updatePass(Pass.GROUND);
-            commands = frustumCommands.commands[Pass.GROUND];
-            length = frustumCommands.indices[Pass.GROUND];
+            us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GROUND + 1;
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 us.updatePass(pass);
