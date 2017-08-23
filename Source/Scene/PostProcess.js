@@ -47,7 +47,7 @@ define([
      *
      * @param {Object} options An object with the following properties:
      * @param {PostProcessStage[]} options.stages The post processing stages to run.
-     * @param {Boolean} [options.overwriteInput=false] Whether to overwrite the input frambuffer color texture during post processing.
+     * @param {Boolean} [options.overwriteInput=false] Whether to overwrite the input color texture during post processing.
      * @param {Boolean} [options.blendOutput=false] Whether to alpha blend the post processing with the output framebuffer.
      *
      * @alias PostProcess
@@ -96,14 +96,15 @@ define([
     }
 
     function PostProcessCache() {
-        this.textures = [
-            new CachedTexture(),
-            new CachedTexture()
-        ];
+        this.textures = [];
     }
 
-    PostProcessCache.prototype.createTexture = function(index, context) {
-        var cachedTexture = this.textures[index];
+    PostProcessCache.prototype.getCachedTexture = function(index, context) {
+        var cachedTextures = this.textures;
+        if (index === cachedTextures.length) {
+            cachedTextures.push(new CachedTexture());
+        }
+        var cachedTexture = cachedTextures[index];
         var colorTexture = cachedTexture.texture;
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
@@ -124,11 +125,20 @@ define([
                 sampler : createSampler()
             });
         }
+
         return cachedTexture.texture;
     };
 
-    PostProcessCache.prototype.destroyTexture = function(index) {
-        var cachedTexture = this.textures[index];
+    PostProcessCache.prototype.destroyTexture = function(texture) {
+        var cachedTexture;
+        var cachedTextures = this.textures;
+        var length = cachedTextures.length;
+        for (var i = 0; i < length; ++i) {
+            cachedTexture = cachedTextures[i];
+            if (cachedTexture === texture) {
+                break;
+            }
+        }
         var count = --cachedTexture.count;
         if (count === 0) {
             cachedTexture.texture.destroy();
@@ -144,7 +154,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 var colorTexture = colorTextures[i];
                 if (colorTexture !== inputColorTexture) {
-                    postProcess._cache.destroyTexture(i);
+                    postProcess._cache.destroyTexture(colorTexture);
                 }
             }
             postProcess._colorTextures = undefined;
@@ -236,17 +246,33 @@ define([
         });
     }
 
+    function getCachedTexture(postProcess, inputColorTexture, previousColorTexture, context) {
+        var texture;
+        var textureIndex = 0;
+        while (!defined(texture) || (texture === inputColorTexture) || (texture === previousColorTexture)) {
+            texture = postProcess._cache.getCachedTexture(textureIndex, context);
+            ++textureIndex;
+        }
+        return texture;
+    }
+
     function createTextures(postProcess, inputColorTexture, context) {
         var activeStages = postProcess._activeStages;
         var length = CesiumMath.clamp(activeStages.length - 1, 0, 2);
         var colorTextures = new Array(length);
         postProcess._colorTextures = colorTextures;
 
-        if (length >= 1) {
-            colorTextures[0] = postProcess._cache.createTexture(0, context);
+        if (length === 0) {
+            return;
         }
+
+        // Get the first ping-pong texture
+        colorTextures[0] = getCachedTexture(postProcess, inputColorTexture, inputColorTexture, context);
+
         if (length === 2) {
-            colorTextures[1] = postProcess._overwriteInput ? inputColorTexture : postProcess._cache.createTexture(1, context);
+            // If there are three or more stages a second ping-pong texture is required.
+            // If overwriteInput is true, use the input texture as the second ping-pong texture.
+            colorTextures[1] = postProcess._overwriteInput ? inputColorTexture : getCachedTexture(postProcess, inputColorTexture, colorTextures[0], context);
         }
     }
 
