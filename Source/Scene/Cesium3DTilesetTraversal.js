@@ -540,7 +540,11 @@ define([
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
-                touch(tileset, children[i], this.outOfCore);
+                var child = children[i];
+                if (child.refine === Cesium3DTileRefine.ADD) {
+                    loadTile(tileset, child, this.frameState);
+                }
+                touch(tileset, child, this.outOfCore);
             }
             return children;
         }
