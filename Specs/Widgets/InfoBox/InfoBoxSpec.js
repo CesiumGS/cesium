@@ -1,4 +1,3 @@
-/* eslint-disable no-trailing-spaces */
 defineSuite([
         'Widgets/InfoBox/InfoBox',
         'Core/defined',
