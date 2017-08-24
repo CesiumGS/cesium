@@ -6,6 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/oneTimeWarning',
+        '../../Core/defaultValue',
         '../../ThirdParty/knockout',
         '../getElement',
         '../subscribeAndEvaluate',
@@ -18,6 +19,7 @@ define([
         defineProperties,
         destroyObject,
         oneTimeWarning,
+        defaultValue,
         knockout,
         getElement,
         subscribeAndEvaluate,
@@ -34,7 +36,7 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    function InfoBox(container) {
+    function InfoBox(container, allowScripts) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('container', container);
         //>>includeEnd('debug')
@@ -80,12 +82,12 @@ click: function () { closeClicked.raiseEvent(this); }');
         var viewModel = new InfoBoxViewModel();
         knockout.applyBindings(viewModel, infoElement);
 
-        this._allowScripts = false;
         this._container = container;
         this._element = infoElement;
         this._frame = frame;
         this._viewModel = viewModel;
         this._descriptionSubscription = undefined;
+        this.allowScripts = defaultValue(allowScripts, false);
 
         var that = this;
         //We can't actually add anything into the frame until the load event is fired
