@@ -1,6 +1,5 @@
 Change Log
 ==========
-
 ### 1.37 - 2017-09-01
 
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
@@ -12,6 +11,8 @@ Change Log
 * Fixed a bug that caused imagery splitting to work incorrectly when CSS pixels were not equivalent to WebGL drawing buffer pixels, such as on high DPI displays in Microsoft Edge and Internet Explorer.
 * Added `Cesium3DTileset.loadJson` to support overriding the default tileset loading behavior. [#5685](https://github.com/AnalyticalGraphicsInc/cesium/pull/5685)
 * Fixed loading of binary glTFs containing CRN or KTX textures. [#5753](https://github.com/AnalyticalGraphicsInc/cesium/pull/5753)
+* Fixed specular computation for certain models using the `KHR_materials_common` extension. [#5773](https://github.com/AnalyticalGraphicsInc/cesium/pull/5773)
+* Fixed a bug where developer error was thrown in Sandcastle example [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
 * Fixed depth picking on 3D Tiles. [#5676](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
 * Fixed glTF model translucency bug. [#5731](https://github.com/AnalyticalGraphicsInc/cesium/issues/5731)
 * Added `classificationType` to `ClassificationPrimitive` and `GroundPrimitive` to choose whether terrain, 3D Tiles, or both are classified. [#5683](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
