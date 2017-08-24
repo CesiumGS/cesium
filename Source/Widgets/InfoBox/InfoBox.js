@@ -115,11 +115,7 @@ click: function () { closeClicked.raiseEvent(this); }');
             that._descriptionSubscription = subscribeAndEvaluate(viewModel, 'description', function(value) {
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
-                if (value.indexOf('<script') > -1 && that.allowScripts) {
-                    InfoBox.stringToHtml(value, frameContent);
-                } else {
-                    frameContent.innerHTML = value;
-                }
+                InfoBox.stringToHtml(value, frameContent);
 
                 //If the snippet is a single element, then use its background
                 //color for the body of the InfoBox. This makes the padding match
