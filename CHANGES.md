@@ -1,5 +1,8 @@
 Change Log
 ==========
+### 1.37 - 2017-09-01
+
+* Fixed a bug where developer error was thrown in Sandcastle example [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
 
 ### 1.37 - 2017-09-01
 
