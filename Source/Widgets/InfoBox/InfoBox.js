@@ -237,7 +237,7 @@ click: function () { closeClicked.raiseEvent(this); }');
 
     InfoBox.stringToHtml = function stringToHtml(s, frame) {
         // if we don't have a script tag - in case the method was used as static...
-        if (s.indexOf('<script') > -1) {
+        if (s.indexOf('<script') > -1 && s.indexOf('</script>') > -1) {
             // we have a script tag - let's handle it
             // check for modern browsers
             if (defined(document.createRange) && defined(document.createRange().createContextualFragment)) {
