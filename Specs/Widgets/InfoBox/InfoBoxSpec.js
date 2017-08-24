@@ -27,7 +27,7 @@ defineSuite([
 
     describe('stringToHtml tests', function() {
 
-        var element, mySpy;
+        var element;
         beforeEach(function() {
             element = document.createElement('div');
             element.id = 'testElement';
@@ -36,6 +36,10 @@ defineSuite([
             spyOn(element, 'testFunction');
         });
 
+        afterEach(function() {
+            document.body.removeChild(element);
+        });
+        
        it('should exist', function() {
            expect(InfoBox.stringToHtml).toBeDefined();
        });
