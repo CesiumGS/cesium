@@ -64,10 +64,17 @@ define([
             this.fxaa
         ];
 
+        // Hide all stages initially
+        var length = stages.length;
+        for (var i = 0; i < length; ++i) {
+            stages[i].show = false;
+        }
+
         this._postProcess = new PostProcess({
             stages : stages,
             overwriteInput : true,
-            blendOutput : false
+            blendOutput : false,
+            createOutputFramebuffer : false
         });
     }
 

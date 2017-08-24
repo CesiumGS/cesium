@@ -49,6 +49,7 @@ define([
      * @param {PostProcessStage[]} options.stages The post processing stages to run.
      * @param {Boolean} [options.overwriteInput=false] Whether to overwrite the input color texture during post processing.
      * @param {Boolean} [options.blendOutput=false] Whether to alpha blend the post processing with the output framebuffer.
+     * @param {Boolean} [options.createOutputFramebuffer=false] Create an output framebuffer if none is supplied.
      *
      * @alias PostProcess
      * @constructor
@@ -61,7 +62,8 @@ define([
 
         this._stages = options.stages;
         this._overwriteInput = defaultValue(options.overwriteInput, false);
-        this._blendOutput = defaultValue(options.blendOutput, true);
+        this._blendOutput = defaultValue(options.blendOutput, false);
+        this._createOutputFramebuffer = defaultValue(options.createOutputFramebuffer, false);
 
         this._drawCommands = undefined;
         this._framebuffers = undefined;
@@ -86,6 +88,14 @@ define([
                     }
                 }
                 return false;
+            }
+        },
+        outputColorTexture : {
+            get : function() {
+                if (!defined(this._outputFramebuffer)) {
+                    return undefined;
+                }
+                return this._outputFramebuffer.getColorTexture(0);
             }
         }
     });
@@ -135,7 +145,7 @@ define([
         var length = cachedTextures.length;
         for (var i = 0; i < length; ++i) {
             cachedTexture = cachedTextures[i];
-            if (cachedTexture === texture) {
+            if (cachedTexture.texture === texture) {
                 break;
             }
         }
@@ -169,6 +179,11 @@ define([
                 framebuffers[i].destroy();
             }
             postProcess._framebuffers = undefined;
+        }
+
+        if (postProcess._createOutputFramebuffer && defined(postProcess._outputFramebuffer)) {
+            postProcess._outputFramebuffer.destroy();
+            postProcess._outputFramebuffer = undefined;
         }
     }
 
@@ -206,7 +221,9 @@ define([
         });
     }
 
-    function createStages(postProcess, inputColorTexture, outputFramebuffer) {
+    function createStages(postProcess) {
+        var inputColorTexture = postProcess._inputColorTexture;
+        var outputFramebuffer = postProcess._outputFramebuffer;
         var activeStages = [];
         var inactiveStages = [];
         var stagesEnabled = [];
@@ -256,7 +273,8 @@ define([
         return texture;
     }
 
-    function createTextures(postProcess, inputColorTexture, context) {
+    function createTextures(postProcess, context) {
+        var inputColorTexture = postProcess._inputColorTexture;
         var activeStages = postProcess._activeStages;
         var length = CesiumMath.clamp(activeStages.length - 1, 0, 2);
         var colorTextures = new Array(length);
@@ -286,6 +304,24 @@ define([
             framebuffers[i] = new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[i]],
+                destroyAttachments : false
+            });
+        }
+
+        if (postProcess._createOutputFramebuffer) {
+            var screenWidth = context.drawingBufferWidth;
+            var screenHeight = context.drawingBufferHeight;
+            var colorTexture = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
+            postProcess._outputFramebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [colorTexture],
                 destroyAttachments : false
             });
         }
@@ -379,7 +415,7 @@ define([
 
         if (inputColorTexture !== postProcess._inputColorTexture ||
             inputDepthTexture !== postProcess._inputDepthTexture ||
-            outputFramebuffer !== postProcess._outputFramebuffer) {
+            outputFramebuffer !== postProcess._outputFramebuffer && !postProcess._createOutputFramebuffer) {
             postProcess._inputColorTexture = inputColorTexture;
             postProcess._inputDepthTexture = inputDepthTexture;
             postProcess._outputFramebuffer = outputFramebuffer;
@@ -436,8 +472,8 @@ define([
         if (dirty) {
             destroyDrawCommands(this);
             destroyFramebuffers(this);
-            createStages(this, inputColorTexture, outputFramebuffer);
-            createTextures(this, inputColorTexture, context);
+            createStages(this);
+            createTextures(this, context);
             createFramebuffers(this, context);
             createDrawCommands(this, context);
         }

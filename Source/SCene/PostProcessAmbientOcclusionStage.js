@@ -38,8 +38,6 @@ define([
         this._fragmentShader = undefined;
         this._uniformValues = undefined;
 
-        this._aoTexture = undefined;
-        this._aoFramebuffer = undefined;
         this._aoPostProcess = undefined;
 
         this._fragmentShader =
@@ -60,7 +58,7 @@ define([
         /**
          * @inheritdoc PostProcessStage#show
          */
-        this.show = false;
+        this.show = true;
     }
 
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
@@ -100,38 +98,14 @@ define([
 
         if (dirty) {
             destroyResources(this);
-            createResources(this, frameState.context);
+            createResources(this);
         }
 
-        this._aoPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._aoFramebuffer);
+        this._aoPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, undefined);
+        this._uniformValues.aoTexture = this._aoPostProcess.outputColorTexture;
     };
 
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
-
-    function createResources(stage, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
-        var aoTexture = new Texture({
-            context : context,
-            width : screenWidth,
-            height : screenHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
-        });
-        var aoFramebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [aoTexture],
-            destroyAttachments : false
-        });
-
+    function createResources(stage) {
         var aoGenerateShader =
             'uniform sampler2D u_colorTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
@@ -172,22 +146,14 @@ define([
         var aoPostProcess = new PostProcess({
             stages : [aoGenerateStage, aoBlurXStage, aoBlurYStage],
             overwriteInput : false,
-            blendOutput : false
+            blendOutput : false,
+            createOutputFramebuffer : true
         });
 
-        aoGenerateStage.show = true;
-        aoBlurXStage.show = true;
-        aoBlurYStage.show = true;
-
-        stage._aoTexture = aoTexture;
-        stage._aoFramebuffer = aoFramebuffer;
         stage._aoPostProcess = aoPostProcess;
-        stage._uniformValues.aoTexture = aoTexture;
     }
 
     function destroyResources(stage) {
-        stage._aoTexture = stage._aoTexture && stage._aoTexture.destroy();
-        stage._aoFramebuffer = stage._aoFramebuffer && stage._aoFramebuffer.destroy();
         stage._aoPostProcess = stage._aoPostProcess && stage._aoPostProcess.destroy();
     }
 

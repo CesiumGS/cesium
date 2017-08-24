@@ -53,9 +53,9 @@ define([
         /**
          * Whether to show the post process stage.
          * @type {Boolean}
-         * @default false
+         * @default true
          */
-        this.show = false;
+        this.show = true;
     }
 
     defineProperties(PostProcessStage.prototype, {

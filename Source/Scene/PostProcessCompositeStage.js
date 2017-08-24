@@ -27,7 +27,7 @@ define([
         /**
          * @inheritDoc PostProcessStage#show
          */
-        this.show = false;
+        this.show = true;
     }
 
     defineProperties(PostProcessCompositeStage.prototype, {
