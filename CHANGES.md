@@ -2,8 +2,7 @@ Change Log
 ==========
 
 ### 1.37 - 2017-09-01
-* Added ability to add scripts in InfoBox (#5147)
-* Added `allowScripts` property to InfoBox
+* Added `allowScripts` property to InfoBox which activates scripts inside entity description [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501)
 * Added ScriptsInInfoBox sandcastle example
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
 * Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
