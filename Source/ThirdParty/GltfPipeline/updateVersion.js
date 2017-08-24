@@ -247,7 +247,8 @@ define([
             programs: {},
             shaders: {},
             skins: {},
-            techniques: {}
+            techniques: {},
+            textures: {}
         };
 
         // Map joint names to id names
