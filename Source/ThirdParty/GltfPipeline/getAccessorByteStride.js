@@ -17,6 +17,9 @@ define([
      * @returns {Number} The byte stride of the accessor.
      */
     function getAccessorByteStride(gltf, accessor) {
+        if(defined(accessor.byteStride)){
+            return accessor.byteStride;
+        }
         var bufferView = gltf.bufferViews[accessor.bufferView];
         if (defined(bufferView.byteStride) && bufferView.byteStride > 0) {
             return bufferView.byteStride;
