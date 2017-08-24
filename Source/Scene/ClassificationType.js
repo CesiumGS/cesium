@@ -23,7 +23,7 @@ define([
          * @type {Number}
          * @constant
          */
-        CESIUM_3D_TILES : 1,
+        CESIUM_3D_TILE : 1,
         /**
          * Both terrain and 3D Tiles will be classified.
          *

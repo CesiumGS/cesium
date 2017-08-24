@@ -580,7 +580,7 @@ define([
         if (classificationType === ClassificationType.TERRAIN) {
             startIndex = 0;
             endIndex = length / 2;
-        } else if (classificationType === ClassificationType.CESIUM_3D_TILES) {
+        } else if (classificationType === ClassificationType.CESIUM_3D_TILE) {
             startIndex = length / 2;
             endIndex = length;
         } else {
