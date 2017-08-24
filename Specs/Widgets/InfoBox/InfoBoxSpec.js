@@ -26,7 +26,7 @@ defineSuite([
         document.body.removeChild(testContainer);
     });
 
-    describe('stringToHtml tests', function() {
+    describe('stringToHtml', function() {
 
         var element;
         beforeEach(function() {
@@ -36,10 +36,6 @@ defineSuite([
             element.testFunction = function(arg){};
             spyOn(element, 'testFunction');
         });
-
-       it('should exist', function() {
-           expect(InfoBox.stringToHtml).toBeDefined();
-       });
 
        it('should set the HTML of the frame when no script tag is available', function() {
            var s = '<div>string</div>';
