@@ -151,14 +151,17 @@ click: function () { closeClicked.raiseEvent(this); }');
     defineProperties(InfoBox.prototype, {
         /**
          * A flag that allows scripts to run inside the infobox from the string.
-         * Due to security issues default is false, and it must be explicitly set after infobox creation.
+         * Due to security issues default is false. It must be explicitly set during or after infobox creation.
          * @memberof InfoBox.prototype
          *
          * @type {Boolean}
          *
          * @example
          * var viewer = new Cesium.Viewer('cesiumContainer');
-         * viewer.infoBox.allowScripts = true; // now you can set entity descriptions with <script> tags to be parsed
+         * viewer.infoBox.allowScripts = true;
+         *
+         * * @example
+         * var infoBox = new Cesium.InfoBox('infoBoxContainer', true);
          */
         allowScripts: {
             get: function() {
