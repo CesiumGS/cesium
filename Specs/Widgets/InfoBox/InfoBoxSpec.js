@@ -37,10 +37,6 @@ defineSuite([
             spyOn(element, 'testFunction');
         });
 
-        afterEach(function() {
-            document.body.removeChild(element);
-        });
-        
        it('should exist', function() {
            expect(InfoBox.stringToHtml).toBeDefined();
        });
@@ -65,6 +61,7 @@ defineSuite([
                expect(element.appendChild).toHaveBeenCalled();
                expect(element.appendChild.calls.mostRecent().args[0].nodeType).toEqual(11);
                expect(element.testFunction).toHaveBeenCalled();
+               document.body.removeChild(element);
            });
        });
 
