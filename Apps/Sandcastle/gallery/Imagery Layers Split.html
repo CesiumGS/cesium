@@ -71,21 +71,27 @@ viewer.scene.imagerySplitPosition = (slider.offsetLeft) / slider.parentElement.o
 var dragStartX = 0;
 
 document.getElementById('slider').addEventListener('mousedown', mouseDown, false);
+document.getElementById('slider').addEventListener('touchstart', mouseDown, false);
 window.addEventListener('mouseup', mouseUp, false);
+window.addEventListener('touchend', mouseUp, false);
 
 function mouseUp() {
   window.removeEventListener('mousemove', sliderMove, true);
+  window.removeEventListener('touchmove', sliderMove, true);
 }
 
 function mouseDown(e) {
   var slider = document.getElementById('slider');
-  dragStartX = e.clientX - slider.offsetLeft;
+  var nPos = e.clientX != undefined?e.clientX:e.changedTouches[0].clientX;
+  dragStartX = nPos - slider.offsetLeft;
   window.addEventListener('mousemove', sliderMove, true);
+  window.addEventListener('touchmove', sliderMove, true);
 }
 
 function sliderMove(e) {
   var slider = document.getElementById('slider');
-  var splitPosition = (e.clientX - dragStartX) / slider.parentElement.offsetWidth;
+  var nPos = e.clientX != undefined?e.clientX:e.changedTouches[0].clientX;
+  var splitPosition = (nPos - dragStartX) / slider.parentElement.offsetWidth;
   slider.style.left = 100.0 * splitPosition + "%";
   viewer.scene.imagerySplitPosition = splitPosition;
 }
