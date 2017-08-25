@@ -542,6 +542,7 @@ define([
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
                 if (child.refine === Cesium3DTileRefine.ADD) {
+                    // Additive refinement tiles are always loaded when they are reached
                     loadTile(tileset, child, this.frameState);
                 }
                 touch(tileset, child, this.outOfCore);
