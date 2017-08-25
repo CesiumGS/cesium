@@ -225,7 +225,7 @@ define([
                 var value = object[id];
                 mapping[id] = array.length;
                 array.push(value);
-                if (!defined(value.name)) {
+                if (!defined(value.name) && typeof(value) === 'object') {
                     value.name = id;
                 }
             }
