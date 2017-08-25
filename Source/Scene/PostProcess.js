@@ -223,7 +223,7 @@ define([
 
     function createStages(postProcess) {
         var inputColorTexture = postProcess._inputColorTexture;
-        var outputFramebuffer = postProcess._outputFramebuffer;
+        var outputColorTexture = postProcess.outputColorTexture;
         var activeStages = [];
         var inactiveStages = [];
         var stagesEnabled = [];
@@ -247,7 +247,6 @@ define([
         }
 
         // Cannot read and write to the same framebuffer simultaneously, add a passthrough stage.
-        var outputColorTexture = defined(outputFramebuffer) ? outputFramebuffer.getColorTexture(0) : undefined;
         if (inputColorTexture === outputColorTexture && activeStages.length === 1) {
             var passthroughStage = createPassthroughStage();
             activeStages.push(passthroughStage);
@@ -378,7 +377,7 @@ define([
         if (index === length - 1) {
             return outputFramebuffer;
         }
-        return  framebuffers[index % framebuffers.length];
+        return framebuffers[index % framebuffers.length];
     }
 
     function createDrawCommands(postProcess, context) {
