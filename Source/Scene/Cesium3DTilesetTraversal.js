@@ -541,7 +541,7 @@ define([
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (child.refine === Cesium3DTileRefine.ADD) {
+                if (child.refine === Cesium3DTileRefine.ADD && isVisible(child._visibilityPlaneMask)) {
                     // Additive refinement tiles are always loaded when they are reached
                     loadTile(tileset, child, this.frameState);
                 }
