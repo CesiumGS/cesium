@@ -82,7 +82,7 @@ function mouseUp() {
 
 function mouseDown(e) {
   var slider = document.getElementById('slider');
-  var nPos = e.clientX != undefined?e.clientX:e.changedTouches[0].clientX;
+  var nPos = e.clientX !== undefined?e.clientX:e.changedTouches[0].clientX;
   dragStartX = nPos - slider.offsetLeft;
   window.addEventListener('mousemove', sliderMove, true);
   window.addEventListener('touchmove', sliderMove, true);
@@ -90,7 +90,7 @@ function mouseDown(e) {
 
 function sliderMove(e) {
   var slider = document.getElementById('slider');
-  var nPos = e.clientX != undefined?e.clientX:e.changedTouches[0].clientX;
+  var nPos = e.clientX !== undefined?e.clientX:e.changedTouches[0].clientX;
   var splitPosition = (nPos - dragStartX) / slider.parentElement.offsetWidth;
   slider.style.left = 100.0 * splitPosition + "%";
   viewer.scene.imagerySplitPosition = splitPosition;
