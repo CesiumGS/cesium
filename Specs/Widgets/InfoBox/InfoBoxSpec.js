@@ -43,16 +43,23 @@ defineSuite([
            expect(element.appendChild).not.toHaveBeenCalled();
        });
 
+        it('should set the HTML of the frame when when `allowScripts` is false', function() {
+            var s = '<script>string</script>';
+            InfoBox.stringToHtml(s, element, false);
+            expect(element.innerHTML).toBe(s);
+            expect(element.appendChild).not.toHaveBeenCalled();
+        });
+
        describe('Handle script tags', function() {
            var elementString = '<script>testElement.testFunction();</script>';
            it('should set the HTML content of the frame', function() {
-               InfoBox.stringToHtml(elementString, element);
+               InfoBox.stringToHtml(elementString, element, true);
                expect(element.innerHTML).toBe(elementString);
            });
 
            it('should run appendChild with contextualFragment if supported', function(){
                document.body.append(element);
-               InfoBox.stringToHtml(elementString, element);
+               InfoBox.stringToHtml(elementString, element, true);
                expect(element.appendChild).toHaveBeenCalled();
                expect(element.appendChild.calls.mostRecent().args[0].nodeType).toEqual(11);
                expect(element.testFunction).toHaveBeenCalled();

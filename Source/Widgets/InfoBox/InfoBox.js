@@ -115,7 +115,7 @@ click: function () { closeClicked.raiseEvent(this); }');
             that._descriptionSubscription = subscribeAndEvaluate(viewModel, 'description', function(value) {
                 // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
                 frame.style.height = '5px';
-                InfoBox.stringToHtml(value, frameContent);
+                InfoBox.stringToHtml(value, frameContent, that.allowScripts);
 
                 //If the snippet is a single element, then use its background
                 //color for the body of the InfoBox. This makes the padding match
@@ -234,10 +234,20 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         return destroyObject(this);
     };
-
-    InfoBox.stringToHtml = function stringToHtml(s, frame) {
+    /**
+     * Receives a string and enters it to the DOM
+     * If the string contains a <script> tag, it is
+     * parsed using contextualFragment
+     *
+     * @s {String} HTML string.
+     * @frame {HTMLNode} Element to insert the string to.
+     * @allowScripts {Boolean} true if scripts should be allowed in the HTML string
+     *
+     * @private
+     */
+    InfoBox.stringToHtml = function stringToHtml(s, frame, allowScripts) {
         // if we don't have a script tag - in case the method was used as static...
-        if (s.indexOf('<script') > -1 && s.indexOf('</script>') > -1) {
+        if (allowScripts && s.indexOf('<script') > -1 && s.indexOf('</script>') > -1) {
             // we have a script tag - let's handle it
             // check for modern browsers
             if (defined(document.createRange) && defined(document.createRange().createContextualFragment)) {
