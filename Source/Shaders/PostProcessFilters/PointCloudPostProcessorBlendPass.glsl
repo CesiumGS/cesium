@@ -7,7 +7,6 @@ uniform sampler2D pointCloud_ecTexture;
 uniform sampler2D pointCloud_aoTexture;
 uniform float u_sigmoidDomainOffset;
 uniform float u_sigmoidSharpness;
-uniform float splitScreenX;
 varying vec2 v_textureCoordinates;
 
 float sigmoid(float x, float sharpness) {
