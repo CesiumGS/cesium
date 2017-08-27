@@ -849,7 +849,7 @@ define([
     }
 
     function processingSupported(context) {
-        return context.depthTexture && context.blendMinmax;
+        return context.floatingPointTexture && context.drawBuffers && context.fragmentDepth;
     }
 
     function getECShaderProgram(context, shaderProgram) {
