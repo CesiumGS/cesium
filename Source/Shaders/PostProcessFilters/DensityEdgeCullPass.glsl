@@ -6,9 +6,9 @@
 #define dropoutEnabled
 
 uniform sampler2D pointCloud_ecTexture;
-uniform float neighborhoodVectorSize;
-uniform float maxAbsRatio;
-uniform float dropoutFactor;
+uniform float u_neighborhoodVectorSize;
+uniform float u_maxAbsRatio;
+uniform float u_dropoutFactor;
 varying vec2 v_textureCoordinates;
 
 float random(vec2 st) {
@@ -29,8 +29,8 @@ void main() {
 
 #ifdef dropoutEnabled
         float seed = random(v_textureCoordinates);
-        if (seed < dropoutFactor) {
-            width = int(float(width) * (1.0 - dropoutFactor));
+        if (seed < u_dropoutFactor) {
+            width = int(float(width) * (1.0 - u_dropoutFactor));
         }
 #endif //dropoutEnabled
 
@@ -62,8 +62,8 @@ void main() {
         float absRatio = length(neighborhoodAccum) /
                          length(absNeighborhoodAccum);
         if (int(closestNeighbor) <= neighborhoodHalfWidth &&
-                !(absRatio > maxAbsRatio &&
-                  length(neighborhoodAccum) > neighborhoodVectorSize)) {
+                !(absRatio > u_maxAbsRatio &&
+                  length(neighborhoodAccum) > u_neighborhoodVectorSize)) {
             gl_FragData[0] = vec4(vec3(closestNeighbor /
                                        densityScaleFactor), 0.0);
         } else {

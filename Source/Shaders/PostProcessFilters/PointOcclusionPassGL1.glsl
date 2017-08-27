@@ -16,7 +16,7 @@
 #define useTriangle
 
 uniform sampler2D pointCloud_ecTexture;
-uniform float occlusionAngle;
+uniform float u_occlusionAngle;
 uniform sampler2D sectorLUT;
 varying vec2 v_textureCoordinates;
 
@@ -208,7 +208,7 @@ void main() {
     }
 
     // The solid angle is too small, so we occlude this point
-    if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
+    if (accumulator < (2.0 * PI) * (1.0 - u_occlusionAngle)) {
         gl_FragData[0] = vec4(0.0);
         gl_FragData[1] = vec4(1.0 - EPS);
     } else {

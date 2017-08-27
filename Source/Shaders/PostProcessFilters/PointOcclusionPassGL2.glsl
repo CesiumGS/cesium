@@ -17,8 +17,8 @@
 #define dropoutEnabled
 
 uniform sampler2D pointCloud_ecTexture;
-uniform float occlusionAngle;
-uniform float dropoutFactor;
+uniform float u_occlusionAngle;
+uniform float u_dropoutFactor;
 uniform sampler2D sectorLUT;
 in vec2 v_textureCoordinates;
 
@@ -92,8 +92,8 @@ void main() {
 
 #ifdef dropoutEnabled
     float seed = random(v_textureCoordinates);
-    if (seed < dropoutFactor) {
-        width = int(float(width) * (1.0 - dropoutFactor));
+    if (seed < u_dropoutFactor) {
+        width = int(float(width) * (1.0 - u_dropoutFactor));
     }
 #endif //dropoutEnabled
 
@@ -160,7 +160,7 @@ void main() {
     }
 
     // The solid angle is too small, so we occlude this point
-    if (accumulator < (2.0 * PI) * (1.0 - occlusionAngle)) {
+    if (accumulator < (2.0 * PI) * (1.0 - u_occlusionAngle)) {
         depthOut = vec4(0);
         aoOut = vec4(1.0 - EPS);
     } else {

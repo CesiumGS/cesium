@@ -5,8 +5,8 @@
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_ecTexture;
 uniform sampler2D pointCloud_aoTexture;
-uniform float sigmoidDomainOffset;
-uniform float sigmoidSharpness;
+uniform float u_sigmoidDomainOffset;
+uniform float u_sigmoidSharpness;
 uniform float splitScreenX;
 varying vec2 v_textureCoordinates;
 
@@ -19,7 +19,7 @@ void main() {
 #ifdef enableAO
     float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture,
                                          v_textureCoordinates));
-    ao = clamp(sigmoid(clamp(ao + sigmoidDomainOffset, 0.0, 1.0), sigmoidSharpness),
+    ao = clamp(sigmoid(clamp(ao + u_sigmoidDomainOffset, 0.0, 1.0), u_sigmoidSharpness),
                0.0, 1.0);
     color.xyz = color.xyz * ao;
 #endif // enableAO

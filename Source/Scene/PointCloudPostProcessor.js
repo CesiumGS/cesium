@@ -394,10 +394,10 @@ define([
             pointCloud_ecTexture : function() {
                 return processor._ecTextures[1];
             },
-            occlusionAngle : function() {
+            u_occlusionAngle : function() {
                 return processor.occlusionAngle;
             },
-            dropoutFactor : function() {
+            u_dropoutFactor : function() {
                 return processor.dropoutFactor;
             }
         };
@@ -437,13 +437,13 @@ define([
             pointCloud_ecTexture : function() {
                 return processor._ecTextures[0];
             },
-            neighborhoodVectorSize : function() {
+            u_neighborhoodVectorSize : function() {
                 return processor.neighborhoodVectorSize;
             },
-            maxAbsRatio : function() {
+            u_maxAbsRatio : function() {
                 return processor.maxAbsRatio;
             },
-            dropoutFactor : function() {
+            u_dropoutFactor : function() {
                 return processor.dropoutFactor;
             }
         };
@@ -490,7 +490,7 @@ define([
             pointCloud_aoTexture : function() {
                 return processor._aoTextures[i];
             },
-            rangeParameter : function() {
+            u_rangeParameter : function() {
                 if (processor.useTriangle) {
                     return processor.rangeParameter;
                 }
@@ -499,10 +499,10 @@ define([
                 }
                 return processor.rangeParameter * (rangeMax - rangeMin) + rangeMin;
             },
-            densityHalfWidth : function() {
+            u_densityHalfWidth : function() {
                 return processor.densityHalfWidth;
             },
-            iterationNumber : function() {
+            u_iterationNumber : function() {
                 return iteration;
             }
         };
@@ -558,7 +558,7 @@ define([
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
-            densityHalfWidth : function() {
+            u_densityHalfWidth : function() {
                 return processor.densityHalfWidth;
             }
         };
@@ -572,7 +572,7 @@ define([
             '#define densityView \n' +
             '#define densityScaleFactor 10.0 \n' +
             '#define EPS 1e-6 \n' +
-            'uniform int densityHalfWidth; \n' +
+            'uniform int u_densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_ecTexture; \n' +
             'uniform sampler2D pointCloud_aoTexture; \n' +
@@ -585,7 +585,7 @@ define([
             '    if (length(ec) > EPS) { \n' +
             '        #ifdef densityView \n' +
             '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
-            '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
+            '        gl_FragData[0] = vec4(vec3(density / float(u_densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
@@ -745,10 +745,10 @@ define([
             pointCloud_aoTexture : function() {
                 return processor._aoTextures[1 - numRegionGrowingPasses % 2];
             },
-            sigmoidDomainOffset : function() {
+            u_sigmoidDomainOffset : function() {
                 return processor.sigmoidDomainOffset;
             },
-            sigmoidSharpness : function() {
+            u_sigmoidSharpness : function() {
                 return processor.sigmoidSharpness;
             }
         };

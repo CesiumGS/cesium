@@ -14,9 +14,9 @@ uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_densityTexture;
 uniform sampler2D pointCloud_ecTexture;
 uniform sampler2D pointCloud_aoTexture;
-uniform float rangeParameter;
-uniform int densityHalfWidth;
-uniform int iterationNumber;
+uniform float u_rangeParameter;
+uniform int u_densityHalfWidth;
+uniform int u_iterationNumber;
 
 in vec2 v_textureCoordinates;
 layout(location = 0) out vec4 colorOut;
@@ -215,7 +215,7 @@ void main() {
     // If our depth value is invalid
     if (abs(depth) < EPS) {
         // If the area that we want to region grow is sufficently sparse
-        if (float(iterationNumber - DELAY) <= density + EPS) {
+        if (float(u_iterationNumber - DELAY) <= density + EPS) {
             float finalDepth = depth;
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors, aoNeighbors, colorNeighbors,
@@ -249,7 +249,7 @@ void main() {
 
                 float weight =
                     (1.0 - rI / 2.0) *
-                    (1.0 - min(1.0, ecDelta / max(1e-38, rangeParameter)));
+                    (1.0 - min(1.0, ecDelta / max(1e-38, u_rangeParameter)));
 
                 ecAccum += ecNeighbor * weight;
                 aoAccum += aoNeighbor * weight;
@@ -266,10 +266,10 @@ void main() {
     }
 
 #ifdef densityView
-    colorOut = vec4(vec3(density / float(densityHalfWidth)), 1.0);
+    colorOut = vec4(vec3(density / float(u_densityHalfWidth)), 1.0);
 #else
 #ifdef stencilView
-    colorOut = testColor(iterationNumber);
+    colorOut = testColor(u_iterationNumber);
 #else
     colorOut = finalColor;
 #endif
