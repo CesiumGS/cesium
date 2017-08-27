@@ -1,4 +1,4 @@
-#define EPS 1e-8
+#define epsilon8 1e-8
 #define enableAO
 #extension GL_EXT_frag_depth : enable
 
@@ -23,7 +23,7 @@ void main() {
     color.xyz = color.xyz * ao;
 #endif // enableAO
     vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates);
-    if (length(ec) < EPS) {
+    if (length(ec) < epsilon8) {
         discard;
     } else {
         float depth = czm_eyeToWindowCoordinates(vec4(ec.xyz, 1.0)).z;

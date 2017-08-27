@@ -571,7 +571,6 @@ define([
             '#extension GL_EXT_draw_buffers : enable \n' +
             '#define densityView \n' +
             '#define densityScaleFactor 10.0 \n' +
-            '#define EPS 1e-6 \n' +
             'uniform int u_densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
             'uniform sampler2D pointCloud_ecTexture; \n' +
@@ -582,7 +581,7 @@ define([
             '{ \n' +
             '    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates); \n' +
             '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
-            '    if (length(ec) > EPS) { \n' +
+            '    if (length(ec) > czm_epsilon6) { \n' +
             '        #ifdef densityView \n' +
             '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(u_densityHalfWidth)), 1.0); \n' +
@@ -593,7 +592,7 @@ define([
             '        gl_FragData[2] = rawAO; \n' +
             '    }  else { \n' +
             '       gl_FragData[1] = vec4(0.0); ' +
-            '       gl_FragData[2] = czm_packDepth(1.0 - EPS); ' +
+            '       gl_FragData[2] = czm_packDepth(1.0 - czm_epsilon6); ' +
             '    } \n' +
             '} \n';
 
@@ -621,7 +620,7 @@ define([
         };
 
         var stencilMaskStageFS =
-            '#define EPS 1e-8 \n' +
+            '#define epsilon8 1e-8 \n' +
             '#define cutoff 0 \n' +
             '#define DELAY 1 \n' +
             '#define densityScaleFactor 10.0 \n' +
@@ -630,7 +629,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
-            '    if (float(cutoff - DELAY) + EPS > density) \n' +
+            '    if (float(cutoff - DELAY) + epsilon8 > density) \n' +
             '        discard; \n' +
             '} \n';
 
@@ -667,7 +666,6 @@ define([
         };
 
         var debugViewStageFS =
-            '#define EPS 1e-8 \n' +
             '#define unpack \n' +
             'uniform sampler2D debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +

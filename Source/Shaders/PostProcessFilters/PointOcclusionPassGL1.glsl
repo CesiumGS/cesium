@@ -8,7 +8,6 @@
 #define C1 -0.212053
 #define C2 0.0740935
 #define C3 -0.0186166
-#define EPS 1e-6
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
 #define numSectors 8
 
@@ -115,9 +114,9 @@ void main() {
 
     // If the EC of this pixel is zero, that means that it's not a valid
     // pixel. We don't care about reprojecting it.
-    if (length(centerPosition) < EPS) {
+    if (length(centerPosition) < czm_epsilon6) {
         gl_FragData[0] = vec4(0.0);
-        gl_FragData[1] = vec4(1.0 - EPS);
+        gl_FragData[1] = vec4(1.0 - czm_epsilon6);
     }
 
     // We split our region of interest (the point of interest and its
@@ -156,7 +155,7 @@ void main() {
                                               vec2(pI) / czm_viewport.zw).xyz;
 
             // If our horizon pixel doesn't exist, ignore it and move on
-            if (length(neighborPosition) < EPS || pI == pos) {
+            if (length(neighborPosition) < czm_epsilon6 || pI == pos) {
                 continue;
             }
 
@@ -210,7 +209,7 @@ void main() {
     // The solid angle is too small, so we occlude this point
     if (accumulator < (2.0 * PI) * (1.0 - u_occlusionAngle)) {
         gl_FragData[0] = vec4(0.0);
-        gl_FragData[1] = vec4(1.0 - EPS);
+        gl_FragData[1] = vec4(1.0 - czm_epsilon6);
     } else {
         float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
         gl_FragData[1] = czm_packDepth(occlusion);

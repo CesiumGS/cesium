@@ -1,6 +1,6 @@
 #define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of region-growing kernel
 
-#define EPS 1e-8
+#define epsilon8 1e-8
 
 #define densityScaleFactor 10.0
 #define dropoutEnabled
@@ -24,7 +24,7 @@ void main() {
     vec2 neighborhoodAccum = vec2(0.0);
     vec2 absNeighborhoodAccum = vec2(0.0);
 
-    if (center < EPS) {
+    if (center < epsilon8) {
         int width = neighborhoodHalfWidth;
 
 #ifdef dropoutEnabled
@@ -47,7 +47,7 @@ void main() {
 
                 float neighbor = length(texture2D(pointCloud_ecTexture,
                                                   normPI));
-                if (neighbor < EPS || pI == pos) {
+                if (neighbor < epsilon8 || pI == pos) {
                     continue;
                 }
 

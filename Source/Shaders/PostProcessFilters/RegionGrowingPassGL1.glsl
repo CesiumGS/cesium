@@ -4,7 +4,7 @@
 #define neighborhoodHalfWidth 1  // TUNABLE PARAMETER -- half-width of region-growing kernel
 #define neighborhoodFullWidth 3
 #define neighborhoodSize 8
-#define EPS 1e-8
+#define epsilon8 1e-8
 #define SQRT2 1.414213562
 #define densityScaleFactor 10.0
 #define densityView
@@ -107,7 +107,7 @@ void fastMedian3(in float[neighborhoodSize] neighbors,
     comparisonNetwork8(neighbors, aoNeighbors, colorNeighbors);
 
     for (int i = 0; i < neighborhoodSize; i++) {
-        if (abs(neighbors[i]) > EPS) {
+        if (abs(neighbors[i]) > epsilon8) {
             outDepth = neighbors[i + (neighborhoodSize - 1 - i) / 2];
             outAO = aoNeighbors[i + (neighborhoodSize - 1 - i) / 2];
             outColor = colorNeighbors[i + (neighborhoodSize - 1 - i) / 2];
@@ -207,9 +207,9 @@ void main() {
                          texture2D(pointCloud_densityTexture, v_textureCoordinates).r);
 
     // If our depth value is invalid
-    if (abs(depth) < EPS) {
+    if (abs(depth) < epsilon8) {
         // If the area that we want to region grow is sufficently sparse
-        if (float(u_iterationNumber - DELAY) <= density + EPS) {
+        if (float(u_iterationNumber - DELAY) <= density + epsilon8) {
             float finalDepth = depth;
 #if neighborhoodFullWidth == 3
             fastMedian3(depthNeighbors, aoNeighbors, colorNeighbors,
@@ -219,7 +219,7 @@ void main() {
                                 finalDepth, finalAO, finalColor);
 #endif
             for (int i = 0; i < neighborhoodSize; i++) {
-                if (abs(depthNeighbors[i] - finalDepth) < EPS) {
+                if (abs(depthNeighbors[i] - finalDepth) < epsilon8) {
                     finalEC = ecNeighbors[i];
                 }
             }
@@ -238,7 +238,7 @@ void main() {
             vec4 colorNeighbor = colorNeighbors[i];
             float rI = rIs[i];
 
-            if (length(ecNeighbor) > EPS) {
+            if (length(ecNeighbor) > epsilon8) {
                 float ecDelta = length(ecNeighbor - ec);
 
                 float weight =
@@ -252,7 +252,7 @@ void main() {
             }
         }
 
-        if (length(ecAccum) > EPS) {
+        if (length(ecAccum) > epsilon8) {
             finalEC = ecAccum / normalization;
             finalColor = colorAccum / normalization;
             finalAO = aoAccum / normalization;
