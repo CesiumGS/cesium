@@ -395,7 +395,7 @@ define([
             sectorLUT : function() {
                 return processor._sectorLUTTexture;
             },
-            pointCloud_ECTexture : function() {
+            pointCloud_ecTexture : function() {
                 return processor._ecTextures[1];
             },
             occlusionAngle : function() {
@@ -438,7 +438,7 @@ define([
 
     function densityEdgeCullStage(processor, context) {
         var uniformMap = {
-            pointCloud_depthTexture : function() {
+            pointCloud_ecTexture : function() {
                 return processor._ecTextures[0];
             },
             neighborhoodVectorSize : function() {
@@ -485,7 +485,7 @@ define([
             pointCloud_colorTexture : function() {
                 return processor._colorTextures[i];
             },
-            pointCloud_depthTexture : function() {
+            pointCloud_ecTexture : function() {
                 return processor._ecTextures[i];
             },
             pointCloud_densityTexture : function() {
@@ -553,7 +553,7 @@ define([
             pointCloud_colorTexture : function() {
                 return processor._colorTextures[i];
             },
-            pointCloud_depthTexture : function() {
+            pointCloud_ecTexture : function() {
                 return processor._ecTextures[i];
             },
             pointCloud_aoTexture : function() {
@@ -578,22 +578,22 @@ define([
             '#define EPS 1e-6 \n' +
             'uniform int densityHalfWidth; \n' +
             'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_depthTexture; \n' +
+            'uniform sampler2D pointCloud_ecTexture; \n' +
             'uniform sampler2D pointCloud_aoTexture; \n' +
             'uniform sampler2D pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 depth = texture2D(pointCloud_depthTexture, v_textureCoordinates); \n' +
+            '    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates); \n' +
             '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
-            '    if (length(depth) > EPS) { \n' +
+            '    if (length(ec) > EPS) { \n' +
             '        #ifdef densityView \n' +
             '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
             '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
-            '        gl_FragData[1] = depth; \n' +
+            '        gl_FragData[1] = ec; \n' +
             '        gl_FragData[2] = rawAO; \n' +
             '    }  else { \n' +
             '       gl_FragData[1] = vec4(0.0); ' +
@@ -743,7 +743,7 @@ define([
             pointCloud_colorTexture : function() {
                 return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_depthTexture : function() {
+            pointCloud_ecTexture : function() {
                 return processor._ecTextures[1 - numRegionGrowingPasses % 2];
             },
             pointCloud_aoTexture : function() {

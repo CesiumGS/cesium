@@ -13,7 +13,7 @@
 
 uniform sampler2D pointCloud_colorTexture;
 uniform sampler2D pointCloud_densityTexture;
-uniform sampler2D pointCloud_depthTexture;
+uniform sampler2D pointCloud_ecTexture;
 uniform sampler2D pointCloud_aoTexture;
 uniform float rangeParameter;
 uniform int densityHalfWidth;
@@ -147,7 +147,7 @@ void loadIntoArray(inout vec4[neighborhoodSize] ecNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            vec4 neighborEC = texture2D(pointCloud_depthTexture,
+            vec4 neighborEC = texture2D(pointCloud_ecTexture,
                                         neighborCoords);
             float neighbor = length(neighborEC);
             float aoNeighbor = czm_unpackDepth(texture2D(pointCloud_aoTexture,
@@ -178,7 +178,7 @@ void loadIntoArray(inout vec4[neighborhoodSize] ecNeighbors,
 
 void main() {
     vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    vec4 ec = texture2D(pointCloud_depthTexture, v_textureCoordinates);
+    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates);
     float depth = length(ec);
     float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture,
                                          v_textureCoordinates));

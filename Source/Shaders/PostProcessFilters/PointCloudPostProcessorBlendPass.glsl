@@ -3,7 +3,7 @@
 #extension GL_EXT_frag_depth : enable
 
 uniform sampler2D pointCloud_colorTexture;
-uniform sampler2D pointCloud_depthTexture;
+uniform sampler2D pointCloud_ecTexture;
 uniform sampler2D pointCloud_aoTexture;
 uniform float sigmoidDomainOffset;
 uniform float sigmoidSharpness;
@@ -23,7 +23,7 @@ void main() {
                0.0, 1.0);
     color.xyz = color.xyz * ao;
 #endif // enableAO
-    vec4 ec = texture2D(pointCloud_depthTexture, v_textureCoordinates);
+    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates);
     if (length(ec) < EPS) {
         discard;
     } else {

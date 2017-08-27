@@ -16,7 +16,7 @@
 #define useTriangle
 #define dropoutEnabled
 
-uniform sampler2D pointCloud_ECTexture;
+uniform sampler2D pointCloud_ecTexture;
 uniform float occlusionAngle;
 uniform float dropoutFactor;
 uniform sampler2D sectorLUT;
@@ -50,7 +50,7 @@ void main() {
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
 
     // The position of this pixel in 3D (i.e the position of the point)
-    vec3 centerPosition = texture(pointCloud_ECTexture, v_textureCoordinates).xyz;
+    vec3 centerPosition = texture(pointCloud_ecTexture, v_textureCoordinates).xyz;
     bool invalid = false;
 
     // If the EC of this pixel is zero, that means that it's not a valid
@@ -105,7 +105,7 @@ void main() {
             ivec2 pI = pos + d;
 
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
-            vec3 neighborPosition = texelFetch(pointCloud_ECTexture, ivec2(pI), 0).xyz;
+            vec3 neighborPosition = texelFetch(pointCloud_ecTexture, ivec2(pI), 0).xyz;
 
             // If our horizon pixel doesn't exist, ignore it and move on
             if (length(neighborPosition) < EPS || pI == pos) {
