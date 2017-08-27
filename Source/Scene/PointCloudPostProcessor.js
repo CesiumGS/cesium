@@ -78,8 +78,7 @@ define([
     function PointCloudPostProcessor(options) {
         this._framebuffers = undefined;
         this._colorTextures = undefined;
-        this._ecTexture = undefined;
-        this._depthTextures = undefined;
+        this._ecTextures = undefined;
         this._densityTexture = undefined;
         this._edgeCullingTexture = undefined;
         this._sectorLUTTexture = undefined;
@@ -163,9 +162,8 @@ define([
     }
 
     function destroyFramebuffers(processor) {
-        processor._depthTextures[0].destroy();
-        processor._depthTextures[1].destroy();
-        processor._ecTexture.destroy();
+        processor._ecTextures[0].destroy();
+        processor._ecTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
         processor._aoTextures[0].destroy();
         processor._aoTextures[1].destroy();
@@ -183,8 +181,7 @@ define([
 
         processor._framebuffers = undefined;
         processor._colorTextures = undefined;
-        processor._ecTexture = undefined;
-        processor._depthTextures = undefined;
+        processor._ecTextures = undefined;
         processor._densityTexture = undefined;
         processor._edgeCullingTexture = undefined;
         processor._sectorLUTTexture = undefined;
@@ -239,17 +236,8 @@ define([
         var screenHeight = context.drawingBufferHeight;
 
         var colorTextures = new Array(2);
-        var depthTextures = new Array(2);
+        var ecTextures = new Array(2);
         var aoTextures = new Array(2);
-
-        var ecTexture = new Texture({
-            context : context,
-            width : screenWidth,
-            height : screenHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT,
-            sampler : createSampler()
-        });
 
         var densityMap = new Texture({
             context : context,
@@ -303,7 +291,7 @@ define([
                 sampler : createSampler()
             });
 
-            depthTextures[i] = new Texture({
+            ecTextures[i] = new Texture({
                 context : context,
                 width : screenWidth,
                 height : screenHeight,
@@ -331,14 +319,14 @@ define([
                 context : context,
                 colorTextures : [
                     colorTextures[0],
-                    ecTexture
+                    ecTextures[1]
                 ],
                 depthStencilTexture : stencilMaskTexture,
                 destroyAttachments : false
             }),
             screenSpacePass : new Framebuffer({
                 context : context,
-                colorTextures : [depthTextures[0], aoTextures[0]],
+                colorTextures : [ecTextures[0], aoTextures[0]],
                 depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
             }),
@@ -366,7 +354,7 @@ define([
             regionGrowingPassA : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[1],
-                                 depthTextures[1],
+                                 ecTextures[1],
                                  aoTextures[1]],
                 depthStencilTexture: stencilMaskTexture,
                 destroyAttachments : false
@@ -374,19 +362,18 @@ define([
             regionGrowingPassB : new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[0],
-                                 depthTextures[0],
+                                 ecTextures[0],
                                  aoTextures[0]],
                 depthStencilTexture : stencilMaskTexture,
                 destroyAttachments : false
             })
         };
-        processor._depthTextures = depthTextures;
+        processor._ecTextures = ecTextures;
         processor._densityTexture = densityMap;
         processor._edgeCullingTexture = edgeCullingTexture;
         processor._sectorLUTTexture = sectorLUTTexture;
         processor._aoTextures = aoTextures;
         processor._colorTextures = colorTextures;
-        processor._ecTexture = ecTexture;
         processor._stencilMaskTexture = stencilMaskTexture;
     }
 
@@ -409,7 +396,7 @@ define([
                 return processor._sectorLUTTexture;
             },
             pointCloud_ECTexture : function() {
-                return processor._ecTexture;
+                return processor._ecTextures[1];
             },
             occlusionAngle : function() {
                 return processor.occlusionAngle;
@@ -452,7 +439,7 @@ define([
     function densityEdgeCullStage(processor, context) {
         var uniformMap = {
             pointCloud_depthTexture : function() {
-                return processor._depthTextures[0];
+                return processor._ecTextures[0];
             },
             neighborhoodVectorSize : function() {
                 return processor.neighborhoodVectorSize;
@@ -499,7 +486,7 @@ define([
                 return processor._colorTextures[i];
             },
             pointCloud_depthTexture : function() {
-                return processor._depthTextures[i];
+                return processor._ecTextures[i];
             },
             pointCloud_densityTexture : function() {
                 return processor._densityTexture;
@@ -567,7 +554,7 @@ define([
                 return processor._colorTextures[i];
             },
             pointCloud_depthTexture : function() {
-                return processor._depthTextures[i];
+                return processor._ecTextures[i];
             },
             pointCloud_aoTexture : function() {
                 return processor._aoTextures[i];
@@ -757,7 +744,7 @@ define([
                 return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
             pointCloud_depthTexture : function() {
-                return processor._depthTextures[1 - numRegionGrowingPasses % 2];
+                return processor._ecTextures[1 - numRegionGrowingPasses % 2];
             },
             pointCloud_aoTexture : function() {
                 return processor._aoTextures[1 - numRegionGrowingPasses % 2];
@@ -781,7 +768,7 @@ define([
         if (processor.AOViewEnabled) {
             debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0], true);
         } else if (processor.depthViewEnabled) {
-            debugViewCommand = debugViewStage(processor, context, processor._depthTextures[0], false);
+            debugViewCommand = debugViewStage(processor, context, processor._ecTextures[0], false);
         }
 
         var framebuffers = processor._framebuffers;
