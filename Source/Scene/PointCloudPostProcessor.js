@@ -373,17 +373,17 @@ define([
         processor._stencilMaskTexture = stencilMaskTexture;
     }
 
-    function replaceConstants(sourceStr, constantName, replacement) {
+    function replaceConstants(sourceFS, constantName, replacement) {
         var r;
         if (typeof(replacement) === 'boolean') {
             if (replacement === false) {
                 r = '#define\\s' + constantName;
-                return sourceStr.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
+                return sourceFS.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
             }
-                return sourceStr;
+                return sourceFS;
         }
         r = '#define\\s' + constantName + '\\s([0-9.]+)';
-        return sourceStr.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
+        return sourceFS.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
     }
 
      function pointOcclusionStage(processor, context) {
@@ -402,26 +402,26 @@ define([
             }
         };
 
-        var pointOcclusionStr = replaceConstants(
+        var pointOcclusionFS = replaceConstants(
             (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
             'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
         );
 
-        pointOcclusionStr = replaceConstants(
-            pointOcclusionStr,
+        pointOcclusionFS = replaceConstants(
+            pointOcclusionFS,
             'useTriangle',
             processor.useTriangle
         );
 
         if (processor.dropoutFactor < 1e-6) {
-            pointOcclusionStr = replaceConstants(
-                pointOcclusionStr,
+            pointOcclusionFS = replaceConstants(
+                pointOcclusionFS,
                 'dropoutEnabled',
                 false);
         }
 
-        return context.createViewportQuadCommand(pointOcclusionStr, {
+        return context.createViewportQuadCommand(pointOcclusionFS, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.screenSpacePass,
             renderState : RenderState.fromCache({
@@ -448,20 +448,20 @@ define([
             }
         };
 
-        var densityEdgeCullStr = replaceConstants(
+        var densityEdgeCullFS = replaceConstants(
             DensityEdgeCullPass,
             'neighborhoodHalfWidth',
             processor.densityHalfWidth
         );
 
         if (processor.dropoutFactor < 1e-6 || !context.webgl2) {
-            densityEdgeCullStr = replaceConstants(
-                densityEdgeCullStr,
+            densityEdgeCullFS = replaceConstants(
+                densityEdgeCullFS,
                 'dropoutEnabled',
                 false);
         }
 
-        return context.createViewportQuadCommand(densityEdgeCullStr, {
+        return context.createViewportQuadCommand(densityEdgeCullFS, {
             uniformMap : uniformMap,
             framebuffer : processor._framebuffers.densityEstimationPass,
             renderState : RenderState.fromCache({
@@ -511,29 +511,29 @@ define([
             processor._framebuffers.regionGrowingPassA :
             processor._framebuffers.regionGrowingPassB;
 
-        var regionGrowingPassStr = (context.webgl2) ?
+        var regionGrowingPassFS = (context.webgl2) ?
             RegionGrowingPassGL2 :
             RegionGrowingPassGL1;
 
-        regionGrowingPassStr = replaceConstants(
-            regionGrowingPassStr,
+        regionGrowingPassFS = replaceConstants(
+            regionGrowingPassFS,
             'densityView',
             processor.densityViewEnabled
         );
 
-        regionGrowingPassStr = replaceConstants(
-            regionGrowingPassStr,
+        regionGrowingPassFS = replaceConstants(
+            regionGrowingPassFS,
             'stencilView',
             processor.stencilViewEnabled
         );
 
-        regionGrowingPassStr = replaceConstants(
-            regionGrowingPassStr,
+        regionGrowingPassFS = replaceConstants(
+            regionGrowingPassFS,
             'DELAY',
             processor.delay
         );
 
-        return context.createViewportQuadCommand(regionGrowingPassStr, {
+        return context.createViewportQuadCommand(regionGrowingPassFS, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
@@ -567,7 +567,7 @@ define([
             processor._framebuffers.regionGrowingPassA :
             processor._framebuffers.regionGrowingPassB;
 
-        var copyStageStr =
+        var copyStageFS =
             '#extension GL_EXT_draw_buffers : enable \n' +
             '#define densityView \n' +
             '#define densityScaleFactor 10.0 \n' +
@@ -597,13 +597,13 @@ define([
             '    } \n' +
             '} \n';
 
-        copyStageStr = replaceConstants(
-            copyStageStr,
+        copyStageFS = replaceConstants(
+            copyStageFS,
             'densityView',
             processor.densityViewEnabled
         );
 
-        return context.createViewportQuadCommand(copyStageStr, {
+        return context.createViewportQuadCommand(copyStageFS, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
@@ -620,7 +620,7 @@ define([
             }
         };
 
-        var stencilMaskStageStr =
+        var stencilMaskStageFS =
             '#define EPS 1e-8 \n' +
             '#define cutoff 0 \n' +
             '#define DELAY 1 \n' +
@@ -634,21 +634,21 @@ define([
             '        discard; \n' +
             '} \n';
 
-        stencilMaskStageStr = replaceConstants(
-            stencilMaskStageStr,
+        stencilMaskStageFS = replaceConstants(
+            stencilMaskStageFS,
             'cutoff',
             iteration
         );
 
-        stencilMaskStageStr = replaceConstants(
-            stencilMaskStageStr,
+        stencilMaskStageFS = replaceConstants(
+            stencilMaskStageFS,
             'DELAY',
             processor.delay
         );
 
         var framebuffer = processor._framebuffers.stencilMask;
 
-        return context.createViewportQuadCommand(stencilMaskStageStr, {
+        return context.createViewportQuadCommand(stencilMaskStageFS, {
             uniformMap : uniformMap,
             framebuffer : framebuffer,
             renderState : RenderState.fromCache({
@@ -666,7 +666,7 @@ define([
             }
         };
 
-        var debugViewStageStr =
+        var debugViewStageFS =
             '#define EPS 1e-8 \n' +
             '#define unpack \n' +
             'uniform sampler2D debugTexture; \n' +
@@ -680,13 +680,13 @@ define([
             '    gl_FragColor = vec4(value); \n' +
             '} \n';
 
-        debugViewStageStr = replaceConstants(
-            debugViewStageStr,
+        debugViewStageFS = replaceConstants(
+            debugViewStageFS,
             'unpack',
             unpack
         );
 
-        return context.createViewportQuadCommand(debugViewStageStr, {
+        return context.createViewportQuadCommand(debugViewStageFS, {
             uniformMap : uniformMap,
             renderState : RenderState.fromCache({
             }),
