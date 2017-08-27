@@ -162,6 +162,11 @@ define([
     }
 
     function destroyFramebuffers(processor) {
+        var framebuffers = processor._framebuffers;
+        if (!defined(framebuffers)) {
+            return;
+        }
+
         processor._ecTextures[0].destroy();
         processor._ecTextures[1].destroy();
         processor._sectorLUTTexture.destroy();
@@ -172,7 +177,6 @@ define([
         processor._stencilMaskTexture.destroy();
         processor._colorTextures[0].destroy();
         processor._colorTextures[1].destroy();
-        var framebuffers = processor._framebuffers;
         for (var name in framebuffers) {
             if (framebuffers.hasOwnProperty(name)) {
                 framebuffers[name].destroy();
@@ -830,23 +834,12 @@ define([
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
         var colorTextures = processor._colorTextures;
-        var regionGrowingCommands = (defined(processor._drawCommands)) ? processor._drawCommands.regionGrowingCommands : undefined;
-        var stencilCommands = (defined(processor._drawCommands)) ? processor._drawCommands.stencilCommands : undefined;
         var nowDirty = false;
         var resized = defined(colorTextures) &&
             ((colorTextures[0].width !== screenWidth) ||
              (colorTextures[0].height !== screenHeight));
 
-        if (!defined(colorTextures)) {
-            createFramebuffers(processor, context);
-            nowDirty = true;
-        }
-
-        if (!defined(regionGrowingCommands) || !defined(stencilCommands) || dirty) {
-            createCommands(processor, context);
-        }
-
-        if (resized) {
+        if (!defined(colorTextures) || resized || dirty) {
             destroyFramebuffers(processor);
             createFramebuffers(processor, context);
             createCommands(processor, context);
