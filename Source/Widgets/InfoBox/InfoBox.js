@@ -239,11 +239,14 @@ click: function () { closeClicked.raiseEvent(this); }');
      * If the string contains a <script> tag, it is
      * parsed using contextualFragment
      *
-     * @s {String} HTML string.
-     * @frame {HTMLNode} Element to insert the string to.
-     * @allowScripts {Boolean} true if scripts should be allowed in the HTML string
-     *
+     * @type {Function}.
      * @private
+     */
+    /**
+     *
+     * @param s {String}
+     * @param frame {Element}
+     * @param allowScripts {Boolean}
      */
     InfoBox.stringToHtml = function stringToHtml(s, frame, allowScripts) {
         // if we don't have a script tag - in case the method was used as static...
