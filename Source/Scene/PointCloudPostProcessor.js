@@ -310,10 +310,6 @@ define([
             });
         }
 
-        // There used to be an explanation of how this worked here
-        // but it got too long.
-        // TODO: Find a better place to put an explanation of what all
-        // the framebuffers are meant for.
         processor._framebuffers = {
             prior : new Framebuffer({
                 context : context,
