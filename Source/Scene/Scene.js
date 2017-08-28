@@ -1945,9 +1945,6 @@ define([
 
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                if (useDepthPlane) {
-                    depthPlane.execute(context, passState);
-                }
             }
 
             us.updatePass(Pass.CESIUM_3D_TILE);
@@ -1966,6 +1963,10 @@ define([
             length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
+            }
+
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
             }
 
             // Execute commands in order by pass up to the translucent pass.
