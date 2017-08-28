@@ -44,9 +44,25 @@ define([
          */
         this.compositeTest = PostProcessLibrary.compositeTest;
         /**
+         * @inheritdoc PostProcessLibrary#lensFlare
+         */
+        this.lensFlare = PostProcessLibrary.lensFlare;
+        /**
          * @inheritdoc PostProcessLibrary#ambientOcclusion
          */
         this.ambientOcclusion = PostProcessLibrary.ambientOcclusion;
+        /**
+         * @inheritdoc PostProcessLibrary#depthOfField
+         */
+        this.depthOfField = PostProcessLibrary.depthOfField;
+        /**
+         * @inheritdoc PostProcessLibrary#bloom
+         */
+        this.bloom = PostProcessLibrary.bloom;
+        /**
+         * @inheritdoc PostProcessLibrary#toon
+         */
+        this.toon = PostProcessLibrary.toon;
         /**
          * @inheritdoc PostProcessLibrary#fxaa
          */
@@ -60,7 +76,11 @@ define([
             this.textureOverlay,
             this.depthView,
             this.compositeTest,
+            this.lensFlare,
             this.ambientOcclusion,
+            this.depthOfField,
+            this.bloom,
+            this.toon,
             this.fxaa
         ];
 
