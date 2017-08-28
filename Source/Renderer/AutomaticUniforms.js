@@ -1591,16 +1591,16 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform that will be the alpha of unclassified 3D Tiles.
+         * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
          *
-         * @alias czm_invertedClassificationAlpha
+         * @alias czm_invertClassificationColor
          * @glslUniform
          */
-        czm_invertedClassificationAlpha : new AutomaticUniform({
+        czm_invertClassificationColor : new AutomaticUniform({
             size : 1,
-            datatype : WebGLConstants.FLOAT,
+            datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
-                return uniformState.invertClassificationAlpha;
+                return uniformState.invertClassificationColor;
             }
         })
     };

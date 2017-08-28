@@ -306,10 +306,10 @@ define([
         this.invertClassification = false;
 
         /**
-         * The alpha of unclassified 3D Tile geometry when {@link FrameState#invertClassification} is <code>true</code>.
-         * @type {Number}
+         * The highlight color of unclassified 3D Tile geometry when {@link FrameState#invertClassification} is <code>true</code>.
+         * @type {Color}
          */
-        this.invertClassificationAlpha = undefined;
+        this.invertClassificationColor = undefined;
     }
 
     /**

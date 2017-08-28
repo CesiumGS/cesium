@@ -159,7 +159,7 @@ define([
 
         this._fogDensity = undefined;
 
-        this._invertClassificationAlpha = undefined;
+        this._invertClassificationColor = undefined;
 
         this._imagerySplitPosition = 0.0;
         this._pixelSizePerMeter = undefined;
@@ -852,14 +852,14 @@ define([
         },
 
         /**
-         * The alpha of unclassified 3D Tiles.
+         * The highlight color of unclassified 3D Tiles.
          *
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        invertClassificationAlpha : {
+        invertClassificationColor : {
             get : function() {
-                return this._invertClassificationAlpha;
+                return this._invertClassificationColor;
             }
         }
     });
@@ -1026,7 +1026,7 @@ define([
 
         this._fogDensity = frameState.fog.density;
 
-        this._invertClassificationAlpha = frameState.invertClassificationAlpha;
+        this._invertClassificationColor = frameState.invertClassificationColor;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);

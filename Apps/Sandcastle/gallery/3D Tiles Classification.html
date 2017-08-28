@@ -33,9 +33,30 @@
     <td><input type="checkbox" data-bind="checked: inverted" /></td>
 </tr>
 <tr>
+    <td>inverted red</td>
+    <td>
+        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedRed, valueUpdate: 'input'">
+        <input type="text" size="3" data-bind="value: invertedRed">
+    </td>
+</tr>
+<tr>
+    <td>inverted green</td>
+    <td>
+        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedGreen, valueUpdate: 'input'">
+        <input type="text" size="3" data-bind="value: invertedGreen">
+    </td>
+</tr>
+<tr>
+    <td>inverted blue</td>
+    <td>
+        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedBlue, valueUpdate: 'input'">
+        <input type="text" size="3" data-bind="value: invertedBlue">
+    </td>
+</tr>
+<tr>
     <td>inverted alpha</td>
     <td>
-        <input type="range" min="0.0" max="0.99" step="0.01" data-bind="value: invertedAlpha, valueUpdate: 'input'">
+        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedAlpha, valueUpdate: 'input'">
         <input type="text" size="3" data-bind="value: invertedAlpha">
     </td>
 </tr>
@@ -66,6 +87,8 @@ classification.readyPromise.then(function(tileset) {
 }).otherwise(function(error) {
     throw(error);
 });
+
+viewer.scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
 
 var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
 var current = {
@@ -101,7 +124,10 @@ handler.setInputAction(function(movement) {
 var viewModel = {
     enabled : classification.debugWireframe,
     inverted : viewer.scene.invertClassification,
-    invertedAlpha : viewer.scene.invertClassificationAlpha
+    invertedRed : viewer.scene.invertClassificationColor.red,
+    invertedGreen : viewer.scene.invertClassificationColor.green,
+    invertedBlue : viewer.scene.invertClassificationColor.blue,
+    invertedAlpha : viewer.scene.invertClassificationColor.alpha
 };
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
@@ -121,9 +147,24 @@ Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
         });
     }
 );
+Cesium.knockout.getObservable(viewModel, 'invertedRed').subscribe(
+    function(newValue) {
+        viewer.scene.invertClassificationColor.red = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'invertedGreen').subscribe(
+    function(newValue) {
+        viewer.scene.invertClassificationColor.green = newValue;
+    }
+);
+Cesium.knockout.getObservable(viewModel, 'invertedBlue').subscribe(
+    function(newValue) {
+        viewer.scene.invertClassificationColor.blue = newValue;
+    }
+);
 Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(
     function(newValue) {
-        viewer.scene.invertClassificationAlpha = newValue;
+        viewer.scene.invertClassificationColor.alpha = newValue;
     }
 );
 //Sandcastle_End
