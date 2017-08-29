@@ -78,9 +78,9 @@ define([
 
             values = new Array(count);
             var accessorByteOffset = defaultValue(accessor.byteOffset, 0);
-            var byteOffset = bufferView.byteOffset + accessorByteOffset + source.byteOffset;
+            var byteOffset = bufferView.byteOffset + accessorByteOffset;
             for (var i = 0; i < count; i++) {
-                var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
+                var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, source.byteOffset + byteOffset, numberOfComponents);
                 if (type === 'SCALAR') {
                     values[i] = typedArrayView[0];
                 } else if (type === 'VEC3') {
@@ -177,14 +177,14 @@ define([
             var type = accessor.type;
             var count = accessor.count;
             var byteStride = getAccessorByteStride(gltf, accessor);
-            var byteOffset = bufferView.byteOffset + accessor.byteOffset + source.byteOffset;
+            var byteOffset = bufferView.byteOffset + accessor.byteOffset;
             var numberOfComponents = numberOfComponentsForType(type);
 
             matrices = new Array(count);
 
             if ((componentType === WebGLConstants.FLOAT) && (type === AttributeType.MAT4)) {
                 for (var i = 0; i < count; ++i) {
-                    var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
+                    var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, source.byteOffset + byteOffset, numberOfComponents);
                     matrices[i] = Matrix4.fromArray(typedArrayView);
                     byteOffset += byteStride;
                 }
