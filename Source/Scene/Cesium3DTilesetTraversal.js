@@ -507,8 +507,12 @@ define([
         }
 
         if (!tile.hasTilesetContent) {
-            if (hasAdditiveContent(tile)) {
-                tileset._desiredTiles.push(tile);
+            if (tile.refine === Cesium3DTileRefine.ADD) {
+                // Always load additive tiles
+                loadTile(tileset, tile, this.frameState);
+                if (hasAdditiveContent(tile)) {
+                    tileset._desiredTiles.push(tile);
+                }
             }
 
             // stop traversal when we've attained the desired level of error
@@ -540,12 +544,7 @@ define([
             var children = tile.children;
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                if (child.refine === Cesium3DTileRefine.ADD) {
-                    // Additive refinement tiles are always loaded when they are reached
-                    loadTile(tileset, child, this.frameState, true);
-                }
-                touch(tileset, child, this.outOfCore);
+                touch(tileset, children[i], this.outOfCore);
             }
             return children;
         }
