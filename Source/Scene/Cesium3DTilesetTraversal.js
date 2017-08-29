@@ -65,7 +65,7 @@ define([
             return;
         }
 
-        loadTile(tileset, root, frameState);
+        loadTile(tileset, root, frameState, true);
 
         if (!tileset.skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -313,7 +313,7 @@ define([
         var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
-            loadTile(tileset, child, frameState);
+            loadTile(tileset, child, frameState, true);
             touch(tileset, child, outOfCore);
 
             // content cannot be replaced until all of the nearest descendants with content are all loaded
@@ -413,7 +413,7 @@ define([
         var childrenLength = children.length;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
-            loadTile(tileset, child, frameState);
+            loadTile(tileset, child, frameState, true);
             touch(tileset, child, outOfCore);
             if (!tile.contentAvailable) {
                 this.allLoaded = false;
@@ -541,9 +541,9 @@ define([
             var childrenLength = children.length;
             for (var i = 0; i < childrenLength; ++i) {
                 var child = children[i];
-                if (child.refine === Cesium3DTileRefine.ADD && isVisible(child._visibilityPlaneMask)) {
+                if (child.refine === Cesium3DTileRefine.ADD) {
                     // Additive refinement tiles are always loaded when they are reached
-                    loadTile(tileset, child, this.frameState);
+                    loadTile(tileset, child, this.frameState, true);
                 }
                 touch(tileset, child, this.outOfCore);
             }
@@ -576,11 +576,11 @@ define([
                     var tiles = parent.children;
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
-                        loadTile(this.tileset, tiles[i], this.frameState);
+                        loadTile(this.tileset, tiles[i], this.frameState, false);
                         touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
-                    loadTile(this.tileset, tile, this.frameState);
+                    loadTile(this.tileset, tile, this.frameState, true);
                     touch(this.tileset, tile, this.outOfCore);
                 }
             }
@@ -643,10 +643,12 @@ define([
         }
     }
 
-    function loadTile(tileset, tile, frameState) {
+    function loadTile(tileset, tile, frameState, checkVisibility) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
-            tile._requestedFrame = frameState.frameNumber;
-            tileset._requestedTiles.push(tile);
+            if (!checkVisibility || isVisible(tile._visibilityPlaneMask)) {
+                tile._requestedFrame = frameState.frameNumber;
+                tileset._requestedTiles.push(tile);
+            }
         }
     }
 
