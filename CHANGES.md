@@ -14,6 +14,7 @@ Change Log
 * Fixed specular computation for certain models using the `KHR_materials_common` extension. [#5773](https://github.com/AnalyticalGraphicsInc/cesium/pull/5773)
 * Fixed a bug where developer error was thrown in Sandcastle example [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
 * Fixed a 3D Tiles traversal bug for tilesets using additive refinement. [#5766](https://github.com/AnalyticalGraphicsInc/cesium/issues/5766)
+* Fixed a 3D Tiles traversal bug where out-of-view children were being loaded unnecessarily. [#5477](https://github.com/AnalyticalGraphicsInc/cesium/issues/5477)
 
 ### 1.36 - 2017-08-01
 
