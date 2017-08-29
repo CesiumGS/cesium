@@ -737,7 +737,7 @@ define([
                     bufferViewsToDelete[oldBufferViewId] = true;
                 }
                 var bufferView = clone(bufferViews[oldBufferViewId]);
-                var accessorByteStride = getAccessorByteStride(gltf, accessor);
+                var accessorByteStride = (defined(accessor.byteStride) && accessor.byteStride !== 0) ? accessor.byteStride : getAccessorByteStride(gltf, accessor);
                 if (defined(accessorByteStride)) {
                     bufferView.byteStride = accessorByteStride;
                     if (bufferView.byteStride !== 0) {
