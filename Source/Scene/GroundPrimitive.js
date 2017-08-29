@@ -18,6 +18,7 @@ define([
         '../Core/Rectangle',
         '../ThirdParty/when',
         './ClassificationPrimitive',
+        './ClassificationType',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -39,6 +40,7 @@ define([
         Rectangle,
         when,
         ClassificationPrimitive,
+        ClassificationType,
         SceneMode) {
     'use strict';
 
@@ -78,6 +80,7 @@ define([
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.BOTH] Determines whether terrain, 3D Tiles or both will be classified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -159,6 +162,14 @@ define([
          * @default true
          */
         this.show = defaultValue(options.show, true);
+        /**
+         * Determines whether terrain, 3D Tiles or both will be classified.
+         *
+         * @type {ClassificationType}
+         *
+         * @default ClassificationType.BOTH
+         */
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
@@ -554,6 +565,34 @@ define([
         }
     }
 
+    function boundingVolumeIndex(commandIndex, length) {
+        return Math.floor((commandIndex % (length / 2)) / 3);
+    }
+
+    var scratchCommandIndices = {
+        start : 0,
+        end : 0
+    };
+
+    function getCommandIndices(classificationType, length) {
+        var startIndex;
+        var endIndex;
+        if (classificationType === ClassificationType.TERRAIN) {
+            startIndex = 0;
+            endIndex = length / 2;
+        } else if (classificationType === ClassificationType.CESIUM_3D_TILE) {
+            startIndex = length / 2;
+            endIndex = length;
+        } else {
+            startIndex = 0;
+            endIndex = length;
+        }
+
+        scratchCommandIndices.start = startIndex;
+        scratchCommandIndices.end = endIndex;
+        return scratchCommandIndices;
+    }
+
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -562,15 +601,24 @@ define([
             boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
+        var indices;
+        var startIndex;
+        var endIndex;
+        var classificationType = groundPrimitive.classificationType;
+
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
             var colorLength = colorCommands.length;
-            for (var i = 0; i < colorLength; ++i) {
+            indices = getCommandIndices(classificationType, colorLength);
+            startIndex = indices.start;
+            endIndex = indices.end;
+
+            for (var i = startIndex; i < endIndex; ++i) {
                 var colorCommand = colorCommands[i];
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = boundingVolumes[Math.floor(i / 3)];
+                colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
@@ -579,13 +627,15 @@ define([
         }
 
         if (passes.pick) {
+            var pickLength = pickCommands.length;
+            indices = getCommandIndices(classificationType, pickLength);
+            startIndex = indices.start;
+            endIndex = indices.end;
+
             var primitive = groundPrimitive._primitive._primitive;
             var pickOffsets = primitive._pickOffsets;
-            var length = pickOffsets.length * 3;
-            pickCommands.length = length;
-
-            for (var j = 0; j < length; ++j) {
-                var pickOffset = pickOffsets[Math.floor(j / 3)];
+            for (var j = startIndex; j < endIndex; ++j) {
+                var pickOffset = pickOffsets[boundingVolumeIndex(j, pickLength)];
                 var bv = boundingVolumes[pickOffset.index];
 
                 var pickCommand = pickCommands[j];
