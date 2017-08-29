@@ -78,7 +78,7 @@ define([
 
             values = new Array(count);
             var accessorByteOffset = defaultValue(accessor.byteOffset, 0);
-            var byteOffset = bufferView.byteOffset + accessorByteOffset;
+            var byteOffset = bufferView.byteOffset + accessorByteOffset + source.byteOffset;
             for (var i = 0; i < count; i++) {
                 var typedArrayView = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, numberOfComponents);
                 if (type === 'SCALAR') {
@@ -177,7 +177,7 @@ define([
             var type = accessor.type;
             var count = accessor.count;
             var byteStride = getAccessorByteStride(gltf, accessor);
-            var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+            var byteOffset = bufferView.byteOffset + accessor.byteOffset + source.byteOffset;
             var numberOfComponents = numberOfComponentsForType(type);
 
             matrices = new Array(count);
