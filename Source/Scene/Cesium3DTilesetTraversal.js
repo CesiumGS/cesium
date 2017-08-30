@@ -553,14 +553,7 @@ define([
     };
 
     InternalSkipTraversal.prototype.shouldVisit = function(tile) {
-        var maximumScreenSpaceError = this.tileset._maximumScreenSpaceError;
-        var parent = tile.parent;
-        if (!defined(parent)) {
-            return isVisible(tile._visibilityPlaneMask);
-        }
-        var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._screenSpaceError > maximumScreenSpaceError;
-
-        return isVisible(tile._visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(this.tileset, parent.geometricError, tile, this.frameState) > maximumScreenSpaceError);
+        return isVisibleAndMeetsSSE(this.tileset, tile, this.frameState);
     };
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
@@ -644,7 +637,7 @@ define([
 
     function loadTile(tileset, tile, frameState, checkVisibility) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
-            if (!checkVisibility || isVisible(tile._visibilityPlaneMask)) {
+            if (!checkVisibility || isVisibleAndMeetsSSE(tileset, tile, frameState)) {
                 tile._requestedFrame = frameState.frameNumber;
                 tileset._requestedTiles.push(tile);
             }
@@ -740,6 +733,17 @@ define([
 
     function isVisible(visibilityPlaneMask) {
         return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+    }
+
+    function isVisibleAndMeetsSSE(tileset, tile, frameState) {
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var parent = tile.parent;
+        if (!defined(parent)) {
+            return isVisible(tile._visibilityPlaneMask);
+        }
+        var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._screenSpaceError > maximumScreenSpaceError;
+
+        return isVisible(tile._visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(tileset, parent.geometricError, tile, frameState) > maximumScreenSpaceError);
     }
 
     function childrenAreVisible(tile) {
