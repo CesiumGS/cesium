@@ -117,8 +117,7 @@ define([
                     enabled : true
                 },
                 depthTest : {
-                    enabled : true,
-                    func : DepthFunction.ALWAYS
+                    enabled : true
                 },
                 colorMask : {
                     red : false,
