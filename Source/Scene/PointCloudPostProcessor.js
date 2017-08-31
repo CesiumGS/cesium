@@ -1032,14 +1032,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     PointCloudPostProcessor.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     PointCloudPostProcessor.prototype.destroy = function() {
         // TODO: actually destroy stuff
