@@ -9,23 +9,26 @@ uniform float u_sigmoidDomainOffset;
 uniform float u_sigmoidSharpness;
 varying vec2 v_textureCoordinates;
 
-float sigmoid(float x, float sharpness) {
+float sigmoid(float x, float sharpness)
+{
     return sharpness * x / (sharpness - x + 1.0);
 }
 
-void main() {
+void main()
+{
     vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
 #ifdef enableAO
-    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture,
-                                         v_textureCoordinates));
-    ao = clamp(sigmoid(clamp(ao + u_sigmoidDomainOffset, 0.0, 1.0), u_sigmoidSharpness),
-               0.0, 1.0);
+    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture, v_textureCoordinates));
+    ao = clamp(sigmoid(clamp(ao + u_sigmoidDomainOffset, 0.0, 1.0), u_sigmoidSharpness), 0.0, 1.0);
     color.xyz = color.xyz * ao;
 #endif // enableAO
     vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates);
-    if (length(ec) < epsilon8) {
+    if (length(ec) < epsilon8)
+    {
         discard;
-    } else {
+    }
+    else
+    {
         float depth = czm_eyeToWindowCoordinates(vec4(ec.xyz, 1.0)).z;
         gl_FragColor = color;
         gl_FragDepthEXT = depth;
