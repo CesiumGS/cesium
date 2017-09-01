@@ -446,15 +446,6 @@ define([
             sharedPromise = terrainPromises[q];
             sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
-            if (typeof request === 'boolean') {
-                deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
-                request = new Request({
-                    throttle : request,
-                    throttleByServer : request,
-                    type : RequestType.TERRAIN
-                });
-            }
-
             sharedRequest = request;
             var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
 

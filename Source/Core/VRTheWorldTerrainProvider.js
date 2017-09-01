@@ -279,15 +279,6 @@ define([
             url = proxy.getURL(url);
         }
 
-        if (typeof request === 'boolean') {
-            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
-            request = new Request({
-                throttle : request,
-                throttleByServer : request,
-                type : RequestType.TERRAIN
-            });
-        }
-
         var promise = loadImage(url, undefined, request);
         if (!defined(promise)) {
             return undefined;
