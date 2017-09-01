@@ -47,21 +47,7 @@ define([
         Check.defined('positions', positions);
         //>>includeEnd('debug');
 
-        var deferred = when.defer();
-
-        function doSamplingWhenReady() {
-            if (terrainProvider.ready) {
-                when(doSampling(terrainProvider, level, positions), function(updatedPositions) {
-                    deferred.resolve(updatedPositions);
-                });
-            } else {
-                setTimeout(doSamplingWhenReady, 10);
-            }
-        }
-
-        doSamplingWhenReady();
-
-        return deferred.promise;
+        return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
     }
 
     function doSampling(terrainProvider, level, positions) {
