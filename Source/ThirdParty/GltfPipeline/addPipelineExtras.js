@@ -56,10 +56,9 @@ define([
         gltf.extras._pipeline = defaultValue(gltf.extras._pipeline, {});
         gltf.asset = defaultValue(gltf.asset, {});
         gltf.asset.extras = defaultValue(gltf.asset.extras, {});
-        if(defined(gltf.asset.extras) && typeof(gltf.asset.extras) !== 'object'){
-            var tmp = gltf.asset.extras;
+        if (defined(gltf.asset.extras) && typeof(gltf.asset.extras) !== 'object'){
             gltf.asset.extras = {
-                extras: tmp
+                extras : gltf.asset.extras
             };
         }
         gltf.asset.extras._pipeline = defaultValue(gltf.asset.extras._pipeline, {});
