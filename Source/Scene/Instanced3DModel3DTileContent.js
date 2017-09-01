@@ -296,13 +296,10 @@ define([
             throw new RuntimeError('glTF byte length is zero, i3dm must have a glTF to instance.');
         }
 
-        var gltfView;
-        if (byteOffset % 4 === 0) {
-            gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
-        } else {
-            // Create a copy of the glb so that it is 4-byte aligned
+        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
+        if (byteOffset % 4 !== 0) {
+            // If glb is not 4-byte aligned print deprecation warning
             Instanced3DModel3DTileContent._deprecationWarning('i3dm-glb-unaligned', 'The embedded glb is not aligned to a 4-byte boundary.');
-            gltfView = new Uint8Array(uint8Array.subarray(byteOffset, byteOffset + gltfByteLength));
         }
 
         // Create model instance collection
