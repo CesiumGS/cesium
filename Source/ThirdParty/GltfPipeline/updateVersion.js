@@ -225,7 +225,7 @@ define([
                 var value = object[id];
                 mapping[id] = array.length;
                 array.push(value);
-                if (!defined(value.name)) {
+                if (!defined(value.name) && typeof(value) === 'object') {
                     value.name = id;
                 }
             }
@@ -449,6 +449,7 @@ define([
                     var target = channel.target;
                     if (defined(target)) {
                         target.node = globalMapping.nodes[target.id];
+                        delete target.id;
                     }
                 }
             }
@@ -737,7 +738,7 @@ define([
                     bufferViewsToDelete[oldBufferViewId] = true;
                 }
                 var bufferView = clone(bufferViews[oldBufferViewId]);
-                var accessorByteStride = getAccessorByteStride(gltf, accessor);
+                var accessorByteStride = (defined(accessor.byteStride) && accessor.byteStride !== 0) ? accessor.byteStride : getAccessorByteStride(gltf, accessor);
                 if (defined(accessorByteStride)) {
                     bufferView.byteStride = accessorByteStride;
                     if (bufferView.byteStride !== 0) {
