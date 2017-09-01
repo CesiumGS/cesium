@@ -2,6 +2,8 @@ Change Log
 ==========
 ### 1.37 - 2017-09-01
 
+* Breaking changes
+   * Removed `GoogleEarthImageryProvider`, use `GoogleEarthEnterpriseMapsProvider` instead.
 * Fixed `Entity` id type to be `String` in `EntityCollection` and `CompositeEntityCollection` [#5791](https://github.com/AnalyticalGraphicsInc/cesium/pull/579)
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
 * Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
