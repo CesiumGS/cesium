@@ -28,7 +28,7 @@ define([
      * @see createOpenStreetMapImageryProvider
      * @see createTileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
      * @see MapboxImageryProvider
      * @see SingleTileImageryProvider
