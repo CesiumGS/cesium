@@ -60,8 +60,7 @@ define([
 
             var contentString = getStringFromTypedArray(data, jsonStart, contentLength);
             gltf = JSON.parse(contentString);
-            
-            // do not clone, TypedArray copies are a major performance bottleneck in IE11
+
             var binaryData = data.subarray(binaryStart, length);
 
             buffers = gltf.buffers;
@@ -107,7 +106,7 @@ define([
                 // Load Binary chunk
                 else if (chunkType === 0x004E4942) {
                     // Clone just the binary chunk so the underlying buffer can be freed
-                    binaryBuffer = new Uint8Array(chunkBuffer);
+                    binaryBuffer = chunkBuffer;
                 }
             }
             if (defined(gltf) && defined(binaryBuffer)) {
