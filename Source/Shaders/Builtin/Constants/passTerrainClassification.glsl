@@ -6,4 +6,4 @@
  *
  * @see czm_pass
  */
-const float czm_passTerrainClassification = 4.0;
+const float czm_passTerrainClassification = 3.0;
