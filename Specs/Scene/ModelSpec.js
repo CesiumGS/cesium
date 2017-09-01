@@ -429,38 +429,20 @@ defineSuite([
     });
 
     it('rejects readyPromise on error', function() {
-        var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders[0].uri = 'invalid.glsl';
+        return loadJson(boomBoxUrl).then(function(gltf) {
+            gltf.images[0].uri = 'invalid.png';
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
 
-        var model = primitives.add(new Model({
-            gltf : invalidGltf
-        }));
+            scene.renderForSpecs();
 
-        scene.renderForSpecs();
-
-        return model.readyPromise.then(function(model) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(model.ready).toEqual(false);
-            primitives.remove(model);
-        });
-    });
-
-    it('rejects readyPromise on error', function() {
-        var invalidGltf = clone(texturedBoxModel.gltf, true);
-        invalidGltf.shaders[0].uri = 'invalid.glsl';
-
-        var model = primitives.add(new Model({
-            gltf : invalidGltf
-        }));
-
-        scene.renderForSpecs();
-
-        return model.readyPromise.then(function(model) {
-            fail('should not resolve');
-        }).otherwise(function(error) {
-            expect(model.ready).toEqual(false);
-            primitives.remove(model);
+            return model.readyPromise.then(function(model) {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(model.ready).toEqual(false);
+                primitives.remove(model);
+            });
         });
     });
 
@@ -906,22 +888,31 @@ defineSuite([
     });
 
     it('renders textured box with external KTX texture', function() {
-        return loadModel(texturedBoxKTXUrl).then(function(m) {
+        return loadModel(texturedBoxKTXUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
 
     it('renders textured box with embedded binary KTX texture', function() {
-        return loadModel(texturedBoxKTXBinaryUrl).then(function(m) {
+        return loadModel(texturedBoxKTXBinaryUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
 
     it('renders textured box with embedded base64 encoded KTX texture', function() {
-        return loadModel(texturedBoxKTXEmbeddedUrl).then(function(m) {
+        return loadModel(texturedBoxKTXEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -930,8 +921,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNUrl).then(function(m) {
+        return loadModel(texturedBoxCRNUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -940,8 +934,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNBinaryUrl).then(function(m) {
+        return loadModel(texturedBoxCRNBinaryUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
@@ -950,8 +947,11 @@ defineSuite([
         if (!scene.context.s3tc) {
             return;
         }
-        return loadModel(texturedBoxCRNEmbeddedUrl).then(function(m) {
+        return loadModel(texturedBoxCRNEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
             verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
             primitives.remove(m);
         });
     });
