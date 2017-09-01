@@ -1971,6 +1971,26 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+                globeDepth.update(context, passState);
+                globeDepth.executeCopyDepth(context, passState);
+            }
+
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                passState.framebuffer = fb;
+            }
+
+            us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            if (clearGlobeDepth) {
+                clearDepth.execute(context, passState);
+            }
+
             if (!scene.frameState.invertClassification || picking) {
                 // Common/fastest path. Draw 3D Tiles and classification normally.
 
@@ -1986,10 +2006,10 @@ define([
                     scene._stencilClearCommand.execute(context, passState);
                 }
 
-                // Draw classifications. Modifies 3D Tiles and terrain color.
-                us.updatePass(Pass.GROUND);
-                commands = frustumCommands.commands[Pass.GROUND];
-                length = frustumCommands.indices[Pass.GROUND];
+                // Draw classifications. Modifies 3D Tiles color.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2005,9 +2025,9 @@ define([
                 }
 
                 // Set stencil
-                us.updatePass(Pass.GROUND_IGNORE_SHOW);
-                commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
-                length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2024,17 +2044,17 @@ define([
 
                 // Draw style over opaque classification.
                 // Clears stencil.
-                us.updatePass(Pass.GROUND);
-                commands = frustumCommands.commands[Pass.GROUND];
-                length = frustumCommands.indices[Pass.GROUND];
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
 
                 // Reset stencil
-                us.updatePass(Pass.GROUND_IGNORE_SHOW);
-                commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
-                length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2048,9 +2068,9 @@ define([
 
                 scene._stencilClearCommand.execute(context, passState);
 
-                us.updatePass(Pass.GROUND_IGNORE_SHOW);
-                commands = frustumCommands.commands[Pass.GROUND_IGNORE_SHOW];
-                length = frustumCommands.indices[Pass.GROUND_IGNORE_SHOW];
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
@@ -2064,35 +2084,12 @@ define([
 
                 scene._stencilClearCommand.execute(context, passState);
 
-                us.updatePass(Pass.GROUND);
-                commands = frustumCommands.commands[Pass.GROUND];
-                length = frustumCommands.indices[Pass.GROUND];
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
-            }
-
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
-                globeDepth.update(context, passState);
-                globeDepth.executeCopyDepth(context, passState);
-            }
-
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                passState.framebuffer = fb;
-            }
-
-            if (clearGlobeDepth) {
-                clearDepth.execute(context, passState);
-            }
-
-            us.updatePass(Pass.CESIUM_3D_TILE);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-            us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
             }
 
             if (clearGlobeDepth && useDepthPlane) {
@@ -2101,7 +2098,7 @@ define([
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION + 1;
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 us.updatePass(pass);

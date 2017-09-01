@@ -431,7 +431,6 @@ define([
                 shaderProgram : primitive._sp,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                //pass : Pass.GROUND
                 pass : Pass.TRANSLUCENT
             });
         }
@@ -449,7 +448,6 @@ define([
                 shaderProgram : primitive._spPick,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                //pass : Pass.GROUND
                 pass : Pass.TRANSLUCENT
             });
         }

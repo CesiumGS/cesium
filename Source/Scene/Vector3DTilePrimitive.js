@@ -603,7 +603,7 @@ define([
             stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.GROUND;
+            stencilPreloadCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -620,7 +620,7 @@ define([
             stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.GROUND;
+            stencilDepthCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -637,7 +637,7 @@ define([
             colorCommand.shaderProgram = sp;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.GROUND;
+            colorCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
         }
 
         primitive._commandsDirty = true;
@@ -659,11 +659,11 @@ define([
         for (var j = 0; j < length; j += 2) {
             var commandIgnoreShow = commandsIgnoreShow[j] = DrawCommand.shallowClone(commands[commandIndex], commandsIgnoreShow[j]);
             commandIgnoreShow.shaderProgram = spStencil;
-            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
 
             commandIgnoreShow = commandsIgnoreShow[j + 1] = DrawCommand.shallowClone(commands[commandIndex + 1], commandsIgnoreShow[j + 1]);
             commandIgnoreShow.shaderProgram = spStencil;
-            commandIgnoreShow.pass = Pass.GROUND_IGNORE_SHOW;
+            commandIgnoreShow.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW;
 
             commandIndex += 3;
         }
@@ -711,7 +711,7 @@ define([
             stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.GROUND;
+            stencilPreloadCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -728,7 +728,7 @@ define([
             stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.GROUND;
+            stencilDepthCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -745,7 +745,7 @@ define([
             colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.GROUND;
+            colorCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
         }
 
         primitive._pickCommandsDirty = false;
