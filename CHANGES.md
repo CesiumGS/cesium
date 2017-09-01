@@ -1,8 +1,13 @@
 Change Log
 ==========
-
 ### 1.37 - 2017-09-01
 
+* Breaking changes
+   * Passing `options.clock` when creating a new `Viewer` instance is removed, pass `options.clockViewModel` instead.
+   * Removed `GoogleEarthImageryProvider`, use `GoogleEarthEnterpriseMapsProvider` instead.
+   * Removed the `throttleRequest` parameter from `TerrainProvider.requestTileGeometry` and inherited terrain providers. It is replaced with an optional `Request` object. Set the request's `throttle` property to `true` to throttle requests.
+   * Removed the ability to provide a Promise for the `options.url` parameter of `loadWithXhr` and for the `url` parameter of `loadArrayBuffer`, `loadBlob`, `loadImageViaBlob`, `loadText`, `loadJson`, `loadXML`, `loadImage`, `loadCRN`, `loadKTX`, and `loadCubeMap`. Instead `url` must be a string.
+* Fixed `Entity` id type to be `String` in `EntityCollection` and `CompositeEntityCollection` [#5791](https://github.com/AnalyticalGraphicsInc/cesium/pull/579)
 * Fixed `replaceState` bug that was causing the `CesiumViewer` demo application to crash in Safari and iOS
 * Fixed issue where `Model` and `BillboardCollection` would throw an error if the globe is undefined [#5638](https://github.com/AnalyticalGraphicsInc/cesium/issues/5638)
 * Fixed issue where the `Model` glTF cache loses reference to the model's buffer data. [#5720](https://github.com/AnalyticalGraphicsInc/cesium/issues/5720)
@@ -11,6 +16,14 @@ Change Log
 * Added small improvements to the atmosphere. [#5741](https://github.com/AnalyticalGraphicsInc/cesium/pull/5741)
 * Fixed a bug that caused imagery splitting to work incorrectly when CSS pixels were not equivalent to WebGL drawing buffer pixels, such as on high DPI displays in Microsoft Edge and Internet Explorer.
 * Added `Cesium3DTileset.loadJson` to support overriding the default tileset loading behavior. [#5685](https://github.com/AnalyticalGraphicsInc/cesium/pull/5685)
+* Fixed loading of binary glTFs containing CRN or KTX textures. [#5753](https://github.com/AnalyticalGraphicsInc/cesium/pull/5753)
+* Fixed specular computation for certain models using the `KHR_materials_common` extension. [#5773](https://github.com/AnalyticalGraphicsInc/cesium/pull/5773)
+* Fixed a bug where developer error was thrown in Sandcastle example [#5703](https://github.com/AnalyticalGraphicsInc/cesium/issues/5703)
+* Fixed a 3D Tiles traversal bug for tilesets using additive refinement. [#5766](https://github.com/AnalyticalGraphicsInc/cesium/issues/5766)
+* Fixed a 3D Tiles traversal bug where out-of-view children were being loaded unnecessarily. [#5477](https://github.com/AnalyticalGraphicsInc/cesium/issues/5477)
+* Fixed depth picking on 3D Tiles. [#5676](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
+* Fixed glTF model translucency bug. [#5731](https://github.com/AnalyticalGraphicsInc/cesium/issues/5731)
+* Added `classificationType` to `ClassificationPrimitive` and `GroundPrimitive` to choose whether terrain, 3D Tiles, or both are classified. [#5683](https://github.com/AnalyticalGraphicsInc/cesium/issues/5676)
 
 ### 1.36 - 2017-08-01
 

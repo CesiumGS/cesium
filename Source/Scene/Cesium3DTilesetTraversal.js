@@ -65,7 +65,7 @@ define([
             return;
         }
 
-        loadTile(tileset, root, frameState);
+        loadTile(tileset, root, frameState, true);
 
         if (!tileset.skipLevelOfDetail) {
             // just execute base traversal and add tiles to _desiredTiles
@@ -313,7 +313,7 @@ define([
         var replacementWithContent = tile.refine === Cesium3DTileRefine.REPLACE && tile.hasRenderableContent;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
-            loadTile(tileset, child, frameState);
+            loadTile(tileset, child, frameState, true);
             touch(tileset, child, outOfCore);
 
             // content cannot be replaced until all of the nearest descendants with content are all loaded
@@ -413,7 +413,7 @@ define([
         var childrenLength = children.length;
         for (var i = 0; i < childrenLength; ++i) {
             var child = children[i];
-            loadTile(tileset, child, frameState);
+            loadTile(tileset, child, frameState, true);
             touch(tileset, child, outOfCore);
             if (!tile.contentAvailable) {
                 this.allLoaded = false;
@@ -507,8 +507,12 @@ define([
         }
 
         if (!tile.hasTilesetContent) {
-            if (hasAdditiveContent(tile)) {
-                tileset._desiredTiles.push(tile);
+            if (tile.refine === Cesium3DTileRefine.ADD) {
+                // Always load additive tiles
+                loadTile(tileset, tile, this.frameState);
+                if (hasAdditiveContent(tile)) {
+                    tileset._desiredTiles.push(tile);
+                }
             }
 
             // stop traversal when we've attained the desired level of error
@@ -549,14 +553,7 @@ define([
     };
 
     InternalSkipTraversal.prototype.shouldVisit = function(tile) {
-        var maximumScreenSpaceError = this.tileset._maximumScreenSpaceError;
-        var parent = tile.parent;
-        if (!defined(parent)) {
-            return isVisible(tile._visibilityPlaneMask);
-        }
-        var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._screenSpaceError > maximumScreenSpaceError;
-
-        return isVisible(tile._visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(this.tileset, parent.geometricError, tile, this.frameState) > maximumScreenSpaceError);
+        return isVisibleAndMeetsSSE(this.tileset, tile, this.frameState);
     };
 
     InternalSkipTraversal.prototype.leafHandler = function(tile) {
@@ -571,11 +568,11 @@ define([
                     var tiles = parent.children;
                     var length = tiles.length;
                     for (var i = 0; i < length; ++i) {
-                        loadTile(this.tileset, tiles[i], this.frameState);
+                        loadTile(this.tileset, tiles[i], this.frameState, false);
                         touch(this.tileset, tiles[i], this.outOfCore);
                     }
                 } else {
-                    loadTile(this.tileset, tile, this.frameState);
+                    loadTile(this.tileset, tile, this.frameState, true);
                     touch(this.tileset, tile, this.outOfCore);
                 }
             }
@@ -638,10 +635,12 @@ define([
         }
     }
 
-    function loadTile(tileset, tile, frameState) {
+    function loadTile(tileset, tile, frameState, checkVisibility) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
-            tile._requestedFrame = frameState.frameNumber;
-            tileset._requestedTiles.push(tile);
+            if (!checkVisibility || isVisibleAndMeetsSSE(tileset, tile, frameState)) {
+                tile._requestedFrame = frameState.frameNumber;
+                tileset._requestedTiles.push(tile);
+            }
         }
     }
 
@@ -734,6 +733,17 @@ define([
 
     function isVisible(visibilityPlaneMask) {
         return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+    }
+
+    function isVisibleAndMeetsSSE(tileset, tile, frameState) {
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var parent = tile.parent;
+        if (!defined(parent)) {
+            return isVisible(tile._visibilityPlaneMask);
+        }
+        var showAdditive = parent.refine === Cesium3DTileRefine.ADD && parent._screenSpaceError > maximumScreenSpaceError;
+
+        return isVisible(tile._visibilityPlaneMask) && (!showAdditive || getScreenSpaceError(tileset, parent.geometricError, tile, frameState) > maximumScreenSpaceError);
     }
 
     function childrenAreVisible(tile) {

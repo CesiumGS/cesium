@@ -20,13 +20,14 @@ define([
         ENVIRONMENT : 0,
         COMPUTE : 1,
         GLOBE : 2,
-        CESIUM_3D_TILE : 3,
-        GROUND_IGNORE_SHOW : 4,
-        GROUND : 5,
-        OPAQUE : 6,
-        TRANSLUCENT : 7,
-        OVERLAY : 8,
-        NUMBER_OF_PASSES : 9
+        TERRAIN_CLASSIFICATION : 3,
+        CESIUM_3D_TILE : 4,
+        CESIUM_3D_TILE_CLASSIFICATION : 5,
+        CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW : 6,
+        OPAQUE : 7,
+        TRANSLUCENT : 8,
+        OVERLAY : 9,
+        NUMBER_OF_PASSES : 10
     };
 
     return freezeObject(Pass);
