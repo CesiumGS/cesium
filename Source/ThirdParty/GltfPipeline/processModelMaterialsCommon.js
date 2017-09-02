@@ -452,7 +452,8 @@ define([
         }
 
         var hasSpecular = hasNormals && ((lightingModel === 'BLINN') || (lightingModel === 'PHONG')) &&
-            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess);
+            defined(techniqueParameters.specular) && defined(techniqueParameters.shininess) &&
+            (techniqueParameters.shininess > 0.0);
 
         // Generate lighting code blocks
         var hasNonAmbientLights = false;
@@ -540,7 +541,8 @@ define([
             } else {
                 fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
             }
-            fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), 0.);\n';
+            var minimumLighting = optimizeForCesium ? 0.2 : 0.0;
+            fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
 
             if (hasSpecular) {
                 if (lightingModel === 'BLINN') {
