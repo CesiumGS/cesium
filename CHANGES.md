@@ -1,5 +1,21 @@
 Change Log
 ==========
+### 1.38 - 2017-10-01
+
+* Breaking changes
+
+* Deprecated
+  * `HeadingPitchRoll.fromDirectQuaternion` is deprecated and his behaviour will replace `HeadingPitchRoll.fromQuaternion` behaviour in 1.43. [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+  * `Matrix3.fromDirectHeadingPitchRoll` is deprecated and  his behaviour will replace `Matrix3.fromHeadingPitchRoll` behaviour in 1.43. [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+  * `Quaternion.fromDirectHeadingPitchRoll` is deprecated and  his behaviour will replace `Quaternion.fromHeadingPitchRoll` behaviour in 1.43. [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+  * `Transforms.directHeadingPitchRollToFixedFrame` is deprecated and  his behaviour will replace `Transforms.headingPitchRollToFixedFrame` behaviour in 1.43. [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+  * `Transforms.directHeadingPitchRollQuaternion` is deprecated and  his behaviour will replace `Transforms.headingPitchRollQuaternion` behaviour in 1.43. [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+* Added HeadingPitchRoll.fromDirectQuaternion that works with classical orientation of heading and pitch [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+* Added Matrix3.fromDirectHeadingPitchRoll that works with classical orientation of heading and pitch [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+* Added Quaternion.fromDirectHeadingPitchRoll that works with classical orientation of heading and pitch [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+* Added Transforms.directHeadingPitchRollToFixedFrame that works with classical orientation of heading and pitch [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+* Added Transforms.directHeadingPitchRollQuaternion that works with classical orientation of heading and pitch [#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+
 ### 1.37 - 2017-09-01
 
 * Breaking changes

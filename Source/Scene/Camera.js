@@ -1052,8 +1052,7 @@ define([
         hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
         hpr.pitch = -hpr.pitch;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+        var rotMat = Matrix3.fromDirectHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
         Matrix3.getColumn(rotMat, 2, camera.up);
@@ -1079,8 +1078,7 @@ define([
         hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
         hpr.pitch = -hpr.pitch;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+        var rotMat = Matrix3.fromDirectHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
         Matrix3.getColumn(rotMat, 2, camera.up);
@@ -1121,8 +1119,7 @@ define([
             hpr.heading = -hpr.heading  + CesiumMath.PI_OVER_TWO;
             hpr.pitch = CesiumMath.PI_OVER_TWO;
             hpr.roll =  0.0;
-            var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+            var rotMat = Matrix3.fromDirectHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
             Matrix3.getColumn(rotMat, 2, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);

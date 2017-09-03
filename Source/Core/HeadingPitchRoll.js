@@ -2,12 +2,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Math'
+        './Math',
+        './deprecationWarning'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        CesiumMath) {
+        CesiumMath,
+        deprecationWarning) {
     'use strict';
 
     /**
@@ -40,6 +42,35 @@ define([
             throw new DeveloperError('quaternion is required');
         }
         //>>includeEnd('debug');
+        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This HeadingPitchRoll.fromQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with HeadingPitchRoll.fromDirectQuaternion');
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
+        var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
+        var denominatorRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
+        var numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
+        var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
+        var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
+        result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
+        result.roll = Math.atan2(numeratorRoll, denominatorRoll);
+        result.pitch = -Math.asin(test);
+        return result;
+    };
+
+    /**
+     * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense
+     *
+     * @param {Quaternion} quaternion The quaternion from which to retrieve heading, pitch, and roll, all expressed in radians.
+     * @param {HeadingPitchRoll} [result] The object in which to store the result. If not provided, a new instance is created and returned.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
+     */
+    HeadingPitchRoll.fromDirectQuaternion = function(quaternion, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(quaternion)) {
+            throw new DeveloperError('quaternion is required');
+        }
+        //>>includeEnd('debug');
+        deprecationWarning('HeadingPitchRoll.fromDirectQuaternion', 'This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.43.');
         if (!defined(result)) {
             result = new HeadingPitchRoll();
         }
