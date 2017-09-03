@@ -290,7 +290,7 @@ define([
                         return;
                     }
                     this._originalValue = value;
-                    value = this.reverseRtl(value);
+                    value = reverseRtl(value);
                 }
 
                 if (this._text !== value) {
@@ -1056,20 +1056,24 @@ define([
          * // Example 1.
          * // Set a label's rtl during init
          * var myLabelEntity = viewer.entities.add({
-         *   id: 'my label',
-         *   text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
-         *   rtl: true
+         *   label: {
+         *     id: 'my label',
+         *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
+         *     rtl: true
+         *   }
          * });
          *
          * @example
          * // Example 2.
          * var myLabelEntity = viewer.entities.add({
-         *   id: 'my label',
-         *   text: 'English text'
+         *   label: {
+         *     id: 'my label',
+         *     text: 'English text'
+         *   }
          * });
          * // Set a label's rtl after init
          * myLabelEntity.rtl = true;
-         * myLabelEntity.text = 'טקסט חדש'
+         * myLabelEntity.text = 'טקסט חדש';
          */
         rtl : {
             get : function() {
@@ -1324,10 +1328,11 @@ define([
 
     /**
      *
-     * @param {String} text the text to parse and reorder
+     * @param {String} value the text to parse and reorder
      * @returns {String} the text as rtl direction
+     * @private
      */
-    Label.prototype.reverseRtl = function(value) {
+    function reverseRtl(value) {
         var rtlChars = /[א-ת]/;
         var texts = value.split('\n');
         var result = '';
@@ -1339,78 +1344,84 @@ define([
             var types = declareTypes();
 
             var splicePointer = 0;
-            for(var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
+            var line = '';
+            for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
                 var subText = parsedText[wordIndex];
                 var reverse = subText.Type === types.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
-                if(rtlDir) {
+                if (rtlDir) {
                     if (subText.Type === types.RTL) {
-                        result = reverseWord(subText.Word) + result;
+                        line = reverseWord(subText.Word) + line;
                         splicePointer = 0;
                     }
                     else if (subText.Type === types.LTR) {
-                        result = spliceWord(result,splicePointer, subText.Word);
+                        line = spliceWord(line, splicePointer, subText.Word);
                         splicePointer += subText.Word.length;
                     }
-                    else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
-                        if (parsedText[wordIndex -1].Type === types.RTL) {
-                            result = reverse + result;
+                    else if (subText.Type === types.WEAK || subText.Type === types.BRACKETS) {
+                        if (subText.Type === types.WEAK && parsedText[wordIndex - 1].Type === types.BRACKETS) {
+                            line = reverseWord(subText.Word) + line;
+                        }
+                        else if (parsedText[wordIndex - 1].Type === types.RTL) {
+                            line = reverse + line;
                             splicePointer = 0;
                         }
-                        else if (parsedText.length > wordIndex +1) {
-                                if (parsedText[wordIndex +1].Type === types.RTL) {
-                                    result = reverse + result;
-                                    splicePointer = 0;
-                                }
-                                else {
-                                    result = spliceWord(result,splicePointer, subText.Word);
-                                    splicePointer += subText.Word.length;
-                                }
+                        else if (parsedText.length > wordIndex + 1) {
+                            if (parsedText[wordIndex + 1].Type === types.RTL) {
+                                line = reverse + line;
+                                splicePointer = 0;
                             }
                             else {
-                                result = spliceWord(result,splicePointer, subText.Word);
-                            }
-                    }
-                }
-                else if (subText.Type === types.RTL) {
-                        result = spliceWord(result, splicePointer, reverseWord(subText.Word));
-                    }
-                    else if (subText.Type === types.LTR) {
-                        result += subText.Word;
-                        splicePointer = result.length;
-                    }
-                    else if (subText.Type === types.WEAK || subText.Type ===types.BRACKETS) {
-                        if (wordIndex > 0) {
-                            if (parsedText[wordIndex -1].Type === types.RTL) {
-                                if (parsedText.length > wordIndex +1) {
-                                    if (parsedText[wordIndex +1].Type === types.LTR) {
-                                        result += subText.Word;
-                                        splicePointer = result.length;
-                                    }
-                                    else if (parsedText[wordIndex +1].Type === types.RTL) {
-                                        result = spliceWord(result, splicePointer, reverse);
-                                    }
-                                }
-                                else {
-                                    result += subText.Word;
-                                }
-                            }
-                            else {
-                                result += subText.Word;
-                                splicePointer = result.length;
+                                line = spliceWord(line, splicePointer, subText.Word);
+                                splicePointer += subText.Word.length;
                             }
                         }
                         else {
-                            result += subText.Word;
-                            splicePointer = result.length;
+                            line = spliceWord(line, splicePointer, subText.Word);
                         }
                     }
+                }
+                else if (subText.Type === types.RTL) {
+                    line = spliceWord(line, splicePointer, reverseWord(subText.Word));
+                }
+                else if (subText.Type === types.LTR) {
+                    line += subText.Word;
+                    splicePointer = line.length;
+                }
+                else if (subText.Type === types.WEAK || subText.Type === types.BRACKETS) {
+                    if (wordIndex > 0) {
+                        if (parsedText[wordIndex - 1].Type === types.RTL) {
+                            if (parsedText.length > wordIndex + 1) {
+                                if (parsedText[wordIndex + 1].Type === types.RTL) {
+                                    line = spliceWord(line, splicePointer, reverse);
+                                }
+                                else {
+                                    line += subText.Word;
+                                    splicePointer = line.length;
+                                }
+                            }
+                            else {
+                                line += subText.Word;
+                            }
+                        }
+                        else {
+                            line += subText.Word;
+                            splicePointer = line.length;
+                        }
+                    }
+                    else {
+                        line += subText.Word;
+                        splicePointer = line.length;
+                    }
+                }
             }
+
+            result += line;
             if (i < texts.length - 1) {
                 result += '\n';
             }
         }
         return result;
-    };
+    }
 
     return Label;
 });
