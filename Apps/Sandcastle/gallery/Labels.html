@@ -126,7 +126,7 @@ function setRtl() {
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         label : {
-            text : 'שלום',
+            text : 'Master (אדון): Hello\nתלמיד (student): שלום',
             rtl : true
         }
     });
@@ -169,7 +169,7 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(scaleByDistance);
     }
 }, {
-    text : 'Set rtl',
+    text : 'Set label with right-to-left language',
     onselect : function() {
         setRtl();
         Sandcastle.highlight(setRtl);

@@ -1877,6 +1877,21 @@ defineSuite([
            expect(label.text).toEqual(text.split('').reverse().join(''));
         });
 
+        it('should reverse part of text when there is mix of right-to-left and other kind of characters and rtl is true', function() {
+           var text = 'Master (אדון): "Hello"\nתלמיד (student): "שלום"';
+           var expectedText = 'Master (ןודא): "Hello"\n"םולש" :(student) דימלת';
+           var label = labels.add({
+               text : text,
+               rtl: true
+           });
+
+           scene.renderForSpecs();
+
+           expect(label.rtl).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(expectedText);
+        });
+
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
