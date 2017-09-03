@@ -1039,7 +1039,6 @@ define([
     var scratchSetViewCartesian = new Cartesian3();
     var scratchSetViewTransform1 = new Matrix4();
     var scratchSetViewTransform2 = new Matrix4();
-    var scratchSetViewQuaternion = new Quaternion();
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
