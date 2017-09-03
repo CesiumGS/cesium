@@ -86,6 +86,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jason Crow](https://github.com/jason-crow)
 * [Flightradar24 AB](https://www.flightradar24.com)
    * [Aleksei Kalmykov](https://github.com/kalmykov)
+* [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
+   * [Jannes Bolling](https://github.com/jbo023)
 * [webiks](https://www.webiks.com)
   * [Hod Bauer](https://github.com/hodbauer)
   * [Yonatan Kra](https://github.com/yonatankra)
