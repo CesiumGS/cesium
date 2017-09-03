@@ -392,10 +392,10 @@ define([
 
      function pointOcclusionStage(processor, context) {
         var uniformMap = {
-            sectorLUT : function() {
+            u_sectorLUT : function() {
                 return processor._sectorLUTTexture;
             },
-            pointCloud_ecTexture : function() {
+            u_pointCloud_ecTexture : function() {
                 return processor._ecTextures[1];
             },
             u_occlusionAngle : function() {
@@ -438,7 +438,7 @@ define([
 
     function densityEdgeCullStage(processor, context) {
         var uniformMap = {
-            pointCloud_ecTexture : function() {
+            u_pointCloud_ecTexture : function() {
                 return processor._ecTextures[0];
             },
             u_neighborhoodVectorSize : function() {
@@ -482,16 +482,16 @@ define([
         var rangeMax = processor.rangeMax;
 
         var uniformMap = {
-            pointCloud_colorTexture : function() {
+            u_pointCloud_colorTexture : function() {
                 return processor._colorTextures[i];
             },
-            pointCloud_ecTexture : function() {
+            u_pointCloud_ecTexture : function() {
                 return processor._ecTextures[i];
             },
-            pointCloud_densityTexture : function() {
+            u_pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
-            pointCloud_aoTexture : function() {
+            u_pointCloud_aoTexture : function() {
                 return processor._aoTextures[i];
             },
             u_rangeParameter : function() {
@@ -550,16 +550,16 @@ define([
 
     function copyRegionGrowingColorStage(processor, context, i) {
         var uniformMap = {
-            pointCloud_colorTexture : function() {
+            u_pointCloud_colorTexture : function() {
                 return processor._colorTextures[i];
             },
-            pointCloud_ecTexture : function() {
+            u_pointCloud_ecTexture : function() {
                 return processor._ecTextures[i];
             },
-            pointCloud_aoTexture : function() {
+            u_pointCloud_aoTexture : function() {
                 return processor._aoTextures[i];
             },
-            pointCloud_densityTexture : function() {
+            u_pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             },
             u_densityHalfWidth : function() {
@@ -576,21 +576,21 @@ define([
             '#define densityView \n' +
             '#define densityScaleFactor 10.0 \n' +
             'uniform int u_densityHalfWidth; \n' +
-            'uniform sampler2D pointCloud_colorTexture; \n' +
-            'uniform sampler2D pointCloud_ecTexture; \n' +
-            'uniform sampler2D pointCloud_aoTexture; \n' +
-            'uniform sampler2D pointCloud_densityTexture; \n' +
+            'uniform sampler2D u_pointCloud_colorTexture; \n' +
+            'uniform sampler2D u_pointCloud_ecTexture; \n' +
+            'uniform sampler2D u_pointCloud_aoTexture; \n' +
+            'uniform sampler2D u_pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates); \n' +
-            '    vec4 rawAO = texture2D(pointCloud_aoTexture, v_textureCoordinates); \n' +
+            '    vec4 ec = texture2D(u_pointCloud_ecTexture, v_textureCoordinates); \n' +
+            '    vec4 rawAO = texture2D(u_pointCloud_aoTexture, v_textureCoordinates); \n' +
             '    if (length(ec) > czm_epsilon6) { \n' +
             '        #ifdef densityView \n' +
-            '        float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
+            '        float density = ceil(densityScaleFactor * texture2D(u_pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '        gl_FragData[0] = vec4(vec3(density / float(u_densityHalfWidth)), 1.0); \n' +
             '        #else \n' +
-            '        gl_FragData[0] = texture2D(pointCloud_colorTexture, v_textureCoordinates); \n' +
+            '        gl_FragData[0] = texture2D(u_pointCloud_colorTexture, v_textureCoordinates); \n' +
             '        #endif \n' +
             '        gl_FragData[1] = ec; \n' +
             '        gl_FragData[2] = rawAO; \n' +
@@ -618,7 +618,7 @@ define([
 
     function stencilMaskStage(processor, context, iteration) {
         var uniformMap = {
-            pointCloud_densityTexture : function() {
+            u_pointCloud_densityTexture : function() {
                 return processor._densityTexture;
             }
         };
@@ -628,11 +628,11 @@ define([
             '#define cutoff 0 \n' +
             '#define DELAY 1 \n' +
             '#define densityScaleFactor 10.0 \n' +
-            'uniform sampler2D pointCloud_densityTexture; \n' +
+            'uniform sampler2D u_pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r); \n' +
+            '    float density = ceil(densityScaleFactor * texture2D(u_pointCloud_densityTexture, v_textureCoordinates).r); \n' +
             '    if (float(cutoff - DELAY) + epsilon8 > density) \n' +
             '        discard; \n' +
             '} \n';
@@ -664,18 +664,18 @@ define([
 
     function debugViewStage(processor, context, texture, unpack) {
         var uniformMap = {
-            debugTexture : function() {
+            u_debugTexture : function() {
                 return texture;
             }
         };
 
         var debugViewStageFS =
             '#define unpack \n' +
-            'uniform sampler2D debugTexture; \n' +
+            'uniform sampler2D u_debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
             '{ \n' +
-            '    vec4 value = texture2D(debugTexture, v_textureCoordinates); \n' +
+            '    vec4 value = texture2D(u_debugTexture, v_textureCoordinates); \n' +
             '#ifdef unpack \n' +
             '    value = vec4(czm_unpackDepth(value)); \n' +
             '#endif // unpack \n' +
@@ -738,13 +738,13 @@ define([
         );
 
         var blendUniformMap = {
-            pointCloud_colorTexture : function() {
+            u_pointCloud_colorTexture : function() {
                 return processor._colorTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_ecTexture : function() {
+            u_pointCloud_ecTexture : function() {
                 return processor._ecTextures[1 - numRegionGrowingPasses % 2];
             },
-            pointCloud_aoTexture : function() {
+            u_pointCloud_aoTexture : function() {
                 return processor._aoTextures[1 - numRegionGrowingPasses % 2];
             },
             u_sigmoidDomainOffset : function() {

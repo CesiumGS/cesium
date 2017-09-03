@@ -5,7 +5,7 @@
 #define densityScaleFactor 10.0
 #define dropoutEnabled
 
-uniform sampler2D pointCloud_ecTexture;
+uniform sampler2D u_pointCloud_ecTexture;
 uniform float u_neighborhoodVectorSize;
 uniform float u_maxAbsRatio;
 uniform float u_dropoutFactor;
@@ -18,7 +18,7 @@ float random(vec2 st)
 
 void main()
 {
-    float center = length(texture2D(pointCloud_ecTexture, v_textureCoordinates));
+    float center = length(texture2D(u_pointCloud_ecTexture, v_textureCoordinates));
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
     
     float closestNeighbor = float(neighborhoodHalfWidth) + 1.0;
@@ -52,7 +52,7 @@ void main()
                 ivec2 pI = pos + d;
                 vec2 normPI = vec2(pI) / czm_viewport.zw;
                 
-                float neighbor = length(texture2D(pointCloud_ecTexture,
+                float neighbor = length(texture2D(u_pointCloud_ecTexture,
                                                   normPI));
                 if (neighbor < epsilon8 || pI == pos)
                 {

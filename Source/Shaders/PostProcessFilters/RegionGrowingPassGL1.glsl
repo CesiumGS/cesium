@@ -11,10 +11,10 @@
 #define stencilView
 #define DELAY 1
 
-uniform sampler2D pointCloud_colorTexture;
-uniform sampler2D pointCloud_densityTexture;
-uniform sampler2D pointCloud_ecTexture;
-uniform sampler2D pointCloud_aoTexture;
+uniform sampler2D u_pointCloud_colorTexture;
+uniform sampler2D u_pointCloud_densityTexture;
+uniform sampler2D u_pointCloud_ecTexture;
+uniform sampler2D u_pointCloud_aoTexture;
 uniform float u_rangeParameter;
 uniform int u_densityHalfWidth;
 uniform int u_iterationNumber;
@@ -157,10 +157,10 @@ void loadIntoArray(inout vec4[neighborhoodSize] ecNeighbors,
                 continue;
             }
             vec2 neighborCoords = vec2(vec2(d) + gl_FragCoord.xy) / czm_viewport.zw;
-            vec4 neighborEC = texture2D(pointCloud_ecTexture, neighborCoords);
+            vec4 neighborEC = texture2D(u_pointCloud_ecTexture, neighborCoords);
             float neighbor = length(neighborEC);
-            float aoNeighbor = czm_unpackDepth(texture2D(pointCloud_aoTexture, neighborCoords));
-            vec4 colorNeighbor = texture2D(pointCloud_colorTexture, neighborCoords);
+            float aoNeighbor = czm_unpackDepth(texture2D(u_pointCloud_aoTexture, neighborCoords));
+            vec4 colorNeighbor = texture2D(u_pointCloud_colorTexture, neighborCoords);
             if (pastCenter)
             {
                 ecNeighbors[(j + 1) * neighborhoodFullWidth + i] = neighborEC;
@@ -181,10 +181,10 @@ void loadIntoArray(inout vec4[neighborhoodSize] ecNeighbors,
 
 void main()
 {
-    vec4 color = texture2D(pointCloud_colorTexture, v_textureCoordinates);
-    vec4 ec = texture2D(pointCloud_ecTexture, v_textureCoordinates);
+    vec4 color = texture2D(u_pointCloud_colorTexture, v_textureCoordinates);
+    vec4 ec = texture2D(u_pointCloud_ecTexture, v_textureCoordinates);
     float depth = length(ec);
-    float ao = czm_unpackDepth(texture2D(pointCloud_aoTexture,
+    float ao = czm_unpackDepth(texture2D(u_pointCloud_aoTexture,
                                          v_textureCoordinates));
                                          
     vec4 finalColor = color;
@@ -207,7 +207,7 @@ void main()
     
     loadIntoArray(ecNeighbors, depthNeighbors, aoNeighbors, colorNeighbors);
     
-    float density = ceil(densityScaleFactor * texture2D(pointCloud_densityTexture, v_textureCoordinates).r);
+    float density = ceil(densityScaleFactor * texture2D(u_pointCloud_densityTexture, v_textureCoordinates).r);
     
     // If our depth value is invalid
     if (abs(depth) < epsilon8)

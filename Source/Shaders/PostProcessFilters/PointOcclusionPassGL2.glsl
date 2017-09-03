@@ -15,10 +15,10 @@
 #define useTriangle
 #define dropoutEnabled
 
-uniform sampler2D pointCloud_ecTexture;
+uniform sampler2D u_pointCloud_ecTexture;
 uniform float u_occlusionAngle;
 uniform float u_dropoutFactor;
-uniform sampler2D sectorLUT;
+uniform sampler2D u_sectorLUT;
 in vec2 v_textureCoordinates;
 
 layout(location = 0) out vec4 depthOut;
@@ -36,7 +36,7 @@ float acosFast(in float inX)
 ivec2 readSectors(in ivec2 sectorPosition)
 {
     vec2 texCoordinate = vec2(sectorPosition + ivec2(neighborhoodHalfWidth)) / float(neighborhoodHalfWidth * 2);
-    vec2 unscaled = texture(sectorLUT, texCoordinate).rg;
+    vec2 unscaled = texture(u_sectorLUT, texCoordinate).rg;
     return ivec2(unscaled * float(numSectors));
 }
 
@@ -52,7 +52,7 @@ void main()
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
     
     // The position of this pixel in 3D (i.e the position of the point)
-    vec3 centerPosition = texture(pointCloud_ecTexture, v_textureCoordinates).xyz;
+    vec3 centerPosition = texture(u_pointCloud_ecTexture, v_textureCoordinates).xyz;
     bool invalid = false;
     
     // If the EC of this pixel is zero, that means that it's not a valid
@@ -111,7 +111,7 @@ void main()
             ivec2 pI = pos + d;
             
             // We now calculate the actual 3D position of the horizon pixel (the horizon point)
-            vec3 neighborPosition = texelFetch(pointCloud_ecTexture, ivec2(pI), 0).xyz;
+            vec3 neighborPosition = texelFetch(u_pointCloud_ecTexture, ivec2(pI), 0).xyz;
             
             // If our horizon pixel doesn't exist, ignore it and move on
             if (length(neighborPosition) < czm_epsilon6 || pI == pos)
