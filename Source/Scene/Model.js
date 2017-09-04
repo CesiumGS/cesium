@@ -1532,6 +1532,7 @@ define([
             var extras = gltfImage.extras;
 
             var bufferViewId = gltfImage.bufferView;
+            var mimeType = gltfImage.mimeType;
             uri = gltfImage.uri;
 
             // First check for a compressed texture
@@ -1542,24 +1543,28 @@ define([
                 var etc1 = extras.compressedImage3DTiles.etc1;
 
                 if (context.s3tc && defined(crunch)) {
+                    mimeType = crunch.mimeType;
                     if (defined(crunch.bufferView)) {
                         bufferViewId = crunch.bufferView;
                     } else {
                         uri = crunch.uri;
                     }
                 } else if (context.s3tc && defined(s3tc)) {
+                    mimeType = s3tc.mimeType;
                     if (defined(s3tc.bufferView)) {
                         bufferViewId = s3tc.bufferView;
                     } else {
                         uri = s3tc.uri;
                     }
                 } else if (context.pvrtc && defined(pvrtc)) {
+                    mimeType = pvrtc.mimeType;
                     if (defined(pvrtc.bufferView)) {
                         bufferViewId = pvrtc.bufferView;
                     } else {
                         uri = pvrtc.uri;
                     }
                 } else if (context.etc1 && defined(etc1)) {
+                    mimeType = etc1.mimeType;
                     if (defined(etc1.bufferView)) {
                         bufferViewId = etc1.bufferView;
                     } else {
@@ -1574,7 +1579,7 @@ define([
                     id : id,
                     image : undefined,
                     bufferView : bufferViewId,
-                    mimeType : gltfImage.mimeType
+                    mimeType : mimeType
                 });
             } else {
                 ++model._loadResources.pendingTextureLoads;
@@ -2193,14 +2198,15 @@ define([
 
             var gltf = model.gltf;
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
+            var imageId = gltf.textures[gltfTexture.id].source;
 
             var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
 
             if (gltfTexture.mimeType === 'image/ktx') {
-                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
+                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
-                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id)).otherwise(onerror);
+                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);

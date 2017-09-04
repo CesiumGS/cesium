@@ -17,6 +17,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTileBatchTable',
         './LabelStyle',
+        './Vector3DTileGeometry',
         './Vector3DTileMeshes',
         './Vector3DTilePoints',
         './Vector3DTilePolygons',
@@ -40,6 +41,7 @@ define([
         when,
         Cesium3DTileBatchTable,
         LabelStyle,
+        Vector3DTileGeometry,
         Vector3DTileMeshes,
         Vector3DTilePoints,
         Vector3DTilePolygons,
@@ -61,6 +63,7 @@ define([
         this._polylines = undefined;
         this._points = undefined;
         this._meshes = undefined;
+        this._geometries = undefined;
 
         this._readyPromise = when.defer();
 
@@ -190,6 +193,197 @@ define([
             if (defined(content._polygons)) {
                 content._polygons.updateCommands(batchId, color);
             }
+            if (defined(content._meshes)) {
+                content._meshes.updateCommands(batchId, color);
+            }
+            if (defined(content._geometries)) {
+                content._geometries.updateCommands(batchId, color);
+            }
+        };
+    }
+
+    function getBatchIds(featureTableJson, featureTableBinary) {
+        var polygonBatchIds;
+        var polylineBatchIds;
+        var pointBatchIds;
+        var meshBatchIds;
+        var boxBatchIds;
+        var cylinderBatchIds;
+        var ellipsoidBatchIds;
+        var sphereBatchIds;
+        var i;
+
+        var numberOfPolygons = defaultValue(featureTableJson.POLYGONS_LENGTH, 0);
+        var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
+        var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
+        var numberOfMeshes = defaultValue(featureTableJson.MESHES_LENGTH, 0);
+        var numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
+        var numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
+        var numberOfEllipsoids = defaultValue(featureTableJson.ELLIPSOIDS_LENGTH, 0);
+        var numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
+
+        if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
+            var polygonBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_BATCH_IDS.byteOffset;
+            polygonBatchIds = new Uint16Array(featureTableBinary.buffer, polygonBatchIdsByteOffset, numberOfPolygons);
+        }
+
+        if (numberOfPolylines > 0 && defined(featureTableJson.POLYLINE_BATCH_IDS)) {
+            var polylineBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_BATCH_IDS.byteOffset;
+            polylineBatchIds = new Uint16Array(featureTableBinary.buffer, polylineBatchIdsByteOffset, numberOfPolylines);
+        }
+
+        if (numberOfPoints > 0 && defined(featureTableJson.POINT_BATCH_IDS)) {
+            var pointBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POINT_BATCH_IDS.byteOffset;
+            pointBatchIds = new Uint16Array(featureTableBinary.buffer, pointBatchIdsByteOffset, numberOfPoints);
+        }
+
+        if (numberOfMeshes > 0 && defined(featureTableJson.MESH_BATCH_IDS)) {
+            var meshBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.MESH_BATCH_IDS.byteOffset;
+            meshBatchIds = new Uint16Array(featureTableBinary.buffer, meshBatchIdsByteOffset, numberOfMeshes);
+        }
+
+        if (numberOfBoxes > 0 && defined(featureTableJson.BOX_BATCH_IDS)) {
+            var boxBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.BOX_BATCH_IDS.byteOffset;
+            boxBatchIds = new Uint16Array(featureTableBinary.buffer, boxBatchIdsByteOffset, numberOfBoxes);
+        }
+
+        if (numberOfCylinders > 0 && defined(featureTableJson.CYLINDER_BATCH_IDS)) {
+            var cylinderBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.CYLINDER_BATCH_IDS.byteOffset;
+            cylinderBatchIds = new Uint16Array(featureTableBinary.byteOffset, cylinderBatchIdsByteOffset, numberOfCylinders);
+        }
+
+        if (numberOfEllipsoids > 0 && defined(featureTableJson.ELLIPSOID_BATCH_IDS)) {
+            var ellipsoidBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.ELLIPSOID_BATCH_IDS.byteOffset;
+            ellipsoidBatchIds = new Uint16Array(featureTableBinary.byteOffset, ellipsoidBatchIdsByteOffset, numberOfCylinders);
+        }
+
+        if (numberOfSpheres > 0 && defined(featureTableJson.SPHERE_BATCH_IDS)) {
+            var sphereBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.SPHERE_BATCH_IDS.byteOffset;
+            sphereBatchIds = new Uint16Array(featureTableBinary.byteOffset, sphereBatchIdsByteOffset, numberOfCylinders);
+        }
+
+        var undefinedBatchIds = !defined(polygonBatchIds) || !defined(polylineBatchIds) || !defined(pointBatchIds) || !defined(meshBatchIds);
+        undefinedBatchIds = undefinedBatchIds || !defined(boxBatchIds) || !defined(cylinderBatchIds) || !defined(ellipsoidBatchIds) || !defined(sphereBatchIds);
+
+        if (undefinedBatchIds) {
+            var maxId = -1;
+
+            if (defined(polygonBatchIds)) {
+                for (i = 0; i < numberOfPolygons; ++i) {
+                    maxId = Math.max(maxId, polygonBatchIds[i]);
+                }
+            }
+
+            if (defined(polylineBatchIds)) {
+                for (i = 0; i < numberOfPolylines; ++i) {
+                    maxId = Math.max(maxId, polylineBatchIds[i]);
+                }
+            }
+
+            if (defined(pointBatchIds)) {
+                for (i = 0; i < numberOfPoints; ++i) {
+                    maxId = Math.max(maxId, pointBatchIds[i]);
+                }
+            }
+
+            if (defined(meshBatchIds)) {
+                for (i = 0; i < numberOfMeshes; ++i) {
+                    maxId = Math.max(maxId, meshBatchIds[i]);
+                }
+            }
+
+            if (defined(boxBatchIds)) {
+                for (i = 0; i < numberOfBoxes; ++i) {
+                    maxId = Math.max(maxId, boxBatchIds[i]);
+                }
+            }
+
+            if (defined(cylinderBatchIds)) {
+                for (i = 0; i < numberOfCylinders; ++i) {
+                    maxId = Math.max(maxId, cylinderBatchIds[i]);
+                }
+            }
+
+            if (defined(ellipsoidBatchIds)) {
+                for (i = 0; i < numberOfEllipsoids; ++i) {
+                    maxId = Math.max(maxId, ellipsoidBatchIds[i]);
+                }
+            }
+
+            if (defined(sphereBatchIds)) {
+                for (i = 0; i < numberOfSpheres; ++i) {
+                    maxId = Math.max(maxId, sphereBatchIds[i]);
+                }
+            }
+
+            maxId = maxId + 1;
+
+            if (!defined(polygonBatchIds) && numberOfPolygons > 0) {
+                polygonBatchIds = new Uint16Array(numberOfPolygons);
+                for (i = 0; i < numberOfPolygons; ++i) {
+                    polygonBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(polylineBatchIds) && numberOfPolylines > 0) {
+                polylineBatchIds = new Uint16Array(numberOfPolylines);
+                for (i = 0; i < numberOfPolylines; ++i) {
+                    polylineBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(pointBatchIds) && numberOfPoints > 0) {
+                pointBatchIds = new Uint16Array(numberOfPoints);
+                for (i = 0; i < numberOfPoints; ++i) {
+                    pointBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(meshBatchIds) && numberOfMeshes > 0) {
+                meshBatchIds = new Uint16Array(numberOfMeshes);
+                for (i = 0; i < numberOfMeshes; ++i) {
+                    meshBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(boxBatchIds) && numberOfBoxes > 0) {
+                boxBatchIds = new Uint16Array(numberOfBoxes);
+                for (i = 0; i < numberOfBoxes; ++i) {
+                    boxBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(cylinderBatchIds) && numberOfCylinders > 0) {
+                cylinderBatchIds = new Uint16Array(numberOfCylinders);
+                for (i = 0; i < numberOfCylinders; ++i) {
+                    cylinderBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(ellipsoidBatchIds) && numberOfEllipsoids > 0) {
+                ellipsoidBatchIds = new Uint16Array(numberOfEllipsoids);
+                for (i = 0; i < numberOfEllipsoids; ++i) {
+                    ellipsoidBatchIds[i] = maxId++;
+                }
+            }
+
+            if (!defined(sphereBatchIds) && numberOfSpheres > 0) {
+                sphereBatchIds = new Uint16Array(numberOfSpheres);
+                for (i = 0; i < numberOfSpheres; ++i) {
+                    sphereBatchIds[i] = maxId++;
+                }
+            }
+        }
+
+        return {
+            polygons : polygonBatchIds,
+            polylines : polylineBatchIds,
+            points : pointBatchIds,
+            meshes : meshBatchIds,
+            boxes : boxBatchIds,
+            cylinders : cylinderBatchIds,
+            ellipsoids : ellipsoidBatchIds,
+            spheres : sphereBatchIds
         };
     }
 
@@ -280,8 +474,14 @@ define([
         var numberOfPolylines = defaultValue(featureTableJson.POLYLINES_LENGTH, 0);
         var numberOfPoints = defaultValue(featureTableJson.POINTS_LENGTH, 0);
         var numberOfMeshes = defaultValue(featureTableJson.MESHES_LENGTH, 0);
+        var numberOfBoxes = defaultValue(featureTableJson.BOXES_LENGTH, 0);
+        var numberOfCylinders = defaultValue(featureTableJson.CYLINDERS_LENGTH, 0);
+        var numberOfEllipsoids = defaultValue(featureTableJson.ELLIPSOIDS_LENGTH, 0);
+        var numberOfSpheres = defaultValue(featureTableJson.SPHERES_LENGTH, 0);
 
-        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints + numberOfMeshes;
+        var totalPrimitives = numberOfPolygons + numberOfPolylines + numberOfPoints;
+        totalPrimitives += numberOfMeshes + numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
+
         var batchTable = new Cesium3DTileBatchTable(content, totalPrimitives, batchTableJson, batchTableBinary, createColorChangedCallback(content));
         content._batchTable = batchTable;
 
@@ -318,89 +518,7 @@ define([
             Matrix4.multiplyByPoint(modelMatrix, center, center);
         }
 
-        var polygonBatchIds;
-        var polylineBatchIds;
-        var pointBatchIds;
-        var meshBatchIds;
-        var i;
-
-        if (numberOfPolygons > 0 && defined(featureTableJson.POLYGON_BATCH_IDS)) {
-            var polygonBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYGON_BATCH_IDS.byteOffset;
-            polygonBatchIds = new Uint16Array(featureTableBinary.buffer, polygonBatchIdsByteOffset, numberOfPolygons);
-        }
-
-        if (numberOfPolylines > 0 && defined(featureTableJson.POLYLINE_BATCH_IDS)) {
-            var polylineBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POLYLINE_BATCH_IDS.byteOffset;
-            polylineBatchIds = new Uint16Array(featureTableBinary.buffer, polylineBatchIdsByteOffset, numberOfPolylines);
-        }
-
-        if (numberOfPoints > 0 && defined(featureTableJson.POINT_BATCH_IDS)) {
-            var pointBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.POINT_BATCH_IDS.byteOffset;
-            pointBatchIds = new Uint16Array(featureTableBinary.buffer, pointBatchIdsByteOffset, numberOfPoints);
-        }
-
-        if (numberOfMeshes > 0 && defined(featureTableJson.MESH_BATCH_IDS)) {
-            var meshBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.MESH_BATCH_IDS.byteOffset;
-            meshBatchIds = new Uint16Array(featureTableBinary.buffer, meshBatchIdsByteOffset, numberOfMeshes);
-        }
-
-        if (!defined(polygonBatchIds) || !defined(polylineBatchIds) || !defined(pointBatchIds) || !defined(meshBatchIds)) {
-            var maxId = -1;
-
-            if (defined(polygonBatchIds)) {
-                for (i = 0; i < numberOfPolygons; ++i) {
-                    maxId = Math.max(maxId, polygonBatchIds[i]);
-                }
-            }
-
-            if (defined(polylineBatchIds)) {
-                for (i = 0; i < numberOfPolylines; ++i) {
-                    maxId = Math.max(maxId, polylineBatchIds[i]);
-                }
-            }
-
-            if (defined(pointBatchIds)) {
-                for (i = 0; i < numberOfPoints; ++i) {
-                    maxId = Math.max(maxId, pointBatchIds[i]);
-                }
-            }
-
-            if (defined(meshBatchIds)) {
-                for (i = 0; i < numberOfMeshes; ++i) {
-                    maxId = Math.max(maxId, meshBatchIds[i]);
-                }
-            }
-
-            maxId = maxId + 1;
-
-            if (!defined(polygonBatchIds) && numberOfPolygons > 0) {
-                polygonBatchIds = new Uint16Array(numberOfPolygons);
-                for (i = 0; i < numberOfPolygons; ++i) {
-                    polygonBatchIds[i] = maxId++;
-                }
-            }
-
-            if (!defined(polylineBatchIds) && numberOfPolylines > 0) {
-                polylineBatchIds = new Uint16Array(numberOfPolylines);
-                for (i = 0; i < numberOfPolylines; ++i) {
-                    polylineBatchIds[i] = maxId++;
-                }
-            }
-
-            if (!defined(pointBatchIds) && numberOfPoints > 0) {
-                pointBatchIds = new Uint16Array(numberOfPoints);
-                for (i = 0; i < numberOfPoints; ++i) {
-                    pointBatchIds[i] = maxId++;
-                }
-            }
-
-            if (!defined(meshBatchIds) && numberOfMeshes > 0) {
-                meshBatchIds = new Uint16Array(numberOfMeshes);
-                for (i = 0; i < numberOfMeshes; ++i) {
-                    meshBatchIds[i] = maxId++;
-                }
-            }
-        }
+        var batchIds = getBatchIds(featureTableJson, featureTableBinary);
 
         var pickObject = {
             content : content,
@@ -443,7 +561,7 @@ define([
                 rectangle : rectangle,
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
-                batchIds : polygonBatchIds,
+                batchIds : batchIds.polygons,
                 pickObject : pickObject,
                 isCartographic : isCartographic,
                 modelMatrix : modelMatrix
@@ -460,7 +578,7 @@ define([
             var widths;
             if (!defined(featureTableJson.POLYLINE_WIDTHS)) {
                 widths = new Array(numberOfPolylines);
-                for (i = 0; i < numberOfPolylines; ++i) {
+                for (var i = 0; i < numberOfPolylines; ++i) {
                     widths[i] = 2.0;
                 }
             } else {
@@ -472,7 +590,7 @@ define([
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,
-                batchIds : polylineBatchIds,
+                batchIds : batchIds.polylines,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
                 center : center,
@@ -488,7 +606,7 @@ define([
 
             content._points = new Vector3DTilePoints({
                 positions : pointPositions,
-                batchIds : pointBatchIds,
+                batchIds : batchIds.points,
                 minimumHeight : minHeight,
                 maximumHeight : maxHeight,
                 rectangle : rectangle,
@@ -511,10 +629,53 @@ define([
                 positionCount : meshPositionCount,
                 indexOffsets : meshIndexOffsets,
                 indexCounts : meshIndexCounts,
-                batchIds : meshBatchIds,
+                batchIds : batchIds.meshes,
                 center : center,
                 modelMatrix : modelMatrix,
-                batchTable : batchTable
+                batchTable : batchTable,
+                boundingVolume : content._tile._boundingVolume.boundingVolume
+            });
+        }
+
+        if (numberOfBoxes > 0 || numberOfCylinders > 0 || numberOfEllipsoids > 0 || numberOfSpheres > 0) {
+            var boxes;
+            var cylinders;
+            var ellipsoids;
+            var spheres;
+
+            if (numberOfBoxes > 0) {
+                var boxesByteOffset = featureTableBinary.byteOffset + featureTableJson.BOXES.byteOffset;
+                boxes = new Float32Array(featureTableBinary.buffer, boxesByteOffset, Vector3DTileGeometry.packedBoxLength * numberOfBoxes);
+            }
+
+            if (numberOfCylinders > 0) {
+                var cylindersByteOffset = featureTableBinary.byteOffset + featureTableJson.CYLINDERS.byteOffset;
+                cylinders = new Float32Array(featureTableBinary.buffer, cylindersByteOffset, Vector3DTileGeometry.packedCylinderLength * numberOfCylinders);
+            }
+
+            if (numberOfEllipsoids > 0) {
+                var ellipsoidsByteOffset = featureTableBinary.byteOffset + featureTableJson.ELLIPSOIDS.byteOffset;
+                ellipsoids = new Float32Array(featureTableBinary.buffer, ellipsoidsByteOffset, Vector3DTileGeometry.packedEllipsoidLength * numberOfEllipsoids);
+            }
+
+            if (numberOfSpheres > 0) {
+                var spheresByteOffset = featureTableBinary.byteOffset + featureTableJson.SPHERES.byteOffset;
+                spheres = new Float32Array(featureTableBinary.buffer, spheresByteOffset, Vector3DTileGeometry.packedSphereLength * numberOfSpheres);
+            }
+
+            content._geometries = new Vector3DTileGeometry({
+                boxes : boxes,
+                boxBatchIds : batchIds.boxes,
+                cylinders : cylinders,
+                cylinderBatchIds : batchIds.cylinders,
+                ellipsoids : ellipsoids,
+                ellipsoidBatchIds : batchIds.ellipsoids,
+                spheres : spheres,
+                sphereBatchIds : batchIds.spheres,
+                center : center,
+                modelMatrix : modelMatrix,
+                batchTable : batchTable,
+                boundingVolume : content._tile._boundingVolume.boundingVolume
             });
         }
     }
@@ -535,6 +696,9 @@ define([
             }
             if (defined(content._meshes)) {
                 content._meshes.createFeatures(content, features);
+            }
+            if (defined(content._geometries)) {
+                content._geometries.createFeatures(content, features);
             }
             content._features = features;
         }
@@ -578,6 +742,9 @@ define([
         if (defined(this._meshes)) {
             this._meshes.applyDebugSettings(enabled, color);
         }
+        if (defined(this._geometries)) {
+            this._geometries.applyDebugSettings(enabled, color);
+        }
     };
 
     /**
@@ -596,6 +763,9 @@ define([
         }
         if (defined(this._meshes)) {
             this._meshes.applyStyle(frameState, style, this._features);
+        }
+        if (defined(this._geometries)) {
+            this._geometries.applyStyle(frameState, style, this._features);
         }
     };
 
@@ -618,6 +788,10 @@ define([
         if (defined(this._meshes)) {
             this._meshes.debugWireframe = this._tileset.debugWireframe;
             this._meshes.update(frameState);
+        }
+        if (defined(this._geometries)) {
+            this._geometries.debugWireframe = this._tileset.debugWireframe;
+            this._geometries.update(frameState);
         }
 
         if (!defined(this._polygonReadyPromise)) {
@@ -648,6 +822,7 @@ define([
         this._polylines = this._polylines && this._polylines.destroy();
         this._points = this._points && this._points.destroy();
         this._meshes = this._meshes && this._meshes.destroy();
+        this._geometries = this._geometries && this._geometries.destroy();
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };

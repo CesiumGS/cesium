@@ -31,8 +31,6 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var camera = scene.camera;
 
-scene.globe.depthTestAgainstTerrain = true;
-
 var buildingHighlight;
 var treeHighlight1;
 var treeHighlight2;
@@ -73,7 +71,8 @@ function highlightBuilding() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
             },
             id : 'volume'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }));
 
     camera.setView({
@@ -106,7 +105,8 @@ function highlightTrees() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#F26419').withAlpha(0.5))
             },
             id : 'volume 1'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }));
 
     center = new Cesium.Cartesian3(1216394.3346955755, -4736207.431365568, 4081336.7768881875);
@@ -125,7 +125,8 @@ function highlightTrees() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#F03A47').withAlpha(0.5))
             },
             id : 'volume 2'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }));
 
     center = new Cesium.Cartesian3(1216388.1664430483, -4736210.034324032, 4081332.9324705894);
@@ -143,7 +144,8 @@ function highlightTrees() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#004FFF').withAlpha(0.5))
             },
             id : 'volume 3'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }));
 
     center = new Cesium.Cartesian3(1216383.1478702603, -4736211.716097012, 4081329.551077661);
@@ -161,7 +163,8 @@ function highlightTrees() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#55DDE0').withAlpha(0.5))
             },
             id : 'volume 4'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
     }));
 
     camera.setView({

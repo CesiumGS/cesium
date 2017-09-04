@@ -31,6 +31,7 @@ define([
         this._center = options.center;
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
+        this._boundingVolume = options.boundingVolume;
 
         this._primitive = undefined;
 
@@ -116,7 +117,7 @@ define([
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
             batchedIndices : batchedIndices,
-            boundingVolume : undefined, // TODO
+            boundingVolume : meshes._boundingVolume,
             boundingVolumes : [], // TODO
             center : center,
             pickObject : defaultValue(meshes._pickObject, meshes)
@@ -132,6 +133,7 @@ define([
         meshes._center = undefined;
         meshes._modelMatrix = undefined;
         meshes._batchTable = undefined;
+        meshes._boundingVolume = undefined;
     }
 
     /**

@@ -24,13 +24,18 @@ define([
      * @constructor
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see GridImageryProvider
+     * @see MapboxImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileCoordinatesImageryProvider
+     * @see UrlTemplateImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
