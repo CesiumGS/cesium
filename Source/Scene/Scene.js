@@ -2,6 +2,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
+        '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -9,6 +10,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -27,6 +29,10 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
+        '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
@@ -37,16 +43,18 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/loadCubeMap',
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        './BrdfLutGenerator',
         './Camera',
         './CreditDisplay',
-        './CullingVolume',
         './DebugCameraPrimitive',
         './DepthPlane',
         './DeviceOrientationCameraController',
@@ -57,12 +65,8 @@ define([
         './JobScheduler',
         './MapMode2D',
         './OIT',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
         './PickDepth',
         './PostProcessScene',
         './Primitive',
@@ -79,6 +83,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
+        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -86,6 +91,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -104,6 +110,10 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
+        PerspectiveOffCenterFrustum,
         PixelFormat,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
@@ -114,16 +124,18 @@ define([
         ContextLimits,
         DrawCommand,
         Framebuffer,
+        loadCubeMap,
         Pass,
         PassState,
         PixelDatatype,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
+        BrdfLutGenerator,
         Camera,
         CreditDisplay,
-        CullingVolume,
         DebugCameraPrimitive,
         DepthPlane,
         DeviceOrientationCameraController,
@@ -134,12 +146,8 @@ define([
         JobScheduler,
         MapMode2D,
         OIT,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
         PerformanceDisplay,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
         PickDepth,
         PostProcessScene,
         Primitive,
@@ -631,6 +639,8 @@ define([
          */
         this.postProcess = new PostProcessScene();
 
+        this._brdfLutGenerator = new BrdfLutGenerator();
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -896,6 +906,10 @@ define([
          */
         imageryLayers : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.imageryLayers;
             }
         },
@@ -908,10 +922,16 @@ define([
          */
         terrainProvider : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.terrainProvider;
             },
             set : function(terrainProvider) {
-                this.globe.terrainProvider = terrainProvider;
+                if (defined(this.globe)) {
+                    this.globe.terrainProvider = terrainProvider;
+                }
             }
         },
 
@@ -924,6 +944,10 @@ define([
          */
         terrainProviderChanged : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.terrainProviderChanged;
             }
         },
@@ -1287,6 +1311,8 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
+        frameState.brdfLutGenerator = scene._brdfLutGenerator;
+        frameState.environmentMap = scene.skyBox && scene.skyBox._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1931,23 +1957,15 @@ define([
                 passState.framebuffer = fb;
             }
 
-            us.updatePass(Pass.GROUND);
-            commands = frustumCommands.commands[Pass.GROUND];
-            length = frustumCommands.indices[Pass.GROUND];
+            us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            // Clear the stencil after the ground pass
-            if (length > 0 && context.stencilBuffer) {
-                scene._stencilClearCommand.execute(context, passState);
-            }
-
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                if (useDepthPlane) {
-                    depthPlane.execute(context, passState);
-                }
             }
 
             us.updatePass(Pass.CESIUM_3D_TILE);
@@ -1957,9 +1975,24 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
+            }
+
+            us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GROUND + 1;
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 us.updatePass(pass);
@@ -2166,13 +2199,11 @@ define([
             executeCommands(scene, passState);
 
             Camera.clone(savedCamera, camera);
+        } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else {
             updateAndClearFramebuffers(scene, passState, backgroundColor);
-            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState);
-            } else {
-                execute2DViewportCommands(scene, passState);
-            }
+            execute2DViewportCommands(scene, passState);
         }
     }
 
@@ -2298,7 +2329,7 @@ define([
         passState.viewport = originalViewport;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState) {
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
         var depthOnly = scene.frameState.passes.depth;
 
         if (!firstViewport && !depthOnly) {
@@ -2311,9 +2342,14 @@ define([
 
         createPotentiallyVisibleSet(scene);
 
-        if (firstViewport && !depthOnly) {
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
+        if (firstViewport) {
+            if (defined(backgroundColor)) {
+                updateAndClearFramebuffers(scene, passState, backgroundColor);
+            }
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
         }
 
         executeCommands(scene, passState);
@@ -2817,16 +2853,21 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      */
-    Scene.prototype.pick = function(windowPosition) {
+    Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
+
+        rectangleWidth = defaultValue(width, 3.0);
+        rectangleHeight = defaultValue(height, rectangleWidth);
 
         var context = this._context;
         var us = context.uniformState;
@@ -2849,7 +2890,8 @@ define([
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
-
+        scratchRectangle.width = rectangleWidth;
+        scratchRectangle.height = rectangleHeight;
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
         updateEnvironment(this, passState);
@@ -3338,6 +3380,7 @@ define([
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
+        this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();

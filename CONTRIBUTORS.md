@@ -83,8 +83,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Joel Depooter](https://github.com/JDepooter)
 * [Bentley Systems, Inc.](https://www.bentley.com)
    * [Paul Connelly](https://github.com/pmconne)
+   * [Jason Crow](https://github.com/jason-crow)
 * [Flightradar24 AB](https://www.flightradar24.com)
    * [Aleksei Kalmykov](https://github.com/kalmykov)
+* [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
+   * [Jannes Bolling](https://github.com/jbo023)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -150,3 +153,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Esra ERİK](https://github.com/esraerik)
 * [Rishabh Shah](https://github.com/rms13)
 * [Rudraksha Shah](https://github.com/Rudraksha20)
+* [Cody Guldner](https://github.com/burn123)
+

@@ -8,14 +8,14 @@ define([
         '../Core/EasingFunction',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/Ray',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Transforms',
         './Camera',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
         './SceneMode'
     ], function(
         Cartesian3,
@@ -27,14 +27,14 @@ define([
         EasingFunction,
         CesiumMath,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Ray,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Transforms,
         Camera,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode) {
     'use strict';
 

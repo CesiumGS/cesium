@@ -158,6 +158,13 @@ defineSuite([
             viewModel.showMemoryUsage = false;
             expect(viewModel.tileset.debugShowMemoryUsage).toBe(false);
         });
+
+        it('showUrl', function() {
+            viewModel.showUrl = true;
+            expect(viewModel.tileset.debugShowUrl).toBe(true);
+            viewModel.showUrl = false;
+            expect(viewModel.tileset.debugShowUrl).toBe(false);
+        });
     });
 
     describe('update options', function() {

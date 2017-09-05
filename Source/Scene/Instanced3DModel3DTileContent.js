@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -21,6 +22,7 @@ define([
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/TranslationRotationScale',
+        '../Renderer/Pass',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -33,6 +35,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -48,6 +51,7 @@ define([
         RuntimeError,
         Transforms,
         TranslationRotationScale,
+        Pass,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -88,6 +92,9 @@ define([
 
         initialize(this, arrayBuffer, byteOffset);
     }
+
+    // This can be overridden for testing purposes
+    Instanced3DModel3DTileContent._deprecationWarning = deprecationWarning;
 
     defineProperties(Instanced3DModel3DTileContent.prototype, {
         /**
@@ -290,8 +297,15 @@ define([
         if (gltfByteLength === 0) {
             throw new RuntimeError('glTF byte length is zero, i3dm must have a glTF to instance.');
         }
-        var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
-        byteOffset += gltfByteLength;
+
+        var gltfView;
+        if (byteOffset % 4 === 0) {
+            gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
+        } else {
+            // Create a copy of the glb so that it is 4-byte aligned
+            Instanced3DModel3DTileContent._deprecationWarning('i3dm-glb-unaligned', 'The embedded glb is not aligned to a 4-byte boundary.');
+            gltfView = new Uint8Array(uint8Array.subarray(byteOffset, byteOffset + gltfByteLength));
+        }
 
         // Create model instance collection
         var collectionOptions = {
@@ -303,11 +317,16 @@ define([
             gltf : undefined,
             basePath : undefined,
             incrementallyLoadTextures : false,
-            upAxis : content._tileset._gltfUpAxis
+            upAxis : content._tileset._gltfUpAxis,
+            opaquePass : Pass.CESIUM_3D_TILE // Draw opaque portions during the 3D Tiles pass
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
+
+            // We need to remove padding from the end of the model URL in case this tile was part of a composite tile.
+            // This removes all white space and null characters from the end of the string.
+            gltfUrl = gltfUrl.replace(/[\s\0]+$/, '');
             collectionOptions.url = getAbsoluteUri(joinUrls(getBaseUri(content._url, true), gltfUrl));
         } else {
             collectionOptions.gltf = gltfView;

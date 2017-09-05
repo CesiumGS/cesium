@@ -4,7 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Intersect',
-        'Scene/PerspectiveFrustum'
+        'Core/PerspectiveFrustum'
     ], function(
         CullingVolume,
         AxisAlignedBoundingBox,
