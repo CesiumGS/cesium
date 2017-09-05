@@ -1043,7 +1043,7 @@ define([
      * @inheritdoc Cesium3DTileContent#destroy
      */
     PointCloudPostProcessor.prototype.destroy = function() {
-        // TODO: actually destroy stuff
+        destroyFramebuffers(this);
         return destroyObject(this);
     };
 
