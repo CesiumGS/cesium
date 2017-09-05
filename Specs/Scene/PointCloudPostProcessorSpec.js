@@ -56,8 +56,6 @@ defineSuite([
     });
 
     beforeEach(function() {
-        scene.morphTo3D(0.0);
-
         var camera = scene.camera;
         camera.frustum = new PerspectiveFrustum();
         camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
