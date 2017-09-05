@@ -878,8 +878,7 @@ define([
                 '    czm_point_cloud_post_process_main(); \n' +
                 '    v_positionECPS = (czm_inverseProjection * gl_Position).xyz; \n' +
                 '}');
-            fs.sources.splice(0, 0,
-                              '#extension GL_EXT_draw_buffers : enable \n');
+            fs.sources.unshift('#extension GL_EXT_draw_buffers : enable \n');
             fs.sources.push(
                 'varying vec3 v_positionECPS; \n' +
                 'void main() \n' +
