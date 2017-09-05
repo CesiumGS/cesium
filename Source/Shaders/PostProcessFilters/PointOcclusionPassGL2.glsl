@@ -1,8 +1,5 @@
 #version 300 es
 
-#define TAU 6.28318530718
-#define PI 3.14159265359
-#define PI_4 0.785398163
 #define C0 1.57073
 #define C1 -0.212053
 #define C2 0.0740935
@@ -30,7 +27,7 @@ float acosFast(in float inX)
     float res = ((C3 * x + C2) * x + C1) * x + C0; // p(x)
     res *= sqrt(1.0 - x);
     
-    return (inX >= 0.0) ? res : PI - res;
+    return (inX >= 0.0) ? res : czm_pi - res;
 }
 
 ivec2 readSectors(in ivec2 sectorPosition)
@@ -77,7 +74,7 @@ void main()
     ivec2 lowerRightCorner = pos + halfNeighborhood;
     
     // The widest the cone can be is 90 degrees
-    float maxAngle = PI / 2.0;
+    float maxAngle = czm_pi / 2.0;
     
     // Our sector array defaults to an angle of "maxAngle" in each sector
     // (i.e no horizon pixels!)
@@ -169,14 +166,14 @@ void main()
     }
     
     // The solid angle is too small, so we occlude this point
-    if (accumulator < (2.0 * PI) * (1.0 - u_occlusionAngle))
+    if (accumulator < (2.0 * czm_pi) * (1.0 - u_occlusionAngle))
     {
         depthOut = vec4(0);
         aoOut = vec4(1.0 - czm_epsilon6);
     }
     else
     {
-        float occlusion = clamp(accumulator / (4.0 * PI), 0.0, 1.0);
+        float occlusion = clamp(accumulator / (4.0 * czm_pi), 0.0, 1.0);
         aoOut = czm_packDepth(occlusion);
         depthOut = vec4(centerPosition, 0.0);
     }
