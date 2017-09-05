@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/destroyObject',
@@ -36,6 +37,7 @@ define([
         '../Shaders/PostProcessFilters/PointCloudPostProcessorBlendPass'
     ], function(
         Color,
+        combine,
         ComponentDatatype,
         defined,
         destroyObject,
@@ -978,9 +980,11 @@ define([
 
                 // TODO: Even if the filter is disabled,
                 // point attenuation settings are not! Fix this behavior.
-                var derivedCommandUniformMap = Object.assign({}, derivedCommand.uniformMap);
-                derivedCommandUniformMap['u_pointAttenuationMaxSize'] = attenuationUniformFunction;
-                derivedCommand.uniformMap = derivedCommandUniformMap;
+                var derivedCommandUniformMap = derivedCommand.uniformMap;
+                var newUniformMap = {
+                    'u_pointAttenuationMaxSize' : attenuationUniformFunction
+                };
+                derivedCommand.uniformMap = combine(derivedCommandUniformMap, newUniformMap);
 
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
             }
