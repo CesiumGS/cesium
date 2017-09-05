@@ -75,7 +75,6 @@ defineSuite([
             scene.renderForSpecs();
             var originalLength = scene.frameState.commandList.length;
 
-
             tileset.pointCloudPostProcessorOptions.enabled = true;
             scene.renderForSpecs();
             var newLength = scene.frameState.commandList.length;
