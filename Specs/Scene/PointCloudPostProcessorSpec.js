@@ -2,36 +2,28 @@ defineSuite([
         'Scene/PointCloudPostProcessor',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/ComponentDatatype',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Transforms',
-        'Scene/Cesium3DTileStyle',
-        'Scene/Expression',
         'Scene/PerspectiveFrustum',
         'Scene/PointCloud3DTileContent',
         'Specs/Cesium3DTilesTester',
-        'Specs/createScene',
-        'ThirdParty/when'
+        'Specs/createScene'
     ], function(
         PointCloudPostProcessor,
         Cartesian3,
         Color,
-        ComponentDatatype,
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
         Transforms,
-        Cesium3DTileStyle,
-        Expression,
         PerspectiveFrustum,
         PointCloud3DTileContent,
         Cesium3DTilesTester,
-        createScene,
-        when) {
+        createScene) {
     'use strict';
 
     var scene;
