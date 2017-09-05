@@ -1033,14 +1033,35 @@ define([
     };
 
     /**
-     * @inheritdoc Cesium3DTileContent#isDestroyed
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see PointCloudPostProcessor#destroy
      */
     PointCloudPostProcessor.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * @inheritdoc Cesium3DTileContent#destroy
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @example
+     * processor = processor && processor.destroy();
+     *
+     * @see PointCloudPostProcessor#isDestroyed
      */
     PointCloudPostProcessor.prototype.destroy = function() {
         destroyFramebuffers(this);
