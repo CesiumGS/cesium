@@ -970,7 +970,7 @@ define([
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
 
-                var derivedCommandRenderState = derivedCommand.renderState;
+                var derivedCommandRenderState = new RenderState(derivedCommand.renderState);
                 derivedCommandRenderState.stencilTest = this._stencilWrite;
                 derivedCommand.renderState = RenderState.fromCache(
                     derivedCommandRenderState
@@ -978,7 +978,7 @@ define([
 
                 // TODO: Even if the filter is disabled,
                 // point attenuation settings are not! Fix this behavior.
-                var derivedCommandUniformMap = derivedCommand.uniformMap;
+                var derivedCommandUniformMap = Object.assign({}, derivedCommand.uniformMap);
                 derivedCommandUniformMap['u_pointAttenuationMaxSize'] = attenuationUniformFunction;
                 derivedCommand.uniformMap = derivedCommandUniformMap;
 
