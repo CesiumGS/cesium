@@ -903,7 +903,6 @@ define([
         }
 
         var dirty = false;
-        // Set options here
         if (tileset.pointCloudPostProcessorOptions.occlusionAngle !== this.occlusionAngle ||
             tileset.pointCloudPostProcessorOptions.rangeParameter !== this.rangeParameter ||
             tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth !== this.neighborhoodHalfWidth ||
@@ -984,7 +983,6 @@ define([
                 derivedCommand.uniformMap = derivedCommandUniformMap;
 
                 derivedCommand.pass = Pass.CESIUM_3D_TILE; // Overrides translucent commands
-                command.dirty = false;
             }
 
             commandList[i] = derivedCommand;
