@@ -978,8 +978,6 @@ define([
                     derivedCommandRenderState
                 );
 
-                // TODO: Even if the filter is disabled,
-                // point attenuation settings are not! Fix this behavior.
                 var derivedCommandUniformMap = derivedCommand.uniformMap;
                 var newUniformMap = {
                     'u_pointAttenuationMaxSize' : attenuationUniformFunction
