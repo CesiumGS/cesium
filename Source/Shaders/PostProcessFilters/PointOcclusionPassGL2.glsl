@@ -128,7 +128,6 @@ void main()
             // from the viewer to the center and the vector to the horizon pixel.
             // We normalize both vectors first because we only care about their relative
             // directions
-            // TODO: Redo the math and figure out whether the result should be negated or not
             float dotProduct = dot(normalize(viewer - centerPosition), normalize(c));
             
             // We calculate the angle that this horizon pixel would make
