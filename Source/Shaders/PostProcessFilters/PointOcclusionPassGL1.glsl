@@ -1,5 +1,4 @@
 #extension GL_EXT_draw_buffers : enable
-#extension GL_EXT_frag_depth : enable
 
 #define C0 1.57073
 #define C1 -0.212053

@@ -386,7 +386,7 @@ define([
                 r = '#define\\s' + constantName;
                 return sourceFS.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
             }
-                return sourceFS;
+            return sourceFS;
         }
         r = '#define\\s' + constantName + '\\s([0-9.]+)';
         return sourceFS.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
