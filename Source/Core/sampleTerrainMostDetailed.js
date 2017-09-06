@@ -1,15 +1,14 @@
-/*global define*/
 define([
-    '../ThirdParty/when',
-    './defined',
-    './sampleTerrain',
-    './DeveloperError'
-], function(
-    when,
-    defined,
-    sampleTerrain,
-    DeveloperError) {
-    "use strict";
+        '../ThirdParty/when',
+        './defined',
+        './DeveloperError',
+        './sampleTerrain'
+    ], function(
+        when,
+        defined,
+        DeveloperError,
+        sampleTerrain) {
+    'use strict';
 
     /**
      * Initiates a sampleTerrain() request at the maximum available tile level for a terrain dataset.

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/PrimitiveType',
         'Renderer/DrawCommand',

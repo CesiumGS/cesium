@@ -1,8 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Matrix4',
@@ -21,6 +21,7 @@ defineSuite([
         ModelVisualizer,
         BoundingSphere,
         Cartesian3,
+        defined,
         DistanceDisplayCondition,
         JulianDate,
         Matrix4,
@@ -52,7 +53,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
     });
 
     it('constructor throws if no scene is passed.', function() {
@@ -80,10 +83,11 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new ModelVisualizer(scene, entityCollection);
+        visualizer = new ModelVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no model does not create one.', function() {

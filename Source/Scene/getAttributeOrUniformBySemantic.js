@@ -1,5 +1,7 @@
-/*global define*/
-define([], function() {
+define([
+        '../Core/defined'
+    ], function(
+        defined) {
     'use strict';
 
     /**
@@ -9,6 +11,7 @@ define([], function() {
      */
     function getAttributeOrUniformBySemantic(gltf, semantic) {
         var techniques = gltf.techniques;
+        var parameter;
         for (var techniqueName in techniques) {
             if (techniques.hasOwnProperty(techniqueName)) {
                 var technique = techniques[techniqueName];
@@ -17,14 +20,16 @@ define([], function() {
                 var uniforms = technique.uniforms;
                 for (var attributeName in attributes) {
                     if (attributes.hasOwnProperty(attributeName)) {
-                        if (parameters[attributes[attributeName]].semantic === semantic) {
+                        parameter = parameters[attributes[attributeName]];
+                        if (defined(parameter) && parameter.semantic === semantic) {
                             return attributeName;
                         }
                     }
                 }
                 for (var uniformName in uniforms) {
                     if (uniforms.hasOwnProperty(uniformName)) {
-                        if (parameters[uniforms[uniformName]].semantic === semantic) {
+                        parameter = parameters[uniforms[uniformName]];
+                        if (defined(parameter) && parameter.semantic === semantic) {
                             return uniformName;
                         }
                     }

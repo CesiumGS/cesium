@@ -1,44 +1,47 @@
-/*global define*/
 define([
-    '../ThirdParty/when',
-    './Credit',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Event',
-    './GeographicTilingScheme',
-    './GoogleEarthEnterpriseMetadata',
-    './GoogleEarthEnterpriseTerrainData',
-    './HeightmapTerrainData',
-    './JulianDate',
-    './loadArrayBuffer',
-    './Math',
-    './Rectangle',
-    './RuntimeError',
-    './TaskProcessor',
-    './throttleRequestByServer',
-    './TileProviderError'
-], function(
-    when,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    GeographicTilingScheme,
-    GoogleEarthEnterpriseMetadata,
-    GoogleEarthEnterpriseTerrainData,
-    HeightmapTerrainData,
-    JulianDate,
-    loadArrayBuffer,
-    CesiumMath,
-    Rectangle,
-    RuntimeError,
-    TaskProcessor,
-    throttleRequestByServer,
-    TileProviderError) {
+        '../ThirdParty/when',
+        './Credit',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Event',
+        './GeographicTilingScheme',
+        './GoogleEarthEnterpriseMetadata',
+        './GoogleEarthEnterpriseTerrainData',
+        './HeightmapTerrainData',
+        './JulianDate',
+        './loadArrayBuffer',
+        './Math',
+        './Rectangle',
+        './Request',
+        './RequestState',
+        './RequestType',
+        './RuntimeError',
+        './TaskProcessor',
+        './TileProviderError'
+    ], function(
+        when,
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        GeographicTilingScheme,
+        GoogleEarthEnterpriseMetadata,
+        GoogleEarthEnterpriseTerrainData,
+        HeightmapTerrainData,
+        JulianDate,
+        loadArrayBuffer,
+        CesiumMath,
+        Rectangle,
+        Request,
+        RequestState,
+        RequestType,
+        RuntimeError,
+        TaskProcessor,
+        TileProviderError) {
     'use strict';
 
     var TerrainState = {
@@ -152,6 +155,7 @@ define([
 
         this._terrainCache = new TerrainCache();
         this._terrainPromises = {};
+        this._terrainRequests = {};
 
         this._errorEvent = new Event();
 
@@ -179,7 +183,7 @@ define([
     defineProperties(GoogleEarthEnterpriseTerrainProvider.prototype, {
         /**
          * Gets the name of the Google Earth Enterprise server url hosting the imagery.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {String}
          * @readonly
          */
@@ -191,7 +195,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Proxy}
          * @readonly
          */
@@ -203,8 +207,8 @@ define([
 
         /**
          * Gets the tiling scheme used by this provider.  This function should
-         * not be called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {TilingScheme}
          * @readonly
          */
@@ -224,7 +228,7 @@ define([
          * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
          * are passed an instance of {@link TileProviderError}.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Event}
          * @readonly
          */
@@ -236,7 +240,7 @@ define([
 
         /**
          * Gets a value indicating whether or not the provider is ready for use.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -248,7 +252,7 @@ define([
 
         /**
          * Gets a promise that resolves to true when the provider is ready for use.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Promise.<Boolean>}
          * @readonly
          */
@@ -260,8 +264,8 @@ define([
 
         /**
          * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-         * the source of the terrain.  This function should not be called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * the source of the terrain.  This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Credit}
          * @readonly
          */
@@ -275,8 +279,8 @@ define([
          * Gets a value indicating whether or not the provider includes a water mask.  The water mask
          * indicates which areas of the globe are water rather than land, so they can be rendered
          * as a reflective surface with animated waves.  This function should not be
-         * called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Boolean}
          */
         hasWaterMask : {
@@ -287,8 +291,8 @@ define([
 
         /**
          * Gets a value indicating whether or not the requested tiles include vertex normals.
-         * This function should not be called before {@link GoogleEarthEnterpriseProvider#ready} returns true.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * This function should not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {Boolean}
          */
         hasVertexNormals : {
@@ -300,9 +304,9 @@ define([
         /**
          * Gets an object that can be used to determine availability of terrain from this provider, such as
          * at points and in rectangles.  This function should not be called before
-         * {@link GoogleEarthEnterpriseProvider#ready} returns true.  This property may be undefined if availability
+         * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  This property may be undefined if availability
          * information is not available.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseTerrainProvider.prototype
          * @type {TileAvailability}
          */
         availability : {
@@ -333,23 +337,21 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link GoogleEarthEnterpriseProvider#ready} returns true.  The result must include terrain data and
+     * {@link GoogleEarthEnterpriseTerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      *
-     * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseProvider#ready}
+     * @exception {DeveloperError} This function must not be called before {@link GoogleEarthEnterpriseTerrainProvider#ready}
      *            returns true.
      */
-    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    GoogleEarthEnterpriseTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -434,23 +436,22 @@ define([
 
         // Load that terrain
         var terrainPromises = this._terrainPromises;
+        var terrainRequests = this._terrainRequests;
         var url = buildTerrainUrl(this, q, terrainVersion);
-        var promise;
+        var sharedPromise;
+        var sharedRequest;
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
-            promise = terrainPromises[q];
+            sharedPromise = terrainPromises[q];
+            sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
-            var requestPromise;
-            throttleRequests = defaultValue(throttleRequests, true);
-            if (throttleRequests) {
-                requestPromise = throttleRequestByServer(url, loadArrayBuffer);
-                if (!defined(requestPromise)) {
-                    return undefined; // Throttled
-                }
-            } else {
-                requestPromise = loadArrayBuffer(url);
+            sharedRequest = request;
+            var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
+
+            if (!defined(requestPromise)) {
+                return undefined; // Throttled
             }
 
-            promise = requestPromise
+            sharedPromise = requestPromise
                 .then(function(terrain) {
                     if (defined(terrain)) {
                         return taskProcessor.scheduleTask({
@@ -482,22 +483,20 @@ define([
                     }
 
                     return when.reject(new RuntimeError('Failed to load terrain.'));
-                })
-                .otherwise(function(error) {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(error);
                 });
 
-            terrainPromises[q] = promise; // Store promise without delete from terrainPromises
+            terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
+            terrainRequests[q] = sharedRequest;
 
             // Set promise so we remove from terrainPromises just one time
-            promise = promise
+            sharedPromise = sharedPromise
                 .always(function() {
                     delete terrainPromises[q];
+                    delete terrainRequests[q];
                 });
         }
 
-        return promise
+        return sharedPromise
             .then(function() {
                 var buffer = terrainCache.get(quadKey);
                 if (defined(buffer)) {
@@ -509,10 +508,17 @@ define([
                         negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
                         negativeElevationThreshold: metadata.negativeAltitudeThreshold
                     });
-                } else {
-                    info.terrainState = TerrainState.NONE;
-                    return when.reject(new RuntimeError('Failed to load terrain.'));
                 }
+
+                return when.reject(new RuntimeError('Failed to load terrain.'));
+            })
+            .otherwise(function(error) {
+                if (sharedRequest.state === RequestState.CANCELLED) {
+                    request.state = sharedRequest.state;
+                    return when.reject(error);
+                }
+                info.terrainState = TerrainState.NONE;
+                return when.reject(error);
             });
     };
 
@@ -569,7 +575,12 @@ define([
 
         if (metadata.isValid(quadKey)) {
             // We will need this tile, so request metadata and return false for now
-            metadata.populateSubtree(x, y, level);
+            var request = new Request({
+                throttle : true,
+                throttleByServer : true,
+                type : RequestType.TERRAIN
+            });
+            metadata.populateSubtree(x, y, level, request);
         }
         return false;
     };

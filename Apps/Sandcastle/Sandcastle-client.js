@@ -13,9 +13,8 @@
             return 'null';
         } else if (defined(value)) {
             return value.toString();
-        } else {
-            return 'undefined';
         }
+        return 'undefined';
     }
 
     console.originalLog = console.log;
@@ -62,10 +61,12 @@
                         lineEnd1 = lineEnd2;
                     }
                     if (lineEnd1 > lineStart) {
+                        /*eslint-disable no-empty*/
                         try {
                             lineNumber = parseInt(stack.substring(lineStart + 1, lineEnd1), 10);
                         } catch (ex) {
                         }
+                        /*eslint-enable no-empty*/
                     }
                 }
             }
@@ -91,6 +92,7 @@
             }
             if (lineNumber < 1) {
                 // Change lineNumber to the local one for highlighting.
+                /*eslint-disable no-empty*/
                 try {
                     var pos = errorMsg.indexOf(Sandcastle.bucket + ':');
                     if (pos < 0) {
@@ -102,6 +104,7 @@
                     }
                 } catch (ex) {
                 }
+                /*eslint-enable no-empty*/
             }
             window.parent.postMessage({
                 'error' : errorMsg,
@@ -119,6 +122,7 @@
     };
 
     Sandcastle.declare = function(obj) {
+        /*eslint-disable no-empty*/
         try {
             //Browsers such as IE don't have a stack property until you actually throw the error.
             var stack = '';
@@ -147,6 +151,7 @@
             }
         } catch (ex) {
         }
+        /*eslint-enable no-empty*/
     };
 
     Sandcastle.highlight = function(obj) {

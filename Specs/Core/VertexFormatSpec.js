@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'

@@ -1,18 +1,23 @@
-/*global define*/
 define([
         '../ThirdParty/when',
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Request',
         './RequestErrorEvent',
+        './RequestScheduler',
         './RuntimeError',
         './TrustedServers'
     ], function(
         when,
+        Check,
         defaultValue,
         defined,
         DeveloperError,
+        Request,
         RequestErrorEvent,
+        RequestScheduler,
         RuntimeError,
         TrustedServers) {
     'use strict';
@@ -26,13 +31,14 @@ define([
      * @exports loadWithXhr
      *
      * @param {Object} options Object with the following properties:
-     * @param {String|Promise.<String>} options.url The URL of the data, or a promise for the URL.
+     * @param {String} options.url The URL of the data.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
+     * @param {Request} [options.request] The request object.
+     * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -57,24 +63,32 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.url)) {
-            throw new DeveloperError('options.url is required.');
-        }
+        Check.defined('options.url', options.url);
         //>>includeEnd('debug');
+
+        var url = options.url;
 
         var responseType = options.responseType;
         var method = defaultValue(options.method, 'GET');
         var data = options.data;
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
+        url = defaultValue(url, options.url);
 
-        return when(options.url, function(url) {
+        var request = defined(options.request) ? options.request : new Request();
+        request.url = url;
+        request.requestFunction = function() {
             var deferred = when.defer();
-
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
-
+            var xhr = loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            if (defined(xhr) && defined(xhr.abort)) {
+                request.cancelFunction = function() {
+                    xhr.abort();
+                };
+            }
             return deferred.promise;
-        });
+        };
+
+        return RequestScheduler.request(request);
     }
 
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
@@ -192,6 +206,8 @@ define([
         };
 
         xhr.send(data);
+
+        return xhr;
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;
