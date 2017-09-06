@@ -203,6 +203,7 @@ define([
      * Computes a rotation from the given heading, pitch and roll angles in the mathematical common sense. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
+     * This Quaternion.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Quaternion.fromHeadingPitchRoll in 1.43.
      *
      * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -212,7 +213,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Quaternion.fromDirectHeadingPitchRoll', 'This Quaternion.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Quaternion.fromHeadingPitchRoll in 1.43.');
 
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
         scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);

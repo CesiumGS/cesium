@@ -344,7 +344,8 @@ define([
     };
 
     /**
-     * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense
+     * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense.
+     * This Matrix3.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Matrix3.fromHeadingPitchRoll in 1.43.
      *
      * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -354,7 +355,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Matrix3.fromDirectHeadingPitchRoll', 'This Matrix3.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Matrix3.fromHeadingPitchRoll in 1.43.');
 
         var cosTheta = Math.cos(headingPitchRoll.pitch);
         var cosPsi = Math.cos(headingPitchRoll.heading);
