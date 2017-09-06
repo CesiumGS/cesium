@@ -461,7 +461,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.skipLevelOfDetail = false;//defaultValue(options.skipLevelOfDetail, true);
+        this.skipLevelOfDetail = defaultValue(options.skipLevelOfDetail, true);
 
         /**
          * The screen space error that must be reached before skipping levels of detail.
