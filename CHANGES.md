@@ -1,5 +1,8 @@
 Change Log
 ==========
+### 1.38 - 2017-10-01
+* Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon (https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
+
 ### 1.37 - 2017-09-01
 
 * Breaking changes

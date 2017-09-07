@@ -1111,10 +1111,6 @@ define([
             entity.billboard = billboard;
         }
 
-        if (!defined(billboard.image)) {
-            billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-        }
-
         var scale = 1.0;
         if (defined(billboard.scale)) {
             scale = billboard.scale.getValue();
