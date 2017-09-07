@@ -1166,6 +1166,41 @@ defineSuite([
         animations.animationRemoved.removeEventListener(spyRemove);
     });
 
+    it('adds an animation by index', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.add({
+            index : 1
+        });
+        expect(a).toBeDefined();
+        expect(a.name).toEqual('animation_1');
+        animations.remove(a);
+    });
+
+    it('add throws when name and index are not defined', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add();
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when index is invalid', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : -1
+            });
+        }).toThrowDeveloperError();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : 2
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('add throws when model is not loaded', function() {
         var m = new Model();
         expect(function() {

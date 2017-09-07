@@ -99,7 +99,8 @@ define([
      * </p>
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.name The glTF animation name that identifies the animation.
+     * @param {String} [options.name] The glTF animation name that identifies the animation. Must be defined if <code>options.id</code> is <code>undefined</code>.
+     * @param {Number} [options.index] The glTF animation index that identifies the animation. Must be defined if <code>options.name</code> is <code>undefined</code>.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.delay=0.0] The delay, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
@@ -111,16 +112,23 @@ define([
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyPromise} to resolve.
      * @exception {DeveloperError} options.name must be a valid animation name.
+     * @exception {DeveloperError} options.index must be a valid animation index.
+     * @exception {DeveloperError} Either options.name or options.index must be defined.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
-     * // Example 1. Add an animation
+     * // Example 1. Add an animation by name
      * model.activeAnimations.add({
      *   name : 'animation name'
      * });
      *
+     * // Example 2. Add an animation by index
+     * model.activeAnimations.add({
+     *   index : 0
+     * });
+     *
      * @example
-     * // Example 2. Add an animation and provide all properties and events
+     * // Example 3. Add an animation and provide all properties and events
      * var startTime = Cesium.JulianDate.now();
      *
      * var animation = model.activeAnimations.add({
@@ -154,13 +162,20 @@ define([
         if (!defined(animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
-        if (!defined(options.name)) {
-            throw new DeveloperError('options.name must be defined.');
+        if (!defined(options.name) && !defined(options.index)) {
+            throw new DeveloperError('Either options.name or options.index must be defined.');
         }
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
             throw new DeveloperError('options.speedup must be greater than zero.');
         }
+        if (defined(options.index) && (options.index >= animations.length || options.index < 0)) {
+            throw new DeveloperError('options.index must be a valid animation index.');
+        }
         //>>includeEnd('debug');
+
+        if (defined(options.index)) {
+            return add(this, options.index, options);
+        }
 
         // Find the index of the animation with the given name
         var index;
