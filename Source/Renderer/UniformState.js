@@ -1016,7 +1016,7 @@ define([
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
 
         // Convert the relative imagerySplitPosition to absolute pixel coordinates
-        this._imagerySplitPosition = frameState.imagerySplitPosition * canvas.clientWidth;
+        this._imagerySplitPosition = frameState.imagerySplitPosition * frameState.context.drawingBufferWidth;
         var fov = camera.frustum.fov;
         var viewport = this._viewport;
         var pixelSizePerMeter;

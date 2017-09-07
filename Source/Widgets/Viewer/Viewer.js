@@ -5,7 +5,6 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/deprecationWarning',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
@@ -51,7 +50,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -404,11 +402,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var scene3DOnly = defaultValue(options.scene3DOnly, false);
 
-        var deprecatedClock = options.clock;
-        if (defined(deprecatedClock)) {
-            deprecationWarning('Viewer.options.clock', 'Passing options.clock when creating a new Viewer instance was deprecated in Cesium 1.34 and will be removed in Cesium 1.37, pass options.clockViewModel instead.');
-        }
-
         var clock;
         var clockViewModel;
         var destroyClockViewModel = false;
@@ -416,7 +409,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clockViewModel = options.clockViewModel;
             clock = clockViewModel.clock;
         } else {
-            clock = defined(deprecatedClock) ? deprecatedClock : new Clock();
+            clock = new Clock();
             clockViewModel = new ClockViewModel(clock);
             destroyClockViewModel = true;
         }
