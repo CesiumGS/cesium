@@ -108,8 +108,9 @@ define([
           frame1 === frame2;
     }
 
-    function frameParents(frame) {
-        var frames = [];
+    function frameParents(frame, resultArray) {
+        var frames = resultArray;
+        frames.length = 0;
         while (defined(frame)) {
             frames.unshift(frame);
             frame = frame.position && frame.position.referenceFrame;
@@ -146,6 +147,91 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchQuaternion = new Quaternion();
 
+    var scratchArray1 = [];
+    var scratchArray2 = [];
+
+    var t;
+
+    var inputPositionAccumulator = function (accumulatedPositionValue, frame) {
+        if (!defined(accumulatedPositionValue)) {
+            return accumulatedPositionValue;
+        }
+
+        var framePositionProperty = frame.position;
+        if (!defined(framePositionProperty)) {
+            return undefined;
+        }
+
+        var frameReferenceFrame = framePositionProperty.referenceFrame;
+        var framePositionValue = framePositionProperty.getValueInReferenceFrame(t, frameReferenceFrame, scratchCartesian3);
+        if (!defined(framePositionValue)) {
+            return undefined;
+        }
+
+        var frameOrientationProperty = frame.orientation;
+        if (defined(frameOrientationProperty)) {
+            var frameOrientationValue = frameOrientationProperty.getValue(t, scratchQuaternion);
+            if (!defined(frameOrientationValue)) {
+                return undefined;
+            }
+
+            Matrix3.fromQuaternion(frameOrientationValue, scratchMatrix3);
+            Matrix3.multiplyByVector(scratchMatrix3, accumulatedPositionValue, accumulatedPositionValue);
+            return Cartesian3.add(framePositionValue, accumulatedPositionValue, accumulatedPositionValue);
+        }
+
+        return Cartesian3.add(framePositionValue, accumulatedPositionValue, accumulatedPositionValue);
+    };
+
+    var outputPositionAccumulator = function (accumulatedPositionValue, frame) {
+        if (!defined(accumulatedPositionValue)) {
+            return accumulatedPositionValue;
+        }
+
+        var framePositionProperty = frame.position;
+        if (!defined(framePositionProperty)) {
+            return undefined;
+        }
+
+        var frameReferenceFrame = framePositionProperty.referenceFrame;
+        var framePositionValue = framePositionProperty.getValueInReferenceFrame(t, frameReferenceFrame, scratchCartesian3);
+        if (!defined(framePositionValue)) {
+            return undefined;
+        }
+
+        accumulatedPositionValue = Cartesian3.subtract(accumulatedPositionValue, framePositionValue, accumulatedPositionValue);
+
+        var frameOrientationProperty = frame.orientation;
+        if (defined(frameOrientationProperty)) {
+            var frameOrientationValue = frameOrientationProperty.getValue(t, scratchQuaternion);
+            if (!defined(frameOrientationValue)) {
+                return undefined;
+            }
+
+            Quaternion.conjugate(frameOrientationValue, frameOrientationValue);
+            Matrix3.fromQuaternion(frameOrientationValue, scratchMatrix3);
+            Matrix3.multiplyByVector(scratchMatrix3, accumulatedPositionValue, accumulatedPositionValue);
+        }
+
+        return accumulatedPositionValue;
+    };
+
+    var reduce = function(array, callback, initialValue) {
+        var nextValue = initialValue;
+        for (var i = 0; i < array.length; i++) {
+            nextValue = callback(nextValue, array[i]);
+        }
+        return nextValue;
+    }
+
+    var reduceRight = function(array, callback, initialValue) {
+        var nextValue = initialValue;
+        for (var i = array.length-1; i > -1; i--) {
+            nextValue = callback(nextValue, array[i]);
+        }
+        return nextValue;
+    }
+
     /**
      * @private
      */
@@ -165,85 +251,24 @@ define([
           return undefined;
       }
 
-      var inputFrameParents = frameParents(inputFrame);
-      var outputFrameParents = frameParents(outputFrame);
+      t = time;
+      var inputFrameParents = frameParents(inputFrame, scratchArray1);
+      var outputFrameParents = frameParents(outputFrame, scratchArray2);
       var lcaIndex = lowestCommonAncestor(inputFrameParents, outputFrameParents);
       var lcaFrame = inputFrameParents[lcaIndex];
 
-      var inputPositionAccumulator = function (accumulatedPositionValue, frame) {
-          if (!defined(accumulatedPositionValue)) {
-              return accumulatedPositionValue;
-          }
-
-          var framePositionProperty = frame.position;
-          if (!defined(framePositionProperty)) {
-              return undefined;
-          }
-
-          var frameReferenceFrame = framePositionProperty.referenceFrame;
-          var framePositionValue = framePositionProperty.getValueInReferenceFrame(time, frameReferenceFrame, scratchCartesian3);
-          if (!defined(framePositionValue)) {
-              return undefined;
-          }
-
-          var frameOrientationProperty = frame.orientation;
-          if (defined(frameOrientationProperty)) {
-              var frameOrientationValue = frameOrientationProperty.getValue(time, scratchQuaternion);
-              if (!defined(frameOrientationValue)) {
-                  return undefined;
-              }
-
-              Matrix3.fromQuaternion(frameOrientationValue, scratchMatrix3);
-              Matrix3.multiplyByVector(scratchMatrix3, accumulatedPositionValue, accumulatedPositionValue);
-              return Cartesian3.add(framePositionValue, accumulatedPositionValue, accumulatedPositionValue);
-          }
-
-          return Cartesian3.add(framePositionValue, accumulatedPositionValue, accumulatedPositionValue);
-      };
-
-      var outputPositionAccumulator = function (accumulatedPositionValue, frame) {
-          if (!defined(accumulatedPositionValue)) {
-              return accumulatedPositionValue;
-          }
-
-          var framePositionProperty = frame.position;
-          if (!defined(framePositionProperty)) {
-              return undefined;
-          }
-
-          var frameReferenceFrame = framePositionProperty.referenceFrame;
-          var framePositionValue = framePositionProperty.getValueInReferenceFrame(time, frameReferenceFrame, scratchCartesian3);
-          if (!defined(framePositionValue)) {
-              return undefined;
-          }
-
-          accumulatedPositionValue = Cartesian3.subtract(accumulatedPositionValue, framePositionValue, accumulatedPositionValue);
-
-          var frameOrientationProperty = frame.orientation;
-          if (defined(frameOrientationProperty)) {
-              var frameOrientationValue = frameOrientationProperty.getValue(time, scratchQuaternion);
-              if (!defined(frameOrientationValue)) {
-                  return undefined;
-              }
-
-              Quaternion.conjugate(frameOrientationValue, frameOrientationValue);
-              Matrix3.fromQuaternion(frameOrientationValue, scratchMatrix3);
-              Matrix3.multiplyByVector(scratchMatrix3, accumulatedPositionValue, accumulatedPositionValue);
-          }
-
-          return accumulatedPositionValue;
-      };
-
       if (defined(lcaFrame)) {
-          inputFrameParents = inputFrameParents.slice(lcaIndex+1);
-          outputFrameParents = outputFrameParents.slice(lcaIndex+1);
+          for (var i=0; i < lcaIndex+1; i++) {
+            inputFrameParents.shift();
+            outputFrameParents.shift();
+          }
 
-          var lcaFrameValue = inputFrameParents.reduceRight(inputPositionAccumulator, Cartesian3.clone(value, result));
+          var lcaFrameValue = reduceRight(inputFrameParents, inputPositionAccumulator, Cartesian3.clone(value, result));
           if (!defined(lcaFrameValue)) {
               return undefined;
           }
 
-          return outputFrameParents.reduce(outputPositionAccumulator, lcaFrameValue);
+          return reduce(outputFrameParents, outputPositionAccumulator, lcaFrameValue);
       }
 
       var inputRootFrame = inputFrameParents.shift();
@@ -251,24 +276,24 @@ define([
       var fixedFrameValue, inertialFrameValue;
 
       if (inputRootFrame === ReferenceFrame.INERTIAL && outputRootFrame === ReferenceFrame.FIXED) {
-          inertialFrameValue = inputFrameParents.reduceRight(inputPositionAccumulator, Cartesian3.clone(value, result));
+          inertialFrameValue = reduceRight(inputFrameParents, inputPositionAccumulator, Cartesian3.clone(value, result));
           if (!defined(inertialFrameValue)) {
               return undefined;
           }
 
           fixedFrameValue = Matrix3.multiplyByVector(getIcrfToFixed(time), inertialFrameValue, result);
-          return outputFrameParents.reduce(outputPositionAccumulator, fixedFrameValue);
+          return reduce(outputFrameParents, outputPositionAccumulator, fixedFrameValue);
       }
 
       if (inputRootFrame === ReferenceFrame.FIXED && outputRootFrame === ReferenceFrame.INERTIAL) {
-          fixedFrameValue = inputFrameParents.reduceRight(inputPositionAccumulator, Cartesian3.clone(value, result));
+          fixedFrameValue = reduceRight(inputFrameParents, inputPositionAccumulator, Cartesian3.clone(value, result))
           if (!defined(fixedFrameValue)) {
               return undefined;
           }
 
           var fixedToIcrf = Matrix3.transpose(getIcrfToFixed(time), scratchMatrix3);
           inertialFrameValue = Matrix3.multiplyByVector(fixedToIcrf, fixedFrameValue, result);
-          return outputFrameParents.reduce(outputPositionAccumulator, inertialFrameValue);
+          return reduce(outputFrameParents, outputPositionAccumulator, inertialFrameValue)
       }
 
       return undefined;

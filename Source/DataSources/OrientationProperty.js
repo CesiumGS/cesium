@@ -80,8 +80,9 @@ define([
             frame1 === frame2;
     }
 
-    function frameParents(frame) {
-        var frames = [];
+    function frameParents(frame, resultArray) {
+        var frames = resultArray;
+        frames.length = 0;
         while (defined(frame)) {
             frames.unshift(frame);
             frame = frame.position && frame.position.referenceFrame;
@@ -115,107 +116,129 @@ define([
         return Quaternion.fromRotationMatrix(icrfToFixedRotation, scratchIcrfToFixed);
     }
 
+    var t;
     var scratchQuaternion = new Quaternion();
+    var scratchArray1 = [];
+    var scratchArray2 = [];
+
+    var inputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
+        if (!defined(accumulatedOrientationValue)) {
+            return accumulatedOrientationValue;
+        }
+
+        var frameOrientationProperty = frame.orientation;
+        if (!defined(frameOrientationProperty)) {
+            return undefined;
+        }
+
+        var frameOrientationValue = frameOrientationProperty.getValue(t, scratchQuaternion);
+        if (!defined(frameOrientationValue)) {
+            return undefined;
+        }
+
+        return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
+    };
+
+    var outputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
+        if (!defined(accumulatedOrientationValue)) {
+            return accumulatedOrientationValue;
+        }
+
+        var frameOrientationProperty = frame.orientation;
+        if (!defined(frameOrientationProperty)) {
+            return undefined;
+        }
+
+        var frameOrientationValue = frameOrientationProperty.getValue(t, scratchQuaternion);
+        if (!defined(frameOrientationValue)) {
+            return undefined;
+        }
+
+        Quaternion.conjugate(frameOrientationValue, frameOrientationValue);
+        return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
+    };
+
+    var reduce = function(array, callback, initialValue) {
+        var nextValue = initialValue;
+        for (var i = 0; i < array.length; i++) {
+            nextValue = callback(nextValue, array[i]);
+        }
+        return nextValue;
+    }
+
+    var reduceRight = function(array, callback, initialValue) {
+        var nextValue = initialValue;
+        for (var i = array.length-1; i > -1; i--) {
+            nextValue = callback(nextValue, array[i]);
+        }
+        return nextValue;
+    }
 
     /**
      * @private
      */
     OrientationProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
-      if (!defined(value)) {
-          return value;
-      }
-      if (!defined(result)) {
-          result = new Quaternion();
-      }
+        if (!defined(value)) {
+            return value;
+        }
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
 
-      if (inputFrame === outputFrame) {
-          return Quaternion.clone(value, result);
-      }
+        if (inputFrame === outputFrame) {
+            return Quaternion.clone(value, result);
+        }
 
-      if (!defined(inputFrame) || !defined(outputFrame)) {
-          return undefined;
-      }
-
-      var inputFrameParents = frameParents(inputFrame);
-      var outputFrameParents = frameParents(outputFrame);
-      var lcaIndex = lowestCommonAncestor(inputFrameParents, outputFrameParents);
-      var lcaFrame = inputFrameParents[lcaIndex];
-
-      var inputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
-          if (!defined(accumulatedOrientationValue)) {
-              return accumulatedOrientationValue;
-          }
-
-          var frameOrientationProperty = frame.orientation;
-          if (!defined(frameOrientationProperty)) {
-              return undefined;
-          }
-
-          var frameOrientationValue = frameOrientationProperty.getValue(time, scratchQuaternion);
-          if (!defined(frameOrientationValue)) {
-              return undefined;
-          }
-
-          return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
-      };
-
-      var outputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
-          if (!defined(accumulatedOrientationValue)) {
-              return accumulatedOrientationValue;
-          }
-
-          var frameOrientationProperty = frame.orientation;
-          if (!defined(frameOrientationProperty)) {
-              return undefined;
-          }
-
-          var frameOrientationValue = frameOrientationProperty.getValue(time, scratchQuaternion);
-          if (!defined(frameOrientationValue)) {
-              return undefined;
-          }
-
-          Quaternion.conjugate(frameOrientationValue, frameOrientationValue);
-          return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
-      };
-
-      if (defined(lcaFrame)) {
-          inputFrameParents = inputFrameParents.slice(lcaIndex+1);
-          outputFrameParents = outputFrameParents.slice(lcaIndex+1);
-
-          var lcaFrameValue = inputFrameParents.reduceRight(inputOrientationAccumulator, Quaternion.clone(value, result));
-          if (!defined(lcaFrameValue)) {
+        if (!defined(inputFrame) || !defined(outputFrame)) {
             return undefined;
-          }
+        }
 
-          return outputFrameParents.reduce(outputOrientationAccumulator, lcaFrameValue);
-      }
+        t = time;
+        var inputFrameParents = frameParents(inputFrame, scratchArray1);
+        var outputFrameParents = frameParents(outputFrame, scratchArray2);
+        var lcaIndex = lowestCommonAncestor(inputFrameParents, outputFrameParents);
+        var lcaFrame = inputFrameParents[lcaIndex];
 
-      var inputRootFrame = inputFrameParents.shift();
-      var outputRootFrame = outputFrameParents.shift();
-      var fixedFrameValue, inertialFrameValue;
+        if (defined(lcaFrame)) {
+            for (var i=0; i < lcaIndex+1; i++) {
+                inputFrameParents.shift();
+                outputFrameParents.shift();
+            }
 
-      if (inputRootFrame === ReferenceFrame.INERTIAL && outputRootFrame === ReferenceFrame.FIXED) {
-          inertialFrameValue = inputFrameParents.reduceRight(inputOrientationAccumulator, Quaternion.clone(value, result));
-          if (!defined(inertialFrameValue)) {
-            return undefined;
-          }
+            var lcaFrameValue = reduceRight(inputFrameParents, inputOrientationAccumulator, Quaternion.clone(value, result));
+            if (!defined(lcaFrameValue)) {
+                return undefined;
+            }
 
-          fixedFrameValue = Quaternion.multiply(getIcrfToFixed(time), inertialFrameValue, result);
-          return outputFrameParents.reduce(outputOrientationAccumulator, fixedFrameValue);
-      }
+            return reduce(outputFrameParents, outputOrientationAccumulator, lcaFrameValue);
+        }
 
-      if (inputRootFrame === ReferenceFrame.FIXED && outputRootFrame === ReferenceFrame.INERTIAL) {
-          fixedFrameValue = inputFrameParents.reduceRight(inputOrientationAccumulator, Quaternion.clone(value, result));
-          if (!defined(fixedFrameValue)) {
-            return undefined;
-          }
+        var inputRootFrame = inputFrameParents.shift();
+        var outputRootFrame = outputFrameParents.shift();
+        var fixedFrameValue, inertialFrameValue;
 
-          var fixedToIcrf = Quaternion.conjugate(getIcrfToFixed(time), scratchQuaternion);
-          inertialFrameValue = Quaternion.multiply(fixedToIcrf, fixedFrameValue, result);
-          return outputFrameParents.reduce(outputOrientationAccumulator, inertialFrameValue);
-      }
+        if (inputRootFrame === ReferenceFrame.INERTIAL && outputRootFrame === ReferenceFrame.FIXED) {
+            inertialFrameValue = reduceRight(inputFrameParents, inputOrientationAccumulator, Quaternion.clone(value, result));
+            if (!defined(inertialFrameValue)) {
+                return undefined;
+            }
 
-      return undefined;
+            fixedFrameValue = Quaternion.multiply(getIcrfToFixed(time), inertialFrameValue, result);
+            return reduce(outputFrameParents, outputOrientationAccumulator, fixedFrameValue);
+        }
+
+        if (inputRootFrame === ReferenceFrame.FIXED && outputRootFrame === ReferenceFrame.INERTIAL) {
+            fixedFrameValue = reduceRight(inputFrameParents, inputOrientationAccumulator, Quaternion.clone(value, result));
+            if (!defined(fixedFrameValue)) {
+                return undefined;
+            }
+
+            var fixedToIcrf = Quaternion.conjugate(getIcrfToFixed(time), scratchQuaternion);
+            inertialFrameValue = Quaternion.multiply(fixedToIcrf, fixedFrameValue, result);
+            return reduce(outputFrameParents, outputOrientationAccumulator, inertialFrameValue);
+        }
+
+        return undefined;
     };
 
     return OrientationProperty;
