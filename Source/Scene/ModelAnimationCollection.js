@@ -82,6 +82,16 @@ define([
         }
     });
 
+    function add(collection, index, options) {
+        var model = collection._model;
+        var animations = model._runtime.animations;
+        var animation = animations[index];
+        var scheduledAnimation = new ModelAnimation(options, model, animation);
+        collection._scheduledAnimations.push(scheduledAnimation);
+        collection.animationAdded.raiseEvent(model, scheduledAnimation);
+        return scheduledAnimation;
+    }
+
     /**
      * Creates and adds an animation with the specified initial properties to the collection.
      * <p>
@@ -144,24 +154,31 @@ define([
         if (!defined(animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
         }
-        //>>includeEnd('debug');
-
-        var animation = animations[options.name];
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(animation)) {
-            throw new DeveloperError('options.name must be a valid animation name.');
+        if (!defined(options.name)) {
+            throw new DeveloperError('options.name must be defined.');
         }
-
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
             throw new DeveloperError('options.speedup must be greater than zero.');
         }
         //>>includeEnd('debug');
 
-        var scheduledAnimation = new ModelAnimation(options, model, animation);
-        this._scheduledAnimations.push(scheduledAnimation);
-        this.animationAdded.raiseEvent(model, scheduledAnimation);
-        return scheduledAnimation;
+        // Find the index of the animation with the given name
+        var index;
+        var length = animations.length;
+        for (var i = 0; i < length; ++i) {
+            if (animations[i].name === options.name) {
+                index = i;
+                break;
+            }
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(index)) {
+            throw new DeveloperError('options.name must be a valid animation name.');
+        }
+        //>>includeEnd('debug');
+
+        return add(this, index, options);
     };
 
     /**
@@ -203,14 +220,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = clone(options);
-
         var scheduledAnimations = [];
-        var animationIds = this._model._animationIds;
-        var length = animationIds.length;
+        var model = this._model;
+        var animations = model._runtime.animations;
+        var length = animations.length;
         for (var i = 0; i < length; ++i) {
-            options.name = animationIds[i];
-            scheduledAnimations.push(this.add(options));
+            scheduledAnimations.push(add(this, i, options));
         }
         return scheduledAnimations;
     };
