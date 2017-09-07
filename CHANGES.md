@@ -1,5 +1,9 @@
 Change Log
 ==========
+### 1.38 - 2017-10-02
+
+* Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
+
 ### 1.37 - 2017-09-01
 
 * Breaking changes
