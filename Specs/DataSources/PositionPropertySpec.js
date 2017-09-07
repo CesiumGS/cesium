@@ -129,7 +129,7 @@ defineSuite([
 
     it('Works when input and output referenceFrame parameters have a root entity reference frame', function() {
         var rootFrame = new Entity();
-        
+
         var referenceFrame = new Entity();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000), rootFrame);
         var orientation = new Quaternion(0, 0, 1, 1);

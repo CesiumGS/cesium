@@ -152,7 +152,7 @@ define([
 
     var t;
 
-    var inputPositionAccumulator = function (accumulatedPositionValue, frame) {
+    function inputPositionAccumulator(accumulatedPositionValue, frame) {
         if (!defined(accumulatedPositionValue)) {
             return accumulatedPositionValue;
         }
@@ -181,9 +181,9 @@ define([
         }
 
         return Cartesian3.add(framePositionValue, accumulatedPositionValue, accumulatedPositionValue);
-    };
+    }
 
-    var outputPositionAccumulator = function (accumulatedPositionValue, frame) {
+    function outputPositionAccumulator(accumulatedPositionValue, frame) {
         if (!defined(accumulatedPositionValue)) {
             return accumulatedPositionValue;
         }
@@ -214,9 +214,9 @@ define([
         }
 
         return accumulatedPositionValue;
-    };
+    }
 
-    var reduce = function(array, callback, initialValue) {
+    function reduce(array, callback, initialValue) {
         var nextValue = initialValue;
         for (var i = 0; i < array.length; i++) {
             nextValue = callback(nextValue, array[i]);
@@ -224,7 +224,7 @@ define([
         return nextValue;
     }
 
-    var reduceRight = function(array, callback, initialValue) {
+    function reduceRight(array, callback, initialValue) {
         var nextValue = initialValue;
         for (var i = array.length-1; i > -1; i--) {
             nextValue = callback(nextValue, array[i]);
@@ -286,14 +286,14 @@ define([
       }
 
       if (inputRootFrame === ReferenceFrame.FIXED && outputRootFrame === ReferenceFrame.INERTIAL) {
-          fixedFrameValue = reduceRight(inputFrameParents, inputPositionAccumulator, Cartesian3.clone(value, result))
+          fixedFrameValue = reduceRight(inputFrameParents, inputPositionAccumulator, Cartesian3.clone(value, result));
           if (!defined(fixedFrameValue)) {
               return undefined;
           }
 
           var fixedToIcrf = Matrix3.transpose(getIcrfToFixed(time), scratchMatrix3);
           inertialFrameValue = Matrix3.multiplyByVector(fixedToIcrf, fixedFrameValue, result);
-          return reduce(outputFrameParents, outputPositionAccumulator, inertialFrameValue)
+          return reduce(outputFrameParents, outputPositionAccumulator, inertialFrameValue);
       }
 
       return undefined;

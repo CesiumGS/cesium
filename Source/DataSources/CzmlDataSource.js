@@ -796,12 +796,14 @@ define([
         var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
         var isReference = defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+        var property;
 
         if (!isReference) {
             var packetReferenceFrame = packetData.referenceFrame;
             if (defined(packetReferenceFrame)) {
                 referenceFrame = ReferenceFrame[packetReferenceFrame];
                 if (!defined(referenceFrame)) {
+                    property = object[propertyName];
                     var currentReferenceFrame = defined(property) && property.referenceFrame;
                     referenceFrame = makeReferenceEntity(entityCollection, packetReferenceFrame, currentReferenceFrame);
                 }
@@ -822,7 +824,7 @@ define([
             return;
         }
 
-        var property = object[propertyName];
+        property = object[propertyName];
 
         var epoch;
         var packetEpoch = packetData.epoch;

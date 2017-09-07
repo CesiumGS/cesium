@@ -11,7 +11,7 @@ define([
         DeveloperError,
         Event,
         Property) {
-    "use strict";
+    'use strict';
 
     function resolve(that) {
         var targetEntity = that._targetEntity;

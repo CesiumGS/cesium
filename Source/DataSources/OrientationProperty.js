@@ -15,7 +15,7 @@ define([
         Quaternion,
         ReferenceFrame,
         Transforms) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for all {@link Property} objects that define a
@@ -121,7 +121,7 @@ define([
     var scratchArray1 = [];
     var scratchArray2 = [];
 
-    var inputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
+    function inputOrientationAccumulator(accumulatedOrientationValue, frame) {
         if (!defined(accumulatedOrientationValue)) {
             return accumulatedOrientationValue;
         }
@@ -137,9 +137,9 @@ define([
         }
 
         return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
-    };
+    }
 
-    var outputOrientationAccumulator = function (accumulatedOrientationValue, frame) {
+    function outputOrientationAccumulator(accumulatedOrientationValue, frame) {
         if (!defined(accumulatedOrientationValue)) {
             return accumulatedOrientationValue;
         }
@@ -156,9 +156,9 @@ define([
 
         Quaternion.conjugate(frameOrientationValue, frameOrientationValue);
         return Quaternion.multiply(frameOrientationValue, accumulatedOrientationValue, accumulatedOrientationValue);
-    };
+    }
 
-    var reduce = function(array, callback, initialValue) {
+    function reduce(array, callback, initialValue) {
         var nextValue = initialValue;
         for (var i = 0; i < array.length; i++) {
             nextValue = callback(nextValue, array[i]);
@@ -166,7 +166,7 @@ define([
         return nextValue;
     }
 
-    var reduceRight = function(array, callback, initialValue) {
+    function reduceRight(array, callback, initialValue) {
         var nextValue = initialValue;
         for (var i = array.length-1; i > -1; i--) {
             nextValue = callback(nextValue, array[i]);
