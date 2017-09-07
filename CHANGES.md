@@ -1,5 +1,11 @@
 Change Log
 ==========
+
+* Modified `CzmlDataSource` to process reference frames of the format ‘#id’
+* Added `OrientationProperty` with `convertToReferenceFrame` to support entities as reference frames
+* Modified `convertToReferenceFrame` in `PositionProperty` to support entities as reference frames
+* Added `ReferenceEntity` to reference entities by id that have not yet been added to an `EntityCollection`
+
 ### 1.37 - 2017-09-01
 
 * Breaking changes
