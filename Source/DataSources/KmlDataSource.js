@@ -1,139 +1,139 @@
 define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/ClockRange',
-        '../Core/ClockStep',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/getAbsoluteUri',
-        '../Core/getExtensionFromUri',
-        '../Core/getFilenameFromUri',
-        '../Core/Iso8601',
-        '../Core/joinUrls',
-        '../Core/JulianDate',
-        '../Core/loadBlob',
-        '../Core/loadXML',
-        '../Core/Math',
-        '../Core/NearFarScalar',
-        '../Core/objectToQuery',
-        '../Core/oneTimeWarning',
-        '../Core/PinBuilder',
-        '../Core/PolygonHierarchy',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
-        '../Core/HeadingPitchRoll',
-        '../Core/HeadingPitchRange',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
-        '../Scene/LabelStyle',
-        '../Scene/SceneMode',
-        '../ThirdParty/Autolinker',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        '../ThirdParty/zip',
-        './BillboardGraphics',
-        './CompositePositionProperty',
-        './CorridorGraphics',
-        './DataSource',
-        './DataSourceClock',
-        './Entity',
-        './EntityCluster',
-        './EntityCollection',
-        './LabelGraphics',
-        './PathGraphics',
-        './PolygonGraphics',
-        './PolylineGraphics',
-        './PositionPropertyArray',
-        './RectangleGraphics',
-        './ReferenceProperty',
-        './SampledPositionProperty',
-        './ScaledPositionProperty',
-        './TimeIntervalCollectionProperty',
-        './WallGraphics',
-        './KmlLookAt',
-        './KmlCamera',
-        './KmlTour',
-        './KmlTourFlyTo',
-        './KmlTourWait'
-    ], function(
-        AssociativeArray,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ClockRange,
-        ClockStep,
-        Color,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Event,
-        getAbsoluteUri,
-        getExtensionFromUri,
-        getFilenameFromUri,
-        Iso8601,
-        joinUrls,
-        JulianDate,
-        loadBlob,
-        loadXML,
-        CesiumMath,
-        NearFarScalar,
-        objectToQuery,
-        oneTimeWarning,
-        PinBuilder,
-        PolygonHierarchy,
-        Rectangle,
-        RuntimeError,
-        TimeInterval,
-        TimeIntervalCollection,
-        HeadingPitchRoll,
-        HeadingPitchRange,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SceneMode,
-        Autolinker,
-        Uri,
-        when,
-        zip,
-        BillboardGraphics,
-        CompositePositionProperty,
-        CorridorGraphics,
-        DataSource,
-        DataSourceClock,
-        Entity,
-        EntityCluster,
-        EntityCollection,
-        LabelGraphics,
-        PathGraphics,
-        PolygonGraphics,
-        PolylineGraphics,
-        PositionPropertyArray,
-        RectangleGraphics,
-        ReferenceProperty,
-        SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionProperty,
-        WallGraphics,
-        KmlLookAt,
-        KmlCamera,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait) {
+    '../Core/AssociativeArray',
+    '../Core/BoundingRectangle',
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/ClockRange',
+    '../Core/ClockStep',
+    '../Core/Color',
+    '../Core/createGuid',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Ellipsoid',
+    '../Core/Event',
+    '../Core/getAbsoluteUri',
+    '../Core/getExtensionFromUri',
+    '../Core/getFilenameFromUri',
+    '../Core/Iso8601',
+    '../Core/joinUrls',
+    '../Core/JulianDate',
+    '../Core/loadBlob',
+    '../Core/loadXML',
+    '../Core/Math',
+    '../Core/NearFarScalar',
+    '../Core/objectToQuery',
+    '../Core/oneTimeWarning',
+    '../Core/PinBuilder',
+    '../Core/PolygonHierarchy',
+    '../Core/Rectangle',
+    '../Core/RuntimeError',
+    '../Core/TimeInterval',
+    '../Core/TimeIntervalCollection',
+    '../Core/HeadingPitchRoll',
+    '../Core/HeadingPitchRange',
+    '../Scene/HeightReference',
+    '../Scene/HorizontalOrigin',
+    '../Scene/LabelStyle',
+    '../Scene/SceneMode',
+    '../ThirdParty/Autolinker',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    '../ThirdParty/zip',
+    './BillboardGraphics',
+    './CompositePositionProperty',
+    './CorridorGraphics',
+    './DataSource',
+    './DataSourceClock',
+    './Entity',
+    './EntityCluster',
+    './EntityCollection',
+    './LabelGraphics',
+    './PathGraphics',
+    './PolygonGraphics',
+    './PolylineGraphics',
+    './PositionPropertyArray',
+    './RectangleGraphics',
+    './ReferenceProperty',
+    './SampledPositionProperty',
+    './ScaledPositionProperty',
+    './TimeIntervalCollectionProperty',
+    './WallGraphics',
+    './KmlLookAt',
+    './KmlCamera',
+    './KmlTour',
+    './KmlTourFlyTo',
+    './KmlTourWait'
+], function(
+    AssociativeArray,
+    BoundingRectangle,
+    Cartesian2,
+    Cartesian3,
+    Cartographic,
+    ClockRange,
+    ClockStep,
+    Color,
+    createGuid,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Ellipsoid,
+    Event,
+    getAbsoluteUri,
+    getExtensionFromUri,
+    getFilenameFromUri,
+    Iso8601,
+    joinUrls,
+    JulianDate,
+    loadBlob,
+    loadXML,
+    CesiumMath,
+    NearFarScalar,
+    objectToQuery,
+    oneTimeWarning,
+    PinBuilder,
+    PolygonHierarchy,
+    Rectangle,
+    RuntimeError,
+    TimeInterval,
+    TimeIntervalCollection,
+    HeadingPitchRoll,
+    HeadingPitchRange,
+    HeightReference,
+    HorizontalOrigin,
+    LabelStyle,
+    SceneMode,
+    Autolinker,
+    Uri,
+    when,
+    zip,
+    BillboardGraphics,
+    CompositePositionProperty,
+    CorridorGraphics,
+    DataSource,
+    DataSourceClock,
+    Entity,
+    EntityCluster,
+    EntityCollection,
+    LabelGraphics,
+    PathGraphics,
+    PolygonGraphics,
+    PolylineGraphics,
+    PositionPropertyArray,
+    RectangleGraphics,
+    ReferenceProperty,
+    SampledPositionProperty,
+    ScaledPositionProperty,
+    TimeIntervalCollectionProperty,
+    WallGraphics,
+    KmlLookAt,
+    KmlCamera,
+    KmlTour,
+    KmlTourFlyTo,
+    KmlTourWait) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -146,61 +146,61 @@ define([
     //in KMZ files. Eventually, we can make this configurable by the end user so they can add
     //there own content types if they have KMZ files that require it.
     var MimeTypes = {
-        avi : 'video/x-msvideo',
-        bmp : 'image/bmp',
-        bz2 : 'application/x-bzip2',
-        chm : 'application/vnd.ms-htmlhelp',
-        css : 'text/css',
-        csv : 'text/csv',
-        doc : 'application/msword',
-        dvi : 'application/x-dvi',
-        eps : 'application/postscript',
-        flv : 'video/x-flv',
-        gif : 'image/gif',
-        gz : 'application/x-gzip',
-        htm : 'text/html',
-        html : 'text/html',
-        ico : 'image/vnd.microsoft.icon',
-        jnlp : 'application/x-java-jnlp-file',
-        jpeg : 'image/jpeg',
-        jpg : 'image/jpeg',
-        m3u : 'audio/x-mpegurl',
-        m4v : 'video/mp4',
-        mathml : 'application/mathml+xml',
-        mid : 'audio/midi',
-        midi : 'audio/midi',
-        mov : 'video/quicktime',
-        mp3 : 'audio/mpeg',
-        mp4 : 'video/mp4',
-        mp4v : 'video/mp4',
-        mpeg : 'video/mpeg',
-        mpg : 'video/mpeg',
-        odp : 'application/vnd.oasis.opendocument.presentation',
-        ods : 'application/vnd.oasis.opendocument.spreadsheet',
-        odt : 'application/vnd.oasis.opendocument.text',
-        ogg : 'application/ogg',
-        pdf : 'application/pdf',
-        png : 'image/png',
-        pps : 'application/vnd.ms-powerpoint',
-        ppt : 'application/vnd.ms-powerpoint',
-        ps : 'application/postscript',
-        qt : 'video/quicktime',
-        rdf : 'application/rdf+xml',
-        rss : 'application/rss+xml',
-        rtf : 'application/rtf',
-        svg : 'image/svg+xml',
-        swf : 'application/x-shockwave-flash',
-        text : 'text/plain',
-        tif : 'image/tiff',
-        tiff : 'image/tiff',
-        txt : 'text/plain',
-        wav : 'audio/x-wav',
-        wma : 'audio/x-ms-wma',
-        wmv : 'video/x-ms-wmv',
-        xml : 'application/xml',
-        zip : 'application/zip',
+        avi: 'video/x-msvideo',
+        bmp: 'image/bmp',
+        bz2: 'application/x-bzip2',
+        chm: 'application/vnd.ms-htmlhelp',
+        css: 'text/css',
+        csv: 'text/csv',
+        doc: 'application/msword',
+        dvi: 'application/x-dvi',
+        eps: 'application/postscript',
+        flv: 'video/x-flv',
+        gif: 'image/gif',
+        gz: 'application/x-gzip',
+        htm: 'text/html',
+        html: 'text/html',
+        ico: 'image/vnd.microsoft.icon',
+        jnlp: 'application/x-java-jnlp-file',
+        jpeg: 'image/jpeg',
+        jpg: 'image/jpeg',
+        m3u: 'audio/x-mpegurl',
+        m4v: 'video/mp4',
+        mathml: 'application/mathml+xml',
+        mid: 'audio/midi',
+        midi: 'audio/midi',
+        mov: 'video/quicktime',
+        mp3: 'audio/mpeg',
+        mp4: 'video/mp4',
+        mp4v: 'video/mp4',
+        mpeg: 'video/mpeg',
+        mpg: 'video/mpeg',
+        odp: 'application/vnd.oasis.opendocument.presentation',
+        ods: 'application/vnd.oasis.opendocument.spreadsheet',
+        odt: 'application/vnd.oasis.opendocument.text',
+        ogg: 'application/ogg',
+        pdf: 'application/pdf',
+        png: 'image/png',
+        pps: 'application/vnd.ms-powerpoint',
+        ppt: 'application/vnd.ms-powerpoint',
+        ps: 'application/postscript',
+        qt: 'video/quicktime',
+        rdf: 'application/rdf+xml',
+        rss: 'application/rss+xml',
+        rtf: 'application/rtf',
+        svg: 'image/svg+xml',
+        swf: 'application/x-shockwave-flash',
+        text: 'text/plain',
+        tif: 'image/tiff',
+        tiff: 'image/tiff',
+        txt: 'text/plain',
+        wav: 'audio/x-wav',
+        wma: 'audio/x-ms-wma',
+        wmv: 'video/x-ms-wmv',
+        xml: 'application/xml',
+        zip: 'application/zip',
 
-        detectFromFilename : function(filename) {
+        detectFromFilename: function(filename) {
             var ext = filename.toLowerCase();
             ext = getExtensionFromUri(ext);
             return MimeTypes[ext];
@@ -209,10 +209,10 @@ define([
 
     var parser = new DOMParser();
     var autolinker = new Autolinker({
-        stripPrefix : false,
-        twitter : false,
-        email : false,
-        replaceFn : function(linker, match) {
+        stripPrefix: false,
+        twitter: false,
+        email: false,
+        replaceFn: function(linker, match) {
             if (!match.protocolUrlMatch) {
                 //Prevent matching of non-explicit urls.
                 //i.e. foo.id won't match but http://foo.id will
@@ -330,7 +330,9 @@ define([
             }
         }
 
-        entity = entityCollection.add(new Entity({id : id}));
+        entity = entityCollection.add(new Entity({
+            id: id
+        }));
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
             entity.kml = new KmlFeatureData();
@@ -387,10 +389,10 @@ define([
     var gxNamespaces = ['http://www.google.com/kml/ext/2.2'];
     var atomNamespaces = ['http://www.w3.org/2005/Atom'];
     var namespaces = {
-        kml : kmlNamespaces,
-        gx : gxNamespaces,
-        atom : atomNamespaces,
-        kmlgx : kmlNamespaces.concat(gxNamespaces)
+        kml: kmlNamespaces,
+        gx: gxNamespaces,
+        atom: atomNamespaces,
+        kmlgx: kmlNamespaces.concat(gxNamespaces)
     };
 
     function queryNumericAttribute(node, attributeName) {
@@ -579,8 +581,8 @@ define([
         var when = JulianDate.fromIso8601(whenString);
         var result = new TimeIntervalCollection();
         result.addInterval(new TimeInterval({
-            start : when,
-            stop : Iso8601.MAXIMUM_VALUE
+            start: when,
+            stop: Iso8601.MAXIMUM_VALUE
         }));
         return result;
     }
@@ -606,20 +608,20 @@ define([
             }
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
-                start : beginDate,
-                stop : endDate
+                start: beginDate,
+                stop: endDate
             }));
         } else if (defined(beginDate)) {
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
-                start : beginDate,
-                stop : Iso8601.MAXIMUM_VALUE
+                start: beginDate,
+                stop: Iso8601.MAXIMUM_VALUE
             }));
         } else if (defined(endDate)) {
             result = new TimeIntervalCollection();
             result.addInterval(new TimeInterval({
-                start : Iso8601.MINIMUM_VALUE,
-                stop : endDate
+                start: Iso8601.MINIMUM_VALUE,
+                stop: endDate
             }));
         }
 
@@ -822,9 +824,9 @@ define([
                 //it never ends up on the final entity.
                 targetEntity.addProperty('balloonStyle');
                 targetEntity.balloonStyle = {
-                    bgColor : bgColor,
-                    textColor : textColor,
-                    text : text
+                    bgColor: bgColor,
+                    textColor: textColor,
+                    text: text
                 };
             } else if (node.localName === 'ListStyle') {
                 var listItemType = queryStringValue(node, 'listItemType', namespaces.kml);
@@ -936,7 +938,7 @@ define([
                     }
                     if (!defined(styleCollection.getById(id))) {
                         styleEntity = new Entity({
-                            id : id
+                            id: id
                         });
                         styleCollection.add(styleEntity);
                         applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver, query);
@@ -1109,10 +1111,6 @@ define([
         if (!defined(billboard)) {
             billboard = defined(styleEntity.billboard) ? styleEntity.billboard.clone() : createDefaultBillboard();
             entity.billboard = billboard;
-        }
-
-        if (!defined(billboard.image)) {
-            billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
         var scale = 1.0;
@@ -1298,8 +1296,8 @@ define([
 
         if (timeNodes.length > 0) {
             entity.availability.addInterval(new TimeInterval({
-                start : times[0],
-                stop : times[times.length - 1]
+                start: times[0],
+                stop: times[times.length - 1]
             }));
         }
 
@@ -1318,24 +1316,24 @@ define([
         data.addSamples(times, positions);
 
         composite.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : createPositionPropertyFromAltitudeMode(data, altitudeMode, gxAltitudeMode)
+            start: start,
+            stop: stop,
+            isStartIncluded: includeEndPoints,
+            isStopIncluded: includeEndPoints,
+            data: createPositionPropertyFromAltitudeMode(data, altitudeMode, gxAltitudeMode)
         }));
         availability.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints
+            start: start,
+            stop: stop,
+            isStartIncluded: includeEndPoints,
+            isStopIncluded: includeEndPoints
         }));
         dropShowProperty.intervals.addInterval(new TimeInterval({
-            start : start,
-            stop : stop,
-            isStartIncluded : includeEndPoints,
-            isStopIncluded : includeEndPoints,
-            data : extrude
+            start: start,
+            stop: stop,
+            isStartIncluded: includeEndPoints,
+            isStopIncluded: includeEndPoints,
+            data: extrude
         }));
     }
 
@@ -1402,14 +1400,14 @@ define([
     }
 
     var geometryTypes = {
-        Point : processPoint,
-        LineString : processLineStringOrLinearRing,
-        LinearRing : processLineStringOrLinearRing,
-        Polygon : processPolygon,
-        Track : processTrack,
-        MultiTrack : processMultiTrack,
-        MultiGeometry : processMultiGeometry,
-        Model : processUnsupportedGeometry
+        Point: processPoint,
+        LineString: processLineStringOrLinearRing,
+        LinearRing: processLineStringOrLinearRing,
+        Polygon: processPolygon,
+        Track: processTrack,
+        MultiTrack: processMultiTrack,
+        MultiGeometry: processMultiGeometry,
+        Model: processUnsupportedGeometry
     };
 
     function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
@@ -1462,8 +1460,8 @@ define([
                 var name = queryStringAttribute(dataNode, 'name');
                 if (defined(name)) {
                     result[name] = {
-                        displayName : queryStringValue(dataNode, 'displayName', namespaces.kml),
-                        value : queryStringValue(dataNode, 'value', namespaces.kml)
+                        displayName: queryStringValue(dataNode, 'displayName', namespaces.kml),
+                        value: queryStringValue(dataNode, 'value', namespaces.kml)
                     };
                 }
             }
@@ -1637,21 +1635,21 @@ define([
         }
 
         return {
-            entity : entity,
-            styleEntity : styleEntity
+            entity: entity,
+            styleEntity: styleEntity
         };
     }
 
     // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
-        Document : processDocument,
-        Folder : processFolder,
-        Placemark : processPlacemark,
-        NetworkLink : processNetworkLink,
-        GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupportedFeature,
-        ScreenOverlay : processUnsupportedFeature,
-        Tour : processTour
+        Document: processDocument,
+        Folder: processFolder,
+        Placemark: processPlacemark,
+        NetworkLink: processNetworkLink,
+        GroundOverlay: processGroundOverlay,
+        PhotoOverlay: processUnsupportedFeature,
+        ScreenOverlay: processUnsupportedFeature,
+        Tour: processTour
     };
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver, promises, context, query) {
@@ -1717,16 +1715,15 @@ define([
         var tour = new KmlTour(name, id);
 
         var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
-        if(playlistNode) {
+        if (playlistNode) {
             var childNodes = playlistNode.childNodes;
-            for(var i = 0; i < childNodes.length; i++) {
+            for (var i = 0; i < childNodes.length; i++) {
                 var entryNode = childNodes[i];
                 if (entryNode.localName) {
                     var playlistNodeProcessor = playlistNodeProcessors[entryNode.localName];
                     if (playlistNodeProcessor) {
                         playlistNodeProcessor(tour, entryNode);
-                    }
-                    else {
+                    } else {
                         console.log('Unknown KML Tour playlist entry type ' + entryNode.localName);
                     }
                 }
@@ -1753,7 +1750,9 @@ define([
         var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
         var flyToMode = queryStringValue(entryNode, 'flyToMode', namespaces.gx);
 
-        var t = {kml: {}};
+        var t = {
+            kml: {}
+        };
 
         processLookAt(entryNode, t);
         processCamera(entryNode, t);
@@ -1766,7 +1765,7 @@ define([
 
     function processCamera(featureNode, entity) {
         var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
-        if(defined(camera)) {
+        if (defined(camera)) {
             var lon = defaultValue(queryNumericValue(camera, 'longitude', namespaces.kml), 0.0);
             var lat = defaultValue(queryNumericValue(camera, 'latitude', namespaces.kml), 0.0);
             var altitude = defaultValue(queryNumericValue(camera, 'altitude', namespaces.kml), 0.0);
@@ -1784,7 +1783,7 @@ define([
 
     function processLookAt(featureNode, entity) {
         var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
-        if(defined(lookAt)) {
+        if (defined(lookAt)) {
             var lon = defaultValue(queryNumericValue(lookAt, 'longitude', namespaces.kml), 0.0);
             var lat = defaultValue(queryNumericValue(lookAt, 'latitude', namespaces.kml), 0.0);
             var altitude = defaultValue(queryNumericValue(lookAt, 'altitude', namespaces.kml), 0.0);
@@ -1898,9 +1897,9 @@ define([
     }
 
     var RefreshMode = {
-        INTERVAL : 0,
-        EXPIRE : 1,
-        STOP : 2
+        INTERVAL: 0,
+        EXPIRE: 1,
+        STOP: 2
     };
 
     function cleanupString(s) {
@@ -2102,9 +2101,9 @@ define([
                 }
 
                 var options = {
-                    sourceUri : newSourceUri,
-                    uriResolver : uriResolver,
-                    context : networkEntity.id
+                    sourceUri: newSourceUri,
+                    uriResolver: uriResolver,
+                    context: networkEntity.id
                 };
                 var networkLinkCollection = new EntityCollection();
                 var promise = load(dataSource, networkLinkCollection, linkUrl, options).then(function(rootElement) {
@@ -2125,22 +2124,22 @@ define([
                     // Add network links to a list if we need they will need to be updated
                     var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
                     var refreshInterval = defaultValue(queryNumericValue(link, 'refreshInterval', namespaces.kml), 0);
-                    if ((refreshMode === 'onInterval' && refreshInterval > 0 ) || (refreshMode === 'onExpire') || (viewRefreshMode === 'onStop')) {
+                    if ((refreshMode === 'onInterval' && refreshInterval > 0) || (refreshMode === 'onExpire') || (viewRefreshMode === 'onStop')) {
                         var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
                         var hasNetworkLinkControl = defined(networkLinkControl);
 
                         var now = JulianDate.now();
                         var networkLinkInfo = {
-                            id : createGuid(),
-                            href : href,
-                            cookie : '',
-                            queryString : queryString,
-                            lastUpdated : now,
-                            updating : false,
-                            entity : networkEntity,
-                            viewBoundScale : viewBoundScale,
-                            needsUpdate : false,
-                            cameraUpdateTime : now
+                            id: createGuid(),
+                            href: href,
+                            cookie: '',
+                            queryString: queryString,
+                            lastUpdated: now,
+                            updating: false,
+                            entity: networkEntity,
+                            viewBoundScale: viewBoundScale,
+                            needsUpdate: false,
+                            cameraUpdateTime: now
                         };
 
                         var minRefreshPeriod = 0;
@@ -2426,10 +2425,10 @@ define([
         this._canvas = canvas;
         this._camera = camera;
         this._lastCameraView = {
-            position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
-            direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
-            up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-            bbox : defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
+            position: defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
+            direction: defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
+            up: defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
+            bbox: defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
         };
     }
 
@@ -2460,11 +2459,11 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {String}
          */
-        name : {
-            get : function() {
+        name: {
+            get: function() {
                 return this._name;
             },
-            set : function(value) {
+            set: function(value) {
                 if (this._name !== value) {
                     this._name = value;
                     this._changed.raiseEvent(this);
@@ -2478,8 +2477,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {DataSourceClock}
          */
-        clock : {
-            get : function() {
+        clock: {
+            get: function() {
                 return this._clock;
             }
         },
@@ -2488,8 +2487,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {EntityCollection}
          */
-        entities : {
-            get : function() {
+        entities: {
+            get: function() {
                 return this._entityCollection;
             }
         },
@@ -2498,8 +2497,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
          */
-        isLoading : {
-            get : function() {
+        isLoading: {
+            get: function() {
                 return this._isLoading;
             }
         },
@@ -2508,8 +2507,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Event}
          */
-        changedEvent : {
-            get : function() {
+        changedEvent: {
+            get: function() {
                 return this._changed;
             }
         },
@@ -2518,8 +2517,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Event}
          */
-        errorEvent : {
-            get : function() {
+        errorEvent: {
+            get: function() {
                 return this._error;
             }
         },
@@ -2528,8 +2527,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Event}
          */
-        loadingEvent : {
-            get : function() {
+        loadingEvent: {
+            get: function() {
                 return this._loading;
             }
         },
@@ -2538,8 +2537,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Event}
          */
-        refreshEvent : {
-            get : function() {
+        refreshEvent: {
+            get: function() {
                 return this._refresh;
             }
         },
@@ -2548,8 +2547,8 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Event}
          */
-        unsupportedNodeEvent : {
-            get : function() {
+        unsupportedNodeEvent: {
+            get: function() {
                 return this._unsupportedNode;
             }
         },
@@ -2558,11 +2557,11 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
          */
-        show : {
-            get : function() {
+        show: {
+            get: function() {
                 return this._entityCollection.show;
             },
-            set : function(value) {
+            set: function(value) {
                 this._entityCollection.show = value;
             }
         },
@@ -2573,11 +2572,11 @@ define([
          * @memberof KmlDataSource.prototype
          * @type {EntityCluster}
          */
-        clustering : {
-            get : function() {
+        clustering: {
+            get: function() {
                 return this._entityCluster;
             },
-            set : function(value) {
+            set: function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value must be defined.');
@@ -2842,8 +2841,8 @@ define([
         var camera = this._camera;
         if (defined(camera) &&
             !(camera.positionWC.equalsEpsilon(lastCameraView.position, CesiumMath.EPSILON7) &&
-            camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
-            camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
+                camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
+                camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
 
             // Camera has changed so update the last view
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
@@ -2867,8 +2866,7 @@ define([
                     if (JulianDate.secondsDifference(now, networkLink.lastUpdated) > networkLink.time) {
                         doUpdate = true;
                     }
-                }
-                else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
+                } else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
                     if (JulianDate.greaterThan(now, networkLink.time)) {
                         doUpdate = true;
                     }
@@ -2890,7 +2888,9 @@ define([
                     var newEntityCollection = new EntityCollection();
                     var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
-                    load(that, newEntityCollection, href, {context : entity.id})
+                    load(that, newEntityCollection, href, {
+                            context: entity.id
+                        })
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
@@ -2929,7 +2929,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property author.name
              */
-            name : undefined,
+            name: undefined,
             /**
              * Gets the URI.
              * @type String
@@ -2937,7 +2937,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property author.uri
              */
-            uri : undefined,
+            uri: undefined,
             /**
              * Gets the email.
              * @type String
@@ -2945,7 +2945,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property author.email
              */
-            email : undefined
+            email: undefined
         };
 
         /**
@@ -2960,7 +2960,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.href
              */
-            href : undefined,
+            href: undefined,
             /**
              * Gets the language of the linked resource.
              * @type String
@@ -2968,7 +2968,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.hreflang
              */
-            hreflang : undefined,
+            hreflang: undefined,
             /**
              * Gets the link relation.
              * @type String
@@ -2976,7 +2976,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.rel
              */
-            rel : undefined,
+            rel: undefined,
             /**
              * Gets the link type.
              * @type String
@@ -2984,7 +2984,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.type
              */
-            type : undefined,
+            type: undefined,
             /**
              * Gets the link title.
              * @type String
@@ -2992,7 +2992,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.title
              */
-            title : undefined,
+            title: undefined,
             /**
              * Gets the link length.
              * @type String
@@ -3000,7 +3000,7 @@ define([
              * @memberof! KmlFeatureData#
              * @property link.length
              */
-            length : undefined
+            length: undefined
         };
 
         /**
