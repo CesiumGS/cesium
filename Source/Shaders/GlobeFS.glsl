@@ -38,6 +38,10 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_SPLIT
+uniform float u_splitDirection;
+#endif
+
 #ifdef SHOW_REFLECTIVE_OCEAN
 uniform sampler2D u_waterMask;
 uniform vec4 u_waterMaskTranslationAndScale;
@@ -140,7 +144,7 @@ vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates);
 vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue);
 
 void main()
-{
+{ 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
@@ -193,6 +197,19 @@ void main()
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     vec4 finalColor = color;
+#endif
+
+
+#ifdef APPLY_SPLIT
+    float splitPosition = czm_imagerySplitPosition;    
+    // Split to the left
+    if (u_splitDirection < 0.0 && gl_FragCoord.x > splitPosition) {
+       discard;
+    }
+    // Split to the right
+    else if (u_splitDirection > 0.0 && gl_FragCoord.x < splitPosition) {
+       discard;
+    }
 #endif
 
 
