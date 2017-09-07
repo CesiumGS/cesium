@@ -181,6 +181,7 @@ define([
      * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
+     * @deprecated since V1.38
      *
      * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.

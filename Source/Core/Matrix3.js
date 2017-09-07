@@ -297,6 +297,7 @@ define([
     /**
      * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
      *
+     * @deprecated since V1.38
      * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns {Matrix3} The 3x3 rotation matrix from this headingPitchRoll.

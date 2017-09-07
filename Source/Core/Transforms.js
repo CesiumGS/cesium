@@ -313,6 +313,7 @@ define([
      * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
+     * @deprecated since V1.38
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
@@ -350,6 +351,7 @@ define([
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
      * This Transforms.directHeadingPitchRollToFixedFrame works in the classical interpretation used in mathematics. This function will replaced Transforms.headingPitchRollToFixedFrame in 1.43.
+     * @deprecated since V1.38
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
