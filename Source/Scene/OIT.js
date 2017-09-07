@@ -555,6 +555,9 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            if (command instanceof ClearCommand) {
+                continue;
+            }
             if (invertedClassification) {
                 inverted = command.derivedCommands.inverted;
                 if (!defined(inverted)) {
@@ -573,6 +576,9 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
+            if (command instanceof ClearCommand) {
+                continue;
+            }
             if (invertedClassification) {
                 inverted = command.derivedCommands.inverted;
                 if (!defined(inverted)) {
@@ -605,6 +611,9 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
+            if (command instanceof ClearCommand) {
+                continue;
+            }
             var derivedCommand;
             if (invertedClassification) {
                 var inverted = command.derivedCommands.inverted;

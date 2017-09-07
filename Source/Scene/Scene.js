@@ -56,6 +56,7 @@ define([
         './BrdfLutGenerator',
         './Camera',
         './CreditDisplay',
+        './CullFace',
         './DebugCameraPrimitive',
         './DepthFunction',
         './DepthPlane',
@@ -140,6 +141,7 @@ define([
         BrdfLutGenerator,
         Camera,
         CreditDisplay,
+        CullFace,
         DebugCameraPrimitive,
         DepthFunction,
         DepthPlane,
@@ -2059,6 +2061,7 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
             } else {
+                // Draw normally
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2066,8 +2069,11 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                scene._stencilClearCommand.execute(context, passState);
+                if (length > 0 && context.stencilBuffer) {
+                    scene._stencilClearCommand.execute(context, passState);
+                }
 
+                // Set stencil
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
@@ -2075,6 +2081,7 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
+                // Draw modified unclassified 3D Tiles
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
@@ -2082,8 +2089,11 @@ define([
                     executeCommand(commands[j], scene, context, passState, undefined, false, false, true);
                 }
 
-                scene._stencilClearCommand.execute(context, passState);
+                if (length > 0 && context.stencilBuffer) {
+                    scene._stencilClearCommand.execute(context, passState);
+                }
 
+                // Draw colored classification
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -3057,6 +3067,8 @@ define([
         if (!defined(depthOnlyState)) {
             var rs = RenderState.getState(renderState);
             rs.depthMask = true;
+            rs.cull.enabled = true;
+            rs.cull.face = CullFace.BACK;
             rs.colorMask = {
                 red : false,
                 green : false,
@@ -3208,7 +3220,7 @@ define([
             rs.depthTest.enabled = true;
             rs.depthTest.func = DepthFunction.EQUAL;
             rs.cull.enabled = true;
-            rs.blending = BlendingState.ALPHA_BLEND;
+            rs.cull.face = CullFace.BACK;
             rs.stencilTest = {
                 enabled : true,
                 frontFunction : StencilFunction.EQUAL,
@@ -3217,12 +3229,7 @@ define([
                     zFail : StencilOperation.KEEP,
                     zPass : StencilOperation.KEEP
                 },
-                backFunction : StencilFunction.EQUAL,
-                backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
+                backFunction : StencilFunction.NEVER,
                 reference : 0,
                 mask : ~0
             };
@@ -3269,7 +3276,7 @@ define([
             rs.depthTest.enabled = true;
             rs.depthTest.func = DepthFunction.EQUAL;
             rs.cull.enabled = true;
-            rs.blending = BlendingState.ALPHA_BLEND;
+            rs.cull.face = CullFace.BACK;
             rs.stencilTest = {
                 enabled : true,
                 frontFunction : StencilFunction.NOT_EQUAL,
