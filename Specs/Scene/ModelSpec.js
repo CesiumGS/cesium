@@ -1135,10 +1135,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 1
+            name : 'animation_1'
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual(1);
+        expect(a.name).toEqual('animation_1');
         expect(a.startTime).not.toBeDefined();
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -1164,6 +1164,41 @@ defineSuite([
         expect(animations.length).toEqual(0);
         expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
         animations.animationRemoved.removeEventListener(spyRemove);
+    });
+
+    it('adds an animation by index', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.add({
+            index : 1
+        });
+        expect(a).toBeDefined();
+        expect(a.name).toEqual('animation_1');
+        animations.remove(a);
+    });
+
+    it('add throws when name and index are not defined', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add();
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when index is invalid', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : -1
+            });
+        }).toThrowDeveloperError();
+        expect(function() {
+            return m.activeAnimations.add({
+                index : 2
+            });
+        }).toThrowDeveloperError();
     });
 
     it('add throws when model is not loaded', function() {
@@ -1207,7 +1242,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             removeOnStop : true
         });
@@ -1253,7 +1288,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             delay : 1.0
         });
@@ -1277,7 +1312,7 @@ defineSuite([
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             stopTime : stopTime
         });
@@ -1301,7 +1336,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             speedup : 1.5
         });
@@ -1326,7 +1361,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             reverse : true
         });
@@ -1353,7 +1388,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.REPEAT
         });
@@ -1383,7 +1418,7 @@ defineSuite([
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
-            name : 1,
+            name : 'animation_1',
             startTime : time,
             loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
@@ -1417,7 +1452,7 @@ defineSuite([
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
             var animations = m.activeAnimations;
             var a = animations.add({
-                name : 1,
+                name : 'animation_1',
                 startTime : time
             });
 
