@@ -88,9 +88,9 @@ define([
         var batchedIndices = new Array(numMeshes);
 
         for (i = 0; i < numMeshes; ++i) {
-            var offset = indexOffsets[i];
-            var count = indexCounts[i];
             var batchId = batchIds[i];
+            var offset = indexOffsets[batchId];
+            var count = indexCounts[batchId];
 
             for (var j = 0; j < count; ++j) {
                 var index = encodedIndices[offset + j];
@@ -105,6 +105,7 @@ define([
                 batchIds : [batchId]
             });
 
+            indexOffsets[batchId] = indexOffset;
             indexOffset += count;
         }
 
