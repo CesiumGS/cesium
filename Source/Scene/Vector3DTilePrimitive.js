@@ -121,7 +121,7 @@ define([
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
 
-        this._batchDirty = false;
+        this._batchDirty = true;
         this._pickCommandsDirty = true;
         this._framesSinceLastRebatch = 0;
 
