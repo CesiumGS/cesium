@@ -191,7 +191,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This Quaternion.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with Quaternion.fromDirectHeadingPitchRoll');
+        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This Quaternion.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Quaternion.fromDirectHeadingPitchRoll');
 
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
         scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
@@ -204,7 +204,7 @@ define([
      * Computes a rotation from the given heading, pitch and roll angles in the mathematical common sense. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
-     * This Quaternion.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Quaternion.fromHeadingPitchRoll in 1.43.
+     * This Quaternion.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Quaternion.fromHeadingPitchRoll in 1.40.
      *
      * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.

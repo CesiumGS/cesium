@@ -306,7 +306,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This Matrix3.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with Matrix3.fromDirectHeadingPitchRoll');
+        deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This Matrix3.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Matrix3.fromDirectHeadingPitchRoll');
 
         var cosTheta = Math.cos(-headingPitchRoll.pitch);
         var cosPsi = Math.cos(-headingPitchRoll.heading);
@@ -346,7 +346,7 @@ define([
 
     /**
      * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense.
-     * This Matrix3.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Matrix3.fromHeadingPitchRoll in 1.43.
+     * This Matrix3.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Matrix3.fromHeadingPitchRoll in 1.40.
      *
      * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.

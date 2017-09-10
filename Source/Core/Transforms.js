@@ -336,7 +336,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This Transforms.headingPitchRollToFixedFrame works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollToFixedFrame');
+        deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This Transforms.headingPitchRollToFixedFrame works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollToFixedFrame');
 
         fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
         var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
@@ -350,7 +350,7 @@ define([
      * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * This Transforms.directHeadingPitchRollToFixedFrame works in the classical interpretation used in mathematics. This function will replaced Transforms.headingPitchRollToFixedFrame in 1.43.
+     * This Transforms.directHeadingPitchRollToFixedFrame works in the classical interpretation used in mathematics. This function will replaced Transforms.headingPitchRollToFixedFrame in 1.40.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
@@ -412,7 +412,7 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Transforms.headingPitchRollQuaternion', 'This Transforms.headingPitchRollQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollQuaternion');
+        deprecationWarning('Transforms.headingPitchRollQuaternion', 'This Transforms.headingPitchRollQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollQuaternion');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
@@ -424,7 +424,7 @@ define([
      * centered at the provided origin. Heading is the rotation from the local north
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.43.
+     * This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.40.
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.

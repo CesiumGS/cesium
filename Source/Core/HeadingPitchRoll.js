@@ -43,7 +43,7 @@ define([
             throw new DeveloperError('quaternion is required');
         }
         //>>includeEnd('debug');
-        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This HeadingPitchRoll.fromQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.43 in order to be classical. The new behavior can be evaluate with HeadingPitchRoll.fromDirectQuaternion');
+        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This HeadingPitchRoll.fromQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with HeadingPitchRoll.fromDirectQuaternion');
         if (!defined(result)) {
             result = new HeadingPitchRoll();
         }
@@ -60,7 +60,7 @@ define([
 
     /**
      * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense.
-     * This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.43.
+     * This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.40.
      *
      * @param {Quaternion} quaternion The quaternion from which to retrieve heading, pitch, and roll, all expressed in radians.
      * @param {HeadingPitchRoll} [result] The object in which to store the result. If not provided, a new instance is created and returned.
