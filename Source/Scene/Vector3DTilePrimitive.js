@@ -762,8 +762,7 @@ define([
         var length = batchIds.length;
         for (var i = 0; i < length; ++i) {
             var batchId = batchIds[i];
-            //features[batchId] = new Cesium3DTileFeature(content, batchId);
-            features[batchId] = new Cesium3DTileFeature(content, i);
+            features[batchId] = new Cesium3DTileFeature(content, batchId);
         }
     };
 

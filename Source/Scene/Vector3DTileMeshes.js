@@ -84,7 +84,6 @@ define([
         }
 
         var indices = new Uint32Array(indicesLength);
-        var indexOffset = 0;
         var batchedIndices = new Array(numMeshes);
 
         for (i = 0; i < numMeshes; ++i) {
@@ -94,19 +93,16 @@ define([
 
             for (var j = 0; j < count; ++j) {
                 var index = encodedIndices[offset + j];
-                indices[indexOffset + j] = index;
+                indices[offset + j] = index;
                 vertexBatchIds[index] = batchId;
             }
 
             batchedIndices[i] = new Vector3DTileBatch({
-                offset : indexOffset,
+                offset : offset,
                 count : count,
                 color : batchTable.getColor(batchId, new Color()),
                 batchIds : [batchId]
             });
-
-            indexOffsets[batchId] = indexOffset;
-            indexOffset += count;
         }
 
         meshes._primitive = new Vector3DTilePrimitive({
