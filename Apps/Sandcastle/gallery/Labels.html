@@ -121,13 +121,13 @@ function scaleByDistance() {
     });
 }
 
-function setRtl() {
-    Sandcastle.declare(setRtl);
+function setRightToLeft() {
+    Sandcastle.declare(setRightToLeft);
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         label : {
             text : 'Master (אדון): Hello\nתלמיד (student): שלום',
-            rtl : true
+            rightToLeft : true
         }
     });
 }
@@ -171,8 +171,8 @@ Sandcastle.addToolbarMenu([{
 }, {
     text : 'Set label with right-to-left language',
     onselect : function() {
-        setRtl();
-        Sandcastle.highlight(setRtl);
+        setRightToLeft();
+        Sandcastle.highlight(setRightToLeft);
     }
 }]);
 
