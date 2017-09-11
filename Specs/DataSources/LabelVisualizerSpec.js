@@ -161,7 +161,7 @@ defineSuite([
         label.scaleByDistance = new ConstantProperty(new NearFarScalar());
         label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         label.disableDepthTestDistance = new ConstantProperty(10.0);
-        label.rtl = new ConstantProperty(false);
+        label.rightToLeft = new ConstantProperty(false);
 
         visualizer.update(time);
 
@@ -189,7 +189,7 @@ defineSuite([
         expect(l.scaleByDistance).toEqual(testObject.label.scaleByDistance.getValue(time));
         expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
         expect(l.disableDepthTestDistance).toEqual(testObject.label.disableDepthTestDistance.getValue(time));
-        expect(l.rtl).toEqual(testObject.label.rtl.getValue(time));
+        expect(l.rightToLeft).toEqual(testObject.label.rightToLeft.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -209,7 +209,7 @@ defineSuite([
         label.scaleByDistance = new ConstantProperty(new NearFarScalar());
         label.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         label.disableDepthTestDistance = new ConstantProperty(20.0);
-        label.rtl = new ConstantProperty(true);
+        label.rightToLeft = new ConstantProperty(true);
 
         visualizer.update(time);
         expect(l.position).toEqual(testObject.position.getValue(time));
@@ -230,7 +230,7 @@ defineSuite([
         expect(l.scaleByDistance).toEqual(testObject.label.scaleByDistance.getValue(time));
         expect(l.distanceDisplayCondition).toEqual(testObject.label.distanceDisplayCondition.getValue(time));
         expect(l.disableDepthTestDistance).toEqual(testObject.label.disableDepthTestDistance.getValue(time));
-        expect(l.rtl).toEqual(testObject.label.rtl.getValue(time));
+        expect(l.rightToLeft).toEqual(testObject.label.rightToLeft.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);

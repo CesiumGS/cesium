@@ -1840,54 +1840,54 @@ defineSuite([
             expect(newlinesBbox.height).toBeGreaterThan(originalBbox.height);
         });
 
-        it('should not modify text when rtl is false', function() {
+        it('should not modify text when rightToLeft is false', function() {
            var text = 'bla bla bla';
            var label = labels.add({
                text : text
            });
            scene.renderForSpecs();
 
-           expect(label.rtl).toEqual(false);
+           expect(label.rightToLeft).toEqual(false);
            expect(label.text).toEqual(text);
         });
 
-        it('should not modify text when rtl is true and there is no hebrew characters', function() {
+        it('should not modify text when rightToLeft is true and there is no hebrew characters', function() {
            var text = 'bla bla bla';
            var label = labels.add({
                text : text,
-               rtl : true
+               rightToLeft : true
            });
            scene.renderForSpecs();
 
-           expect(label.rtl).toEqual(true);
+           expect(label.rightToLeft).toEqual(true);
            expect(label.text).toEqual(text);
         });
 
-        it('should reverse text when there is only hebrew characters and rtl is true', function() {
+        it('should reverse text when there is only hebrew characters and rightToLeft is true', function() {
            var text = 'שלום';
            var label = labels.add({
                text : text,
-               rtl: true
+               rightToLeft: true
            });
 
            scene.renderForSpecs();
 
-           expect(label.rtl).toEqual(true);
+           expect(label.rightToLeft).toEqual(true);
            expect(label.text).not.toEqual(text);
            expect(label.text).toEqual(text.split('').reverse().join(''));
         });
 
-        it('should reverse part of text when there is mix of right-to-left and other kind of characters and rtl is true', function() {
+        it('should reverse part of text when there is mix of right-to-left and other kind of characters and rightToLeft is true', function() {
            var text = 'Master (אדון): "Hello"\nתלמיד (student): "שלום"';
            var expectedText = 'Master (ןודא): "Hello"\n"םולש" :(student) דימלת';
            var label = labels.add({
                text : text,
-               rtl: true
+               rightToLeft: true
            });
 
            scene.renderForSpecs();
 
-           expect(label.rtl).toEqual(true);
+           expect(label.rightToLeft).toEqual(true);
            expect(label.text).not.toEqual(text);
            expect(label.text).toEqual(expectedText);
         });

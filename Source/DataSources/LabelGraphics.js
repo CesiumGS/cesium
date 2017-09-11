@@ -47,7 +47,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
-     * @param {Property} [options.rtl=false] A Property specifying if to modify text when there is possibly rtl characters.
+     * @param {Property} [options.rightToLeft=false] A Property specifying if to modify text when there is possibly rightToLeft characters.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -94,8 +94,8 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._disableDepthTestDistance = undefined;
         this._disableDepthTestDistanceSubscription = undefined;
-        this._rtl = undefined;
-        this._rtlSubscribtion = undefined;
+        this._rightToLeft = undefined;
+        this._rightToLeftSubscribtion = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -329,7 +329,7 @@ define([
          * @type {Property}
          * @default false
          */
-        rtl: createPropertyDescriptor('rtl')
+        rightToLeft: createPropertyDescriptor('rightToLeft')
     });
 
     /**
@@ -363,7 +363,7 @@ define([
         result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.disableDepthTestDistance = this.disableDepthTestDistance;
-        result.rtl = this.rtl;
+        result.rightToLeft = this.rightToLeft;
         return result;
     };
 
@@ -401,7 +401,7 @@ define([
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
-        this.rtl = defaultValue(this.rtl, source.rtl);
+        this.rightToLeft = defaultValue(this.rightToLeft, source.rightToLeft);
     };
 
     return LabelGraphics;

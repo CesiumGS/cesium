@@ -148,7 +148,7 @@ define([
 
         this._clusterShow = true;
 
-        this._rtl = defaultValue(options.rtl, false);
+        this._rightToLeft = defaultValue(options.rightToLeft, false);
         this.text = defaultValue(options.text, '');
 
         this._updateClamping();
@@ -283,7 +283,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this.rtl) {
+                if (this.rightToLeft) {
                     if (this._originalValue === value) {
                         value = this._text;
                         return;
@@ -1053,12 +1053,12 @@ define([
          *
          * @example
          * // Example 1.
-         * // Set a label's rtl during init
+         * // Set a label's rightToLeft during init
          * var myLabelEntity = viewer.entities.add({
          *   label: {
          *     id: 'my label',
          *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
-         *     rtl: true
+         *     rightToLeft: true
          *   }
          * });
          *
@@ -1070,17 +1070,17 @@ define([
          *     text: 'English text'
          *   }
          * });
-         * // Set a label's rtl after init
-         * myLabelEntity.rtl = true;
+         * // Set a label's rightToLeft after init
+         * myLabelEntity.rightToLeft = true;
          * myLabelEntity.text = 'טקסט חדש';
          */
-        rtl : {
+        rightToLeft : {
             get : function() {
-                return this._rtl;
+                return this._rightToLeft;
             },
             set : function(value) {
-                if (this._rtl !== value) {
-                    this._rtl = value;
+                if (this._rightToLeft !== value) {
+                    this._rightToLeft = value;
                 }
             }
         }
@@ -1328,7 +1328,7 @@ define([
     /**
      *
      * @param {String} value the text to parse and reorder
-     * @returns {String} the text as rtl direction
+     * @returns {String} the text as rightToLeft direction
      * @private
      */
     function reverseRtl(value) {
