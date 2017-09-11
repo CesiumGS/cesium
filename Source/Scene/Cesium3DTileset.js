@@ -523,6 +523,14 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         /**
+         * For point cloud tiles, whether to scale points as they get closer to the camera.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.pointAttenuation = true;
+
+        /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * Determines if only the tiles from last frame should be used for rendering.  This

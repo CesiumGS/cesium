@@ -12,6 +12,7 @@ defineSuite([
         'Scene/Cesium3DTileStyle',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
+        'Specs/createCanvas',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
@@ -28,6 +29,7 @@ defineSuite([
         Cesium3DTileStyle,
         Expression,
         Cesium3DTilesTester,
+        createCanvas,
         createScene,
         when) {
     'use strict';
@@ -50,15 +52,14 @@ defineSuite([
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
     var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform';
 
-    function setCamera(longitude, latitude) {
+    function setCamera(camera, longitude, latitude) {
         // Point the camera to the center of the tile
         var center = Cartesian3.fromRadians(longitude, latitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+        camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
     }
 
     beforeAll(function() {
         scene = createScene();
-        scene.frameState.passes.render = true;
     });
 
     afterAll(function() {
@@ -67,13 +68,7 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0.0);
-
-        var camera = scene.camera;
-        camera.frustum = new PerspectiveFrustum();
-        camera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        camera.frustum.fov = CesiumMath.toRadians(60.0);
-
-        setCamera(centerLongitude, centerLatitude);
+        setCamera(scene.camera, centerLongitude, centerLatitude);
     });
 
     afterEach(function() {
@@ -254,7 +249,7 @@ defineSuite([
             tileset._root.transform = newTransform;
 
             // Move the camera to the new location
-            setCamera(newLongitude, newLatitude);
+            setCamera(scene.camera, newLongitude, newLatitude);
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
@@ -275,7 +270,7 @@ defineSuite([
     it('renders in CV', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             scene.morphToColumbusView(0.0);
-            setCamera(centerLongitude, centerLatitude);
+            setCamera(scene.camera, centerLongitude, centerLatitude);
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
@@ -283,7 +278,7 @@ defineSuite([
     it('renders in 2D', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             scene.morphTo2D(0.0);
-            setCamera(centerLongitude, centerLatitude);
+            setCamera(scene.camera, centerLongitude, centerLatitude);
             tileset.maximumScreenSpaceError = 3;
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
@@ -381,6 +376,7 @@ defineSuite([
     it('Supports back face culling when there are per-point normals', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
+            tileset.pointAttenuation = false;
 
             // Get the number of picked sections with back face culling on
             var pickedCountCulling = 0;
@@ -429,6 +425,28 @@ defineSuite([
 
                 expect(pickedCount).toBeGreaterThan(pickedCountCulling);
             });
+        });
+    });
+
+    it('point attenuation', function() {
+        var scene = createScene({
+            canvas : createCanvas(10, 10)
+        });
+        setCamera(scene.camera, centerLongitude, centerLatitude);
+
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            scene.camera.zoomIn(6);
+            tileset.pointAttenuation = false;
+            expect(scene).notToPick(tileset, 0, 0, 2, 2);
+            tileset.pointAttenuation = true;
+            expect(scene).toPickPrimitive(tileset, 0, 0, 2, 2);
+            scene.destroyForSpecs();
+        });
+    });
+
+    it('renders point cloud with rgb colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
