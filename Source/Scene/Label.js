@@ -112,6 +112,7 @@ define([
             distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
         }
 
+        this._text = defaultValue(options.text, '');
         this._show = defaultValue(options.show, true);
         this._font = defaultValue(options.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
