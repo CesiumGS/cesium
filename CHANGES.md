@@ -4,7 +4,8 @@ Change Log
 
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
-* Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
+* Zoom about mouse now maintains camera heading, pitch, and roll [#5603](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
+* Added point attenuation for rendering 3D Tiles point clouds. [#5824](https://github.com/AnalyticalGraphicsInc/cesium/pull/5824)
 
 ### 1.37 - 2017-09-01
 
