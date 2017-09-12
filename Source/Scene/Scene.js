@@ -66,6 +66,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './InvertClassification',
         './JobScheduler',
         './MapMode2D',
         './OIT',
@@ -151,6 +152,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        InvertClassification,
         JobScheduler,
         MapMode2D,
         OIT,
@@ -662,6 +664,8 @@ define([
         this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
+
+        this._invertClassification = new InvertClassification();
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -1299,12 +1303,6 @@ define([
             }
 
             derivedCommands.depth = createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
-
-            if (command.pass === Pass.CESIUM_3D_TILE) {
-                derivedCommands.inverted = createInverted3DTileUnclassifiedOpaqueDerivedCommand(scene, command, context, derivedCommands.inverted);
-                derivedCommands.inverted = createInverted3DTileUnclassifiedTranslucentDerivedCommand(scene, command, context, derivedCommands.inverted);
-                derivedCommands.inverted = createInverted3DTileClassifiedDerivedCommand(scene, command, derivedCommands.inverted);
-            }
         }
     }
 
@@ -1688,7 +1686,7 @@ define([
                                       0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
-    function executeCommand(command, scene, context, passState, debugFramebuffer, depthOnly, invertedClassified, invertedUnclassified) {
+    function executeCommand(command, scene, context, passState, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
@@ -1708,12 +1706,8 @@ define([
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
-        } else if ((depthOnly || scene.frameState.passes.depth) && defined(command.derivedCommands.depth)) {
+        } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
             command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
-        } else if (invertedClassified) {
-            command.derivedCommands.inverted.inverted3DTileClassifiedCommand.execute(context, passState);
-        } else if (invertedUnclassified) {
-            command.derivedCommands.inverted.inverted3DTileUnclassifiedOpaqueCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -1808,18 +1802,14 @@ define([
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertedClassification) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
         var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
-            var command = commands[j];
-            if (invertedClassification && defined(command.derivedCommands.inverted)) {
-                command = command.derivedCommands.inverted.inverted3DTileTranslucentCommand;
-            }
-            executeFunction(command, scene, context, passState);
+            executeFunction(commands[j], scene, context, passState);
         }
     }
 
@@ -1915,8 +1905,8 @@ define([
         var executeTranslucentCommands;
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
-                scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertedClassification) {
-                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertedClassification);
+                scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
@@ -2015,52 +2005,10 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
-            } else if (scene.frameState.invertClassificationColor.alpha < 1.0) {
-                // Inverted classification. Apply alpha to unclassified geometry and classified geometry opaque.
-
-                // Depth only pass
-                us.updatePass(Pass.CESIUM_3D_TILE);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState, undefined, true);
-                }
-
-                // Set stencil
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
-
-                // Draw opaque 3D Tiles where classified
-                us.updatePass(Pass.CESIUM_3D_TILE);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState, undefined, false, true);
-                }
-
-                scene._stencilClearCommand.execute(context, passState);
-
-                // Draw style over opaque classification.
-                // Clears stencil.
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
-
-                // Reset stencil
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
-                }
             } else {
+                var opaqueClassificationFramebuffer = passState.framebuffer;
+                passState.framebuffer = scene._invertClassification._fbo;
+
                 // Draw normally
                 us.updatePass(Pass.CESIUM_3D_TILE);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
@@ -2081,24 +2029,11 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                // Draw modified unclassified 3D Tiles
-                us.updatePass(Pass.CESIUM_3D_TILE);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState, undefined, false, false, true);
-                }
+                passState.framebuffer = opaqueClassificationFramebuffer;
 
-                if (length > 0 && context.stencilBuffer) {
-                    scene._stencilClearCommand.execute(context, passState);
-                }
-
-                // Draw colored classification
-                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                for (j = 0; j < length; ++j) {
-                    executeCommand(commands[j], scene, context, passState);
+                scene._invertClassification.executeClassified(context, passState);
+                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                    scene._invertClassification.executeUnclassified(context, passState);
                 }
             }
 
@@ -2129,14 +2064,6 @@ define([
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
-
-            if (scene.frameState.invertClassification && scene.frameState.invertClassificationColor.alpha < 1.0 && !picking) {
-                // Draw translucent 3D Tiles where unclassified
-                us.updatePass(Pass.CESIUM_3D_TILE);
-                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-                executeTranslucentCommands(scene, executeCommand, passState, commands, true);
-            }
 
             if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
@@ -2672,6 +2599,16 @@ define([
 
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
+
+            var depthFramebuffer;
+            if (environmentState.useGlobeDepthFramebuffer) {
+                depthFramebuffer = scene._globeDepth.framebuffer;
+            } else if (environmentState.useFXAA) {
+                depthFramebuffer = scene._fxaa.getColorFramebuffer();
+            }
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
         }
     }
 
@@ -3109,216 +3046,6 @@ define([
         } else {
             result.depthOnlyCommand.shaderProgram = shader;
             result.depthOnlyCommand.renderState = renderState;
-        }
-
-        return result;
-    }
-
-    var inverted3DTileUnclassifiedKeyword = '3DTileInvertedTranslucent';
-
-    function get3DTileInvertedUnclassifiedShader(context, shaderProgram) {
-        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, inverted3DTileUnclassifiedKeyword);
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-
-            var fs = shaderProgram.fragmentShaderSource.clone();
-
-            fs.sources = fs.sources.map(function(source) {
-                source = ShaderSource.replaceMain(source, 'czm_3d_tiles_unclassified_main');
-                return source;
-            });
-
-            fs.sources.push(
-                'void main()\n' +
-                '{\n' +
-                '    czm_3d_tiles_unclassified_main();\n' +
-                '    gl_FragColor = gl_FragColor * czm_invertClassificationColor;\n' +
-                '}\n');
-
-            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, inverted3DTileUnclassifiedKeyword, {
-                vertexShaderSource : shaderProgram.vertexShaderSource,
-                fragmentShaderSource : fs,
-                attributeLocations : attributeLocations
-            });
-        }
-
-        return shader;
-    }
-
-    function get3DTileInvertedUnclassifiedTranslucentRenderState(scene, renderState) {
-        var cache = scene._3DTileInvertedUnclassifiedTranslucentRenderStateCache;
-        var invertedState = cache[renderState.id];
-        if (!defined(invertedState)) {
-            var rs = RenderState.getState(renderState);
-            rs.depthMask = false;
-            rs.depthTest.enabled = false;
-            rs.cull.enabled = false;
-            rs.blending = BlendingState.ALPHA_BLEND;
-            rs.stencilTest = {
-                enabled : true,
-                frontFunction : StencilFunction.EQUAL,
-                frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                backFunction : StencilFunction.EQUAL,
-                backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                reference : 0,
-                mask : ~0
-            };
-
-            invertedState = RenderState.fromCache(rs);
-            cache[renderState.id] = invertedState;
-        }
-
-        return invertedState;
-    }
-
-    function createInverted3DTileUnclassifiedTranslucentDerivedCommand(scene, command, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        var renderState;
-        if (defined(result.inverted3DTileUnclassifiedTranslucentCommand)) {
-            shader = result.inverted3DTileUnclassifiedTranslucentCommand.shaderProgram;
-            renderState = result.inverted3DTileUnclassifiedTranslucentCommand.renderState;
-        }
-
-        result.inverted3DTileUnclassifiedTranslucentCommand = DrawCommand.shallowClone(command, result.inverted3DTileUnclassifiedTranslucentCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.inverted3DTileUnclassifiedTranslucentCommand.shaderProgram = get3DTileInvertedUnclassifiedShader(context, command.shaderProgram);
-            result.inverted3DTileUnclassifiedTranslucentCommand.renderState = get3DTileInvertedUnclassifiedTranslucentRenderState(scene, command.renderState);
-
-            var oit = scene._oit;
-            if (defined(oit) && oit.isSupported()) {
-                result.oit = oit.createDerivedCommands(result.inverted3DTileUnclassifiedTranslucentCommand, context, result.oit);
-            }
-
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.inverted3DTileUnclassifiedTranslucentCommand.shaderProgram = shader;
-            result.inverted3DTileUnclassifiedTranslucentCommand.renderState = renderState;
-        }
-
-        return result;
-    }
-
-    function get3DTileInvertedUnclassifiedOpaqueRenderState(scene, renderState) {
-        var cache = scene._3DTileInvertedUnclassifiedOpaqueRenderStateCache;
-        var invertedState = cache[renderState.id];
-        if (!defined(invertedState)) {
-            var rs = RenderState.getState(renderState);
-            rs.depthMask = false;
-            rs.depthTest.enabled = true;
-            rs.depthTest.func = DepthFunction.EQUAL;
-            rs.cull.enabled = true;
-            rs.cull.face = CullFace.BACK;
-            rs.stencilTest = {
-                enabled : true,
-                frontFunction : StencilFunction.EQUAL,
-                frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                backFunction : StencilFunction.NEVER,
-                reference : 0,
-                mask : ~0
-            };
-
-            invertedState = RenderState.fromCache(rs);
-            cache[renderState.id] = invertedState;
-        }
-
-        return invertedState;
-    }
-
-    function createInverted3DTileUnclassifiedOpaqueDerivedCommand(scene, command, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var shader;
-        var renderState;
-        if (defined(result.inverted3DTileUnclassifiedOpaqueCommand)) {
-            shader = result.inverted3DTileUnclassifiedOpaqueCommand.shaderProgram;
-            renderState = result.inverted3DTileUnclassifiedOpaqueCommand.renderState;
-        }
-
-        result.inverted3DTileUnclassifiedOpaqueCommand = DrawCommand.shallowClone(command, result.inverted3DTileUnclassifiedOpaqueCommand);
-
-        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
-            result.inverted3DTileUnclassifiedOpaqueCommand.shaderProgram = get3DTileInvertedUnclassifiedShader(context, command.shaderProgram);
-            result.inverted3DTileUnclassifiedOpaqueCommand.renderState = get3DTileInvertedUnclassifiedOpaqueRenderState(scene, command.renderState);
-            result.shaderProgramId = command.shaderProgram.id;
-        } else {
-            result.inverted3DTileUnclassifiedOpaqueCommand.shaderProgram = shader;
-            result.inverted3DTileUnclassifiedOpaqueCommand.renderState = renderState;
-        }
-
-        return result;
-    }
-
-    function get3DTileInvertedClassifiedRenderState(scene, renderState) {
-        var cache = scene._3DTileInvertedClassifiedRenderStateCache;
-        var invertedState = cache[renderState.id];
-        if (!defined(invertedState)) {
-            var rs = RenderState.getState(renderState);
-            rs.depthMask = false;
-            rs.depthTest.enabled = true;
-            rs.depthTest.func = DepthFunction.EQUAL;
-            rs.cull.enabled = true;
-            rs.cull.face = CullFace.BACK;
-            rs.stencilTest = {
-                enabled : true,
-                frontFunction : StencilFunction.NOT_EQUAL,
-                frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                backFunction : StencilFunction.NOT_EQUAL,
-                backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
-                },
-                reference : 0,
-                mask : ~0
-            };
-
-            invertedState = RenderState.fromCache(rs);
-            cache[renderState.id] = invertedState;
-        }
-
-        return invertedState;
-    }
-
-    function createInverted3DTileClassifiedDerivedCommand(scene, command, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        var renderState;
-        if (defined(result.inverted3DTileClassifiedCommand)) {
-            renderState = result.inverted3DTileClassifiedCommand.renderState;
-        }
-
-        result.inverted3DTileClassifiedCommand = DrawCommand.shallowClone(command, result.inverted3DTileClassifiedCommand);
-
-        if (!defined(renderState) || result.renderStateId !== command.renderState.id) {
-            result.inverted3DTileClassifiedCommand.renderState = get3DTileInvertedClassifiedRenderState(scene, command.renderState);
-            result.renderStateId = command.renderState.id;
-        } else {
-            result.inverted3DTileClassifiedCommand.renderState = renderState;
         }
 
         return result;
