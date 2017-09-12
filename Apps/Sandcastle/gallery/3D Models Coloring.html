@@ -176,7 +176,7 @@ function createModel(url, height) {
     var pitch = 0;
     var roll = 0;
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-    var orientation = Cesium.Transforms.directHeadingPitchRollQuaternion(position, hpr);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr, undefined, undefined, undefined, true);
 
     entity = viewer.entities.add({
         name : url,

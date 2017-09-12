@@ -297,72 +297,41 @@ define([
     /**
      * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
      *
-     * @deprecated since V1.38
+     * @deprecated since V1.38. An optional boolean flag can be supplied to this function that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40
      * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @param {Boolean} [false] Indicates if the function uses the classical orientation of heading and pitch (counter-clockwise).
      * @returns {Matrix3} The 3x3 rotation matrix from this headingPitchRoll.
      */
-    Matrix3.fromHeadingPitchRoll = function(headingPitchRoll, result) {
+    Matrix3.fromHeadingPitchRoll = function(headingPitchRoll, result, classical) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This Matrix3.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Matrix3.fromDirectHeadingPitchRoll');
+        classical = defaultValue(classical, false);
 
-        var cosTheta = Math.cos(-headingPitchRoll.pitch);
-        var cosPsi = Math.cos(-headingPitchRoll.heading);
-        var cosPhi = Math.cos(headingPitchRoll.roll);
-        var sinTheta = Math.sin(-headingPitchRoll.pitch);
-        var sinPsi = Math.sin(-headingPitchRoll.heading);
-        var sinPhi = Math.sin(headingPitchRoll.roll);
+        var cosTheta;
+        var cosPsi;
+        var cosPhi;
+        var sinTheta;
+        var sinPsi;
+        var sinPhi;
 
-        var m00 = cosTheta * cosPsi;
-        var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;
-        var m02 = sinPhi * sinPsi + cosPhi * sinTheta * cosPsi;
-
-        var m10 = cosTheta * sinPsi;
-        var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
-        var m12 = -sinPhi * cosPsi + cosPhi * sinTheta * sinPsi;
-
-        var m20 = -sinTheta;
-        var m21 = sinPhi * cosTheta;
-        var m22 = cosPhi * cosTheta;
-
-        if (!defined(result)) {
-            return new Matrix3(m00, m01, m02,
-                m10, m11, m12,
-                m20, m21, m22);
+        if(classical === true){
+          cosTheta = Math.cos(headingPitchRoll.pitch);
+          cosPsi = Math.cos(headingPitchRoll.heading);
+          cosPhi = Math.cos(headingPitchRoll.roll);
+          sinTheta = Math.sin(headingPitchRoll.pitch);
+          sinPsi = Math.sin(headingPitchRoll.heading);
+          sinPhi = Math.sin(headingPitchRoll.roll);
+        } else {
+          deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This Matrix3.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate using parameter classical setted to true');
+          cosTheta = Math.cos(-headingPitchRoll.pitch);
+          cosPsi = Math.cos(-headingPitchRoll.heading);
+          cosPhi = Math.cos(headingPitchRoll.roll);
+          sinTheta = Math.sin(-headingPitchRoll.pitch);
+          sinPsi = Math.sin(-headingPitchRoll.heading);
+          sinPhi = Math.sin(headingPitchRoll.roll);
         }
-        result[0] = m00;
-        result[1] = m10;
-        result[2] = m20;
-        result[3] = m01;
-        result[4] = m11;
-        result[5] = m21;
-        result[6] = m02;
-        result[7] = m12;
-        result[8] = m22;
-        return result;
-    };
-
-    /**
-     * Computes a 3x3 rotation matrix from the provided headingPitchRoll. (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles ) in the mathematical common sense.
-     * This Matrix3.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Matrix3.fromHeadingPitchRoll in 1.40.
-     *
-     * @param {HeadingPitchRoll} headingPitchRoll the headingPitchRoll to use.
-     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns {Matrix3} The 3x3 rotation matrix from this headingPitchRoll.
-     */
-    Matrix3.fromDirectHeadingPitchRoll = function(headingPitchRoll, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
-        //>>includeEnd('debug');
-
-        var cosTheta = Math.cos(headingPitchRoll.pitch);
-        var cosPsi = Math.cos(headingPitchRoll.heading);
-        var cosPhi = Math.cos(headingPitchRoll.roll);
-        var sinTheta = Math.sin(headingPitchRoll.pitch);
-        var sinPsi = Math.sin(headingPitchRoll.heading);
-        var sinPhi = Math.sin(headingPitchRoll.roll);
 
         var m00 = cosTheta * cosPsi;
         var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;

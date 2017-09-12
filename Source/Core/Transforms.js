@@ -313,7 +313,7 @@ define([
      * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * @deprecated since V1.38
+     * @deprecated since V1.38 An optional boolean flag can be supplied to this function that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
@@ -321,6 +321,7 @@ define([
      * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Matrix4} [result] The object onto which to store the result.
+     * @param {Boolean} [false] Indicates if the function uses the classical orientation of heading and pitch (counter-clockwise).
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
      * @example
@@ -332,51 +333,20 @@ define([
      * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
      * var transform = Cesium.Transforms.headingPitchRollToFixedFrame(center, hpr);
      */
-    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
+    Transforms.headingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result, classical) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This Transforms.headingPitchRollToFixedFrame works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollToFixedFrame');
-
+        classical = defaultValue(classical, false);
         fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
-        var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
-        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
-        result = fixedFrameTransform(origin, ellipsoid, result);
-        return Matrix4.multiply(result, hprMatrix, result);
-    };
 
-    /**
-     * Computes a 4x4 transformation matrix from a reference frame with axes computed from the heading-pitch-roll angles ( in the mathematical common sense)
-     * centered at the provided origin to the provided ellipsoid's fixed reference frame. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * This Transforms.directHeadingPitchRollToFixedFrame works in the classical interpretation used in mathematics. This function will replaced Transforms.headingPitchRollToFixedFrame in 1.40.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
-     *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
-     *
-     * @example
-     * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-     * var transform = Cesium.Transforms.directHeadingPitchRollToFixedFrame(center, hpr);
-     */
-    Transforms.directHeadingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
-        //>>includeEnd('debug');
-
-        fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
-        var hprQuaternion = Quaternion.fromDirectHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
-        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
+        if(classical === true){
+          Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion, true);
+        } else {
+          deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This Transforms.headingPitchRollToFixedFrame works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate using parameter classical setted to true');
+          Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion, false);
+        }
+        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, scratchHPRQuaternion, scratchScale, scratchHPRMatrix4);
         result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
@@ -389,7 +359,7 @@ define([
      * centered at the provided origin. Heading is the rotation from the local north
      * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
      * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * @deprecated since V1.38
+     * @deprecated since V1.38. An optional boolean flag can be supplied to this function that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40
      *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
@@ -397,6 +367,7 @@ define([
      * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
      *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
      * @param {Quaternion} [result] The object onto which to store the result.
+     * @param {Boolean} [false] Indicates if the function uses the classical orientation of heading and pitch (counter-clockwise).
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      *
      * @example
@@ -408,49 +379,21 @@ define([
      * var hpr = new HeadingPitchRoll(heading, pitch, roll);
      * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
      */
-    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
+    Transforms.headingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result, classical) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Transforms.headingPitchRollQuaternion', 'This Transforms.headingPitchRollQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Transforms.directHeadingPitchRollQuaternion');
+        classical = defaultValue(classical, false);
+        if(classical === true){
+          scratchENUMatrix4 = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4, true);
+          Matrix4.getRotation(scratchENUMatrix4, scratchHPRMatrix3);
+        } else {
+          deprecationWarning('Transforms.headingPitchRollQuaternion', 'This Transforms.headingPitchRollQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate using parameter classical setted to true');
+          scratchENUMatrix4 = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4, false);
+          Matrix4.getRotation(scratchENUMatrix4, scratchHPRMatrix3);
+        }
 
-        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
-        return Quaternion.fromRotationMatrix(rotation, result);
-    };
-
-    /**
-     * Computes a quaternion from a reference frame with axes computed from the heading-pitch-roll angles ( in the mathematical common sense)
-     * centered at the provided origin. Heading is the rotation from the local north
-     * direction where a positive angle is increasing eastward. Pitch is the rotation from the local east-north plane. Positive pitch angles
-     * are above the plane. Negative pitch angles are below the plane. Roll is the first rotation applied about the local east axis.
-     * This HeadingPitchRoll.fromDirectQuaternion works in the classical interpretation used in mathematics. This function will replaced HeadingPitchRoll.fromQuaternion in 1.40.
-     *
-     * @param {Cartesian3} origin The center point of the local reference frame.
-     * @param {HeadingPitchRoll} headingPitchRoll The heading, pitch, and roll.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
-     * @param {Transforms~LocalFrameToFixedFrame} [fixedFrameTransform=Transforms.eastNorthUpToFixedFrame] A 4x4 transformation
-     *  matrix from a reference frame to the provided ellipsoid's fixed reference frame
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
-     *
-     * @example
-     * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var hpr = new HeadingPitchRoll(heading, pitch, roll);
-     * var quaternion = Cesium.Transforms.headingPitchRollQuaternion(center, hpr);
-     */
-    Transforms.directHeadingPitchRollQuaternion = function(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
-        //>>includeEnd('debug');
-
-        var transform = Transforms.directHeadingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
-        return Quaternion.fromRotationMatrix(rotation, result);
+        return Quaternion.fromRotationMatrix(scratchHPRMatrix3, result);
     };
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;

@@ -129,7 +129,7 @@ function createModel(url, height, heading, pitch, roll) {
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 
     var origin = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
-    var modelMatrix = Cesium.Transforms.directHeadingPitchRollToFixedFrame(origin, hpr);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, hpr, undefined, undefined, undefined, true);
 
     scene.primitives.removeAll(); // Remove previous model
     model = scene.primitives.add(Cesium.Model.fromGltf({

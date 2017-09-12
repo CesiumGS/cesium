@@ -51,7 +51,7 @@ defineSuite([
         }
     });
 
-    it('conversion from direct quaternion', function() {
+    it('conversion from quaternion', function() {
         var testingTab = [
             [0, 0, 0],
             [90 * deg2rad, 0, 0],
@@ -70,7 +70,7 @@ defineSuite([
             hpr.pitch = init[1];
             hpr.roll = init[2];
 
-            var result = HeadingPitchRoll.fromDirectQuaternion(Quaternion.fromDirectHeadingPitchRoll(hpr));
+            var result = HeadingPitchRoll.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr, undefined, true), undefined, true);
             expect(init[0]).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
             expect(init[1]).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
             expect(init[2]).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
@@ -168,12 +168,6 @@ defineSuite([
     it('fromQuaternion throws with no parameter', function() {
         expect(function() {
             HeadingPitchRoll.fromQuaternion();
-        }).toThrowDeveloperError();
-    });
-
-    it('fromDirectQuaternion throws with no parameter', function() {
-        expect(function() {
-            HeadingPitchRoll.fromDirectQuaternion();
         }).toThrowDeveloperError();
     });
 

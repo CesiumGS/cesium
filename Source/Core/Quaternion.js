@@ -181,44 +181,32 @@ define([
      * Computes a rotation from the given heading, pitch and roll angles. Heading is the rotation about the
      * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
      * the positive x axis.
-     * @deprecated since V1.38
+     * @deprecated since V1.38. An optional boolean flag can be supplied to this function that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40
      *
      * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
      * @param {Quaternion} [result] The object onto which to store the result.
+     * @param {Boolean} [false] Indicates if the function uses the classical orientation of heading and pitch (counter-clockwise).
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
      */
-    Quaternion.fromHeadingPitchRoll = function(headingPitchRoll, result) {
+    Quaternion.fromHeadingPitchRoll = function(headingPitchRoll, result, classical) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This Quaternion.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate with Quaternion.fromDirectHeadingPitchRoll');
+        classical = defaultValue(classical, false);
 
-        scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
-        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
-        result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
-        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
-        return Quaternion.multiply(scratchHeadingQuaternion, result, result);
-    };
+        if(classical === true){
+          scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
+          scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);
+          result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
+          scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, headingPitchRoll.heading, scratchHPRQuaternion);
+        }else{
+          deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This Quaternion.fromHeadingPitchRoll works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate using parameter classical setted to true');
+          scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
+          scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
+          result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
+          scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
+        }
 
-    /**
-     * Computes a rotation from the given heading, pitch and roll angles in the mathematical common sense. Heading is the rotation about the
-     * negative z axis. Pitch is the rotation about the negative y axis. Roll is the rotation about
-     * the positive x axis.
-     * This Quaternion.fromDirectHeadingPitchRoll works in the classical interpretation used in mathematics. This function will replaced Quaternion.fromHeadingPitchRoll in 1.40.
-     *
-     * @param {HeadingPitchRoll} headingPitchRoll The rotation expressed as a heading, pitch and roll.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if none was provided.
-     */
-    Quaternion.fromDirectHeadingPitchRoll = function(headingPitchRoll, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('headingPitchRoll', headingPitchRoll);
-        //>>includeEnd('debug');
-
-        scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
-        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);
-        result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
-        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, headingPitchRoll.heading, scratchHPRQuaternion);
         return Quaternion.multiply(scratchHeadingQuaternion, result, result);
     };
 
