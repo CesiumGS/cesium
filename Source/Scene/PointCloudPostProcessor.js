@@ -1073,7 +1073,7 @@ define([
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
 
-                var derivedCommandRenderState = new RenderState(derivedCommand.renderState);
+                var derivedCommandRenderState = RenderState.fromCache(derivedCommand.renderState);
                 derivedCommandRenderState.stencilTest = this._stencilWrite;
                 derivedCommand.renderState = RenderState.fromCache(
                     derivedCommandRenderState
