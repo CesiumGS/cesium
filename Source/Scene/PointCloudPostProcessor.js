@@ -214,11 +214,12 @@ define([
 
         var first = sectors[0];
         var second = sectors[0];
-        sectors.forEach(function(element) {
+        for (var i = 0; i < sectors.length; i++) {
+            var element = sectors[i];
             if (element !== first) {
                 second = element;
             }
-        });
+        }
         return [first, second];
     }
 
