@@ -1,16 +1,6 @@
 #extension GL_EXT_frag_depth : enable
 #extension GL_EXT_draw_buffers : enable
 
-#define neighborhoodHalfWidth 1  // TUNABLE PARAMETER -- half-width of region-growing kernel
-#define neighborhoodFullWidth 3
-#define neighborhoodSize 8
-#define epsilon8 1e-8
-#define SQRT2 1.414213562
-#define densityScaleFactor 10.0
-#define densityView
-#define stencilView
-#define DELAY 1
-
 uniform sampler2D u_pointCloud_colorTexture;
 uniform sampler2D u_pointCloud_densityTexture;
 uniform sampler2D u_pointCloud_ecTexture;

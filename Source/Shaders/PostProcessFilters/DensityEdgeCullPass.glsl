@@ -1,10 +1,3 @@
-#define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of region-growing kernel
-
-#define epsilon8 1e-8
-
-#define densityScaleFactor 10.0
-#define dropoutEnabled
-
 uniform sampler2D u_pointCloud_ecTexture;
 uniform float u_neighborhoodVectorSize;
 uniform float u_maxAbsRatio;

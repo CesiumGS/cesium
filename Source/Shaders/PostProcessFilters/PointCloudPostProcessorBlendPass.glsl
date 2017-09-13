@@ -1,5 +1,3 @@
-#define epsilon8 1e-8
-#define enableAO
 #extension GL_EXT_frag_depth : enable
 
 uniform sampler2D u_pointCloud_colorTexture;

@@ -152,6 +152,11 @@ define([
 
         this.rangeMin = 1e-6;
         this.rangeMax = 5e-2;
+
+        this.C0 = 1.57073;
+        this.C1 = -0.212053;
+        this.C2 = 0.0740935;
+        this.C3 = -0.0186166;
     }
 
     function createSampler() {
@@ -379,17 +384,16 @@ define([
         processor._stencilMaskTexture = stencilMaskTexture;
     }
 
-    function replaceConstants(sourceFS, constantName, replacement) {
-        var r;
+    function addConstants(sourceFS, constantName, replacement) {
+        var finalSource = sourceFS;
         if (typeof(replacement) === 'boolean') {
-            if (replacement === false) {
-                r = '#define\\s' + constantName;
-                return sourceFS.replace(new RegExp(r, 'g'), '/*#define ' + constantName + '*/');
+            if (replacement !== false) {
+                finalSource = '#define ' + constantName + '\n' + sourceFS;
             }
-            return sourceFS;
+        } else {
+            finalSource = '#define ' + constantName + ' ' + replacement + '\n' + sourceFS;
         }
-        r = '#define\\s' + constantName + '\\s([0-9.]+)';
-        return sourceFS.replace(new RegExp(r, 'g'), '#define ' + constantName + ' ' + replacement);
+        return finalSource;
     }
 
      function pointOcclusionStage(processor, context) {
@@ -408,24 +412,58 @@ define([
             }
         };
 
-        var pointOcclusionFS = replaceConstants(
+        var pointOcclusionFS = addConstants(
             (context.webgl2) ? PointOcclusionPassGL2 : PointOcclusionPassGL1,
             'neighborhoodHalfWidth',
             processor.neighborhoodHalfWidth
         );
 
-        pointOcclusionFS = replaceConstants(
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'C0',
+            processor.C0
+        );
+
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'C1',
+            processor.C1
+        );
+
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'C2',
+            processor.C2
+        );
+
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'C3',
+            processor.C3
+        );
+
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'numSectors',
+            8
+        );
+
+        pointOcclusionFS = addConstants(
             pointOcclusionFS,
             'useTriangle',
             processor.useTriangle
         );
 
-        if (processor.dropoutFactor < 1e-6) {
-            pointOcclusionFS = replaceConstants(
-                pointOcclusionFS,
-                'dropoutEnabled',
-                false);
-        }
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'trianglePeriod',
+            1.0
+        );
+
+        pointOcclusionFS = addConstants(
+            pointOcclusionFS,
+            'dropoutEnabled',
+            processor.dropoutFactor > 1e-6 && context.webgl2);
 
         return context.createViewportQuadCommand(pointOcclusionFS, {
             uniformMap : uniformMap,
@@ -454,18 +492,28 @@ define([
             }
         };
 
-        var densityEdgeCullFS = replaceConstants(
+        var densityEdgeCullFS = addConstants(
             DensityEdgeCullPass,
             'neighborhoodHalfWidth',
             processor.densityHalfWidth
         );
 
-        if (processor.dropoutFactor < 1e-6 || !context.webgl2) {
-            densityEdgeCullFS = replaceConstants(
+        densityEdgeCullFS = addConstants(
+            densityEdgeCullFS,
+            'epsilon8',
+            1e-8
+        );
+
+        densityEdgeCullFS = addConstants(
+            densityEdgeCullFS,
+            'densityScaleFactor',
+            '10.0'
+        );
+
+        densityEdgeCullFS = addConstants(
                 densityEdgeCullFS,
                 'dropoutEnabled',
-                false);
-        }
+                processor.dropoutFactor > 1e-6 && context.webgl2);
 
         return context.createViewportQuadCommand(densityEdgeCullFS, {
             uniformMap : uniformMap,
@@ -521,19 +569,55 @@ define([
             RegionGrowingPassGL2 :
             RegionGrowingPassGL1;
 
-        regionGrowingPassFS = replaceConstants(
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'neighborhoodHalfWidth',
+            1
+        );
+
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'neighborhoodFullWidth',
+            3
+        );
+
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'neighborhoodSize',
+            8
+        );
+
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'epsilon8',
+            1e-8
+        );
+
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'SQRT2',
+            1.414213562
+        );
+
+        regionGrowingPassFS = addConstants(
+            regionGrowingPassFS,
+            'densityScaleFactor',
+            '10.0'
+        );
+
+        regionGrowingPassFS = addConstants(
             regionGrowingPassFS,
             'densityView',
             processor.densityViewEnabled
         );
 
-        regionGrowingPassFS = replaceConstants(
+        regionGrowingPassFS = addConstants(
             regionGrowingPassFS,
             'stencilView',
             processor.stencilViewEnabled
         );
 
-        regionGrowingPassFS = replaceConstants(
+        regionGrowingPassFS = addConstants(
             regionGrowingPassFS,
             'DELAY',
             processor.delay
@@ -575,8 +659,6 @@ define([
 
         var copyStageFS =
             '#extension GL_EXT_draw_buffers : enable \n' +
-            '#define densityView \n' +
-            '#define densityScaleFactor 10.0 \n' +
             'uniform int u_densityHalfWidth; \n' +
             'uniform sampler2D u_pointCloud_colorTexture; \n' +
             'uniform sampler2D u_pointCloud_ecTexture; \n' +
@@ -602,10 +684,16 @@ define([
             '    } \n' +
             '} \n';
 
-        copyStageFS = replaceConstants(
+        copyStageFS = addConstants(
             copyStageFS,
             'densityView',
             processor.densityViewEnabled
+        );
+
+        copyStageFS = addConstants(
+            copyStageFS,
+            'densityScaleFactor',
+            processor.densityScaleFactor
         );
 
         return context.createViewportQuadCommand(copyStageFS, {
@@ -626,10 +714,6 @@ define([
         };
 
         var stencilMaskStageFS =
-            '#define epsilon8 1e-8 \n' +
-            '#define cutoff 0 \n' +
-            '#define DELAY 1 \n' +
-            '#define densityScaleFactor 10.0 \n' +
             'uniform sampler2D u_pointCloud_densityTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
@@ -639,13 +723,25 @@ define([
             '        discard; \n' +
             '} \n';
 
-        stencilMaskStageFS = replaceConstants(
+        stencilMaskStageFS = addConstants(
             stencilMaskStageFS,
             'cutoff',
             iteration
         );
 
-        stencilMaskStageFS = replaceConstants(
+        stencilMaskStageFS = addConstants(
+            stencilMaskStageFS,
+            'epsilon8',
+            1e-8
+        );
+
+        stencilMaskStageFS = addConstants(
+            stencilMaskStageFS,
+            'densityScaleFactor',
+            '10.0'
+        );
+
+        stencilMaskStageFS = addConstants(
             stencilMaskStageFS,
             'DELAY',
             processor.delay
@@ -672,7 +768,6 @@ define([
         };
 
         var debugViewStageFS =
-            '#define unpack \n' +
             'uniform sampler2D u_debugTexture; \n' +
             'varying vec2 v_textureCoordinates; \n' +
             'void main() \n' +
@@ -684,7 +779,7 @@ define([
             '    gl_FragColor = vec4(value); \n' +
             '} \n';
 
-        debugViewStageFS = replaceConstants(
+        debugViewStageFS = addConstants(
             debugViewStageFS,
             'unpack',
             unpack
@@ -733,10 +828,16 @@ define([
             });
         }
 
-        var blendFS = replaceConstants(
+        var blendFS = addConstants(
             PointCloudPostProcessorBlendPass,
             'enableAO',
             processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
+        );
+
+        blendFS = addConstants(
+            blendFS,
+            'epsilon8',
+            1e-8
         );
 
         var blendUniformMap = {

@@ -1,17 +1,5 @@
 #version 300 es
 
-#define C0 1.57073
-#define C1 -0.212053
-#define C2 0.0740935
-#define C3 -0.0186166
-#define neighborhoodHalfWidth 4  // TUNABLE PARAMETER -- half-width of point-occlusion neighborhood
-#define neighborhoodSize 9
-#define numSectors 8
-
-#define trianglePeriod 1.0
-#define useTriangle
-#define dropoutEnabled
-
 uniform sampler2D u_pointCloud_ecTexture;
 uniform float u_occlusionAngle;
 uniform float u_dropoutFactor;
