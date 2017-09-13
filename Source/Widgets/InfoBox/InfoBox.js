@@ -33,16 +33,19 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Boolean} [options.allowScripts] A boolean value indicating if <script> tags should run inside the infobox iframe
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    function InfoBox(container, allowScripts) {
+    function InfoBox(container, options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('container', container);
         //>>includeEnd('debug')
 
         container = getElement(container);
 
+        options = defaultValue(options, {allowScripts: false});
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-infoBox';
         infoElement.setAttribute('data-bind', '\
@@ -72,76 +75,16 @@ click: function () { closeClicked.raiseEvent(this); }');
         closeElement.innerHTML = '&times;';
         infoElement.appendChild(closeElement);
 
-        var frame = document.createElement('iframe');
-        frame.className = 'cesium-infoBox-iframe';
-        frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
-        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
-        frame.setAttribute('allowfullscreen', true);
-        infoElement.appendChild(frame);
-
         var viewModel = new InfoBoxViewModel();
         knockout.applyBindings(viewModel, infoElement);
 
         this._container = container;
         this._element = infoElement;
-        this._frame = frame;
         this._viewModel = viewModel;
         this._descriptionSubscription = undefined;
-        this.allowScripts = defaultValue(allowScripts, false);
+        this.allowScripts = defaultValue(options.allowScripts, false);
 
-        var that = this;
-        //We can't actually add anything into the frame until the load event is fired
-        frame.addEventListener('load', function() {
-            var frameDocument = frame.contentDocument;
-
-            //We inject default css into the content iframe,
-            //end users can remove it or add their own via the exposed frame property.
-            var cssLink = frameDocument.createElement('link');
-            cssLink.href = buildModuleUrl('Widgets/InfoBox/InfoBoxDescription.css');
-            cssLink.rel = 'stylesheet';
-            cssLink.type = 'text/css';
-
-            //div to use for description content.
-            var frameContent = frameDocument.createElement('div');
-            frameContent.className = 'cesium-infoBox-description';
-
-            frameDocument.head.appendChild(cssLink);
-            frameDocument.body.appendChild(frameContent);
-
-            //We manually subscribe to the description event rather than through a binding for two reasons.
-            //1. It's an easy way to ensure order of operation so that we can adjust the height.
-            //2. Knockout does not bind to elements inside of an iFrame, so we would have to apply a second binding
-            //   model anyway.
-            that._descriptionSubscription = subscribeAndEvaluate(viewModel, 'description', function(value) {
-                // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
-                frame.style.height = '5px';
-                InfoBox.stringToHtml(value, frameContent, that.allowScripts);
-
-                //If the snippet is a single element, then use its background
-                //color for the body of the InfoBox. This makes the padding match
-                //the content and produces much nicer results.
-                var background = null;
-                var firstElementChild = frameContent.firstElementChild;
-                if (firstElementChild !== null && frameContent.childNodes.length === 1) {
-                    var style = window.getComputedStyle(firstElementChild);
-                    if (style !== null) {
-                        var backgroundColor = style['background-color'];
-                        var color = Color.fromCssColorString(backgroundColor);
-                        if (defined(color) && color.alpha !== 0) {
-                            background = style['background-color'];
-                        }
-                    }
-                }
-                infoElement.style['background-color'] = background;
-
-                // Measure and set the new custom height, based on text wrapped above.
-                var height = frameContent.getBoundingClientRect().height;
-                frame.style.height =  height + 'px';
-            });
-        });
-
-        //Chrome does not send the load event unless we explicitly set a src
-        frame.setAttribute('src', 'about:blank');
+        this.createFrame();
     }
 
     defineProperties(InfoBox.prototype, {
@@ -157,21 +100,16 @@ click: function () { closeClicked.raiseEvent(this); }');
          * viewer.infoBox.allowScripts = true;
          *
          * * @example
-         * var infoBox = new Cesium.InfoBox('infoBoxContainer', true);
+         * var infoBox = new Cesium.InfoBox('infoBoxContainer', {allowScripts: true});
          */
         allowScripts: {
             get: function() {
                 return this._allowScripts;
             },
-            set: function(val) {
-                this._allowScripts = val;
-                // change sandbox properties
-                if (val === true) {
-                    this.frame.sandbox.add('allow-scripts');
-                    this.frame.sandbox.add('allow-modals');
-                } else {
-                    this.frame.sandbox.remove('allow-scripts');
-                    this.frame.sandbox.remove('allow-modals');
+            set: function(value) {
+                if (!(value === this._allowScripts)) {
+                    this._allowScripts = value;
+                    this.createFrame();
                 }
             }
         },
@@ -234,6 +172,95 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         return destroyObject(this);
     };
+    /**
+     * Removes the frame if exists.
+     */
+    InfoBox.prototype.removeFrame = function() {
+        // cache the frame
+        var frame = this._frame;
+        // if no frame exists, do nothing
+        if (!(frame instanceof HTMLElement)) {
+            return;
+        }
+
+        // if we subscribed, we need to remove subscription
+        if (defined(this._descriptionSubscription)) {
+            this._descriptionSubscription.dispose();
+        }
+        frame.parentNode.removeChild(frame);
+        this._frame = null;
+    };
+
+    /**
+     * Creates a new frame according to allowScripts.
+     */
+    InfoBox.prototype.createFrame = function() {
+        this.removeFrame(); //make sure to remove existing frame if any
+        var frame = document.createElement('iframe');
+        frame.className = 'cesium-infoBox-iframe';
+        frame.setAttribute('sandbox', this.allowScripts ?
+                                      'allow-same-origin allow-popups allow-forms allow-scripts allow-modals' :
+                                      'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
+        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
+        frame.setAttribute('allowfullscreen', true);
+        this._element.appendChild(frame);
+        this._frame = frame;
+
+        var that = this;
+        //We can't actually add anything into the frame until the load event is fired
+        frame.addEventListener('load', function() {
+            var frameDocument = frame.contentDocument;
+
+            //We inject default css into the content iframe,
+            //end users can remove it or add their own via the exposed frame property.
+            var cssLink = frameDocument.createElement('link');
+            cssLink.href = buildModuleUrl('Widgets/InfoBox/InfoBoxDescription.css');
+            cssLink.rel = 'stylesheet';
+            cssLink.type = 'text/css';
+
+            //div to use for description content.
+            var frameContent = frameDocument.createElement('div');
+            frameContent.className = 'cesium-infoBox-description';
+
+            frameDocument.head.appendChild(cssLink);
+            frameDocument.body.appendChild(frameContent);
+
+            //We manually subscribe to the description event rather than through a binding for two reasons.
+            //1. It's an easy way to ensure order of operation so that we can adjust the height.
+            //2. Knockout does not bind to elements inside of an iFrame, so we would have to apply a second binding
+            //   model anyway.
+            that._descriptionSubscription = subscribeAndEvaluate(that._viewModel, 'description', function(value) {
+                // Set the frame to small height, force vertical scroll bar to appear, and text to wrap accordingly.
+                frame.style.height = '5px';
+                InfoBox.stringToHtml(value, frameContent, that.allowScripts);
+
+                //If the snippet is a single element, then use its background
+                //color for the body of the InfoBox. This makes the padding match
+                //the content and produces much nicer results.
+                var background = null;
+                var firstElementChild = frameContent.firstElementChild;
+                if (firstElementChild !== null && frameContent.childNodes.length === 1) {
+                    var style = window.getComputedStyle(firstElementChild);
+                    if (style !== null) {
+                        var backgroundColor = style['background-color'];
+                        var color = Color.fromCssColorString(backgroundColor);
+                        if (defined(color) && color.alpha !== 0) {
+                            background = style['background-color'];
+                        }
+                    }
+                }
+                that._element.style['background-color'] = background;
+
+                // Measure and set the new custom height, based on text wrapped above.
+                var height = frameContent.getBoundingClientRect().height;
+                frame.style.height =  height + 'px';
+            });
+        });
+
+        //Chrome does not send the load event unless we explicitly set a src
+        frame.setAttribute('src', 'about:blank');
+    };
+
     /**
      * Receives a string and enters it to the DOM
      * If the string contains a <script> tag, it is

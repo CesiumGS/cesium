@@ -66,8 +66,6 @@ defineSuite([
                document.body.removeChild(element);
            });
        });
-
-
     });
 
     it('constructor sets expected values', function() {
@@ -121,5 +119,58 @@ defineSuite([
         expect(function() {
             return new InfoBox('foo');
         }).toThrowDeveloperError();
+    });
+
+    describe('createFrame', function() {
+        beforeEach(function() {
+            infoBox = new InfoBox('testContainer');
+        });
+
+        it('should call removeFrame', function() {
+            spyOn(infoBox, 'removeFrame').and.returnValue({});
+            infoBox.createFrame();
+            expect(infoBox.removeFrame).toHaveBeenCalled();
+        });
+
+        it('should append a frame to _element', function() {
+            spyOn(infoBox._element, 'appendChild').and.callThrough();
+            infoBox.createFrame();
+            expect(infoBox._element.appendChild).toHaveBeenCalledWith(infoBox._frame);
+        });
+    });
+
+    describe('removeFrame', function() {
+        beforeEach(function() {
+            infoBox = new InfoBox('testContainer');
+        });
+        it('should call remove child of parent (_element)', function() {
+            spyOn(infoBox._element, 'removeChild').and.callThrough();
+            var frame = infoBox._frame;
+            infoBox.removeFrame();
+            expect(infoBox._element.removeChild).toHaveBeenCalledWith(frame);
+        });
+    });
+
+    describe('allowScripts setter', function() {
+        beforeEach(function() {
+            infoBox = new InfoBox('testContainer');
+            spyOn(infoBox, 'createFrame').and.returnValue({});
+        });
+
+        it('should set _allowScripts', function() {
+            infoBox.allowScripts = true;
+            expect(infoBox.allowScripts).toBeTruthy();
+            infoBox.allowScripts = false;
+            expect(infoBox.allowScripts).toBeFalsy();
+        });
+
+        it('should call createFrame when sent with true and different from current value', function() {
+            infoBox._allowScripts = true;
+            infoBox.allowScripts = true;
+            expect(infoBox.createFrame).not.toHaveBeenCalled();
+            infoBox.allowScripts = false;
+            infoBox.allowScripts = true;
+            expect(infoBox.createFrame).toHaveBeenCalled();
+        });
     });
 });
