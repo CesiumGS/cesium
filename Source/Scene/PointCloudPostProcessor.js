@@ -1080,7 +1080,7 @@ define([
 
                 var derivedCommandUniformMap = derivedCommand.uniformMap;
                 var newUniformMap = {
-                    'u_pointAttenuationMaxSize' : attenuationUniformFunction
+                    u_pointAttenuationMaxSize : attenuationUniformFunction
                 };
                 derivedCommand.uniformMap = combine(derivedCommandUniformMap, newUniformMap);
 
@@ -1127,7 +1127,7 @@ define([
             commandList.push(debugViewCommand);
         }
 
-        commandList.push(clearCommands['prior']);
+        commandList.push(clearCommands.prior);
     };
 
     /**

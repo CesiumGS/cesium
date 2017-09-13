@@ -256,7 +256,7 @@ define([
             get : function() {
                 return this._batchTable;
             }
-        },
+        }
     });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
