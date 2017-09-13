@@ -197,7 +197,6 @@ define([
         processor._edgeCullingTexture = undefined;
         processor._sectorLUTTexture = undefined;
         processor._aoTextures = undefined;
-        processor._dirty = undefined;
         processor._drawCommands = undefined;
     }
 
