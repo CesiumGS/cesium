@@ -102,7 +102,7 @@ define([
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
         this.useTriangle = options.useTriangle;
         this.enableAO = options.enableAO;
-        this.AOViewEnabled = options.AOViewEnabled;
+        this.aoViewEnabled = options.aoViewEnabled;
         this.depthViewEnabled = options.depthViewEnabled;
         this.sigmoidDomainOffset = options.sigmoidDomainOffset;
         this.sigmoidSharpness = options.sigmoidSharpness;
@@ -866,7 +866,7 @@ define([
         });
 
         var debugViewCommand;
-        if (processor.AOViewEnabled) {
+        if (processor.aoViewEnabled) {
             debugViewCommand = debugViewStage(processor, context, processor._aoTextures[0], true);
         } else if (processor.depthViewEnabled) {
             debugViewCommand = debugViewStage(processor, context, processor._ecTextures[0], false);
@@ -1019,7 +1019,7 @@ define([
             tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier !== this.pointAttenuationMultiplier ||
             tileset.pointCloudPostProcessorOptions.useTriangle !== this.useTriangle ||
             tileset.pointCloudPostProcessorOptions.enableAO !== this.enableAO ||
-            tileset.pointCloudPostProcessorOptions.AOViewEnabled !== this.AOViewEnabled ||
+            tileset.pointCloudPostProcessorOptions.aoViewEnabled !== this.aoViewEnabled ||
             tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset !== this.sigmoidDomainOffset ||
             tileset.pointCloudPostProcessorOptions.sigmoidSharpness !== this.sigmoidSharpness ||
             tileset.pointCloudPostProcessorOptions.dropoutFactor !== this.dropoutFactor ||
@@ -1037,7 +1037,7 @@ define([
             this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
             this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;
             this.enableAO = tileset.pointCloudPostProcessorOptions.enableAO;
-            this.AOViewEnabled = tileset.pointCloudPostProcessorOptions.AOViewEnabled;
+            this.aoViewEnabled = tileset.pointCloudPostProcessorOptions.aoViewEnabled;
             this.sigmoidDomainOffset = tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset;
             this.sigmoidSharpness = tileset.pointCloudPostProcessorOptions.sigmoidSharpness;
             this.dropoutFactor = tileset.pointCloudPostProcessorOptions.dropoutFactor;
@@ -1124,7 +1124,7 @@ define([
 
         // Blend final result back into the main FBO
         commandList.push(blendCommand);
-        if ((this.AOViewEnabled && this.enableAO) || this.depthViewEnabled) {
+        if ((this.aoViewEnabled && this.enableAO) || this.depthViewEnabled) {
             commandList.push(debugViewCommand);
         }
 
