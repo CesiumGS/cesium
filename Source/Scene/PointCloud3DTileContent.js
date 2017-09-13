@@ -770,7 +770,7 @@ define([
         }
 
         // Edit the function header to accept the point position, color, and normal
-        return source.replace('()', '(vec3 position, vec3 positionWC, vec4 color, vec3 normal)');
+        return source.replace('()', '(vec3 position, vec3 position_absolute, vec4 color, vec3 normal)');
     }
 
     function createShaders(content, frameState, style) {
