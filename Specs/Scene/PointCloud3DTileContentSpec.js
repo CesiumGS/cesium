@@ -444,12 +444,6 @@ defineSuite([
         });
     });
 
-    it('renders point cloud with rgb colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            Cesium3DTilesTester.expectRender(scene, tileset);
-        });
-    });
-
     it('applies shader style', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset._root.content;
