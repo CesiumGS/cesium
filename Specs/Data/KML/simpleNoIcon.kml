@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+	<Placemark>
+		<Style>
+			<IconStyle>
+			  <Icon>
+			  </Icon>
+			</IconStyle>
+		</Style>
+		<description><![CDATA[image.png <a href="./image.png">image.png</a><img src="image.png"/>]]></description>
+		<Point>
+			<coordinates>1,2,3</coordinates>
+		</Point>
+	</Placemark>
+</Document>
+</kml>

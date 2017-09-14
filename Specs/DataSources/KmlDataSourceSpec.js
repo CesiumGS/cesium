@@ -1,79 +1,79 @@
 defineSuite([
-        'DataSources/KmlDataSource',
-        'DataSources/KmlLookAt',
-        'DataSources/KmlCamera',
-        'DataSources/KmlTour',
-        'DataSources/KmlTourWait',
-        'DataSources/KmlTourFlyTo',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/combine',
-        'Core/DefaultProxy',
-        'Core/Event',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/loadBlob',
-        'Core/loadWithXhr',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/Rectangle',
-        'Core/RequestErrorEvent',
-        'Core/RuntimeError',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ImageMaterialProperty',
-        'Scene/Camera',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        KmlDataSource,
-        KmlLookAt,
-        KmlCamera,
-        KmlTour,
-        KmlTourWait,
-        KmlTourFlyTo,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        ClockRange,
-        ClockStep,
-        Color,
-        combine,
-        DefaultProxy,
-        Event,
-        Iso8601,
-        JulianDate,
-        loadBlob,
-        loadWithXhr,
-        CesiumMath,
-        NearFarScalar,
-        Rectangle,
-        RequestErrorEvent,
-        RuntimeError,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        ColorMaterialProperty,
-        EntityCollection,
-        ImageMaterialProperty,
-        Camera,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SceneMode,
-        createCamera,
-        pollToPromise,
-        when) {
+    'DataSources/KmlDataSource',
+    'DataSources/KmlLookAt',
+    'DataSources/KmlCamera',
+    'DataSources/KmlTour',
+    'DataSources/KmlTourWait',
+    'DataSources/KmlTourFlyTo',
+    'Core/BoundingRectangle',
+    'Core/Cartesian2',
+    'Core/Cartesian3',
+    'Core/ClockRange',
+    'Core/ClockStep',
+    'Core/Color',
+    'Core/combine',
+    'Core/DefaultProxy',
+    'Core/Event',
+    'Core/Iso8601',
+    'Core/JulianDate',
+    'Core/loadBlob',
+    'Core/loadWithXhr',
+    'Core/Math',
+    'Core/NearFarScalar',
+    'Core/Rectangle',
+    'Core/RequestErrorEvent',
+    'Core/RuntimeError',
+    'Core/HeadingPitchRange',
+    'Core/HeadingPitchRoll',
+    'DataSources/ColorMaterialProperty',
+    'DataSources/EntityCollection',
+    'DataSources/ImageMaterialProperty',
+    'Scene/Camera',
+    'Scene/HeightReference',
+    'Scene/HorizontalOrigin',
+    'Scene/LabelStyle',
+    'Scene/SceneMode',
+    'Specs/createCamera',
+    'Specs/pollToPromise',
+    'ThirdParty/when'
+], function(
+    KmlDataSource,
+    KmlLookAt,
+    KmlCamera,
+    KmlTour,
+    KmlTourWait,
+    KmlTourFlyTo,
+    BoundingRectangle,
+    Cartesian2,
+    Cartesian3,
+    ClockRange,
+    ClockStep,
+    Color,
+    combine,
+    DefaultProxy,
+    Event,
+    Iso8601,
+    JulianDate,
+    loadBlob,
+    loadWithXhr,
+    CesiumMath,
+    NearFarScalar,
+    Rectangle,
+    RequestErrorEvent,
+    RuntimeError,
+    HeadingPitchRange,
+    HeadingPitchRoll,
+    ColorMaterialProperty,
+    EntityCollection,
+    ImageMaterialProperty,
+    Camera,
+    HeightReference,
+    HorizontalOrigin,
+    LabelStyle,
+    SceneMode,
+    createCamera,
+    pollToPromise,
+    when) {
     "use strict";
 
     var parser = new DOMParser();
@@ -123,26 +123,26 @@ defineSuite([
     var uberLabelScale = 4;
 
     var options = {
-        camera : {
-            positionWC : new Cartesian3(0.0, 0.0, 0.0),
-            directionWC : new Cartesian3(0.0, 0.0, 1.0),
-            upWC : new Cartesian3(0.0, 1.0, 0.0),
-            pitch : 0.0,
-            heading : 0.0,
-            frustum : {
-                aspectRatio : 1.0,
-                fov : CesiumMath.PI_OVER_FOUR
+        camera: {
+            positionWC: new Cartesian3(0.0, 0.0, 0.0),
+            directionWC: new Cartesian3(0.0, 0.0, 1.0),
+            upWC: new Cartesian3(0.0, 1.0, 0.0),
+            pitch: 0.0,
+            heading: 0.0,
+            frustum: {
+                aspectRatio: 1.0,
+                fov: CesiumMath.PI_OVER_FOUR
             },
-            computeViewRectangle : function() {
+            computeViewRectangle: function() {
                 return Rectangle.MAX_VALUE;
             },
-            pickEllipsoid : function() {
+            pickEllipsoid: function() {
                 return undefined;
             }
         },
-        canvas : {
-            clientWidth : 512,
-            clientHeight : 512
+        canvas: {
+            clientWidth: 512,
+            clientHeight: 512
         }
     };
 
@@ -263,6 +263,18 @@ defineSuite([
         });
     });
 
+    it('if load contains <icon> tag with no image included, no image is added', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleNoIcon.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(!source.entities._entities._array[0]._billboard._image);
+        });
+    });
+
     it('sets DataSource name from Document', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document>\
@@ -270,9 +282,9 @@ defineSuite([
             </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options. canvas,
-            sourceUri : 'NameFromUri.kml'
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'NameFromUri.kml'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('NameInKml', options);
         });
@@ -287,9 +299,9 @@ defineSuite([
             </kml>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options. canvas,
-            sourceUri : 'NameFromUri.kml'
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'NameFromUri.kml'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('NameInKml', options);
         });
@@ -301,9 +313,9 @@ defineSuite([
             </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'NameFromUri.kml'
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'NameFromUri.kml'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('NameFromUri.kml');
         });
@@ -773,7 +785,7 @@ defineSuite([
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
-            expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127/255));
+            expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127 / 255));
         });
     });
 
@@ -1539,9 +1551,9 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid'
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'http://test.invalid'
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
@@ -1570,10 +1582,10 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid',
-            proxy : new DefaultProxy('/proxy/')
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'http://test.invalid',
+            proxy: new DefaultProxy('/proxy/')
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
@@ -1594,10 +1606,10 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid',
-            query : {
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'http://test.invalid',
+            query: {
                 "test": true
             }
         }).then(function(dataSource) {
@@ -1891,9 +1903,9 @@ defineSuite([
         </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            sourceUri : 'http://test.invalid'
+            camera: options.camera,
+            canvas: options.canvas,
+            sourceUri: 'http://test.invalid'
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
@@ -2404,9 +2416,9 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            clampToGround : true
+            camera: options.camera,
+            canvas: options.canvas,
+            clampToGround: true
         }).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
@@ -2927,9 +2939,9 @@ defineSuite([
             </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            clampToGround : true
+            camera: options.camera,
+            canvas: options.canvas,
+            clampToGround: true
         }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
@@ -2966,9 +2978,9 @@ defineSuite([
             </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            clampToGround : true
+            camera: options.camera,
+            canvas: options.canvas,
+            clampToGround: true
         }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
@@ -3063,9 +3075,9 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), {
-            camera : options.camera,
-            canvas : options.canvas,
-            clampToGround : true
+            camera: options.camera,
+            canvas: options.canvas,
+            clampToGround: true
         }).then(function(dataSource) {
             var time1 = JulianDate.fromIso8601('2000-01-01T00:00:00Z');
             var time2 = JulianDate.fromIso8601('2000-01-01T00:00:01Z');
@@ -3265,9 +3277,9 @@ defineSuite([
         });
 
         KmlDataSource.load('Data/KML/networkLink.kml', {
-            camera : options.camera,
-            canvas : options.canvas,
-            query : {
+            camera: options.camera,
+            canvas: options.canvas,
+            query: {
                 password: "PassW0rd",
                 token: 229432
             }
@@ -3458,7 +3470,7 @@ defineSuite([
         });
     });
 
-    it('NetworkLink can accept invalid but common URL tag instead of Link', function(){
+    it('NetworkLink can accept invalid but common URL tag instead of Link', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Url>\
@@ -3782,24 +3794,24 @@ defineSuite([
           </NetworkLink>';
 
         var ourOptions = {
-            camera : {
-                positionWC : new Cartesian3(0.0, 0.0, 0.0),
-                directionWC : new Cartesian3(0.0, 0.0, 1.0),
-                upWC : new Cartesian3(0.0, 1.0, 0.0),
-                pitch : 0.0,
-                heading : 0.0,
-                frustum : {
-                    aspectRatio : 1.0,
-                    fov : CesiumMath.PI_OVER_FOUR
+            camera: {
+                positionWC: new Cartesian3(0.0, 0.0, 0.0),
+                directionWC: new Cartesian3(0.0, 0.0, 1.0),
+                upWC: new Cartesian3(0.0, 1.0, 0.0),
+                pitch: 0.0,
+                heading: 0.0,
+                frustum: {
+                    aspectRatio: 1.0,
+                    fov: CesiumMath.PI_OVER_FOUR
                 },
-                computeViewRectangle : function() {
+                computeViewRectangle: function() {
                     return undefined;
                 },
-                pickEllipsoid : function() {
+                pickEllipsoid: function() {
                     return undefined;
                 }
             },
-            canvas : options.canvas
+            canvas: options.canvas
         };
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), ourOptions).then(function(dataSource) {
@@ -3893,7 +3905,7 @@ defineSuite([
             var entities = dataSource.entities.values;
             expect(entities.length).toBe(3);
             expect(entities[1].billboard).not.toBeNull();
-            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1,2,3));
+            expect(entities[1].position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Cartesian3.fromDegrees(1, 2, 3));
 
             // The root network link is loaded, then the children
             //  since its done recursively the lowest level entities
@@ -3910,16 +3922,16 @@ defineSuite([
         });
     });
 
-	it('can load styles from a KML file with namespaces', function() {
-		return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
-			console.debug(dataSource.entities.values[2]);
-			var polyline = dataSource.entities.values[2].polyline;
-			var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
-			var polylineColor = polyline.material.color.getValue();
-			expect(polylineColor).toEqual(expectedColor);
-			expect(polyline.width.getValue()).toEqual(10);
-		});
-	});
+    it('can load styles from a KML file with namespaces', function() {
+        return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
+            console.debug(dataSource.entities.values[2]);
+            var polyline = dataSource.entities.values[2].polyline;
+            var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
+            var polylineColor = polyline.material.color.getValue();
+            expect(polylineColor).toEqual(expectedColor);
+            expect(polyline.width.getValue()).toEqual(10);
+        });
+    });
 
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -4004,7 +4016,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
         });
     });
 
@@ -4300,7 +4312,7 @@ defineSuite([
         });
     });
 
-    it('Tour: reads LookAt and Camera', function(){
+    it('Tour: reads LookAt and Camera', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document xmlns="http://www.opengis.net/kml/2.2"\
                        xmlns:gx="http://www.google.com/kml/ext/2.2">\
@@ -4427,7 +4439,7 @@ defineSuite([
         });
     });
 
-    it('when clampToGround is false, height isn\'t set if the polygon is extrudable' , function() {
+    it('when clampToGround is false, height isn\'t set if the polygon is extrudable', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Polygon>\
@@ -4442,7 +4454,7 @@ defineSuite([
         });
     });
 
-    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable' , function() {
+    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Polygon>\
@@ -4473,7 +4485,9 @@ defineSuite([
                     </coordinates>\
                 </LineString>\
             </Placemark>';
-        var clampToGroundOptions = combine(options, { clampToGround : true });
+        var clampToGroundOptions = combine(options, {
+            clampToGround: true
+        });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.corridor).toBeDefined();
