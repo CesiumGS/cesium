@@ -259,6 +259,9 @@ define([
         });
     }
 
+    var stencilReference = 0;
+    var stencilMask = 0x0F;
+
     var stencilPreloadRenderState = {
         colorMask : {
             red : false,
@@ -280,8 +283,8 @@ define([
                 zFail : StencilOperation.INCREMENT_WRAP,
                 zPass : StencilOperation.INCREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : false
@@ -310,8 +313,8 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : true,
@@ -335,8 +338,8 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : false
@@ -360,8 +363,8 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         depthTest : {
             enabled : false

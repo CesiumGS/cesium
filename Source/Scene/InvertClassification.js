@@ -92,6 +92,9 @@ define([
         }
     });
 
+    var stencilReference = 0;
+    var stencilMask = 0x0F;
+
     var rsUnclassified = {
         depthMask : false,
         stencilTest : {
@@ -103,11 +106,12 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         blending : BlendingState.ALPHA_BLEND
     };
+
     var rsClassified = {
         depthMask : false,
         stencilTest : {
@@ -119,11 +123,12 @@ define([
                 zPass : StencilOperation.KEEP
             },
             backFunction : StencilFunction.NEVER,
-            reference : 0,
-            mask : ~0
+            reference : stencilReference,
+            mask : stencilMask
         },
         blending : BlendingState.ALPHA_BLEND
     };
+
     var rsDefault = {
         depthMask : true,
         depthTest : {

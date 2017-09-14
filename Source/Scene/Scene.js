@@ -1995,10 +1995,6 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                if (length > 0 && context.stencilBuffer) {
-                    scene._stencilClearCommand.execute(context, passState);
-                }
-
                 // Draw classifications. Modifies 3D Tiles color.
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2016,10 +2012,6 @@ define([
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
-                }
-
-                if (length > 0 && context.stencilBuffer) {
-                    scene._stencilClearCommand.execute(context, passState);
                 }
 
                 // Set stencil
@@ -2048,6 +2040,10 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
+            }
+
+            if (length > 0 && context.stencilBuffer) {
+                scene._stencilClearCommand.execute(context, passState);
             }
 
             if (clearGlobeDepth && useDepthPlane) {
