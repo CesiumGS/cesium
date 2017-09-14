@@ -289,20 +289,6 @@ define([
         this.ready = true;
     };
 
-    function getAnimationIds(cachedGltf) {
-        var animationIds = [];
-        if (defined(cachedGltf)) {
-            var animations = cachedGltf.animations;
-            for (var id in animations) {
-                if (animations.hasOwnProperty(id)) {
-                    animationIds.push(id);
-                }
-            }
-        }
-
-        return animationIds;
-    }
-
     var gltfCache = {};
 
     ///////////////////////////////////////////////////////////////////////////
@@ -368,7 +354,6 @@ define([
         this._cacheKey = cacheKey;
         this._cachedGltf = undefined;
         this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
-        this._animationIds = undefined;
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -2523,48 +2508,48 @@ define([
         }
         loadResources.createRuntimeAnimations = false;
 
-        model._runtime.animations = {};
+        model._runtime.animations = [];
 
         var runtimeNodes = model._runtime.nodes;
         var animations = model.gltf.animations;
         var accessors = model.gltf.accessors;
 
-        for (var animationId in animations) {
-            if (animations.hasOwnProperty(animationId)) {
-                var animation = animations[animationId];
-                var channels = animation.channels;
-                var samplers = animation.samplers;
+        var length = animations.length;
+        for (var i = 0; i < length; ++i) {
+            var animation = animations[i];
+            var channels = animation.channels;
+            var samplers = animation.samplers;
 
-                // Find start and stop time for the entire animation
-                var startTime = Number.MAX_VALUE;
-                var stopTime = -Number.MAX_VALUE;
+            // Find start and stop time for the entire animation
+            var startTime = Number.MAX_VALUE;
+            var stopTime = -Number.MAX_VALUE;
 
-                var length = channels.length;
-                var channelEvaluators = new Array(length);
+            var channelsLength = channels.length;
+            var channelEvaluators = new Array(channelsLength);
 
-                for (var i = 0; i < length; ++i) {
-                    var channel = channels[i];
-                    var target = channel.target;
-                    var path = target.path;
-                    var sampler = samplers[channel.sampler];
-                    var input = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.input]);
-                    var output = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.output]);
+            for (var j = 0; j < channelsLength; ++j) {
+                var channel = channels[j];
+                var target = channel.target;
+                var path = target.path;
+                var sampler = samplers[channel.sampler];
+                var input = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.input]);
+                var output = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.output]);
 
-                    startTime = Math.min(startTime, input[0]);
-                    stopTime = Math.max(stopTime, input[input.length - 1]);
+                startTime = Math.min(startTime, input[0]);
+                stopTime = Math.max(stopTime, input[input.length - 1]);
 
-                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, input, path, output);
+                var spline = ModelAnimationCache.getAnimationSpline(model, i, animation, channel.sampler, sampler, input, path, output);
 
-                    // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
-                }
-
-                model._runtime.animations[animationId] = {
-                    startTime : startTime,
-                    stopTime : stopTime,
-                    channelEvaluators : channelEvaluators
-                };
+                // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
+                channelEvaluators[j] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
             }
+
+            model._runtime.animations[i] = {
+                name : animation.name,
+                startTime : startTime,
+                stopTime : stopTime,
+                channelEvaluators : channelEvaluators
+            };
         }
     }
 
@@ -4551,7 +4536,6 @@ define([
                     processPbrMetallicRoughness(this.gltf, options);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
-                    this._animationIds = getAnimationIds(this.gltf);
 
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
