@@ -152,22 +152,22 @@ Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
 );
 Cesium.knockout.getObservable(viewModel, 'invertedRed').subscribe(
     function(newValue) {
-        viewer.scene.invertClassificationColor.red = newValue;
+        viewer.scene.invertClassificationColor.red = parseFloat(newValue);
     }
 );
 Cesium.knockout.getObservable(viewModel, 'invertedGreen').subscribe(
     function(newValue) {
-        viewer.scene.invertClassificationColor.green = newValue;
+        viewer.scene.invertClassificationColor.green = parseFloat(newValue);
     }
 );
 Cesium.knockout.getObservable(viewModel, 'invertedBlue').subscribe(
     function(newValue) {
-        viewer.scene.invertClassificationColor.blue = newValue;
+        viewer.scene.invertClassificationColor.blue = parseFloat(newValue);
     }
 );
 Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(
     function(newValue) {
-        viewer.scene.invertClassificationColor.alpha = newValue;
+        viewer.scene.invertClassificationColor.alpha = parseFloat(newValue);
     }
 );
 //Sandcastle_End

@@ -335,9 +335,6 @@ define([
         this._pickDepthFramebufferWidth = undefined;
         this._pickDepthFramebufferHeight = undefined;
         this._depthOnlyRenderStateCache = {};
-        this._3DTileInvertedUnclassifiedTranslucentRenderStateCache = {};
-        this._3DTileInvertedUnclassifiedOpaqueRenderStateCache = {};
-        this._3DTileInvertedClassifiedRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -1802,10 +1799,14 @@ define([
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
+
+        if (defined(invertClassification)) {
+            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
+        }
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
@@ -1905,8 +1906,8 @@ define([
         var executeTranslucentCommands;
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
-                scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
-                    scene._oit.executeCommands(scene, executeFunction, passState, commands);
+                scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertClassification) {
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
@@ -2060,10 +2061,15 @@ define([
                 us.updateFrustum(frustum);
             }
 
+            var invertClassification;
+            if (!picking && scene.frameState.invertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+                invertClassification = scene._invertClassification;
+            }
+
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
-            executeTranslucentCommands(scene, executeCommand, passState, commands);
+            executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
             if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
@@ -2601,14 +2607,23 @@ define([
             clear.execute(context, passState);
 
             var depthFramebuffer;
-            if (environmentState.useGlobeDepthFramebuffer) {
-                depthFramebuffer = scene._globeDepth.framebuffer;
-            } else if (environmentState.useFXAA) {
-                depthFramebuffer = scene._fxaa.getColorFramebuffer();
+            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (environmentState.useGlobeDepthFramebuffer) {
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
+                }
             }
+
             scene._invertClassification.previousFramebuffer = depthFramebuffer;
             scene._invertClassification.update(context);
             scene._invertClassification.clear(context, passState);
+
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+            }
         }
     }
 
