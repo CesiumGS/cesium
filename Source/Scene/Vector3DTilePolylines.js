@@ -467,7 +467,7 @@ define([
         var batchIds = this._batchIds;
         var length = batchIds.length;
         for (var i = 0; i < length; ++i) {
-            var batchId = batchIds;
+            var batchId = batchIds[i];
             features[batchId] = new Cesium3DTileFeature(content, batchId);
         }
     };
@@ -496,6 +496,9 @@ define([
 
     var scratchColor = new Color();
 
+    var DEFAULT_COLOR_VALUE = Color.WHITE;
+    var DEFAULT_SHOW_VALUE = true;
+
     /**
      * Apply a style to the content.
      *
@@ -515,8 +518,8 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
-            feature.show = style.show.evaluate(frameState, feature);
+            feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
         }
     };
 
