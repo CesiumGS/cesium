@@ -263,6 +263,18 @@ defineSuite([
         });
     });
 
+    it('if load contains <icon> tag with no image included, no image is added', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleNoIcon.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(!source.entities._entities._array[0]._billboard._image);
+        });
+    });
+
     it('sets DataSource name from Document', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document>\
