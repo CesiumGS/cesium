@@ -2036,6 +2036,18 @@ define([
                 if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                     scene._invertClassification.executeUnclassified(context, passState);
                 }
+
+                if (length > 0 && context.stencilBuffer) {
+                    scene._stencilClearCommand.execute(context, passState);
+                }
+
+                // Draw style over opaque classification.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
             }
 
             if (clearGlobeDepth && useDepthPlane) {
