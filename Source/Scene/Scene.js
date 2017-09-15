@@ -2010,6 +2010,38 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
             } else {
+                // When the invert classification color is opaque:
+                //    Main FBO (FBO1):                   Main_Color   + Main_DepthStencil
+                //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
+                //
+                //    1. Clear FBO2 color to vec4(0.0) for each frustum
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Main_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Main_DepthStencil has stencil bit set to 0 (unclassified) and
+                //           * Invert_Color !== vec4(0.0)
+                //
+                // When the invert classification color is translucent:
+                //    Main FBO (FBO1):                  Main_Color         + Main_DepthStencil
+                //    Invert classification FBO (FBO2): Invert_Color       + Invert_DepthStencil
+                //    IsClassified FBO (FBO3):          IsClassified_Color + Invert_DepthStencil
+                //
+                //    1. Clear FBO2 and FBO3 color to vec4(0.0), stencil to 0, and depth to 1.0
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO3, draw any color when
+                //           * Invert_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color !== vec4(0.0)
+                //    6. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color === vec4(0.0)
+                //
+                // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
+                //
                 scene._invertClassification.clear(context, passState);
 
                 var opaqueClassificationFramebuffer = passState.framebuffer;
@@ -2033,16 +2065,19 @@ define([
 
                 passState.framebuffer = opaqueClassificationFramebuffer;
 
+                // Fullscreen pass to copy classified fragments
                 scene._invertClassification.executeClassified(context, passState);
                 if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                    // Fullscreen pass to copy unclassified fragments when alpha == 1.0
                     scene._invertClassification.executeUnclassified(context, passState);
                 }
 
+                // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
                     scene._stencilClearCommand.execute(context, passState);
                 }
 
-                // Draw style over opaque classification.
+                // Draw style over classification.
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
                 length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
@@ -2080,6 +2115,8 @@ define([
 
             var invertClassification;
             if (!picking && scene.frameState.invertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+                // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
+                // Not executed when undefined.
                 invertClassification = scene._invertClassification;
             }
 
