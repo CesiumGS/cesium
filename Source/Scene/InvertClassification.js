@@ -92,6 +92,10 @@ define([
         }
     });
 
+    InvertClassification.prototype.isTranslucencySupported = function(context) {
+        return context.depthTexture && context.fragmentDepth;
+    };
+
     var stencilReference = 0;
     var stencilMask = 0x0F;
 

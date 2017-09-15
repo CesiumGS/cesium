@@ -650,19 +650,13 @@ define([
          * @default false
          */
         this.invertClassification = false;
-
-        /**
-         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
-         * @type {Color}
-         * @default Color.WHITE
-         */
-        this.invertClassificationColor = Color.clone(Color.WHITE);
+        this._invertClassificationColor = Color.clone(Color.WHITE);
+        this._actualInvertClassificationColor = this._invertClassificationColor;
+        this._invertClassification = new InvertClassification();
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
-
-        this._invertClassification = new InvertClassification();
 
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
@@ -1229,6 +1223,24 @@ define([
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
             }
+        },
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * @type {Color}
+         * @default Color.WHITE
+         */
+        invertClassificationColor : {
+            get : function() {
+                return this._invertClassificationColor;
+            },
+            set : function(value) {
+                this._invertClassificationColor = Color.clone(value, this._invertClassificationColor);
+                this._actualInvertClassificationColor = Color.clone(value, this._actualInvertClassificationColor);
+                if (!this._invertClassification.isTranslucencySupported(this._context)) {
+                    this._actualInvertClassificationColor.alpha = 1.0;
+                }
+            }
         }
     });
 
@@ -1345,7 +1357,7 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
-        frameState.invertClassificationColor = scene.invertClassificationColor;
+        frameState.invertClassificationColor = scene._actualInvertClassificationColor;
 
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
@@ -2616,22 +2628,24 @@ define([
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
 
-            var depthFramebuffer;
-            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
-                if (environmentState.useGlobeDepthFramebuffer) {
-                    depthFramebuffer = scene._globeDepth.framebuffer;
-                } else if (environmentState.useFXAA) {
-                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
+            if (scene.invertClassification) {
+                var depthFramebuffer;
+                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                    if (environmentState.useGlobeDepthFramebuffer) {
+                        depthFramebuffer = scene._globeDepth.framebuffer;
+                    } else if (environmentState.useFXAA) {
+                        depthFramebuffer = scene._fxaa.getColorFramebuffer();
+                    }
                 }
-            }
 
-            scene._invertClassification.previousFramebuffer = depthFramebuffer;
-            scene._invertClassification.update(context);
+                scene._invertClassification.previousFramebuffer = depthFramebuffer;
+                scene._invertClassification.update(context);
 
-            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                var command = scene._invertClassification.unclassifiedCommand;
-                var derivedCommands = command.derivedCommands;
-                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                    var command = scene._invertClassification.unclassifiedCommand;
+                    var derivedCommands = command.derivedCommands;
+                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
             }
         }
     }
