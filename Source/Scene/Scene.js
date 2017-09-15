@@ -2003,6 +2003,8 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
             } else {
+                scene._invertClassification.clear(context, passState);
+
                 var opaqueClassificationFramebuffer = passState.framebuffer;
                 passState.framebuffer = scene._invertClassification._fbo;
 
@@ -2625,7 +2627,6 @@ define([
 
             scene._invertClassification.previousFramebuffer = depthFramebuffer;
             scene._invertClassification.update(context);
-            scene._invertClassification.clear(context, passState);
 
             if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
                 var command = scene._invertClassification.unclassifiedCommand;
