@@ -650,8 +650,15 @@ define([
          * @default false
          */
         this.invertClassification = false;
-        this._invertClassificationColor = Color.clone(Color.WHITE);
-        this._actualInvertClassificationColor = this._invertClassificationColor;
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * @type {Color}
+         * @default Color.WHITE
+         */
+        this.invertClassificationColor = Color.clone(Color.WHITE);
+
+        this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
         this._invertClassification = new InvertClassification();
 
         this._brdfLutGenerator = new BrdfLutGenerator();
@@ -1223,24 +1230,6 @@ define([
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
             }
-        },
-
-        /**
-         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
-         * @type {Color}
-         * @default Color.WHITE
-         */
-        invertClassificationColor : {
-            get : function() {
-                return this._invertClassificationColor;
-            },
-            set : function(value) {
-                this._invertClassificationColor = Color.clone(value, this._invertClassificationColor);
-                this._actualInvertClassificationColor = Color.clone(value, this._actualInvertClassificationColor);
-                if (!this._invertClassification.isTranslucencySupported(this._context)) {
-                    this._actualInvertClassificationColor.alpha = 1.0;
-                }
-            }
         }
     });
 
@@ -1357,6 +1346,12 @@ define([
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
+
+        scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
+        if (!scene._invertClassification.isTranslucencySupported(scene._context)) {
+            scene._actualInvertClassificationColor.alpha = 1.0;
+        }
+
         frameState.invertClassificationColor = scene._actualInvertClassificationColor;
 
         if (defined(scene.globe)) {
