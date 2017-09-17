@@ -8,7 +8,7 @@ Change Log
    * `Scene/OrthographicOffCenterFrustum` has been removed. Use `Core/OrthographicOffCenterFrustum`.
    * `Scene/PerspectiveFrustum` has been removed. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` has been removed. Use `Core/PerspectiveOffCenterFrustum`.
-* Added support for right-to-left languages in labels
+* Added support for right-to-left languages in labels. [#5771](https://github.com/AnalyticalGraphicsInc/cesium/pull/5771)
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
