@@ -435,11 +435,17 @@ defineSuite([
         setCamera(scene.camera, centerLongitude, centerLatitude);
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
             scene.camera.zoomIn(6);
             tileset.pointAttenuation = false;
             expect(scene).notToPick(tileset, 0, 0, 2, 2);
             tileset.pointAttenuation = true;
             expect(scene).toPickPrimitive(tileset, 0, 0, 2, 2);
+
+            // Simulate being further away from the point cloud where attenuation has no effect
+            content._pointAttenuationStartDistance = 1.0;
+            expect(scene).notToPick(tileset, 0, 0, 2, 2);
+
             scene.destroyForSpecs();
         });
     });
