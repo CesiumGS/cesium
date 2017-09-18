@@ -686,7 +686,8 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false
+            useFXAA : false,
+            useInvertClassification : false
         };
 
         this._useWebVR = false;
@@ -1981,7 +1982,7 @@ define([
                 clearDepth.execute(context, passState);
             }
 
-            if (!scene.frameState.invertClassification || picking) {
+            if (!environmentState.useInvertClassification || picking) {
                 // Common/fastest path. Draw 3D Tiles and classification normally.
 
                 // Draw 3D Tiles
@@ -2104,7 +2105,7 @@ define([
             }
 
             var invertClassification;
-            if (!picking && scene.frameState.invertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+            if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
                 // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
@@ -2649,26 +2650,27 @@ define([
 
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
+        }
 
-            if (scene.invertClassification) {
-                var depthFramebuffer;
-                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
-                    if (environmentState.useGlobeDepthFramebuffer) {
-                        depthFramebuffer = scene._globeDepth.framebuffer;
-                    } else if (environmentState.useFXAA) {
-                        depthFramebuffer = scene._fxaa.getColorFramebuffer();
-                    }
+        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        if (useInvertClassification) {
+            var depthFramebuffer;
+            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (environmentState.useGlobeDepthFramebuffer) {
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
                 }
+            }
 
-                scene._invertClassification.previousFramebuffer = depthFramebuffer;
-                scene._invertClassification.update(context);
-                scene._invertClassification.clear(context, passState);
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
 
-                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                    var command = scene._invertClassification.unclassifiedCommand;
-                    var derivedCommands = command.derivedCommands;
-                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
-                }
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
             }
         }
     }
