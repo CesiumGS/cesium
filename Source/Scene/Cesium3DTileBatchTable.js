@@ -1343,7 +1343,8 @@ define([
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
             rs.stencilTest.enabled = true;
-            rs.stencilTest.reference = reference;
+            rs.stencilTest.mask = 0xF0;
+            rs.stencilTest.reference = reference << 4;
             rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
             rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
             derivedCommand.renderState = RenderState.fromCache(rs);
