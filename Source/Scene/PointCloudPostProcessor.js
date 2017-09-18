@@ -89,7 +89,7 @@ define([
         this._drawCommands = undefined;
         this._clearCommands = undefined;
 
-        this.densityScaleFactor = 10.0;
+        this.densityScaleFactor = '10.0';
         this.occlusionAngle = options.occlusionAngle;
         this.rangeParameter = options.rangeParameter;
         this.neighborhoodHalfWidth = options.neighborhoodHalfWidth;
@@ -507,13 +507,14 @@ define([
         densityEdgeCullFS = addConstants(
             densityEdgeCullFS,
             'densityScaleFactor',
-            '10.0'
+            processor.densityScaleFactor
         );
 
         densityEdgeCullFS = addConstants(
-                densityEdgeCullFS,
-                'dropoutEnabled',
-                processor.dropoutFactor > 1e-6 && context.webgl2);
+            densityEdgeCullFS,
+            'dropoutEnabled',
+            processor.dropoutFactor > 1e-6 && context.webgl2
+        );
 
         return context.createViewportQuadCommand(densityEdgeCullFS, {
             uniformMap : uniformMap,
@@ -602,7 +603,7 @@ define([
         regionGrowingPassFS = addConstants(
             regionGrowingPassFS,
             'densityScaleFactor',
-            '10.0'
+            processor.densityScaleFactor
         );
 
         regionGrowingPassFS = addConstants(
@@ -738,7 +739,7 @@ define([
         stencilMaskStageFS = addConstants(
             stencilMaskStageFS,
             'densityScaleFactor',
-            '10.0'
+            processor.densityScaleFactor
         );
 
         stencilMaskStageFS = addConstants(
