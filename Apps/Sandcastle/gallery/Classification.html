@@ -184,6 +184,7 @@ var currentObjectId;
 var currentPrimitive;
 var currentColor;
 var currentShow;
+var attributes;
 
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 handler.setInputAction(function(movement) {
@@ -194,7 +195,9 @@ handler.setInputAction(function(movement) {
         }
 
         if (Cesium.defined(currentObjectId)) {
-            currentPrimitive.getGeometryInstanceAttributes(currentObjectId).color = currentColor;
+            attributes = currentPrimitive.getGeometryInstanceAttributes(currentObjectId);
+            attributes.color = currentColor;
+            attributes.show = currentShow;
             currentObjectId = undefined;
             currentPrimitive = undefined;
             currentColor = undefined;

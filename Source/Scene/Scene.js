@@ -696,7 +696,8 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false
+            useFXAA : false,
+            useInvertClassification : false
         };
 
         this._useWebVR = false;
@@ -1194,7 +1195,7 @@ define([
             }
         },
 
-         /**
+        /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
          * @memberof Scene.prototype
          *
@@ -1259,10 +1260,10 @@ define([
         Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
         Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
         return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -1991,7 +1992,7 @@ define([
                 clearDepth.execute(context, passState);
             }
 
-            if (!scene.frameState.invertClassification || picking) {
+            if (!environmentState.useInvertClassification || picking) {
                 // Common/fastest path. Draw 3D Tiles and classification normally.
 
                 // Draw 3D Tiles
@@ -2114,7 +2115,7 @@ define([
             }
 
             var invertClassification;
-            if (!picking && scene.frameState.invertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+            if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
                 // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
@@ -2679,6 +2680,28 @@ define([
                     var derivedCommands = command.derivedCommands;
                     derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
                 }
+            }
+        }
+
+        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        if (useInvertClassification) {
+            var depthFramebuffer;
+            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (environmentState.useGlobeDepthFramebuffer) {
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
+                }
+            }
+
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
+
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
             }
         }
     }
@@ -3533,7 +3556,7 @@ define([
         return destroyObject(this);
     };
 
-     /**
+    /**
      * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
      * HTML element at the same screen position as an object in the scene.
      *
