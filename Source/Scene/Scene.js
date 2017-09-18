@@ -1348,7 +1348,7 @@ define([
         frameState.invertClassification = scene.invertClassification;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
-        if (!scene._invertClassification.isTranslucencySupported(scene._context)) {
+        if (!InvertClassification.isTranslucencySupported(scene._context)) {
             scene._actualInvertClassificationColor.alpha = 1.0;
         }
 

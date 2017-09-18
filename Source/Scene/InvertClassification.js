@@ -92,7 +92,7 @@ define([
         }
     });
 
-    InvertClassification.prototype.isTranslucencySupported = function(context) {
+    InvertClassification.isTranslucencySupported = function(context) {
         return context.depthTexture && context.fragmentDepth;
     };
 
