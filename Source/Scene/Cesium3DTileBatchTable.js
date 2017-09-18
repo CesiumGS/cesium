@@ -29,6 +29,7 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
+        './DepthFunction',
         './getBinaryAccessor',
         './StencilFunction',
         './StencilOperation'
@@ -63,6 +64,7 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
+        DepthFunction,
         getBinaryAccessor,
         StencilFunction,
         StencilOperation) {
@@ -1181,6 +1183,46 @@ define([
         };
     };
 
+    Cesium3DTileBatchTable.prototype.getPickVertexShaderCallbackIgnoreShow = function(batchIdAttributeName) {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        var that = this;
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                '}';
+
+            return renamedSource + '\n' + getGlslComputeSt(that) + newMain;
+        };
+    };
+
+    Cesium3DTileBatchTable.prototype.getPickFragmentShaderCallbackIgnoreShow = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
+        return function(source) {
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
+            var newMain =
+                'uniform sampler2D tile_pickTexture; \n' +
+                'varying vec2 tile_featureSt; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    tile_main(); \n' +
+                '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
+                '}';
+
+            return renamedSource + '\n' + newMain;
+        };
+    };
+
     Cesium3DTileBatchTable.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
             return;
@@ -1348,6 +1390,9 @@ define([
             // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
+            if (rs.depthTest.enabled && rs.depthTest.func === DepthFunction.LESS) {
+                rs.depthTest.func = DepthFunction.LESS_OR_EQUAL;
+            }
             // Stencil test is masked to the most significant 4 bits so the reference is shifted.
             // This is to prevent clearing the stencil before classification which needs the least significant
             // bits for increment/decrement operations.
