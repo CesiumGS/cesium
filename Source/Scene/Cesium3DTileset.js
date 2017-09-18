@@ -1502,7 +1502,7 @@ define([
             var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
-            commandList.length += backfaceCommands.length;
+            commandList.length += backfaceCommandsLength;
 
             // copy commands to the back of the commandList
             for (i = addedCommandsLength - 1; i >= 0; --i) {
