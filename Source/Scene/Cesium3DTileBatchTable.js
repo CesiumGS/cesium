@@ -1395,7 +1395,7 @@ define([
             }
             // Stencil test is masked to the most significant 4 bits so the reference is shifted.
             // This is to prevent clearing the stencil before classification which needs the least significant
-            // bits for increment/decrement operations.            
+            // bits for increment/decrement operations.
             rs.stencilTest.enabled = true;
             rs.stencilTest.mask = 0xF0;
             rs.stencilTest.reference = reference << 4;

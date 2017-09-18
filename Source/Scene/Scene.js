@@ -52,13 +52,10 @@ define([
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        './BlendingState',
         './BrdfLutGenerator',
         './Camera',
         './CreditDisplay',
-        './CullFace',
         './DebugCameraPrimitive',
-        './DepthFunction',
         './DepthPlane',
         './DeviceOrientationCameraController',
         './Fog',
@@ -80,8 +77,6 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './ShadowMap',
-        './StencilFunction',
-        './StencilOperation',
         './SunPostProcess',
         './TweenCollection'
     ], function(
@@ -138,13 +133,10 @@ define([
         ShaderProgram,
         ShaderSource,
         Texture,
-        BlendingState,
         BrdfLutGenerator,
         Camera,
         CreditDisplay,
-        CullFace,
         DebugCameraPrimitive,
-        DepthFunction,
         DepthPlane,
         DeviceOrientationCameraController,
         Fog,
@@ -166,8 +158,6 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         ShadowMap,
-        StencilFunction,
-        StencilOperation,
         SunPostProcess,
         TweenCollection) {
     'use strict';
@@ -2660,27 +2650,6 @@ define([
 
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
-
-            if (scene.invertClassification) {
-                var depthFramebuffer;
-                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
-                    if (environmentState.useGlobeDepthFramebuffer) {
-                        depthFramebuffer = scene._globeDepth.framebuffer;
-                    } else if (environmentState.useFXAA) {
-                        depthFramebuffer = scene._fxaa.getColorFramebuffer();
-                    }
-                }
-
-                scene._invertClassification.previousFramebuffer = depthFramebuffer;
-                scene._invertClassification.update(context);
-                scene._invertClassification.clear(context, passState);
-
-                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                    var command = scene._invertClassification.unclassifiedCommand;
-                    var derivedCommands = command.derivedCommands;
-                    derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
-                }
-            }
         }
 
         var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
@@ -3098,8 +3067,6 @@ define([
         if (!defined(depthOnlyState)) {
             var rs = RenderState.getState(renderState);
             rs.depthMask = true;
-            rs.cull.enabled = true;
-            rs.cull.face = CullFace.BACK;
             rs.colorMask = {
                 red : false,
                 green : false,

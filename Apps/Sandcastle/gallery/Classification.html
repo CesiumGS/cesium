@@ -205,7 +205,6 @@ handler.setInputAction(function(movement) {
         }
     }
 
-    var attributes;
     if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.primitive) && Cesium.defined(pickedObject.id) && Cesium.defined(pickedObject.primitive.getGeometryInstanceAttributes)) {
         currentObjectId = pickedObject.id;
         currentPrimitive = pickedObject.primitive;
