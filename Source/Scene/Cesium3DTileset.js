@@ -645,6 +645,7 @@ define([
          * @param {Number} densityHalfWidth Half of the width of the density estimation operator's kernel size minus 1
          * @param {Number} neighborhoodVectorSize Parameter for the edge culling algorithm; decrease to make edge culling more aggressive
          * @param {Number} maxAbsRatio Parameter for the edge culling algorithm; decrease to make edge culling more aggressive
+         * @param {Number} distanceConstraint Parameter for the edge culling algorithm; decrease to make edge culling more aggressive
          * @param {Boolean} densityViewEnabled Whether or not the density view is enabled
          * @param {Boolean} stencilViewEnabled Whether or not the stencil view is enabled
          * @param {Boolean} pointAttenuationMultiplier The factor by which points at the near plane are larger than points at the far plane
@@ -674,6 +675,7 @@ define([
             densityHalfWidth : 4,
             neighborhoodVectorSize : 10.0,
             maxAbsRatio : 0.9,
+            distanceConstraint : 200,
             densityViewEnabled : false,
             stencilViewEnabled : false,
             pointAttenuationMultiplier : 2.0,

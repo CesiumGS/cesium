@@ -97,6 +97,7 @@ define([
         this.densityHalfWidth = options.densityHalfWidth;
         this.neighborhoodVectorSize = options.neighborhoodVectorSize;
         this.maxAbsRatio = options.maxAbsRatio;
+        this.distanceConstraint = options.distanceConstraint;
         this.densityViewEnabled = options.densityViewEnabled;
         this.stencilViewEnabled = options.stencilViewEnabled;
         this.pointAttenuationMultiplier = options.pointAttenuationMultiplier;
@@ -486,6 +487,9 @@ define([
             },
             u_maxAbsRatio : function() {
                 return processor.maxAbsRatio;
+            },
+            u_distanceConstraint : function() {
+                return processor.distanceConstraint;
             },
             u_dropoutFactor : function() {
                 return processor.dropoutFactor;
@@ -1014,6 +1018,7 @@ define([
             tileset.pointCloudPostProcessorOptions.densityHalfWidth !== this.densityHalfWidth ||
             tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize !== this.neighborhoodVectorSize ||
             tileset.pointCloudPostProcessorOptions.maxAbsRatio !== this.maxAbsRatio ||
+            tileset.pointCloudPostProcessorOptions.distanceConstraint !== this.distanceConstraint ||
             tileset.pointCloudPostProcessorOptions.densityViewEnabled !== this.densityViewEnabled ||
             tileset.pointCloudPostProcessorOptions.depthViewEnabled !== this.depthViewEnabled ||
             tileset.pointCloudPostProcessorOptions.stencilViewEnabled !== this.stencilViewEnabled ||
@@ -1034,6 +1039,7 @@ define([
             this.densityViewEnabled = tileset.pointCloudPostProcessorOptions.densityViewEnabled;
             this.depthViewEnabled = tileset.pointCloudPostProcessorOptions.depthViewEnabled;
             this.stencilViewEnabled = tileset.pointCloudPostProcessorOptions.stencilViewEnabled;
+            this.distanceConstraint = tileset.pointCloudPostProcessorOptions.distanceConstraint;
             this.maxAbsRatio = tileset.pointCloudPostProcessorOptions.maxAbsRatio;
             this.pointAttenuationMultiplier = tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier;
             this.useTriangle = tileset.pointCloudPostProcessorOptions.useTriangle;

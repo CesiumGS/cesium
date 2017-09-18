@@ -69,6 +69,13 @@
             </td>
           </tr>
           <tr>
+            <td>Max Distance Constraint</td>
+            <td>
+                <input type="range" min="0.0" max="10000" step="1" data-bind="value: distanceConstraint, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: distanceConstraint">
+            </td>
+          </tr>
+          <tr>
             <td>Point Attenuation Multiplier</td>
             <td>
                 <input type="range" min="1.0" max="10.0" step="1" data-bind="value: pointAttenuationMultiplier, valueUpdate: 'input'">
@@ -137,6 +144,7 @@ var viewModel = {
     neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
     neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
     maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
+    distanceConstraint : tileset.pointCloudPostProcessorOptions.distanceConstraint,
     pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier,
     sigmoidDomainOffset : tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset,
     sigmoidSharpness : tileset.pointCloudPostProcessorOptions.sigmoidSharpness,
@@ -163,6 +171,7 @@ subscribeParameter('neighborhoodHalfWidth');
 subscribeParameter('numRegionGrowingPasses');
 subscribeParameter('neighborhoodVectorSize');
 subscribeParameter('maxAbsRatio');
+subscribeParameter('distanceConstraint');
 subscribeParameter('pointAttenuationMultiplier');
 subscribeParameter('sigmoidDomainOffset');
 subscribeParameter('sigmoidSharpness');

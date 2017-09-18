@@ -1,6 +1,7 @@
 uniform sampler2D u_pointCloud_ecTexture;
 uniform float u_neighborhoodVectorSize;
 uniform float u_maxAbsRatio;
+uniform float u_distanceConstraint;
 uniform float u_dropoutFactor;
 varying vec2 v_textureCoordinates;
 
@@ -15,6 +16,7 @@ void main()
     ivec2 pos = ivec2(int(gl_FragCoord.x), int(gl_FragCoord.y));
     
     float closestNeighbor = float(neighborhoodHalfWidth) + 1.0;
+    float closestNeighborDist = 1e10;
     vec2 neighborhoodAccum = vec2(0.0);
     vec2 absNeighborhoodAccum = vec2(0.0);
     
@@ -55,11 +57,13 @@ void main()
                 neighborhoodAccum += vec2(d);
                 absNeighborhoodAccum += abs(vec2(d));
                 closestNeighbor = min(closestNeighbor, max(abs(float(i)), abs(float(j))));
+                closestNeighborDist = min(closestNeighborDist, neighbor);
             }
         }
         
         float absRatio = length(neighborhoodAccum) / length(absNeighborhoodAccum);
-        if (int(closestNeighbor) <= neighborhoodHalfWidth && !(absRatio > u_maxAbsRatio && length(neighborhoodAccum) > u_neighborhoodVectorSize))
+        if (int(closestNeighbor) <= neighborhoodHalfWidth && !(absRatio > u_maxAbsRatio && length(neighborhoodAccum) > u_neighborhoodVectorSize) &&
+            closestNeighborDist * closestNeighbor < u_distanceConstraint)
         {
             gl_FragData[0] = vec4(vec3(closestNeighbor /
                                        densityScaleFactor), 0.0);
