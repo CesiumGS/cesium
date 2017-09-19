@@ -1,13 +1,17 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defined',
         '../Core/Matrix4',
         '../Scene/Vector3DTileBatch',
         './createTaskProcessorWorker'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Color,
+        defined,
         Matrix4,
         Vector3DTileBatch,
         createTaskProcessorWorker) {
@@ -35,11 +39,20 @@ define([
         return count;
     }
 
-    function packBuffer(batchedIndices) {
-        var length = 1 + packedBatchedIndicesLength(batchedIndices);
+    function packBuffer(batchedIndices, boundingVolumes) {
+        var numBVs = boundingVolumes.length;
+        var length = 1 + numBVs * BoundingSphere.packedLength + 1 + packedBatchedIndicesLength(batchedIndices);
+
         var packedBuffer = new Float64Array(length);
 
         var offset = 0;
+        packedBuffer[offset++] = numBVs;
+
+        for (var i = 0; i < numBVs; ++i) {
+            BoundingSphere.pack(boundingVolumes[i], packedBuffer, offset);
+            offset += BoundingSphere.packedLength;
+        }
+
         var indicesLength = batchedIndices.length;
         packedBuffer[offset++] = indicesLength;
 
@@ -65,10 +78,9 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+    var scratchMesh = [];
 
     function createMeshesFromVectorTile(parameters, transferableObjects) {
-        debugger;
-
         var positions = new Float32Array(parameters.positions);
         var indexOffsets = new Uint32Array(parameters.indexOffsets);
         var indexCounts = new Uint32Array(parameters.indexCounts);
@@ -77,7 +89,7 @@ define([
         var batchTableColors = new Uint32Array(parameters.batchTableColors);
 
         var numMeshes = indexOffsets.length;
-        //var boundingVolumes = new Array(numMeshes);
+        var boundingVolumes = new Array(numMeshes);
 
         var vertexBatchIds = new Uint16Array(positions.length / 3);
 
@@ -98,15 +110,26 @@ define([
         }
 
         var batchedIndices = new Array(numMeshes);
+        var mesh = scratchMesh;
 
         for (i = 0; i < numMeshes; ++i) {
             var batchId = batchIds[i];
             var offset = indexOffsets[batchId];
             var count = indexCounts[batchId];
 
+            mesh.length = count;
+
             for (var j = 0; j < count; ++j) {
                 var index = indices[offset + j];
                 vertexBatchIds[index] = batchId;
+
+                var result = mesh[j];
+                if (!defined(result)) {
+                    result = mesh[j] = new Cartesian3();
+                }
+
+                var meshPosition = Cartesian3.unpack(positions, index * 3, scratchPosition);
+                Cartesian3.add(meshPosition, center, result);
             }
 
             batchedIndices[i] = new Vector3DTileBatch({
@@ -115,9 +138,11 @@ define([
                 color : Color.fromRgba(batchTableColors[batchId]),
                 batchIds : [batchId]
             });
+
+            boundingVolumes[i] = BoundingSphere.fromPoints(mesh);
         }
 
-        var packedBuffer = packBuffer(batchedIndices);
+        var packedBuffer = packBuffer(batchedIndices, boundingVolumes);
 
         transferableObjects.push(positions.buffer, indices.buffer, indexOffsets.buffer, indexCounts.buffer, vertexBatchIds.buffer, packedBuffer.buffer);
 

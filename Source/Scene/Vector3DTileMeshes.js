@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -12,6 +13,7 @@ define([
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Color,
         defaultValue,
@@ -47,6 +49,7 @@ define([
         this._transferrableBatchIds = undefined;
         this._batchTableColors = undefined;
         this._packedBuffer = undefined;
+        this._boundingVolumes = undefined;
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -89,11 +92,19 @@ define([
         return packedBuffer;
     }
 
-    function unpackBuffer(polygons, packedBuffer) {
+    function unpackBuffer(meshes, packedBuffer) {
         var offset = 0;
 
+        var numBVS = packedBuffer[offset++];
+        var bvs = meshes._boundingVolumes = new Array(numBVS);
+
+        for (var i = 0; i < numBVS; ++i) {
+            bvs[i] = BoundingSphere.unpack(packedBuffer, offset);
+            offset += BoundingSphere.packedLength;
+        }
+
         var numBatchedIndices = packedBuffer[offset++];
-        var bis = polygons._batchedIndices = new Array(numBatchedIndices);
+        var bis = meshes._batchedIndices = new Array(numBatchedIndices);
 
         for (var j = 0; j < numBatchedIndices; ++j) {
             var color = Color.unpack(packedBuffer, offset);
@@ -219,7 +230,7 @@ define([
                 indexCounts : meshes._indexCounts,
                 batchedIndices : meshes._batchedIndices,
                 boundingVolume : meshes._boundingVolume,
-                boundingVolumes : [],//meshes._boundingVolumes,
+                boundingVolumes : meshes._boundingVolumes,
                 center : meshes._center,
                 pickObject : defaultValue(meshes._pickObject, meshes)
             });
@@ -243,6 +254,7 @@ define([
             meshes._transferrableBatchIds = undefined;
             meshes._batchTableColors = undefined;
             meshes._packedBuffer = undefined;
+            meshes._boundingVolumes = undefined;
 
             meshes._readyPromise.resolve();
         }
