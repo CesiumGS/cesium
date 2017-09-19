@@ -190,7 +190,7 @@ define([
         }
     }
 
-    var createVerticesTaskProcessor = new TaskProcessor('createVerticesFromVectorTile');
+    var createVerticesTaskProcessor = new TaskProcessor('createPolygonsFromVectorTile');
     var scratchColor = new Color();
 
     function createPrimitive(polygons) {
@@ -222,7 +222,6 @@ define([
 
                 var length = batchTableColors.length;
                 for (var i = 0; i < length; ++i) {
-                    //var color = batchTable.getColor(batchIds[i], scratchColor);
                     var color = batchTable.getColor(i, scratchColor);
                     batchTableColors[i] = color.toRgba();
                 }

@@ -65,6 +65,7 @@ define([
         this._meshes = undefined;
         this._geometries = undefined;
 
+        this._contentReadyPromise = undefined;
         this._readyPromise = when.defer();
 
         this._batchTable = undefined;
@@ -794,14 +795,22 @@ define([
             this._geometries.update(frameState);
         }
 
-        if (!defined(this._polygonReadyPromise)) {
-            if (defined(this._polygons)) {
+        if (!defined(this._contentReadyPromise)) {
+            var promise;
+            if (defined(this._polygons) && defined(this._meshes)) {
+                promise = when.all([this._polygons.readyPromise, this._meshes.readyPromise]);
+            } else if (defined(this._polygons)) {
+                promise = this._polygons.readyPromise;
+            } else if (defined(this._meshes)) {
+                promise = this._meshes.readyPromise;
+            }
+
+            if (defined(promise)) {
                 var that = this;
-                this._polygonReadyPromise = this._polygons.readyPromise.then(function() {
+                this._contentReadyPromise = promise.then(function() {
                     that._readyPromise.resolve(that);
                 });
             } else {
-                this._polygonReadyPromise = true;
                 this._readyPromise.resolve(this);
             }
         }

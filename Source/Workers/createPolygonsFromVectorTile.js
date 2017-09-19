@@ -123,7 +123,7 @@ define([
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
 
-    function createVerticesFromVectorTile(parameters, transferableObjects) {
+    function createPolygonsFromVectorTile(parameters, transferableObjects) {
         var positions = new Uint16Array(parameters.positions);
         var counts = new Uint32Array(parameters.counts);
         var indexCounts = new Uint32Array(parameters.indexCounts);
@@ -411,5 +411,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createVerticesFromVectorTile);
+    return createTaskProcessorWorker(createPolygonsFromVectorTile);
 });
