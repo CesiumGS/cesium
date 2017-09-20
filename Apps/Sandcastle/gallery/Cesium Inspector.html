@@ -37,7 +37,7 @@ var globe = scene.globe;
 globe.depthTestAgainstTerrain = true;
 
 var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask: true,
     requestVertexNormals: true
 });
@@ -47,7 +47,7 @@ viewer.terrainProvider = cesiumTerrainProviderHeightmaps;
 //Add Cesium Inspector
 viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
-//Add Primitives   
+//Add Primitives
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : Cesium.BoxGeometry.fromDimensions({
@@ -65,7 +65,7 @@ scene.primitives.add(new Cesium.Primitive({
         closed: true
     })
 }));
-       
+
 scene.primitives.add(new Cesium.Primitive({
     geometryInstances : new Cesium.GeometryInstance({
         geometry : new Cesium.RectangleGeometry({
@@ -85,7 +85,7 @@ billboards.add({
     position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
     image : '../images/Cesium_Logo_overlay.png'
 });
-    
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

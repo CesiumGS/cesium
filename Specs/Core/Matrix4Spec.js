@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Matrix4',
         'Core/Cartesian3',

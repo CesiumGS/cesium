@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/defaultValue',
@@ -72,6 +71,23 @@ define([
                     internalFormat = WebGLConstants.DEPTH_COMPONENT24;
                 }
             }
+
+            if (pixelDatatype === PixelDatatype.FLOAT) {
+                switch (pixelFormat) {
+                    case PixelFormat.RGBA:
+                        internalFormat = WebGLConstants.RGBA32F;
+                        break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB32F;
+                        break;
+                    case PixelFormat.RG:
+                        internalFormat = WebGLConstants.RG32F;
+                        break;
+                    case PixelFormat.R:
+                        internalFormat = WebGLConstants.R32F;
+                        break;
+                }
+            }
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -139,7 +155,7 @@ define([
                 throw new DeveloperError('When options.pixelFormat is ETC1 compressed, this WebGL implementation must support the WEBGL_texture_compression_etc1 extension. Check context.etc1.');
             }
 
-            if (PixelFormat.compressedTextureSize(internalFormat, width, height) !== source.arrayBufferView.byteLength) {
+            if (PixelFormat.compressedTextureSizeInBytes(internalFormat, width, height) !== source.arrayBufferView.byteLength) {
                 throw new DeveloperError('The byte length of the array buffer is invalid for the compressed texture with the given width and height.');
             }
         }
@@ -189,6 +205,13 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
+        var sizeInBytes;
+        if (isCompressed) {
+            sizeInBytes = PixelFormat.compressedTextureSizeInBytes(pixelFormat, width, height);
+        } else {
+            sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
+        }
+
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -198,6 +221,8 @@ define([
         this._width = width;
         this._height = height;
         this._dimensions = new Cartesian2(width, height);
+        this._hasMipmap = false;
+        this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
         this._sampler = undefined;
@@ -380,6 +405,14 @@ define([
                 return this._height;
             }
         },
+        sizeInBytes : {
+            get : function() {
+                if (this._hasMipmap) {
+                    return Math.floor(this._sizeInBytes * 4 / 3);
+                }
+                return this._sizeInBytes;
+            }
+        },
         _target : {
             get : function() {
                 return this._textureTarget;
@@ -527,6 +560,7 @@ define([
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
      *
      * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is a compressed format.
      * @exception {DeveloperError} hint is invalid.
      * @exception {DeveloperError} This texture's width must be a power of two to call generateMipmap().
      * @exception {DeveloperError} This texture's height must be a power of two to call generateMipmap().
@@ -552,6 +586,8 @@ define([
             throw new DeveloperError('hint is invalid.');
         }
         //>>includeEnd('debug');
+
+        this._hasMipmap = true;
 
         var gl = this._context._gl;
         var target = this._textureTarget;

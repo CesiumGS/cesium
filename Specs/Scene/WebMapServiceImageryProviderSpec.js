@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/WebMapServiceImageryProvider',
         'Core/Cartographic',
@@ -10,6 +9,7 @@ defineSuite([
         'Core/Math',
         'Core/queryToObject',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Core/WebMercatorTilingScheme',
         'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
@@ -30,6 +30,7 @@ defineSuite([
         CesiumMath,
         queryToObject,
         Rectangle,
+        RequestScheduler,
         WebMercatorTilingScheme,
         GetFeatureInfoFormat,
         Imagery,
@@ -40,6 +41,10 @@ defineSuite([
         pollToPromise,
         Uri) {
     'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -133,9 +138,10 @@ defineSuite([
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
 
-            expect(loadImage.createImage).toHaveBeenCalled();
         });
     });
 
@@ -182,9 +188,9 @@ defineSuite([
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -200,16 +206,15 @@ defineSuite([
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 var questionMarkCount = url.match(/\?/g).length;
                 expect(questionMarkCount).toEqual(1);
-
                 expect(url).not.toContain('&&');
 
                 // Don't need to actually load image, but satisfy the request.
                 deferred.resolve(true);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -566,11 +571,14 @@ defineSuite([
 
                 expect(params.format).toEqual('foo');
                 expect(params.format).not.toEqual('image/jpeg');
+
+                // Just return any old image.
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
 
-            provider.requestImage(0, 0, 0);
-
-            expect(loadImage.createImage).toHaveBeenCalled();
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(loadImage.createImage).toHaveBeenCalled();
+            });
         });
     });
 
@@ -700,6 +708,9 @@ defineSuite([
                 if (tries < 3) {
                     error.retry = true;
                 }
+                setTimeout(function() {
+                    RequestScheduler.update();
+                }, 1);
             });
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -717,6 +728,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;

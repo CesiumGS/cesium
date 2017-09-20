@@ -2,7 +2,7 @@
 
 Our development culture is committed to testing.  Cesium is used in diverse use cases on a wide array of platforms so it is important for it to be well tested.
 
-As of Cesium 1.15, Cesium has over 7,000 tests with 93% code coverage.  Cesium has almost as much test code (94K lines) as engine code (98K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
+As of Cesium 1.35, Cesium has over 8,800 tests with 93% code coverage.  Cesium has as much test code (126K lines) as engine code (126K).  We are unaware of any other project of this size and lifetime and with this many contributors that has similar stats.
 
 All new code should have 100% code coverage and should pass all tests.  Always run the tests before opening a pull request.
 
@@ -15,7 +15,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-   * [Running Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
+   * [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -233,7 +233,6 @@ Tests are written in JavaScript using Jasmine.  It is important to realize that 
 Here is a stripped down version of the tests:
 
 ```javascript
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian3'
     ], function(
@@ -630,7 +629,7 @@ it('can create a billboard using a URL', function() {
     return pollToPromise(function() {
         return b.ready;
     }).then(function() {
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 });
 ```
@@ -696,7 +695,6 @@ This test is more cohesive and easier to debug than if it were written using a _
 As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `defineSuite`.
 
 ```javascript
-/*global defineSuite*/
 defineSuite([
         'Scene/DebugModelMatrixPrimitive',
         'Specs/createScene'

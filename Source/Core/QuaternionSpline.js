@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -90,6 +89,7 @@ define([
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see LinearSpline
+     * @see WeightSpline
      */
     function QuaternionSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

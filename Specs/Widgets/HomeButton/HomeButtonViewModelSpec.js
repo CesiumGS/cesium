@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/HomeButton/HomeButtonViewModel',
         'Core/Ellipsoid',

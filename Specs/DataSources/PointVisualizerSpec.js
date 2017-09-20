@@ -1,9 +1,9 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PointVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defined',
         'Core/defineProperties',
         'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
@@ -24,6 +24,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        defined,
         defineProperties,
         DistanceDisplayCondition,
         Ellipsoid,
@@ -82,7 +83,9 @@ defineSuite([
     });
 
     afterEach(function() {
-        visualizer = visualizer && visualizer.destroy();
+        if (defined(visualizer)) {
+            visualizer = visualizer.destroy();
+        }
         entityCluster.destroy();
     });
 
@@ -118,10 +121,11 @@ defineSuite([
 
     it('removes the listener from the entity collection when destroyed', function() {
         var entityCollection = new EntityCollection();
-        var visualizer = new PointVisualizer(entityCluster, entityCollection);
+        visualizer = new PointVisualizer(entityCluster, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
+        visualizer = undefined;
     });
 
     it('object with no point does not create a pointPrimitive.', function() {

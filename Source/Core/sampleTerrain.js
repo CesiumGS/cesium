@@ -1,12 +1,9 @@
-/*global define*/
 define([
         '../ThirdParty/when',
-        './defined',
-        './DeveloperError'
+        './Check'
     ], function(
         when,
-        defined,
-        DeveloperError) {
+        Check) {
     'use strict';
 
     /**
@@ -31,7 +28,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'https://assets.agi.com/stk-terrain/world'
+     *     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
@@ -45,32 +42,12 @@ define([
      */
     function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        if (!defined(level)) {
-            throw new DeveloperError('level is required.');
-        }
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
+        Check.typeOf.object('terrainProvider', terrainProvider);
+        Check.typeOf.number('level', level);
+        Check.defined('positions', positions);
         //>>includeEnd('debug');
 
-        var deferred = when.defer();
-
-        function doSamplingWhenReady() {
-            if (terrainProvider.ready) {
-                when(doSampling(terrainProvider, level, positions), function(updatedPositions) {
-                    deferred.resolve(updatedPositions);
-                });
-            } else {
-                setTimeout(doSamplingWhenReady, 10);
-            }
-        }
-
-        doSamplingWhenReady();
-
-        return deferred.promise;
+        return terrainProvider.readyPromise.then(function() { return doSampling(terrainProvider, level, positions); });
     }
 
     function doSampling(terrainProvider, level, positions) {
@@ -107,7 +84,7 @@ define([
         var tilePromises = [];
         for (i = 0; i < tileRequests.length; ++i) {
             var tileRequest = tileRequests[i];
-            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level, false);
+            var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
             var tilePromise = when(requestPromise, createInterpolateFunction(tileRequest), createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }

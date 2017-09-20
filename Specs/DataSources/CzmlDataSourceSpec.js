@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/CzmlDataSource',
         'Core/BoundingRectangle',
@@ -15,6 +14,7 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Quaternion',
@@ -51,6 +51,7 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadJson,
+        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Quaternion,
@@ -258,13 +259,13 @@ defineSuite([
 
     it('process loads expected data', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length).toEqual(10);
     });
 
     it('process loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length === 10);
 
         dataSource.process(vehicle, vehicleUrl);
@@ -273,7 +274,7 @@ defineSuite([
 
     it('load replaces data', function() {
         var dataSource = new CzmlDataSource();
-        dataSource.process(simple, simpleUrl);
+        dataSource.process(simple);
         expect(dataSource.entities.values.length).toEqual(10);
 
         dataSource.load(vehicle, vehicleUrl);
@@ -552,6 +553,52 @@ defineSuite([
         var imageProperty = entity.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+    });
+
+    it('appends query to all uri', function() {
+        var source = 'http://some.url.invalid/';
+        var packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    uri : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    uri : 'image2.png'
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet), {
+            sourceUri : source,
+            query : {
+                token : 34570,
+                password : "Passw0rd"
+            }
+        });
+        var entity = dataSource.entities.values[0];
+        var imageProperty = entity.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png' + '?token=34570&password=Passw0rd');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png' + '?token=34570&password=Passw0rd');
+    });
+
+    it('appends query tokens to source URL', function() {
+        var dataSource = new CzmlDataSource();
+        var requestNetworkLink = when.defer();
+
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        dataSource.process(simpleUrl, { query : {
+                                            "token" : 30203,
+                                            "pass" : "passw0rd"
+                                        }});
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual(simpleUrl + '?token=30203&pass=passw0rd');
+        });
     });
 
     it('CZML adds data for constrained billboard.', function() {
@@ -3384,7 +3431,6 @@ defineSuite([
 
     it('checks validation document', function() {
         return CzmlDataSource.load('Data/CZML/ValidationDocument.czml').then(function(dataSource) {
-            /*jshint -W120 */
             var e;
             var date;
             var documentStartDate = JulianDate.fromIso8601('2016-06-17T12:00:00Z');
@@ -3753,6 +3799,11 @@ defineSuite([
             expect(e.path.material.outlineWidth.getValue(date)).toEqual(11017.0);
             expect(e = dataSource.entities.getById('material_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(166, 131, 155, 102));
+            expect(e = dataSource.entities.getById('material_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(190, 189, 9, 7));
+            expect(e.path.material.gapColor.getValue(date)).toEqual(Color.fromBytes(170, 88, 12, 24));
+            expect(e.path.material.dashLength.getValue(date)).toEqual(45848.0);
+            expect(e.path.material.dashPattern.getValue(date)).toEqual(13519.0);
             expect(e = dataSource.entities.getById('material_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(72, 114, 200, 147));
             expect(e.path.material.glowPower.getValue(date)).toEqual(42344.0);
@@ -3779,6 +3830,10 @@ defineSuite([
             expect(e.path.material.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.266666666666667, 0.556862745098039, 0.352941176470588, 0.76078431372549), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_polylineArrow_color')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.627450980392157, 0.27843137254902, 0.972549019607843, 0.92156862745098), 1e-14);
+            expect(e = dataSource.entities.getById('constant_path_material_polylineDash_color')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.113725490196078, 0.368627450980392, 0.411764705882353, 0.745098039215686), 1e-14);
+            expect(e = dataSource.entities.getById('constant_path_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.path.material.gapColor.getValue(date)).toEqualEpsilon(new Color(0.831372549019608, 0.313725490196078, 0.341176470588235, 0.749019607843137), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_polylineGlow_color')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqualEpsilon(new Color(0.584313725490196, 0.0156862745098039, 0.329411764705882, 0.270588235294118), 1e-14);
             expect(e = dataSource.entities.getById('constant_path_material_image_color')).toBeDefined();
@@ -3838,6 +3893,11 @@ defineSuite([
             expect(e.polyline.material.outlineWidth.getValue(date)).toEqual(6879.0);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(82, 169, 80, 107));
+            expect(e = dataSource.entities.getById('material_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(22, 214, 57, 141));
+            expect(e.polyline.material.gapColor.getValue(date)).toEqual(Color.fromBytes(150, 91, 109, 117));
+            expect(e.polyline.material.dashLength.getValue(date)).toEqual(60297.0);
+            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(40430.0);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(59, 125, 181, 171));
             expect(e.polyline.material.glowPower.getValue(date)).toEqual(41345.0);
@@ -3864,6 +3924,10 @@ defineSuite([
             expect(e.polyline.material.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.815686274509804, 0.545098039215686, 0.529411764705882, 0.317647058823529), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineArrow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.831372549019608, 0.823529411764706, 0.631372549019608, 0.443137254901961), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_material_polylineDash_color')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.462745098039216, 0.184313725490196, 0.329411764705882, 0), 1e-14);
+            expect(e = dataSource.entities.getById('constant_polyline_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.material.gapColor.getValue(date)).toEqualEpsilon(new Color(0.0509803921568627, 0.0313725490196078, 0.23921568627451, 0.4), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineGlow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.411764705882353, 0.313725490196078, 0.858823529411765, 0.380392156862745), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_image_color')).toBeDefined();
@@ -4388,6 +4452,11 @@ defineSuite([
             expect(e.path.material.outlineWidth.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineOutline').path.material.outlineWidth.getValue(date));
             expect(e = dataSource.entities.getById('reference_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineArrow').path.material.color.getValue(date));
+            expect(e = dataSource.entities.getById('reference_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.color.getValue(date));
+            expect(e.path.material.gapColor.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.gapColor.getValue(date));
+            expect(e.path.material.dashLength.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.dashLength.getValue(date));
+            expect(e.path.material.dashPattern.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineDash').path.material.dashPattern.getValue(date));
             expect(e = dataSource.entities.getById('reference_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineGlow').path.material.color.getValue(date));
             expect(e.path.material.glowPower.getValue(date)).toEqual(dataSource.entities.getById('material_path_material_polylineGlow').path.material.glowPower.getValue(date));
@@ -4431,6 +4500,11 @@ defineSuite([
             expect(e.polyline.material.outlineWidth.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineOutline').polyline.material.outlineWidth.getValue(date));
             expect(e = dataSource.entities.getById('reference_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineArrow').polyline.material.color.getValue(date));
+            expect(e = dataSource.entities.getById('reference_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.color.getValue(date));
+            expect(e.polyline.material.gapColor.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.gapColor.getValue(date));
+            expect(e.polyline.material.dashLength.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.dashLength.getValue(date));
+            expect(e.polyline.material.dashPattern.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineDash').polyline.material.dashPattern.getValue(date));
             expect(e = dataSource.entities.getById('reference_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineGlow').polyline.material.color.getValue(date));
             expect(e.polyline.material.glowPower.getValue(date)).toEqual(dataSource.entities.getById('material_polyline_material_polylineGlow').polyline.material.glowPower.getValue(date));
@@ -5003,6 +5077,15 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_path_material_polylineArrow')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(150, 221, 161, 136));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(19, 231, 68, 117));
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash')).toBeDefined();
+            expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(140, 167, 151, 119));
+            expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(65, 100, 228, 104));
+            expect(e.path.material.gapColor.getValue(documentStartDate)).toEqual(Color.fromBytes(154, 198, 168, 151));
+            expect(e.path.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(16, 23, 0, 42));
+            expect(e.path.material.dashLength.getValue(documentStartDate)).toEqual(38294.0);
+            expect(e.path.material.dashLength.getValue(documentStopDate)).toEqual(33057.0);
+            expect(e.path.material.dashPattern.getValue(documentStartDate)).toEqual(58660.0);
+            expect(e.path.material.dashPattern.getValue(documentStopDate)).toEqual(3340.0);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineGlow')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(197, 117, 196, 254));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(18, 17, 195, 230));
@@ -5042,6 +5125,12 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_path_material_polylineArrow_color')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.0666666666666667, 0.972549019607843, 0.686274509803922, 0.325490196078431), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.2, 0.482352941176471, 0.498039215686275, 0.219607843137255), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash_color')).toBeDefined();
+            expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.803921568627451, 0.67843137254902, 0.176470588235294, 0.709803921568627), 1e-14);
+            expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.674509803921569, 0.0980392156862745, 0.447058823529412, 0.803921568627451), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_path_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.path.material.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.231372549019608, 0.745098039215686, 0.772549019607843, 0.901960784313726), 1e-14);
+            expect(e.path.material.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.713725490196078, 0.180392156862745, 0.317647058823529, 0.309803921568627), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineGlow_color')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.63921568627451, 0.2, 0.0196078431372549, 0.984313725490196), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.376470588235294, 0.815686274509804, 0.933333333333333, 0.0235294117647059), 1e-14);
@@ -5119,6 +5208,15 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineArrow')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(141, 137, 252, 157));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(8, 236, 198, 57));
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash')).toBeDefined();
+            expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(77, 159, 238, 158));
+            expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(206, 194, 234, 158));
+            expect(e.polyline.material.gapColor.getValue(documentStartDate)).toEqual(Color.fromBytes(232, 145, 15, 164));
+            expect(e.polyline.material.gapColor.getValue(documentStopDate)).toEqual(Color.fromBytes(173, 151, 118, 138));
+            expect(e.polyline.material.dashLength.getValue(documentStartDate)).toEqual(41757.0);
+            expect(e.polyline.material.dashLength.getValue(documentStopDate)).toEqual(10126.0);
+            expect(e.polyline.material.dashPattern.getValue(documentStartDate)).toEqual(33948.0);
+            expect(e.polyline.material.dashPattern.getValue(documentStopDate)).toEqual(16892.0);
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineGlow')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(174, 178, 78, 176));
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(79, 191, 38, 195));
@@ -5158,6 +5256,12 @@ defineSuite([
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineArrow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.52156862745098, 0.725490196078431, 0.87843137254902, 0.823529411764706), 1e-14);
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.772549019607843, 0.862745098039216, 0.325490196078431, 0), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash_color')).toBeDefined();
+            expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.525490196078431, 0.992156862745098, 0.964705882352941, 0.364705882352941), 1e-14);
+            expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.27843137254902, 0.133333333333333, 0.447058823529412, 0.192156862745098), 1e-14);
+            expect(e = dataSource.entities.getById('sampled_polyline_material_polylineDash_gapColor')).toBeDefined();
+            expect(e.polyline.material.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.498039215686275, 0.776470588235294, 0.803921568627451, 0.690196078431373), 1e-14);
+            expect(e.polyline.material.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.376470588235294, 0.898039215686275, 0.168627450980392, 0.898039215686275), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_material_polylineGlow_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.705882352941177, 0.901960784313726, 0.0784313725490196, 0.356862745098039), 1e-14);
             expect(e.polyline.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.517647058823529, 0.207843137254902, 0.701960784313725, 0.105882352941176), 1e-14);

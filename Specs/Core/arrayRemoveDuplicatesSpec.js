@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/arrayRemoveDuplicates',
         'Core/Cartesian3',

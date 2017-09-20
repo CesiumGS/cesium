@@ -1,0 +1,24 @@
+{
+  "name": "eslint-config-cesium",
+  "version": "2.0.1",
+  "description": "ESLint shareable configs for Cesium",
+  "homepage": "http://cesiumjs.org",
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Analytical Graphics, Inc.",
+    "url": "http://www.agi.com"
+  },
+  "contributors": [
+    {
+      "name": "Cesium community",
+      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+    }
+  ],
+  "keywords": [
+    "eslint",
+    "cesium"
+  ],
+  "peerDependencies": {
+    "eslint": ">= 4"
+  }
+}
