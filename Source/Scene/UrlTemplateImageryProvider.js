@@ -44,6 +44,38 @@ define([
         ImageryProvider) {
     'use strict';
 
+    var tags = {
+        '{x}': xTag,
+        '{y}': yTag,
+        '{z}': zTag,
+        '{s}': sTag,
+        '{reverseX}': reverseXTag,
+        '{reverseY}': reverseYTag,
+        '{reverseZ}': reverseZTag,
+        '{westDegrees}': westDegreesTag,
+        '{southDegrees}': southDegreesTag,
+        '{eastDegrees}': eastDegreesTag,
+        '{northDegrees}': northDegreesTag,
+        '{westProjected}': westProjectedTag,
+        '{southProjected}': southProjectedTag,
+        '{eastProjected}': eastProjectedTag,
+        '{northProjected}': northProjectedTag,
+        '{width}': widthTag,
+        '{height}': heightTag
+    };
+
+    var pickFeaturesTags = combine(tags, {
+        '{i}' : iTag,
+        '{j}' : jTag,
+        '{reverseI}' : reverseITag,
+        '{reverseJ}' : reverseJTag,
+        '{longitudeDegrees}' : longitudeDegreesTag,
+        '{latitudeDegrees}' : latitudeDegreesTag,
+        '{longitudeProjected}' : longitudeProjectedTag,
+        '{latitudeProjected}' : latitudeProjectedTag,
+        '{format}' : formatTag
+    });
+
     /**
      * Provides imagery by requesting tiles using a specified URL template.
      *
@@ -578,18 +610,33 @@ define([
             }
             that._credit = credit;
 
-            if (defined(properties.customTags)) {
-                for (var tag in properties.customTags) {
-                    if (properties.customTags.hasOwnProperty(tag)) {
+            var tag;
+            var allTags = {};
+            var allPickFeaturesTags = {};
+            for (tag in tags) {
+                if (tags.hasOwnProperty(tag)) {
+                    allTags[tag] = tags[tag];
+                }
+            }
+            for (tag in pickFeaturesTags) {
+                if (pickFeaturesTags.hasOwnProperty(tag)) {
+                    allPickFeaturesTags[tag] = pickFeaturesTags[tag];
+                }
+            }
+
+            var customTags = properties.customTags;
+            if (defined(customTags)) {
+                for (tag in customTags) {
+                    if (customTags.hasOwnProperty(tag)) {
                         var targetTag = '{' + tag + '}';
-                        tags[targetTag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
-                        pickFeaturesTags[targetTag] = properties.customTags[tag]; //eslint-disable-line no-use-before-define
+                        allTags[targetTag] = customTags[tag];
+                        allPickFeaturesTags[targetTag] = customTags[tag];
                     }
                 }
             }
 
-            that._urlParts = urlTemplateToParts(that._url, tags); //eslint-disable-line no-use-before-define
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags); //eslint-disable-line no-use-before-define
+            that._urlParts = urlTemplateToParts(that._url, allTags);
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, allPickFeaturesTags);
             return true;
         });
     };
@@ -982,38 +1029,6 @@ define([
     function formatTag(imageryProvider, x, y, level, longitude, latitude, format) {
         return format;
     }
-
-    var tags = {
-        '{x}': xTag,
-        '{y}': yTag,
-        '{z}': zTag,
-        '{s}': sTag,
-        '{reverseX}': reverseXTag,
-        '{reverseY}': reverseYTag,
-        '{reverseZ}': reverseZTag,
-        '{westDegrees}': westDegreesTag,
-        '{southDegrees}': southDegreesTag,
-        '{eastDegrees}': eastDegreesTag,
-        '{northDegrees}': northDegreesTag,
-        '{westProjected}': westProjectedTag,
-        '{southProjected}': southProjectedTag,
-        '{eastProjected}': eastProjectedTag,
-        '{northProjected}': northProjectedTag,
-        '{width}': widthTag,
-        '{height}': heightTag
-    };
-
-    var pickFeaturesTags = combine(tags, {
-        '{i}' : iTag,
-        '{j}' : jTag,
-        '{reverseI}' : reverseITag,
-        '{reverseJ}' : reverseJTag,
-        '{longitudeDegrees}' : longitudeDegreesTag,
-        '{latitudeDegrees}' : latitudeDegreesTag,
-        '{longitudeProjected}' : longitudeProjectedTag,
-        '{latitudeProjected}' : latitudeProjectedTag,
-        '{format}' : formatTag
-    });
 
     return UrlTemplateImageryProvider;
 });
