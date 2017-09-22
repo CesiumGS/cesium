@@ -113,7 +113,10 @@ gulp.task('build-watch', function() {
 });
 
 gulp.task('buildApps', function() {
-    return buildCesiumViewer();
+    return buildCesiumViewer()
+        .then(function () {
+            return buildSandcastle();
+        });
 });
 
 gulp.task('clean', function(done) {
@@ -1151,6 +1154,22 @@ function createJsHintOptions() {
 var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
 
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
+}
+
+function buildSandcastle() {
+        return gulp.src([
+                'Apps/Sandcastle/**'
+            ])
+            // Replace require Source with pre-built Cesium
+            .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
+            // Use unminified cesium instead of source
+            .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+            // Fix relative paths for new location
+            .pipe(gulpReplace('../../Source', '../../../Source'))
+            .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
+            .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
+            .pipe(gulpReplace('Build/Documentation', 'Documentation'))
+            .pipe(gulp.dest('Build/Apps/Sandcastle'));
 }
 
 function buildCesiumViewer() {
