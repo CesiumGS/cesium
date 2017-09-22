@@ -94,6 +94,9 @@ define([
          */
         pointsLength : {
             get : function() {
+                if (defined(this._points)) {
+                    return this._points.pointsLength;
+                }
                 return 0;
             }
         },
@@ -103,7 +106,20 @@ define([
          */
         trianglesLength : {
             get : function() {
-                return 0;
+                var trianglesLength = 0;
+                if (defined(this._polygons)) {
+                    trianglesLength += this._polygons.trianglesLength;
+                }
+                if (defined(this._polylines)) {
+                    trianglesLength += this._polylines.trianglesLength;
+                }
+                if (defined(this._geometries)) {
+                    trianglesLength += this._geometries.trianglesLength;
+                }
+                if (defined(this._meshes)) {
+                    trianglesLength += this._meshes.trianglesLength;
+                }
+                return trianglesLength;
             }
         },
 
@@ -112,7 +128,20 @@ define([
          */
         geometryByteLength : {
             get : function() {
-                return 0;
+                var geometryByteLength = 0;
+                if (defined(this._polygons)) {
+                    geometryByteLength += this._polygons.geometryByteLength;
+                }
+                if (defined(this._polylines)) {
+                    geometryByteLength += this._polylines.geometryByteLength;
+                }
+                if (defined(this._geometries)) {
+                    geometryByteLength += this._geometries.geometryByteLength;
+                }
+                if (defined(this._meshes)) {
+                    geometryByteLength += this._meshes.geometryByteLength;
+                }
+                return geometryByteLength;
             }
         },
 
@@ -121,6 +150,9 @@ define([
          */
         texturesByteLength : {
             get : function() {
+                if (defined(this._points)) {
+                    return this._points.texturesByteLength;
+                }
                 return 0;
             }
         },
@@ -796,23 +828,14 @@ define([
         }
 
         if (!defined(this._contentReadyPromise)) {
-            var promise;
-            if (defined(this._polygons) && defined(this._meshes)) {
-                promise = when.all([this._polygons.readyPromise, this._meshes.readyPromise]);
-            } else if (defined(this._polygons)) {
-                promise = this._polygons.readyPromise;
-            } else if (defined(this._meshes)) {
-                promise = this._meshes.readyPromise;
-            }
+            var polygonPromise = defined(this._polygons) ? this._polygons.readyPromise : undefined;
+            var meshPromise = defined(this._meshes) ? this._meshes.readyPromise : undefined;
+            var geometryPromise = defined(this._geometries) ? this._geometries.readyPromise : undefined;
 
-            if (defined(promise)) {
-                var that = this;
-                this._contentReadyPromise = promise.then(function() {
-                    that._readyPromise.resolve(that);
-                });
-            } else {
-                this._readyPromise.resolve(this);
-            }
+            var that = this;
+            this._contentReadyPromise = when.all([polygonPromise, meshPromise, geometryPromise]).then(function() {
+                that._readyPromise.resolve(that);
+            });
         }
     };
 

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -80,7 +79,7 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchMesh = [];
 
-    function createMeshesFromVectorTile(parameters, transferableObjects) {
+    function createVectorTileMeshes(parameters, transferableObjects) {
         var positions = new Float32Array(parameters.positions);
         var indexOffsets = new Uint32Array(parameters.indexOffsets);
         var indexCounts = new Uint32Array(parameters.indexCounts);
@@ -156,5 +155,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createMeshesFromVectorTile);
+    return createTaskProcessorWorker(createVectorTileMeshes);
 });

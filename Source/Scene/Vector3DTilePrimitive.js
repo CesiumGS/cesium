@@ -4,6 +4,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
@@ -30,6 +31,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         IndexDatatype,
         Matrix4,
@@ -125,6 +127,9 @@ define([
         this._pickCommandsDirty = true;
         this._framesSinceLastRebatch = 0;
 
+        this._trianglesLength = this._indices.length / 3;
+        this._geometryByteLength = this._indices.byteLength + this._positions.byteLength + this._vertexBatchIds.byteLength;
+
         /**
          * Draw the wireframe of the classification meshes.
          * @type {Boolean}
@@ -133,6 +138,36 @@ define([
         this.debugWireframe = false;
         this._debugWireframe = this.debugWireframe;
     }
+
+    defineProperties(Vector3DTilePrimitive.prototype, {
+        /**
+         * Gets the number of triangles.
+         *
+         * @memberof Vector3DTilePrimitive.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                return this._trianglesLength;
+            }
+        },
+
+        /**
+         * Gets the geometry memory in bytes.
+         *
+         * @memberof Vector3DTilePrimitive.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        geometryByteLength : {
+            get : function() {
+                return this._geometryByteLength;
+            }
+        }
+    });
 
     var attributeLocations = {
         position : 0,

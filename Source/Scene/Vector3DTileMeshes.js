@@ -68,8 +68,42 @@ define([
 
     defineProperties(Vector3DTileMeshes.prototype, {
         /**
+         * Gets the number of triangles.
+         *
+         * @memberof Vector3DTileMeshes.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.trianglesLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Gets the geometry memory in bytes.
+         *
+         * @memberof Vector3DTileMeshes.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        geometryByteLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.geometryByteLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
          * Gets a promise that resolves when the primitive is ready to render.
-         * @memberof Vector3DTilePolygons.prototype
+         * @memberof Vector3DTileMeshes.prototype
          * @type {Promise}
          * @readonly
          */
@@ -129,7 +163,7 @@ define([
         }
     }
 
-    var createVerticesTaskProcessor = new TaskProcessor('createMeshesFromVectorTile');
+    var createVerticesTaskProcessor = new TaskProcessor('createVectorTileMeshes');
     var scratchColor = new Color();
 
     function createPrimitive(meshes) {

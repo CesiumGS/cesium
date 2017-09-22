@@ -6,6 +6,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
@@ -31,6 +32,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Ellipsoid,
         IndexDatatype,
@@ -98,7 +100,40 @@ define([
 
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
+
+        this._trianglesLength = 0;
+        this._geometryByteLength = 0;
     }
+
+    defineProperties(Vector3DTilePolylines.prototype, {
+        /**
+         * Gets the number of triangles.
+         *
+         * @memberof Vector3DTilePolylines.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                return this._trianglesLength;
+            }
+        },
+
+        /**
+         * Gets the geometry memory in bytes.
+         *
+         * @memberof Vector3DTilePolylines.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        geometryByteLength : {
+            get : function() {
+                return this._geometryByteLength;
+            }
+        }
+    });
 
     var attributeLocations = {
         previousPosition : 0,
@@ -250,6 +285,11 @@ define([
 
             index += 4;
         }
+
+        var byteLength = prevPositions.byteLength + curPositions.byteLength + nextPositions.byteLength;
+        byteLength += expandAndWidth.byteLength + batchIds.byteLength + indices.byteLength;
+        primitive._trianglesLength = indices.length / 3;
+        primitive._geometryByteLength = byteLength;
 
         var prevPositionBuffer = Buffer.createVertexBuffer({
             context : context,
