@@ -3,7 +3,6 @@ define([
         './Check',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './isCrossOriginUrl',
         './isDataUri',
@@ -15,7 +14,6 @@ define([
         Check,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         isCrossOriginUrl,
         isDataUri,
@@ -61,19 +59,6 @@ define([
 
         allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
-        if (typeof url !== 'string') {
-            // Returning a promise here is okay because it is unlikely that anyone using the deprecated functionality is also
-            // providing a Request object marked as throttled.
-            deprecationWarning('url promise', 'url as a Promise is deprecated and will be removed in 1.37');
-            return url.then(function(url) {
-                return makeRequest(url, allowCrossOrigin, request);
-            });
-        }
-
-        return makeRequest(url, allowCrossOrigin, request);
-    }
-
-    function makeRequest(url, allowCrossOrigin, request) {
         request = defined(request) ? request : new Request();
         request.url = url;
         request.requestFunction = function() {

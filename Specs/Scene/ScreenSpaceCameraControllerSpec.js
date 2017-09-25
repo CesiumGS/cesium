@@ -849,19 +849,31 @@ defineSuite([
     it('zoom in 3D with wheel', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+        var roll = camera.roll;
 
         simulateMouseWheel(120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
+        expect(camera.heading).toBeCloseTo(heading, 10);
+        expect(camera.pitch).toBeCloseTo(pitch, 10);
+        expect(camera.roll).toBeCloseTo(roll, 10);
     });
 
     it('zoom out in 3D with wheel', function() {
         setUp3D();
         var position = Cartesian3.clone(camera.position);
+        var heading = camera.heading;
+        var pitch = camera.pitch;
+        var roll = camera.roll;
 
         simulateMouseWheel(-120);
         updateController();
         expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
+        expect(camera.heading).toBeCloseTo(heading, 10);
+        expect(camera.pitch).toBeCloseTo(pitch, 10);
+        expect(camera.roll).toBeCloseTo(roll, 10);
     });
 
     it('zoom in 3D with orthographic projection', function() {
