@@ -86,6 +86,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jason Crow](https://github.com/jason-crow)
 * [Flightradar24 AB](https://www.flightradar24.com)
    * [Aleksei Kalmykov](https://github.com/kalmykov)
+* [Logilab](https://www.logilab.fr/)
+   * [Florent Cayré](https://github.com/fcayre/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
