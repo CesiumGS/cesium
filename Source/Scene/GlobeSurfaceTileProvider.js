@@ -763,6 +763,9 @@ define([
 
     function createTileUniformMap(frameState) {
         var uniformMap = {
+            u_far : function() {
+                return frameState.camera._scene._frustumCommandsList[0].far;
+            },
             u_initialColor : function() {
                 return this.properties.initialColor;
             },

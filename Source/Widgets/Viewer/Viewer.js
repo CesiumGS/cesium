@@ -434,7 +434,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
             terrainShadows : options.terrainShadows,
-            mapMode2D : options.mapMode2D
+            mapMode2D : options.mapMode2D,
+            logDepthBuffer : options.logDepthBuffer
         });
 
         var dataSourceCollection = options.dataSources;
