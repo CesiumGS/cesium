@@ -32,38 +32,32 @@ define([
     /**
      * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
      *
-     * @deprecated since V1.38. An optional boolean flag can be supplied to this function that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40
      * @param {Quaternion} quaternion The quaternion from which to retrieve heading, pitch, and roll, all expressed in radians.
      * @param {HeadingPitchRoll} [result] The object in which to store the result. If not provided, a new instance is created and returned.
-     * @param {Boolean} [false] Indicates if the function uses the classical orientation of heading and pitch (counter-clockwise).
      * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
      */
-    HeadingPitchRoll.fromQuaternion = function(quaternion, result, classical) {
+    HeadingPitchRoll.fromQuaternion = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         //>>includeEnd('debug');
+
+        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This function now uses a counter-clockwise orientation as per mathematical conventions. This deprecation warning will be removed in Cesium 1.40.');
+
         if (!defined(result)) {
             result = new HeadingPitchRoll();
         }
-        classical = defaultValue(classical, false);
+
         var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
         var denominatorRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
         var numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
         var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
 
-        if(classical === true){
-          result.heading = Math.atan2(numeratorHeading, denominatorHeading);
-          result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-          result.pitch = Math.asin(test);
-        } else {
-          deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This HeadingPitchRoll.fromQuaternion works in the Cesium legacy fashion which means that heading and pitch is opposite of the classical interpretation used in mathematics. This behavior will be corrected in 1.40 in order to be classical. The new behavior can be evaluate using parameter classical setted to true');
-          result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
-          result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-          result.pitch = -Math.asin(test);
-        }
+        result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
+        result.roll = Math.atan2(numeratorRoll, denominatorRoll);
+        result.pitch = -Math.asin(test);
 
         return result;
     };
