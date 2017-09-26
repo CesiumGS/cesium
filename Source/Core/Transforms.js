@@ -340,9 +340,9 @@ define([
 
         fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
 
-        Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
+       var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
 
-        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, scratchHPRQuaternion, scratchScale, scratchHPRMatrix4);
+        var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
         result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
     };
@@ -383,7 +383,9 @@ define([
         scratchENUMatrix4 = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         Matrix4.getRotation(scratchENUMatrix4, scratchHPRMatrix3);
 
-        return Quaternion.fromRotationMatrix(scratchHPRMatrix3, result);
+        var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
+        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
+        return Quaternion.fromRotationMatrix(rotation, result);
     };
 
     var gmstConstant0 = 6 * 3600 + 41 * 60 + 50.54841;

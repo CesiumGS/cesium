@@ -55,9 +55,9 @@ define([
         var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
 
-        result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
+        result.heading = Math.atan2(numeratorHeading, denominatorHeading);
         result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-        result.pitch = -Math.asin(test);
+        result.pitch = Math.asin(test);
 
         return result;
     };

@@ -308,19 +308,12 @@ define([
 
         deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation as per mathematical conventions. This deprecation warning will be removed in Cesium 1.40.');
 
-        var cosTheta;
-        var cosPsi;
-        var cosPhi;
-        var sinTheta;
-        var sinPsi;
-        var sinPhi;
-
-        cosTheta = Math.cos(headingPitchRoll.pitch);
-        cosPsi = Math.cos(headingPitchRoll.heading);
-        cosPhi = Math.cos(headingPitchRoll.roll);
-        sinTheta = Math.sin(headingPitchRoll.pitch);
-        sinPsi = Math.sin(headingPitchRoll.heading);
-        sinPhi = Math.sin(headingPitchRoll.roll);
+        var cosTheta = Math.cos(headingPitchRoll.pitch);
+        var cosPsi = Math.cos(headingPitchRoll.heading);
+        var cosPhi = Math.cos(headingPitchRoll.roll);
+        var sinTheta = Math.sin(headingPitchRoll.pitch);
+        var sinPsi = Math.sin(headingPitchRoll.heading);
+        var sinPhi = Math.sin(headingPitchRoll.roll);
 
         var m00 = cosTheta * cosPsi;
         var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;

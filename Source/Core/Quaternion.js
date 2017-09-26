@@ -194,9 +194,9 @@ define([
         deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation as per mathematical conventions. This deprecation warning will be removed in Cesium 1.40.');
 
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
-        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
+        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);
         result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
-        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
+        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, headingPitchRoll.heading, scratchHPRQuaternion);
 
         return Quaternion.multiply(scratchHeadingQuaternion, result, result);
     };
