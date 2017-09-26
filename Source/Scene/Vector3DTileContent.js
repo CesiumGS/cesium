@@ -610,7 +610,7 @@ define([
 
             var widths;
             if (!defined(featureTableJson.POLYLINE_WIDTHS)) {
-                widths = new Array(numberOfPolylines);
+                widths = new Uint16Array(numberOfPolylines);
                 for (var i = 0; i < numberOfPolylines; ++i) {
                     widths[i] = 2.0;
                 }
@@ -829,11 +829,12 @@ define([
 
         if (!defined(this._contentReadyPromise)) {
             var polygonPromise = defined(this._polygons) ? this._polygons.readyPromise : undefined;
+            var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
             var meshPromise = defined(this._meshes) ? this._meshes.readyPromise : undefined;
             var geometryPromise = defined(this._geometries) ? this._geometries.readyPromise : undefined;
 
             var that = this;
-            this._contentReadyPromise = when.all([polygonPromise, meshPromise, geometryPromise]).then(function() {
+            this._contentReadyPromise = when.all([polygonPromise, polylinePromise, meshPromise, geometryPromise]).then(function() {
                 that._readyPromise.resolve(that);
             });
         }

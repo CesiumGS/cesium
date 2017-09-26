@@ -1,7 +1,5 @@
 define([
-        '../Core/AttributeCompression',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -10,8 +8,9 @@ define([
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
-        '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Rectangle',
+        '../Core/TaskProcessor',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -22,12 +21,11 @@ define([
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/Vector3DTilePolylinesVS',
+        '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileFeature'
     ], function(
-        AttributeCompression,
         Cartesian3,
-        Cartographic,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -36,8 +34,9 @@ define([
         destroyObject,
         Ellipsoid,
         IndexDatatype,
-        CesiumMath,
         Matrix4,
+        Rectangle,
+        TaskProcessor,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -48,6 +47,7 @@ define([
         VertexArray,
         PolylineCommon,
         Vector3DTilePolylinesVS,
+        when,
         BlendingState,
         Cesium3DTileFeature) {
     'use strict';
@@ -103,6 +103,11 @@ define([
 
         this._trianglesLength = 0;
         this._geometryByteLength = 0;
+
+        this._ready = false;
+        this._readyPromise = when.defer();
+
+        this._verticesPromise = undefined;
     }
 
     defineProperties(Vector3DTilePolylines.prototype, {
@@ -132,9 +137,47 @@ define([
             get : function() {
                 return this._geometryByteLength;
             }
+        },
+
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Vector3DTileGeometry.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
         }
     });
 
+    function packBuffer(polylines) {
+        var rectangle = polylines._rectangle;
+        var minimumHeight = polylines._minimumHeight;
+        var maximumHeight = polylines._maximumHeight;
+        var ellipsoid = polylines._ellipsoid;
+        var center = polylines._center;
+
+        var packedLength = 2 + Rectangle.packedLength + Ellipsoid.packedLength + Cartesian3.packedLength;
+        var packedBuffer = new Float64Array(packedLength);
+
+        var offset = 0;
+        packedBuffer[offset++] = minimumHeight;
+        packedBuffer[offset++] = maximumHeight;
+
+        Rectangle.pack(rectangle, packedBuffer, offset);
+        offset += Rectangle.packedLength;
+
+        Ellipsoid.pack(ellipsoid, packedBuffer, offset);
+        offset += Ellipsoid.packedLength;
+
+        Cartesian3.pack(center, packedBuffer, offset);
+
+        return packedBuffer;
+    }
+
+    var createVerticesTaskProcessor = new TaskProcessor('createVectorTilePolylines');
     var attributeLocations = {
         previousPosition : 0,
         currentPosition : 1,
@@ -143,219 +186,140 @@ define([
         a_batchId : 4
     };
 
-    var maxShort = 32767;
-
-    var scratchBVCartographic = new Cartographic();
-    var scratchEncodedPosition = new Cartesian3();
-
-    function decodePositions(positions, rectangle, minimumHeight, maximumHeight, ellipsoid) {
-        var positionsLength = positions.length / 3;
-        var uBuffer = positions.subarray(0, positionsLength);
-        var vBuffer = positions.subarray(positionsLength, 2 * positionsLength);
-        var heightBuffer = positions.subarray(2 * positionsLength, 3 * positionsLength);
-        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
-
-        var decoded = new Float32Array(positions.length);
-        for (var i = 0; i < positionsLength; ++i) {
-            var u = uBuffer[i];
-            var v = vBuffer[i];
-            var h = heightBuffer[i];
-
-            var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-            var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-            var alt = CesiumMath.lerp(minimumHeight, maximumHeight, h / maxShort);
-
-            var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchBVCartographic);
-            var decodedPosition = ellipsoid.cartographicToCartesian(cartographic, scratchEncodedPosition);
-            Cartesian3.pack(decodedPosition, decoded, i * 3);
-        }
-        return decoded;
-    }
-
-    var scratchP0 = new Cartesian3();
-    var scratchP1 = new Cartesian3();
-    var scratchPrev = new Cartesian3();
-    var scratchCur = new Cartesian3();
-    var scratchNext = new Cartesian3();
-
-    function createVertexArray(primitive, context) {
-        if (defined(primitive._va)) {
+    function createVertexArray(polylines, context) {
+        if (defined(polylines._va)) {
             return;
         }
 
-        var rectangle = primitive._rectangle;
-        var minimumHeight = primitive._minimumHeight;
-        var maximumHeight = primitive._maximumHeight;
-        var ellipsoid = primitive._ellipsoid;
+        if (!defined(polylines._verticesPromise)) {
+            var positions = polylines._positions;
+            var widths = polylines._widths;
+            var counts = polylines._counts;
+            var batchIds = polylines._transferrableBatchIds;
 
-        var positions = decodePositions(primitive._positions, rectangle, minimumHeight, maximumHeight, ellipsoid);
-        var widths = primitive._widths;
-        var ids = primitive._batchIds;
-        var counts = primitive._counts;
+            var packedBuffer = polylines._packedBuffer;
 
-        var positionsLength = positions.length / 3;
-        var size = positionsLength * 4 - 4;
+            if (!defined(packedBuffer)) {
+                // Copy because they may be the views on the same buffer.
+                positions = polylines._positions = positions.slice();
+                widths = polylines._widths = widths.slice();
+                counts = polylines._counts = counts.slice();
 
-        var curPositions = new Float32Array(size * 3);
-        var prevPositions = new Float32Array(size * 3);
-        var nextPositions = new Float32Array(size * 3);
-        var expandAndWidth = new Float32Array(size * 2);
-        var batchIds = new Uint16Array(size);
+                batchIds = polylines._transferrableBatchIds = polylines._batchIds.slice();
 
-        var positionIndex = 0;
-        var expandAndWidthIndex = 0;
-        var batchIdIndex = 0;
-
-        var center = primitive._center;
-
-        var i;
-        var offset = 0;
-        var length = counts.length;
-
-        for (i = 0; i < length; ++i) {
-            var count = counts [i];
-            var width = widths[i];
-            var id = ids[i];
-
-            for (var j = 0; j < count; ++j) {
-                var previous;
-                if (j === 0) {
-                    var p0 = Cartesian3.unpack(positions, offset * 3, scratchP0);
-                    var p1 = Cartesian3.unpack(positions, (offset + 1) * 3, scratchP1);
-
-                    previous = Cartesian3.subtract(p0, p1, scratchPrev);
-                    Cartesian3.add(p0, previous, previous);
-                } else {
-                    previous = Cartesian3.unpack(positions, (offset + j - 1) * 3, scratchPrev);
-                }
-
-                var current = Cartesian3.unpack(positions, (offset + j) * 3, scratchCur);
-
-                var next;
-                if (j === count - 1) {
-                    var p2 = Cartesian3.unpack(positions, (offset + count - 1) * 3, scratchP0);
-                    var p3 = Cartesian3.unpack(positions, (offset + count - 2) * 3, scratchP1);
-
-                    next = Cartesian3.subtract(p2, p3, scratchNext);
-                    Cartesian3.add(p2, next, next);
-                } else {
-                    next = Cartesian3.unpack(positions, (offset + j + 1) * 3, scratchNext);
-                }
-
-                Cartesian3.subtract(previous, center, previous);
-                Cartesian3.subtract(current, center, current);
-                Cartesian3.subtract(next, center, next);
-
-                var startK = j === 0 ? 2 : 0;
-                var endK = j === count - 1 ? 2 : 4;
-
-                for (var k = startK; k < endK; ++k) {
-                    Cartesian3.pack(current, curPositions, positionIndex);
-                    Cartesian3.pack(previous, prevPositions, positionIndex);
-                    Cartesian3.pack(next, nextPositions, positionIndex);
-                    positionIndex += 3;
-
-                    var direction = (k - 2 < 0) ? -1.0 : 1.0;
-                    expandAndWidth[expandAndWidthIndex++] = 2 * (k % 2) - 1;
-                    expandAndWidth[expandAndWidthIndex++] = direction * width;
-
-                    batchIds[batchIdIndex++] = id;
-                }
+                packedBuffer = polylines._packedBuffer = packBuffer(polylines);
             }
 
-            offset += count;
+            var transferrableObjects = [positions.buffer, widths.buffer, counts.buffer, batchIds.buffer, packedBuffer.buffer];
+            var parameters = {
+                positions : positions.buffer,
+                widths : widths.buffer,
+                counts : counts.buffer,
+                batchIds : batchIds.buffer,
+                packedBuffer : packedBuffer.buffer
+            };
+
+            var verticesPromise = polylines._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
+            if (!defined(verticesPromise)) {
+                // Postponed
+                return;
+            }
+
+            when(verticesPromise, function(result) {
+                polylines._currentPositions = new Float32Array(result.currentPositions);
+                polylines._previousPositions = new Float32Array(result.previousPositions);
+                polylines._nextPositions = new Float32Array(result.nextPositions);
+                polylines._expandAndWidth = new Float32Array(result.expandAndWidth);
+                polylines._vertexBatchIds = new Uint16Array(result.batchIds);
+
+                var indexDatatype = result.indexDatatype;
+                polylines._indices = indexDatatype === IndexDatatype.UNSIGNED_SHORT ? new Uint16Array(result.indices) : new Uint32Array(result.indices);
+
+                polylines._ready = true;
+            });
         }
 
-        primitive._positions = undefined;
-        primitive._widths = undefined;
-        primitive._counts = undefined;
+        if (polylines._ready && !defined(polylines._va)) {
+            var curPositions = polylines._currentPositions;
+            var prevPositions = polylines._previousPositions;
+            var nextPositions = polylines._nextPositions;
+            var expandAndWidth = polylines._expandAndWidth;
+            var vertexBatchIds = polylines._vertexBatchIds;
+            var indices = polylines._indices;
 
-        var indices = IndexDatatype.createTypedArray(size, positionsLength * 6 - 6);
-        var index = 0;
-        var indicesIndex = 0;
-        length = positionsLength - 1;
-        for (i = 0; i < length; ++i) {
-            indices[indicesIndex++] = index;
-            indices[indicesIndex++] = index + 2;
-            indices[indicesIndex++] = index + 1;
+            var byteLength = prevPositions.byteLength + curPositions.byteLength + nextPositions.byteLength;
+            byteLength += expandAndWidth.byteLength + vertexBatchIds.byteLength + indices.byteLength;
+            polylines._trianglesLength = indices.length / 3;
+            polylines._geometryByteLength = byteLength;
 
-            indices[indicesIndex++] = index + 1;
-            indices[indicesIndex++] = index + 2;
-            indices[indicesIndex++] = index + 3;
+            var prevPositionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : prevPositions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var curPositionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : curPositions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var nextPositionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : nextPositions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var expandAndWidthBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : expandAndWidth,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            var idBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : vertexBatchIds,
+                usage : BufferUsage.STATIC_DRAW
+            });
 
-            index += 4;
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : (indices.BYTES_PER_ELEMENT === 2) ? IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT
+            });
+
+            var vertexAttributes = [{
+                index : attributeLocations.previousPosition,
+                vertexBuffer : prevPositionBuffer,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            }, {
+                index : attributeLocations.currentPosition,
+                vertexBuffer : curPositionBuffer,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            }, {
+                index : attributeLocations.nextPosition,
+                vertexBuffer : nextPositionBuffer,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3
+            }, {
+                index : attributeLocations.expandAndWidth,
+                vertexBuffer : expandAndWidthBuffer,
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2
+            }, {
+                index : attributeLocations.a_batchId,
+                vertexBuffer : idBuffer,
+                componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                componentsPerAttribute : 1
+            }];
+
+            polylines._va = new VertexArray({
+                context : context,
+                attributes : vertexAttributes,
+                indexBuffer : indexBuffer
+            });
+
+            polylines._readyPromise.resolve();
         }
-
-        var byteLength = prevPositions.byteLength + curPositions.byteLength + nextPositions.byteLength;
-        byteLength += expandAndWidth.byteLength + batchIds.byteLength + indices.byteLength;
-        primitive._trianglesLength = indices.length / 3;
-        primitive._geometryByteLength = byteLength;
-
-        var prevPositionBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : prevPositions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var curPositionBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : curPositions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var nextPositionBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : nextPositions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var expandAndWidthBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : expandAndWidth,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var idBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : batchIds,
-            usage : BufferUsage.STATIC_DRAW
-        });
-
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : indices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT
-        });
-
-        var vertexAttributes = [{
-            index : attributeLocations.previousPosition,
-            vertexBuffer : prevPositionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.currentPosition,
-            vertexBuffer : curPositionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.nextPosition,
-            vertexBuffer : nextPositionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.expandAndWidth,
-            vertexBuffer : expandAndWidthBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2
-        }, {
-            index : attributeLocations.a_batchId,
-            vertexBuffer : idBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-            componentsPerAttribute : 1
-        }];
-
-        primitive._va = new VertexArray({
-            context : context,
-            attributes : vertexAttributes,
-            indexBuffer : indexBuffer
-        });
     }
 
     var modifiedModelViewScratch = new Matrix4();
@@ -573,6 +537,10 @@ define([
         createUniformMap(this, context);
         createShaders(this, context);
         createRenderStates(this);
+
+        if (!this._ready) {
+            return;
+        }
 
         var passes = frameState.passes;
         if (passes.render) {

@@ -179,6 +179,7 @@ define([
         if (defined(geometries._primitive)) {
             return;
         }
+
         if (!defined(geometries._verticesPromise)) {
             var boxes = geometries._boxes;
             var boxBatchIds = geometries._boxBatchIds;
