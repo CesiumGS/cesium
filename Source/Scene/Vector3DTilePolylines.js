@@ -98,6 +98,16 @@ define([
         this._rsPick = undefined;
         this._pickCommand = undefined;
 
+        this._transferrableBatchIds = undefined;
+        this._packedBuffer = undefined;
+
+        this._currentPositions = undefined;
+        this._previousPositions = undefined;
+        this._nextPositions = undefined;
+        this._expandAndWidth = undefined;
+        this._vertexBatchIds = undefined;
+        this._indices = undefined;
+
         this._constantColor = Color.clone(Color.WHITE);
         this._highlightColor = this._constantColor;
 
@@ -317,6 +327,25 @@ define([
                 attributes : vertexAttributes,
                 indexBuffer : indexBuffer
             });
+
+            polylines._positions = undefined;
+            polylines._widths = undefined;
+            polylines._counts = undefined;
+
+            polylines._ellipsoid = undefined;
+            polylines._minimumHeight = undefined;
+            polylines._maximumHeight = undefined;
+            polylines._rectangle = undefined;
+
+            polylines._transferrableBatchIds = undefined;
+            polylines._packedBuffer = undefined;
+
+            polylines._currentPositions = undefined;
+            polylines._previousPositions = undefined;
+            polylines._nextPositions = undefined;
+            polylines._expandAndWidth = undefined;
+            polylines._vertexBatchIds = undefined;
+            polylines._indices = undefined;
 
             polylines._readyPromise.resolve();
         }
