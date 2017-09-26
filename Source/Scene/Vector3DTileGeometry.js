@@ -1,36 +1,26 @@
 define([
         '../Core/BoundingSphere',
-        '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/CylinderGeometry',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/EllipsoidGeometry',
-        '../Core/Math',
         '../Core/Matrix4',
         '../Core/TaskProcessor',
-        '../Core/VertexFormat',
         '../ThirdParty/when',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
         BoundingSphere,
-        BoxGeometry,
         Cartesian3,
         Color,
-        CylinderGeometry,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        EllipsoidGeometry,
-        CesiumMath,
         Matrix4,
         TaskProcessor,
-        VertexFormat,
         when,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
@@ -50,6 +40,21 @@ define([
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
         this._boundingVolume = options.boundingVolume;
+
+        this._boundingVolumes = undefined;
+        this._batchedIndices = undefined;
+
+        this._indices = undefined;
+        this._indexOffsets = undefined;
+        this._indexCounts = undefined;
+
+        this._positions = undefined;
+        this._vertexBatchIds = undefined;
+
+        this._batchIds = undefined;
+
+        this._batchTableColors = undefined;
+        this._packedBuffer = undefined;
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -282,6 +287,23 @@ define([
             geometries._modelMatrix = undefined;
             geometries._batchTable = undefined;
             geometries._boundingVolume = undefined;
+
+            geometries._boundingVolumes = undefined;
+            geometries._batchedIndices = undefined;
+
+            geometries._indices = undefined;
+            geometries._indexOffsets = undefined;
+            geometries._indexCounts = undefined;
+
+            geometries._positions = undefined;
+            geometries._vertexBatchIds = undefined;
+
+            geometries._batchIds = undefined;
+
+            geometries._batchTableColors = undefined;
+            geometries._packedBuffer = undefined;
+
+            geometries._verticesPromise = undefined;
 
             geometries._readyPromise.resolve();
         }
