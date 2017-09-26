@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -16,6 +17,7 @@ define([
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        BoundingSphere,
         BoxGeometry,
         Cartesian3,
         Color,
@@ -130,6 +132,14 @@ define([
 
     function unpackBuffer(geometries, packedBuffer) {
         var offset = 0;
+
+        var numBVS = packedBuffer[offset++];
+        var bvs = geometries._boundingVolumes = new Array(numBVS);
+
+        for (var i = 0; i < numBVS; ++i) {
+            bvs[i] = BoundingSphere.unpack(packedBuffer, offset);
+            offset += BoundingSphere.packedLength;
+        }
 
         var numBatchedIndices = packedBuffer[offset++];
         var bis = geometries._batchedIndices = new Array(numBatchedIndices);
@@ -255,7 +265,7 @@ define([
                 indexCounts : geometries._indexCounts,
                 batchedIndices : geometries._batchedIndices,
                 boundingVolume : geometries._boundingVolume,
-                boundingVolumes : [], // TODO
+                boundingVolumes : geometries._boundingVolumes,
                 center : geometries._center,
                 pickObject : defaultValue(geometries._pickObject, geometries)
             });

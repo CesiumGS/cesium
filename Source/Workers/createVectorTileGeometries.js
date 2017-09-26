@@ -1,4 +1,5 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -10,6 +11,7 @@ define([
         '../Scene/Vector3DTileBatch',
         './createTaskProcessorWorker'
     ], function(
+        BoundingSphere,
         BoxGeometry,
         Cartesian3,
         Color,
@@ -23,7 +25,6 @@ define([
     'use strict';
 
     var scratchCartesian = new Cartesian3();
-    var scratchModelMatrix = new Matrix4();
 
     var boxGeometry;
     var packedBoxLength = Matrix4.packedLength + Cartesian3.packedLength;
@@ -35,57 +36,78 @@ define([
     var packedEllipsoidLength = Matrix4.packedLength + Cartesian3.packedLength;
     var packedSphereLength = Matrix4.packedLength + 1;
 
-    function unpackBoxModelMatrix(boxes, index) {
+    var scratchModelMatrixAndBV = {
+        modelMatrix : new Matrix4(),
+        boundingVolume : new BoundingSphere()
+    };
+
+    function boxModelMatrixAndBoundingVolume(boxes, index) {
         var boxIndex  = index * packedBoxLength;
 
         var dimensions = Cartesian3.unpack(boxes, boxIndex, scratchCartesian);
         boxIndex += Cartesian3.packedLength;
 
-        var boxModelMatrix = Matrix4.unpack(boxes, boxIndex, scratchModelMatrix);
+        var boxModelMatrix = Matrix4.unpack(boxes, boxIndex, scratchModelMatrixAndBV.modelMatrix);
         Matrix4.multiplyByScale(boxModelMatrix, dimensions, boxModelMatrix);
 
-        return boxModelMatrix;
+        var boundingVolume = scratchModelMatrixAndBV.boundingVolume;
+        Cartesian3.clone(Cartesian3.ZERO, boundingVolume.center);
+        boundingVolume.radius = Math.sqrt(3.0);
+
+        return scratchModelMatrixAndBV;
     }
 
-    function unpackCylinderModelMatrix(cylinders, index) {
+    function cylinderModelMatrixAndBoundingVolume(cylinders, index) {
         var cylinderIndex = index * packedCylinderLength;
 
         var cylinderRadius = cylinders[cylinderIndex++];
         var length = cylinders[cylinderIndex++];
         var scale = Cartesian3.fromElements(cylinderRadius, cylinderRadius, length, scratchCartesian);
 
-        var cylinderModelMatrix = Matrix4.unpack(cylinders, cylinderIndex, scratchModelMatrix);
+        var cylinderModelMatrix = Matrix4.unpack(cylinders, cylinderIndex, scratchModelMatrixAndBV.modelMatrix);
         Matrix4.multiplyByScale(cylinderModelMatrix, scale, cylinderModelMatrix);
 
-        return cylinderModelMatrix;
+        var boundingVolume = scratchModelMatrixAndBV.boundingVolume;
+        Cartesian3.clone(Cartesian3.ZERO, boundingVolume.center);
+        boundingVolume.radius = Math.sqrt(2.0);
+
+        return scratchModelMatrixAndBV;
     }
 
-    function unpackEllipsoidModelMatrix(ellipsoids, index) {
+    function ellipsoidModelMatrixAndBoundingVolume(ellipsoids, index) {
         var ellipsoidIndex = index * packedEllipsoidLength;
 
         var radii = Cartesian3.unpack(ellipsoids, ellipsoidIndex, scratchCartesian);
         ellipsoidIndex += Cartesian3.packedLength;
 
-        var ellipsoidModelMatrix = Matrix4.unpack(ellipsoids, ellipsoidIndex, scratchModelMatrix);
+        var ellipsoidModelMatrix = Matrix4.unpack(ellipsoids, ellipsoidIndex, scratchModelMatrixAndBV.modelMatrix);
         Matrix4.multiplyByScale(ellipsoidModelMatrix, radii, ellipsoidModelMatrix);
 
-        return ellipsoidModelMatrix;
+        var boundingVolume = scratchModelMatrixAndBV.boundingVolume;
+        Cartesian3.clone(Cartesian3.ZERO, boundingVolume.center);
+        boundingVolume.radius = 1.0;
+
+        return scratchModelMatrixAndBV;
     }
 
-    function unpackSphereModelMatrix(spheres, index) {
+    function sphereModelMatrixAndBoundingVolume(spheres, index) {
         var sphereIndex = index * packedSphereLength;
 
         var sphereRadius = spheres[sphereIndex++];
 
-        var sphereModelMatrix = Matrix4.unpack(spheres, sphereIndex, scratchModelMatrix);
+        var sphereModelMatrix = Matrix4.unpack(spheres, sphereIndex, scratchModelMatrixAndBV.modelMatrix);
         Matrix4.multiplyByUniformScale(sphereModelMatrix, sphereRadius, sphereModelMatrix);
 
-        return sphereModelMatrix;
+        var boundingVolume = scratchModelMatrixAndBV.boundingVolume;
+        Cartesian3.clone(Cartesian3.ZERO, boundingVolume.center);
+        boundingVolume.radius = 1.0;
+
+        return scratchModelMatrixAndBV;
     }
 
     var scratchPosition = new Cartesian3();
 
-    function createPrimitive(options, primitive, primitiveBatchIds, geometry, unpackModelMatrix) {
+    function createPrimitive(options, primitive, primitiveBatchIds, geometry, getModelMatrixAndBoundingVolume) {
         if (!defined(primitive)) {
             return;
         }
@@ -103,6 +125,7 @@ define([
         var batchedIndices = options.batchedIndices;
         var indexOffsets = options.indexOffsets;
         var indexCounts = options.indexCounts;
+        var boundingVolumes = options.boundingVolumes;
 
         var modelMatrix = options.modelMatrix;
         var center = options.center;
@@ -113,7 +136,8 @@ define([
         var batchedIndicesOffset = options.batchedIndicesOffset;
 
         for (var i = 0; i < numberOfPrimitives; ++i) {
-            var primitiveModelMatrix = unpackModelMatrix(primitive, i);
+            var primitiveModelMatrixAndBV = getModelMatrixAndBoundingVolume(primitive, i);
+            var primitiveModelMatrix = primitiveModelMatrixAndBV.modelMatrix;
             Matrix4.multiply(modelMatrix, primitiveModelMatrix, primitiveModelMatrix);
 
             var batchId = primitiveBatchIds[i];
@@ -143,6 +167,7 @@ define([
             batchIds[offset] = batchId;
             indexOffsets[offset] = indexOffset;
             indexCounts[offset] = indicesLength;
+            boundingVolumes[offset] = BoundingSphere.transform(primitiveModelMatrixAndBV.boundingVolume, primitiveModelMatrix);
 
             positionOffset += positionsLength / 3;
             indexOffset += indicesLength;
@@ -176,12 +201,20 @@ define([
         return count;
     }
 
-    function packBuffer(batchedIndices) {
-        var length = 1 + packedBatchedIndicesLength(batchedIndices);
+    function packBuffer(batchedIndices, boundingVolumes) {
+        var numBVs = boundingVolumes.length;
+        var length = 1 + numBVs * BoundingSphere.packedLength + 1 + packedBatchedIndicesLength(batchedIndices);
 
         var packedBuffer = new Float64Array(length);
 
         var offset = 0;
+        packedBuffer[offset++] = numBVs;
+
+        for (var i = 0; i < numBVs; ++i) {
+            BoundingSphere.pack(boundingVolumes[i], packedBuffer, offset);
+            offset += BoundingSphere.packedLength;
+        }
+
         var indicesLength = batchedIndices.length;
         packedBuffer[offset++] = indicesLength;
 
@@ -263,6 +296,7 @@ define([
         var batchedIndices = new Array(numberOfGeometries);
         var indexOffsets = new Uint32Array(numberOfGeometries);
         var indexCounts = new Uint32Array(numberOfGeometries);
+        var boundingVolumes = new Array(numberOfGeometries);
 
         unpackBuffer(parameters.packedBuffer);
 
@@ -275,6 +309,7 @@ define([
             batchedIndices : batchedIndices,
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
+            boundingVolumes : boundingVolumes,
             positionOffset : 0,
             batchIdIndex : 0,
             indexOffset : 0,
@@ -283,12 +318,12 @@ define([
             center : scratchCenter
         };
 
-        createPrimitive(options, boxes, boxBatchIds, boxGeometry, unpackBoxModelMatrix);
-        createPrimitive(options, cylinders, cylinderBatchIds, cylinderGeometry, unpackCylinderModelMatrix);
-        createPrimitive(options, ellipsoids, ellipsoidBatchIds, ellipsoidGeometry, unpackEllipsoidModelMatrix);
-        createPrimitive(options, spheres, sphereBatchIds, ellipsoidGeometry, unpackSphereModelMatrix);
+        createPrimitive(options, boxes, boxBatchIds, boxGeometry, boxModelMatrixAndBoundingVolume);
+        createPrimitive(options, cylinders, cylinderBatchIds, cylinderGeometry, cylinderModelMatrixAndBoundingVolume);
+        createPrimitive(options, ellipsoids, ellipsoidBatchIds, ellipsoidGeometry, ellipsoidModelMatrixAndBoundingVolume);
+        createPrimitive(options, spheres, sphereBatchIds, ellipsoidGeometry, sphereModelMatrixAndBoundingVolume);
 
-        var packedBuffer = packBuffer(batchedIndices);
+        var packedBuffer = packBuffer(batchedIndices, boundingVolumes);
         transferableObjects.push(positions.buffer, vertexBatchIds.buffer, indices.buffer);
         transferableObjects.push(batchIds.buffer, indexOffsets.buffer, indexCounts.buffer);
         transferableObjects.push(packedBuffer.buffer);
