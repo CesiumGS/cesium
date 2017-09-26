@@ -167,10 +167,8 @@ define([
     }
 
     if (typeof TextDecoder !== 'undefined') {
-        console.log('Using TextDecoder');
         getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithTextDecoder;
     } else {
-        console.log('Using FromCharCode');
         getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
     }
 

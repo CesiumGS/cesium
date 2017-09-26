@@ -14,17 +14,23 @@ defineSuite([
         expect(string).toEqual('');
     }
 
+    var previous;
+    beforeEach(function() {
+        previous = getStringFromTypedArray.decode;
+    });
+
+    afterEach(function() {
+        getStringFromTypedArray.decode = previous;
+    });
+
     it('converts a typed array to string', function() {
         verifyString();
     });
 
     it('converts a typed array to string when forced to use fromCharCode', function() {
-        var previous = getStringFromTypedArray.decode;
         getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
 
         verifyString();
-
-        getStringFromTypedArray.decode = previous;
     });
 
     it('converts a sub-region of a typed array to a string', function() {
@@ -58,5 +64,17 @@ defineSuite([
         expect(function() {
             getStringFromTypedArray();
         }).toThrowDeveloperError();
+    });
+
+    it('Unicode characters work', function() {
+        var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+        expect(getStringFromTypedArray(arr, 0, arr.length)).toEqual('Zürich');
+    });
+
+    it('Unicode characters work with decodeWithFromCharCode forced', function() {
+        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
+
+        var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
+        expect(getStringFromTypedArray(arr, 0, arr.length)).toEqual('Zürich');
     });
 });
