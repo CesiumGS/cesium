@@ -9,7 +9,6 @@ define([
         DeveloperError,
         RuntimeError) {
     'use strict';
-    /*global TextDecoder*/
 
     /**
      * @private
@@ -44,31 +43,13 @@ define([
         return decoder.decode(view);
     };
 
-    var code_point = 0;
-    var bytes_seen = 0;
-    var bytes_needed = 0;
-    var lower_boundary = 0x80;
-    var upper_boundary = 0xBF;
 
     getStringFromTypedArray.decodeWithFromCharCode = function(view) {
-        code_point = bytes_needed = bytes_seen = 0;
-        lower_boundary = 0x80;
-        upper_boundary = 0xBF;
-
         var result = '';
-        var length = view.length;
-        var i, cp;
-        var codePoints = [];
-        for (i = 0; i < length; ++i) {
-            cp = utf8Handler(view[i]);
-            if (defined(cp)) {
-                codePoints.push(cp);
-            }
-        }
-
-        length = codePoints.length;
-        for (i = 0; i < length; ++i) {
-            cp = codePoints[i];
+        var codePoints = utf8Handler(view);
+        var length = codePoints.length;
+        for (var i = 0; i < length; ++i) {
+            var cp = codePoints[i];
             if (cp <= 0xFFFF) {
                 result += String.fromCharCode(cp);
             } else {
@@ -85,85 +66,95 @@ define([
         return min <= a && a <= max;
     }
 
-    function utf8Handler(byte) {
-        // If bytes_needed = 0, then we are starting a new character
-        if (bytes_needed === 0) {
-            // 1 Byte Ascii character
-            if (inRange(byte, 0x00, 0x7F)) {
-                // Return a code point whose value is byte.
-                return byte;
-            }
+    // This code is inspired by public domain code found here: https://github.com/inexorabletash/text-encoding
+    function utf8Handler(utfBytes) {
+        var codePoint = 0;
+        var bytesSeen = 0;
+        var bytesNeeded = 0;
+        var lowerBoundary = 0x80;
+        var upperBoundary = 0xBF;
 
-            // 2 Byte character
-            else if (inRange(byte, 0xC2, 0xDF)) {
-                bytes_needed = 1;
+        var codePoints = [];
+        var length = utfBytes.length;
+        for (var i = 0; i < length; ++i) {
+            var byte = utfBytes[i];
 
-                // Set UTF-8 code point to byte & 0x1F.
-                code_point = byte & 0x1F;
-            }
-
-            // 3 Byte character
-            else if (inRange(byte, 0xE0, 0xEF)) {
-                // If byte is 0xE0, set utf-8 lower boundary to 0xA0.
-                if (byte === 0xE0) {
-                    lower_boundary = 0xA0;
-                }
-                // If byte is 0xED, set utf-8 upper boundary to 0x9F.
-                if (byte === 0xED) {
-                    upper_boundary = 0x9F;
+            // If bytesNeeded = 0, then we are starting a new character
+            if (bytesNeeded === 0) {
+                // 1 Byte Ascii character
+                if (inRange(byte, 0x00, 0x7F)) {
+                    // Return a code point whose value is byte.
+                    codePoints.push(byte);
+                    continue;
                 }
 
-                bytes_needed = 2;
-
-                // Set UTF-8 code point to byte & 0xF.
-                code_point = byte & 0xF;
-            }
-
-            // 4 Byte character
-            else if (inRange(byte, 0xF0, 0xF4)) {
-                // If byte is 0xF0, set utf-8 lower boundary to 0x90.
-                if (byte === 0xF0) {
-                    lower_boundary = 0x90;
-                }
-                // If byte is 0xF4, set utf-8 upper boundary to 0x8F.
-                if (byte === 0xF4) {
-                    upper_boundary = 0x8F;
+                // 2 Byte character
+                if (inRange(byte, 0xC2, 0xDF)) {
+                    bytesNeeded = 1;
+                    codePoint = byte & 0x1F;
+                    continue;
                 }
 
-                bytes_needed = 3;
+                // 3 Byte character
+                if (inRange(byte, 0xE0, 0xEF)) {
+                    // If byte is 0xE0, set utf-8 lower boundary to 0xA0.
+                    if (byte === 0xE0) {
+                        lowerBoundary = 0xA0;
+                    }
+                    // If byte is 0xED, set utf-8 upper boundary to 0x9F.
+                    if (byte === 0xED) {
+                        upperBoundary = 0x9F;
+                    }
 
-                // Set UTF-8 code point to byte & 0x7.
-                code_point = byte & 0x7;
-            } else {
-                throw new RuntimeError('String decoding failed,');
+                    bytesNeeded = 2;
+                    codePoint = byte & 0xF;
+                    continue;
+                }
+
+                // 4 Byte character
+                if (inRange(byte, 0xF0, 0xF4)) {
+                    // If byte is 0xF0, set utf-8 lower boundary to 0x90.
+                    if (byte === 0xF0) {
+                        lowerBoundary = 0x90;
+                    }
+                    // If byte is 0xF4, set utf-8 upper boundary to 0x8F.
+                    if (byte === 0xF4) {
+                        upperBoundary = 0x8F;
+                    }
+
+                    bytesNeeded = 3;
+                    codePoint = byte & 0x7;
+                    continue;
+                }
+
+                throw new RuntimeError('String decoding failed.');
             }
 
-            return null;
+            // Out of range, so ignore the first part(s) of the character and continue with this byte on its own
+            if (!inRange(byte, lowerBoundary, upperBoundary)) {
+                codePoint = bytesNeeded = bytesSeen = 0;
+                lowerBoundary = 0x80;
+                upperBoundary = 0xBF;
+                --i;
+                continue;
+            }
+
+            // Set appropriate boundaries, since we've now checked byte 2 of a potential longer character
+            lowerBoundary = 0x80;
+            upperBoundary = 0xBF;
+
+            // Add byte to code point
+            codePoint = (codePoint << 6) | (byte & 0x3F);
+
+            // We have the correct number of bytes, so push and reset for next character
+            ++bytesSeen;
+            if (bytesSeen === bytesNeeded) {
+                codePoints.push(codePoint);
+                codePoint = bytesNeeded = bytesSeen = 0;
+            }
         }
 
-        // If byte is not in the range utf-8 lower boundary to utf-8
-        // upper boundary, inclusive, run these substeps:
-        if (!inRange(byte, lower_boundary, upper_boundary)) {
-            throw new RuntimeError('String decoding failed,');
-        }
-
-        // Set utf-8 lower boundary to 0x80 and utf-8 upper boundary to 0xBF.
-        lower_boundary = 0x80;
-        upper_boundary = 0xBF;
-
-        // 6. Set UTF-8 code point to (UTF-8 code point << 6) | (byte &
-        // 0x3F)
-        code_point = (code_point << 6) | (byte & 0x3F);
-
-        // We need more bytes for this code point, so return null
-        ++bytes_seen;
-        if (bytes_seen !== bytes_needed) {
-            return null;
-        }
-
-        var cp = code_point;
-        code_point = bytes_needed = bytes_seen = 0;
-        return cp;
+        return codePoints;
     }
 
     if (typeof TextDecoder !== 'undefined') {

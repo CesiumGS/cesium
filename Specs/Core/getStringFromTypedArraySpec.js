@@ -14,21 +14,12 @@ defineSuite([
         expect(string).toEqual('');
     }
 
-    var previous;
-    beforeEach(function() {
-        previous = getStringFromTypedArray.decode;
-    });
-
-    afterEach(function() {
-        getStringFromTypedArray.decode = previous;
-    });
-
     it('converts a typed array to string', function() {
         verifyString();
     });
 
     it('converts a typed array to string when forced to use fromCharCode', function() {
-        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
 
         verifyString();
     });
@@ -66,15 +57,39 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Unicode characters work', function() {
+    it('Unicode 2-byte characters work', function() {
         var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
-        expect(getStringFromTypedArray(arr, 0, arr.length)).toEqual('Zürich');
+        expect(getStringFromTypedArray(arr)).toEqual('Zürich');
     });
 
-    it('Unicode characters work with decodeWithFromCharCode forced', function() {
-        getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
+    it('Unicode 2-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
 
         var arr = new Uint8Array([90, 195, 188, 114, 105, 99, 104]);
-        expect(getStringFromTypedArray(arr, 0, arr.length)).toEqual('Zürich');
+        expect(getStringFromTypedArray(arr)).toEqual('Zürich');
+    });
+
+    it('Unicode 3-byte characters work', function() {
+        var arr = new Uint8Array([224, 162, 160]);
+        expect(getStringFromTypedArray(arr)).toEqual('ࢠ');
+    });
+
+    it('Unicode 3-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
+
+        var arr = new Uint8Array([224, 162, 160]);
+        expect(getStringFromTypedArray(arr)).toEqual('ࢠ');
+    });
+
+    it('Unicode 4-byte characters work', function() {
+        var arr = new Uint8Array([240, 144, 138, 129]);
+        expect(getStringFromTypedArray(arr)).toEqual('𐊁');
+    });
+
+    it('Unicode 4-byte characters work with decodeWithFromCharCode forced', function() {
+        spyOn(getStringFromTypedArray, 'decode').and.callFake(getStringFromTypedArray.decodeWithFromCharCode);
+
+        var arr = new Uint8Array([240, 144, 138, 129]);
+        expect(getStringFromTypedArray(arr)).toEqual('𐊁');
     });
 });
