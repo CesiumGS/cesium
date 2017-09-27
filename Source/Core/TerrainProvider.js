@@ -231,6 +231,7 @@ define([
      * Determines the level of the most detailed tile covering the position.  This function
      * usually completes in time logarithmic to the number of rectangles added with
      * {@link TileAvailability#addAvailableTileRange}.
+     * @function
      *
      * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
      * @return {Number} The level of the most detailed tile covering the position.
