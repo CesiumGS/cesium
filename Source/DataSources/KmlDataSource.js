@@ -255,6 +255,26 @@ define([
         return deferred.promise;
     }
 
+    function insertNamespaces(text) {
+	var namespaceMap = {
+	    'xsi:' : ["xmlns:xsi=", "'http://www.w3.org/2001/XMLSchema-instance'"]
+	}
+	var firstPart;
+	var lastPart;
+
+	if(text.trim().substr(0, 5) !== '<?xml')
+	    text = "<?xml version='1.0' encoding='UTF-8'?>" + text;
+		
+	for (var key in namespaceMap){
+	    if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
+		firstPart = text.substr(0, text.indexOf('<kml') + 4);
+		lastPart = text.substr(firstPart.length);
+		text = firstPart + ' ' + namespaceMap[key][0] + namespaceMap[key][1] + lastPart;
+	    }
+	}
+	return text; 
+    }
+
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
@@ -2321,6 +2341,9 @@ define([
                         return readBlobAsText(dataToLoad).then(function(text) {
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
+
+			    //Insert missing namespaces
+			    text = insertNamespaces(text);
 
                             //IE raises an exception
                             var kml;
