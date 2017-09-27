@@ -22,6 +22,7 @@ define([
         './BlendingState',
         './Cesium3DTileFeature',
         './DepthFunction',
+        './Expression',
         './StencilFunction',
         './StencilOperation',
         './Vector3DTileBatch'
@@ -49,6 +50,7 @@ define([
         BlendingState,
         Cesium3DTileFeature,
         DepthFunction,
+        Expression,
         StencilFunction,
         StencilOperation,
         Vector3DTileBatch) {
@@ -126,6 +128,8 @@ define([
         this._batchDirty = true;
         this._pickCommandsDirty = true;
         this._framesSinceLastRebatch = 0;
+
+        this._updatingAllCommands = false;
 
         this._trianglesLength = this._indices.length / 3;
         this._geometryByteLength = this._indices.byteLength + this._positions.byteLength + this._vertexBatchIds.byteLength;
@@ -815,21 +819,37 @@ define([
     };
 
     function clearStyle(polygons, features) {
+        polygons._updatingAllCommands = true;
+
         var batchIds = polygons._batchIds;
         var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
+        var i;
+
+        for (i = 0; i < length; ++i) {
             var batchId = batchIds[i];
             var feature = features[batchId];
 
             feature.show = true;
             feature.color = Color.WHITE;
         }
+
+        var batchedIndices = this._batchedIndices;
+        length = batchedIndices.length;
+
+        for (i = 0; i < length; ++i) {
+            batchedIndices[i].color = Color.clone(Color.WHITE);
+        }
+
+        polygons._updatingAllCommands = false;
+        polygons._batchDirty = true;
     }
 
     var scratchColor = new Color();
 
     var DEFAULT_COLOR_VALUE = Color.WHITE;
     var DEFAULT_SHOW_VALUE = true;
+
+    var complexExpressionReg = /\$/;
 
     /**
      * Apply a style to the content.
@@ -844,14 +864,32 @@ define([
             return;
         }
 
+        var colorExpression = style.color;
+        var isSimpleStyle = colorExpression instanceof Expression && !complexExpressionReg.test(colorExpression.expression);
+        this._updatingAllCommands = isSimpleStyle;
+
         var batchIds = this._batchIds;
         var length = batchIds.length;
-        for (var i = 0; i < length; ++i) {
+        var i;
+
+        for (i = 0; i < length; ++i) {
             var batchId = batchIds[i];
             var feature = features[batchId];
 
             feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
             feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+        }
+
+        if (isSimpleStyle) {
+            var batchedIndices = this._batchedIndices;
+            length = batchedIndices.length;
+
+            for (i = 0; i < length; ++i) {
+                batchedIndices[i].color = Color.clone(Color.WHITE);
+            }
+
+            this._updatingAllCommands = false;
+            this._batchDirty = true;
         }
     };
 
@@ -863,6 +901,10 @@ define([
      * @param {Color} color The new polygon color.
      */
     Vector3DTilePrimitive.prototype.updateCommands = function(batchId, color) {
+        if (this._updatingAllCommands) {
+            return;
+        }
+
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
 
