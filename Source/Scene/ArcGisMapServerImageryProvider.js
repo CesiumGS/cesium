@@ -384,14 +384,20 @@ define([
         },
 
         /**
-         * Gets the ArcGIS token used to authenticate with the ArcGis MapServer service.
+         * The ArcGIS token used to authenticate with the ArcGis MapServer service.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {String}
-         * @readonly
          */
         token : {
             get : function() {
                 return this._token;
+            },
+            set : function(token) {
+                delete this._token;
+
+                if (defined(token)) {
+                    this._token = token;
+                }
             }
         },
 
