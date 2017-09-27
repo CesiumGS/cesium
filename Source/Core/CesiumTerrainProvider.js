@@ -729,5 +729,21 @@ define([
         return this.availability.isTileAvailable(level, x, y);
     };
 
+    /**
+     * Determines the level of the most detailed tile covering the position.  This function
+     * usually completes in time logarithmic to the number of rectangles added with
+     * {@link TileAvailability#addAvailableTileRange}.
+     *
+     * @param {Cartographic} position The position for which to determine the maximum available level.  The height component is ignored.
+     * @return {Number} The level of the most detailed tile covering the position.
+     * @throws {DeveloperError} Undefined if not supported by the terrain provider or if position is outside any tile according to the tiling scheme.
+     */
+    CesiumTerrainProvider.prototype.getMaximumLevelAtPosition = function(position) {
+        if (!defined(this.availability)) {
+            return undefined;
+        }
+        return this.availability.computeMaximumLevelAtPosition(position);
+    };
+
     return CesiumTerrainProvider;
 });
