@@ -1157,19 +1157,32 @@ var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
 }
 
 function buildSandcastle() {
-        return gulp.src([
-                'Apps/Sandcastle/**'
-            ])
-            // Replace require Source with pre-built Cesium
-            .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
-            // Use unminified cesium instead of source
-            .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
-            // Fix relative paths for new location
-            .pipe(gulpReplace('../../Source', '../../../Source'))
-            .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
-            .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
-            .pipe(gulpReplace('Build/Documentation', 'Documentation'))
-            .pipe(gulp.dest('Build/Apps/Sandcastle'));
+    var appStream = gulp.src([
+            'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/images/**',
+            '!Apps/Sandcastle/gallery/**.jpg'
+        ])
+        // Replace require Source with pre-built Cesium
+        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
+        // Use unminified cesium instead of source
+        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Fix relative paths for new location
+        .pipe(gulpReplace('../../Source', '../../../Source'))
+        .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
+        .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
+        .pipe(gulpReplace('Build/Documentation', 'Documentation'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    var imageStream = gulp.src([
+            'Apps/Sandcastle/gallery/**.jpg',
+            'Apps/Sandcastle/images/**'
+        ], {
+            base: 'Apps/Sandcastle',
+            buffer: false
+        })
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return eventStream.merge(appStream, imageStream);
 }
 
 function buildCesiumViewer() {
