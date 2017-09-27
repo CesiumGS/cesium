@@ -230,7 +230,6 @@ define([
      */
     function Scene(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this.logDepthBuffer = defaultValue(options.logDepthBuffer, false);
 
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
@@ -252,6 +251,17 @@ define([
             creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
+        }
+        if (options.logDepthBuffer) {
+            if (context.fragmentDepth) {
+                this.logDepthBuffer = true;
+            } else {
+                console.log('Can\'t use logarithmic depth buffer, since fragDepth extension not supported.\
+Fall back to multifrustum view');
+                this.logDepthBuffer = false;
+            }
+        } else {
+            this.logDepthBuffer = false;
         }
 
         this._id = createGuid();
