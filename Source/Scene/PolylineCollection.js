@@ -1457,7 +1457,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                        if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1489,7 +1489,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);
