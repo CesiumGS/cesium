@@ -336,6 +336,40 @@ define([
         return url;
     }
 
+    function jsonToFeatures(json) {
+        var result = [];
+
+        var features = json.results;
+        if (!defined(features)) {
+            return result;
+        }
+
+        for (var i = 0; i < features.length; ++i) {
+            var feature = features[i];
+
+            var featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = feature;
+            featureInfo.name = feature.value;
+            featureInfo.properties = feature.attributes;
+            featureInfo.configureDescriptionFromProperties(feature.attributes);
+
+            // If this is a point feature, use the coordinates of the point.
+            if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
+                var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
+                if (wkid === 4326 || wkid === 4283) {
+                    featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
+                } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
+                    var projection = new WebMercatorProjection();
+                    featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
+                }
+            }
+
+            result.push(featureInfo);
+        }
+
+        return result;
+    }
+
     defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
@@ -677,37 +711,7 @@ define([
         var url = buildPickURL(this, x, y, level, longitude, latitude);
 
         return loadJson(url).then(function(json) {
-            var result = [];
-
-            var features = json.results;
-            if (!defined(features)) {
-                return result;
-            }
-
-            for (var i = 0; i < features.length; ++i) {
-                var feature = features[i];
-
-                var featureInfo = new ImageryLayerFeatureInfo();
-                featureInfo.data = feature;
-                featureInfo.name = feature.value;
-                featureInfo.properties = feature.attributes;
-                featureInfo.configureDescriptionFromProperties(feature.attributes);
-
-                // If this is a point feature, use the coordinates of the point.
-                if (feature.geometryType === 'esriGeometryPoint' && feature.geometry) {
-                    var wkid = feature.geometry.spatialReference && feature.geometry.spatialReference.wkid ? feature.geometry.spatialReference.wkid : 4326;
-                    if (wkid === 4326 || wkid === 4283) {
-                        featureInfo.position = Cartographic.fromDegrees(feature.geometry.x, feature.geometry.y, feature.geometry.z);
-                    } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
-                        var projection = new WebMercatorProjection();
-                        featureInfo.position = projection.unproject(new Cartesian3(feature.geometry.x, feature.geometry.y, feature.geometry.z));
-                    }
-                }
-
-                result.push(featureInfo);
-            }
-
-            return result;
+            return jsonToFeatures(json);
         });
     };
 
