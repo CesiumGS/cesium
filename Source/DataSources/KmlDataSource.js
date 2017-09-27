@@ -257,13 +257,13 @@ define([
 
     function insertNamespaces(text) {
         var namespaceMap = {
-            'xsi:' : ["xmlns:xsi=", "'http://www.w3.org/2001/XMLSchema-instance'"]
+            'xsi:' : ['xmlns:xsi=', '"http://www.w3.org/2001/XMLSchema-instance"']
         }
         var firstPart;
         var lastPart;
 
         if(text.trim().substr(0, 5) !== '<?xml')
-            text = "<?xml version='1.0' encoding='UTF-8'?>" + text;
+            text = '<?xml version="1.0" encoding="UTF-8"?>' + text;
 
         for (var key in namespaceMap){
             if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
