@@ -297,6 +297,45 @@ define([
         return url;
     }
 
+    function buildPickURL(imageryProvider, x, y, level, longitude, latitude) {
+        var rectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+
+        var horizontal;
+        var vertical;
+        var sr;
+        if (imageryProvider._tilingScheme instanceof GeographicTilingScheme) {
+            horizontal = CesiumMath.toDegrees(longitude);
+            vertical = CesiumMath.toDegrees(latitude);
+            sr = '4326';
+        } else {
+            var projected = imageryProvider._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
+            horizontal = projected.x;
+            vertical = projected.y;
+            sr = '3857';
+        }
+
+        var url = imageryProvider._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
+        url += '&geometry=' + horizontal + ',' + vertical;
+        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
+        url += '&imageDisplay=' + imageryProvider._tileWidth + ',' + imageryProvider._tileHeight + ',96';
+        url += '&sr=' + sr;
+
+        url += '&layers=visible';
+        if (defined(imageryProvider._layers)) {
+            url += ':' + imageryProvider._layers;
+        }
+
+        if (defined(imageryProvider._token)) {
+            url += '&token=' + imageryProvider._token;
+        }
+
+        if (defined(imageryProvider._proxy)) {
+            url = imageryProvider._proxy.getURL(url);
+        }
+
+        return url;
+    }
+
     defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
@@ -635,40 +674,7 @@ define([
             return undefined;
         }
 
-        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
-
-        var horizontal;
-        var vertical;
-        var sr;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
-            horizontal = CesiumMath.toDegrees(longitude);
-            vertical = CesiumMath.toDegrees(latitude);
-            sr = '4326';
-        } else {
-            var projected = this._tilingScheme.projection.project(new Cartographic(longitude, latitude, 0.0));
-            horizontal = projected.x;
-            vertical = projected.y;
-            sr = '3857';
-        }
-
-        var url = this._url + '/identify?f=json&tolerance=2&geometryType=esriGeometryPoint';
-        url += '&geometry=' + horizontal + ',' + vertical;
-        url += '&mapExtent=' + rectangle.west + ',' + rectangle.south + ',' + rectangle.east + ',' + rectangle.north;
-        url += '&imageDisplay=' + this._tileWidth + ',' + this._tileHeight + ',96';
-        url += '&sr=' + sr;
-
-        url += '&layers=visible';
-        if (defined(this._layers)) {
-            url += ':' + this._layers;
-        }
-
-        if (defined(this._token)) {
-            url += '&token=' + this._token;
-        }
-
-        if (defined(this._proxy)) {
-            url = this._proxy.getURL(url);
-        }
+        var url = buildPickURL(this, x, y, level, longitude, latitude);
 
         return loadJson(url).then(function(json) {
             var result = [];
