@@ -558,7 +558,7 @@ define([
         /**
          * Gets the comma-separated list of layer IDs to show.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * 
+         *
          * @type {String}
          */
         layers : {
