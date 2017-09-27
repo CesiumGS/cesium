@@ -18,7 +18,7 @@ require({
         location : '.'
     }, {
         name: 'CesiumUnminified',
-        location : '../../Build/CesiumUnminified',
+        location : '../Build/CesiumUnminified',
         main: 'Cesium'
     }, {
         name : 'CodeMirror',

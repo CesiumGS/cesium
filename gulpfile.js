@@ -113,10 +113,10 @@ gulp.task('build-watch', function() {
 });
 
 gulp.task('buildApps', function() {
-    return buildCesiumViewer()
-        .then(function () {
-            return buildSandcastle();
-        });
+    return Promise.join(
+        buildCesiumViewer(),
+        buildSandcastle()
+    );
 });
 
 gulp.task('clean', function(done) {
