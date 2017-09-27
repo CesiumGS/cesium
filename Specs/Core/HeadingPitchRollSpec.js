@@ -51,6 +51,32 @@ defineSuite([
         }
     });
 
+    it('conversion from quaternion', function() {
+        var testingTab = [
+            [0, 0, 0],
+            [90 * deg2rad, 0, 0],
+            [-90 * deg2rad, 0, 0],
+            [0, 89 * deg2rad, 0],
+            [0, -89 * deg2rad, 0],
+            [0, 0, 90 * deg2rad],
+            [0, 0, -90 * deg2rad],
+            [30 * deg2rad, 30 * deg2rad, 30 * deg2rad],
+            [-30 * deg2rad, -30 * deg2rad, 45 * deg2rad]
+        ];
+        var hpr = new HeadingPitchRoll();
+        for (var i = 0; i < testingTab.length; i++) {
+            var init = testingTab[i];
+            hpr.heading = init[0];
+            hpr.pitch = init[1];
+            hpr.roll = init[2];
+
+            var result = HeadingPitchRoll.fromQuaternion(Quaternion.fromHeadingPitchRoll(hpr, undefined, true), undefined, true);
+            expect(init[0]).toEqualEpsilon(result.heading, CesiumMath.EPSILON11);
+            expect(init[1]).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
+            expect(init[2]).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
+        }
+    });
+
     it('conversion from degrees', function() {
         var testingTab = [
             [0, 0, 0],

@@ -133,8 +133,8 @@ defineSuite([
             var heading = Math.PI/2.0;
             var pitch = 0.0;
             var roll = 0.0;
-            var hpr = new HeadingPitchRoll(heading, pitch, roll);
-            var modelMatrix = Transforms.headingPitchRollToFixedFrame(position, hpr);
+            var hpr = new HeadingPitchRoll(-heading, -pitch, roll);
+            var modelMatrix = Transforms.headingPitchRollToFixedFrame(position, hpr, undefined, undefined, undefined, true);
             instances.push({
                 modelMatrix : modelMatrix
             });

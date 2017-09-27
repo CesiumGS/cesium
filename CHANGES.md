@@ -8,6 +8,8 @@ Change Log
    * `Scene/OrthographicOffCenterFrustum` has been removed. Use `Core/OrthographicOffCenterFrustum`.
    * `Scene/PerspectiveFrustum` has been removed. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` has been removed. Use `Core/PerspectiveOffCenterFrustum`.
+* Deprecated
+   * The default behavior of the functions `HeadingPitchRoll.fromQuaternion`, `Matrix3.fromHeadingPitchRoll`, `Quaternion.fromHeadingPitchRoll`, `Transforms.headingPitchRollToFixedFrame`, and `Transforms.headingPitchRollQuaternion` has been deprecated. An optional boolean flag can be supplied to these functions that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40.[#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Added support in CZML for expressing `orientation` as the velocity vector of an entity, using `velocityReference` syntax. [#5807](https://github.com/AnalyticalGraphicsInc/cesium/pull/5807)
