@@ -2306,12 +2306,16 @@ define([
                     sampler : sampler,
                     flipY : false
                 });
-            }
-            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+                // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
 
-            if (mipmap) {
-                tx.generateMipmap();
+                if (mipmap) {
+                    tx.generateMipmap();
+                }
             }
+        }
+
+        if (!defined(tx)) {
+            throw new RuntimeError('Failed to load texture.');
         }
 
         model._rendererResources.textures[gltfTexture.id] = tx;

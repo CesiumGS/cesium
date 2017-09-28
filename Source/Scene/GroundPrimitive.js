@@ -16,6 +16,7 @@ define([
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../ThirdParty/when',
         './ClassificationPrimitive',
         './ClassificationType',
@@ -38,6 +39,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
+        RuntimeError,
         when,
         ClassificationPrimitive,
         ClassificationType,
@@ -599,6 +601,8 @@ define([
             boundingVolumes = groundPrimitive._boundingVolumes;
         } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
             boundingVolumes = groundPrimitive._boundingVolumes2D;
+        } else {
+            throw new RuntimeError('Failed to compute ground primitive bounding volumes');
         }
 
         var indices;
