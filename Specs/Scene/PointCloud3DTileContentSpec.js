@@ -435,15 +435,31 @@ defineSuite([
         setCamera(scene.camera, centerLongitude, centerLatitude);
 
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            var content = tileset._root.content;
             scene.camera.zoomIn(6);
+
+            // Test that attenuation works
             tileset.pointAttenuation = false;
             expect(scene).notToPick(tileset, 0, 0, 2, 2);
             tileset.pointAttenuation = true;
             expect(scene).toPickPrimitive(tileset, 0, 0, 2, 2);
 
+            // Test lowering the max size
+            tileset.pointAttenuation = true;
+            var oldPointAttenuationMaxSize = tileset.pointAttenuationMaxSize;
+            tileset.pointAttenuationMaxSize = 1.0;
+            expect(scene).notToPick(tileset, 0, 0, 2, 2);
+            tileset.pointAttenuationMaxSize = oldPointAttenuationMaxSize;
+
+            // Test modifying the point size
+            tileset.pointAttenuation = false;
+            var oldPointSize = tileset.pointSize;
+            tileset.pointSize = 10.0;
+            expect(scene).toPickPrimitive(tileset, 0, 0, 2, 2);
+            tileset.pointSize = oldPointSize;
+
             // Simulate being further away from the point cloud where attenuation has no effect
-            content._pointAttenuationStartDistance = 1.0;
+            tileset.pointAttenuation = true;
+            tileset.pointAttenuationStartDistance = 1.0;
             expect(scene).notToPick(tileset, 0, 0, 2, 2);
 
             scene.destroyForSpecs();

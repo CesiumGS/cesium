@@ -1243,6 +1243,9 @@ define([
             this._pointAttenuation = this.pointAttenuation;
             createShaders(this, frameState, tileset.style);
         }
+        this._pointSize = tileset.pointSize;
+        this._pointAttenuationMaxSize = tileset.pointAttenuationMaxSize;
+        this._pointAttenuationStartDistance = tileset.pointAttenuationStartDistance;
 
         // Update the render state
         var isTranslucent = (this._highlightColor.alpha < 1.0) || (this._constantColor.alpha < 1.0) || this._styleTranslucent;

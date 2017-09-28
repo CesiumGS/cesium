@@ -523,12 +523,33 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         /**
+         * For point cloud tiles, the point size in pixels.
+         *
+         * @private
+         */
+        this.pointSize = 1.0;
+
+        /**
          * For point cloud tiles, whether to scale points as they get closer to the camera.
          *
          * @type {Boolean}
          * @default true
          */
         this.pointAttenuation = true;
+
+        /**
+         * For point cloud tiles, the maximum point size when point attenuation is enabled.
+         *
+         * @private
+         */
+        this.pointAttenuationMaxSize = 10.0;
+
+        /**
+         * For point cloud tiles, the distance from the point at which point attenuation starts to be applied.
+         *
+         * @private
+         */
+        this.pointAttenuationStartDistance = 100.0;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
