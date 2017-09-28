@@ -599,10 +599,8 @@ define([
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = groundPrimitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
-            boundingVolumes = groundPrimitive._boundingVolumes2D;
         } else {
-            throw new RuntimeError('Failed to compute ground primitive bounding volumes');
+            boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
         var indices;

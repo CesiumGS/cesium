@@ -278,9 +278,9 @@ define([
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
-            }
-            if (parameters.createPickOffsets && geometries.length > 0) {
-                pickOffsets = createInstancePickOffsets(instances, geometries);
+                if (parameters.createPickOffsets) {
+                    pickOffsets = createInstancePickOffsets(instances, geometries);
+                }
             }
         }
 
