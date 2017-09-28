@@ -67,6 +67,147 @@ defineSuite([
         expect(event.numberOfListeners).toEqual(0);
     });
 
+    it('can remove from withing a callback in event with mutiple listeners', function() {
+        var doNothing = function(evt) {
+        };
+
+        var removeEventCb = function(evt) {
+            event.removeEventListener(removeEventCb);
+        };
+
+        var removeEventCb2 = function(evt) {
+            event.removeEventListener(removeEventCb2);
+        };
+
+        var removeEventCb3 = function(evt) {
+            event.removeEventListener(removeEventCb3);
+        };
+
+        var doNothing2 = function(evt) {
+        };
+
+        event.addEventListener(doNothing);
+        event.addEventListener(removeEventCb);
+        event.addEventListener(removeEventCb2);
+        event.addEventListener(doNothing2);
+        event.addEventListener(removeEventCb3);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(2);
+        expect(event._listeners.indexOf(doNothing2)).toEqual(1);
+    });
+
+    it('can remove from withing a callback in event with mutiple listeners and recursive raiseEvent call', function() {
+
+        var counter = 0;
+        var callbacks = {
+            doNothing : function(evt) {
+            },
+            removeEventCb : function(evt) {
+                event.removeEventListener(callbacks.removeEventCb);
+            },
+            doNothing2 : function(evt) {
+            },
+            doRecursiveCall : function(evt) {
+                if (counter < 1) {
+                    counter++;
+                    event.raiseEvent();
+                }
+            },
+            removeEventCb2 : function(evt) {
+                event.removeEventListener(callbacks.removeEventCb2);
+            }
+        };
+
+        spyOn(callbacks, 'doNothing2').and.callThrough();
+
+        event.addEventListener(callbacks.doNothing);
+        event.addEventListener(callbacks.removeEventCb);
+        event.addEventListener(callbacks.doRecursiveCall);
+        event.addEventListener(callbacks.doNothing2);
+        event.addEventListener(callbacks.removeEventCb2);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(3);
+        expect(callbacks.doNothing2.calls.count()).toEqual(2);
+    });
+
+    it('event._recursionLevel has the correct value', function() {
+
+        var counter = 0;
+        var recursionLevel;
+        var callbacks = {
+            doNothing : function(evt) {
+            },
+            removeEventCb : function(evt) {
+                event.removeEventListener(callbacks.removeEventCb);
+            },
+            doNothing2 : function(evt) {
+            },
+            doRecursiveCall : function(evt) {
+                if (counter < 1) {
+                    counter++;
+                    event.raiseEvent();
+                } else {
+                    recursionLevel = event._recursionLevel;
+                }
+            },
+            removeEventCb2 : function(evt) {
+                event.removeEventListener(callbacks.removeEventCb2);
+            }
+        };
+
+        event.addEventListener(callbacks.doNothing);
+        event.addEventListener(callbacks.removeEventCb);
+        event.addEventListener(callbacks.doRecursiveCall);
+        event.addEventListener(callbacks.doNothing2);
+        event.addEventListener(callbacks.removeEventCb2);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(3);
+        expect(recursionLevel).toEqual(2);
+        expect(event._recursionLevel).toEqual(0);
+
+
+    });
+
+    it('can remove from withing a callback in event with mutiple listeners when the deletion is not the listeners order', function() {
+
+        /**
+         *  if you comment out the toRemove.sort() (in Event class) this spec should fail
+         */
+
+        var doNothing = function(evt) {
+        };
+
+        var doNothing2 = function(evt) {
+        };
+        var removeEventCb = function(evt) {
+            event.removeEventListener(removeEventCb);
+            //remove previous callback so it would pushed to toRemove **after** this CB
+            event.removeEventListener(doNothing2);
+
+        };
+
+        var removeEventCb2 = function(evt) {
+            event.removeEventListener(removeEventCb2);
+            //remove previous callback so it would pushed to toRemove **after** two CBs
+            event.removeEventListener(doNothing);
+        };
+
+        var doNothing3 = function(evt) {
+        };
+        var doNothing4 = function(evt) {
+        };
+        event.addEventListener(doNothing);
+        event.addEventListener(doNothing2);
+        event.addEventListener(doNothing3);
+        event.addEventListener(removeEventCb);
+        event.addEventListener(removeEventCb2);
+        event.addEventListener(doNothing4);
+        event.raiseEvent();
+        expect(event.numberOfListeners).toEqual(2);
+        expect(event._listeners.indexOf(doNothing3)).toEqual(0);
+        expect(event._listeners.indexOf(doNothing4)).toEqual(1);
+    });
+
     it('addEventListener and removeEventListener works with same function of different scopes', function() {
         var Scope = function() {
             this.timesCalled = 0;
