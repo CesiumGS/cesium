@@ -210,6 +210,6 @@ define([
     ForEach.texture = function(gltf, handler) {
         ForEach.topLevel(gltf, 'textures', handler);
     };
-    
+
     return ForEach;
 });
