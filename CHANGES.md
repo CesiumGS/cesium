@@ -16,6 +16,7 @@ Change Log
 * Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
 * Fixed a bug in `PolylineCollection` preventing the display of more than 16K points in a single collection [#5538](https://github.com/AnalyticalGraphicsInc/cesium/pull/5782)
 * Fixed removing multiple event listeners within event callbacks. [#5827](https://github.com/AnalyticalGraphicsInc/cesium/issues/5827)
+* Fixed a 3D Tiles point cloud bug causing a stray point to appear at the center of the screen on certain hardware. [#5599](https://github.com/AnalyticalGraphicsInc/cesium/issues/5599)
 
 ### 1.37 - 2017-09-01
 
