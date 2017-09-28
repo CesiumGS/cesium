@@ -90,6 +90,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Wall](https://github.com/wallw-bits)
 * [virtualcitySYSTEMS GmbH](https://www.virtualcitysystems.de)
    * [Jannes Bolling](https://github.com/jbo023)
+* [Logilab](https://www.logilab.fr/)
+   * [Florent Cayré](https://github.com/fcayre/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -156,4 +158,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Rishabh Shah](https://github.com/rms13)
 * [Rudraksha Shah](https://github.com/Rudraksha20)
 * [Cody Guldner](https://github.com/burn123)
-
+* [Florent Cayré](https://github.com/fcayre)
+* [Nacho Carnicero](https://github.com/nacho-carnicero)
