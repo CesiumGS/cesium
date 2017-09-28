@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -36,6 +37,7 @@ define([
         '../Shaders/PostProcessFilters/DensityEdgeCullPass',
         '../Shaders/PostProcessFilters/PointCloudPostProcessorBlendPass'
     ], function(
+        clone,
         Color,
         combine,
         ComponentDatatype,
@@ -385,14 +387,14 @@ define([
         processor._stencilMaskTexture = stencilMaskTexture;
     }
 
-    function addConstants(sourceFS, constantName, replacement) {
+    function addConstants(sourceFS, constantName, value) {
         var finalSource = sourceFS;
-        if (typeof(replacement) === 'boolean') {
-            if (replacement !== false) {
+        if (typeof(value) === 'boolean') {
+            if (value !== false) {
                 finalSource = '#define ' + constantName + '\n' + sourceFS;
             }
         } else {
-            finalSource = '#define ' + constantName + ' ' + replacement + '\n' + sourceFS;
+            finalSource = '#define ' + constantName + ' ' + value + '\n' + sourceFS;
         }
         return finalSource;
     }
@@ -1080,7 +1082,7 @@ define([
                 derivedCommand.castShadows = false;
                 derivedCommand.receiveShadows = false;
 
-                var derivedCommandRenderState = RenderState.fromCache(derivedCommand.renderState);
+                var derivedCommandRenderState = clone(derivedCommand.renderState);
                 derivedCommandRenderState.stencilTest = this._stencilWrite;
                 derivedCommand.renderState = RenderState.fromCache(
                     derivedCommandRenderState
