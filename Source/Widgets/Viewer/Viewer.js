@@ -943,6 +943,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         },
 
+        entityView : {
+            get : function() {
+                return this._entityView;
+            }
+        },
+
         /**
          * Gets the set of {@link DataSource} instances to be visualized.
          * @memberof Viewer.prototype

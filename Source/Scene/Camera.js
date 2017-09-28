@@ -2022,7 +2022,7 @@ define([
      * var range = 5000.0;
      * viewer.camera.lookAtTransform(transform, new Cesium.HeadingPitchRange(heading, pitch, range));
      */
-    Camera.prototype.lookAtTransform = function(transform, offset) {
+    Camera.prototype.lookAtTransform = function(transform, offset, upVector) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(transform)) {
             throw new DeveloperError('transform is required');
@@ -2032,7 +2032,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._setTransform(transform);
         if (!defined(offset)) {
             return;
         }
@@ -2044,6 +2043,13 @@ define([
             cartesianOffset = offset;
         }
 
+        cartesianOffset = this._transformToCamera(transform, cartesianOffset);
+        if (defined(upVector)){
+            var cameraUpVector = this._transformToCamera(transform, upVector);
+        }
+        
+        this._setTransform(transform);
+                
         if (this._mode === SceneMode.SCENE2D) {
             Cartesian2.clone(Cartesian2.ZERO, this.position);
 
@@ -2079,16 +2085,26 @@ define([
         Cartesian3.normalize(this.direction, this.direction);
         Cartesian3.cross(this.direction, Cartesian3.UNIT_Z, this.right);
 
+        if (defined(upVector)) {
+            Cartesian3.cross(this.direction, cameraUpVector, this.right);
+        }
+
         if (Cartesian3.magnitudeSquared(this.right) < CesiumMath.EPSILON10) {
             Cartesian3.clone(Cartesian3.UNIT_X, this.right);
         }
 
+        Cartesian3.cross(this.right, this.direction, this.up);    
         Cartesian3.normalize(this.right, this.right);
-        Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.up, this.up);
 
         this._adjustOrthographicFrustum(true);
     };
+
+    Camera.prototype._transformToCamera = function(transform, vector) {
+        var fixedVector = Matrix4.multiplyByPoint(transform, vector, new Cartesian3());
+        var cameraVector = Matrix4.multiplyByPoint(this._actualInvTransform, fixedVector, new Cartesian3());
+        return cameraVector;
+    }
 
     var viewRectangle3DCartographic1 = new Cartographic();
     var viewRectangle3DCartographic2 = new Cartographic();
