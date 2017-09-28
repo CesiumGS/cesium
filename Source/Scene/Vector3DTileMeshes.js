@@ -1,21 +1,29 @@
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/TaskProcessor',
+        '../ThirdParty/when',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Color,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         CesiumMath,
         Matrix4,
+        TaskProcessor,
+        when,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
     'use strict';
@@ -32,6 +40,21 @@ define([
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
         this._boundingVolume = options.boundingVolume;
+        this._pickObject = options.pickObject;
+
+        this._positions = undefined;
+        this._vertexBatchIds = undefined;
+        this._indices = undefined;
+        this._batchedIndices = undefined;
+        this._transferrableBatchIds = undefined;
+        this._batchTableColors = undefined;
+        this._packedBuffer = undefined;
+        this._boundingVolumes = undefined;
+
+        this._ready = false;
+        this._readyPromise = when.defer();
+
+        this._verticesPromise = undefined;
 
         this._primitive = undefined;
 
@@ -43,97 +66,232 @@ define([
         this.debugWireframe = false;
     }
 
-    var scratchPosition = new Cartesian3();
+    defineProperties(Vector3DTileMeshes.prototype, {
+        /**
+         * Gets the number of triangles.
+         *
+         * @memberof Vector3DTileMeshes.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.trianglesLength;
+                }
+                return 0;
+            }
+        },
 
-    function createPrimitive(meshes) {
-        var buffer = meshes._buffer;
-        var byteOffset = meshes._byteOffset;
+        /**
+         * Gets the geometry memory in bytes.
+         *
+         * @memberof Vector3DTileMeshes.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        geometryByteLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.geometryByteLength;
+                }
+                return 0;
+            }
+        },
 
-        var center = meshes._center;
-        var modelMatrix = meshes._modelMatrix;
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Vector3DTileMeshes.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        }
+    });
 
-        var batchIds = meshes._batchIds;
-        var batchTable = meshes._batchTable;
+    function packBuffer(meshes) {
+        var offset = 0;
+        var packedBuffer = new Float64Array(Cartesian3.packedLength + Matrix4.packedLength);
 
-        var positionCount = meshes._positionCount;
+        Cartesian3.pack(meshes._center, packedBuffer, offset);
+        offset += Cartesian3.packedLength;
 
-        var indexOffsets = meshes._indexOffsets;
-        var indexCounts = meshes._indexCounts;
-        var indicesLength = 0;
+        Matrix4.pack(meshes._modelMatrix, packedBuffer, offset);
 
-        var i;
-        var numMeshes = indexCounts.length;
-        for (i = 0; i < numMeshes; ++i) {
-            indicesLength += indexCounts[i];
+        return packedBuffer;
+    }
+
+    function unpackBuffer(meshes, packedBuffer) {
+        var offset = 0;
+
+        var numBVS = packedBuffer[offset++];
+        var bvs = meshes._boundingVolumes = new Array(numBVS);
+
+        for (var i = 0; i < numBVS; ++i) {
+            bvs[i] = BoundingSphere.unpack(packedBuffer, offset);
+            offset += BoundingSphere.packedLength;
         }
 
-        var positions = new Float32Array(positionCount * 3);
-        var vertexBatchIds = new Uint16Array(positionCount);
+        var numBatchedIndices = packedBuffer[offset++];
+        var bis = meshes._batchedIndices = new Array(numBatchedIndices);
 
-        var encodedIndices = new Uint32Array(buffer, byteOffset, indicesLength);
-        var encodedPositions = new Float32Array(buffer, byteOffset + indicesLength * Uint32Array.BYTES_PER_ELEMENT, 3 * positionCount);
+        for (var j = 0; j < numBatchedIndices; ++j) {
+            var color = Color.unpack(packedBuffer, offset);
+            offset += Color.packedLength;
 
-        var length = positions.length;
-        for (i = 0; i < length; i += 3) {
-            var position = Cartesian3.unpack(encodedPositions, i, scratchPosition);
+            var indexOffset = packedBuffer[offset++];
+            var count = packedBuffer[offset++];
 
-            Matrix4.multiplyByPoint(modelMatrix, position, position);
-            Cartesian3.subtract(position, center, position);
+            var length = packedBuffer[offset++];
+            var batchIds = new Array(length);
 
-            Cartesian3.pack(position, positions, i);
-        }
-
-        var indices = new Uint32Array(indicesLength);
-        var indexOffset = 0;
-        var batchedIndices = new Array(numMeshes);
-
-        for (i = 0; i < numMeshes; ++i) {
-            var offset = indexOffsets[i];
-            var count = indexCounts[i];
-            var batchId = batchIds[i];
-
-            for (var j = 0; j < count; ++j) {
-                var index = encodedIndices[offset + j];
-                indices[indexOffset + j] = index;
-                vertexBatchIds[index] = batchId;
+            for (var k = 0; k < length; ++k) {
+                batchIds[k] = packedBuffer[offset++];
             }
 
-            batchedIndices[i] = new Vector3DTileBatch({
+            bis[j] = new Vector3DTileBatch({
+                color : color,
                 offset : indexOffset,
                 count : count,
-                color : batchTable.getColor(batchId, new Color()),
-                batchIds : [batchId]
+                batchIds : batchIds
             });
+        }
+    }
 
-            indexOffset += count;
+    var createVerticesTaskProcessor = new TaskProcessor('createVectorTileMeshes');
+    var scratchColor = new Color();
+
+    function createPrimitive(meshes) {
+        if (defined(meshes._primitive)) {
+            return;
         }
 
-        meshes._primitive = new Vector3DTilePrimitive({
-            batchTable : batchTable,
-            positions : positions,
-            batchIds : batchIds,
-            vertexBatchIds : vertexBatchIds,
-            indices : indices,
-            indexOffsets : indexOffsets,
-            indexCounts : indexCounts,
-            batchedIndices : batchedIndices,
-            boundingVolume : meshes._boundingVolume,
-            boundingVolumes : [], // TODO
-            center : center,
-            pickObject : defaultValue(meshes._pickObject, meshes)
-        });
+        if (!defined(meshes._verticesPromise)) {
+            var positions = meshes._positions;
+            var indexOffsets = meshes._indexOffsets;
+            var indexCounts = meshes._indexCounts;
+            var indices = meshes._indices;
 
-        meshes._buffer = undefined;
-        meshes._byteOffset = undefined;
-        meshes._positionOffset = undefined;
-        meshes._positionCount = undefined;
-        meshes._indexOffsets = undefined;
-        meshes._indexCounts = undefined;
-        meshes._batchIds = undefined;
-        meshes._center = undefined;
-        meshes._modelMatrix = undefined;
-        meshes._batchTable = undefined;
-        meshes._boundingVolume = undefined;
+            var batchIds = meshes._transferrableBatchIds;
+            var batchTableColors = meshes._batchTableColors;
+
+            var packedBuffer = meshes._packedBuffer;
+
+            if (!defined(batchTableColors)) {
+                // Copy because they may be the views on the same buffer.
+                var buffer = meshes._buffer;
+                var byteOffset = meshes._byteOffset;
+
+                indexOffsets = meshes._indexOffsets = meshes._indexOffsets.slice();
+                indexCounts = meshes._indexCounts = meshes._indexCounts.slice();
+
+                var positionCount = meshes._positionCount;
+                var batchTable = meshes._batchTable;
+
+                var i;
+                var indicesLength = 0;
+                var numMeshes = indexCounts.length;
+                for (i = 0; i < numMeshes; ++i) {
+                    indicesLength += indexCounts[i];
+                }
+
+                var start = byteOffset;
+                var end = start + indicesLength * Uint32Array.BYTES_PER_ELEMENT;
+                indices = meshes._indices = new Uint32Array(buffer.slice(start, end));
+
+                start = end;
+                end = start + 3 * positionCount * Float32Array.BYTES_PER_ELEMENT;
+                positions = meshes._positions = new Float32Array(buffer.slice(start, end));
+
+                batchIds = meshes._transferrableBatchIds = new Uint32Array(meshes._batchIds);
+                batchTableColors = meshes._batchTableColors = new Uint32Array(batchIds.length);
+
+                var length = batchTableColors.length;
+                for (i = 0; i < length; ++i) {
+                    var color = batchTable.getColor(i, scratchColor);
+                    batchTableColors[i] = color.toRgba();
+                }
+
+                packedBuffer = meshes._packedBuffer = packBuffer(meshes);
+            }
+
+            var transferrableObjects = [positions.buffer, indexOffsets.buffer, indexCounts.buffer, indices.buffer, batchIds.buffer, batchTableColors.buffer, packedBuffer.buffer];
+            var parameters = {
+                packedBuffer : packedBuffer.buffer,
+                positions : positions.buffer,
+                indexOffsets : indexOffsets.buffer,
+                indexCounts : indexCounts.buffer,
+                indices : indices.buffer,
+                batchIds : batchIds.buffer,
+                batchTableColors : batchTableColors.buffer
+            };
+
+            var verticesPromise = meshes._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
+            if (!defined(verticesPromise)) {
+                // Postponed
+                return;
+            }
+
+            when(verticesPromise, function(result) {
+                var packedBuffer = new Float64Array(result.packedBuffer);
+                unpackBuffer(meshes, packedBuffer);
+
+                meshes._indices = new Uint32Array(result.indices);
+                meshes._indexOffsets = new Uint32Array(result.indexOffsets);
+                meshes._indexCounts = new Uint32Array(result.indexCounts);
+
+                // will be released
+                meshes._positions = new Float32Array(result.positions);
+                meshes._vertexBatchIds = new Uint32Array(result.batchIds);
+
+                meshes._ready = true;
+            });
+        }
+
+        if (meshes._ready && !defined(meshes._primitive)) {
+            meshes._primitive = new Vector3DTilePrimitive({
+                batchTable : meshes._batchTable,
+                positions : meshes._positions,
+                batchIds : meshes._batchIds,
+                vertexBatchIds : meshes._vertexBatchIds,
+                indices : meshes._indices,
+                indexOffsets : meshes._indexOffsets,
+                indexCounts : meshes._indexCounts,
+                batchedIndices : meshes._batchedIndices,
+                boundingVolume : meshes._boundingVolume,
+                boundingVolumes : meshes._boundingVolumes,
+                center : meshes._center,
+                pickObject : defaultValue(meshes._pickObject, meshes)
+            });
+
+            meshes._buffer = undefined;
+            meshes._byteOffset = undefined;
+            meshes._positionCount = undefined;
+            meshes._indexOffsets = undefined;
+            meshes._indexCounts = undefined;
+            meshes._batchIds = undefined;
+            meshes._center = undefined;
+            meshes._modelMatrix = undefined;
+            meshes._batchTable = undefined;
+            meshes._boundingVolume = undefined;
+            meshes._pickObject = undefined;
+
+            meshes._positions = undefined;
+            meshes._vertexBatchIds = undefined;
+            meshes._indices = undefined;
+            meshes._batchedIndices = undefined;
+            meshes._transferrableBatchIds = undefined;
+            meshes._batchTableColors = undefined;
+            meshes._packedBuffer = undefined;
+            meshes._boundingVolumes = undefined;
+
+            meshes._readyPromise.resolve();
+        }
     }
 
     /**
@@ -184,9 +342,12 @@ define([
      * @param {FrameState} frameState The current frame state.
      */
     Vector3DTileMeshes.prototype.update = function(frameState) {
-        if (!defined(this._primitive)) {
-            createPrimitive(this);
+        createPrimitive(this);
+
+        if (!this._ready) {
+            return;
         }
+
         this._primitive.debugWireframe = this.debugWireframe;
         this._primitive.update(frameState);
     };

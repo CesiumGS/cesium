@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
@@ -123,7 +122,7 @@ define([
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
 
-    function createVerticesFromVectorTile(parameters, transferableObjects) {
+    function createVectorTilePolygons(parameters, transferableObjects) {
         var positions = new Uint16Array(parameters.positions);
         var counts = new Uint32Array(parameters.counts);
         var indexCounts = new Uint32Array(parameters.indexCounts);
@@ -411,5 +410,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createVerticesFromVectorTile);
+    return createTaskProcessorWorker(createVectorTilePolygons);
 });

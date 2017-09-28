@@ -281,13 +281,22 @@ define([
         return (value >> 1) ^ (-(value & 1));
     }
 
+    /**
+     * Decodes delta and ZigZag encoded vertices. This modifies the buffers in place.
+     *
+     * @param {Uint16Array} uBuffer The buffer or buffer view of u values.
+     * @param {Uint16Array} vBuffer The buffer or buffer view of v values.
+     * @param {Uint16Array} [heightBuffer] The buffer or buffer view of height values.
+     *
+     * @see {@link http://cesiumjs.org/data-and-assets/terrain/formats/quantized-mesh-1.0.html|quantized-mesh-1.0 terrain format}
+     */
     AttributeCompression.zigZagDeltaDecode = function(uBuffer, vBuffer, heightBuffer) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(uBuffer)) {
-            throw new DeveloperError('uBuffer is required.');
-        }
-        if (!defined(vBuffer)) {
-            throw new DeveloperError('vBuffer is required.');
+        Check.defined('uBuffer', uBuffer);
+        Check.defined('vBuffer', vBuffer);
+        Check.typeOf.number.equals('uBuffer.length', 'vBuffer.length', uBuffer.length, vBuffer.length);
+        if (defined(heightBuffer)) {
+            Check.typeOf.number.equals('uBuffer.length', 'heightBuffer.length', uBuffer.length, heightBuffer.length);
         }
         //>>includeEnd('debug');
 
