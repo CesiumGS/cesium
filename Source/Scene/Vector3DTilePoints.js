@@ -1,14 +1,15 @@
 define([
-        '../Core/AttributeCompression',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DistanceDisplayCondition',
-        '../Core/Math',
+        '../Core/Ellipsoid',
         '../Core/NearFarScalar',
+        '../Core/Rectangle',
+        '../Core/TaskProcessor',
+        '../ThirdParty/when',
         './BillboardCollection',
         './Cesium3DTilePointFeature',
         './HorizontalOrigin',
@@ -17,16 +18,17 @@ define([
         './PolylineCollection',
         './VerticalOrigin'
     ], function(
-        AttributeCompression,
         Cartesian3,
-        Cartographic,
         Color,
         defined,
         defineProperties,
         destroyObject,
         DistanceDisplayCondition,
-        CesiumMath,
+        Ellipsoid,
         NearFarScalar,
+        Rectangle,
+        TaskProcessor,
+        when,
         BillboardCollection,
         Cesium3DTilePointFeature,
         HorizontalOrigin,
@@ -66,6 +68,13 @@ define([
         this._billboardCollection = undefined;
         this._labelCollection = undefined;
         this._polylineCollection = undefined;
+
+        this._verticesPromise = undefined;
+        this._packedBuffer = undefined;
+
+        this._ready = false;
+        this._readyPromise = when.defer();
+        this._resolvedPromise = false;
     }
 
     defineProperties(Vector3DTilePoints.prototype, {
@@ -97,63 +106,113 @@ define([
                 var labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
                 return billboardSize + labelSize;
             }
+        },
+
+        /**
+         * Gets a promise that resolves when the primitive is ready to render.
+         * @memberof Vector3DTilePoints.prototype
+         * @type {Promise}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
         }
     });
 
-    var maxShort = 32767;
+    function packBuffer(points, ellipsoid) {
+        var rectangle = points._rectangle;
+        var minimumHeight = points._minHeight;
+        var maximumHeight = points._maxHeight;
 
-    var scratchCartographic = new Cartographic();
-    var scratchCartesian3 = new Cartesian3();
+        var packedLength = 2 + Rectangle.packedLength + Ellipsoid.packedLength;
+        var packedBuffer = new Float64Array(packedLength);
 
-    function createPoints(primitive, ellipsoid) {
-        var positions = primitive._positions;
-        var batchTable = primitive._batchTable;
-        var batchIds = primitive._batchIds;
+        var offset = 0;
+        packedBuffer[offset++] = minimumHeight;
+        packedBuffer[offset++] = maximumHeight;
 
-        var rectangle = primitive._rectangle;
-        var minHeight = primitive._minHeight;
-        var maxHeight = primitive._maxHeight;
+        Rectangle.pack(rectangle, packedBuffer, offset);
+        offset += Rectangle.packedLength;
 
-        var billboardCollection = primitive._billboardCollection = new BillboardCollection({ batchTable : batchTable });
-        var labelCollection = primitive._labelCollection = new LabelCollection({ batchTable : batchTable });
-        var polylineCollection = primitive._polylineCollection = new PolylineCollection();
+        Ellipsoid.pack(ellipsoid, packedBuffer, offset);
 
-        var numberOfPoints = positions.length / 3;
-        var uBuffer = positions.subarray(0, numberOfPoints);
-        var vBuffer = positions.subarray(numberOfPoints, 2 * numberOfPoints);
-        var heightBuffer = positions.subarray(2 * numberOfPoints, 3 * numberOfPoints);
-        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
+        return packedBuffer;
+    }
 
-        for (var i = 0; i < numberOfPoints; ++i) {
-            var id = batchIds[i];
+    var createVerticesTaskProcessor = new TaskProcessor('createVectorTilePoints');
+    var scratchPosition = new Cartesian3();
 
-            var u = uBuffer[i];
-            var v = vBuffer[i];
-            var height = heightBuffer[i];
-
-            var lon = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
-            var lat = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
-            var alt = CesiumMath.lerp(minHeight, maxHeight, height / maxShort);
-
-            var cartographic = Cartographic.fromRadians(lon, lat, alt, scratchCartographic);
-            var position = ellipsoid.cartographicToCartesian(cartographic, scratchCartesian3);
-
-            var b = billboardCollection.add();
-            b.position = position;
-            b.verticalOrigin = VerticalOrigin.BOTTOM;
-            b._batchIndex = id;
-
-            var l = labelCollection.add();
-            l.text = ' ';
-            l.position = position;
-            l.verticalOrigin = VerticalOrigin.BOTTOM;
-            l._batchIndex = id;
-
-            var p = polylineCollection.add();
-            p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
+    function createPoints(points, ellipsoid) {
+        if (defined(points._billboardCollection)) {
+            return;
         }
 
-        primitive._positions = undefined;
+        var positions;
+        if (!defined(points._verticesPromise)) {
+            positions = points._positions;
+            var packedBuffer = points._packedBuffer;
+
+            if (!defined(packedBuffer)) {
+                // Copy because they may be the views on the same buffer.
+                positions = points._positions = positions.slice();
+                points._batchIds = points._batchIds.slice();
+
+                packedBuffer = points._packedBuffer = packBuffer(points, ellipsoid);
+            }
+
+            var transferrableObjects = [positions.buffer, packedBuffer.buffer];
+            var parameters = {
+                positions : positions.buffer,
+                packedBuffer : packedBuffer.buffer
+            };
+
+            var verticesPromise = points._verticesPromise = createVerticesTaskProcessor.scheduleTask(parameters, transferrableObjects);
+            if (!defined(verticesPromise)) {
+                // Postponed
+                return;
+            }
+
+            when(verticesPromise, function(result) {
+                points._positions = new Float64Array(result.positions);
+                points._ready = true;
+            });
+        }
+
+        if (points._ready && !defined(points._billboardCollection)) {
+            positions = points._positions;
+            var batchTable = points._batchTable;
+            var batchIds = points._batchIds;
+
+            var billboardCollection = points._billboardCollection = new BillboardCollection({batchTable : batchTable});
+            var labelCollection = points._labelCollection = new LabelCollection({batchTable : batchTable});
+            var polylineCollection = points._polylineCollection = new PolylineCollection();
+
+            var numberOfPoints = positions.length / 3;
+            for (var i = 0; i < numberOfPoints; ++i) {
+                var id = batchIds[i];
+
+                var position = Cartesian3.unpack(positions, i * 3, scratchPosition);
+
+                var b = billboardCollection.add();
+                b.position = position;
+                b.verticalOrigin = VerticalOrigin.BOTTOM;
+                b._batchIndex = id;
+
+                var l = labelCollection.add();
+                l.text = ' ';
+                l.position = position;
+                l.verticalOrigin = VerticalOrigin.BOTTOM;
+                l._batchIndex = id;
+
+                var p = polylineCollection.add();
+                p.positions = [Cartesian3.clone(position), Cartesian3.clone(position)];
+            }
+
+            points._positions = undefined;
+            points._packedBuffer = undefined;
+        }
     }
 
     /**
@@ -198,10 +257,10 @@ define([
             var feature = features[batchId];
 
             feature.show = true;
-            feature.pointSize = 8.0;
-            feature.pointColor = Color.WHITE;
-            feature.pointOutlineColor = Color.BLACK;
-            feature.pointOutlineWidth = 0.0;
+            feature.pointSize = Cesium3DTilePointFeature.defaultPointSize;
+            feature.pointColor = Cesium3DTilePointFeature.defaultPointColor;
+            feature.pointOutlineColor = Cesium3DTilePointFeature.defaultPointOutlineColor;
+            feature.pointOutlineWidth = Cesium3DTilePointFeature.defaultPointOutlineWidth;
             feature.labelColor = Color.WHITE;
             feature.labelOutlineColor = Color.WHITE;
             feature.labelOutlineWidth = 1.0;
@@ -369,13 +428,20 @@ define([
      * @private
      */
     Vector3DTilePoints.prototype.update = function(frameState) {
-        if (!defined(this._billboardCollection)) {
-            createPoints(this, frameState.mapProjection.ellipsoid);
+        createPoints(this, frameState.mapProjection.ellipsoid);
+
+        if (!this._ready) {
+            return;
         }
 
+        this._polylineCollection.update(frameState);
         this._billboardCollection.update(frameState);
         this._labelCollection.update(frameState);
-        this._polylineCollection.update(frameState);
+
+        if (!this._resolvedPromise) {
+            this._readyPromise.resolve();
+            this._resolvedPromise = true;
+        }
     };
 
     /**

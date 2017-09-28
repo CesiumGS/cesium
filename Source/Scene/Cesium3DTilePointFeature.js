@@ -573,6 +573,11 @@ define([
         }
     });
 
+    Cesium3DTilePointFeature.defaultPointColor = Color.WHITE;
+    Cesium3DTilePointFeature.defaultPointOutlineColor = Color.BLACK;
+    Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
+    Cesium3DTilePointFeature.defaultPointSize = 8.0;
+
     Cesium3DTilePointFeature.prototype._setBillboardImage = function() {
         var b = this._billboard;
         if (defined(this._billboardImage) && this._billboardImage !== b.image) {
@@ -584,10 +589,10 @@ define([
             return;
         }
 
-        var newColor = this._pointColor;
-        var newOutlineColor = this._pointOutlineColor;
-        var newOutlineWidth = this._pointOutlineWidth;
-        var newPointSize = this._pointSize;
+        var newColor = defaultValue(this._pointColor, Cesium3DTilePointFeature.defaultPointColor);
+        var newOutlineColor = defaultValue(this._pointOutlineColor, Cesium3DTilePointFeature.defaultPointOutlineColor);
+        var newOutlineWidth = defaultValue(this._pointOutlineWidth, Cesium3DTilePointFeature.defaultPointOutlineWidth);
+        var newPointSize = defaultValue(this._pointSize, Cesium3DTilePointFeature.defaultPointSize);
 
         var currentColor = this._billboardColor;
         var currentOutlineColor = this._billboardOutlineColor;
