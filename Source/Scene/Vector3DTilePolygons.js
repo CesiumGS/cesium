@@ -118,6 +118,40 @@ define([
 
     defineProperties(Vector3DTilePolygons.prototype, {
         /**
+         * Gets the number of triangles.
+         *
+         * @memberof Vector3DTilePolygons.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        trianglesLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.trianglesLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
+         * Gets the geometry memory in bytes.
+         *
+         * @memberof Vector3DTilePolygons.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        geometryByteLength : {
+            get : function() {
+                if (defined(this._primitive)) {
+                    return this._primitive.geometryByteLength;
+                }
+                return 0;
+            }
+        },
+
+        /**
          * Gets a promise that resolves when the primitive is ready to render.
          * @memberof Vector3DTilePolygons.prototype
          * @type {Promise}
@@ -190,7 +224,7 @@ define([
         }
     }
 
-    var createVerticesTaskProcessor = new TaskProcessor('createVerticesFromVectorTile');
+    var createVerticesTaskProcessor = new TaskProcessor('createVectorTilePolygons');
     var scratchColor = new Color();
 
     function createPrimitive(polygons) {
@@ -222,7 +256,6 @@ define([
 
                 var length = batchTableColors.length;
                 for (var i = 0; i < length; ++i) {
-                    //var color = batchTable.getColor(batchIds[i], scratchColor);
                     var color = batchTable.getColor(i, scratchColor);
                     batchTableColors[i] = color.toRgba();
                 }

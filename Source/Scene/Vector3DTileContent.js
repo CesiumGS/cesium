@@ -65,6 +65,7 @@ define([
         this._meshes = undefined;
         this._geometries = undefined;
 
+        this._contentReadyPromise = undefined;
         this._readyPromise = when.defer();
 
         this._batchTable = undefined;
@@ -93,6 +94,9 @@ define([
          */
         pointsLength : {
             get : function() {
+                if (defined(this._points)) {
+                    return this._points.pointsLength;
+                }
                 return 0;
             }
         },
@@ -102,7 +106,20 @@ define([
          */
         trianglesLength : {
             get : function() {
-                return 0;
+                var trianglesLength = 0;
+                if (defined(this._polygons)) {
+                    trianglesLength += this._polygons.trianglesLength;
+                }
+                if (defined(this._polylines)) {
+                    trianglesLength += this._polylines.trianglesLength;
+                }
+                if (defined(this._geometries)) {
+                    trianglesLength += this._geometries.trianglesLength;
+                }
+                if (defined(this._meshes)) {
+                    trianglesLength += this._meshes.trianglesLength;
+                }
+                return trianglesLength;
             }
         },
 
@@ -111,7 +128,20 @@ define([
          */
         geometryByteLength : {
             get : function() {
-                return 0;
+                var geometryByteLength = 0;
+                if (defined(this._polygons)) {
+                    geometryByteLength += this._polygons.geometryByteLength;
+                }
+                if (defined(this._polylines)) {
+                    geometryByteLength += this._polylines.geometryByteLength;
+                }
+                if (defined(this._geometries)) {
+                    geometryByteLength += this._geometries.geometryByteLength;
+                }
+                if (defined(this._meshes)) {
+                    geometryByteLength += this._meshes.geometryByteLength;
+                }
+                return geometryByteLength;
             }
         },
 
@@ -120,6 +150,9 @@ define([
          */
         texturesByteLength : {
             get : function() {
+                if (defined(this._points)) {
+                    return this._points.texturesByteLength;
+                }
                 return 0;
             }
         },
@@ -577,7 +610,7 @@ define([
 
             var widths;
             if (!defined(featureTableJson.POLYLINE_WIDTHS)) {
-                widths = new Array(numberOfPolylines);
+                widths = new Uint16Array(numberOfPolylines);
                 for (var i = 0; i < numberOfPolylines; ++i) {
                     widths[i] = 2.0;
                 }
@@ -794,16 +827,16 @@ define([
             this._geometries.update(frameState);
         }
 
-        if (!defined(this._polygonReadyPromise)) {
-            if (defined(this._polygons)) {
-                var that = this;
-                this._polygonReadyPromise = this._polygons.readyPromise.then(function() {
-                    that._readyPromise.resolve(that);
-                });
-            } else {
-                this._polygonReadyPromise = true;
-                this._readyPromise.resolve(this);
-            }
+        if (!defined(this._contentReadyPromise)) {
+            var polygonPromise = defined(this._polygons) ? this._polygons.readyPromise : undefined;
+            var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
+            var meshPromise = defined(this._meshes) ? this._meshes.readyPromise : undefined;
+            var geometryPromise = defined(this._geometries) ? this._geometries.readyPromise : undefined;
+
+            var that = this;
+            this._contentReadyPromise = when.all([polygonPromise, polylinePromise, meshPromise, geometryPromise]).then(function() {
+                that._readyPromise.resolve(that);
+            });
         }
     };
 

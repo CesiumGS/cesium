@@ -4,6 +4,7 @@ define([
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DistanceDisplayCondition',
         '../Core/Math',
@@ -21,6 +22,7 @@ define([
         Cartographic,
         Color,
         defined,
+        defineProperties,
         destroyObject,
         DistanceDisplayCondition,
         CesiumMath,
@@ -34,6 +36,22 @@ define([
         VerticalOrigin) {
     'use strict';
 
+    /**
+     * Renders a batch of points or billboards and labels.
+     *
+     * @alias Vector3DTilePoints
+     * @constructor
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array|Uint16Array} options.positions The positions of the polygons.
+     * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
+     * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
+     * @param {Rectangle} options.rectangle The rectangle containing the tile.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
+     * @param {Number[]} options.batchIds The batch ids for each polygon.
+     *
+     * @private
+     */
     function Vector3DTilePoints(options) {
         // released after the first update
         this._positions = options.positions;
@@ -49,6 +67,38 @@ define([
         this._labelCollection = undefined;
         this._polylineCollection = undefined;
     }
+
+    defineProperties(Vector3DTilePoints.prototype, {
+        /**
+         * Gets the number of points.
+         *
+         * @memberof Vector3DTilePoints.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        pointsLength : {
+            get : function() {
+                return this._billboardCollection.length;
+            }
+        },
+
+        /**
+         * Gets the texture atlas memory in bytes.
+         *
+         * @memberof Vector3DTilePoints.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        texturesByteLength : {
+            get : function() {
+                var billboardSize = this._billboardCollection.textureAtlas.texture.sizeInBytes;
+                var labelSize = this._labelCollection._textureAtlas.texture.sizeInBytes;
+                return billboardSize + labelSize;
+            }
+        }
+    });
 
     var maxShort = 32767;
 
