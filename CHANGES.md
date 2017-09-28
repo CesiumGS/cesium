@@ -9,9 +9,13 @@ Change Log
    * `Scene/PerspectiveFrustum` has been removed. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` has been removed. Use `Core/PerspectiveOffCenterFrustum`.
 * Added support for right-to-left languages in labels. [#5771](https://github.com/AnalyticalGraphicsInc/cesium/pull/5771)
+* Fixed where unicode string loaded from a typed array would be incorrect in Internet Explorer and Edge. This mainly popped up in 3dTiles batch tables.
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
+* Added support in CZML for expressing `orientation` as the velocity vector of an entity, using `velocityReference` syntax. [#5807](https://github.com/AnalyticalGraphicsInc/cesium/pull/5807)
+* Fixed CZML processing of `velocityReference` within an interval. [#5738](https://github.com/AnalyticalGraphicsInc/cesium/issues/5738)
 * Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
+* Fixed a bug in `PolylineCollection` preventing the display of more than 16K points in a single collection [#5538](https://github.com/AnalyticalGraphicsInc/cesium/pull/5782)
 
 ### 1.37 - 2017-09-01
 
