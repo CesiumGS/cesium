@@ -2106,7 +2106,7 @@ define([
 
             var invertClassification;
             if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
-                // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
+                // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
             }
