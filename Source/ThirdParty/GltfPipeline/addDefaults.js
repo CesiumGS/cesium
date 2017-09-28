@@ -384,14 +384,8 @@ define([
     }
 
     function selectDefaultScene(gltf) {
-        var scenes = gltf.scenes;
-
-        if (!defined(gltf.scene)) {
-            var scenesLength = scenes.length;
-            for (var sceneId = 0; sceneId < scenesLength; sceneId++) {
-                gltf.scene = sceneId;
-                break;
-            }
+        if (defined(gltf.scenes) && !defined(gltf.scene)) {
+            gltf.scene = 0;
         }
     }
 
