@@ -256,20 +256,20 @@ define([
     }
 
     function insertNamespaces(text) {
-	var namespaceMap = {
-	    'xsi:' : ["xmlns:xsi=", "'http://www.w3.org/2001/XMLSchema-instance'"]
-	}
-	var firstPart;
-	var lastPart;
-	
-	for (var key in namespaceMap){
-	    if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
-		firstPart = text.substr(0, text.indexOf('<kml') + 4);
-		lastPart = text.substr(firstPart.length);
-		text = firstPart + ' ' + namespaceMap[key][0] + namespaceMap[key][1] + lastPart;
-	    }
-	}
-	return text; 
+        var namespaceMap = {
+            'xsi:' : ['xmlns:xsi=', '"http://www.w3.org/2001/XMLSchema-instance"']
+        }
+        var firstPart;
+        var lastPart;
+
+        for (var key in namespaceMap){
+            if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
+                firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                lastPart = text.substr(firstPart.length);
+                text = firstPart + ' ' + namespaceMap[key][0] + namespaceMap[key][1] + lastPart;
+            }
+        }
+        return text; 
     }
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
@@ -2339,8 +2339,8 @@ define([
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
 
-			    //Insert missing namespaces
-			    text = insertNamespaces(text);
+                            //Insert missing namespaces
+                            text = insertNamespaces(text);
 
                             //IE raises an exception
                             var kml;
