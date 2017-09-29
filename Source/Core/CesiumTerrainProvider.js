@@ -306,12 +306,14 @@ define([
                     }
 
                     var length = overallAvailability.length;
-                    var availability = that._availability = new TileAvailability(that._tilingScheme, length);
-                    for(var level = 0;level<length;++level) {
-                        var levelRanges = overallAvailability[level];
-                        for(var i=0;i<levelRanges.length;++i) {
-                            var range = levelRanges[i];
-                            availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                    if (length > 0) {
+                        var availability = that._availability = new TileAvailability(that._tilingScheme, length);
+                        for (var level = 0; level < length; ++level) {
+                            var levelRanges = overallAvailability[level];
+                            for (var i = 0; i < levelRanges.length; ++i) {
+                                var range = levelRanges[i];
+                                availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                            }
                         }
                     }
 
@@ -400,7 +402,7 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, littleEndianExtensionSize) {
         var pos = 0;
         var cartesian3Elements = 3;
         var boundingSphereElements = cartesian3Elements + 1;
@@ -511,7 +513,7 @@ define([
         while (pos < view.byteLength) {
             var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
-            var extensionLength = view.getUint32(pos, provider._littleEndianExtensionSize);
+            var extensionLength = view.getUint32(pos, littleEndianExtensionSize);
             pos += Uint32Array.BYTES_PER_ELEMENT;
 
             if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS && provider._requestVertexNormals) {
@@ -635,7 +637,7 @@ define([
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }
-            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse.littleEndianExtensionSize);
         });
     };
 
