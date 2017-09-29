@@ -92,7 +92,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jannes Bolling](https://github.com/jbo023)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
-* [Novetta](https://github.com/Novetta/)
+* [Novetta](http://www.novetta.com/)
    * [Joshua Bernstein](https://github.com/jbernstein/)
 
 
