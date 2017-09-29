@@ -149,6 +149,8 @@ define([
         }
         this._credit = credit;
 
+        this._availability = undefined;
+
         this._ready = false;
         this._readyPromise = when.defer();
 
@@ -163,6 +165,7 @@ define([
 
         var layers = this._layers = [];
         var attribution = '';
+        var overallAvailability = [];
 
         function parseMetadataSuccess(data) {
             var message;
@@ -224,10 +227,16 @@ define([
                 for (var level = 0; level < availableTiles.length; ++level) {
                     var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+                    if (!defined(overallAvailability[level])) {
+                        overallAvailability[level] = [];
+                    }
 
                     for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
                         var range = rangesAtLevel[rangeIndex];
-                        availability.addAvailableTileRange(level, range.startX, yTiles - range.endY - 1, range.endX, yTiles - range.startY - 1);
+                        var yStart = yTiles - range.endY - 1;
+                        var yEnd = yTiles - range.startY - 1;
+                        overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
+                        availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
                     }
                 }
             }
@@ -248,10 +257,13 @@ define([
                 hasWaterMask = true;
             }
 
-            that._hasWaterMask = that._hasWaterMask && hasWaterMask;
-            that._hasVertexNormals = that._hasVertexNormals && hasVertexNormals;
+            that._hasWaterMask = that._hasWaterMask || hasWaterMask;
+            that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
             if (defined(data.attribution)) {
-                attribution += data.attribution + ' ';
+                if (attribution.length > 0) {
+                    attribution += ' ';
+                }
+                attribution += data.attribution;
             }
 
             layers.push(new LayerInformation({
@@ -265,6 +277,10 @@ define([
 
             var parentUrl = data.parentUrl;
             if (defined(parentUrl)) {
+                if (!defined(availability)) {
+                    console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
+                    return when.resolve();
+                }
                 lastUrl = joinUrls(lastUrl, parentUrl);
                 metadataUrl = joinUrls(lastUrl, 'layer.json');
                 if (defined(that._proxy)) {
@@ -287,6 +303,16 @@ define([
                 .then(function() {
                     if (defined(metadataError)) {
                         return;
+                    }
+
+                    var length = overallAvailability.length;
+                    var availability = that._availability = new TileAvailability(that._tilingScheme, length);
+                    for(var level = 0;level<length;++level) {
+                        var levelRanges = overallAvailability[level];
+                        for(var i=0;i<levelRanges.length;++i) {
+                            var range = levelRanges[i];
+                            availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                        }
                     }
 
                     if (!defined(that._credit) && attribution.length > 0) {
@@ -530,21 +556,9 @@ define([
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: computeChildMaskForTile(provider, level, x, y),
+            childTileMask: provider.availability.computeChildMaskForTile(level, x, y),
             waterMask: waterMaskBuffer
         });
-    }
-
-    function computeChildMaskForTile(provider, level, x, y) {
-        var childLevel = level + 1;
-        var mask = 0;
-
-        mask |= provider.getTileDataAvailable(2 * x, 2 * y + 1, childLevel) ? 1 : 0;
-        mask |= provider.getTileDataAvailable(2 * x + 1, 2 * y + 1, childLevel) ? 2 : 0;
-        mask |= provider.getTileDataAvailable(2 * x, 2 * y, childLevel) ? 4 : 0;
-        mask |= provider.getTileDataAvailable(2 * x + 1, 2 * y, childLevel) ? 8 : 0;
-
-        return mask;
     }
 
     /**
@@ -571,13 +585,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        var layerToUse;
         var layers = this._layers;
+        var layerToUse = layers[0];
         var layerCount = layers.length;
         for (var i=0;i<layerCount;++i) {
             var layer = layers[i];
-            if (layer.availability.isTileAvailable(level, x, y)) {
+            if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
                 layerToUse = layer;
+                break;
             }
         }
 
@@ -803,19 +818,11 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        var layers = this._layers;
-        if (!defined(layers)) {
+        if (!defined(this._availability)) {
             return undefined;
         }
 
-        var layerCount = layers.length;
-        for (var i=0;i<layerCount;++i) {
-            if (defined(layers[i].availability) && layers[i].availability.isTileAvailable(level, x, y)) {
-                return true;
-            }
-        }
-
-        return false;
+        return this._availability.isTileAvailable(level, x, y);
     };
 
     return CesiumTerrainProvider;
