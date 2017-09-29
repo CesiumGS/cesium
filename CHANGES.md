@@ -8,8 +8,7 @@ Change Log
    * `Scene/OrthographicOffCenterFrustum` has been removed. Use `Core/OrthographicOffCenterFrustum`.
    * `Scene/PerspectiveFrustum` has been removed. Use `Core/PerspectiveFrustum`.
    * `Scene/PerspectiveOffCenterFrustum` has been removed. Use `Core/PerspectiveOffCenterFrustum`.
-* Deprecated
-   * The default behavior of the functions `HeadingPitchRoll.fromQuaternion`, `Matrix3.fromHeadingPitchRoll`, `Quaternion.fromHeadingPitchRoll`, `Transforms.headingPitchRollToFixedFrame`, and `Transforms.headingPitchRollQuaternion` has been deprecated. An optional boolean flag can be supplied to these functions that, if true, uses the classical orientation of heading and pitch calculated counter-clockwise. The flag will be removed and the new behavior made default in 1.40.[#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
+   * The default behavior of the functions `HeadingPitchRoll.fromQuaternion`, `Matrix3.fromHeadingPitchRoll`, `Quaternion.fromHeadingPitchRoll`, `Transforms.headingPitchRollToFixedFrame`, and `Transforms.headingPitchRollQuaternion` has been deprecated. These functions now use the classical orientation of heading and pitch calculated counter-clockwise. With this new behavior, heading and pitch will need to be the negative of their previous values. The deprecation warnings will be removed in Cesium 1.40.[#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
 * Fixed where unicode string loaded from a typed array would be incorrect in Internet Explorer and Edge. This mainly popped up in 3dTiles batch tables.
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)

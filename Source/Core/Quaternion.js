@@ -191,7 +191,7 @@ define([
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation as per mathematical conventions. This deprecation warning will be removed in Cesium 1.40.');
+        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
 
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
         scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);
