@@ -195,8 +195,6 @@ define([
         this._replacementSentinel = replacementList.add();
         this._trimTiles = false;
 
-
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
 
         this._hasMixedContent = false;
@@ -1047,12 +1045,6 @@ define([
                 return this._statistics;
             }
         },
-
-        distanceDisplayCondition : {
-            get : function() {
-                return this._distanceDisplayCondition;
-            }
-        }
     });
 
     /**

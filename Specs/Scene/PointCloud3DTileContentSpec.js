@@ -463,9 +463,9 @@ defineSuite([
             expect(scene).toRenderAndCall(function(rgba) {
                 // Pixel color is some shade of gray
                 expect(rgba[0]).toBe(rgba[1]);
-                expect(rgba[1]).toBe(rgba[2]);
-                expect(rgba[2]).toBeGreaterThan(0);
-                expect(rgba[3]).toBeLessThan(255);
+                expect(rgba[0]).toBe(rgba[2]);
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[0]).toBeLessThan(255);
             });
 
             // When no conditions are met the default color is white
