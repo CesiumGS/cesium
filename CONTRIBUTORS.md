@@ -95,7 +95,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Novetta](http://www.novetta.com/)
    * [Joshua Bernstein](https://github.com/jbernstein/)
 
-
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
