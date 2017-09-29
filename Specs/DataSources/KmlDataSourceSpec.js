@@ -287,6 +287,18 @@ defineSuite([
         });
     });
 
+    it('if load contains empty <IconStyle> tag for placemark, default yellow pin does show', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleEmptyIconStyle.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(source.entities._entities._array[0]._billboard._image == dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
+        });
+    });
+
     it('sets DataSource name from Document', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document>\
