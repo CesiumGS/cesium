@@ -11,6 +11,7 @@ Change Log
 * Fixed where unicode string loaded from a typed array would be incorrect in Internet Explorer and Edge. This mainly popped up in 3dTiles batch tables.
 * Added ability to add an animation to `ModelAnimationCollection` by its index. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
 * Fixed a bug in `ModelAnimationCollection` that caused adding an animation by its name to throw an error. [#5815](https://github.com/AnalyticalGraphicsInc/cesium/pull/5815)
+* Running `buildApps` now creates a built version of Sandcastle which uses the built version of Cesium for better performance.
 * Added support in CZML for expressing `orientation` as the velocity vector of an entity, using `velocityReference` syntax. [#5807](https://github.com/AnalyticalGraphicsInc/cesium/pull/5807)
 * Fixed CZML processing of `velocityReference` within an interval. [#5738](https://github.com/AnalyticalGraphicsInc/cesium/issues/5738)
 * Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
