@@ -245,11 +245,11 @@ defineSuite([
     });
 
     it('load inserts missing namespace declaration', function() {
-	var dataSource = new KmlDataSource(options);
-	return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
-	    expect(source).toBe(dataSource);
+	    var dataSource = new KmlDataSource(options);
+	    return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
+	        expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
-	});
+	    });
     });
 
     it('load rejects nonexistent URL', function() {
