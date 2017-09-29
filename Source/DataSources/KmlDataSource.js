@@ -261,10 +261,7 @@ define([
 	}
 	var firstPart;
 	var lastPart;
-
-	if(text.trim().substr(0, 5) !== '<?xml')
-	    text = "<?xml version='1.0' encoding='UTF-8'?>" + text;
-		
+	
 	for (var key in namespaceMap){
 	    if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
 		firstPart = text.substr(0, text.indexOf('<kml') + 4);
