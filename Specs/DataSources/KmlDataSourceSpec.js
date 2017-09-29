@@ -271,7 +271,19 @@ defineSuite([
             expect(source.entities);
             expect(source.entities.values.length).toEqual(1);
             expect(source.entities._entities._array.length).toEqual(1);
-            expect(!source.entities._entities._array[0]._billboard._image);
+            expect(source.entities._entities._array[0]._billboard._image).toBeUndefined();
+        });
+    });
+
+    it('if load does not contain icon <style> tag for placemark, default yellow pin does show', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleNoStyle.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(source.entities._entities._array[0]._billboard._image == dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
         });
     });
 
