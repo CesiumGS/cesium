@@ -43,7 +43,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ottavio Hartman](https://github.com/omh1280)
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
-   * [Joshua Bernstein](https://github.com/jbernstein)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -93,6 +92,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jannes Bolling](https://github.com/jbo023)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
+* [Novetta](https://github.com/Novetta/)
+   * [Joshua Bernstein](https://github.com/jbernstein/)
+
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
