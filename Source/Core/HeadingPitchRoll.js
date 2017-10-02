@@ -2,14 +2,12 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Math',
-        './deprecationWarning'
+        './Math'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        CesiumMath,
-        deprecationWarning) {
+        CesiumMath) {
     'use strict';
 
     /**
@@ -42,23 +40,17 @@ define([
             throw new DeveloperError('quaternion is required');
         }
         //>>includeEnd('debug');
-
-        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
-
         if (!defined(result)) {
             result = new HeadingPitchRoll();
         }
-
         var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
         var denominatorRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
         var numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
         var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
-
-        result.heading = Math.atan2(numeratorHeading, denominatorHeading);
+        result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
         result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-        result.pitch = Math.asin(test);
-
+        result.pitch = -Math.asin(test);
         return result;
     };
 

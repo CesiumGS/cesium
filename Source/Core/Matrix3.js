@@ -6,8 +6,7 @@ define([
         './defineProperties',
         './DeveloperError',
         './freezeObject',
-        './Math',
-        './deprecationWarning'
+        './Math'
     ], function(
         Cartesian3,
         Check,
@@ -16,8 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         freezeObject,
-        CesiumMath,
-        deprecationWarning) {
+        CesiumMath) {
     'use strict';
 
     /**
@@ -306,13 +304,11 @@ define([
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Matrix3.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
-
-        var cosTheta = Math.cos(headingPitchRoll.pitch);
-        var cosPsi = Math.cos(headingPitchRoll.heading);
+        var cosTheta = Math.cos(-headingPitchRoll.pitch);
+        var cosPsi = Math.cos(-headingPitchRoll.heading);
         var cosPhi = Math.cos(headingPitchRoll.roll);
-        var sinTheta = Math.sin(headingPitchRoll.pitch);
-        var sinPsi = Math.sin(headingPitchRoll.heading);
+        var sinTheta = Math.sin(-headingPitchRoll.pitch);
+        var sinPsi = Math.sin(-headingPitchRoll.heading);
         var sinPhi = Math.sin(headingPitchRoll.roll);
 
         var m00 = cosTheta * cosPsi;
