@@ -3,6 +3,7 @@ Change Log
 ### 1.38 - 2017-10-02
 
 * Breaking changes
+   * `HeadingPitchRoll.fromQuaternion`, `Matrix3.fromHeadingPitchRoll`, `Quaternion.fromHeadingPitchRoll`, `Transforms.headingPitchRollToFixedFrame`, and `Transforms.headingPitchRollQuaternion` now use the classical orientation of heading and pitch calculated counter-clockwise. With this new behavior, heading and pitch need to be the negative of their previous values. The warning message will be removed in Cesium 1.40.[#5666](https://github.com/AnalyticalGraphicsInc/cesium/issues/5666)
    * `Scene/CullingVolume` has been removed. Use `Core/CullingVolume`.
    * `Scene/OrthographicFrustum` has been removed. Use `Core/OrthographicFrustum`.
    * `Scene/OrthographicOffCenterFrustum` has been removed. Use `Core/OrthographicOffCenterFrustum`.
