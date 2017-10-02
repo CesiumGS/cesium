@@ -56,7 +56,7 @@ function highlightBuilding() {
 
     var center = new Cesium.Cartesian3(1216378.730451297, -4736275.917774027, 4081266.871000864);
     var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    var hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(2.619728786416368, 0.0, 0.0));
+    var hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(-2.619728786416368, 0.0, 0.0));
     var hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(0.0, 0.0, -2.0));
     Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
@@ -91,7 +91,7 @@ function highlightTrees() {
 
     var center = new Cesium.Cartesian3(1216398.6054139996, -4736204.533089285, 4081338.6585485404);
     var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    var hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0));
+    var hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(-5.785339046755887, 0.0, 0.0));
     var hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(0.4, 0.0, -2.0));
     Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
@@ -111,7 +111,7 @@ function highlightTrees() {
 
     center = new Cesium.Cartesian3(1216394.3346955755, -4736207.431365568, 4081336.7768881875);
     modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(5.785339046755887, 0.0, 0.0));
+    hprRotation = Cesium.Matrix3.fromHeadingPitchRoll(new Cesium.HeadingPitchRoll(-5.785339046755887, 0.0, 0.0));
     hpr = Cesium.Matrix4.fromRotationTranslation(hprRotation, new Cesium.Cartesian3(-0.25, 0.0, -2.0));
     Cesium.Matrix4.multiply(modelMatrix, hpr, modelMatrix);
 
