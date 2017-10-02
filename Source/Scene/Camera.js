@@ -1039,7 +1039,6 @@ define([
     var scratchSetViewCartesian = new Cartesian3();
     var scratchSetViewTransform1 = new Matrix4();
     var scratchSetViewTransform2 = new Matrix4();
-    var scratchSetViewQuaternion = new Quaternion();
     var scratchSetViewMatrix3 = new Matrix3();
     var scratchSetViewCartographic = new Cartographic();
 
@@ -1049,10 +1048,10 @@ define([
         camera._setTransform(localTransform);
 
         Cartesian3.clone(Cartesian3.ZERO, camera.position);
-        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
+        hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
+        hpr.pitch = -hpr.pitch;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+        var rotMat = Matrix3.fromHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
         Matrix3.getColumn(rotMat, 2, camera.up);
@@ -1075,10 +1074,10 @@ define([
             }
             Cartesian3.clone(position, camera.position);
         }
-        hpr.heading = hpr.heading - CesiumMath.PI_OVER_TWO;
+        hpr.heading = -hpr.heading + CesiumMath.PI_OVER_TWO;
+        hpr.pitch = -hpr.pitch;
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+        var rotMat = Matrix3.fromHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
         Matrix3.getColumn(rotMat, 0, camera.direction);
         Matrix3.getColumn(rotMat, 2, camera.up);
@@ -1116,11 +1115,10 @@ define([
         }
 
         if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            hpr.heading = hpr.heading  - CesiumMath.PI_OVER_TWO;
-            hpr.pitch = -CesiumMath.PI_OVER_TWO;
+            hpr.heading = -hpr.heading  + CesiumMath.PI_OVER_TWO;
+            hpr.pitch = CesiumMath.PI_OVER_TWO;
             hpr.roll =  0.0;
-            var rotQuat = Quaternion.fromHeadingPitchRoll(hpr, scratchSetViewQuaternion);
-            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+            var rotMat = Matrix3.fromHeadingPitchRoll(hpr, scratchSetViewMatrix3);
 
             Matrix3.getColumn(rotMat, 2, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);

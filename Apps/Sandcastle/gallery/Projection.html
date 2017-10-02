@@ -36,7 +36,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 viewer.projectionPicker.viewModel.switchToOrthographic();
 
 var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 0.0);
-var hpr = new Cesium.HeadingPitchRoll(Cesium.Math.toRadians(135), 0.0, 0.0);
+var hpr = new Cesium.HeadingPitchRoll(-Cesium.Math.toRadians(135), 0.0, 0.0);
 var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
 
 var entity = viewer.entities.add({
