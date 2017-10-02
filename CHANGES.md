@@ -17,7 +17,7 @@ Change Log
 * Fixed a bug in `PolylineCollection` preventing the display of more than 16K points in a single collection [#5538](https://github.com/AnalyticalGraphicsInc/cesium/pull/5782)
 * Fixed removing multiple event listeners within event callbacks. [#5827](https://github.com/AnalyticalGraphicsInc/cesium/issues/5827)
 * Fixed a 3D Tiles point cloud bug causing a stray point to appear at the center of the screen on certain hardware. [#5599](https://github.com/AnalyticalGraphicsInc/cesium/issues/5599)
-* Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon (https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
+* Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon. [#5819](https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
 
 ### 1.37 - 2017-09-01
 
