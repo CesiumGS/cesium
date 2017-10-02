@@ -108,14 +108,14 @@ defineSuite([
         var angle = CesiumMath.toRadians(20.0);
         var hpr = new HeadingPitchRoll(angle, 0.0, 0.0);
         var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
-        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(Matrix3.fromRotationZ(-angle), CesiumMath.EPSILON11);
+        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(Matrix3.fromRotationZ(angle), CesiumMath.EPSILON11);
     });
 
     it('fromHeadingPitchRoll with just pitch', function() {
         var angle = CesiumMath.toRadians(20.0);
         var hpr = new HeadingPitchRoll(0.0, angle, 0.0);
         var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
-        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(Matrix3.fromRotationY(-angle), CesiumMath.EPSILON11);
+        expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(Matrix3.fromRotationY(angle), CesiumMath.EPSILON11);
     });
 
     it('fromHeadingPitchRoll with just roll', function() {
@@ -130,8 +130,8 @@ defineSuite([
         var hpr = new HeadingPitchRoll( angle, angle, angle);
         var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
         var expected = Matrix3.fromRotationX(angle);
-        Matrix3.multiply(Matrix3.fromRotationY(-angle), expected, expected);
-        Matrix3.multiply(Matrix3.fromRotationZ(-angle), expected, expected);
+        Matrix3.multiply(Matrix3.fromRotationY(angle), expected, expected);
+        Matrix3.multiply(Matrix3.fromRotationZ(angle), expected, expected);
         expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
@@ -142,8 +142,8 @@ defineSuite([
         var hpr = new HeadingPitchRoll( heading, pitch, roll);
         var quaternion = Quaternion.fromHeadingPitchRoll(hpr);
         var expected = Matrix3.fromRotationX(roll);
-        Matrix3.multiply(Matrix3.fromRotationY(-pitch), expected, expected);
-        Matrix3.multiply(Matrix3.fromRotationZ(-heading), expected, expected);
+        Matrix3.multiply(Matrix3.fromRotationY(pitch), expected, expected);
+        Matrix3.multiply(Matrix3.fromRotationZ(heading), expected, expected);
         expect(Matrix3.fromQuaternion(quaternion)).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
