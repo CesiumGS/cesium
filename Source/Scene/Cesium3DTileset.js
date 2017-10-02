@@ -525,7 +525,8 @@ define([
         /**
          * For point cloud tiles, the point size in pixels.
          *
-         * @private
+         * @type Number
+         * @default 1.0
          */
         this.pointSize = 1.0;
 
@@ -540,14 +541,16 @@ define([
         /**
          * For point cloud tiles, the maximum point size when point attenuation is enabled.
          *
-         * @private
+         * @type Number
+         * @default 10.0
          */
         this.pointAttenuationMaxSize = 10.0;
 
         /**
          * For point cloud tiles, the distance from the point at which point attenuation starts to be applied.
          *
-         * @private
+         * @type Number
+         * @default 100.0
          */
         this.pointAttenuationStartDistance = 100.0;
 
