@@ -19,6 +19,7 @@ Change Log
 * Fixed a 3D Tiles point cloud bug causing a stray point to appear at the center of the screen on certain hardware. [#5599](https://github.com/AnalyticalGraphicsInc/cesium/issues/5599)
 * Fixed removing multiple event listeners within event callbacks. [#5827](https://github.com/AnalyticalGraphicsInc/cesium/issues/5827)
 * Running `buildApps` now creates a built version of Sandcastle which uses the built version of Cesium for better performance.
+* Added function that inserts missing namespace declarations into KML files. [#5860](https://github.com/AnalyticalGraphicsInc/cesium/pull/5860)
 
 ### 1.37 - 2017-09-01
 
