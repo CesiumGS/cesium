@@ -138,9 +138,32 @@ function Model(options) {
 
 ## Linting
 
-For syntax and style guidelines, we use the [ESLint](http://eslint.org/docs/rules/) recommended settings as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium), which is maintained as part of the Cesium repository and also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js). 
+For syntax and style guidelines, we use the ESLint recommended settings (the list of rules can be found [here](http://eslint.org/docs/rules/)) as a base and extend it with additional rules via a shared config Node module, [eslint-config-cesium](https://www.npmjs.com/package/eslint-config-cesium). This package is maintained as a part of the Cesium repository and is also used throughout the Cesium ecosystem. For a list of which rules are enabled, look in [index.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/index.js), [browser.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/browser.js), and [node.js](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Tools/eslint-config-cesium/node.js).
 
-* When disabling linting for one line, use `//eslint-disable-line`:
+**General rules:**
+- [block-scoped-var](http://eslint.org/docs/rules/block-scoped-var)
+- [no-alert](http://eslint.org/docs/rules/no-alert)
+- [no-floating-decimal](http://eslint.org/docs/rules/no-floating-decimal)
+- [no-implicit-globals](http://eslint.org/docs/rules/no-implicit-globals)
+- [no-loop-func](http://eslint.org/docs/rules/no-loop-func)
+- [no-use-before-define](http://eslint.org/docs/rules/no-use-before-define) to prevent using variables and functions before they are defined.
+- [no-else-return](http://eslint.org/docs/rules/no-else-return)
+- [no-undef-init](http://eslint.org/docs/rules/no-undef-init)
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+- [no-trailing-spaces](http://eslint.org/docs/rules/no-trailing-spaces)
+- [no-lonely-if](http://eslint.org/docs/rules/no-lonely-if)
+- [quotes](http://eslint.org/docs/rules/quotes) to enforce using single-quotes
+- [no-sequences](http://eslint.org/docs/rules/no-sequences)
+- [no-unused-expressions](http://eslint.org/docs/rules/no-unused-expressions)
+
+**Node-specific rules:**
+- [global-require](http://eslint.org/docs/rules/global-require)
+- [no-buffer-constructor](http://eslint.org/docs/rules/no-buffer-constructor)
+- [no-new-require](http://eslint.org/docs/rules/no-new-require)
+
+**[Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments)**
+ * When disabling linting for one line, use `//eslint-disable-line`:
 ```js
 function exit(warningMessage) {
     window.alert('Cannot exit: ' + warningMessage); //eslint-disable-line no-alert
@@ -156,8 +179,6 @@ try {
 }
 /*eslint-enable no-empty*/
 ```
-
-* See [Disabling Rules with Inline Comments](http://eslint.org/docs/user-guide/configuring#disabling-rules-with-inline-comments) for more examples.
 
 ## Units
 
