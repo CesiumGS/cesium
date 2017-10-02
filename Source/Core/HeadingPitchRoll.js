@@ -3,13 +3,13 @@ define([
         './defined',
         './DeveloperError',
         './Math',
-        './deprecationWarning'
+        './oneTimeWarning'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         CesiumMath,
-        deprecationWarning) {
+        oneTimeWarning) {
     'use strict';
 
     /**
@@ -43,7 +43,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        deprecationWarning('HeadingPitchRoll.fromQuaternion', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
+        oneTimeWarning('HeadingPitchRoll counter-clockwise', 'HeadingPitchRoll.fromQuaternion now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and this warning will be removed in Cesium 1.40.');
 
         if (!defined(result)) {
             result = new HeadingPitchRoll();

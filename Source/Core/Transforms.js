@@ -19,7 +19,7 @@ define([
         './Matrix4',
         './Quaternion',
         './TimeConstants',
-        './deprecationWarning'
+        './oneTimeWarning'
     ], function(
         when,
         Cartesian2,
@@ -41,7 +41,7 @@ define([
         Matrix4,
         Quaternion,
         TimeConstants,
-        deprecationWarning) {
+        oneTimeWarning) {
     'use strict';
 
     /**
@@ -336,7 +336,7 @@ define([
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
+        oneTimeWarning('HeadingPitchRoll counter-clockwise', 'Transforms.headingPitchRollToFixedFrame now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and this warning will be removed in Cesium 1.40.');
 
         fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
 
@@ -378,7 +378,7 @@ define([
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Transforms.headingPitchRollQuaternion', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
+        oneTimeWarning('HeadingPitchRoll counter-clockwise', 'Transforms.headingPitchRollQuaternion now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and this warning will be removed in Cesium 1.40.');
 
         scratchENUMatrix4 = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         Matrix4.getRotation(scratchENUMatrix4, scratchHPRMatrix3);
