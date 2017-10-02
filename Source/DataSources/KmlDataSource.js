@@ -2188,6 +2188,8 @@ define([
                     } else if (viewRefreshMode === 'onRegion') {
                         oneTimeWarning('kml-refrehMode-onRegion', 'KML - Unsupported viewRefreshMode: onRegion');
                     }
+                }).otherwise(function(error) {
+                    oneTimeWarning('An error occured during loading ' + linkUrl);
                 });
 
                 promises.push(promise);
