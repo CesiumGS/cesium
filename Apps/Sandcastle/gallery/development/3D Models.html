@@ -123,8 +123,8 @@ Cesium.knockout.getObservable(viewModel, 'colorBlendAmount').subscribe(
 
 function createModel(url, height, heading, pitch, roll) {
     height = Cesium.defaultValue(height, 0.0);
-    heading = Cesium.defaultValue(heading, 0.0);
-    pitch = Cesium.defaultValue(pitch, 0.0);
+    heading = -Cesium.defaultValue(heading, 0.0);
+    pitch = -Cesium.defaultValue(pitch, 0.0);
     roll = Cesium.defaultValue(roll, 0.0);
     var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
 

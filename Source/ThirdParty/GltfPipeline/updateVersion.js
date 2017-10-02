@@ -521,7 +521,7 @@ define([
                                 compressedImage.mimeType = compressedBinaryGltf.mimeType;
                                 delete compressedExtensions.KHR_binary_glTF;
                             }
-                            if (Object.keys(extensions).length === 0) {
+                            if (Object.keys(compressedExtensions).length === 0) {
                                 delete compressedImage.extensions;
                             }
                         }
