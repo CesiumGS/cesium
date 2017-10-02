@@ -7,8 +7,7 @@ define([
         './freezeObject',
         './HeadingPitchRoll',
         './Math',
-        './Matrix3',
-        './deprecationWarning'
+        './Matrix3'
     ], function(
         Cartesian3,
         Check,
@@ -18,8 +17,7 @@ define([
         freezeObject,
         HeadingPitchRoll,
         CesiumMath,
-        Matrix3,
-        deprecationWarning) {
+        Matrix3) {
     'use strict';
 
     /**
@@ -191,13 +189,10 @@ define([
         Check.typeOf.object('headingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Quaternion.fromHeadingPitchRoll', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
-
         scratchRollQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, headingPitchRoll.roll, scratchHPRQuaternion);
-        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, headingPitchRoll.pitch, result);
+        scratchPitchQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, -headingPitchRoll.pitch, result);
         result = Quaternion.multiply(scratchPitchQuaternion, scratchRollQuaternion, scratchPitchQuaternion);
-        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, headingPitchRoll.heading, scratchHPRQuaternion);
-
+        scratchHeadingQuaternion = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -headingPitchRoll.heading, scratchHPRQuaternion);
         return Quaternion.multiply(scratchHeadingQuaternion, result, result);
     };
 
