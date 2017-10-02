@@ -339,7 +339,9 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(instancedSource);
+                var gltf = collection._model.gltf;
+                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+                instancedSource = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseUniformName)(instancedSource);
             }
 
             return instancedSource;
@@ -433,7 +435,9 @@ define([
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
             if (defined(collection._batchTable)) {
-                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId')(vs);
+                var gltf = collection._model.gltf;
+                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+                vs = collection._batchTable.getVertexShaderCallback(true, 'a_batchId', diffuseUniformName)(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }

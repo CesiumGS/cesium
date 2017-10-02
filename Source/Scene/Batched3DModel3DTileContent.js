@@ -208,7 +208,8 @@ define([
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
+            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName, diffuseUniformName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
