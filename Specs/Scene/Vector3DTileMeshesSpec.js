@@ -298,6 +298,37 @@ defineSuite([
         });
     });
 
+    it('renders wireframe', function() {
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        var options = combineMeshes([createMesh(Matrix4.fromUniformScale(1000000.0))]);
+
+        meshes = scene.primitives.add(new Vector3DTileMeshes(combine(options, {
+            byteOffset : 0,
+            batchIds : new Uint16Array([0]),
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable
+        })));
+        meshes.debugWireframe = true;
+        return loadMeshes(meshes).then(function() {
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 10.0));
+            expect(scene).toRender([255, 255, 255, 255]);
+
+            batchTable.setColor(0, Color.BLUE);
+            meshes.updateCommands(0, Color.BLUE);
+            batchTable.update(mockTileset, scene.frameState);
+            expect(scene).toRender([0, 0, 255, 255]);
+        });
+    });
+
     it('isDestroyed', function() {
         meshes = new Vector3DTileMeshes({});
         expect(meshes.isDestroyed()).toEqual(false);
