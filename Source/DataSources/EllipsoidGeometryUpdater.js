@@ -412,7 +412,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : entity.computetModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
