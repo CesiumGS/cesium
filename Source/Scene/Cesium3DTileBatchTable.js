@@ -853,7 +853,9 @@ define([
 
         var that = this;
         return function(source) {
-            var renamedSource = modifyDiffuse(source, diffuseUniformName, true);
+            // If the color blend mode is HIGHLIGHT, the highlight color will always be applied in the fragment shader.
+            // No need to apply the highlight color in the vertex shader as well.
+            var renamedSource = modifyDiffuse(source, diffuseUniformName, false);
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
@@ -905,10 +907,19 @@ define([
         };
     };
 
-    function getHighlightOnlyFragmentShader(source) {
+    function getDefaultShader(source, applyHighlight) {
+        source = ShaderSource.replaceMain(source, 'tile_main');
+
+        if (!applyHighlight) {
+            return source +
+                   'void tile_color(vec4 tile_featureColor) \n' +
+                   '{ \n' +
+                   '    tile_main(); \n' +
+                   '} \n';
+        }
+
         // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
         // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
-        source = ShaderSource.replaceMain(source, 'tile_main');
         return source +
                'uniform float tile_colorBlend; \n' +
                'void tile_color(vec4 tile_featureColor) \n' +
@@ -920,24 +931,11 @@ define([
                '} \n';
     }
 
-    function getPassthroughVertexShader(source) {
-        source = ShaderSource.replaceMain(source, 'tile_main');
-        return source +
-               'void tile_color(vec4 tile_featureColor) \n' +
-               '{ \n' +
-               '    tile_main(); \n' +
-               '} \n';
-    }
-
-    function getDefaultShader(source, isVertexShader) {
-        return isVertexShader ? getPassthroughVertexShader(source) : getHighlightOnlyFragmentShader(source);
-    }
-
-    function modifyDiffuse(source, diffuseUniformName, isVertexShader) {
-        // If the glTF does not specify the _3DTILESDIFFUSE semantic, return a basic highlight shader.
+    function modifyDiffuse(source, diffuseUniformName, applyHighlight) {
+        // If the glTF does not specify the _3DTILESDIFFUSE semantic, return the default shader.
         // Otherwise if _3DTILESDIFFUSE is defined prefer the shader below that can switch the color mode at runtime.
         if (!defined(diffuseUniformName)) {
-            return getDefaultShader(source, isVertexShader);
+            return getDefaultShader(source, applyHighlight);
         }
 
         // Find the diffuse uniform. Examples matches:
@@ -948,7 +946,7 @@ define([
 
         if (!defined(uniformMatch)) {
             // Could not find uniform declaration of type vec3, vec4, or sampler2D
-            return getDefaultShader(source, isVertexShader);
+            return getDefaultShader(source, applyHighlight);
         }
 
         var declaration = uniformMatch[0];
@@ -975,16 +973,10 @@ define([
 
         // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
         // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
-        var applyHighlight = '';
-
-        if (!isVertexShader) {
-            // Highlight color is always applied in the fragment shader, from either here or in getHighlightOnlyFragmentShader.
-            // No need to apply the highlight color in the vertex shader as well.
-            applyHighlight =
-                '    gl_FragColor.a *= tile_featureColor.a; \n' +
-                '    float highlight = ceil(tile_colorBlend); \n' +
-                '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n';
-        }
+        var highlight =
+            '    gl_FragColor.a *= tile_featureColor.a; \n' +
+            '    float highlight = ceil(tile_colorBlend); \n' +
+            '    gl_FragColor.rgb *= mix(tile_featureColor.rgb, vec3(1.0), highlight); \n';
 
         var setColor;
         if (type === 'vec3' || type === 'vec4') {
@@ -1015,9 +1007,13 @@ define([
             source + '\n' +
             'void tile_color(vec4 tile_featureColor) \n' +
             '{ \n' +
-            setColor +
-            applyHighlight +
-            '} \n';
+            setColor;
+
+        if (applyHighlight) {
+            source += highlight;
+        }
+
+        source += '} \n';
 
         return source;
     }
@@ -1027,7 +1023,7 @@ define([
             return;
         }
         return function(source) {
-            source = modifyDiffuse(source, diffuseUniformName, false);
+            source = modifyDiffuse(source, diffuseUniformName, true);
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 source +=
