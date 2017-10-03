@@ -43,6 +43,7 @@ defineSuite([
     var scene;
     var rectangle;
     var depthPrimitive;
+    var geometry;
 
     var ellipsoid = Ellipsoid.WGS84;
 
@@ -90,7 +91,7 @@ defineSuite([
 
         rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
 
-        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
+        var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 0.0, 1.0));
         var primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
@@ -115,6 +116,8 @@ defineSuite([
 
     afterEach(function() {
         scene.primitives.removeAll();
+        geometry = geometry && !geometry.isDestroyed() && geometry.destroy();
+        depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
     });
 
     function loadGeometries(geometries) {
@@ -196,7 +199,7 @@ defineSuite([
 
         scene.primitives.add(depthPrimitive);
 
-        var geometry = scene.primitives.add(new Vector3DTileGeometry(combine(geometryOptions, {
+        geometry = scene.primitives.add(new Vector3DTileGeometry(combine(geometryOptions, {
             center : center,
             modelMatrix : modelMatrix,
             batchTable : batchTable
@@ -215,6 +218,48 @@ defineSuite([
         });
     }
 
+    function verifyMultipleRender(modelMatrices, geometryOptions) {
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        Cartesian3.clone(center, geometryOptions.boundingVolume.center);
+
+        var length = modelMatrices.length;
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, length);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        geometry = scene.primitives.add(new Vector3DTileGeometry(combine(geometryOptions, {
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable
+        })));
+        return loadGeometries(geometry).then(function() {
+            var i;
+            for (i = 0; i < length; ++i) {
+                batchTable.setShow(i, false);
+            }
+
+            for (i = 0; i < length; ++i) {
+                var transform = Matrix4.multiply(modelMatrix, modelMatrices[i], new Matrix4());
+                scene.camera.lookAtTransform(transform, new Cartesian3(0.0, 0.0, 10.0));
+
+                batchTable.setShow(i, true);
+                batchTable.update(mockTileset, scene.frameState);
+                expect(scene).toRender([255, 255, 255, 255]);
+
+                batchTable.setColor(i, Color.BLUE);
+                geometry.updateCommands(i, Color.BLUE);
+                batchTable.update(mockTileset, scene.frameState);
+                expect(scene).toRender([0, 0, 255, 255]);
+
+                batchTable.setShow(i, false);
+            }
+        });
+    }
+
     it('renders a single box', function() {
         var dimensions = new Cartesian3(1000000.0, 1000000.0, 1000000.0);
         var boxes = packBoxes([{
@@ -222,8 +267,28 @@ defineSuite([
             dimensions : dimensions
         }]);
         var boxBatchIds = new Uint16Array([0]);
-        var bv = new BoundingSphere(undefined, Math.sqrt(3 * dimensions.x * dimensions.x));
-        verifySingleRender({
+        var bv = new BoundingSphere(undefined, Math.sqrt(3.0 * dimensions.x * dimensions.x));
+        return verifySingleRender({
+            boxes : boxes,
+            boxBatchIds : boxBatchIds,
+            boundingVolume : bv
+        });
+    });
+
+    it('renders multiple boxes', function() {
+        var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0))];
+        var boxes = packBoxes([{
+            modelMatrix : modelMatrices[0],
+            dimensions : dimensions
+        }, {
+            modelMatrix : modelMatrices[1],
+            dimensions : dimensions
+        }]);
+        var boxBatchIds = new Uint16Array([0, 1]);
+        var bv = new BoundingSphere(undefined, Math.sqrt(3.0 * 2.0 * dimensions.x * dimensions.x));
+        return verifyMultipleRender(modelMatrices, {
             boxes : boxes,
             boxBatchIds : boxBatchIds,
             boundingVolume : bv
@@ -240,7 +305,30 @@ defineSuite([
         }]);
         var cylinderBatchIds = new Uint16Array([0]);
         var bv = new BoundingSphere(undefined, Math.sqrt(radius * radius + length * length));
-        verifySingleRender({
+        return verifySingleRender({
+            cylinders : cylinders,
+            cylinderBatchIds : cylinderBatchIds,
+            boundingVolume : bv
+        });
+    });
+
+    it('renders multiple cylinders', function() {
+        var radius = 500000.0;
+        var length = 500000.0;
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))];
+        var cylinders = packCylinders([{
+            modelMatrix : modelMatrices[0],
+            radius : radius,
+            length : length
+        }, {
+            modelMatrix : modelMatrices[1],
+            radius : radius,
+            length : length
+        }]);
+        var cylinderBatchIds = new Uint16Array([0, 1]);
+        var bv = new BoundingSphere(undefined, Math.sqrt(2.0 * (radius * radius + length * length)));
+        return verifyMultipleRender(modelMatrices, {
             cylinders : cylinders,
             cylinderBatchIds : cylinderBatchIds,
             boundingVolume : bv
@@ -255,8 +343,28 @@ defineSuite([
         }]);
         var ellipsoidBatchIds = new Uint16Array([0]);
         var bv = new BoundingSphere(undefined, Cartesian3.maximumComponent(radii));
-        verifySingleRender({
+        return verifySingleRender({
             ellipsoids : ellipsoid,
+            ellipsoidBatchIds : ellipsoidBatchIds,
+            boundingVolume : bv
+        });
+    });
+
+    it('renders multiple ellipsoids', function() {
+        var radii = new Cartesian3(500000.0, 500000.0, 500000.0);
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0))];
+        var ellipsoids = packEllipsoids([{
+            modelMatrix : modelMatrices[0],
+            radii : radii
+        }, {
+            modelMatrix : modelMatrices[1],
+            radii : radii
+        }]);
+        var ellipsoidBatchIds = new Uint16Array([0, 1]);
+        var bv = new BoundingSphere(undefined, 2.0 * Cartesian3.maximumComponent(radii));
+        return verifyMultipleRender(modelMatrices, {
+            ellipsoids : ellipsoids,
             ellipsoidBatchIds : ellipsoidBatchIds,
             boundingVolume : bv
         });
@@ -270,10 +378,106 @@ defineSuite([
         }]);
         var sphereBatchIds = new Uint16Array([0]);
         var bv = new BoundingSphere(undefined, radius);
-        verifySingleRender({
+        return verifySingleRender({
             spheres : sphere,
             sphereBatchIds : sphereBatchIds,
             boundingVolume : bv
         });
+    });
+
+    it('renders multiple spheres', function() {
+        var radius = 500000.0;
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0))];
+        var spheres = packSpheres([{
+            modelMatrix : modelMatrices[0],
+            radius : radius
+        }, {
+            modelMatrix : modelMatrices[1],
+            radius : radius
+        }]);
+        var sphereBatchIds = new Uint16Array([0, 1]);
+        var bv = new BoundingSphere(undefined, 2.0 * radius);
+        return verifyMultipleRender(modelMatrices, {
+            spheres : spheres,
+            sphereBatchIds : sphereBatchIds,
+            boundingVolume : bv
+        });
+    });
+
+    it('renders with multiple types of each geometry', function() {
+        var dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0))];
+        var boxes = packBoxes([{
+            modelMatrix : modelMatrices[0],
+            dimensions : dimensions
+        }, {
+            modelMatrix : modelMatrices[1],
+            dimensions : dimensions
+        }]);
+        var boxBatchIds = new Uint16Array([0, 1]);
+
+        var radius = 125000.0;
+        var length = 125000.0;
+        modelMatrices.push(
+            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)));
+        var cylinders = packCylinders([{
+            modelMatrix : modelMatrices[2],
+            radius : radius,
+            length : length
+        }, {
+            modelMatrix : modelMatrices[3],
+            radius : radius,
+            length : length
+        }]);
+        var cylinderBatchIds = new Uint16Array([2, 3]);
+
+        var radii = new Cartesian3(125000.0, 125000.0, 125000.0);
+        modelMatrices.push(
+            Matrix4.fromTranslation(new Cartesian3(radii.x, 0.0, 0.0)),
+            Matrix4.fromTranslation(new Cartesian3(-radii.x, 0.0, 0.0)));
+        var ellipsoids = packEllipsoids([{
+            modelMatrix : modelMatrices[4],
+            radii : radii
+        }, {
+            modelMatrix : modelMatrices[5],
+            radii : radii
+        }]);
+        var ellipsoidBatchIds = new Uint16Array([4, 5]);
+
+        modelMatrices.push(
+            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)));
+        var spheres = packSpheres([{
+            modelMatrix : modelMatrices[6],
+            radius : radius
+        }, {
+            modelMatrix : modelMatrices[7],
+            radius : radius
+        }]);
+        var sphereBatchIds = new Uint16Array([6, 7]);
+
+        var bv = new BoundingSphere(undefined, 50000000.0);
+
+        return verifyMultipleRender(modelMatrices, {
+            boxes : boxes,
+            boxBatchIds : boxBatchIds,
+            cylinders : cylinders,
+            cylinderBatchIds : cylinderBatchIds,
+            ellipsoids : ellipsoids,
+            ellipsoidBatchIds : ellipsoidBatchIds,
+            spheres : spheres,
+            sphereBatchIds : sphereBatchIds,
+            boundingVolume : bv
+        });
+    });
+
+    it('isDestroyed', function() {
+        geometry = new Vector3DTileGeometry({});
+        expect(geometry.isDestroyed()).toEqual(false);
+        geometry.destroy();
+        expect(geometry.isDestroyed()).toEqual(true);
     });
 });
