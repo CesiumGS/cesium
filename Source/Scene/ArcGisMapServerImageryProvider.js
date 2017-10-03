@@ -11,6 +11,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/GeographicTilingScheme',
+        '../Core/loadImageViaBlob',
         '../Core/loadJson',
         '../Core/loadJsonp',
         '../Core/Math',
@@ -35,6 +36,7 @@ define([
         Ellipsoid,
         Event,
         GeographicTilingScheme,
+        loadImageViaBlob,
         loadJson,
         loadJsonp,
         CesiumMath,
@@ -686,7 +688,31 @@ define([
         //>>includeEnd('debug');
 
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        if (!defined(this._requestNewToken)) {
+            return ImageryProvider.loadImage(this, url);
+        } else {
+            let that = this;
+            let tokenRetries = 1;
+            function loadImageWithToken () {
+                return loadImageViaBlob(url).otherwise(function(requestErrorEvent) {
+                    // If the token has expired the server sets the HTTP status code to 498 specifically to indicate this error.
+                    if ((requestErrorEvent.statusCode === 498) && (tokenRetries > 0)) {
+                        tokenRetries--;
+
+                        return that._requestNewToken().then(function(new_token) {
+                            that.token = new_token;
+                            // Rebuild the URL now that the token has been updated.
+                            url = buildImageUrl(that, x, y, level);
+                            return loadImageWithToken();
+                        });
+                    }
+
+                    throw requestErrorEvent;
+                });
+            }
+
+            return loadImageWithToken();
+        }
     };
 
     /**
@@ -716,11 +742,28 @@ define([
             return undefined;
         }
 
-        var url = buildPickURL(this, x, y, level, longitude, latitude);
+        let that = this;
+        let tokenRetries = 1;
+        function loadJsonHandleError() {
+            let url = buildPickURL(that, x, y, level, longitude, latitude);
+            return loadJson(url).then(function(json) {
+                // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
+                if (defined(json.error) && defined(json.error.code)) {
+                    if ((json.error.code === 498) && defined(that._requestNewToken) && (tokenRetries > 0)) {
+                        tokenRetries--;
 
-        return loadJson(url).then(function(json) {
-            return jsonToFeatures(json);
-        });
+                        return that._requestNewToken().then(function(new_token) {
+                            that.token = new_token;
+                            return loadJsonHandleError();
+                        });
+                    }
+                }
+
+                return jsonToFeatures(json);
+            });
+        };
+
+        return loadJsonHandleError();
     };
 
     return ArcGisMapServerImageryProvider;
