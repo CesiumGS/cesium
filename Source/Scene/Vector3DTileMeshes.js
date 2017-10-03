@@ -247,7 +247,7 @@ define([
 
                 // will be released
                 meshes._positions = new Float32Array(result.positions);
-                meshes._vertexBatchIds = new Uint32Array(result.batchIds);
+                meshes._vertexBatchIds = new Uint16Array(result.batchIds);
 
                 meshes._ready = true;
             });
