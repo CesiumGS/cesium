@@ -1522,6 +1522,11 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection, query);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection, query);
+        processPacketData(Cartesian3, ellipsoid, 'innerRadii', ellipsoidData.innerRadii, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'azimuthMin', ellipsoidData.azimuthMin, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'azimuthMax', ellipsoidData.azimuthMax, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'elevationMin', ellipsoidData.elevationMin, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'elevationMax', ellipsoidData.elevationMax, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection, query);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri, entityCollection, query);
