@@ -643,6 +643,7 @@ define([
 
         /**
          * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * <p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles</p>
          * @type {Color}
          * @default Color.WHITE
          */
@@ -2106,7 +2107,7 @@ define([
 
             var invertClassification;
             if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
-                // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
+                // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
             }
