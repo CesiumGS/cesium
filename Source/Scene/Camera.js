@@ -2007,6 +2007,7 @@ define([
      *
      * @param {Matrix4} transform The transformation matrix defining the reference frame.
      * @param {Cartesian3|HeadingPitchRange} [offset] The offset from the target in a reference frame centered at the target.
+     * @param {Cartesian3} [upVector] The up direction for the camera in the transform reference frame.
      *
      * @exception {DeveloperError} lookAtTransform is not supported while morphing.
      *
@@ -2043,11 +2044,13 @@ define([
             cartesianOffset = offset;
         }
 
-        cartesianOffset = this._transformToCamera(transform, cartesianOffset);
-        if (defined(upVector)){
-            var cameraUpVector = this._transformToCamera(transform, upVector);
+        if (this._mode ===SceneMode.SCENE3D){
+            cartesianOffset = this._transformToCamera(transform, cartesianOffset);
+            if (defined(upVector)){
+                var cameraUpVector = this._transformToCamera(transform, upVector);
+            }
         }
-        
+                
         this._setTransform(transform);
                 
         if (this._mode === SceneMode.SCENE2D) {

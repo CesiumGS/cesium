@@ -1353,6 +1353,8 @@ defineSuite([
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
         var tempCamera = Camera.clone(camera);
+        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
+        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1372,9 +1374,11 @@ defineSuite([
         var range = 2.0;
 
         var tempCamera = Camera.clone(camera);
+        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
+        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
-        tempCamera.lookAtTransform(Matrix4.IDENTITY);
+        tempCamera._setTransform(Matrix4.IDENTITY);
 
         expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -1412,6 +1416,8 @@ defineSuite([
 
         var target = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
+        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
+        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, offset);
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -1440,6 +1446,8 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
+        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
+        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -1459,12 +1467,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('lookAtTransform', function() {
+    it('lookAtTransform with no upVector parameter', function() {
         var target = new Cartesian3(-1.0, -1.0, 0.0);
         var offset = new Cartesian3(1.0, 1.0, 0.0);
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
 
         var tempCamera = Camera.clone(camera);
+        tempCamera._setTransform(transform);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1477,7 +1486,7 @@ defineSuite([
         expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
-    it('lookAtTransform with no offset parameter', function() {
+    it('lookAtTransform', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
         var origin = ellipsoid.cartographicToCartesian(cartOrigin);
@@ -1491,12 +1500,34 @@ defineSuite([
         camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, new Cartesian4(), new Matrix4()));
         camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0, new Cartesian4()));
 
+        camera._setTransform(transform);
         camera.lookAtTransform(transform);
 
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, height), CesiumMath.EPSILON9);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON9);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON9);
         expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON9);
+    });
+
+    it('lookAtTransform with up vector', function() {
+        var target = new Cartesian3(-1.0, -1.0, 0.0);
+        var offset = new Cartesian3(1.0, 1.0, 0.0);
+        var upVector = new Cartesian3(0.0, 1.0, 0.0);
+        var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.UNIT_SPHERE);
+
+        var tempCamera = Camera.clone(camera);
+
+        tempCamera._setTransform(transform);
+        tempCamera.lookAtTransform(transform, offset, upVector);
+
+        expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
+        expect(tempCamera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(offset, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.right).toEqualEpsilon(Cartesian3.cross(tempCamera.direction, tempCamera.up, new Cartesian3()), CesiumMath.EPSILON11);
+        expect(tempCamera.up).toEqualEpsilon(Cartesian3.cross(tempCamera.right, tempCamera.direction, new Cartesian3()), CesiumMath.EPSILON11);
+
+        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
     it('lookAtTransform with heading, pitch and range', function() {
@@ -1507,9 +1538,10 @@ defineSuite([
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
         var tempCamera = Camera.clone(camera);
+        tempCamera._setTransform(transform);
         tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
-        tempCamera.lookAtTransform(Matrix4.IDENTITY);
+        tempCamera._setTransform(Matrix4.IDENTITY);
 
         expect(Cartesian3.distance(tempCamera.position, target)).toEqualEpsilon(range, CesiumMath.EPSILON6);
         expect(tempCamera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
@@ -1541,6 +1573,7 @@ defineSuite([
 
         var transform = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0));
         var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
+        tempCamera._setTransform(transform);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -1570,6 +1603,7 @@ defineSuite([
         var range = 2.0;
         var transform = Transforms.eastNorthUpToFixedFrame(target);
 
+        tempCamera._setTransform(transform);
         tempCamera.lookAtTransform(transform, new HeadingPitchRange(heading, pitch, range));
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -1591,6 +1625,7 @@ defineSuite([
         tempCamera.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         tempCamera.frustum.width = tempCamera.positionCartographic.height;
 
+        tempCamera._setTransform(transform);
         tempCamera.lookAtTransform(transform, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -2495,6 +2530,7 @@ defineSuite([
         scene.mode = SceneMode.SCENE3D;
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10000.0);
+        camera._setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
         camera.viewBoundingSphere(sphere);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -2511,11 +2547,13 @@ defineSuite([
         var range = 15.0;
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10.0);
+
+        camera._setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
         camera.viewBoundingSphere(sphere, new HeadingPitchRange(heading, pitch, range));
         camera._setTransform(Matrix4.IDENTITY);
 
         var distance = Cartesian3.distance(camera.position, sphere.center);
-        expect(distance).toEqualEpsilon(range, CesiumMath.EPSILON10);
+        expect(distance).toEqualEpsilon(range, CesiumMath.EPSILON9);
         expect(camera.heading).toEqualEpsilon(heading, CesiumMath.EPSILON6);
         expect(camera.pitch).toEqualEpsilon(pitch, CesiumMath.EPSILON5);
     });
@@ -2555,6 +2593,8 @@ defineSuite([
         expect(frustum.projectionMatrix).toBeDefined();
 
         var sphere = new BoundingSphere(Cartesian3.fromDegrees(-117.16, 32.71, 0.0), 10000.0);
+
+        camera._setTransform(Transforms.eastNorthUpToFixedFrame(sphere.center));
         camera.viewBoundingSphere(sphere);
         camera._setTransform(Matrix4.IDENTITY);
 
