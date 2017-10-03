@@ -1,5 +1,10 @@
 Change Log
 ==========
+
+### 1.39 - 2017-11-01
+
+* Added support for vertex shader uniforms when `tileset.colorBlendMode` is  `MIX` or `REPLACE`. [#5874])https://github.com/AnalyticalGraphicsInc/cesium/pull/5874)
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes

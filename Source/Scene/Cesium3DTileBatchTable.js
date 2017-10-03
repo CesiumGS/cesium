@@ -906,6 +906,8 @@ define([
     };
 
     function getHighlightOnlyFragmentShader(source) {
+        // The color blend mode is intended for the RGB channels so alpha is always just multiplied.
+        // gl_FragColor is multiplied by the tile color only when tile_colorBlend is 0.0 (highlight)
         source = ShaderSource.replaceMain(source, 'tile_main');
         return source +
                'uniform float tile_colorBlend; \n' +
