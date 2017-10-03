@@ -59,6 +59,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
      * @param {String} [options.token] The ArcGIS token used to authenticate with the ArcGIS MapServer service.
+     * @param {Promise.<String>} [options.requestNewToken] A callback to retrieve new tokens if its detected that the current token has expired.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
@@ -124,6 +125,7 @@ define([
 
         this._url = options.url;
         this._token = options.token;
+        this._requestNewToken = options.requestNewToken;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
 
