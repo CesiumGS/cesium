@@ -50,6 +50,11 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
+     * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
+     * @param {Number} [options.azimuthMin=0.0] The minimum azimuth in degrees (0 is north, +CW).
+     * @param {Number} [options.azimuthMax=360.0] The maximum azimuth in degrees (0 is north, +CW).
+     * @param {Number} [options.elevationMin=-90.0] The minimum elevation in degrees (0 is tangential to earth surface, +UP).
+     * @param {Number} [options.elevationMax=90.0] The maximum elevation in degrees (0 is tangential to earth surface, +UP).
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -70,8 +75,13 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 64));
-        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 64));
+        var innerRadii = defaultValue(options.innerRadii, radii);
+        var azimuthMin = defaultValue(options.azimuthMin, 0);
+        var azimuthMax = defaultValue(options.azimuthMax, 360);
+        var elevationMin = defaultValue(options.elevationMin, -90);
+        var elevationMax = defaultValue(options.elevationMax, 90);
+        var stackPartitions = defaultValue(options.stackPartitions, 64);
+        var slicePartitions = defaultValue(options.slicePartitions, 64);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -84,6 +94,11 @@ define([
         //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
+        this._innerRadii = Cartesian3.clone(innerRadii);
+        this._azimuthMin = azimuthMin;
+        this._azimuthMax = azimuthMax;
+        this._elevationMin = elevationMin;
+        this._elevationMax = elevationMax;
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
@@ -94,7 +109,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipsoidGeometry.packedLength = Cartesian3.packedLength + VertexFormat.packedLength + 2;
+    EllipsoidGeometry.packedLength = 2 * (Cartesian3.packedLength) + VertexFormat.packedLength + 6;
 
     /**
      * Stores the provided instance into the provided array.
@@ -120,20 +135,33 @@ define([
         Cartesian3.pack(value._radii, array, startingIndex);
         startingIndex += Cartesian3.packedLength;
 
+        Cartesian3.pack(value._innerRadii, array, startingIndex);
+        startingIndex += Cartesian3.packedLength;
+
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        array[startingIndex++] = value._azimuthMin;
+        array[startingIndex++] = value._azimuthMax;
+        array[startingIndex++] = value._elevationMin;
+        array[startingIndex++] = value._elevationMax;
         array[startingIndex++] = value._stackPartitions;
-        array[startingIndex]   = value._slicePartitions;
+        array[startingIndex++] = value._slicePartitions;
 
         return array;
     };
 
     var scratchRadii = new Cartesian3();
+    var scratchInnerRadii = new Cartesian3();
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
         radii : scratchRadii,
+        innerRadii : scratchInnerRadii,
         vertexFormat : scratchVertexFormat,
+        azimuthMin : undefined,
+        azimuthMax : undefined,
+        elevationMin : undefined,
+        elevationMax : undefined,
         stackPartitions : undefined,
         slicePartitions : undefined
     };
@@ -158,20 +186,36 @@ define([
         var radii = Cartesian3.unpack(array, startingIndex, scratchRadii);
         startingIndex += Cartesian3.packedLength;
 
+        var innerRadii = Cartesian3.unpack(array, startingIndex, scratchInnerRadii);
+        startingIndex += Cartesian3.packedLength;
+
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var azimuthMin = array[startingIndex++];
+        var azimuthMax = array[startingIndex++];
+        var elevationMin = array[startingIndex++];
+        var elevationMax = array[startingIndex++];
         var stackPartitions = array[startingIndex++];
-        var slicePartitions = array[startingIndex];
+        var slicePartitions = array[startingIndex++];
 
         if (!defined(result)) {
+            scratchOptions.azimuthMin = azimuthMin;
+            scratchOptions.azimuthMax = azimuthMax;
+            scratchOptions.elevationMin = elevationMin;
+            scratchOptions.elevationMax = elevationMax;
             scratchOptions.stackPartitions = stackPartitions;
             scratchOptions.slicePartitions = slicePartitions;
             return new EllipsoidGeometry(scratchOptions);
         }
 
         result._radii = Cartesian3.clone(radii, result._radii);
+        result._innerRadii = Cartesian3.clone(innerRadii, result._innerRadii);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
+        result._azimuthMin = azimuthMin;
+        result._azimuthMax = azimuthMax;
+        result._elevationMin = elevationMin;
+        result._elevationMax = elevationMax;
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
 
@@ -186,24 +230,71 @@ define([
      */
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
-
         if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
             return;
         }
 
+        var innerRadii = ellipsoidGeometry._innerRadii;
+        if ((innerRadii.x <= 0) || (innerRadii.y <= 0) || innerRadii.z <= 0) {
+            return;
+        }
+
+        // The azimuth input assumes 0 is north with CW+. The geometry uses an
+        // ENU frame where 0 is east with CCW+. We have to convert the azimuth
+        // to ENU here.
+        var azMin = 450.0 - ellipsoidGeometry._azimuthMax;
+        var azMax = 450.0 - ellipsoidGeometry._azimuthMin;
+
+        var azimuthMin = azMin * Math.PI / 180.0;
+        var azimuthMax = azMax * Math.PI / 180.0;
+        var elevationMin = ellipsoidGeometry._elevationMin * Math.PI / 180.0;
+        var elevationMax = ellipsoidGeometry._elevationMax * Math.PI / 180.0;
+        var inclination1 = (Math.PI / 2.0 - elevationMax);
+        var inclination2 = (Math.PI / 2.0 - elevationMin);
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
 
-        // The extra slice and stack are for duplicating points at the x axis and poles.
-        // We need the texture coordinates to interpolate from (2 * pi - delta) to 2 * pi instead of
-        // (2 * pi - delta) to 0.
-        var slicePartitions = ellipsoidGeometry._slicePartitions + 1;
-        var stackPartitions = ellipsoidGeometry._stackPartitions + 1;
+        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(azimuthMax - azimuthMin) / CesiumMath.TWO_PI);
+        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(elevationMax - elevationMin) / CesiumMath.TWO_PI);
+        if (slicePartitions < 2) {
+            slicePartitions = 2;
+        }
+        if (stackPartitions < 2) {
+            stackPartitions = 2;
+        }
 
-        var vertexCount = stackPartitions * slicePartitions;
+        // Allow for extra indices if there is an inner surface and if we need
+        // to close the sides if the azimuth range is not a full circle
+        var extraIndices = 0;
+        var vertexMultiplier = 1.0;
+        var hasInnerSurface = ((innerRadii.x !== radii.x) || (innerRadii.y !== radii.y) || innerRadii.z !== radii.z);
+        var isTopOpen = false;
+        var isBotOpen = false;
+        var isAzimuthOpen = false;
+        if (hasInnerSurface) {
+            vertexMultiplier = 2.0;
+            if (ellipsoidGeometry._elevationMax < 90.0) {
+                isTopOpen = true;
+                extraIndices += (slicePartitions - 1);
+            }
+            if (ellipsoidGeometry._elevationMin > -90.0) {
+                isBotOpen = true;
+                extraIndices += (slicePartitions - 1);
+            }
+            if ((azimuthMax - azimuthMin) % CesiumMath.TWO_PI) {
+                isAzimuthOpen = true;
+                extraIndices += ((stackPartitions - 1) * 2) + 1;
+            } else {
+                extraIndices += 1;
+            }
+        }
+
+        var vertexCount = stackPartitions * slicePartitions * vertexMultiplier;
         var positions = new Float64Array(vertexCount * 3);
 
-        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 2);
+        // Multiply by 6 because there are two triangles per sector
+        var numIndices = 6 * (vertexCount + extraIndices + 1 - (slicePartitions + stackPartitions) * vertexMultiplier);
         var indices = IndexDatatype.createTypedArray(vertexCount, numIndices);
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
@@ -211,46 +302,147 @@ define([
         var bitangents = (vertexFormat.bitangent) ? new Float32Array(vertexCount * 3) : undefined;
         var st = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
 
-        var cosTheta = new Array(slicePartitions);
-        var sinTheta = new Array(slicePartitions);
-
         var i;
         var j;
+        var theta;
+        var phi;
         var index = 0;
 
-        for (i = 0; i < slicePartitions; i++) {
-            var theta = CesiumMath.TWO_PI * i / (slicePartitions - 1);
-            cosTheta[i] = cos(theta);
-            sinTheta[i] = sin(theta);
-
-            // duplicate first point for correct
-            // texture coordinates at the north pole.
-            positions[index++] = 0.0;
-            positions[index++] = 0.0;
-            positions[index++] = radii.z;
+        // Calculate sin/cos phi
+        var sinPhi = new Array(stackPartitions);
+        var cosPhi = new Array(stackPartitions);
+        for (i = 0; i < stackPartitions; i++) {
+            phi = inclination1 + i * (inclination2 - inclination1) / (stackPartitions - 1);
+            sinPhi[i] = sin(phi);
+            cosPhi[i] = cos(phi);
         }
 
-        for (i = 1; i < stackPartitions - 1; i++) {
-            var phi = Math.PI * i / (stackPartitions - 1);
-            var sinPhi = sin(phi);
+        // Calculate sin/cos theta
+        var sinTheta = new Array(slicePartitions);
+        var cosTheta = new Array(slicePartitions);
+        for (i = 0; i < slicePartitions; i++) {
+            theta = azimuthMin + i * (azimuthMax - azimuthMin) / (slicePartitions - 1);
+            cosTheta[i] = cos(theta);
+            sinTheta[i] = sin(theta);
+        }
 
-            var xSinPhi = radii.x * sinPhi;
-            var ySinPhi = radii.y * sinPhi;
-            var zCosPhi = radii.z * cos(phi);
-
+        // Create outer surface
+        for (i = 0; i < stackPartitions; i++) {
             for (j = 0; j < slicePartitions; j++) {
-                positions[index++] = cosTheta[j] * xSinPhi;
-                positions[index++] = sinTheta[j] * ySinPhi;
-                positions[index++] = zCosPhi;
+                positions[index++] = radii.x * sinPhi[i] * cosTheta[j];
+                positions[index++] = radii.y * sinPhi[i] * sinTheta[j];
+                positions[index++] = radii.z * cosPhi[i];
             }
         }
 
-        for (i = 0; i < slicePartitions; i++) {
-            // duplicate first point for correct
-            // texture coordinates at the south pole.
-            positions[index++] = 0.0;
-            positions[index++] = 0.0;
-            positions[index++] = -radii.z;
+        // Create inner surface
+        if (hasInnerSurface) {
+            for (i = 0; i < stackPartitions; i++) {
+                for (j = 0; j < slicePartitions; j++) {
+                    positions[index++] = innerRadii.x * sinPhi[i] * cosTheta[j];
+                    positions[index++] = innerRadii.y * sinPhi[i] * sinTheta[j];
+                    positions[index++] = innerRadii.z * cosPhi[i];
+                }
+            }
+        }
+
+        // Create indices for outer surface
+        index = 0;
+        var topOffset;
+        var bottomOffset;
+        for (i = 0; i < (stackPartitions - 1); i++) {
+            topOffset = i * slicePartitions;
+            bottomOffset = (i + 1) * slicePartitions;
+
+            for (j = 0; j < slicePartitions - 1; j++) {
+                indices[index++] = bottomOffset + j;
+                indices[index++] = bottomOffset + j + 1;
+                indices[index++] = topOffset + j + 1;
+
+                indices[index++] = bottomOffset + j;
+                indices[index++] = topOffset + j + 1;
+                indices[index++] = topOffset + j;
+            }
+        }
+
+        // Create indices for inner surface
+        if (hasInnerSurface) {
+            var offset = stackPartitions * slicePartitions;
+            for (i = 0; i < (stackPartitions - 1); i++) {
+                topOffset = offset + i * slicePartitions;
+                bottomOffset = offset + (i + 1) * slicePartitions;
+
+                for (j = 0; j < slicePartitions - 1; j++) {
+                    indices[index++] = topOffset + j;
+                    indices[index++] = topOffset + j + 1;
+                    indices[index++] = bottomOffset + j;
+
+                    indices[index++] = bottomOffset + j;
+                    indices[index++] = bottomOffset + j + 1;
+                    indices[index++] = topOffset + j + 1;
+                }
+            }
+        }
+
+        if (hasInnerSurface) {
+            if (isTopOpen) {
+                // Connect the top of the inner surface to the top of the outer surface
+                var innerOffset = stackPartitions * slicePartitions;
+                for (i = 0; i < slicePartitions - 1; i++) {
+                    indices[index++] = i;
+                    indices[index++] = i + 1;
+                    indices[index++] = innerOffset + i + 1;
+
+                    indices[index++] = i;
+                    indices[index++] = innerOffset + i + 1;
+                    indices[index++] = innerOffset + i;
+                }
+            }
+
+            if (isBotOpen) {
+                // Connect the bottom of the inner surface to the bottom of the outer surface
+                var outerOffset = stackPartitions * slicePartitions - slicePartitions;
+                innerOffset = stackPartitions * slicePartitions * vertexMultiplier - slicePartitions;
+                for (i = 0; i < slicePartitions - 1; i++) {
+                    indices[index++] = outerOffset + i;
+                    indices[index++] = outerOffset + i + 1;
+                    indices[index++] = innerOffset + i + 1;
+
+                    indices[index++] = outerOffset + i;
+                    indices[index++] = innerOffset + i;
+                    indices[index++] = innerOffset + i + 1;
+                }
+            }
+        }
+
+        // Connect the edges if azimuth is not closed
+        if (isAzimuthOpen) {
+            var outerOffset;
+            var innerOffset = slicePartitions * stackPartitions;
+            for (i = 0; i < stackPartitions - 1; i++) {
+                outerOffset = slicePartitions * i;
+                indices[index++] = outerOffset;
+                indices[index++] = outerOffset + slicePartitions;
+                indices[index++] = innerOffset;
+
+                indices[index++] = outerOffset + slicePartitions;
+                indices[index++] = innerOffset;
+                indices[index++] = innerOffset + slicePartitions;
+                innerOffset += slicePartitions;
+            }
+
+            innerOffset = slicePartitions * stackPartitions + slicePartitions - 1;
+            for (i = 0; i < stackPartitions - 1; i++) {
+                outerOffset = slicePartitions * (i + 1) - 1;
+                indices[index++] = outerOffset;
+                indices[index++] = outerOffset + slicePartitions;
+                indices[index++] = innerOffset;
+
+                indices[index++] = outerOffset + slicePartitions;
+                indices[index++] = innerOffset;
+                indices[index++] = innerOffset + slicePartitions;
+                innerOffset += slicePartitions;
+            }
         }
 
         var attributes = new GeometryAttributes();
@@ -356,40 +548,6 @@ define([
                     values : bitangents
                 });
             }
-        }
-
-        index = 0;
-        for (j = 0; j < slicePartitions - 1; j++) {
-            indices[index++] = slicePartitions + j;
-            indices[index++] = slicePartitions + j + 1;
-            indices[index++] = j + 1;
-        }
-
-        var topOffset;
-        var bottomOffset;
-        for (i = 1; i < stackPartitions - 2; i++) {
-            topOffset = i * slicePartitions;
-            bottomOffset = (i + 1) * slicePartitions;
-
-            for (j = 0; j < slicePartitions - 1; j++) {
-                indices[index++] = bottomOffset + j;
-                indices[index++] = bottomOffset + j + 1;
-                indices[index++] = topOffset + j + 1;
-
-                indices[index++] = bottomOffset + j;
-                indices[index++] = topOffset + j + 1;
-                indices[index++] = topOffset + j;
-            }
-        }
-
-        i = stackPartitions - 2;
-        topOffset = i * slicePartitions;
-        bottomOffset = (i + 1) * slicePartitions;
-
-        for (j = 0; j < slicePartitions - 1; j++) {
-            indices[index++] = bottomOffset + j;
-            indices[index++] = topOffset + j + 1;
-            indices[index++] = topOffset + j;
         }
 
         return new Geometry({
