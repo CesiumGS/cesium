@@ -258,7 +258,7 @@ define([
     function insertNamespaces(text) {
         var namespaceMap = {
             'xsi:' : ['xmlns:xsi=', '"http://www.w3.org/2001/XMLSchema-instance"']
-        }
+        };
         var firstPart;
         var lastPart;
 
@@ -269,7 +269,7 @@ define([
                 text = firstPart + ' ' + namespaceMap[key][0] + namespaceMap[key][1] + lastPart;
             }
         }
-        return text; 
+        return text;
     }
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
