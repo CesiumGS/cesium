@@ -72,6 +72,11 @@ define([
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
+        this.innerRadii = undefined;
+        this.azimuthMin = undefined;
+        this.azimuthMax = undefined;
+        this.elevationMin = undefined;
+        this.elevationMax = undefined;
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
@@ -407,7 +412,7 @@ define([
         return new GeometryInstance({
             id : entity,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : entity.computeModelMatrix(Iso8601.MINIMUM_VALUE),
+            modelMatrix : entity.computetModelMatrix(Iso8601.MINIMUM_VALUE),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
@@ -496,14 +501,28 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
+        var innerRadii = ellipsoid.innerRadii;
+        var azimuthMin = ellipsoid.azimuthMin;
+        var azimuthMax = ellipsoid.azimuthMax;
+        var elevationMin = ellipsoid.elevationMin;
+        var elevationMax = ellipsoid.elevationMax;
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
         var outlineWidth = ellipsoid.outlineWidth;
         var subdivisions = ellipsoid.subdivisions;
 
+        if (!defined(innerRadii)) {
+            innerRadii = radii;
+        }
+
         if (!position.isConstant || //
             !Property.isConstant(entity.orientation) || //
             !radii.isConstant || //
+            !innerRadii.isConstant || //
+            !Property.isConstant(azimuthMin) || //
+            !Property.isConstant(azimuthMax) || //
+            !Property.isConstant(elevationMin) || //
+            !Property.isConstant(elevationMax) || //
             !Property.isConstant(stackPartitions) || //
             !Property.isConstant(slicePartitions) || //
             !Property.isConstant(outlineWidth) || //
@@ -516,6 +535,11 @@ define([
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
             options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
+            options.innerRadii = innerRadii.getValue(Iso8601.MINIMUM_VALUE, options.innerRadii);
+            options.azimuthMin = defined(azimuthMin) ? azimuthMin.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.azimuthMax = defined(azimuthMax) ? azimuthMax.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.elevationMin = defined(elevationMin) ? elevationMin.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.elevationMax = defined(elevationMax) ? elevationMax.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
