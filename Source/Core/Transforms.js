@@ -18,8 +18,7 @@ define([
         './Matrix3',
         './Matrix4',
         './Quaternion',
-        './TimeConstants',
-        './deprecationWarning'
+        './TimeConstants'
     ], function(
         when,
         Cartesian2,
@@ -40,8 +39,7 @@ define([
         Matrix3,
         Matrix4,
         Quaternion,
-        TimeConstants,
-        deprecationWarning) {
+        TimeConstants) {
     'use strict';
 
     /**
@@ -336,12 +334,8 @@ define([
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
 
-        deprecationWarning('Transforms.headingPitchRollToFixedFrame', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
-
         fixedFrameTransform = defaultValue(fixedFrameTransform, Transforms.eastNorthUpToFixedFrame);
-
-       var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
-
+        var hprQuaternion = Quaternion.fromHeadingPitchRoll(headingPitchRoll, scratchHPRQuaternion);
         var hprMatrix = Matrix4.fromTranslationQuaternionRotationScale(Cartesian3.ZERO, hprQuaternion, scratchScale, scratchHPRMatrix4);
         result = fixedFrameTransform(origin, ellipsoid, result);
         return Matrix4.multiply(result, hprMatrix, result);
@@ -377,11 +371,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object( 'HeadingPitchRoll', headingPitchRoll);
         //>>includeEnd('debug');
-
-        deprecationWarning('Transforms.headingPitchRollQuaternion', 'This function now uses a counter-clockwise orientation of heading and pitch as per mathematical conventions. With this new behavior, heading and pitch will need to be the negative of their previous values. This was introduced in 1.38 and the deprecation warning will be removed in Cesium 1.40.');
-
-        scratchENUMatrix4 = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
-        Matrix4.getRotation(scratchENUMatrix4, scratchHPRMatrix3);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
         var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
