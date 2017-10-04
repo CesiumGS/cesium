@@ -374,10 +374,11 @@ define([
         return result;
     }
 
-    function debounceRequestNewToken(imageryProvider) {
+    function updateToken(imageryProvider) {
         if (!defined(imageryProvider._newTokenRequestInFlight) && defined(imageryProvider._requestNewToken)) {
             imageryProvider._newTokenRequestInFlight = imageryProvider._requestNewToken().then(function(newToken) {
                 delete imageryProvider._newTokenRequestInFlight;
+                imageryProvider.token = newToken;
                 return newToken;
             });
         }
@@ -712,8 +713,7 @@ define([
 
                         // Note: The token may have already been updated between the request and now (when the responce is recieved),
                         // but for now we don't detect and optomise for this case and send off a new token request regardless.
-                        return debounceRequestNewToken(that).then(function(new_token) {
-                            that.token = new_token;
+                        return updateToken(that).then(() => {
                             // Rebuild the URL now that the token has been updated.
                             url = buildImageUrl(that, x, y, level);
                             return loadImageWithToken();
@@ -767,8 +767,7 @@ define([
 
                         // Note: The token may have already been updated between the request and now (when the responce is recieved),
                         // but for now we don't detect and optomise for this case and send off a new token request regardless.
-                        return debounceRequestNewToken(that).then(function(new_token) {
-                            that.token = new_token;
+                        return updateToken(that).then(() => {
                             return loadJsonHandleError();
                         });
                     }
