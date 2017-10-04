@@ -420,7 +420,7 @@ defineSuite([
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
-                camera._setTransform(Matrix4.IDENTITY);
+                camera.setView({endTransform: Matrix4.IDENTITY});
 
                 var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
@@ -498,7 +498,7 @@ defineSuite([
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
                 camera.lookAt(new Cartesian3(ellipsoid.maximumRadius, 0.0, 0.0), new Cartesian3(0.0, 0.0, 100.0));
-                camera._setTransform(Matrix4.IDENTITY);
+                camera.setView({endTransform: Matrix4.IDENTITY});
 
                 var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
