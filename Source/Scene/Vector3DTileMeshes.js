@@ -35,6 +35,7 @@ define([
         this._positionCount = options.positionCount;
         this._indexOffsets = options.indexOffsets;
         this._indexCounts = options.indexCounts;
+        this._indexBytesPerElement = options.indexBytesPerElement;
         this._batchIds = options.batchIds;
         this._center = options.center;
         this._modelMatrix = options.modelMatrix;
@@ -123,7 +124,9 @@ define([
 
     function packBuffer(meshes) {
         var offset = 0;
-        var packedBuffer = new Float64Array(Cartesian3.packedLength + Matrix4.packedLength);
+        var packedBuffer = new Float64Array(1 + Cartesian3.packedLength + Matrix4.packedLength);
+
+        packedBuffer[offset++] = meshes._indexBytesPerElement;
 
         Cartesian3.pack(meshes._center, packedBuffer, offset);
         offset += Cartesian3.packedLength;
@@ -208,8 +211,13 @@ define([
                 }
 
                 var start = byteOffset;
-                var end = start + indicesLength * Uint32Array.BYTES_PER_ELEMENT;
-                indices = meshes._indices = new Uint32Array(buffer.slice(start, end));
+                var end = start + indicesLength * meshes._indexBytesPerElement;
+                var bufferCopy = buffer.slice(start, end);
+                if (meshes._indexBytesPerElement) {
+                    indices = meshes._indices = new Uint16Array(bufferCopy);
+                } else {
+                    indices = meshes._indices = new Uint32Array(bufferCopy);
+                }
 
                 start = end;
                 end = start + 3 * positionCount * Float32Array.BYTES_PER_ELEMENT;
@@ -248,7 +256,12 @@ define([
                 var packedBuffer = new Float64Array(result.packedBuffer);
                 unpackBuffer(meshes, packedBuffer);
 
-                meshes._indices = new Uint32Array(result.indices);
+                if (meshes._indexBytesPerElement === 2) {
+                    meshes._indices = new Uint16Array(result.indices);
+                } else {
+                    meshes._indices = new Uint32Array(result.indices);
+                }
+
                 meshes._indexOffsets = new Uint32Array(result.indexOffsets);
                 meshes._indexCounts = new Uint32Array(result.indexCounts);
 

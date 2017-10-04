@@ -157,15 +157,6 @@ defineSuite([
             Cartesian3.pack(position, positions, j);
         }
 
-        if (indices.BYTES_PER_ELEMENT !== 4) {
-            var newIndices = new Uint32Array(indices.length);
-            var indicesLength = indices.length;
-            for (var i = 0; i < indicesLength; ++i) {
-                newIndices[i] = indices[i];
-            }
-            indices = newIndices;
-        }
-
         return {
             positions : positions,
             indices : indices
@@ -200,8 +191,8 @@ defineSuite([
         var buffer = new ArrayBuffer(byteLength);
 
         var indicesLength = indexOffsets[indexOffsets.length - 1] + indexCounts[indexCounts.length - 1];
-        var indicesView = new Uint32Array(buffer, 0, indicesLength);
-        var positionsView = new Float32Array(buffer, indicesLength * Uint32Array.BYTES_PER_ELEMENT, positionCount * 3);
+        var indicesView = new Uint16Array(buffer, 0, indicesLength);
+        var positionsView = new Float32Array(buffer, indicesLength * Uint16Array.BYTES_PER_ELEMENT, positionCount * 3);
 
         var indexOffset = 0;
         var positionOffset = 0;
@@ -229,6 +220,7 @@ defineSuite([
             buffer : buffer,
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
+            indexBytesPerElement : Uint16Array.BYTES_PER_ELEMENT,
             positionCount : positionCount
         };
     }

@@ -23,10 +23,14 @@ define([
         var packedBuffer = new Float64Array(buffer);
 
         var offset = 0;
+        var indexBytesPerElement = packedBuffer[offset++];
+
         Cartesian3.unpack(packedBuffer, offset, scratchCenter);
         offset += Cartesian3.packedLength;
 
         Matrix4.unpack(packedBuffer, offset, scratchMatrix4);
+
+        return indexBytesPerElement;
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -80,10 +84,17 @@ define([
     var scratchMesh = [];
 
     function createVectorTileMeshes(parameters, transferableObjects) {
+        var indexBytesPerElement = unpackBuffer(parameters.packedBuffer);
+        var indices;
+        if (indexBytesPerElement === 2) {
+            indices = new Uint16Array(parameters.indices);
+        } else {
+            indices = new Uint32Array(parameters.indices);
+        }
+
         var positions = new Float32Array(parameters.positions);
         var indexOffsets = new Uint32Array(parameters.indexOffsets);
         var indexCounts = new Uint32Array(parameters.indexCounts);
-        var indices = new Uint32Array(parameters.indices);
         var batchIds = new Uint32Array(parameters.batchIds);
         var batchTableColors = new Uint32Array(parameters.batchTableColors);
 
@@ -91,8 +102,6 @@ define([
         var boundingVolumes = new Array(numMeshes);
 
         var vertexBatchIds = new Uint16Array(positions.length / 3);
-
-        unpackBuffer(parameters.packedBuffer);
 
         var center = scratchCenter;
         var modelMatrix = scratchMatrix4;

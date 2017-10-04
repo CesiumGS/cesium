@@ -654,6 +654,7 @@ define([
                 positionCount : meshPositionCount,
                 indexOffsets : meshIndexOffsets,
                 indexCounts : meshIndexCounts,
+                indexBytesPerElement : Uint32Array.BYTES_PER_ELEMENT,
                 batchIds : batchIds.meshes,
                 center : center,
                 modelMatrix : modelMatrix,
