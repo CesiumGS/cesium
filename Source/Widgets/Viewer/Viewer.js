@@ -943,6 +943,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         },
 
+        /**
+        * Gets the {@link EntityView} object
+        * @memberof Viewer.prototype
+        * @type {EntityView}
+        * @readonly 
+        */
         entityView : {
             get : function() {
                 return this._entityView;
@@ -1227,7 +1233,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         this._entityView = undefined;
-                        this.camera.lookAtTransform(Matrix4.IDENTITY);
+                        this.camera.setView({endTransform: Matrix4.IDENTITY});
                     } else {
                         //We can't start tracking immediately, so we set a flag and start tracking
                         //when the bounding sphere is ready (most likely next frame).

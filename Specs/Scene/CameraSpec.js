@@ -1353,8 +1353,6 @@ defineSuite([
         var offset = new Cartesian3(0.0, -1.0, 0.0);
 
         var tempCamera = Camera.clone(camera);
-        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
-        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, offset);
 
         expect(tempCamera.position).toEqualEpsilon(offset, CesiumMath.EPSILON11);
@@ -1374,8 +1372,6 @@ defineSuite([
         var range = 2.0;
 
         var tempCamera = Camera.clone(camera);
-        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
-        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         tempCamera._setTransform(Matrix4.IDENTITY);
@@ -1416,8 +1412,6 @@ defineSuite([
 
         var target = Cartesian3.fromDegrees(0.0, 0.0);
         var offset = new Cartesian3(10000.0, 10000.0, 30000.0);
-        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
-        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, offset);
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);
@@ -1446,8 +1440,6 @@ defineSuite([
         var pitch = CesiumMath.toRadians(-45.0);
         var range = 2.0;
 
-        var targetENUtransform = Transforms.eastNorthUpToFixedFrame(target);
-        tempCamera._setTransform(targetENUtransform);
         tempCamera.lookAt(target, new HeadingPitchRange(heading, pitch, range));
 
         expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.ZERO);

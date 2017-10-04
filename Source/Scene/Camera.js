@@ -1970,6 +1970,7 @@ define([
         //>>includeEnd('debug');
 
         var transform = Transforms.eastNorthUpToFixedFrame(target, Ellipsoid.WGS84, scratchLookAtMatrix4);
+        this._setTransform(transform);
         this.lookAtTransform(transform, offset);
     };
 
