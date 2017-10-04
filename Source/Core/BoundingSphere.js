@@ -292,11 +292,17 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
-        var positions;
-        if (defined(rectangle)) {
-            positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
+        if (!defined(result)) {
+            result = new BoundingSphere();
         }
 
+        if (!defined(rectangle)) {
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
+            result.radius = 0.0;
+            return result;
+        }
+
+        var positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
         return BoundingSphere.fromPoints(positions, result);
     };
 

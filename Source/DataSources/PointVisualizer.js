@@ -144,7 +144,7 @@ define([
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
                 pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
                 pointPrimitive.disableDepthTestDistance = Property.getValueOrDefault(pointGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
-            } else { // billboard
+            } else if (defined(billboard)) {
                 billboard.show = true;
                 billboard.position = position;
                 billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
