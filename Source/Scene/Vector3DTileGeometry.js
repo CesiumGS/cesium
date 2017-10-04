@@ -145,6 +145,7 @@ define([
     function unpackBuffer(geometries, packedBuffer) {
         var offset = 0;
 
+        var indicesBytesPerElement = packedBuffer[offset++];
         var numBVS = packedBuffer[offset++];
         var bvs = geometries._boundingVolumes = new Array(numBVS);
 
@@ -177,6 +178,8 @@ define([
                 batchIds : batchIds
             });
         }
+
+        return indicesBytesPerElement;
     }
 
     var createVerticesTaskProcessor = new TaskProcessor('createVectorTileGeometries');
@@ -271,9 +274,14 @@ define([
 
             when(verticesPromise, function(result) {
                 var packedBuffer = new Float64Array(result.packedBuffer);
-                unpackBuffer(geometries, packedBuffer);
+                var indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
-                geometries._indices = new Uint32Array(result.indices);
+                if (indicesBytesPerElement === 2) {
+                    geometries._indices = new Uint16Array(result.indices);
+                } else {
+                    geometries._indices = new Uint32Array(result.indices);
+                }
+
                 geometries._indexOffsets = new Uint32Array(result.indexOffsets);
                 geometries._indexCounts = new Uint32Array(result.indexCounts);
 
