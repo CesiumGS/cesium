@@ -374,6 +374,17 @@ define([
         return result;
     }
 
+    function debounceRequestNewToken(imageryProvider) {
+        if (!defined(imageryProvider._newTokenRequestInFlight) && defined(imageryProvider._requestNewToken)) {
+            imageryProvider._newTokenRequestInFlight = imageryProvider._requestNewToken().then(function(newToken) {
+                delete imageryProvider._newTokenRequestInFlight;
+                return newToken;
+            });
+        }
+
+        return imageryProvider._newTokenRequestInFlight;
+    }
+
     defineProperties(ArcGisMapServerImageryProvider.prototype, {
         /**
          * Gets the URL of the ArcGIS MapServer.
@@ -699,7 +710,9 @@ define([
                     if ((requestErrorEvent.statusCode === 498) && (tokenRetries > 0)) {
                         tokenRetries--;
 
-                        return that._requestNewToken().then(function(new_token) {
+                        // Note: The token may have already been updated between the request and now (when the responce is recieved),
+                        // but for now we don't detect and optomise for this case and send off a new token request regardless.
+                        return debounceRequestNewToken(that).then(function(new_token) {
                             that.token = new_token;
                             // Rebuild the URL now that the token has been updated.
                             url = buildImageUrl(that, x, y, level);
@@ -752,7 +765,9 @@ define([
                     if ((json.error.code === 498) && defined(that._requestNewToken) && (tokenRetries > 0)) {
                         tokenRetries--;
 
-                        return that._requestNewToken().then(function(new_token) {
+                        // Note: The token may have already been updated between the request and now (when the responce is recieved),
+                        // but for now we don't detect and optomise for this case and send off a new token request regardless.
+                        return debounceRequestNewToken(that).then(function(new_token) {
                             that.token = new_token;
                             return loadJsonHandleError();
                         });
