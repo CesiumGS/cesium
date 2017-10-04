@@ -707,8 +707,8 @@ define([
             let tokenRetries = 1;
             function loadImageWithToken () {
                 return loadImageViaBlob(url).otherwise(function(requestErrorEvent) {
-                    // If the token has expired the server sets the HTTP status code to 498 specifically to indicate this error.
-                    if ((requestErrorEvent.statusCode === 498) && (tokenRetries > 0)) {
+                    // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
+                    if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
                         tokenRetries--;
 
                         // Note: The token may have already been updated between the request and now (when the responce is recieved),
@@ -762,7 +762,7 @@ define([
             return loadJson(url).then(function(json) {
                 // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
                 if (defined(json.error) && defined(json.error.code)) {
-                    if ((json.error.code === 498) && defined(that._requestNewToken) && (tokenRetries > 0)) {
+                    if (((json.error.code === 498) || (json.error.code === 499)) && defined(that._requestNewToken) && (tokenRetries > 0)) {
                         tokenRetries--;
 
                         // Note: The token may have already been updated between the request and now (when the responce is recieved),
