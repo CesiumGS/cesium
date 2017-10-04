@@ -129,8 +129,9 @@ define([
                 }
             }
 
+            var message;
             if (!defined(tilesets) || !defined(bbox)) {
-                var message = 'Unable to find expected tilesets or bbox attributes in ' + joinUrls(url, 'tilemapresource.xml') + '.';
+                message = 'Unable to find expected tilesets or bbox attributes in ' + joinUrls(url, 'tilemapresource.xml') + '.';
                 metadataError = TileProviderError.handleError(metadataError, imageryProvider, imageryProvider.errorEvent, message, undefined, undefined, undefined, requestMetadata);
                 if(!metadataError.retry) {
                     deferred.reject(new RuntimeError(message));
@@ -152,7 +153,7 @@ define([
                 } else if (tilingSchemeName === 'mercator' || tilingSchemeName === 'global-mercator') {
                     tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
                 } else {
-                    var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
+                    message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, imageryProvider, imageryProvider.errorEvent, message, undefined, undefined, undefined, requestMetadata);
                     if(!metadataError.retry) {
                         deferred.reject(new RuntimeError(message));
