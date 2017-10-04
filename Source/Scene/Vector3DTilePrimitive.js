@@ -141,6 +141,13 @@ define([
          */
         this.debugWireframe = false;
         this._debugWireframe = this.debugWireframe;
+
+        /**
+         * Forces a re-batch instead of waiting after a number of frames have been rendered.
+         * @type {Boolean}
+         * @default false
+         */
+        this.forceRebatch = false;
     }
 
     defineProperties(Vector3DTilePrimitive.prototype, {
@@ -585,7 +592,7 @@ define([
             return false;
         }
 
-        if (needToRebatch && primitive._framesSinceLastRebatch < 120) {
+        if (needToRebatch && !primitive.forceRebatch && primitive._framesSinceLastRebatch < 120) {
             ++primitive._framesSinceLastRebatch;
             return;
         }

@@ -477,6 +477,126 @@ defineSuite([
         });
     });
 
+    it('renders multiple geometries after a re-batch', function() {
+        var dimensions = new Cartesian3(125000.0, 125000.0, 125000.0);
+        var modelMatrices = [Matrix4.fromTranslation(new Cartesian3(dimensions.x, 0.0, 0.0)),
+                             Matrix4.fromTranslation(new Cartesian3(-dimensions.x, 0.0, 0.0))];
+        var boxes = packBoxes([{
+            modelMatrix : modelMatrices[0],
+            dimensions : dimensions
+        }, {
+            modelMatrix : modelMatrices[1],
+            dimensions : dimensions
+        }]);
+        var boxBatchIds = new Uint16Array([0, 1]);
+
+        var radius = 125000.0;
+        var length = 125000.0;
+        modelMatrices.push(
+            Matrix4.fromTranslation(new Cartesian3(radius, 0.0, 0.0)),
+            Matrix4.fromTranslation(new Cartesian3(-radius, 0.0, 0.0)));
+        var cylinders = packCylinders([{
+            modelMatrix : modelMatrices[2],
+            radius : radius,
+            length : length
+        }, {
+            modelMatrix : modelMatrices[3],
+            radius : radius,
+            length : length
+        }]);
+        var cylinderBatchIds = new Uint16Array([2, 3]);
+
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var bv = new BoundingSphere(center, 50000000.0);
+
+        length = modelMatrices.length;
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, length);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        geometry = scene.primitives.add(new Vector3DTileGeometry({
+            boxes : boxes,
+            boxBatchIds : boxBatchIds,
+            cylinders : cylinders,
+            cylinderBatchIds : cylinderBatchIds,
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable,
+            boundingVolume : bv
+        }));
+        geometry.forceRebatch = true;
+        return loadGeometries(geometry).then(function() {
+            var i;
+            for (i = 0; i < length; ++i) {
+                batchTable.setShow(i, false);
+            }
+
+            for (i = 0; i < length; ++i) {
+                var transform = Matrix4.multiply(modelMatrix, modelMatrices[i], new Matrix4());
+                scene.camera.lookAtTransform(transform, new Cartesian3(0.0, 0.0, 10.0));
+
+                batchTable.setShow(i, true);
+                batchTable.update(mockTileset, scene.frameState);
+                expect(scene).toRender([255, 255, 255, 255]);
+
+                batchTable.setColor(i, Color.BLUE);
+                geometry.updateCommands(i, Color.BLUE);
+                batchTable.update(mockTileset, scene.frameState);
+                expect(scene).toRender([0, 0, 255, 255]);
+
+                batchTable.setShow(i, false);
+            }
+        });
+    });
+
+    it('renders with inverted classification', function() {
+        var radii = new Cartesian3(10.0, 10.0, 1000.0);
+        var ellipsoids = packEllipsoids([{
+            modelMatrix : Matrix4.IDENTITY,
+            radii : radii
+        }]);
+        var ellipsoidBatchIds = new Uint16Array([0]);
+
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var bv = new BoundingSphere(center, Cartesian3.maximumComponent(radii));
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        geometry = scene.primitives.add(new Vector3DTileGeometry({
+            ellipsoids : ellipsoids,
+            ellipsoidBatchIds : ellipsoidBatchIds,
+            boundingVolume : bv,
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable
+        }));
+        return loadGeometries(geometry).then(function() {
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
+
+            expect(scene).toRender([255, 0, 0, 255]);
+
+            scene.invertClassification = true;
+            scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
+
+            expect(scene).toRender([64, 0, 0, 255]);
+
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
+            expect(scene).toRender([255, 255, 255, 255]);
+
+            scene.invertClassification = false;
+        });
+    });
+
     it('renders wireframe', function() {
         var origin = Rectangle.center(rectangle);
         var center = ellipsoid.cartographicToCartesian(origin);

@@ -69,6 +69,13 @@ define([
          * @default false
          */
         this.debugWireframe = false;
+
+        /**
+         * Forces a re-batch instead of waiting after a number of frames have been rendered.
+         * @type {Boolean}
+         * @default false
+         */
+        this.forceRebatch = false;
     }
 
     defineProperties(Vector3DTileGeometry.prototype, {
@@ -384,6 +391,7 @@ define([
         }
 
         this._primitive.debugWireframe = this.debugWireframe;
+        this._primitive.forceRebatch = this.forceRebatch;
         this._primitive.update(frameState);
     };
 

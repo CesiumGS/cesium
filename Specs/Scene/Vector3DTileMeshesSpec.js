@@ -303,6 +303,84 @@ defineSuite([
         });
     });
 
+    it('renders multiple meshes after a re-batch', function() {
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        var scale = 125000.0;
+        var matrices = [Matrix4.multiply(Matrix4.fromTranslation(new Cartesian3(scale, 0.0, 0.0)), Matrix4.fromUniformScale(scale), new Matrix4()),
+                        Matrix4.multiply(Matrix4.fromTranslation(new Cartesian3(-scale, 0.0, 0.0)), Matrix4.fromUniformScale(scale), new Matrix4())];
+        var options = combineMeshes([createMesh(matrices[0]),
+                                     createMesh(matrices[1])]);
+
+        var bv = new BoundingSphere(center, 2.0 * scale);
+
+        meshes = scene.primitives.add(new Vector3DTileMeshes(combine(options, {
+            byteOffset : 0,
+            batchIds : new Uint16Array([0, 1]),
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable,
+            boundingVolume : bv
+        })));
+        meshes.forceRebatch = true;
+        return loadMeshes(meshes).then(function() {
+            for (var i = 0; i < matrices.length; ++i) {
+                var transform = Matrix4.multiply(modelMatrix, Matrix4.fromTranslation(Matrix4.getTranslation(matrices[i], new Cartesian3())), new Matrix4());
+                scene.camera.lookAtTransform(transform, new Cartesian3(0.0, 0.0, 10.0));
+                expect(scene).toRender([255, 255, 255, 255]);
+
+                batchTable.setColor(i, Color.BLUE);
+                meshes.updateCommands(i, Color.BLUE);
+                batchTable.update(mockTileset, scene.frameState);
+                expect(scene).toRender([0, 0, 255, 255]);
+            }
+        });
+    });
+
+    it('renders with inverted classification', function() {
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        var radii = new Cartesian3(10.0, 10.0, 1000.0);
+        var options = combineMeshes([createMesh(Matrix4.fromScale(radii))]);
+
+        meshes = scene.primitives.add(new Vector3DTileMeshes(combine(options, {
+            byteOffset : 0,
+            batchIds : new Uint16Array([0]),
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable
+        })));
+        return loadMeshes(meshes).then(function() {
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(radii.x, 0.0, 1.0));
+
+            expect(scene).toRender([255, 0, 0, 255]);
+
+            scene.invertClassification = true;
+            scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
+
+            expect(scene).toRender([64, 0, 0, 255]);
+
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 1.0));
+            expect(scene).toRender([255, 255, 255, 255]);
+
+            scene.invertClassification = false;
+        });
+    });
+
     it('renders wireframe', function() {
         var origin = Rectangle.center(rectangle);
         var center = ellipsoid.cartographicToCartesian(origin);
