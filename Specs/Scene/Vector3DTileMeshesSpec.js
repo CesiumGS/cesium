@@ -64,6 +64,11 @@ defineSuite([
     var mockTileset = {
         _statistics : {
             texturesByteLength : 0
+        },
+        _tileset : {
+            _statistics : {
+                batchTableByteLength : 0
+            }
         }
     };
 
@@ -200,7 +205,7 @@ defineSuite([
 
         var indexOffset = 0;
         var positionOffset = 0;
-        var positionCount = 0;
+        positionCount = 0;
 
         for (i = 0; i < meshesLength; ++i) {
             mesh = meshes[i];
@@ -326,6 +331,44 @@ defineSuite([
             meshes.updateCommands(0, Color.BLUE);
             batchTable.update(mockTileset, scene.frameState);
             expect(scene).toRender([0, 0, 255, 255]);
+        });
+    });
+
+    it('picks meshes', function() {
+        var origin = Rectangle.center(rectangle);
+        var center = ellipsoid.cartographicToCartesian(origin);
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        var options = combineMeshes([createMesh(Matrix4.fromUniformScale(1000000.0))]);
+
+        meshes = scene.primitives.add(new Vector3DTileMeshes(combine(options, {
+            byteOffset : 0,
+            batchIds : new Uint16Array([0]),
+            center : center,
+            modelMatrix : modelMatrix,
+            batchTable : batchTable
+        })));
+        return loadMeshes(meshes).then(function() {
+            scene.camera.lookAtTransform(modelMatrix, new Cartesian3(0.0, 0.0, 10.0));
+
+            var features = [];
+            meshes.createFeatures(mockTileset, features);
+            mockTileset.getFeature = function(index) {
+                return features[index];
+            };
+
+            scene.frameState.passes.pick = true;
+            batchTable.update(mockTileset, scene.frameState);
+            expect(scene).toPickAndCall(function (result) {
+                expect(result).toBe(features[0]);
+            });
+
+            mockTileset.getFeature = undefined;
         });
     });
 
