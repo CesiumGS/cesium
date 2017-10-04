@@ -60,26 +60,21 @@ define([
      * @private
      */
     function Vector3DTilePolygons(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+        // All of the private properties will be released except _readyPromise
+        // and _primitive after the Vector3DTilePrimitive is created.
         this._batchTable = options.batchTable;
 
-        // These arrays are released after VAO creation.
         this._batchIds = options.batchIds;
         this._positions = options.positions;
         this._counts = options.counts;
 
-        // These arrays are kept for re-batching indices based on colors.
-        // If WebGL 2 is supported, indices will be released and rebatching uses buffer-to-buffer copies.
         this._indices = options.indices;
         this._indexCounts = options.indexCounts;
         this._indexOffsets = undefined;
 
-        // Typed arrays transferred to web worker.
         this._batchTableColors = undefined;
         this._packedBuffer = undefined;
 
-        // Typed array transferred from web worker and released after vbo creation.
         this._batchedPositions = undefined;
         this._transferrableBatchIds = undefined;
         this._vertexBatchIds = undefined;
@@ -172,9 +167,11 @@ define([
     });
 
     function packBuffer(polygons) {
-        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
+        var packedBuffer = new Float64Array(4 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
 
         var offset = 0;
+        packedBuffer[offset++] = polygons._indices.BYTES_PER_ELEMENT;
+
         packedBuffer[offset++] = polygons._minimumHeight;
         packedBuffer[offset++] = polygons._maximumHeight;
 
@@ -333,9 +330,31 @@ define([
                 pickObject : defaultValue(polygons._pickObject, polygons)
             });
 
+            polygons._batchTable = undefined;
+            polygons._batchIds = undefined;
+            polygons._positions = undefined;
+            polygons._counts = undefined;
+            polygons._indices = undefined;
+            polygons._indexCounts = undefined;
+            polygons._indexOffsets = undefined;
+            polygons._batchTableColors = undefined;
+            polygons._packedBuffer = undefined;
             polygons._batchedPositions = undefined;
             polygons._transferrableBatchIds = undefined;
             polygons._vertexBatchIds = undefined;
+            polygons._ellipsoid = undefined;
+            polygons._minimumHeight = undefined;
+            polygons._maximumHeight = undefined;
+            polygons._polygonMinimumHeights = undefined;
+            polygons._polygonMaximumHeights = undefined;
+            polygons._center = undefined;
+            polygons._rectangle = undefined;
+            polygons._isCartographic = undefined;
+            polygons._modelMatrix = undefined;
+            polygons._boundingVolume = undefined;
+            polygons._boundingVolumes = undefined;
+            polygons._batchedIndices = undefined;
+            polygons._pickObject = undefined;
             polygons._verticesPromise = undefined;
 
             polygons._readyPromise.resolve();

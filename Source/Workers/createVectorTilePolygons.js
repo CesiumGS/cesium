@@ -36,17 +36,21 @@ define([
     var scratchEllipsoid = new Ellipsoid();
     var scratchRectangle = new Rectangle();
     var scratchMatrix4 = new Matrix4();
-    var scratchHeights = {
+    var scratchScalars = {
         min : undefined,
-        max : undefined
+        max : undefined,
+        indexBytesPerElement : undefined,
+        isCartographic : undefined
     };
 
     function unpackBuffer(buffer) {
         var packedBuffer = new Float64Array(buffer);
 
         var offset = 0;
-        scratchHeights.min = packedBuffer[offset++];
-        scratchHeights.max = packedBuffer[offset++];
+        scratchScalars.indexBytesPerElement = packedBuffer[offset++];
+
+        scratchScalars.min = packedBuffer[offset++];
+        scratchScalars.max = packedBuffer[offset++];
 
         Cartesian3.unpack(packedBuffer, offset, scratchCenter);
         offset += Cartesian3.packedLength;
@@ -57,11 +61,9 @@ define([
         Rectangle.unpack(packedBuffer, offset, scratchRectangle);
         offset += Rectangle.packedLength;
 
-        var isCartographic = packedBuffer[offset++] === 1.0;
+        scratchScalars.isCartographic = packedBuffer[offset++] === 1.0;
 
         Matrix4.unpack(packedBuffer, offset, scratchMatrix4);
-
-        return isCartographic;
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -123,23 +125,31 @@ define([
     var scratchBVRectangle = new Rectangle();
 
     function createVectorTilePolygons(parameters, transferableObjects) {
+        unpackBuffer(parameters.packedBuffer);
+
+        var indices;
+        var indexBytesPerElement = scratchScalars.indexBytesPerElement;
+        if (indexBytesPerElement === 2) {
+            indices = new Uint16Array(parameters.indices);
+        } else {
+            indices = new Uint32Array(parameters.indices);
+        }
+
         var positions = new Uint16Array(parameters.positions);
         var counts = new Uint32Array(parameters.counts);
         var indexCounts = new Uint32Array(parameters.indexCounts);
-        var indices = new Uint32Array(parameters.indices);
         var batchIds = new Uint32Array(parameters.batchIds);
         var batchTableColors = new Uint32Array(parameters.batchTableColors);
 
         var boundingVolumes = new Array(counts.length);
 
-        var isCartographic = unpackBuffer(parameters.packedBuffer);
-
         var center = scratchCenter;
         var ellipsoid = scratchEllipsoid;
         var rectangle = scratchRectangle;
-        var minHeight = scratchHeights.min;
-        var maxHeight = scratchHeights.max;
+        var minHeight = scratchScalars.min;
+        var maxHeight = scratchScalars.max;
         var modelMatrix = scratchMatrix4;
+        var isCartographic = scratchScalars.isCartographic;
 
         var minimumHeights = parameters.minimumHeights;
         var maximumHeights = parameters.maximumHeights;
