@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defined',
@@ -18,6 +19,7 @@ define([
         './PolylineCollection',
         './VerticalOrigin'
     ], function(
+        Cartesian2,
         Cartesian3,
         Color,
         defined,
@@ -267,8 +269,8 @@ define([
             feature.font = '30px sans-serif';
             feature.labelStyle = LabelStyle.FILL;
             feature.labelText = undefined;
-            feature.backgroundColor = undefined;
-            feature.backgroundPadding = undefined;
+            feature.backgroundColor = new Color(0.165, 0.165, 0.165, 0.8);
+            feature.backgroundPadding = new Cartesian2(7, 5);
             feature.backgroundEnabled = false;
             feature.scaleByDistance = undefined;
             feature.translucencyByDistance = undefined;
