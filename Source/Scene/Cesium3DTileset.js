@@ -220,6 +220,7 @@ define([
         this._tilesLoaded = false;
 
         this._tileDebugLabels = undefined;
+
         this._readyPromise = when.defer();
 
         /**
@@ -1044,7 +1045,7 @@ define([
             get : function() {
                 return this._statistics;
             }
-        },
+        }
     });
 
     /**
