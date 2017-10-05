@@ -342,6 +342,64 @@ defineSuite([
         });
     });
 
+    it('renders multiple polygons with different minimum and maximum heights', function() {
+        var rectangle1 = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var rectangle2 = Rectangle.fromDegrees(1.0, -1.0, 2.0, 1.0);
+        var cartographicPositions = [
+            Rectangle.northwest(rectangle1),
+            Rectangle.southwest(rectangle1),
+            Rectangle.southeast(rectangle1),
+            Rectangle.northeast(rectangle1),
+            Rectangle.northwest(rectangle2),
+            Rectangle.southwest(rectangle2),
+            Rectangle.southeast(rectangle2),
+            Rectangle.northeast(rectangle2)
+        ];
+        var rectangle = Rectangle.fromDegrees(-1.0, -1.0, 2.0, 1.0);
+
+        var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
+        batchTable.update(mockTileset, scene.frameState);
+
+        scene.primitives.add(depthPrimitive);
+
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+        polygons = scene.primitives.add(new Vector3DTilePolygons({
+            positions : encodePositions(rectangle, cartographicPositions),
+            indices : new Uint16Array([0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7]),
+            counts : new Uint32Array([4, 4]),
+            indexCounts : new Uint32Array([6, 6]),
+            minimumHeight : -10000.0,
+            maximumHeight : 10000.0,
+            polygonMinimumHeights : new Float32Array([-10000.0, 10.0]),
+            polygonMaximumHeights : new Float32Array([10000.0, 100.0]),
+            center : center,
+            rectangle : rectangle,
+            boundingVolume : new BoundingSphere(center, 10000.0),
+            batchTable : batchTable,
+            batchIds : new Uint32Array([0, 1]),
+            isCartographic : true
+        }));
+        polygons.forceRebatch = true;
+        return loadPolygons(polygons).then(function() {
+            scene.camera.setView({
+                destination : rectangle1
+            });
+
+            expect(scene).toRender([255, 255, 255, 255]);
+
+            batchTable.setColor(0, Color.BLUE);
+            polygons.updateCommands(0, Color.BLUE);
+            batchTable.update(mockTileset, scene.frameState);
+            expect(scene).toRender([0, 0, 255, 255]);
+
+            scene.camera.setView({
+                destination : rectangle2
+            });
+
+            expect(scene).toRender([255, 0, 0, 255]);
+        });
+    });
+
     it('renders with inverted classification', function() {
         var rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
         var polygonOptions = createPolygon(rectangle);
