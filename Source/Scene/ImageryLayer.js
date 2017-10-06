@@ -136,6 +136,14 @@ define([
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {ImagerySplitDirection|Function} [options.splitDirection=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The
+     *                                    texture minification filter to apply to this layer. Possible values
+     *                                    are <code>TextureMinificationFilter.LINEAR</code> and
+     *                                    <code>TextureMinificationFilter.NEAREST</code>.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The
+     *                                     texture minification filter to apply to this layer. Possible values
+     *                                     are <code>TextureMagnificationFilter.LINEAR</code> and
+     *                                     <code>TextureMagnificationFilter.NEAREST</code>.
      * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -210,6 +218,22 @@ define([
          * @default {@link ImageryLayer.DEFAULT_SPLIT}
          */
         this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
+
+        /**
+         * The {@link TextureMinificationFilter} to apply to this layer.
+         *
+         * @type {TextureMinificationFilter}
+         * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
+         */
+        this.minificationFilter = defaultValue(options.minificationFilter, defaultValue(imageryProvider.defaultMinificationFilter, ImageryLayer.DEFAULT_MINIFICATION_FILTER));
+
+        /**
+         * The {@link TextureMagnificationFilter} to apply to this layer.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
+         */
+        this.magnificationFilter = defaultValue(options.magnificationFilter, defaultValue(imageryProvider.defaultMagnificationFilter, ImageryLayer.DEFAULT_MAGNIFICATION_FILTER));
 
         /**
          * Determines if this layer is shown.
@@ -309,12 +333,28 @@ define([
     ImageryLayer.DEFAULT_GAMMA = 1.0;
 
     /**
-     * This value is used as the default spliat for the imagery layer if one is not provided during construction
+     * This value is used as the default split for the imagery layer if one is not provided during construction
      * or by the imagery provider.
      * @type {ImagerySplitDirection}
      * @default ImagerySplitDirection.NONE
      */
     ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
+
+    /**
+     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default texture minification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMinificationFilter}
+     * @default TextureMinificationFilter.LINEAR
+     */
+    ImageryLayer.DEFAULT_MINIFICATION_FILTER = TextureMinificationFilter.LINEAR;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -764,6 +804,11 @@ define([
             }
         }
 
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
         // Imagery does not need to be discarded, so upload it to WebGL.
         var texture;
         if (defined(image.internalFormat)) {
@@ -774,13 +819,15 @@ define([
                 height : image.height,
                 source : {
                     arrayBufferView : image.bufferView
-                }
+                },
+                sampler: sampler
             });
         } else {
             texture = new Texture({
                 context : context,
                 source : image,
-                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
+                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
+                sampler: sampler
             });
         }
 
@@ -799,11 +846,17 @@ define([
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
+                var minificationFilter = imageryLayer.minificationFilter;
+                if (imageryLayer.minificationFilter === TextureMinificationFilter.NEAREST) {
+                    minificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
+                } else if (imageryLayer.minificationFilter === TextureMinificationFilter.LINEAR) {
+                    minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+                }
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR,
+                    minificationFilter : minificationFilter,
+                    magnificationFilter : imageryLayer.magnificationFilter,
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
@@ -815,8 +868,8 @@ define([
                 nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                    minificationFilter : imageryLayer.minificationFilter,
+                    magnificationFilter : imageryLayer.magnificationFilter
                 });
             }
             texture.sampler = nonMipmapSampler;

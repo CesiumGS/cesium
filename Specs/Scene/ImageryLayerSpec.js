@@ -7,6 +7,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Renderer/ComputeEngine',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
         'Scene/createTileMapServiceImageryProvider',
@@ -30,6 +32,8 @@ defineSuite([
         Rectangle,
         RequestScheduler,
         ComputeEngine,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         createTileMapServiceImageryProvider,
@@ -365,6 +369,25 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
+    });
+
+    it('texture filter properties work as expected', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        var layer = new ImageryLayer(provider, {});
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        layer.destroy();
+
+        layer = new ImageryLayer(provider, {
+            magnificationFilter: TextureMagnificationFilter.NEAREST,
+            minificationFilter: TextureMinificationFilter.NEAREST
+        });
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        layer.destroy();
     });
 
     it('returns HTTP status code information in TileProviderError', function() {
