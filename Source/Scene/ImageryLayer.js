@@ -221,6 +221,8 @@ define([
 
         /**
          * The {@link TextureMinificationFilter} to apply to this layer.
+         * Possible values are {@link TextureMinificationFilter.LINEAR} (the default)
+         * and {@link TextureMinificationFilter.NEAREST}.
          *
          * @type {TextureMinificationFilter}
          * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
@@ -229,6 +231,8 @@ define([
 
         /**
          * The {@link TextureMagnificationFilter} to apply to this layer.
+         * Possible values are {@link TextureMagnificationFilter.LINEAR} (the default)
+         * and {@link TextureMagnificationFilter.NEAREST}.
          *
          * @type {TextureMagnificationFilter}
          * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
