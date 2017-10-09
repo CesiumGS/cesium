@@ -377,7 +377,7 @@ define([
     function updateToken(imageryProvider) {
         if (!defined(imageryProvider._newTokenRequestInFlight) && defined(imageryProvider._requestNewToken)) {
             imageryProvider._newTokenRequestInFlight = imageryProvider._requestNewToken().then(function(newToken) {
-                delete imageryProvider._newTokenRequestInFlight;
+                imageryProvider._newTokenRequestInFlight = undefiend;
                 imageryProvider.token = newToken;
                 return newToken;
             });
