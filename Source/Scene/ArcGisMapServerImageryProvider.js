@@ -703,8 +703,8 @@ define([
         if (!defined(this._requestNewToken)) {
             return ImageryProvider.loadImage(this, url);
         } else {
-            let that = this;
-            let tokenRetries = 1;
+            var that = this;
+            var tokenRetries = 1;
             function loadImageWithToken () {
                 return loadImageViaBlob(url).otherwise(function(requestErrorEvent) {
                     // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
@@ -755,10 +755,10 @@ define([
             return undefined;
         }
 
-        let that = this;
-        let tokenRetries = 1;
+        var that = this;
+        var tokenRetries = 1;
         function loadJsonHandleError() {
-            let url = buildPickURL(that, x, y, level, longitude, latitude);
+            var url = buildPickURL(that, x, y, level, longitude, latitude);
             return loadJson(url).then(function(json) {
                 // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
                 if (defined(json.error) && defined(json.error.code)) {
