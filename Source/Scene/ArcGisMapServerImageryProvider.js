@@ -17,6 +17,7 @@ define([
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/RuntimeError',
+        '../Core/throttleRequestByServer',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -42,6 +43,7 @@ define([
         CesiumMath,
         Rectangle,
         RuntimeError,
+        throttleRequestByServer,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -719,7 +721,12 @@ define([
             var that = this;
             var tokenRetries = 1;
             function loadImageWithToken () {
-                return loadImageViaBlob(url).otherwise(function(requestErrorEvent) {
+                var loadPromise = throttleRequestByServer(url, loadImageViaBlob);
+                if (!defined(loadPromise)) {
+                    return loadPromise;
+                }
+
+                return loadPromise.otherwise(function(requestErrorEvent) {
                     // If the token has expired or was not supplied the server sets the HTTP status code to 498/499 specifically to indicate these errors.
                     if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
                         tokenRetries--;
