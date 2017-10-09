@@ -2045,15 +2045,16 @@ define([
             cartesianOffset = offset;
         }
 
+        var cameraUpVector;
         if (this._mode ===SceneMode.SCENE3D){
             cartesianOffset = this._transformToCamera(transform, cartesianOffset);
             if (defined(upVector)){
-                var cameraUpVector = this._transformToCamera(transform, upVector);
+                cameraUpVector = this._transformToCamera(transform, upVector);
             }
         }
-                
+
         this._setTransform(transform);
-                
+
         if (this._mode === SceneMode.SCENE2D) {
             Cartesian2.clone(Cartesian2.ZERO, this.position);
 
@@ -2097,7 +2098,7 @@ define([
             Cartesian3.clone(Cartesian3.UNIT_X, this.right);
         }
 
-        Cartesian3.cross(this.right, this.direction, this.up);    
+        Cartesian3.cross(this.right, this.direction, this.up);
         Cartesian3.normalize(this.right, this.right);
         Cartesian3.normalize(this.up, this.up);
 
@@ -2108,7 +2109,7 @@ define([
         var fixedVector = Matrix4.multiplyByPoint(transform, vector, new Cartesian3());
         var cameraVector = Matrix4.multiplyByPoint(this._actualInvTransform, fixedVector, new Cartesian3());
         return cameraVector;
-    }
+    };
 
     var viewRectangle3DCartographic1 = new Cartographic();
     var viewRectangle3DCartographic2 = new Cartographic();
