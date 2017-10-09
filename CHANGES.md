@@ -1,5 +1,12 @@
 Change Log
 ==========
+
+### 1.39 - 2017-11-01
+
+* Breaking Changes
+  *
+* Added the ability to load Cesium's assets from the local file system [#5830](https://github.com/AnalyticalGraphicsInc/cesium/issues/5830)
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes
