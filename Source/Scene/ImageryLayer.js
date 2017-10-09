@@ -846,16 +846,16 @@ define([
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-                var minificationFilter = imageryLayer.minificationFilter;
+                var mipmapMinificationFilter = imageryLayer.minificationFilter;
                 if (imageryLayer.minificationFilter === TextureMinificationFilter.NEAREST) {
-                    minificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
+                    mipmapMinificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
                 } else if (imageryLayer.minificationFilter === TextureMinificationFilter.LINEAR) {
-                    minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+                    mipmapMinificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
                 }
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : minificationFilter,
+                    minificationFilter : mipmapMinificationFilter,
                     magnificationFilter : imageryLayer.magnificationFilter,
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
