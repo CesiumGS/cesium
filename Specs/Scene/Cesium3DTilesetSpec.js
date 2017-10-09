@@ -720,6 +720,14 @@ defineSuite([
         });
     });
 
+    it('does not load additive tiles that are out of view', function() {
+        viewBottomLeft();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.numberOfTilesWithContentReady).toEqual(2);
+        });
+    });
+
     it('culls with content box', function() {
         // Root tile has a content box that is half the extents of its box
         // Expect to cull root tile and three child tiles
