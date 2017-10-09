@@ -257,26 +257,26 @@ define([
 
     function insertNamespaces(text) {
         var namespaceMap = {
-            xsi : 'http://www.w3.org/2001/XMLSchema-instance']
+            xsi : 'http://www.w3.org/2001/XMLSchema-instance'
         };
         var firstPart, lastPart, prefix, declaration; 
 
-        for (var key in namespaceMap){
-	    prefix = '<' + key + ':';
-	    declaration = 'xmlns:' + key + '=';
+        for (var key in namespaceMap) {
+	        prefix = key + ':';
+	        declaration = 'xmlns:' + key + '=';
             if (text.indexOf(prefix) !== -1 && text.indexOf(declaration) === -1) {
-		if (!firstPart) {                
-		    firstPart = text.substr(0, text.indexOf('<kml') + 4);
+		        if (!firstPart) {                
+		            firstPart = text.substr(0, text.indexOf('<kml') + 4);
                     lastPart = text.substr(firstPart.length);
-		}
+		        }
                 firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
             }
         }
-	
-	if (firstPart) {
-	    text = firstPart + lastPart;
-	}
-
+        
+	    if (firstPart) {
+	        text = firstPart + lastPart;
+	    }
+        
         return text; 
     }
 
