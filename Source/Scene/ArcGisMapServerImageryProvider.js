@@ -711,8 +711,8 @@ define([
                     if (((requestErrorEvent.statusCode === 498) || (requestErrorEvent.statusCode === 499)) && (tokenRetries > 0)) {
                         tokenRetries--;
 
-                        // Note: The token may have already been updated between the request and now (when the responce is recieved),
-                        // but for now we don't detect and optomise for this case and send off a new token request regardless.
+                        // Note: The token may have already been updated between the request and now (when the response is received),
+                        // but for now we don't detect and optimize for this case and send off a new token request regardless.
                         return updateToken(that).then(() => {
                             // Rebuild the URL now that the token has been updated.
                             url = buildImageUrl(that, x, y, level);
@@ -765,8 +765,8 @@ define([
                     if (((json.error.code === 498) || (json.error.code === 499)) && defined(that._requestNewToken) && (tokenRetries > 0)) {
                         tokenRetries--;
 
-                        // Note: The token may have already been updated between the request and now (when the responce is recieved),
-                        // but for now we don't detect and optomise for this case and send off a new token request regardless.
+                        // Note: The token may have already been updated between the request and now (when the response is received),
+                        // but for now we don't detect and optimize for this case and send off a new token request regardless.
                         return updateToken(that).then(() => {
                             return loadJsonHandleError();
                         });
