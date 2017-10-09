@@ -409,11 +409,7 @@ define([
                 return this._token;
             },
             set : function(token) {
-                delete this._token;
-
-                if (defined(token)) {
-                    this._token = token;
-                }
+                this._token = token;
             }
         },
 
