@@ -262,7 +262,7 @@ define([
         var firstPart, lastPart, reg, declaration;
 
         for (var key in namespaceMap) {
-            reg = RegExp('[<| ]' + key + ':';
+            reg = RegExp('[<| ]' + key + ':');
             declaration = 'xmlns:' + key + '=';
             if (reg.test(text) && text.indexOf(declaration) === -1) {
                 if (!firstPart) {
