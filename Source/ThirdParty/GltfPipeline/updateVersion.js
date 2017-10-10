@@ -1,7 +1,6 @@
 define([
         './addExtensionsRequired',
         './addToArray',
-        './findAccessorMinMax',
         './ForEach',
         './getAccessorByteStride',
         '../../Core/Cartesian3',
@@ -14,7 +13,6 @@ define([
     ], function(
         addExtensionsRequired,
         addToArray,
-        findAccessorMinMax,
         ForEach,
         getAccessorByteStride,
         Cartesian3,
@@ -645,17 +643,6 @@ define([
         });
     }
 
-    function makeTechniqueValuesArrays(gltf) {
-        ForEach.technique(gltf, function(technique) {
-            ForEach.techniqueParameter(technique, function(parameter) {
-                var value = parameter.value;
-                if (defined(value) && !Array.isArray(value)) {
-                    parameter.value = [value];
-                }
-            });
-        });
-    }
-
     function removeScissorFromTechniques(gltf) {
         ForEach.technique(gltf, function(technique) {
             var techniqueStates = technique.states;
@@ -754,6 +741,7 @@ define([
 
         var bufferViewShiftMap = {};
         var bufferViewRemovalCount = 0;
+        /* jshint unused:vars */
         ForEach.bufferView(gltf, function(bufferView, bufferViewId) {
             if (defined(bufferViewsToDelete[bufferViewId])) {
                 bufferViewRemovalCount++;
@@ -801,16 +789,6 @@ define([
                         }
                     }
                 }
-            }
-        });
-    }
-
-    function requireAccessorMinMax(gltf) {
-        ForEach.accessor(gltf, function(accessor) {
-            if (!defined(accessor.min) || !defined(accessor.max)) {
-                var minMax = findAccessorMinMax(gltf, accessor);
-                accessor.min = minMax.min;
-                accessor.max = minMax.max;
             }
         });
     }
@@ -872,8 +850,6 @@ define([
         requireAttributeSetIndex(gltf);
         // Add underscores to application-specific parameters
         underscoreApplicationSpecificSemantics(gltf);
-        // technique.parameters.value should be arrays
-        makeTechniqueValuesArrays(gltf);
         // remove scissor from techniques
         removeScissorFromTechniques(gltf);
         // clamp technique function states to min/max
@@ -887,6 +863,5 @@ define([
         // add KHR_technique_webgl extension
         addKHRTechniqueExtension(gltf);
     }
-
     return updateVersion;
 });
