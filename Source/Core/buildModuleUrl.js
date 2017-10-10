@@ -74,7 +74,7 @@ define([
     function buildModuleUrl(moduleID) {
         if (!defined(implementation)) {
             //select implementation
-            if (defined(require.toUrl)) {
+            if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
                 implementation = buildModuleUrlFromRequireToUrl;
             } else {
                 implementation = buildModuleUrlFromBaseUrl;
