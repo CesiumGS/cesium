@@ -20,6 +20,7 @@ define([
         './QuantizedMeshTerrainData',
         './Request',
         './RequestType',
+        './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
         './TileProviderError'
@@ -45,6 +46,7 @@ define([
         QuantizedMeshTerrainData,
         Request,
         RequestType,
+        RuntimeError,
         TerrainProvider,
         TileAvailability,
         TileProviderError) {
@@ -588,18 +590,23 @@ define([
         //>>includeEnd('debug');
 
         var layers = this._layers;
-        var layerToUse = layers[0];
+        var layerToUse;
         var layerCount = layers.length;
-        for (var i=0;i<layerCount;++i) {
-            var layer = layers[i];
-            if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
-                layerToUse = layer;
-                break;
+
+        if (layerCount === 1) { // Optimized path for single layers
+            layerToUse = layers[0];
+        } else {
+            for (var i = 0; i < layerCount; ++i) {
+                var layer = layers[i];
+                if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
+                    layerToUse = layer;
+                    break;
+                }
             }
         }
 
         if (!defined(layerToUse)) {
-            return undefined;
+            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         var urlTemplates = layerToUse.tileUrlTemplates;

@@ -277,14 +277,23 @@ defineSuite([
             expect(provider.requestVertexNormals).toBe(true);
             expect(provider.requestWaterMask).toBe(true);
             expect(provider.hasVertexNormals).toBe(false); // Neither tileset has them
-            expect(provider.hasWaterMask).toBe(true); // The top level tileset has them
+            expect(provider.hasWaterMask).toBe(true); // The child tileset has them
+            expect(provider.availability.isTileAvailable(1, 2, 1)).toBe(true); // Both have this
+            expect(provider.availability.isTileAvailable(1, 3, 1)).toBe(true); // Parent has this, but child doesn't
+            expect(provider.availability.isTileAvailable(2, 0, 0)).toBe(false); // Neither has this
 
             var layers = provider._layers;
             expect(layers.length).toBe(2);
             expect(layers[0].hasVertexNormals).toBe(false);
             expect(layers[0].hasWaterMask).toBe(true);
+            expect(layers[0].availability.isTileAvailable(1, 2, 1)).toBe(true);
+            expect(layers[0].availability.isTileAvailable(1, 3, 1)).toBe(false);
+            expect(layers[0].availability.isTileAvailable(2, 0, 0)).toBe(false);
             expect(layers[1].hasVertexNormals).toBe(false);
             expect(layers[1].hasWaterMask).toBe(false);
+            expect(layers[1].availability.isTileAvailable(1, 2, 1)).toBe(true);
+            expect(layers[1].availability.isTileAvailable(1, 3, 1)).toBe(true);
+            expect(layers[1].availability.isTileAvailable(2, 0, 0)).toBe(false);
         });
     });
 
