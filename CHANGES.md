@@ -7,6 +7,7 @@ Change Log
   of image tiles, namely `minificationFilter` and `magnificationFilter` with possible values `LINEAR`
   (the default) and `NEAREST` defined in `TextureMinificationFilter` and `TextureMagnificationFilter`.
   [#5846](https://github.com/AnalyticalGraphicsInc/cesium/issues/5846)
+  Hence, the enums `TextureMagnificationFilter` and `TextureMinificationFilter` have been made public. 
     
 
 ### 1.38 - 2017-10-02
