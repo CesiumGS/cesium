@@ -272,7 +272,7 @@ define([
                 firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
             }
         }
-	
+
         if (firstPart) {
             text = firstPart + lastPart;
         }
