@@ -1,5 +1,12 @@
 Change Log
 ==========
+
+### 1.39 - 2017-11-01
+
+* Breaking changes
+   * 
+* Fixed the ability to mipmap model textures that are defined by buffers [#5853](https://github.com/AnalyticalGraphicsInc/cesium/pull/5853)
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes
