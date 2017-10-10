@@ -262,14 +262,16 @@ define([
         var firstPart, lastPart, reg, declaration;
 
         for (var key in namespaceMap) {
-            reg = RegExp('[<| ]' + key + ':');
-            declaration = 'xmlns:' + key + '=';
-            if (reg.test(text) && text.indexOf(declaration) === -1) {
-                if (!firstPart) {
-                    firstPart = text.substr(0, text.indexOf('<kml') + 4);
-                    lastPart = text.substr(firstPart.length);
+            if (namespaceMap.hasOwnProperty(key)) {
+                reg = RegExp('[<| ]' + key + ':');
+                declaration = 'xmlns:' + key + '=';
+                if (reg.test(text) && text.indexOf(declaration) === -1) {
+                    if (!firstPart) {
+                        firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                        lastPart = text.substr(firstPart.length);
+                    }
+                    firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
                 }
-                firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
             }
         }
 
