@@ -376,11 +376,28 @@ define([
 
     function updateToken(imageryProvider) {
         if (!defined(imageryProvider._newTokenRequestInFlight) && defined(imageryProvider._requestNewToken)) {
-            imageryProvider._newTokenRequestInFlight = imageryProvider._requestNewToken().then(function(newToken) {
-                imageryProvider._newTokenRequestInFlight = undefiend;
+            // Due to the promise implementation used the function registered with .then() will be executed immediatly if the imageryProvider._requestNewToken()
+            // promise has already resolved when .then() is called. This flag allows us to make sure that ._newTokenRequestInFlight is defined correctly in both
+            // cases (where then runs immediately, when then runs deferred).
+            // Note: We explicitly set/test alreadyRun from both .then() and .otherwise() rather then using loadPromise.always() so that the order of execution is well
+            // defined (i.e. these operations will be run before any subsequently chained operations which might then call updateToken() and not want to get this result
+            // which has been resolved).
+            var alreadyRun = false;
+            var loadPromise = imageryProvider._requestNewToken().then(function(newToken) {
+                alreadyRun = true;
+                imageryProvider._newTokenRequestInFlight = undefined;
+
                 imageryProvider.token = newToken;
                 return newToken;
+            }).otherwise(function(requestErrorEvent) {
+                alreadyRun = true;
+                imageryProvider._newTokenRequestInFlight = undefined;
+
+                throw requestErrorEvent;
             });
+
+            imageryProvider._newTokenRequestInFlight = alreadyRun ? undefined : loadPromise;
+            return loadPromise;
         }
 
         return imageryProvider._newTokenRequestInFlight;
