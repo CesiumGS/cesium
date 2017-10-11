@@ -37,9 +37,10 @@ define([
         //>>includeEnd('debug');
 
         token = ComposerApi.getToken(token);
-        return loadJson('beta.cesium.com/api/assets/' + assetId + '?access_token=' + token)
+        return loadJson('//api.composer.dev:8081/api/assets/' + assetId + '?access_token=' + token)
             .then(function(metadata) {
                 var type = metadata.type;
+                metadata.url = metadata.url + '?access_token=' + token;
                 if (type === ComposerAssetType.MODEL) {
                     return new Entity({
                         name : metadata.name,
