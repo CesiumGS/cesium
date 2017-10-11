@@ -41,29 +41,29 @@ define([
 
     /**
      * Creates an imagery provider from the external imagery type
-     * @param {ComposerExternalImageryType} type The imagery provider type
-     * @param {Object} metadata The asset metadata
+     * @param {Object} configuration The asset configuration
      * @return {ImageryProvider}
      */
-    ComposerExternalImageryType.getProvider = function(type, metadata) {
+    ComposerExternalImageryType.getProvider = function(configuration) {
+        var type = configuration.type;
         if (type === ComposerExternalImageryType.ARCGIS_MAPSERVER) {
-            return new ArcGisMapServerImageryProvider(metadata);
+            return new ArcGisMapServerImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.BING) {
-            return new BingMapsImageryProvider(metadata);
+            return new BingMapsImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.GOOGLE_EARTH) {
-            return new GoogleEarthEnterpriseMapsProvider(metadata);
+            return new GoogleEarthEnterpriseMapsProvider(configuration);
         } else if (type === ComposerExternalImageryType.MAPBOX) {
-            return new MapboxImageryProvider(metadata);
+            return new MapboxImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.SINGLE_TILE) {
-            return new SingleTileImageryProvider(metadata);
+            return new SingleTileImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.TMS) {
-            return createTileMapServiceImageryProvider(metadata);
+            return createTileMapServiceImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.URL_TEMPLATE) {
-            return new UrlTemplateImageryProvider(metadata);
+            return new UrlTemplateImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.WMS) {
-            return new WebMapServiceImageryProvider(metadata);
+            return new WebMapServiceImageryProvider(configuration);
         } else if (type === ComposerExternalImageryType.WMTS) {
-            return new WebMapTileServiceImageryProvider(metadata);
+            return new WebMapTileServiceImageryProvider(configuration);
         }
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Unrecognized external imagery type: ' + type);
@@ -72,4 +72,3 @@ define([
 
     return freezeObject(ComposerExternalImageryType);
 });
-

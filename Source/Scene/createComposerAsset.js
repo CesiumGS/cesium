@@ -4,6 +4,8 @@ define([
     './ComposerExternalImageryType',
     './Cesium3DTileset',
     '../Core/loadJson',
+    '../Core/Check',
+    '../Core/ComposerApi',
     '../Core/CesiumTerrainProvider',
     '../DataSources/CzmlDataSource',
     '../DataSources/Entity',
@@ -14,6 +16,8 @@ define([
     ComposerExternalImageryType,
     Cesium3DTileset,
     loadJson,
+    Check,
+    ComposerApi,
     CesiumTerrainProvider,
     CzmlDataSource,
     Entity,
@@ -21,13 +25,18 @@ define([
     'use strict';
 
     /**
-     *
-     * @param assetId
-     * @param token
-     * @param {Object} options
-     * @return {*}
+     * Returns a promise to an cesium.com asset from the asset id
+     * @param {Number} assetId The cesium.com asset id
+     * @param {String} token The access token for the asset
+     * @param {Object} [options] Additional options for the asset
+     * @return {Promise<*>} A promise to the asset
      */
     function createComposerAsset(assetId, token, options) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('assetId', assetId);
+        //>>includeEnd('debug');
+
+        token = ComposerApi.getToken(token);
         return loadJson('beta.cesium.com/api/assets/' + assetId + '?access_token=' + token)
             .then(function(metadata) {
                 var type = metadata.type;
@@ -56,6 +65,9 @@ define([
                         }
                     });
                 } else if (type === ComposerAssetType['3DTILES']) {
+                    if (metadata.isExternal) {
+                        metadata = metadata.externalConfiguration;
+                    }
                     return new Cesium3DTileset(metadata);
                 } else if (type === ComposerAssetType.CZML) {
                     return CzmlDataSource.load(metadata.url);
@@ -69,10 +81,10 @@ define([
                     if (!metadata.isExternal) {
                         return createTileMapServiceImageryProvider(metadata);
                     }
-                    return ComposerExternalImageryType.getProvider(metadata.externalType, metadata.externalConfiguration);
+                    return ComposerExternalImageryType.getProvider(metadata.externalConfiguration);
                 } else if (type === ComposerAssetType.TERRAIN) {
                     return new CesiumTerrainProvider({
-                        url : metadata.url,
+                        url : metadata.isExternal ? metadata.externalConfiguration.url : metadata.url,
                         requestWaterMask : true,
                         requestVertexNormals : true
                     });
