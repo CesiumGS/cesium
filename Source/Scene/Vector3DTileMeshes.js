@@ -213,7 +213,7 @@ define([
                 var start = byteOffset;
                 var end = start + indicesLength * meshes._indexBytesPerElement;
                 var bufferCopy = buffer.slice(start, end);
-                if (meshes._indexBytesPerElement) {
+                if (meshes._indexBytesPerElement === Uint16Array.BYTES_PER_ELEMENT) {
                     indices = meshes._indices = new Uint16Array(bufferCopy);
                 } else {
                     indices = meshes._indices = new Uint32Array(bufferCopy);

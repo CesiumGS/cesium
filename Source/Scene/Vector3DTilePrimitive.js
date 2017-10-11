@@ -627,6 +627,7 @@ define([
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
+        var pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
         var owner = primitive._pickObject;
         if (!defined(owner)) {
@@ -652,7 +653,7 @@ define([
             stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilPreloadCommand.pass = pass;
 
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -669,7 +670,7 @@ define([
             stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilDepthCommand.pass = pass;
 
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -686,7 +687,7 @@ define([
             colorCommand.shaderProgram = sp;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            colorCommand.pass = pass;
         }
 
         primitive._commandsDirty = true;
@@ -734,6 +735,7 @@ define([
         var spPick = primitive._spPick;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
+        var pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
 
         var owner = primitive._pickObject;
         if (!defined(owner)) {
@@ -760,7 +762,7 @@ define([
             stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilPreloadCommand.pass = pass;
 
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -777,7 +779,7 @@ define([
             stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilDepthCommand.pass = pass;
 
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -794,7 +796,7 @@ define([
             colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            colorCommand.pass = pass;
         }
 
         primitive._pickCommandsDirty = false;
