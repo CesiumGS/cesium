@@ -282,8 +282,6 @@ define([
             feature.disableDepthTestDistance = 0.0;
             feature.origin = HorizontalOrigin.CENTER;
             feature.labelOrigin = HorizontalOrigin.LEFT;
-
-            feature._setBillboardImage();
         }
     }
 
@@ -421,8 +419,6 @@ define([
             if (defined(style.labelOrigin)) {
                 feature.labelOrigin = style.labelOrigin.evaluate(frameState, feature);
             }
-
-            feature._setBillboardImage();
         }
     };
 

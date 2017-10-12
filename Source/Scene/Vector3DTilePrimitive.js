@@ -842,7 +842,7 @@ define([
             feature.color = Color.WHITE;
         }
 
-        var batchedIndices = this._batchedIndices;
+        var batchedIndices = polygons._batchedIndices;
         length = batchedIndices.length;
 
         for (i = 0; i < length; ++i) {
