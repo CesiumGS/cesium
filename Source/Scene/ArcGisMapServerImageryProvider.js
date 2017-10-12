@@ -240,11 +240,10 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = loadJsonp(that._url, {
+            loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
-            });
-            when(metadata, metadataSuccess, metadataFailure);
+            }).then(metadataSuccess).otherwise(metadataFailure);
         }
 
         if (defined(options.mapServerData)) {
