@@ -62,6 +62,8 @@ define([
         /**
          * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
          *
+         * @private
+         *
          * @param textureMinificationFilter
          * @returns {Boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
          */
