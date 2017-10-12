@@ -577,8 +577,8 @@ define([
         } else {
             var that = this;
             var tokenRetries = 1;
-            function loadImageWithToken () {
-                var loadPromise = throttleRequestByServer(url, loadImageViaBlob);
+            function loadImageWithToken (url) {
+                var loadPromise = loadImageViaBlob(url);
                 if (!defined(loadPromise)) {
                     return loadPromise;
                 }
@@ -593,7 +593,7 @@ define([
                         return updateToken(that).then(() => {
                             // Rebuild the URL now that the token has been updated.
                             url = buildImageUrl(that, x, y, level);
-                            return loadImageWithToken();
+                            return loadImageWithToken(url);
                         });
                     }
 
@@ -601,7 +601,7 @@ define([
                 });
             }
 
-            return loadImageWithToken();
+            return throttleRequestByServer(url, loadImageWithToken);
         }
     };
 
