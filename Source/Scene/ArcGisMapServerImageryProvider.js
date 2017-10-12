@@ -651,19 +651,23 @@ define([
             return undefined;
         }
 
-        var that = this;
+        return loadJsonHandleTokenErrors(this);
+    };
+
+    function loadJsonHandleTokenErrors(item)
+    {
         var tokenRetries = 1;
         function loadJsonHandleError() {
-            var url = buildPickURL(that, x, y, level, longitude, latitude);
+            var url = buildPickURL(item, x, y, level, longitude, latitude);
             return loadJson(url).then(function(json) {
                 // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
                 if (defined(json.error) && defined(json.error.code)) {
-                    if (((json.error.code === 498) || (json.error.code === 499)) && defined(that._requestNewToken) && (tokenRetries > 0)) {
+                    if (((json.error.code === 498) || (json.error.code === 499)) && defined(item._requestNewToken) && (tokenRetries > 0)) {
                         tokenRetries--;
 
                         // Note: The token may have already been updated between the request and now (when the response is received),
                         // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                        return updateToken(that).then(() => {
+                        return updateToken(item).then(() => {
                             return loadJsonHandleError();
                         });
                     }
@@ -674,7 +678,7 @@ define([
         };
 
         return loadJsonHandleError();
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url;
