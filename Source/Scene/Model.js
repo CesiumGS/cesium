@@ -2312,13 +2312,10 @@ define([
                 }
             }
         }
-
-        if (!defined(tx)) {
-            throw new RuntimeError('Failed to load texture.');
+        if (defined(tx)) {
+            model._rendererResources.textures[gltfTexture.id] = tx;
+            model._texturesByteLength += tx.sizeInBytes;
         }
-
-        model._rendererResources.textures[gltfTexture.id] = tx;
-        model._texturesByteLength += tx.sizeInBytes;
     }
 
     var scratchCreateTextureJob = new CreateTextureJob();
