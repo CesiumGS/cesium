@@ -881,10 +881,8 @@ define([
                     maximumAnisotropy : maximumAnisotropy
                 });
             }
-            //texture.generateMipmap(MipmapHint.NICEST);
-            //texture.generateMipmap();
+            texture.generateMipmap(MipmapHint.NICEST);
             texture.sampler = mipmapSampler;
-            texture.generateMipmap(MipmapHint.FASTEST);
         } else {
             var minificationFilter = imageryLayer.minificationFilter;
             var magnificationFilter = imageryLayer.magnificationFilter;
