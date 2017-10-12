@@ -263,7 +263,7 @@ define([
 
         for (var key in namespaceMap) {
             if (namespaceMap.hasOwnProperty(key)) {
-                reg = RegExp('[<| ]' + key + ':');
+                reg = RegExp('[< ]' + key + ':');
                 declaration = 'xmlns:' + key + '=';
                 if (reg.test(text) && text.indexOf(declaration) === -1) {
                     if (!firstPart) {
