@@ -232,18 +232,22 @@ define([
         }
 
         function requestMetadata() {
-            var parameters = {
-                f: 'json'
-            };
+            function requestMetadataHandleTokenError() {
+                var parameters = {
+                    f: 'json'
+                };
 
-            if (defined(that._token)) {
-                parameters.token = that._token;
+                if (defined(that._token)) {
+                    parameters.token = that._token;
+                }
+
+                return loadJsonp(that._url, {
+                    parameters : parameters,
+                    proxy : that._proxy
+                });
             }
 
-            loadJsonp(that._url, {
-                parameters : parameters,
-                proxy : that._proxy
-            }).then(metadataSuccess).otherwise(metadataFailure);
+            requestMetadataHandleTokenError().then(metadataSuccess).otherwise(metadataFailure);
         }
 
         if (defined(options.mapServerData)) {
