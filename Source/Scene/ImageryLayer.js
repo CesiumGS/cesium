@@ -850,36 +850,56 @@ define([
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
+    function getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy) {
+        return minificationFilter + ':' + magnificationFilter + ':' + maximumAnisotropy;
+    }
+
     function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         // Use mipmaps if this texture has power-of-two dimensions.
         if (!PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
-            var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
+            var mipmapMinificationFilter = imageryLayer.minificationFilter;
+            if (mipmapMinificationFilter === TextureMinificationFilter.NEAREST) {
+                mipmapMinificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
+            } else if (mipmapMinificationFilter === TextureMinificationFilter.LINEAR) {
+                mipmapMinificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+            }
+            var mipmapMagnificationFilter = imageryLayer.magnificationFilter;
+            var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
+            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy));
+            var mipmapSamplerKey = getSamplerKey(mipmapMinificationFilter, mipmapMagnificationFilter, maximumAnisotropy);
+            var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
+            var mipmapSampler = mipmapSamplers && mipmapSamplers[mipmapSamplerKey];
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-                var mipmapMinificationFilter = imageryLayer.minificationFilter;
-                if (imageryLayer.minificationFilter === TextureMinificationFilter.NEAREST) {
-                    mipmapMinificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
-                } else if (imageryLayer.minificationFilter === TextureMinificationFilter.LINEAR) {
-                    mipmapMinificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+                if (!defined(mipmapSamplers)) {
+                    mipmapSamplers = context.cache.imageryLayerMipmapSamplers = {};
                 }
-                mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
+                mipmapSampler = mipmapSamplers[mipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : mipmapMinificationFilter,
-                    magnificationFilter : imageryLayer.magnificationFilter,
-                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+                    magnificationFilter : mipmapMagnificationFilter,
+                    maximumAnisotropy : maximumAnisotropy
                 });
             }
-            texture.generateMipmap(MipmapHint.NICEST);
+            //texture.generateMipmap(MipmapHint.NICEST);
+            //texture.generateMipmap();
             texture.sampler = mipmapSampler;
+            texture.generateMipmap(MipmapHint.FASTEST);
         } else {
-            var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
+            var minificationFilter = imageryLayer.minificationFilter;
+            var magnificationFilter = imageryLayer.magnificationFilter;
+            var nonMipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, 0);
+            var nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
+            var nonMipmapSampler = nonMipmapSamplers && nonMipmapSamplers[nonMipmapSamplerKey];
             if (!defined(nonMipmapSampler)) {
-                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = new Sampler({
+                if (!defined(nonMipmapSamplers)) {
+                    nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers = {};
+                }
+                nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : imageryLayer.minificationFilter,
-                    magnificationFilter : imageryLayer.magnificationFilter
+                    minificationFilter : minificationFilter,
+                    magnificationFilter : magnificationFilter
                 });
             }
             texture.sampler = nonMipmapSampler;
