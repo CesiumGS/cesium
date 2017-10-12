@@ -2,7 +2,7 @@
   "asset": {
     "version": "0.0"
   },
-  "geometricError": 600,
+  "geometricError": 5000,
   "root": {
     "boundingVolume": {
       "region": [
@@ -14,7 +14,7 @@
         1000
       ]
     },
-    "geometricError": 500,
+    "geometricError": 100,
     "refine": "REPLACE",
     "content": {
       "url": "parent.vctr"

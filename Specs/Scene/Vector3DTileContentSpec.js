@@ -52,38 +52,55 @@ defineSuite([
     var vectorGeometryAllBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllBatchedChildren';
     var vectorGeometryAllBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllBatchedChildrenWithBatchTable';
     var vectorGeometryAllWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllWithBatchTable';
+    var vectorGeometryAllWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllWithBatchIds';
+
     var vectorGeometryBoxes = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxes';
     var vectorGeometryBoxesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesBatchedChildren';
     var vectorGeometryBoxesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesBatchedChildrenWithBatchTable';
     var vectorGeometryBoxesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesWithBatchTable';
+    var vectorGeometryBoxesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesWithBatchIds';
+
     var vectorGeometryCylinders = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylinders';
     var vectorGeometryCylindersBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersBatchedChildren';
     var vectorGeometryCylindersBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersBatchedChildrenWithBatchTable';
     var vectorGeometryCylindersWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersWithBatchTable';
+    var vectorGeometryCylindersWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersWithBatchIds';
+
     var vectorGeometryEllipsoids = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoids';
     var vectorGeometryEllipsoidsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsBatchedChildren';
     var vectorGeometryEllipsoidsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsBatchedChildrenWithBatchTable';
     var vectorGeometryEllipsoidsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsWithBatchTable';
+    var vectorGeometryEllipsoidsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsWithBatchIds';
+
     var vectorGeometrySpheres = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheres';
     var vectorGeometrySpheresBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresBatchedChildren';
     var vectorGeometrySpheresBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresBatchedChildrenWithBatchTable';
     var vectorGeometrySpheresWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresWithBatchTable';
+    var vectorGeometrySpheresWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresWithBatchIds';
+
     var vectorMesh = './Data/Cesium3DTiles/Vector/VectorTileMesh';
     var vectorMeshBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileMeshBatchedChildren';
     var vectorMeshBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileMeshBatchedChildrenWithBatchTable';
     var vectorMeshWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileMeshWithBatchTable';
+    var vectorMeshWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileMeshWithBatchIds';
+
     var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints';
     var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren';
     var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable';
     var vectorPointsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchTable';
+    var vectorPointsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePointsWithBatchIds';
+
     var vectorPolygons = './Data/Cesium3DTiles/Vector/VectorTilePolygons';
     var vectorPolygonsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildren';
     var vectorPolygonsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsBatchedChildrenWithBatchTable';
     var vectorPolygonsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchTable';
+    var vectorPolygonsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolygonsWithBatchIds';
+
     var vectorPolylines = './Data/Cesium3DTiles/Vector/VectorTilePolylines';
     var vectorPolylinesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildren';
     var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable';
     var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable';
+    var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds';
 
     var scene;
     var rectangle;
@@ -416,6 +433,16 @@ defineSuite([
         });
     });
 
+    it('renders points with batch ids', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPointsWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRenderPoints(tileset, scene);
+            verifyPickPoints(scene);
+        });
+    });
+
     it('renders polygons', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
@@ -460,6 +487,17 @@ defineSuite([
         });
     });
 
+    it('renders polygons with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolygonsWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
     it('renders polylines', function() {
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : vectorPolylines
@@ -490,6 +528,15 @@ defineSuite([
     it('renders batched polylines with a batch table', function() {
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : vectorPolylinesBatchedChildrenWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRenderPolylines(tileset, scene);
+        });
+    });
+
+    it('renders polylines with batch ids', function() {
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolylinesWithBatchIds
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
@@ -533,6 +580,17 @@ defineSuite([
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : vectorMeshBatchedChildrenWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
+    it('renders meshes with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorMeshWithBatchIds
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
@@ -584,6 +642,17 @@ defineSuite([
         });
     });
 
+    it('renders boxes with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorGeometryBoxesWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
     it('renders cylinders', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
@@ -621,6 +690,17 @@ defineSuite([
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : vectorGeometryCylindersBatchedChildrenWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
+    it('renders cylinders with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorGeometryCylindersWithBatchIds
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
@@ -672,6 +752,17 @@ defineSuite([
         });
     });
 
+    it('renders ellipsoids with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorGeometryEllipsoidsWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
     it('renders spheres', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
@@ -716,6 +807,17 @@ defineSuite([
         });
     });
 
+    it('renders spheres with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorGeometrySpheresWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
     it('renders all geometries', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
@@ -753,6 +855,17 @@ defineSuite([
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
             url : vectorGeometryAllBatchedChildrenWithBatchTable
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+        });
+    });
+
+    it('renders all geometries with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorGeometryAllWithBatchIds
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
