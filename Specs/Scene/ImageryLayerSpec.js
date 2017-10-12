@@ -371,22 +371,38 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(true);
     });
 
-    it('texture filter properties work as expected', function() {
+    it('allows setting texture filter properties', function() {
         var provider = new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
         });
 
-        var layer = new ImageryLayer(provider, {});
-        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
+        // expect default LINEAR
+        var layer = new ImageryLayer(provider);
         expect(layer.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
         layer.destroy();
 
+        // change to NEAREST
         layer = new ImageryLayer(provider, {
-            magnificationFilter: TextureMagnificationFilter.NEAREST,
-            minificationFilter: TextureMinificationFilter.NEAREST
+            minificationFilter: TextureMinificationFilter.NEAREST,
+            magnificationFilter: TextureMagnificationFilter.NEAREST
         });
-        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
         expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
+        layer.destroy();
+    });
+
+    it('uses default texture filter properties of ImageryProvider', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        provider.defaultMinificationFilter = TextureMinificationFilter.NEAREST;
+        provider.defaultMagnificationFilter = TextureMinificationFilter.NEAREST;
+
+        var layer = new ImageryLayer(provider);
+        expect(layer.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(layer.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
         layer.destroy();
     });
 
