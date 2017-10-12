@@ -232,6 +232,7 @@ define([
         }
 
         function requestMetadata() {
+            let tokenRetries = 1;
             function requestMetadataHandleTokenError() {
                 var parameters = {
                     f: 'json'
@@ -244,6 +245,21 @@ define([
                 return loadJsonp(that._url, {
                     parameters : parameters,
                     proxy : that._proxy
+                }).then(function (json) {
+                    // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
+                    if (defined(json.error) && defined(json.error.code)) {
+                        if (((json.error.code === 498) || (json.error.code === 499)) && defined(that._requestNewToken) && (tokenRetries > 0)) {
+                            tokenRetries--;
+
+                            // Note: The token may have already been updated between the request and now (when the response is received),
+                            // but for now we don't detect and optimize for this case and send off a new token request regardless.
+                            return updateToken(that).then(() => {
+                                return requestMetadataHandleTokenError();
+                            });
+                        }
+                    }
+
+                    return json;
                 });
             }
 
