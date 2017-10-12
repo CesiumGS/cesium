@@ -10,7 +10,7 @@ define([
      * Enumerates all possible filters used when minifying WebGL textures, which takes places when zooming
      * out of imagery. Provides the possible values for the {@link ImageryLayer#minificationFilter} property.
      *
-     * @alias TextureMinificationFilter
+     * @exports TextureMinificationFilter
      *
      * @see TextureMagnificationFilter
      * @see ImageryLayer#minificationFilter

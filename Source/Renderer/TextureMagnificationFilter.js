@@ -10,7 +10,7 @@ define([
      * Enumerates all possible filters used when magnifying WebGL textures, which takes places when zooming
      * into imagery. Provides the possible values for the {@link ImageryLayer#magnificationFilter} property.
      *
-     * @alias TextureMagnificationFilter
+     * @exports TextureMagnificationFilter
      *
      * @see TextureMinificationFilter
      * @see ImageryLayer#magnificationFilter
