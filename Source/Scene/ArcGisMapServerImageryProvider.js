@@ -591,7 +591,7 @@ define([
 
                         // Note: The token may have already been updated between the request and now (when the response is received),
                         // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                        return updateToken(that).then(() => {
+                        return updateToken(that).then(function () {
                             // Rebuild the URL now that the token has been updated.
                             url = buildImageUrl(that, x, y, level);
                             return loadImageWithToken(url);
@@ -636,7 +636,7 @@ define([
         var that = this;
         return loadJsonHandleTokenErrors(this, function () {
             var url = buildPickURL(that, x, y, level, longitude, latitude);
-            return loadJson(url)
+            return loadJson(url);
         }).then(function(json) {
             return jsonToFeatures(json);
         });
@@ -653,7 +653,7 @@ define([
 
                         // Note: The token may have already been updated between the request and now (when the response is received),
                         // but for now we don't detect and optimize for this case and send off a new token request regardless.
-                        return updateToken(item).then(() => {
+                        return updateToken(item).then(function () {
                             return loadJsonHandleError();
                         });
                     }
@@ -661,7 +661,7 @@ define([
 
                 return json;
             });
-        };
+        }
 
         return loadJsonHandleError();
     }
