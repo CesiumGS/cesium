@@ -830,14 +830,14 @@ define([
                 source : {
                     arrayBufferView : image.bufferView
                 },
-                sampler: sampler
+                sampler : sampler
             });
         } else {
             texture = new Texture({
                 context : context,
                 source : image,
                 pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
-                sampler: sampler
+                sampler : sampler
             });
         }
 
