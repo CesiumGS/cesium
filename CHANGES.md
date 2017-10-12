@@ -3,11 +3,8 @@ Change Log
 
 ### 1.39 - 2017-11-??
 
-* Added two new properties to `ImageryLayer` that allow for adjusting the texture sampler used for up- and down-sampling
-  of image tiles, namely `minificationFilter` and `magnificationFilter` with possible values `LINEAR`
-  (the default) and `NEAREST` defined in `TextureMinificationFilter` and `TextureMagnificationFilter`.
-  [#5846](https://github.com/AnalyticalGraphicsInc/cesium/issues/5846)
-  Hence, the enums `TextureMagnificationFilter` and `TextureMinificationFilter` have been made public. 
+* Added two new properties to `ImageryLayer` that allow for adjusting the texture sampler used for up- and down-sampling of image tiles, namely `minificationFilter` and `magnificationFilter` with possible values `LINEAR` (the default) and `NEAREST` defined in `TextureMinificationFilter` and `TextureMagnificationFilter`. [#5846](https://github.com/AnalyticalGraphicsInc/cesium/issues/5846)
+* The enums `TextureMinificationFilter` and `TextureMagnificationFilter` have been made public to support the new texture filter properties mentioned above. 
     
 
 ### 1.38 - 2017-10-02
