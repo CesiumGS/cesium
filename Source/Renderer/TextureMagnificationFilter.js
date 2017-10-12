@@ -35,7 +35,7 @@ define([
          * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
          *
          * @param textureMagnificationFilter
-         * @returns {boolean} <code>true</code> if <code>textureMagnificationFilter</code> is valid.
+         * @returns {Boolean} <code>true</code> if <code>textureMagnificationFilter</code> is valid.
          */
         validate : function(textureMagnificationFilter) {
             return ((textureMagnificationFilter === TextureMagnificationFilter.NEAREST) ||

@@ -63,7 +63,7 @@ define([
          * Validates the given <code>textureMinificationFilter</code> with respect to the possible enum values.
          *
          * @param textureMinificationFilter
-         * @returns {boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
+         * @returns {Boolean} <code>true</code> if <code>textureMinificationFilter</code> is valid.
          */
         validate : function(textureMinificationFilter) {
             return ((textureMinificationFilter === TextureMinificationFilter.NEAREST) ||
