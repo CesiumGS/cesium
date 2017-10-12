@@ -18,10 +18,16 @@ define([
     var TextureMagnificationFilter = {
         /**
          * Nearest neighbor sampling of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         NEAREST : WebGLConstants.NEAREST,
         /**
          * Bi-linear interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         LINEAR : WebGLConstants.LINEAR,
 

@@ -18,26 +18,44 @@ define([
     var TextureMinificationFilter = {
         /**
          * Nearest neighbor sampling of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         NEAREST : WebGLConstants.NEAREST,
         /**
          * Bi-linear interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         LINEAR : WebGLConstants.LINEAR,
         /**
          * WebGL <code>NEAREST_MIPMAP_NEAREST</code> interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         NEAREST_MIPMAP_NEAREST : WebGLConstants.NEAREST_MIPMAP_NEAREST,
         /**
          * WebGL <code>LINEAR_MIPMAP_NEAREST</code> interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         LINEAR_MIPMAP_NEAREST : WebGLConstants.LINEAR_MIPMAP_NEAREST,
         /**
          * WebGL <code>NEAREST_MIPMAP_LINEAR</code> interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         NEAREST_MIPMAP_LINEAR : WebGLConstants.NEAREST_MIPMAP_LINEAR,
         /**
          * WebGL <code>LINEAR_MIPMAP_LINEAR</code> interpolation of image pixels to texture.
+         *
+         * @type {Number}
+         * @constant
          */
         LINEAR_MIPMAP_LINEAR : WebGLConstants.LINEAR_MIPMAP_LINEAR,
 
