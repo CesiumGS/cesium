@@ -224,6 +224,9 @@ define([
          * Possible values are {@link TextureMinificationFilter.LINEAR} (the default)
          * and {@link TextureMinificationFilter.NEAREST}.
          *
+         * To take effect, this property must be set immediately after adding the imagery layer.
+         * Once a texture is loaded it won't be possible to change the texture filter used.
+         *
          * @type {TextureMinificationFilter}
          * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
          */
@@ -233,6 +236,9 @@ define([
          * The {@link TextureMagnificationFilter} to apply to this layer.
          * Possible values are {@link TextureMagnificationFilter.LINEAR} (the default)
          * and {@link TextureMagnificationFilter.NEAREST}.
+         *
+         * To take effect, this property must be set immediately after adding the imagery layer.
+         * Once a texture is loaded it won't be possible to change the texture filter used.
          *
          * @type {TextureMagnificationFilter}
          * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
