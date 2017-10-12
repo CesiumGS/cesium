@@ -651,15 +651,19 @@ define([
             return undefined;
         }
 
-        return loadJsonHandleTokenErrors(this);
+        var that = this;
+        return loadJsonHandleTokenErrors(this, function () {
+            var url = buildPickURL(that, x, y, level, longitude, latitude);
+            return loadJson(url)
+        }).then(function(json) {
+            return jsonToFeatures(json);
+        });
     };
 
-    function loadJsonHandleTokenErrors(item)
-    {
+    function loadJsonHandleTokenErrors(item, loadJson) {
         var tokenRetries = 1;
         function loadJsonHandleError() {
-            var url = buildPickURL(item, x, y, level, longitude, latitude);
-            return loadJson(url).then(function(json) {
+            return loadJson().then(function(json) {
                 // In this case if the token fails the server returns with a HTTP status code of 200 and encodes the error as JSON.
                 if (defined(json.error) && defined(json.error.code)) {
                     if (((json.error.code === 498) || (json.error.code === 499)) && defined(item._requestNewToken) && (tokenRetries > 0)) {
@@ -673,7 +677,7 @@ define([
                     }
                 }
 
-                return jsonToFeatures(json);
+                return json;
             });
         };
 
