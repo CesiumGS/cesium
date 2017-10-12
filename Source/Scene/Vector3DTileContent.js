@@ -287,115 +287,73 @@ define([
             sphereBatchIds = new Uint16Array(featureTableBinary.byteOffset, sphereBatchIdsByteOffset, numberOfCylinders);
         }
 
-        var undefinedBatchIds = !defined(polygonBatchIds) || !defined(polylineBatchIds) || !defined(pointBatchIds) || !defined(meshBatchIds);
-        undefinedBatchIds = undefinedBatchIds || !defined(boxBatchIds) || !defined(cylinderBatchIds) || !defined(ellipsoidBatchIds) || !defined(sphereBatchIds);
+        var atLeastOneDefined = defined(polygonBatchIds) || defined(polylineBatchIds) || defined(pointBatchIds) || defined(meshBatchIds);
+        atLeastOneDefined = atLeastOneDefined || defined(boxBatchIds) || defined(cylinderBatchIds) || defined(ellipsoidBatchIds) || defined(sphereBatchIds);
 
-        if (undefinedBatchIds) {
-            var maxId = -1;
+        var atLeastOneUndefined = (numberOfPolygons > 0 && !defined(polygonBatchIds)) ||
+                                  (numberOfPolylines > 0 && !defined(polylineBatchIds)) ||
+                                  (numberOfPoints > 0 && !defined(pointBatchIds)) ||
+                                  (numberOfMeshes > 0 && !defined(meshBatchIds)) ||
+                                  (numberOfBoxes > 0 && !defined(boxBatchIds)) ||
+                                  (numberOfCylinders > 0 && !defined(cylinderBatchIds)) ||
+                                  (numberOfEllipsoids > 0 && !defined(ellipsoidBatchIds)) ||
+                                  (numberOfSpheres > 0 && !defined(sphereBatchIds));
 
-            if (defined(polygonBatchIds)) {
-                for (i = 0; i < numberOfPolygons; ++i) {
-                    maxId = Math.max(maxId, polygonBatchIds[i]);
-                }
-            }
+        if (atLeastOneDefined && atLeastOneUndefined) {
+            throw new DeveloperError('If one group of batch ids is defined, then all batch ids must be defined.');
+        }
 
-            if (defined(polylineBatchIds)) {
-                for (i = 0; i < numberOfPolylines; ++i) {
-                    maxId = Math.max(maxId, polylineBatchIds[i]);
-                }
-            }
+        var allUndefinedBatchIds = !defined(polygonBatchIds) && !defined(polylineBatchIds) && !defined(pointBatchIds) && !defined(meshBatchIds);
+        allUndefinedBatchIds = allUndefinedBatchIds && !defined(boxBatchIds) && !defined(cylinderBatchIds) && !defined(ellipsoidBatchIds) && !defined(sphereBatchIds);
 
-            if (defined(pointBatchIds)) {
-                for (i = 0; i < numberOfPoints; ++i) {
-                    maxId = Math.max(maxId, pointBatchIds[i]);
-                }
-            }
-
-            if (defined(meshBatchIds)) {
-                for (i = 0; i < numberOfMeshes; ++i) {
-                    maxId = Math.max(maxId, meshBatchIds[i]);
-                }
-            }
-
-            if (defined(boxBatchIds)) {
-                for (i = 0; i < numberOfBoxes; ++i) {
-                    maxId = Math.max(maxId, boxBatchIds[i]);
-                }
-            }
-
-            if (defined(cylinderBatchIds)) {
-                for (i = 0; i < numberOfCylinders; ++i) {
-                    maxId = Math.max(maxId, cylinderBatchIds[i]);
-                }
-            }
-
-            if (defined(ellipsoidBatchIds)) {
-                for (i = 0; i < numberOfEllipsoids; ++i) {
-                    maxId = Math.max(maxId, ellipsoidBatchIds[i]);
-                }
-            }
-
-            if (defined(sphereBatchIds)) {
-                for (i = 0; i < numberOfSpheres; ++i) {
-                    maxId = Math.max(maxId, sphereBatchIds[i]);
-                }
-            }
-
-            maxId = maxId + 1;
-
+        if (allUndefinedBatchIds) {
+            var id = 0;
             if (!defined(polygonBatchIds) && numberOfPolygons > 0) {
                 polygonBatchIds = new Uint16Array(numberOfPolygons);
                 for (i = 0; i < numberOfPolygons; ++i) {
-                    polygonBatchIds[i] = maxId++;
+                    polygonBatchIds[i] = id++;
                 }
             }
-
             if (!defined(polylineBatchIds) && numberOfPolylines > 0) {
                 polylineBatchIds = new Uint16Array(numberOfPolylines);
                 for (i = 0; i < numberOfPolylines; ++i) {
-                    polylineBatchIds[i] = maxId++;
+                    polylineBatchIds[i] = id++;
                 }
             }
-
             if (!defined(pointBatchIds) && numberOfPoints > 0) {
                 pointBatchIds = new Uint16Array(numberOfPoints);
                 for (i = 0; i < numberOfPoints; ++i) {
-                    pointBatchIds[i] = maxId++;
+                    pointBatchIds[i] = id++;
                 }
             }
-
             if (!defined(meshBatchIds) && numberOfMeshes > 0) {
                 meshBatchIds = new Uint16Array(numberOfMeshes);
                 for (i = 0; i < numberOfMeshes; ++i) {
-                    meshBatchIds[i] = maxId++;
+                    meshBatchIds[i] = id++;
                 }
             }
-
             if (!defined(boxBatchIds) && numberOfBoxes > 0) {
                 boxBatchIds = new Uint16Array(numberOfBoxes);
                 for (i = 0; i < numberOfBoxes; ++i) {
-                    boxBatchIds[i] = maxId++;
+                    boxBatchIds[i] = id++;
                 }
             }
-
             if (!defined(cylinderBatchIds) && numberOfCylinders > 0) {
                 cylinderBatchIds = new Uint16Array(numberOfCylinders);
                 for (i = 0; i < numberOfCylinders; ++i) {
-                    cylinderBatchIds[i] = maxId++;
+                    cylinderBatchIds[i] = id++;
                 }
             }
-
             if (!defined(ellipsoidBatchIds) && numberOfEllipsoids > 0) {
                 ellipsoidBatchIds = new Uint16Array(numberOfEllipsoids);
                 for (i = 0; i < numberOfEllipsoids; ++i) {
-                    ellipsoidBatchIds[i] = maxId++;
+                    ellipsoidBatchIds[i] = id++;
                 }
             }
-
             if (!defined(sphereBatchIds) && numberOfSpheres > 0) {
                 sphereBatchIds = new Uint16Array(numberOfSpheres);
                 for (i = 0; i < numberOfSpheres; ++i) {
-                    sphereBatchIds[i] = maxId++;
+                    sphereBatchIds[i] = id++;
                 }
             }
         }
