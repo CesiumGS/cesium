@@ -351,20 +351,20 @@ define([
     ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
 
     /**
-     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
-     * during construction or by the imagery provider.
-     * @type {TextureMagnificationFilter}
-     * @default TextureMagnificationFilter.LINEAR
-     */
-    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
-
-    /**
      * This value is used as the default texture minification filter for the imagery layer if one is not provided
      * during construction or by the imagery provider.
      * @type {TextureMinificationFilter}
      * @default TextureMinificationFilter.LINEAR
      */
     ImageryLayer.DEFAULT_MINIFICATION_FILTER = TextureMinificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
