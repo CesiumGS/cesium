@@ -914,8 +914,13 @@ define([
             return;
         }
 
-        var offset = this._indexOffsets[batchId];
-        var count = this._indexCounts[batchId];
+        var index = this._batchIds.indexOf(batchId);
+        if (index === -1) {
+            return;
+        }
+
+        var offset = this._indexOffsets[index];
+        var count = this._indexCounts[index];
 
         var batchedIndices = this._batchedIndices;
         var length = batchedIndices.length;

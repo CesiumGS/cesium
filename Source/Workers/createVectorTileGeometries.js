@@ -295,7 +295,7 @@ define([
         var indices = IndexDatatype.createTypedArray(numberOfPositions / 3, numberOfIndices);
 
         var numberOfGeometries = numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
-        var batchIds = new Uint32Array(numberOfGeometries);
+        var batchIds = new Uint16Array(numberOfGeometries);
         var batchedIndices = new Array(numberOfGeometries);
         var indexOffsets = new Uint32Array(numberOfGeometries);
         var indexCounts = new Uint32Array(numberOfGeometries);

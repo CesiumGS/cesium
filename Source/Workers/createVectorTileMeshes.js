@@ -122,8 +122,8 @@ define([
 
         for (i = 0; i < numMeshes; ++i) {
             var batchId = batchIds[i];
-            var offset = indexOffsets[batchId];
-            var count = indexCounts[batchId];
+            var offset = indexOffsets[i];
+            var count = indexCounts[i];
 
             mesh.length = count;
 
