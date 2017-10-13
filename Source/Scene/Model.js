@@ -2014,10 +2014,6 @@
 
     function modifyShaderForColorAndDepth(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
-        shader = '#ifdef GL_EXT_frag_depth \n' +
-                 '#extension GL_EXT_frag_depth : enable \n' +
-                 '#endif \n' +
-                 shader;
         shader +=
             'uniform vec4 gltf_color; \n' +
             'uniform float gltf_colorBlend; \n' +

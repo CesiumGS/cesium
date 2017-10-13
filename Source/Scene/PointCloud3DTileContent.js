@@ -1031,10 +1031,7 @@ define([
 
         vs += '} \n';
 
-        var fs = '#ifdef GL_EXT_frag_depth \n' +
-                 '    #extension GL_EXT_frag_depth : enable \n' +
-                 '#endif \n' +
-                 'varying vec4 v_color; \n' +
+        var fs = 'varying vec4 v_color; \n' +
                  'varying vec4 v_position; \n' +
                  'void main() \n' +
                  '{ \n' +

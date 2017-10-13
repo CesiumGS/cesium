@@ -1,8 +1,4 @@
 //#define SHOW_TILE_BOUNDARIES
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 uniform vec4 u_initialColor;
 
 #if TEXTURE_UNITS > 0

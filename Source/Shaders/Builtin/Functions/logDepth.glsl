@@ -1,3 +1,6 @@
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
 void czm_logDepth(float z)
 {
 #ifdef GL_EXT_frag_depth

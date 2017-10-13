@@ -1,7 +1,3 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 varying vec2 v_st;
 varying vec4 v_position;
 

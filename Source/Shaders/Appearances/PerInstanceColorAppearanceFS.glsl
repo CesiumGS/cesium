@@ -1,7 +1,3 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
 varying vec4 v_color;

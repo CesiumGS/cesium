@@ -1,7 +1,3 @@
-#ifdef GL_EXT_frag_depth
-#extension GL_EXT_frag_depth : enable
-#endif
-
 uniform sampler2D u_atlas;
 
 varying vec2 v_textureCoordinates;
