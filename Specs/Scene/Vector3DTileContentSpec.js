@@ -872,4 +872,22 @@ defineSuite([
             verifyPick(scene);
         });
     });
+
+    it('renders with debug color', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolygonsBatchedChildren,
+            debugColorizeTiles : true
+        }));
+        return loadTileset(tileset).then(function() {
+            var center = Rectangle.center(tilesetRectangle);
+            var ulRect = new Rectangle(tilesetRectangle.west, center.latitude, center.longitude, tilesetRectangle.north);
+
+            scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ulRect)), new Cartesian3(0.0, 0.0, 5.0));
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual([255, 255, 255, 255]);
+                expect(rgba).not.toEqual([255, 0, 0, 255]);
+            });
+        });
+    });
 });
