@@ -261,8 +261,7 @@ define([
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
                 terrainExaggeration : options.terrainExaggeration,
                 shadows : options.shadows,
-                mapMode2D : options.mapMode2D,
-                logDepthBuffer : options.logDepthBuffer
+                mapMode2D : options.mapMode2D
             });
             this._scene = scene;
 

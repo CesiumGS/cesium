@@ -90,18 +90,8 @@ void main()
 
     gl_FragColor = mix(insideFaceColor, outsideFaceColor, outsideFaceColor.a);
     gl_FragColor.a = 1.0 - (1.0 - insideFaceColor.a) * (1.0 - outsideFaceColor.a);
-    
+
 #ifdef WRITE_DEPTH
-#ifdef GL_EXT_frag_depth
-    t = (intersection.start != 0.0) ? intersection.start : intersection.stop;
-    vec3 positionEC = czm_pointAlongRay(ray, t);
-    vec4 positionCC = czm_projection * vec4(positionEC, 1.0);
-    float z = positionCC.z / positionCC.w;
-    
-    float n = czm_depthRange.near;
-    float f = czm_depthRange.far;
-    
-    gl_FragDepthEXT = (z * (f - n) + f + n) * 0.5;
-#endif
+    czm_logDepth(v_positionEC.z);
 #endif
 }

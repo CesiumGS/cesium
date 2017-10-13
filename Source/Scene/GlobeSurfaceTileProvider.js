@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/Combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -50,6 +51,7 @@ define([
         Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -763,9 +765,6 @@ define([
 
     function createTileUniformMap(frameState) {
         var uniformMap = {
-            u_far : function() {
-                return frameState.camera._scene._frustumCommandsList[0].far;
-            },
             u_initialColor : function() {
                 return this.properties.initialColor;
             },

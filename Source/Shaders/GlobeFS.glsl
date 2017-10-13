@@ -4,7 +4,6 @@
 #endif
 
 uniform vec4 u_initialColor;
-uniform float u_far;
 
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
@@ -210,9 +209,7 @@ void main()
 #else
     gl_FragColor = finalColor;
 #endif
-#ifdef LOG_DEPTH_BUFFER
-    gl_FragDepthEXT = log(v_position.w + 1.) / log(u_far + 1.);
-#endif
+    czm_logDepth(v_position.w);
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN

@@ -310,7 +310,7 @@ define([
             var frustumCommand = scene._frustumCommandsList[0];
             var far = frustumCommand.far;
             var near = frustumCommand.near;
-            depth = far * (1 - near/(Math.exp(depth * Math.log(far + 1)) - 1)) / (far - near);
+            depth = far * (1 - 1 /(Math.exp(depth * Math.log(far / near + 1)) - 1)) / (far - near);
         }
         ndc.z = (depth * 2.0) - 1.0;
         ndc.w = 1.0;

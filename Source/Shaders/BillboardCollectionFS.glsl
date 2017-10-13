@@ -1,6 +1,11 @@
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
+
 uniform sampler2D u_atlas;
 
 varying vec2 v_textureCoordinates;
+varying vec4 v_position;
 
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
@@ -45,4 +50,5 @@ void main()
 #else
     gl_FragColor = color;
 #endif
+    czm_logDepth(-v_position.z);
 }

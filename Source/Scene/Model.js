@@ -1,4 +1,4 @@
-define([
+    define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -2027,11 +2027,16 @@ define([
         return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
     }
 
-    function modifyShaderForColor(shader, premultipliedAlpha) {
+    function modifyShaderForColorAndDepth(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
+        shader = '#ifdef GL_EXT_frag_depth \n' +
+                 '#extension GL_EXT_frag_depth : enable \n' +
+                 '#endif \n' +
+                 shader;
         shader +=
             'uniform vec4 gltf_color; \n' +
             'uniform float gltf_colorBlend; \n' +
+            'varying vec4 v_position; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_blend_main(); \n';
@@ -2055,6 +2060,20 @@ define([
             '    float highlight = ceil(gltf_colorBlend); \n' +
             '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
             '    gl_FragColor.a *= gltf_color.a; \n' +
+            '    czm_logDepth(v_position.w); \n' +
+            '} \n';
+
+        return shader;
+    }
+
+    function modifyVertexShaderForDepth(shader) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_morph_main');
+        shader +=
+            'varying vec4 v_position; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_morph_main(); \n' +
+            '    v_position = u_projectionMatrix * (u_modelViewMatrix * vec4(a_position,1.0)); \n' +
             '} \n';
 
         return shader;
@@ -2110,7 +2129,8 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+        var blendFS = modifyShaderForColorAndDepth(fs, premultipliedAlpha);
+        vs = modifyVertexShaderForDepth(vs);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);

@@ -252,15 +252,11 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
-        if (options.logDepthBuffer) {
-            if (context.fragmentDepth) {
-                this.logDepthBuffer = true;
-            } else {
-                console.log('Can\'t use logarithmic depth buffer, since fragDepth extension not supported.\
-Fall back to multifrustum view');
-                this.logDepthBuffer = false;
-            }
+        if (context.fragmentDepth) {
+            this.logDepthBuffer = true;
         } else {
+            console.log('Can\'t use logarithmic depth buffer, since fragDepth extension not supported.' +
+                        'Fall back to multifrustum view');
             this.logDepthBuffer = false;
         }
 
@@ -293,6 +289,7 @@ Fall back to multifrustum view');
 
         this._computeCommandList = [];
         this._frustumCommandsList = [];
+        var that = this;
         this._overlayCommandList = [];
 
         this._pickFramebuffer = undefined;

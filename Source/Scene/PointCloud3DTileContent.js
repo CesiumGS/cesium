@@ -898,6 +898,7 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
+                 'varying vec4 v_position; \n' +
                  'uniform vec2 u_pointSizeAndTilesetTime; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
@@ -1014,7 +1015,8 @@ define([
         }
 
         vs += '    v_color = color; \n' +
-              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
+              '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
+              '    v_position = gl_Position; \n';
 
         if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
@@ -1027,10 +1029,15 @@ define([
 
         vs += '} \n';
 
-        var fs = 'varying vec4 v_color; \n' +
+        var fs = '#ifdef GL_EXT_frag_depth \n' +
+                 '    #extension GL_EXT_frag_depth : enable \n' +
+                 '#endif \n' +
+                 'varying vec4 v_color; \n' +
+                 'varying vec4 v_position; \n' +
                  'void main() \n' +
                  '{ \n' +
                  '    gl_FragColor = v_color; \n' +
+                 '    czm_logDepth(v_position.w); \n' +
                  '} \n';
 
         var drawVS = vs;

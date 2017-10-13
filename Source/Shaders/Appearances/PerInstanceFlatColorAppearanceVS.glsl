@@ -4,6 +4,7 @@ attribute vec4 color;
 attribute float batchId;
 
 varying vec4 v_color;
+varying vec4 v_position;
 
 void main() 
 {
@@ -12,4 +13,5 @@ void main()
     v_color = color;
     
     gl_Position = czm_modelViewProjectionRelativeToEye * p;
+    v_position = gl_Position;
 }

@@ -1,6 +1,11 @@
+#ifdef GL_EXT_frag_depth
+#extension GL_EXT_frag_depth : enable
+#endif
+
 varying vec3 v_positionEC;
 varying vec3 v_normalEC;
 varying vec4 v_color;
+varying vec4 v_position;
 
 void main()
 {
@@ -19,4 +24,5 @@ void main()
     material.alpha = v_color.a;
     
     gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    czm_logDepth(v_position.w);
 }

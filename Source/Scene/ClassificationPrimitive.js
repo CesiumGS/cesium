@@ -1,5 +1,6 @@
 define([
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -25,6 +26,7 @@ define([
         './StencilOperation'
     ], function(
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -569,7 +571,7 @@ define([
         }
     }
 
-    function createColorCommands(classificationPrimitive, colorCommands) {
+    function createColorCommands(classificationPrimitive, colorCommands, frameState) {
         var primitive = classificationPrimitive._primitive;
         var length = primitive._va.length * 3;
         colorCommands.length = length * 2;
@@ -634,7 +636,7 @@ define([
         }
     }
 
-    function createPickCommands(classificationPrimitive, pickCommands) {
+    function createPickCommands(classificationPrimitive, pickCommands, frameState) {
         var primitive = classificationPrimitive._primitive;
         var pickOffsets = primitive._pickOffsets;
         var length = pickOffsets.length * 3;
@@ -710,9 +712,9 @@ define([
         }
     }
 
-    function createCommands(classificationPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
-        createColorCommands(classificationPrimitive, colorCommands);
-        createPickCommands(classificationPrimitive, pickCommands);
+    function createCommands(classificationPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+        createColorCommands(classificationPrimitive, colorCommands, frameState);
+        createPickCommands(classificationPrimitive, pickCommands, frameState);
     }
 
     function boundingVolumeIndex(commandIndex, length) {
@@ -870,7 +872,7 @@ define([
                 createShaderProgram(that, frameState);
             };
             primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
-                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
+                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands, frameState);
             };
 
             if (defined(this._updateAndQueueCommandsFunction)) {

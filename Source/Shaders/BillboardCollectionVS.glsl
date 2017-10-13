@@ -12,6 +12,7 @@ attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, f
 attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
 varying vec2 v_textureCoordinates;
+varying vec4 v_position;
 
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
@@ -254,6 +255,7 @@ void main()
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+    v_position = positionEC;
     v_textureCoordinates = textureCoordinates;
 
 #ifdef DISABLE_DEPTH_DISTANCE
