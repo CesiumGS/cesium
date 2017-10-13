@@ -3,11 +3,8 @@ Change Log
 
 ### TerriaJS-only
 
-* Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
-
-### TerriaJS-only
-
 * Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface.
+* Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
 
 ### 1.33 - 2017-05-01
 
