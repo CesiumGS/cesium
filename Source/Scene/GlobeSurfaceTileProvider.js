@@ -6,7 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
-        '../Core/Combine',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',

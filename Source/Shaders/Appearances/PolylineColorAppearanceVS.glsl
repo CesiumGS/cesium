@@ -9,6 +9,7 @@ attribute vec4 color;
 attribute float batchId;
 
 varying vec4 v_color;
+varying vec4 v_position;
 
 void main()
 {
@@ -25,4 +26,5 @@ void main()
     float angle;
     vec4 positionWC = getPolylineWindowCoordinates(p, prev, next, expandDir, width, usePrev, angle);
     gl_Position = czm_viewportOrthographic * positionWC;
+    v_position = (czm_modelViewRelativeToEye * p);
 }
