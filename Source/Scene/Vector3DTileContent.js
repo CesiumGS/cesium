@@ -274,17 +274,17 @@ define([
 
         if (numberOfCylinders > 0 && defined(featureTableJson.CYLINDER_BATCH_IDS)) {
             var cylinderBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.CYLINDER_BATCH_IDS.byteOffset;
-            cylinderBatchIds = new Uint16Array(featureTableBinary.byteOffset, cylinderBatchIdsByteOffset, numberOfCylinders);
+            cylinderBatchIds = new Uint16Array(featureTableBinary.buffer, cylinderBatchIdsByteOffset, numberOfCylinders);
         }
 
         if (numberOfEllipsoids > 0 && defined(featureTableJson.ELLIPSOID_BATCH_IDS)) {
             var ellipsoidBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.ELLIPSOID_BATCH_IDS.byteOffset;
-            ellipsoidBatchIds = new Uint16Array(featureTableBinary.byteOffset, ellipsoidBatchIdsByteOffset, numberOfCylinders);
+            ellipsoidBatchIds = new Uint16Array(featureTableBinary.buffer, ellipsoidBatchIdsByteOffset, numberOfEllipsoids);
         }
 
         if (numberOfSpheres > 0 && defined(featureTableJson.SPHERE_BATCH_IDS)) {
             var sphereBatchIdsByteOffset = featureTableBinary.byteOffset + featureTableJson.SPHERE_BATCH_IDS.byteOffset;
-            sphereBatchIds = new Uint16Array(featureTableBinary.byteOffset, sphereBatchIdsByteOffset, numberOfCylinders);
+            sphereBatchIds = new Uint16Array(featureTableBinary.buffer, sphereBatchIdsByteOffset, numberOfSpheres);
         }
 
         var atLeastOneDefined = defined(polygonBatchIds) || defined(polylineBatchIds) || defined(pointBatchIds) || defined(meshBatchIds);
