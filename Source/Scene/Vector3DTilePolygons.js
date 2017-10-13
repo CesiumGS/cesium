@@ -89,6 +89,11 @@ define([
         this._isCartographic = options.isCartographic;
         this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
 
+        if (this._isCartographic) {
+            this._modelMatrix = Matrix4.IDENTITY;
+            this._center = this._ellipsoid.cartographicToCartesian(Rectangle.center(this._rectangle));
+        }
+
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
 

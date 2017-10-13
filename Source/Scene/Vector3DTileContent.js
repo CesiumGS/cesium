@@ -497,8 +497,8 @@ define([
             } else {
                 center = Cartesian3.fromElements(center.longitude, center.latitude, 0.0);
                 center.z = CesiumMath.lerp(minHeight, maxHeight, 0.5);
+                Matrix4.multiplyByPoint(modelMatrix, center, center);
             }
-            Matrix4.multiplyByPoint(modelMatrix, center, center);
         }
 
         var batchIds = getBatchIds(featureTableJson, featureTableBinary);
