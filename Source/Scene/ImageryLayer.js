@@ -857,7 +857,7 @@ define([
     function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         var minificationFilter = imageryLayer.minificationFilter;
         var magnificationFilter = imageryLayer.magnificationFilter;
-        var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMinificationFilter.LINEAR;
+        var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture uses linear filters and has power-of-two dimensions.
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             if (minificationFilter === TextureMinificationFilter.NEAREST) {
