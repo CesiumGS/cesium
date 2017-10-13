@@ -541,7 +541,7 @@ define([
             } else {
                 fragmentLightingBlock += '  vec3 l = vec3(0.0, 0.0, 1.0);\n';
             }
-            var minimumLighting = optimizeForCesium ? 0.2 : 0.0;
+            var minimumLighting = optimizeForCesium ? '0.2' : '0.0'; // Use strings instead of values as 0.0 -> 0 when stringified
             fragmentLightingBlock += '  diffuseLight += vec3(1.0, 1.0, 1.0) * max(dot(normal,l), ' + minimumLighting + ');\n';
 
             if (hasSpecular) {
