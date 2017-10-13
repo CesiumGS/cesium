@@ -289,7 +289,6 @@ define([
 
         this._computeCommandList = [];
         this._frustumCommandsList = [];
-        var that = this;
         this._overlayCommandList = [];
 
         this._pickFramebuffer = undefined;
