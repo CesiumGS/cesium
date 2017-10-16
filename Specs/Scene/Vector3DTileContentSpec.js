@@ -17,6 +17,7 @@ defineSuite([
         'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene',
@@ -40,6 +41,7 @@ defineSuite([
         Cesium3DTileBatchTable,
         Cesium3DTileset,
         Cesium3DTileStyle,
+        ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
         createScene,
@@ -1035,6 +1037,32 @@ defineSuite([
                 expect(rgba).not.toEqual([255, 255, 255, 255]);
                 expect(rgba).not.toEqual([255, 0, 0, 255]);
             });
+        });
+    });
+
+    it('renders with different classification types', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorPolygonsBatchedChildren
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            tileset.classificationType = ClassificationType.CESIUM_3D_TILE;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+
+            tileset.classificationType = ClassificationType.TERRAIN;
+            expect(scene).toRender([255, 0, 0, 255]);
+
+            depthPrimitive.pass = Pass.GLOBE;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+
+            tileset.classificationType = ClassificationType.BOTH;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
         });
     });
 });
