@@ -11,6 +11,7 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../ThirdParty/when',
         './Cesium3DTileBatchTable',
         './Vector3DTileGeometry',
@@ -31,6 +32,7 @@ define([
         CesiumMath,
         Matrix4,
         Rectangle,
+        RuntimeError,
         when,
         Cesium3DTileBatchTable,
         Vector3DTileGeometry,
@@ -300,7 +302,7 @@ define([
                                   (numberOfSpheres > 0 && !defined(sphereBatchIds));
 
         if (atLeastOneDefined && atLeastOneUndefined) {
-            throw new DeveloperError('If one group of batch ids is defined, then all batch ids must be defined.');
+            throw new RuntimeError('If one group of batch ids is defined, then all batch ids must be defined.');
         }
 
         var allUndefinedBatchIds = !defined(polygonBatchIds) && !defined(polylineBatchIds) && !defined(pointBatchIds) && !defined(meshBatchIds);
@@ -377,20 +379,13 @@ define([
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        var magic = getMagic(uint8Array, byteOffset);
-        if (magic !== 'vctr') {
-            throw new DeveloperError('Invalid Vector tile.  Expected magic=vctr.  Read magic=' + magic);
-        }
-
         var view = new DataView(arrayBuffer);
         byteOffset += sizeOfUint32;  // Skip magic number
 
-        //>>includeStart('debug', pragmas.debug);
         var version = view.getUint32(byteOffset, true);
         if (version !== 1) {
-            throw new DeveloperError('Only Vector tile version 1 is supported.  Version ' + version + ' is not.');
+            throw new RuntimeError('Only Vector tile version 1 is supported.  Version ' + version + ' is not.');
         }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
         var byteLength = view.getUint32(byteOffset, true);
@@ -404,11 +399,9 @@ define([
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        //>>includeStart('debug', pragmas.debug);
         if (featureTableJSONByteLength === 0) {
-            throw new DeveloperError('Feature table must have a byte length greater than zero');
+            throw new RuntimeError('Feature table must have a byte length greater than zero');
         }
-        //>>includeEnd('debug');
 
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
