@@ -1,6 +1,7 @@
 Change Log
 ==========
 ### 1.39 - 2017-11-01
+
 * Added support for right-to-left languages in labels. [#5771](https://github.com/AnalyticalGraphicsInc/cesium/pull/5771)
 * Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
 

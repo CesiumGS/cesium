@@ -1283,11 +1283,17 @@ define([
                 currentType = types.WEAK;
             }
 
+            if (textIndex === 0) {
+                lastType = currentType;
+            }
+
             if (lastType === currentType && currentType !== types.BRACKETS) {
                 word += character;
             }
             else {
-                parsedText.push({Type : lastType, Word : word});
+                if (word !== '') {
+                    parsedText.push({Type : lastType, Word : word});
+                }
                 lastType = currentType;
                 word = character;
             }
@@ -1332,7 +1338,7 @@ define([
      * @private
      */
     function reverseRtl(value) {
-        var rtlChars = /[א-ת]/;
+        var rtlChars = /[\u05D0-\u05EA]/;
         var texts = value.split('\n');
         var result = '';
         for (var i = 0; i < texts.length; i++) {
@@ -1375,7 +1381,7 @@ define([
                             }
                         }
                         else {
-                            line = spliceWord(line, splicePointer, subText.Word);
+                            line = spliceWord(line, 0, reverse);
                         }
                     }
                 }

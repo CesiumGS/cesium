@@ -1867,8 +1867,36 @@ defineSuite([
            var text = 'שלום';
            var label = labels.add({
                text : text,
-               rightToLeft: true
+               rightToLeft : true
            });
+
+           scene.renderForSpecs();
+
+           expect(label.rightToLeft).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(text.split('').reverse().join(''));
+        });
+
+        it('should reverse text even if rightToLeft is set to true after creation of label', function() {
+           var text = 'שלום';
+           var label = labels.add({});
+           label.rightToLeft = true;
+           label.text = text;
+
+           scene.renderForSpecs();
+
+           expect(label.rightToLeft).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(text.split('').reverse().join(''));
+        });
+
+        it('should not change text if it updated to the same value, although rightToLeft is true', function() {
+           var text = 'שלום';
+           var label = labels.add({
+               text : text,
+               rightToLeft : true
+           });
+           label.text = text;
 
            scene.renderForSpecs();
 
@@ -1882,13 +1910,57 @@ defineSuite([
            var expectedText = 'Master (ןודא): "Hello"\n"םולש" :(student) דימלת';
            var label = labels.add({
                text : text,
-               rightToLeft: true
+               rightToLeft : true
            });
 
            scene.renderForSpecs();
 
            expect(label.rightToLeft).toEqual(true);
            expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(expectedText);
+        });
+
+        it('should reverse all text and replace brackets when there is right-to-left characters and rightToLeft is true', function() {
+           var text = 'משפט [מורכב] {עם} תווים <מיוחדים special>';
+           var expectedText = '<special םידחוימ> םיוות {םע} [בכרומ] טפשמ';
+           var label = labels.add({
+               text : text,
+               rightToLeft : true
+           });
+
+           scene.renderForSpecs();
+
+           expect(label.rightToLeft).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(expectedText);
+        });
+
+        it('should reverse only text that detected as rtl text when it begin with non rtl characters when rightToLeft is true', function() {
+           var text = '(interesting sentence with hebrew characters) שלום(עליך)חביבי.';
+           var expectedText = '(interesting sentence with hebrew characters) יביבח(ךילע)םולש.';
+           var label = labels.add({
+               text : text,
+               rightToLeft : true
+           });
+
+           scene.renderForSpecs();
+
+           expect(label.rightToLeft).toEqual(true);
+           expect(label.text).not.toEqual(text);
+           expect(label.text).toEqual(expectedText);
+        });
+
+        it('should not change nothing if it only non alphanumeric characters when rightToLeft is true', function() {
+           var text = '([{- -}])';
+           var expectedText = '([{- -}])';
+           var label = labels.add({
+               text : text,
+               rightToLeft : true
+           });
+
+           scene.renderForSpecs();
+
+           expect(label.rightToLeft).toEqual(true);
            expect(label.text).toEqual(expectedText);
         });
 
