@@ -21,6 +21,7 @@ define([
         '../Shaders/ShadowVolumeVS',
         './BlendingState',
         './Cesium3DTileFeature',
+        './ClassificationType',
         './DepthFunction',
         './Expression',
         './StencilFunction',
@@ -49,6 +50,7 @@ define([
         ShadowVolumeVS,
         BlendingState,
         Cesium3DTileFeature,
+        ClassificationType,
         DepthFunction,
         Expression,
         StencilFunction,
@@ -143,11 +145,19 @@ define([
         this._debugWireframe = this.debugWireframe;
 
         /**
-         * Forces a re-batch instead of waiting after a number of frames have been rendered.
+         * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
          * @type {Boolean}
          * @default false
          */
         this.forceRebatch = false;
+
+        /**
+         * What this tile will classify.
+         * @type {ClassificationType}
+         * @default ClassificationType.CESIUM_3D_TILE
+         */
+        this.classificationType = ClassificationType.CESIUM_3D_TILE;
+        this._classificationType = this.classificationType;
 
         this._batchIdLookUp = {};
 
@@ -631,22 +641,30 @@ define([
     }
 
     function createColorCommands(primitive, context) {
-        if (defined(primitive._commands) && !rebatchCommands(primitive, context) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
+        var needsRebatch = rebatchCommands(primitive, context);
+
+        var commands = primitive._commands;
+        var batchedIndices = primitive._batchedIndices;
+        var length = batchedIndices.length;
+        var commandsLength = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
+
+        if (defined(commands) &&
+            !needsRebatch &&
+            commands.length === commandsLength &&
+            primitive.classificationType === primitive._classificationType) {
             return;
         }
 
-        var batchedIndices = primitive._batchedIndices;
-        var length = batchedIndices.length;
-
-        var commands = primitive._commands;
-        commands.length = length * 3;
+        primitive._pickCommandsDirty = primitive._pickCommandsDirty || primitive._classificationType !== primitive.classificationType;
+        primitive._classificationType = primitive.classificationType;
+        commands.length = commandsLength;
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
-        var pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
         var owner = primitive._pickObject;
         if (!defined(owner)) {
@@ -709,11 +727,26 @@ define([
             colorCommand.pass = pass;
         }
 
+        if (primitive._classificationType === ClassificationType.BOTH) {
+            length = length * 3;
+            for (var i = 0; i < length; ++i) {
+                var command = commands[i + length];
+                if (!defined(command)) {
+                    command = commands[i + length] = new DrawCommand();
+                }
+
+                DrawCommand.shallowClone(commands[i], command);
+                command.pass = Pass.TERRAIN_CLASSIFICATION;
+            }
+        }
+
         primitive._commandsDirty = true;
     }
 
     function createColorCommandsIgnoreShow(primitive, frameState) {
-        if (!frameState.invertClassification || (defined(primitive._commandsIgnoreShow) && !primitive._commandsDirty)) {
+        if (primitive._classificationType === ClassificationType.TERRAIN ||
+            !frameState.invertClassification ||
+            (defined(primitive._commandsIgnoreShow) && !primitive._commandsDirty)) {
             return;
         }
 
@@ -747,14 +780,14 @@ define([
 
         var length = primitive._indexOffsets.length;
         var pickCommands = primitive._pickCommands;
-        pickCommands.length = length * 3;
+        pickCommands.length = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
 
         var vertexArray = primitive._va;
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
-        var pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
         var owner = primitive._pickObject;
         if (!defined(owner)) {
@@ -816,6 +849,19 @@ define([
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
             colorCommand.pass = pass;
+        }
+
+        if (primitive._classificationType === ClassificationType.BOTH) {
+            length = length * 3;
+            for (var i = 0; i < length; ++i) {
+                var command = pickCommands[i + length];
+                if (!defined(command)) {
+                    command = pickCommands[i + length] = new DrawCommand();
+                }
+
+                DrawCommand.shallowClone(pickCommands[i], command);
+                command.pass = Pass.TERRAIN_CLASSIFICATION;
+            }
         }
 
         primitive._pickCommandsDirty = false;

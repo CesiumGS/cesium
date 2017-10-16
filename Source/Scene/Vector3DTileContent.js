@@ -756,6 +756,7 @@ define([
             this._batchTable.update(tileset, frameState);
         }
         if (defined(this._polygons)) {
+            this._polygons.classificationType = this._tileset.classificationType;
             this._polygons.update(frameState);
         }
         if (defined(this._polylines)) {
@@ -765,10 +766,12 @@ define([
             this._points.update(frameState);
         }
         if (defined(this._meshes)) {
+            this._meshes.classificationType = this._tileset.classificationType;
             this._meshes.debugWireframe = this._tileset.debugWireframe;
             this._meshes.update(frameState);
         }
         if (defined(this._geometries)) {
+            this._geometries.classificationType = this._tileset.classificationType;
             this._geometries.debugWireframe = this._tileset.debugWireframe;
             this._geometries.update(frameState);
         }
