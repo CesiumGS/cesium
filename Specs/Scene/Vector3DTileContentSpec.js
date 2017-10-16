@@ -47,6 +47,7 @@ defineSuite([
     'use strict';
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
+    var combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
 
     var vectorGeometryAll = './Data/Cesium3DTiles/Vector/VectorTileGeometryAll';
     var vectorGeometryAllBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllBatchedChildren';
@@ -101,6 +102,9 @@ defineSuite([
     var vectorPolylinesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesBatchedChildrenWithBatchTable';
     var vectorPolylinesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchTable';
     var vectorPolylinesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTilePolylinesWithBatchIds';
+
+    var vectorCombined = './Data/Cesium3DTiles/Vector/VectorTileCombined';
+    var vectorCombinedWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileCombinedWithBatchIds';
 
     var scene;
     var rectangle;
@@ -391,6 +395,127 @@ defineSuite([
             color : 'rgba(0, 0, 255, 1.0)'
         });
         expectRenderPolylines(scene, [0, 0, 255, 255]);
+    }
+
+    function verifyPickCombined(scene) {
+        var center = Rectangle.center(combinedRectangle);
+        var width = combinedRectangle.width;
+        var step = width / 5;
+        var halfStep = step * 0.5;
+
+        var west = combinedRectangle.west;
+        var north = combinedRectangle.north;
+        var south = combinedRectangle.south;
+
+        var meshRect = new Rectangle(west, south, west + step, north);
+        var polygonRect = new Rectangle(west + step, south, west + 2 * step, north);
+        var boxRect = new Rectangle(west + step * 2, center.latitude, west + step * 2 + halfStep, north);
+        var cylinderRect = new Rectangle(west + step * 2 + halfStep, center.latitude, west + step * 3, north);
+        var ellipsoidRect = new Rectangle(west + step * 2, south, west + step * 2 + halfStep, center.latitude);
+        var sphereRect = new Rectangle(west + step * 2 + halfStep, south, west + step * 3, center.latitude);
+        var polylineRect = new Rectangle(west + step * 3, south, west + step * 4, north);
+        var pointRect = new Rectangle(west + step * 4, south, west + step * 5, north);
+
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(meshRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(boxRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(cylinderRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ellipsoidRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(sphereRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expectPick(scene);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toPickAndCall(function(result) {
+            expect(result).toBeDefined();
+
+            result.pointColor = Color.clone(Color.YELLOW, result.color);
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[2]).toEqual(0);
+                expect(rgba[3]).toEqual(255);
+            });
+
+            // Turn show off and on
+            result.show = false;
+            expect(scene).toRender([255, 0, 0, 255]);
+            result.show = true;
+            expect(scene).toRenderAndCall(function (rgba) {
+                expect(rgba[0]).toBeGreaterThan(0);
+                expect(rgba[1]).toBeGreaterThan(0);
+                expect(rgba[2]).toEqual(0);
+                expect(rgba[3]).toEqual(255);
+            });
+        });
+    }
+
+    function expectRenderCombined(scene, color) {
+        var center = Rectangle.center(combinedRectangle);
+        var width = combinedRectangle.width;
+        var step = width / 5;
+        var halfStep = step * 0.5;
+
+        var west = combinedRectangle.west;
+        var north = combinedRectangle.north;
+        var south = combinedRectangle.south;
+
+        var meshRect = new Rectangle(west, south, west + step, north);
+        var polygonRect = new Rectangle(west + step, south, west + 2 * step, north);
+        var boxRect = new Rectangle(west + step * 2, center.latitude, west + step * 2 + halfStep, north);
+        var cylinderRect = new Rectangle(west + step * 2 + halfStep, center.latitude, west + step * 3, north);
+        var ellipsoidRect = new Rectangle(west + step * 2, south, west + step * 2 + halfStep, center.latitude);
+        var sphereRect = new Rectangle(west + step * 2 + halfStep, south, west + step * 3, center.latitude);
+        var polylineRect = new Rectangle(west + step * 3, south, west + step * 4, north);
+        var pointRect = new Rectangle(west + step * 4, south, west + step * 5, north);
+
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(meshRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(boxRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(cylinderRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ellipsoidRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(sphereRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRender(color);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(pointRect)), new Cartesian3(0.0, 0.0, 5.0));
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            if (!(color[0] === 255 && color[1] === 0 && color[2] === 0 && color[3] === 255)) {
+                expect(rgba).not.toEqual([255, 0, 0, 255]);
+            }
+        });
+    }
+
+    function verifyRenderCombined(tileset, scene) {
+        tileset.style = undefined;
+        expectRenderCombined(scene, [255, 255, 255, 255]);
+
+        tileset.style = new Cesium3DTileStyle({
+            show : 'false'
+        });
+        expectRenderCombined(scene, [255, 0, 0, 255]);
+        tileset.style = new Cesium3DTileStyle({
+            show : 'true'
+        });
+        expectRenderCombined(scene, [255, 255, 255, 255]);
+
+        tileset.style = new Cesium3DTileStyle({
+            color : 'rgba(0, 0, 255, 1.0)',
+            pointColor : 'rgba(0, 0, 255, 1.0)'
+        });
+        expectRenderCombined(scene, [0, 0, 255, 255]);
     }
 
     it('renders points', function() {
@@ -870,6 +995,28 @@ defineSuite([
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
+        });
+    });
+
+    it('renders combined tile', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorCombined
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRenderCombined(tileset, scene);
+            verifyPickCombined(scene);
+        });
+    });
+
+    it('renders combined tile with batch ids', function() {
+        scene.primitives.add(depthPrimitive);
+        tileset = scene.primitives.add(new Cesium3DTileset({
+            url : vectorCombinedWithBatchIds
+        }));
+        return loadTileset(tileset).then(function(tileset) {
+            verifyRenderCombined(tileset, scene);
+            verifyPickCombined(scene);
         });
     });
 

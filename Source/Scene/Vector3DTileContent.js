@@ -508,6 +508,8 @@ define([
             primitive : content._tileset
         };
 
+        byteOffset += byteOffset % 4;
+
         if (numberOfPolygons > 0) {
             var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
             byteOffset += indicesByteLength;
