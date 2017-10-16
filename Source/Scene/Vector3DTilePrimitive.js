@@ -453,19 +453,20 @@ define([
         };
     }
 
-    function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds) {
+    function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, primitiveBatchIds) {
         var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
 
         var batchedIdsLength = batchIds.length;
         for (var j = 0; j < batchedIdsLength; ++j) {
             var batchedId = batchIds[j];
-            var offset = offsets[batchedId];
-            var count = counts[batchedId];
+            var index = primitiveBatchIds.indexOf(batchedId);
+            var offset = offsets[index];
+            var count = counts[index];
 
             var subarray = new indices.constructor(indices.buffer, sizeInBytes * offset, count);
             newIndices.set(subarray, currentOffset);
 
-            offsets[batchedId] = currentOffset;
+            offsets[index] = currentOffset;
             currentOffset += count;
         }
 
@@ -473,12 +474,17 @@ define([
     }
 
     function rebatchCPU(primitive, batchedIndices) {
-        var newIndices = new primitive._indices.constructor(primitive._indices.length);
+        var indices = primitive._indices;
+        var indexOffsets = primitive._indexOffsets;
+        var indexCounts = primitive._indexCounts;
+        var primitiveBatchIds = primitive._batchIds;
+
+        var newIndices = new indices.constructor(indices.length);
 
         var current = batchedIndices.pop();
         var newBatchedIndices = [current];
 
-        var currentOffset = copyIndicesCPU(primitive._indices, newIndices, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
+        var currentOffset = copyIndicesCPU(indices, newIndices, 0, indexOffsets, indexCounts, current.batchIds, primitiveBatchIds);
 
         current.offset = 0;
         current.count = currentOffset;
@@ -486,12 +492,12 @@ define([
         while (batchedIndices.length > 0) {
             var next = batchedIndices.pop();
             if (Color.equals(next.color, current.color)) {
-                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                currentOffset = copyIndicesCPU(indices, newIndices, currentOffset, indexOffsets, indexCounts, next.batchIds, primitiveBatchIds);
                 current.batchIds = current.batchIds.concat(next.batchIds);
                 current.count = currentOffset - current.offset;
             } else {
                 var offset = currentOffset;
-                currentOffset = copyIndicesCPU(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                currentOffset = copyIndicesCPU(indices, newIndices, currentOffset, indexOffsets, indexCounts, next.batchIds, primitiveBatchIds);
 
                 next.offset = offset;
                 next.count = currentOffset - offset;
@@ -506,18 +512,19 @@ define([
         primitive._batchedIndices = newBatchedIndices;
     }
 
-    function copyIndicesGPU(readBuffer, writeBuffer, currentOffset, offsets, counts, batchIds) {
+    function copyIndicesGPU(readBuffer, writeBuffer, currentOffset, offsets, counts, batchIds, primitiveBatchIds) {
         var sizeInBytes = readBuffer.bytesPerIndex;
 
         var batchedIdsLength = batchIds.length;
         for (var j = 0; j < batchedIdsLength; ++j) {
             var batchedId = batchIds[j];
-            var offset = offsets[batchedId];
-            var count = counts[batchedId];
+            var index = primitiveBatchIds.indexOf(batchedId);
+            var offset = offsets[index];
+            var count = counts[index];
 
             writeBuffer.copyFromBuffer(readBuffer, offset * sizeInBytes, currentOffset * sizeInBytes, count * sizeInBytes);
 
-            offsets[batchedId] = currentOffset;
+            offsets[index] = currentOffset;
             currentOffset += count;
         }
 
@@ -525,13 +532,17 @@ define([
     }
 
     function rebatchGPU(primitive, batchedIndices) {
+        var indexOffsets = primitive._indexOffsets;
+        var indexCounts = primitive._indexCounts;
+        var primitiveBatchIds = primitive._batchIds;
+
         var current = batchedIndices.pop();
         var newBatchedIndices = [current];
 
         var readBuffer = primitive._va.indexBuffer;
         var writeBuffer = primitive._vaSwap.indexBuffer;
 
-        var currentOffset = copyIndicesGPU(readBuffer, writeBuffer, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
+        var currentOffset = copyIndicesGPU(readBuffer, writeBuffer, 0, indexOffsets, indexCounts, current.batchIds, primitiveBatchIds);
 
         current.offset = 0;
         current.count = currentOffset;
@@ -539,12 +550,12 @@ define([
         while (batchedIndices.length > 0) {
             var next = batchedIndices.pop();
             if (Color.equals(next.color, current.color)) {
-                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, indexOffsets, indexCounts, next.batchIds, primitiveBatchIds);
                 current.batchIds = current.batchIds.concat(next.batchIds);
                 current.count = currentOffset - current.offset;
             } else {
                 var offset = currentOffset;
-                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                currentOffset = copyIndicesGPU(readBuffer, writeBuffer, currentOffset, indexOffsets, indexCounts, next.batchIds, primitiveBatchIds);
                 next.offset = offset;
                 next.count = currentOffset - offset;
                 newBatchedIndices.push(next);
@@ -914,13 +925,17 @@ define([
             return;
         }
 
-        var index = this._batchIds.indexOf(batchId);
+        var primitiveBatchIds = this._batchIds;
+        var index = primitiveBatchIds.indexOf(batchId);
         if (index === -1) {
             return;
         }
 
-        var offset = this._indexOffsets[index];
-        var count = this._indexCounts[index];
+        var indexOffsets = this._indexOffsets;
+        var indexCounts = this._indexCounts;
+
+        var offset = indexOffsets[index];
+        var count = indexCounts[index];
 
         var batchedIndices = this._batchedIndices;
         var length = batchedIndices.length;
@@ -954,7 +969,8 @@ define([
                 continue;
             }
 
-            if (this._indexOffsets[id] < offset) {
+            var offsetIndex = primitiveBatchIds.indexOf(id);
+            if (indexOffsets[offsetIndex] < offset) {
                 startIds.push(id);
             } else {
                 endIds.push(id);
