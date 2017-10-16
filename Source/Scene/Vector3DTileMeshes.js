@@ -28,6 +28,28 @@ define([
         Vector3DTilePrimitive) {
     'use strict';
 
+    /**
+     * Renders a batch of meshes intersecting 3D Tiles and/or terrain.
+     *
+     * @alias Vector3DTileMeshes
+     * @constructor
+     *
+     * @param {Object} options An object with following properties:
+     * @param {ArrayBuffer} options.buffer A buffer containing the indices and positions of the mesh.
+     * @param {Number} options.byteOffset The offset into buffer to extract the indices and positions.
+     * @param {Number} options.positionCount The number of positions of all meshes for extraction from buffer.
+     * @param {Uint32Array} options.indexOffsets The offsets into the indices buffer for each mesh.
+     * @param {Uint32Array} options.indexCounts The number of indices for each mesh.
+     * @param {IndexDatatype} options.indexBytesPerElement The number of bytes per index.
+     * @param {Uint16Array} options.batchIds The batch id for each mesh.
+     * @param {Cartesian3} options.center The RTC center of all meshes.
+     * @param {Matrix4} options.modelMatrix The modelMatrix of all meshes.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
+     * @param {Object} options.pickObject The object to place as the owner of the draw commands.
+     *
+     * @private
+     */
     function Vector3DTileMeshes(options) {
         // these will all be released after the primitive is created
         this._buffer = options.buffer;

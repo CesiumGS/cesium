@@ -63,19 +63,19 @@ define([
      * @constructor
      *
      * @param {Object} options An object with following properties:
-     * @param {Float32Array|Uint16Array} options.positions The positions of the meshes.
+     * @param {Float32Array} options.positions The positions of the meshes.
      * @param {Uint16Array|Uint32Array} options.indices The indices of the triangulated meshes. The indices must be contiguous so that
      * the indices for mesh n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
-     * @param {Number[]} options.indexCounts The number of indices for each mesh.
-     * @param {Number[]} options.indexOffsets The offset into the index buffer for each mesh.
+     * @param {Uint32Array} options.indexCounts The number of indices for each mesh.
+     * @param {Uint32Array} options.indexOffsets The offset into the index buffer for each mesh.
      * @param {Vector3DTileBatch[]} options.batchedIndices The index offset and count for each batch with the same color.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched meshes.
-     * @param {Number[]} options.batchIds The batch ids for each mesh.
+     * @param {Uint16Array} options.batchIds The batch ids for each mesh.
      * @param {Uint16Array} options.vertexBatchIds The batch id for each vertex.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
      * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
-     * @param {Object} options.pickObject The object to return when picked.
+     * @param {Object} options.pickObject The object to assign as each draw commands owner.
      *
      * @private
      */

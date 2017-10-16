@@ -26,6 +26,28 @@ define([
         Vector3DTilePrimitive) {
     'use strict';
 
+    /**
+     * Renders a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
+     *
+     * @alias Vector3DTileGeometry
+     * @constructor
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array} [options.boxes] The boxes in the tile.
+     * @param {Uint16Array} [options.boxBatchIds] The batch ids for each box.
+     * @param {Float32Array} [options.cylinders] The cylinders in the tile.
+     * @param {Uint16Array} [options.cylinderBatchIds] The batch ids for each cylinder.
+     * @param {Float32Array} [options.ellipsoids] The ellipsoids in the tile.
+     * @param {Uint16Array} [options.ellipsoidBatchIds] The batch ids for each ellipsoid.
+     * @param {Float32Array} [options.spheres] The spheres in the tile.
+     * @param {Uint16Array} [options.sphereBatchIds] The batch ids for each sphere.
+     * @param {Cartesian3} options.center The RTC center of all geometries.
+     * @param {Matrix4} options.modelMatrix The model matrix of all geometries. Applied after the individual geometry model matrices.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume containing all of the geometry in the tile.
+     *
+     * @private
+     */
     function Vector3DTileGeometry(options) {
         // these will all be released after the primitive is created
         this._boxes = options.boxes;
