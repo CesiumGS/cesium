@@ -587,6 +587,7 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
     });
 
+
     it('headingPitchRollQuaternion works with a custom fixedFrameTransform', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
@@ -1047,7 +1048,7 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
-        var hpr = new HeadingPitchRoll(-heading, -pitch, roll);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
@@ -1068,7 +1069,7 @@ defineSuite([
         var heading = CesiumMath.toRadians(90.0);
         var pitch = CesiumMath.toRadians(45.0);
         var roll = 0.0;
-        var hpr = new HeadingPitchRoll(-heading, -pitch, roll);
+        var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
