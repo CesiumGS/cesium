@@ -313,6 +313,9 @@ define([
         batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
         featureTable.featuresLength = batchLength;
 
+        // A tile without batch ids is considered a tile containing a single feature
+        batchLength = Math.max(batchLength, 1);
+
         var batchTableJson;
         var batchTableBinary;
         if (batchTableJsonByteLength > 0) {

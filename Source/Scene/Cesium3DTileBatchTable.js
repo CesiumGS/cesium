@@ -855,6 +855,7 @@ define([
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
+            var batchIdValue = defaultValue(batchIdAttributeName, '0.0');
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
@@ -865,7 +866,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    vec2 st = computeSt(' + batchIdValue + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n';                          // Per-feature show/hide
@@ -896,7 +897,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    tile_featureSt = computeSt(' + batchIdValue + '); \n' +
                     '}';
             }
 
@@ -1098,6 +1099,7 @@ define([
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
+            var batchIdValue = defaultValue(batchIdAttributeName, '0.0');
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
@@ -1107,7 +1109,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    vec2 st = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    vec2 st = computeSt(' + batchIdValue + '); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +    // 0 - false, non-zero - true
                     '    gl_Position *= show; \n' +                       // Per-feature show/hide
@@ -1119,7 +1121,7 @@ define([
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    tile_featureSt = computeSt(' + batchIdAttributeName + '); \n' +
+                    '    tile_featureSt = computeSt(' + batchIdValue + '); \n' +
                     '}';
             }
 
