@@ -54,6 +54,7 @@ define([
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param {Property} [options.clippingPlanes=[]] A list of planes to clip the model by.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -91,6 +92,8 @@ define([
         this._colorBlendModeSubscription = undefined;
         this._colorBlendAmount = undefined;
         this._colorBlendAmountSubscription = undefined;
+        this._clippingPlanes = undefined;
+        this._clippingPlanesSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -242,7 +245,12 @@ define([
          * @type {Property}
          * @default 0.5
          */
-        colorBlendAmount : createPropertyDescriptor('colorBlendAmount')
+        colorBlendAmount : createPropertyDescriptor('colorBlendAmount'),
+
+        /**
+         * TODO
+         */
+        clippingPlanes: createPropertyDescriptor('clippingPlanes')
     });
 
     /**
@@ -271,6 +279,7 @@ define([
         result.color = this.color;
         result.colorBlendMode = this.colorBlendMode;
         result.colorBlendAmount = this.colorBlendAmount;
+        result.clippingPlanes = this.clippingPlanes;
 
         return result;
     };
@@ -303,6 +312,7 @@ define([
         this.color = defaultValue(this.color, source.color);
         this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
         this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
+        this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

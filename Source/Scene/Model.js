@@ -339,6 +339,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+     * @param {Plane[]} [options.clippingPlanes=[]] The list of clipping planes to apply to the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -575,6 +576,17 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+        /**
+         * A list of planes used to clip to the model.
+         *
+         * @type {Plane[]}
+         *
+         * @default []
+         */
+        this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+        this._clippingPlanes = this.clippingPlanes;
+
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -2096,9 +2108,10 @@ define([
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+        var clippingFS = modifyShaderForClippingPlanes(blendFS);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(clippingFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -3293,6 +3306,29 @@ define([
         };
     }
 
+    function createNumClippingPlanesFunction(model) {
+        return function() {
+            return model.clippingPlanes.length;
+        };
+    }
+
+    function createClippingPlanesFunction(model) {
+        return function() {
+            var planes = model.clippingPlanes;
+            var packedPlanes = [];
+            for (var i = 0; i < planes.length; ++i) {
+                var plane = planes[i];
+                var packedValue = new Cartesian4(); // TODO scratch
+                packedValue.x = plane.normal.x;
+                packedValue.y = plane.normal.y;
+                packedValue.z = plane.normal.z;
+                packedValue.w = plane.distance; // TODO right system
+                packedPlanes.push[packedValue];
+            }
+            return packedPlanes;
+        };
+    }
+
     function createColorBlendFunction(model) {
         return function() {
             return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
@@ -3387,7 +3423,9 @@ define([
 
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
-                gltf_colorBlend : createColorBlendFunction(model)
+                gltf_colorBlend : createColorBlendFunction(model),
+                gltf_numClippingPlanes: createNumClippingPlanesFunction(model),
+                gltf_clippingPlanes: createClippingPlanesFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4179,6 +4217,29 @@ define([
                 nodeCommand.silhouetteColorCommand2D = silhouetteColorCommand2D;
             }
         }
+    }
+
+    function modifyShaderForClippingPlanes(shader) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
+        shader +=
+            'uniform int gltf_numClippingPlanes; \n' +
+            'uniform vec4 gltf_clippingPlanes[6]; \n' + // TODO Max doesn't have to be 6
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_clip_main(); \n' +
+            '    bool clipped = false; \n' +
+            '    vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord); \n' +
+            '    vec4 positionWC = czm_inverseView3D * positionEC; \n' +
+            '    vec4 clippingPlane = vec4(0.0, 0.0, 0.0, 0.0); \n' +
+            '    for (int i = 0; i < 6; ++i) { \n' +
+            '        if (i >= gltf_numClippingPlanes) break; \n' +
+            '        clippingPlane = gltf_clippingPlanes[i]; \n' +
+            '        clipped = clipped || (dot(positionWC.xyz, clippingPlane.xyz) + clippingPlane.w > czm_epsilon7); \n' +
+            '    } \n' +
+            '    if (clipped) discard; \n' +
+            '} \n';
+
+        return shader;
     }
 
     function updateSilhouette(model, frameState) {
