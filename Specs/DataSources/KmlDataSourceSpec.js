@@ -283,7 +283,7 @@ defineSuite([
             expect(source.entities);
             expect(source.entities.values.length).toEqual(1);
             expect(source.entities._entities._array.length).toEqual(1);
-            expect(source.entities._entities._array[0]._billboard._image === dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
+            expect(source.entities._entities._array[0]._billboard._image._value).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
         });
     });
 
@@ -295,7 +295,7 @@ defineSuite([
             expect(source.entities);
             expect(source.entities.values.length).toEqual(1);
             expect(source.entities._entities._array.length).toEqual(1);
-            expect(source.entities._entities._array[0]._billboard._image === dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
+            expect(source.entities._entities._array[0]._billboard._image._value).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
         });
     });
 
