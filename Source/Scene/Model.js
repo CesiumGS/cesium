@@ -3323,7 +3323,7 @@ define([
                 packedValue.y = plane.normal.y;
                 packedValue.z = plane.normal.z;
                 packedValue.w = plane.distance; // TODO right system
-                packedPlanes.push[packedValue];
+                packedPlanes.push(packedValue);
             }
             return packedPlanes;
         };

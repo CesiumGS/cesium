@@ -377,7 +377,8 @@ define([
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-            pickObject : pickObject
+            pickObject : pickObject,
+            clippingPlanes : tileset._clippingPlanes
         });
     }
 
@@ -447,6 +448,7 @@ define([
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
+        this._model.clippingPlanes = this._tileset.clippingPlanes
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands

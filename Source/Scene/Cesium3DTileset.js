@@ -524,6 +524,14 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         /**
+         * The list of planes to clip the tileset.
+         *
+         * @type {Plane[]}
+         * @default []
+         */
+        this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+
+        /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * Determines if only the tiles from last frame should be used for rendering.  This
