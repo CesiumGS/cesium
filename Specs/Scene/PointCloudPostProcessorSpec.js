@@ -62,7 +62,8 @@ defineSuite([
 
     it('enabling the point cloud post processor increases the number of draw calls', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            if (!tileset.pointCloudPostProcessor.processingSupported()) {
+            if (!defined(tileset.pointCloudPostProcessor) ||
+                !tileset.pointCloudPostProcessor.processingSupported()) {
                 return;
             }
 
