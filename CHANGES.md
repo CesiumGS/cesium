@@ -1,5 +1,8 @@
 Change Log
 ==========
+### 1.39 - 2017-11-01
+* Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes

@@ -3,9 +3,11 @@ define([
         './addToArray',
         './ForEach',
         './getAccessorByteStride',
+        './numberOfComponentsForType',
         '../../Core/Cartesian3',
         '../../Core/Math',
         '../../Core/clone',
+        '../../Core/ComponentDatatype',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/Quaternion',
@@ -15,9 +17,11 @@ define([
         addToArray,
         ForEach,
         getAccessorByteStride,
+        numberOfComponentsForType,
         Cartesian3,
         CesiumMath,
         clone,
+        ComponentDatatype,
         defaultValue,
         defined,
         Quaternion,
@@ -133,6 +137,55 @@ define([
         }
     }
 
+    function updateAnimations(gltf) {
+        var animations = gltf.animations;
+        var accessors = gltf.accessors;
+        var bufferViews = gltf.bufferViews;
+        var buffers = gltf.buffers;
+        var updatedAccessors = {};
+        var axis = new Cartesian3();
+        var quat = new Quaternion();
+        for (var animationId in animations) {
+            if (animations.hasOwnProperty(animationId)) {
+                var animation = animations[animationId];
+                var channels = animation.channels;
+                var parameters = animation.parameters;
+                var samplers = animation.samplers;
+                if (defined(channels)) {
+                    var channelsLength = channels.length;
+                    for (var i = 0; i < channelsLength; ++i) {
+                        var channel = channels[i];
+                        if (channel.target.path === 'rotation') {
+                            var accessorId = parameters[samplers[channel.sampler].output];
+                            if (defined(updatedAccessors[accessorId])) {
+                                continue;
+                            }
+                            updatedAccessors[accessorId] = true;
+                            var accessor = accessors[accessorId];
+                            var bufferView = bufferViews[accessor.bufferView];
+                            var buffer = buffers[bufferView.buffer];
+                            var source = buffer.extras._pipeline.source;
+                            var byteOffset = source.byteOffset + bufferView.byteOffset + accessor.byteOffset;
+                            var componentType = accessor.componentType;
+                            var count = accessor.count;
+                            var componentsLength = numberOfComponentsForType(accessor.type);
+                            var length = accessor.count * componentsLength;
+                            var typedArray = ComponentDatatype.createArrayBufferView(componentType, source.buffer, byteOffset, length);
+
+                            for (var j = 0; j < count; j++) {
+                                var offset = j * componentsLength;
+                                Cartesian3.unpack(typedArray, offset, axis);
+                                var angle = typedArray[offset + 3];
+                                Quaternion.fromAxisAngle(axis, angle, quat);
+                                Quaternion.pack(quat, typedArray, offset);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function removeTechniquePasses(gltf) {
         var techniques = gltf.techniques;
         for (var techniqueId in techniques) {
@@ -177,6 +230,8 @@ define([
         // node rotation should be quaternion, not axis-angle
         // node.instanceSkin is deprecated
         updateNodes(gltf);
+        // animations that target rotations should be quaternion, not axis-angle
+        updateAnimations(gltf);
         // technique.pass and techniques.passes are deprecated
         removeTechniquePasses(gltf);
         // gltf.lights -> khrMaterialsCommon.lights
