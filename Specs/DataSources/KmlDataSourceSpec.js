@@ -808,6 +808,7 @@ defineSuite([
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+            expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
         });
     });
 
