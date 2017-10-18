@@ -249,6 +249,9 @@ define([
 
         /**
          * The list of planes to clip the tileset.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default []
          */
         clippingPlanes: createPropertyDescriptor('clippingPlanes')
     });

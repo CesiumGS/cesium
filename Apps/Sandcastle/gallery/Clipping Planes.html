@@ -126,8 +126,8 @@ function loadModel (url, height) {
 Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(
     function(newValue) {
         var clippingPlanePosition = new Cesium.Cartesian3(
-            targetPosition.x +  parseFloat(newValue),
-            targetPosition.y, targetPosition.z
+            0.0 +  parseFloat(newValue),
+            0.0, 0.0
         );
         target.clippingPlanes[0] = Cesium.Plane.fromPointNormal(clippingPlanePosition, Cesium.Cartesian3.UNIT_X);
     }

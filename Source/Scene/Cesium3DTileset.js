@@ -1043,7 +1043,7 @@ define([
          *
          * @memberof Cesium3DTileset.prototype
          *
-         * @tpye {Plane[]}
+         * @type {Plane[]}
          */
         clippingPlanes : {
             get : function() {

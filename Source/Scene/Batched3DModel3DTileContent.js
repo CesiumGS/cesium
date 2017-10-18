@@ -448,7 +448,7 @@ define([
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
-        this._model.clippingPlanes = this._tileset.clippingPlanes
+        this._model.clippingPlanes = this._tileset.clippingPlanes;
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands

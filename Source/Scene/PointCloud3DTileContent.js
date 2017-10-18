@@ -1056,11 +1056,11 @@ define([
                  '    vec4 positionWC = czm_inverseView3D * positionEC; \n' + // TODO
                  '    vec4 clippingPlane = vec4(0.0, 0.0, 0.0, 0.0); \n' +
                  '    for (int i = 0; i < 6; ++i) { \n' +
-                 '        if (i >= pc_numClippingPlanes) break; \n' +
+                 '        if (i >= pc_numClippingPlanes) { break; }\n' +
                  '        clippingPlane = pc_clippingPlanes[i]; \n' +
                  '        clipped = clipped || (dot(positionWC.xyz, clippingPlane.xyz) + clippingPlane.w > czm_epsilon7); \n' +
                  '    } \n' +
-                 '    if (clipped) discard; \n' +
+                 '    if (clipped){ discard; }\n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 
