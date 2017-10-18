@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document xsi:schemaLocation="http://www.opengis.net/kml/2.2 http://schemas.opengis.net/kml/2.2.0/ogckml22.xsd http://www.google.com/kml/ext/2.2 http://code.google.com/apis/kml/schema/kml22gx.xsd">
+    <Placemark>
+        <Style>
+            <IconStyle>
+              <Icon>
+                  <href>image.png</href>
+              </Icon>
+            </IconStyle>
+        </Style>
+        <description><![CDATA[image.png <a href="./image.png">image.png</a><img src="image.png"/>]]></description>
+        <Point>
+            <coordinates>1,2,3</coordinates>
+        </Point>
+    </Placemark>
+</Document>
+</kml>
