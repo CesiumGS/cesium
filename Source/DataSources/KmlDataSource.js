@@ -266,7 +266,7 @@ define([
                 reg = RegExp('[< ]' + key + ':');
                 declaration = 'xmlns:' + key + '=';
                 if (reg.test(text) && text.indexOf(declaration) === -1) {
-                    if (!firstPart) {
+                    if (!defined(firstPart)) {
                         firstPart = text.substr(0, text.indexOf('<kml') + 4);
                         lastPart = text.substr(firstPart.length);
                     }
@@ -275,7 +275,7 @@ define([
             }
         }
 
-        if (firstPart) {
+        if (defined(firstPart)) {
             text = firstPart + lastPart;
         }
 
