@@ -73,7 +73,6 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
     var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
 
 var target = loadTileset(bimUrl);
-var targetPosition;
 
 function loadTileset (url) {
     var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -85,8 +84,7 @@ function loadTileset (url) {
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, boundingSphere.radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-        tileset.clippingPlanes = [ Cesium.Plane.fromPointNormal(boundingSphere.center, Cesium.Cartesian3.UNIT_X) ];
-        targetPosition = tileset.boundingSphere.center;
+        tileset.clippingPlanes = [ new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0) ];
     }).otherwise(function(error) {
         throw(error);
     });
@@ -115,21 +113,16 @@ function loadModel (url, height) {
         }
     });
 
-    entity.model.clippingPlanes = [ Cesium.Plane.fromPointNormal(position, Cesium.Cartesian3.UNIT_X) ];
+    entity.model.clippingPlanes = [ new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0) ];
 
     viewer.trackedEntity = entity;
-    targetPosition = position;
 
     return entity.model;
 }
 
 Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(
     function(newValue) {
-        var clippingPlanePosition = new Cesium.Cartesian3(
-            0.0 +  parseFloat(newValue),
-            0.0, 0.0
-        );
-        target.clippingPlanes[0] = Cesium.Plane.fromPointNormal(clippingPlanePosition, Cesium.Cartesian3.UNIT_X);
+        target.clippingPlanes[0].distance = parseFloat(newValue);
     }
 );
 

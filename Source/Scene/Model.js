@@ -3312,20 +3312,33 @@ define([
         };
     }
 
-    function createClippingPlanesFunction(model) {
+    var scratchCartesian = new Cartesian3();
+    var scratchMatrix = new Matrix4();
+
+    function createClippingNormalsFunction(model) {
         return function() {
             var planes = model.clippingPlanes;
-            var packedPlanes = [];
+            var packedNormals = [];
             for (var i = 0; i < planes.length; ++i) {
                 var plane = planes[i];
-                var packedValue = new Cartesian4(); // TODO scratch
-                packedValue.x = plane.normal.x;
-                packedValue.y = plane.normal.y;
-                packedValue.z = plane.normal.z;
-                packedValue.w = plane.distance; // TODO right system
-                packedPlanes.push(packedValue);
+                var transposeInverse = Matrix4.transpose(Matrix4.inverse(model.modelMatrix, scratchMatrix), scratchMatrix);
+                packedNormals.push(Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone());
             }
-            return packedPlanes;
+            return packedNormals;
+        };
+    }
+
+    function createClippingPositionsFunction(model) {
+        return function() {
+            var planes = model.clippingPlanes;
+            var packedPositions = [];
+            for (var i = 0; i < planes.length; ++i) {
+                var plane = planes[i];
+                var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), model._boundingSphere.center, scratchCartesian);
+                var positionWC = Matrix4.multiplyByPoint(model.modelMatrix, localPosition, scratchCartesian);
+                packedPositions.push(positionWC.clone());
+            }
+            return packedPositions;
         };
     }
 
@@ -3425,7 +3438,8 @@ define([
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_numClippingPlanes: createNumClippingPlanesFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model)
+                gltf_clipNormals: createClippingNormalsFunction(model),
+                gltf_clipPositions: createClippingPositionsFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4223,18 +4237,20 @@ define([
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             'uniform int gltf_numClippingPlanes; \n' +
-            'uniform vec4 gltf_clippingPlanes[6]; \n' + // TODO Max doesn't have to be 6
+            'uniform vec3 gltf_clipNormals[6]; \n' + // TODO Max doesn't have to be 6
+            'uniform vec3 gltf_clipPositions[6]; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
             '    bool clipped = false; \n' +
-            '    vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord); \n' +
-            '    vec4 positionWC = czm_inverseView3D * positionEC; \n' +
-            '    vec4 clippingPlane = vec4(0.0, 0.0, 0.0, 0.0); \n' +
+            '    vec4 positionWC = czm_inverseView3D * czm_windowToEyeCoordinates(gl_FragCoord); \n' +
+            '    vec3 clipNormal = vec3(0.0, 0.0, 0.0); \n' +
+            '    vec3 clipPosition = vec3(0.0, 0.0, 0.0); \n' +
             '    for (int i = 0; i < 6; ++i) { \n' +
             '        if (i >= gltf_numClippingPlanes) { break; } \n' +
-            '        clippingPlane = gltf_clippingPlanes[i]; \n' +
-            '        clipped = clipped || (dot(positionWC.xyz, clippingPlane.xyz) + clippingPlane.w > czm_epsilon7); \n' +
+            '        clipNormal = gltf_clipNormals[i]; \n' +
+            '        clipPosition = gltf_clipPositions[i]; \n' +
+            '        clipped = clipped || (dot(clipNormal, (positionWC.xyz - clipPosition)) > czm_epsilon7); \n' +
             '    } \n' +
             '    if (clipped) { discard; } \n' +
             '} \n';
