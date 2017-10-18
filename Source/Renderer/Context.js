@@ -194,8 +194,7 @@ define([
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
         webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
-        var defaultToWebgl2 = false;
-        var requestWebgl2 = defaultToWebgl2 && (typeof WebGL2RenderingContext !== 'undefined');
+        var requestWebgl2 = defaultValue(options.requestWebgl2, false) && (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
 
         var glContext;
