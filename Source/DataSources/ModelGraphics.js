@@ -248,7 +248,7 @@ define([
         colorBlendAmount : createPropertyDescriptor('colorBlendAmount'),
 
         /**
-         * TODO
+         * The list of planes to clip the tileset.
          */
         clippingPlanes: createPropertyDescriptor('clippingPlanes')
     });
