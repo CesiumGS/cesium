@@ -701,12 +701,7 @@ define([
         var color = queryColorValue(node, 'color', namespaces.kml);
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
-        var icon;
-        if (!defined(iconNode)) {
-            icon = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-        } else {
-            icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
-        }
+        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
