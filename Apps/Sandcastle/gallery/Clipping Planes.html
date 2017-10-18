@@ -60,7 +60,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
     exampleType : 'BIM',
-    exampleTypes : ['BIM', 'Model'],
+    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
     xOffset : 0.0
 };
 Cesium.knockout.track(viewModel);
@@ -69,12 +69,15 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-var target = loadTileset();
+    var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
+    var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
+
+var target = loadTileset(bimUrl);
 var targetPosition;
 
-function loadTileset () {
+function loadTileset (url) {
     var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4'
+        url : url
     }));
 
     tileset.readyPromise.then(function() {
@@ -84,8 +87,6 @@ function loadTileset () {
 
         tileset.clippingPlanes = [ Cesium.Plane.fromPointNormal(boundingSphere.center, Cesium.Cartesian3.UNIT_X) ];
         targetPosition = tileset.boundingSphere.center;
-
-        // TODO go to tileset
     }).otherwise(function(error) {
         throw(error);
     });
@@ -135,7 +136,9 @@ Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
     function(newValue) {
         if (newValue === 'BIM') {
-            target = loadTileset();
+            target = loadTileset(bimUrl);
+        } else if (newValue === 'Point Cloud') {
+            target = loadTileset(pointCloudUrl);
         } else {
             target = loadModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', 20.0);
         }

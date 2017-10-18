@@ -521,6 +521,23 @@ define([
             },
             u_constantColor : function() {
                 return content._constantColor;
+            },
+            pc_numClippingPlanes : function() {
+                return content._tileset.clippingPlanes.length;
+            },
+            pc_clippingPlanes : function() {
+                var planes = content._tileset.clippingPlanes;
+                var packedPlanes = [];
+                for (var i = 0; i < planes.length; ++i) {
+                    var plane = planes[i];
+                    var packedValue = new Cartesian4(); // TODO
+                    packedValue.x = plane.normal.x;
+                    packedValue.y = plane.normal.y;
+                    packedValue.z = plane.normal.z;
+                    packedValue.w = plane.distance; // TODO
+                    packedPlanes.push(packedValue);
+                }
+                return packedPlanes;
             }
         };
 
@@ -1030,8 +1047,20 @@ define([
         vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
+                 'uniform int pc_numClippingPlanes;' +
+                 'uniform vec4 pc_clippingPlanes[6];' + // TODO
                  'void main() \n' +
                  '{ \n' +
+                 '    bool clipped = false; \n' +
+                 '    vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord); \n' +
+                 '    vec4 positionWC = czm_inverseView3D * positionEC; \n' + // TODO
+                 '    vec4 clippingPlane = vec4(0.0, 0.0, 0.0, 0.0); \n' +
+                 '    for (int i = 0; i < 6; ++i) { \n' +
+                 '        if (i >= pc_numClippingPlanes) break; \n' +
+                 '        clippingPlane = pc_clippingPlanes[i]; \n' +
+                 '        clipped = clipped || (dot(positionWC.xyz, clippingPlane.xyz) + clippingPlane.w > czm_epsilon7); \n' +
+                 '    } \n' +
+                 '    if (clipped) discard; \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 
