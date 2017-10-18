@@ -510,6 +510,9 @@ define([
             }
         }
 
+        var scratchCartesian = new Cartesian3();
+        var scratchMatrix = new Matrix4();
+
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -525,19 +528,26 @@ define([
             pc_numClippingPlanes : function() {
                 return content._tileset.clippingPlanes.length;
             },
-            pc_clippingPlanes : function() {
+            pc_clipPositions : function() {
                 var planes = content._tileset.clippingPlanes;
-                var packedPlanes = [];
+                var packedPositions = [];
                 for (var i = 0; i < planes.length; ++i) {
                     var plane = planes[i];
-                    var packedValue = new Cartesian4(); // TODO
-                    packedValue.x = plane.normal.x;
-                    packedValue.y = plane.normal.y;
-                    packedValue.z = plane.normal.z;
-                    packedValue.w = plane.distance; // TODO
-                    packedPlanes.push(packedValue);
+                    var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), content._tileset.boundingSphere.center, scratchCartesian);
+                    var positionWC = Matrix4.multiplyByPoint(content._tileset.modelMatrix, localPosition, scratchCartesian);
+                    packedPositions.push(positionWC);
                 }
-                return packedPlanes;
+                return packedPositions;
+            },
+            pc_clipNormals : function() {
+                var planes = content._tileset.clippingPlanes;
+                var packedNormals = [];
+                for (var i = 0; i < planes.length; ++i) {
+                    var plane = planes[i];
+                    var transposeInverse = Matrix4.transpose(Matrix4.inverse(content._tileset.modelMatrix, scratchMatrix), scratchMatrix);
+                    packedNormals.push(Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone());
+                }
+                return packedNormals;
             }
         };
 
@@ -1048,19 +1058,21 @@ define([
 
         var fs = 'varying vec4 v_color; \n' +
                  'uniform int pc_numClippingPlanes;' +
-                 'uniform vec4 pc_clippingPlanes[6];' + // TODO
+                 'uniform vec3 pc_clipNormals[6]; \n' + // TODO Max doesn't have to be 6
+                 'uniform vec3 pc_clipPositions[6]; \n' +
                  'void main() \n' +
                  '{ \n' +
                  '    bool clipped = false; \n' +
-                 '    vec4 positionEC = czm_windowToEyeCoordinates(gl_FragCoord); \n' +
-                 '    vec4 positionWC = czm_inverseView3D * positionEC; \n' + // TODO
-                 '    vec4 clippingPlane = vec4(0.0, 0.0, 0.0, 0.0); \n' +
+                 '    vec4 positionWC = czm_inverseView3D * czm_windowToEyeCoordinates(gl_FragCoord); \n' +
+                 '    vec3 clipNormal = vec3(0.0, 0.0, 0.0); \n' +
+                 '    vec3 clipPosition = vec3(0.0, 0.0, 0.0); \n' +
                  '    for (int i = 0; i < 6; ++i) { \n' +
-                 '        if (i >= pc_numClippingPlanes) { break; }\n' +
-                 '        clippingPlane = pc_clippingPlanes[i]; \n' +
-                 '        clipped = clipped || (dot(positionWC.xyz, clippingPlane.xyz) + clippingPlane.w > czm_epsilon7); \n' +
+                 '        if (i >= pc_numClippingPlanes) { break; } \n' +
+                 '        clipNormal = pc_clipNormals[i]; \n' +
+                 '        clipPosition = pc_clipPositions[i]; \n' +
+                 '        clipped = clipped || (dot(clipNormal, (positionWC.xyz - clipPosition)) > czm_epsilon7); \n' +
                  '    } \n' +
-                 '    if (clipped){ discard; }\n' +
+                 '    if (clipped) { discard; } \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 

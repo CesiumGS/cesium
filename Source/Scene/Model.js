@@ -3336,7 +3336,7 @@ define([
                 var plane = planes[i];
                 var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), model._boundingSphere.center, scratchCartesian);
                 var positionWC = Matrix4.multiplyByPoint(model.modelMatrix, localPosition, scratchCartesian);
-                packedPositions.push(positionWC.clone());
+                packedPositions.push(positionWC);
             }
             return packedPositions;
         };
