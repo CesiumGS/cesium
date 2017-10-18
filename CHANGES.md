@@ -1,7 +1,7 @@
 Change Log
 ==========
 ### 1.39 - 2017-11-01
-
+* Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
 * Adds `invertClassification` and `invertClassificationColor` to `Scene`. When `invertClassification` is `true`, any 3D Tiles geometry that is not classified by a `ClassificationPrimitive` or `GroundPrimitive` will have its color multiplied by `invertClassificationColor`. [#5836](https://github.com/AnalyticalGraphicsInc/cesium/pull/5836)
 
 ### 1.38 - 2017-10-02
