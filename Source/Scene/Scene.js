@@ -653,6 +653,7 @@ define([
         this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
         this._invertClassification = new InvertClassification();
 
+        /**
          * The focal length for use when with cardboard or WebVR.
          * @type {Number}
          */
