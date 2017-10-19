@@ -4,7 +4,6 @@ Change Log
 ### 1.39 - 2017-11-01
 
 * Added function that inserts missing namespace declarations into KML files. [#5860](https://github.com/AnalyticalGraphicsInc/cesium/pull/5860)
-
 * Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
 * Fixed a bug that caused KML ground overlays to appear distorted when rotation was applied. [#5914](https://github.com/AnalyticalGraphicsInc/cesium/issues/5914)
 * Added two new properties to `ImageryLayer` that allow for adjusting the texture sampler used for up- and down-sampling of image tiles, namely `minificationFilter` and `magnificationFilter` with possible values `LINEAR` (the default) and `NEAREST` defined in `TextureMinificationFilter` and `TextureMagnificationFilter`. [#5846](https://github.com/AnalyticalGraphicsInc/cesium/issues/5846)
