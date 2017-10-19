@@ -858,22 +858,21 @@ define([
         var minificationFilter = imageryLayer.minificationFilter;
         var magnificationFilter = imageryLayer.magnificationFilter;
         var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
-        // Use mipmaps if this texture uses linear filters and has power-of-two dimensions.
+        // Use mipmaps if this texture has power-of-two dimensions.
+        // In addition, we only use mipmaps if the texture filters are both LINEAR, because a NEAREST filter
+        // in Cesium v1.39 had no effect on mipmaps (see discussion on PR #5890).
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
-            if (minificationFilter === TextureMinificationFilter.NEAREST) {
-                minificationFilter = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
-            } else if (minificationFilter === TextureMinificationFilter.LINEAR) {
-                minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-            }
+            minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
             var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
             var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy));
             var mipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy);
             var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
-            var mipmapSampler = mipmapSamplers && mipmapSamplers[mipmapSamplerKey];
+            if (!defined(mipmapSamplers)) {
+                mipmapSamplers = {};
+                context.cache.imageryLayerMipmapSamplers = mipmapSamplers;
+            }
+            var mipmapSampler = mipmapSamplers[mipmapSamplerKey];
             if (!defined(mipmapSampler)) {
-                if (!defined(mipmapSamplers)) {
-                    mipmapSamplers = context.cache.imageryLayerMipmapSamplers = {};
-                }
                 mipmapSampler = mipmapSamplers[mipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -887,11 +886,12 @@ define([
         } else {
             var nonMipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, 0);
             var nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
-            var nonMipmapSampler = nonMipmapSamplers && nonMipmapSamplers[nonMipmapSamplerKey];
+            if (!defined(nonMipmapSamplers)) {
+                nonMipmapSamplers = {};
+                context.cache.imageryLayerNonMipmapSamplers = nonMipmapSamplers;
+            }
+            var nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey];
             if (!defined(nonMipmapSampler)) {
-                if (!defined(nonMipmapSamplers)) {
-                    nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers = {};
-                }
                 nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
