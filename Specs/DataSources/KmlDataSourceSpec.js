@@ -244,6 +244,14 @@ defineSuite([
         });
     });
 
+    it('load inserts missing namespace declaration', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
     it('load rejects nonexistent URL', function() {
         return KmlDataSource.load('test.invalid', options).otherwise(function(e) {
             expect(e).toBeInstanceOf(RequestErrorEvent);
@@ -808,6 +816,7 @@ defineSuite([
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+            expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
         });
     });
 

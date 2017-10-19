@@ -597,7 +597,7 @@ define([
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolumes = groundPrimitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
+        } else {
             boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
