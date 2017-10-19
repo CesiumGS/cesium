@@ -525,27 +525,29 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
-            pc_numClippingPlanes : function() {
+            u_clippingPlanesLength : function() {
                 return content._tileset.clippingPlanes.length;
             },
-            pc_clipPositions : function() {
+            u_clipPositions : function() {
                 var planes = content._tileset.clippingPlanes;
-                var packedPositions = [];
+                var length = planes.length;
+                var packedPositions = new Array(length);
                 for (var i = 0; i < planes.length; ++i) {
                     var plane = planes[i];
                     var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), content._tileset.boundingSphere.center, scratchCartesian);
                     var positionWC = Matrix4.multiplyByPoint(content._tileset.modelMatrix, localPosition, scratchCartesian);
-                    packedPositions.push(positionWC);
+                    packedPositions[i] = positionWC;
                 }
                 return packedPositions;
             },
-            pc_clipNormals : function() {
+            u_clipNormals : function() {
                 var planes = content._tileset.clippingPlanes;
-                var packedNormals = [];
+                var length = planes.length;
+                var packedNormals = new Array(length);
                 for (var i = 0; i < planes.length; ++i) {
                     var plane = planes[i];
                     var transposeInverse = Matrix4.transpose(Matrix4.inverse(content._tileset.modelMatrix, scratchMatrix), scratchMatrix);
-                    packedNormals.push(Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone());
+                    packedNormals[i] = Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone();
                 }
                 return packedNormals;
             }
@@ -1057,22 +1059,12 @@ define([
         vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
-                 'uniform int pc_numClippingPlanes;' +
-                 'uniform vec3 pc_clipNormals[6]; \n' + // TODO Max doesn't have to be 6
-                 'uniform vec3 pc_clipPositions[6]; \n' +
+                 'uniform int u_clippingPlanesLength;' +
+                 'uniform vec3 u_clipNormals[czm_maxClippingPlanes]; \n' + // TODO Max doesn't have to be 6
+                 'uniform vec3 u_clipPositions[czm_maxClippingPlanes]; \n' +
                  'void main() \n' +
                  '{ \n' +
-                 '    bool clipped = false; \n' +
-                 '    vec4 positionWC = czm_inverseView3D * czm_windowToEyeCoordinates(gl_FragCoord); \n' +
-                 '    vec3 clipNormal = vec3(0.0, 0.0, 0.0); \n' +
-                 '    vec3 clipPosition = vec3(0.0, 0.0, 0.0); \n' +
-                 '    for (int i = 0; i < 6; ++i) { \n' +
-                 '        if (i >= pc_numClippingPlanes) { break; } \n' +
-                 '        clipNormal = pc_clipNormals[i]; \n' +
-                 '        clipPosition = pc_clipPositions[i]; \n' +
-                 '        clipped = clipped || (dot(clipNormal, (positionWC.xyz - clipPosition)) > czm_epsilon7); \n' +
-                 '    } \n' +
-                 '    if (clipped) { discard; } \n' +
+                 '    czm_clipPlanes(u_clippingPlanesLength, u_clipNormals, u_clipPositions); \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 

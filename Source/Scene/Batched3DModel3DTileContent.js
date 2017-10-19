@@ -378,7 +378,7 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : tileset._clippingPlanes
+            clippingPlanes : tileset.clippingPlanes
         });
     }
 

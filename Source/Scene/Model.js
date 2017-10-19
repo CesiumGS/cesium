@@ -339,7 +339,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {Plane[]} [options.clippingPlanes=[]] The list of clipping planes to apply to the model.
+     * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -578,15 +578,13 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * A list of planes used to clip to the model.
+         * An array of {@link Plane} used to clip the model.
          *
          * @type {Plane[]}
          *
          * @default []
          */
         this.clippingPlanes = defaultValue(options.clippingPlanes, []);
-        this._clippingPlanes = this.clippingPlanes;
-
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -3306,7 +3304,7 @@ define([
         };
     }
 
-    function createNumClippingPlanesFunction(model) {
+    function createClippingPlanesLengthFunction(model) {
         return function() {
             return model.clippingPlanes.length;
         };
@@ -3318,11 +3316,12 @@ define([
     function createClippingNormalsFunction(model) {
         return function() {
             var planes = model.clippingPlanes;
-            var packedNormals = [];
-            for (var i = 0; i < planes.length; ++i) {
+            var length = planes.length;
+            var packedNormals = new Array(length);
+            for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 var transposeInverse = Matrix4.transpose(Matrix4.inverse(model.modelMatrix, scratchMatrix), scratchMatrix);
-                packedNormals.push(Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone());
+                packedNormals[i] = Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone();
             }
             return packedNormals;
         };
@@ -3331,12 +3330,13 @@ define([
     function createClippingPositionsFunction(model) {
         return function() {
             var planes = model.clippingPlanes;
-            var packedPositions = [];
-            for (var i = 0; i < planes.length; ++i) {
+            var length = planes.length;
+            var packedPositions = new Array(length);
+            for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), model._boundingSphere.center, scratchCartesian);
                 var positionWC = Matrix4.multiplyByPoint(model.modelMatrix, localPosition, scratchCartesian);
-                packedPositions.push(positionWC);
+                packedPositions[i] = positionWC;
             }
             return packedPositions;
         };
@@ -3437,7 +3437,7 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_numClippingPlanes: createNumClippingPlanesFunction(model),
+                gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clipNormals: createClippingNormalsFunction(model),
                 gltf_clipPositions: createClippingPositionsFunction(model)
             });
@@ -4236,23 +4236,13 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
-            'uniform int gltf_numClippingPlanes; \n' +
-            'uniform vec3 gltf_clipNormals[6]; \n' + // TODO Max doesn't have to be 6
-            'uniform vec3 gltf_clipPositions[6]; \n' +
+            'uniform int gltf_clippingPlanesLength; \n' +
+            'uniform vec3 gltf_clipNormals[czm_maxClippingPlanes]; \n' +
+            'uniform vec3 gltf_clipPositions[czm_maxClippingPlanes]; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    bool clipped = false; \n' +
-            '    vec4 positionWC = czm_inverseView3D * czm_windowToEyeCoordinates(gl_FragCoord); \n' +
-            '    vec3 clipNormal = vec3(0.0, 0.0, 0.0); \n' +
-            '    vec3 clipPosition = vec3(0.0, 0.0, 0.0); \n' +
-            '    for (int i = 0; i < 6; ++i) { \n' +
-            '        if (i >= gltf_numClippingPlanes) { break; } \n' +
-            '        clipNormal = gltf_clipNormals[i]; \n' +
-            '        clipPosition = gltf_clipPositions[i]; \n' +
-            '        clipped = clipped || (dot(clipNormal, (positionWC.xyz - clipPosition)) > czm_epsilon7); \n' +
-            '    } \n' +
-            '    if (clipped) { discard; } \n' +
+            '    czm_clipPlanes(gltf_clippingPlanesLength, gltf_clipNormals, gltf_clipPositions); \n' +
             '} \n';
 
         return shader;
