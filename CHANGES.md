@@ -1,7 +1,10 @@
 Change Log
 ==========
 ### 1.39 - 2017-11-01
+
+* Added function that inserts missing namespace declarations into KML files. [#5860](https://github.com/AnalyticalGraphicsInc/cesium/pull/5860)
 * Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
+* Fixed a bug that caused KML ground overlays to appear distorted when rotation was applied. [#5914](https://github.com/AnalyticalGraphicsInc/cesium/issues/5914)
 * Adds `invertClassification` and `invertClassificationColor` to `Scene`. When `invertClassification` is `true`, any 3D Tiles geometry that is not classified by a `ClassificationPrimitive` or `GroundPrimitive` will have its color multiplied by `invertClassificationColor`. [#5836](https://github.com/AnalyticalGraphicsInc/cesium/pull/5836)
 
 ### 1.38 - 2017-10-02

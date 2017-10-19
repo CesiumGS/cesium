@@ -96,8 +96,11 @@ define([
         return context.depthTexture && context.fragmentDepth;
     };
 
-    var stencilReference = 0;
+    // The stencil mask only uses the least significant 4 bits.
+    // This is so 3D Tiles with the skip LOD optimization, which uses the most significant 4 bits,
+    // can be classified.
     var stencilMask = 0x0F;
+    var stencilReference = 0;
 
     var rsUnclassified = {
         depthMask : false,
