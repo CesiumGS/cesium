@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Point occlusion and region growing example.">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar button { display: block; }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table>
+      <tbody>
+          <tr>
+            <td>Occlusion Angle</td>
+            <td>
+                <input type="range" min="-1" max="1" step="0.05" data-bind="value: occlusionAngle, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: occlusionAngle">
+            </td>
+          </tr>
+          <tr>
+            <td>Point Occlusion Filter Size</td>
+            <td>
+                <input type="range" min="0" max="4" step="1" data-bind="value: neighborhoodHalfWidth, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: neighborhoodHalfWidth">
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Region Growing Iterations</td>
+            <td>
+                <input type="range" min="0" max="10" step="1" data-bind="value: numRegionGrowingPasses, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: numRegionGrowingPasses">
+            </td>
+          </tr>
+          <tr>
+            <td>Region Growing Range Parameter</td>
+            <td>
+                <input type="range" min="0" max="1" step="1e-41" data-bind="value: rangeParameter, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: rangeParameter">
+            </td>
+          </tr>
+          <tr>
+            <td>Maximum Neighborhood Vector Size</td>
+            <td>
+                <input type="range" min="0.0" max="200.0" step="1e-2" data-bind="value: neighborhoodVectorSize, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: neighborhoodVectorSize">
+            </td>
+          </tr>
+          <tr>
+            <td>Max Neighborhood ABS ratio</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="1e-2" data-bind="value: maxAbsRatio, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: maxAbsRatio">
+            </td>
+          </tr>
+          <tr>
+            <td>Max Distance Constraint</td>
+            <td>
+                <input type="range" min="0.0" max="10000" step="1" data-bind="value: distanceConstraint, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: distanceConstraint">
+            </td>
+          </tr>
+          <tr>
+            <td>Point Attenuation Multiplier</td>
+            <td>
+                <input type="range" min="1.0" max="10.0" step="1" data-bind="value: pointAttenuationMultiplier, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: pointAttenuationMultiplier">
+            </td>
+          </tr>
+          <tr>
+            <td>AO Sigmoid Domain Offset</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: sigmoidDomainOffset, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: sigmoidDomainOffset">
+            </td>
+          </tr>
+          <tr>
+            <td>AO Sigmoid Sharpness</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: sigmoidSharpness, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: sigmoidSharpness">
+            </td>
+          </tr>
+          <tr>
+            <td>Dropout Factor</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: dropoutFactor, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: dropoutFactor">
+            </td>
+          </tr>
+          <tr>
+            <td>Delay</td>
+            <td>
+                <input type="range" min="0" max="4" step="1" data-bind="value: delay, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: delay">
+            </td>
+          </tr>
+        </tbody>
+    </table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
+var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
+inspectorViewModel.picking = false;
+
+var scene = viewer.scene;
+var url = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
+var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : url
+}));
+tileset.pointCloudPostProcessorOptions.enabled = false;
+inspectorViewModel.tileset = tileset;
+
+tileset.readyPromise.then(function() {
+    var boundingSphere = tileset.boundingSphere;
+    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -1.0, 50.0));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+});
+
+var viewModel = {
+    occlusionAngle : tileset.pointCloudPostProcessorOptions.occlusionAngle,
+    rangeParameter : tileset.pointCloudPostProcessorOptions.rangeParameter,
+    numRegionGrowingPasses : tileset.pointCloudPostProcessorOptions.numRegionGrowingPasses,
+    neighborhoodHalfWidth : tileset.pointCloudPostProcessorOptions.neighborhoodHalfWidth,
+    neighborhoodVectorSize : tileset.pointCloudPostProcessorOptions.neighborhoodVectorSize,
+    maxAbsRatio : tileset.pointCloudPostProcessorOptions.maxAbsRatio,
+    distanceConstraint : tileset.pointCloudPostProcessorOptions.distanceConstraint,
+    pointAttenuationMultiplier : tileset.pointCloudPostProcessorOptions.pointAttenuationMultiplier,
+    sigmoidDomainOffset : tileset.pointCloudPostProcessorOptions.sigmoidDomainOffset,
+    sigmoidSharpness : tileset.pointCloudPostProcessorOptions.sigmoidSharpness,
+    dropoutFactor : tileset.pointCloudPostProcessorOptions.dropoutFactor,
+    delay : tileset.pointCloudPostProcessorOptions.delay
+};
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+function subscribeParameter(name) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(
+        function(newValue) {
+            viewModel[name] = newValue;
+            tileset.pointCloudPostProcessorOptions[name] = newValue;
+        }
+    );
+}
+
+subscribeParameter('occlusionAngle');
+subscribeParameter('rangeParameter');
+subscribeParameter('neighborhoodHalfWidth');
+subscribeParameter('numRegionGrowingPasses');
+subscribeParameter('neighborhoodVectorSize');
+subscribeParameter('maxAbsRatio');
+subscribeParameter('distanceConstraint');
+subscribeParameter('pointAttenuationMultiplier');
+subscribeParameter('sigmoidDomainOffset');
+subscribeParameter('sigmoidSharpness');
+subscribeParameter('dropoutFactor');
+subscribeParameter('delay');
+
+Sandcastle.addToggleButton('Enabled', false, function(checked) {
+    tileset.pointCloudPostProcessorOptions.enabled = checked;
+});
+
+Sandcastle.addToggleButton('Use Triangle Wave', false, function(checked) {
+    tileset.pointCloudPostProcessorOptions.useTriangle = checked;
+});
+
+Sandcastle.addToggleButton('Enable AO', true, function(checked) {
+    tileset.pointCloudPostProcessorOptions.enableAO = checked;
+});
+
+Sandcastle.addToolbarMenu([{
+    text : 'Color View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
+    }
+}, {
+    text : 'Depth View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = true;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
+    }
+}, {
+    text : 'Density View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = true;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
+    }
+}, {
+    text : 'Stencil View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = true;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = false;
+    }
+}, {
+    text : 'AO View',
+    onselect : function() {
+        tileset.pointCloudPostProcessorOptions.depthViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.densityViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.stencilViewEnabled = false;
+        tileset.pointCloudPostProcessorOptions.AOViewEnabled = true;
+    }
+}]);
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

@@ -60,6 +60,7 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
+        this._clampedFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
 
         this._frameState = undefined;
@@ -640,6 +641,18 @@ define([
         },
 
         /**
+         * The distance to the clamped near and far planes. The nearest object determines the near
+         * plane and the farthest object determines the far plane.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        clampedFrustum : {
+            get : function() {
+                return this._clampedFrustum;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -991,6 +1004,8 @@ define([
 
         var camera = frameState.camera;
         this.updateCamera(camera);
+        this._clampedFrustum.x = frameState.clampedNear;
+        this._clampedFrustum.y = frameState.clampedFar;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
