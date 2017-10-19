@@ -859,8 +859,7 @@ define([
         var magnificationFilter = imageryLayer.magnificationFilter;
         var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture has power-of-two dimensions.
-        // In addition, we only use mipmaps if the texture filters are both LINEAR, because a NEAREST filter
-        // in Cesium v1.39 had no effect on mipmaps (see discussion on PR #5890).
+        // In addition, mipmaps are only generated if the texture filters are both LINEAR.
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
             var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
