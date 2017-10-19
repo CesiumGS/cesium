@@ -2,7 +2,7 @@ define([
         '../Core/Check',
         '../Core/defineProperties',
         '../Core/destroyObject'
-], function(
+    ], function(
         Check,
         defineProperties,
         destroyObject) {

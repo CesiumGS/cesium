@@ -3,7 +3,7 @@ define([
         '../Core/destroyObject',
         './PostProcess',
         './PostProcessLibrary'
-], function(
+    ], function(
         defineProperties,
         destroyObject,
         PostProcess,

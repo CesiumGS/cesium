@@ -14,7 +14,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap'
-], function(
+    ], function(
         Color,
         defined,
         destroyObject,
