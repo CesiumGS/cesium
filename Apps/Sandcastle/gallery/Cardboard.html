@@ -34,6 +34,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 viewer.scene.globe.enableLighting = true;
 
+// TEST
+viewer.scene.eyeSeparation = 1.0;
+
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestVertexNormals : true
