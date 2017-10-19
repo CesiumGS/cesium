@@ -961,7 +961,6 @@ defineSuite([
             dataSource.entities.remove(entity);
 
             expect(viewer.trackedEntity).toBeUndefined();
-            expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
 
             dataSource.entities.add(entity);
             viewer.trackedEntity = entity;
@@ -976,7 +975,6 @@ defineSuite([
                 viewer.dataSources.remove(dataSource);
 
                 expect(viewer.trackedEntity).toBeUndefined();
-                expect(viewer.scene.camera.transform).toEqual(Matrix4.IDENTITY);
             });
         });
     });

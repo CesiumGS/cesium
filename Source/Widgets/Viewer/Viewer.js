@@ -1233,7 +1233,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         }
 
                         this._entityView = undefined;
-                        this.camera.setView({endTransform: Matrix4.IDENTITY});
                     } else {
                         //We can't start tracking immediately, so we set a flag and start tracking
                         //when the bounding sphere is ready (most likely next frame).
