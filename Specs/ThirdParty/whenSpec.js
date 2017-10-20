@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'ThirdParty/when'
     ], function(

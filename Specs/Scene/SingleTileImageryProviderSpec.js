@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
@@ -166,13 +165,13 @@ defineSuite([
 
     it('routes requests through a proxy if one is specified', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
+        var proxy = new DefaultProxy('/proxy/');
 
         spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
             expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
             loadImage.defaultCreateImage(url, crossOrigin, deferred);
         });
 
-        var proxy = new DefaultProxy('/proxy/');
         var provider = new SingleTileImageryProvider({
             url : imageUrl,
             proxy : proxy

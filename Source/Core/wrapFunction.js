@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './DeveloperError'
     ], function(
@@ -15,11 +14,11 @@ define([
     function wrapFunction(obj, oldFunction, newFunction) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof oldFunction !== 'function') {
-            throw new DeveloperError("oldFunction is required to be a function.");
+            throw new DeveloperError('oldFunction is required to be a function.');
         }
 
         if (typeof newFunction !== 'function') {
-            throw new DeveloperError("oldFunction is required to be a function.");
+            throw new DeveloperError('oldFunction is required to be a function.');
         }
         //>>includeEnd('debug');
 

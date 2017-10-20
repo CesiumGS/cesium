@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GlobeSurfaceTile',
         'Core/Cartesian3',
@@ -88,7 +87,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : 'https://cesiumjs.org/smallTerrain'
+                url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
             });
         });
 
@@ -444,10 +443,9 @@ defineSuite([
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
                     GlobeSurfaceTile.processStateMachine(rootTile, scene.frameState, allWaterTerrainProvider, imageryLayerCollection, []);
                     return false;
-                } else {
-                    GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, allWaterTerrainProvider, imageryLayerCollection, []);
-                    return childTile.state === QuadtreeTileLoadState.DONE;
                 }
+                GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, allWaterTerrainProvider, imageryLayerCollection, []);
+                return childTile.state === QuadtreeTileLoadState.DONE;
             }).then(function() {
                 expect(childTile.data.waterMaskTexture).toBeDefined();
                 expect(childTile.data.waterMaskTexture).toBe(rootTile.data.waterMaskTexture);
@@ -482,10 +480,9 @@ defineSuite([
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
                     GlobeSurfaceTile.processStateMachine(rootTile, scene.frameState, allLandTerrainProvider, imageryLayerCollection, []);
                     return false;
-                } else {
-                    GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, allLandTerrainProvider, imageryLayerCollection, []);
-                    return childTile.state === QuadtreeTileLoadState.DONE;
                 }
+                GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, allLandTerrainProvider, imageryLayerCollection, []);
+                return childTile.state === QuadtreeTileLoadState.DONE;
             }).then(function() {
                 expect(childTile.data.waterMaskTexture).toBeUndefined();
             });

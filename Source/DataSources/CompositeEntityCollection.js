@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/createGuid',
         '../Core/defined',
@@ -450,7 +449,7 @@ define([
     /**
      * Gets an entity with the specified id.
      *
-     * @param {Object} id The id of the entity to retrieve.
+     * @param {String} id The id of the entity to retrieve.
      * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
      */
     CompositeEntityCollection.prototype.getById = function(id) {

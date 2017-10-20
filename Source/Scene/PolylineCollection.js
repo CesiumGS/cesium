@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -758,14 +757,12 @@ define([
             } else {
                 bufferUsage.frameCount = 100;
             }
-        } else {
-            if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
-                if (bufferUsage.frameCount === 0) {
-                    usageChanged = true;
-                    bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
-                } else {
-                    bufferUsage.frameCount--;
-                }
+        } else if (bufferUsage.bufferUsage !== BufferUsage.STATIC_DRAW) {
+            if (bufferUsage.frameCount === 0) {
+                usageChanged = true;
+                bufferUsage.bufferUsage = BufferUsage.STATIC_DRAW;
+            } else {
+                bufferUsage.frameCount--;
             }
         }
 
@@ -1147,14 +1144,22 @@ define([
         }
 
         var defines = ['DISTANCE_DISPLAY_CONDITION'];
+
+        var fs = new ShaderSource({
+            sources : [this.material.shaderSource, PolylineFS]
+        });
+
+        // Check for use of v_polylineAngle in material shader
+        if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
+            defines.push('POLYLINE_DASH');
+        }
+
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
             defines : defines,
             sources : [PolylineCommon, vsSource]
         });
-        var fs = new ShaderSource({
-            sources : [this.material.shaderSource, PolylineFS]
-        });
+
         var fsPick = new ShaderSource({
             sources : fs.sources,
             pickColorQualifier : 'varying'
@@ -1452,7 +1457,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                        if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1484,7 +1489,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

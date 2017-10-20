@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/loadArrayBuffer',
         'Core/Request',

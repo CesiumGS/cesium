@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -569,8 +568,8 @@ define([
             }
             that._credit = credit;
 
-            that._urlParts = urlTemplateToParts(that._url, tags);
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
+            that._urlParts = urlTemplateToParts(that._url, tags); //eslint-disable-line no-use-before-define
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags); //eslint-disable-line no-use-before-define
             return true;
         });
     };
@@ -667,16 +666,20 @@ define([
                 return loadXML(url).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
                 return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url : url,
-                    responseType : format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
             }
+            return loadWithXhr({
+                url : url,
+                responseType : format.format
+            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();
     };
+
+    var degreesScratchComputed = false;
+    var degreesScratch = new Rectangle();
+    var projectedScratchComputed = false;
+    var projectedScratch = new Rectangle();
 
     function buildImageUrl(imageryProvider, x, y, level) {
         degreesScratchComputed = false;
@@ -686,6 +689,10 @@ define([
             return partFunction(imageryProvider, x, y, level);
         });
     }
+
+    var ijScratchComputed = false;
+    var ijScratch = new Cartesian2();
+    var longitudeLatitudeProjectedScratchComputed = false;
 
     function buildPickFeaturesUrl(imageryProvider, x, y, level, longitude, latitude, format) {
         degreesScratchComputed = false;
@@ -805,9 +812,6 @@ define([
         return imageryProvider._subdomains[index];
     }
 
-    var degreesScratchComputed = false;
-    var degreesScratch = new Rectangle();
-
     function computeDegrees(imageryProvider, x, y, level) {
         if (degreesScratchComputed) {
             return;
@@ -841,9 +845,6 @@ define([
         computeDegrees(imageryProvider, x, y, level);
         return degreesScratch.north;
     }
-
-    var projectedScratchComputed = false;
-    var projectedScratch = new Rectangle();
 
     function computeProjected(imageryProvider, x, y, level) {
         if (projectedScratchComputed) {
@@ -883,9 +884,6 @@ define([
         return imageryProvider.tileHeight;
     }
 
-    var ijScratchComputed = false;
-    var ijScratch = new Cartesian2();
-
     function iTag(imageryProvider, x, y, level, longitude, latitude, format) {
         computeIJ(imageryProvider, x, y, level, longitude, latitude);
         return ijScratch.x;
@@ -907,6 +905,7 @@ define([
     }
 
     var rectangleScratch = new Rectangle();
+    var longitudeLatitudeProjectedScratch = new Cartesian3();
 
     function computeIJ(imageryProvider, x, y, level, longitude, latitude, format) {
         if (ijScratchComputed) {
@@ -929,9 +928,6 @@ define([
     function latitudeDegreesTag(imageryProvider, x, y, level, longitude, latitude, format) {
         return CesiumMath.toDegrees(latitude);
     }
-
-    var longitudeLatitudeProjectedScratchComputed = false;
-    var longitudeLatitudeProjectedScratch = new Cartesian3();
 
     function longitudeProjectedTag(imageryProvider, x, y, level, longitude, latitude, format) {
         computeLongitudeLatitudeProjected(imageryProvider, x, y, level, longitude, latitude);

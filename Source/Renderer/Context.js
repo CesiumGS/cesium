@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/clone',
         '../Core/Color',
@@ -270,11 +269,14 @@ define([
 
         // Query and initialize extensions
         this._standardDerivatives = !!getExtension(gl, ['OES_standard_derivatives']);
+        this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
         this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
         this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
+
+        this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
@@ -484,7 +486,21 @@ define([
          */
         standardDerivatives : {
             get : function() {
-                return this._standardDerivatives;
+                return this._standardDerivatives || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_blend_minmax extension is supported.  This
+         * extension extends blending capabilities by adding two new blend equations:
+         * the minimum or maximum color components of the source and destination colors.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/}
+         */
+        blendMinmax : {
+            get : function() {
+                return this._blendMinmax || this._webgl2;
             }
         },
 
@@ -511,7 +527,7 @@ define([
          */
         depthTexture : {
             get : function() {
-                return this._depthTexture;
+                return this._depthTexture || this._webgl2;
             }
         },
 
@@ -524,7 +540,7 @@ define([
          */
         floatingPointTexture : {
             get : function() {
-                return this._textureFloat;
+                return this._textureFloat || this._colorBufferFloat;
             }
         },
 
@@ -598,7 +614,7 @@ define([
          */
         fragmentDepth : {
             get : function() {
-                return this._fragDepth;
+                return this._fragDepth || this._webgl2;
             }
         },
 
@@ -612,6 +628,20 @@ define([
         instancedArrays : {
             get : function() {
                 return this._instancedArrays || this._webgl2;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
+         * extension makes the formats gl.R16F, gl.RG16F, gl.RGBA16F, gl.R32F, gl.RG32F,
+         * gl.RGBA32F, gl.R11F_G11F_B10F color renderable.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+         */
+        colorBufferFloat : {
+            get : function() {
+                return this._colorBufferFloat;
             }
         },
 
@@ -1077,7 +1107,8 @@ define([
             }),
             uniformMap : overrides.uniformMap,
             owner : overrides.owner,
-            framebuffer : overrides.framebuffer
+            framebuffer : overrides.framebuffer,
+            pass : overrides.pass
         });
     };
 

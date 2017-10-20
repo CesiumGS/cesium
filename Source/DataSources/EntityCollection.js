@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/createGuid',
@@ -326,7 +325,7 @@ define([
     /**
      * Removes an entity with the provided id from the collection.
      *
-     * @param {Object} id The id of the entity to remove.
+     * @param {String} id The id of the entity to remove.
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
      */
     EntityCollection.prototype.removeById = function(id) {
@@ -383,7 +382,7 @@ define([
     /**
      * Gets an entity with the specified id.
      *
-     * @param {Object} id The id of the entity to retrieve.
+     * @param {String} id The id of the entity to retrieve.
      * @returns {Entity} The entity with the provided id or undefined if the id did not exist in the collection.
      */
     EntityCollection.prototype.getById = function(id) {
@@ -399,7 +398,7 @@ define([
     /**
      * Gets an entity with the specified id or creates it and adds it to the collection if it does not exist.
      *
-     * @param {Object} id The id of the entity to retrieve or create.
+     * @param {String} id The id of the entity to retrieve or create.
      * @returns {Entity} The new or existing object.
      */
     EntityCollection.prototype.getOrCreateEntity = function(id) {

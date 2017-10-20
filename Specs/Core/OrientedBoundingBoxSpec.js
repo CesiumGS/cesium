@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
         'Core/BoundingSphere',
@@ -343,9 +342,8 @@ defineSuite([
             var d = -Cartesian3.dot(p0, n);
             if (Math.abs(d) > 0.0001 && Cartesian3.magnitudeSquared(n) > 0.0001) {
                 return new Plane(n, d);
-            } else {
-                return undefined;
             }
+            return undefined;
         };
 
         var pl;

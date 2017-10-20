@@ -1,39 +1,40 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/Ray',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Transforms',
         './Camera',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
         './SceneMode'
     ], function(
         Cartesian3,
         Cartographic,
+        Check,
         defined,
         destroyObject,
         DeveloperError,
         EasingFunction,
         CesiumMath,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Ray,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Transforms,
         Camera,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode) {
     'use strict';
 
@@ -42,9 +43,7 @@ define([
      */
     function SceneTransitioner(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
+        Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');
 
         this._scene = scene;
@@ -195,6 +194,14 @@ define([
         }
     };
 
+    var scratchCVTo3DCamera = {
+        position : new Cartesian3(),
+        direction : new Cartesian3(),
+        up : new Cartesian3(),
+        frustum : undefined
+    };
+    var scratch2DTo3DFrustumPersp = new PerspectiveFrustum();
+
     SceneTransitioner.prototype.morphTo3D = function(duration, ellipsoid) {
         if (defined(this._completeMorph)) {
             this._completeMorph();
@@ -302,12 +309,6 @@ define([
     var scratchCVTo3DCartographic = new Cartographic();
     var scratchCVTo3DSurfacePoint = new Cartesian3();
     var scratchCVTo3DFromENU = new Matrix4();
-    var scratchCVTo3DCamera = {
-        position : new Cartesian3(),
-        direction : new Cartesian3(),
-        up : new Cartesian3(),
-        frustum : undefined
-    };
 
     function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
         var scene = transitioner._scene;
@@ -376,8 +377,13 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    var scratch2DTo3DFrustumPersp = new PerspectiveFrustum();
     var scratch2DTo3DFrustumOrtho = new OrthographicFrustum();
+    var scratch3DToCVStartPos = new Cartesian3();
+    var scratch3DToCVStartDir = new Cartesian3();
+    var scratch3DToCVStartUp = new Cartesian3();
+    var scratch3DToCVEndPos = new Cartesian3();
+    var scratch3DToCVEndDir = new Cartesian3();
+    var scratch3DToCVEndUp = new Cartesian3();
 
     function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
         duration /= 3.0;
@@ -786,13 +792,6 @@ define([
             morphOrthographicToPerspective(transitioner, 0.0, cameraCV, morph);
         }
     }
-
-    var scratch3DToCVStartPos = new Cartesian3();
-    var scratch3DToCVStartDir = new Cartesian3();
-    var scratch3DToCVStartUp = new Cartesian3();
-    var scratch3DToCVEndPos = new Cartesian3();
-    var scratch3DToCVEndDir = new Cartesian3();
-    var scratch3DToCVEndUp = new Cartesian3();
 
     function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
         var scene = transitioner._scene;

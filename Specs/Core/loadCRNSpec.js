@@ -1,19 +1,19 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/loadCRN',
-    'Core/PixelFormat',
-    'Core/Request',
-    'Core/RequestErrorEvent',
-    'Core/RequestScheduler'
-], function(
-    loadCRN,
-    PixelFormat,
-    Request,
-    RequestErrorEvent,
-    RequestScheduler) {
+        'Core/loadCRN',
+        'Core/PixelFormat',
+        'Core/Request',
+        'Core/RequestErrorEvent',
+        'Core/RequestScheduler'
+    ], function(
+        loadCRN,
+        PixelFormat,
+        Request,
+        RequestErrorEvent,
+        RequestScheduler) {
     'use strict';
 
     var validCompressed = new Uint8Array([72, 120, 0, 74, 227, 123, 0, 0, 0, 138, 92, 167, 0, 4, 0, 4, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 74, 0, 0, 22, 0, 1, 0, 0, 96, 0, 0, 12, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 108, 0, 0, 0, 137, 0, 10, 96, 0, 0, 0, 0, 0, 0, 16, 4, 9, 130, 0, 0, 0, 0, 0, 0, 109, 4, 0, 0, 198, 96, 128, 0, 0, 0, 0, 0, 26, 80, 0, 0, 6, 96, 0, 0, 0, 0, 0, 0, 16, 0, 51, 0, 0, 0, 0, 0, 0, 0, 128, 1, 152, 0, 0, 0, 0, 0, 0, 4, 0]);
+    var validCompressedMipmap = new Uint8Array([72, 120, 0, 82, 183, 141, 0, 0, 0, 148, 151, 24, 0, 4, 0, 4, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 0, 22, 0, 1, 0, 0, 104, 0, 0, 12, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 29, 0, 0, 116, 0, 0, 0, 145, 0, 0, 0, 146, 0, 0, 0, 147, 0, 130, 97, 0, 0, 0, 0, 0, 4, 35, 37, 0, 3, 48, 0, 0, 0, 0, 0, 0, 8, 200, 0, 198, 96, 128, 0, 0, 0, 0, 0, 26, 80, 0, 0, 6, 96, 0, 0, 0, 0, 0, 0, 16, 0, 51, 0, 0, 0, 0, 0, 0, 0, 128, 1, 152, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0]);
     var fakeXHR;
 
     beforeEach(function() {
@@ -120,7 +120,7 @@ defineSuite([
         expect(rejectedError.response).toEqual(error);
     });
 
-    it('returns a promise that resolves to an compressed texture when the request loads', function() {
+    it('returns a promise that resolves to a compressed texture when the request loads', function() {
         var testUrl = 'http://example.invalid/testuri';
         var promise = loadCRN(testUrl);
 
@@ -138,6 +138,36 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
 
         var response = validCompressed.buffer;
+        fakeXHR.simulateLoad(response);
+
+        return newPromise.then(function() {
+            expect(resolvedValue).toBeDefined();
+            expect(resolvedValue.width).toEqual(4);
+            expect(resolvedValue.height).toEqual(4);
+            expect(PixelFormat.isCompressedFormat(resolvedValue.internalFormat)).toEqual(true);
+            expect(resolvedValue.bufferView).toBeDefined();
+            expect(rejectedError).toBeUndefined();
+        });
+    });
+
+    it('returns a promise that resolves to a compressed texture containing the first mip level of the original texture', function() {
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadCRN(testUrl);
+
+        expect(promise).toBeDefined();
+
+        var resolvedValue;
+        var rejectedError;
+        var newPromise = promise.then(function(value) {
+            resolvedValue = value;
+        }, function(error) {
+            rejectedError = error;
+        });
+
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
+
+        var response = validCompressedMipmap.buffer;
         fakeXHR.simulateLoad(response);
 
         return newPromise.then(function() {

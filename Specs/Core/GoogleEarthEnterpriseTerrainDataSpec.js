@@ -1,32 +1,31 @@
-/*global defineSuite*/
 defineSuite([
-    'Core/GoogleEarthEnterpriseTerrainData',
-    'Core/BoundingSphere',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/Math',
-    'Core/Matrix4',
-    'Core/Rectangle',
-    'Core/TerrainData',
-    'Core/TerrainMesh',
-    'Core/Transforms',
-    'ThirdParty/when'
-], function(
-    GoogleEarthEnterpriseTerrainData,
-    BoundingSphere,
-    Cartesian3,
-    Cartographic,
-    Ellipsoid,
-    GeographicTilingScheme,
-    CesiumMath,
-    Matrix4,
-    Rectangle,
-    TerrainData,
-    TerrainMesh,
-    Transforms,
-    when) {
+        'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Core/TerrainData',
+        'Core/TerrainMesh',
+        'Core/Transforms',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthEnterpriseTerrainData,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        GeographicTilingScheme,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        TerrainData,
+        TerrainMesh,
+        Transforms,
+        when) {
     'use strict';
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
@@ -107,7 +106,8 @@ defineSuite([
             offset += sizeOfInt32;
 
             // Points
-            for (var j = 0; j < 4; ++j) {
+            var j;
+            for (j = 0; j < 4; ++j) {
                 var xPos = 0;
                 var yPos = 0;
                 var altitude = altitudeStart;
@@ -143,7 +143,7 @@ defineSuite([
     describe('upsample', function() {
         it('works for all four children of a simple quad', function() {
             var maxShort = 32767;
-            tilingScheme = new GeographicTilingScheme();
+            var tilingScheme = new GeographicTilingScheme();
             var buffer = getBuffer(tilingScheme, 0, 0, 0);
             var data = new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
@@ -152,7 +152,7 @@ defineSuite([
                 negativeElevationThreshold : CesiumMath.EPSILON12
             });
 
-            var tilingScheme = new GeographicTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             var childRectangles = [
                 tilingScheme.tileXYToRectangle(0, 0, 1),
                 tilingScheme.tileXYToRectangle(1, 0, 1),

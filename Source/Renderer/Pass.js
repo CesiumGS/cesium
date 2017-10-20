@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
@@ -21,11 +20,14 @@ define([
         ENVIRONMENT : 0,
         COMPUTE : 1,
         GLOBE : 2,
-        GROUND : 3,
-        OPAQUE : 4,
-        TRANSLUCENT : 5,
-        OVERLAY : 6,
-        NUMBER_OF_PASSES : 7
+        TERRAIN_CLASSIFICATION : 3,
+        CESIUM_3D_TILE : 4,
+        CESIUM_3D_TILE_CLASSIFICATION : 5,
+        CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW : 6,
+        OPAQUE : 7,
+        TRANSLUCENT : 8,
+        OVERLAY : 9,
+        NUMBER_OF_PASSES : 10
     };
 
     return freezeObject(Pass);

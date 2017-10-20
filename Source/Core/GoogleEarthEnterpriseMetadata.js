@@ -1,40 +1,39 @@
-/*global define*/
 define([
-    '../ThirdParty/google-earth-dbroot-parser',
-    '../ThirdParty/when',
-    './appendForwardSlash',
-    './Check',
-    './Credit',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './GoogleEarthEnterpriseTileInformation',
-    './isBitSet',
-    './joinUrls',
-    './loadArrayBuffer',
-    './Math',
-    './Request',
-    './RequestType',
-    './RuntimeError',
-    './TaskProcessor'
-], function(
-    dbrootParser,
-    when,
-    appendForwardSlash,
-    Check,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    GoogleEarthEnterpriseTileInformation,
-    isBitSet,
-    joinUrls,
-    loadArrayBuffer,
-    CesiumMath,
-    Request,
-    RequestType,
-    RuntimeError,
-    TaskProcessor) {
+        '../ThirdParty/google-earth-dbroot-parser',
+        '../ThirdParty/when',
+        './appendForwardSlash',
+        './Check',
+        './Credit',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './GoogleEarthEnterpriseTileInformation',
+        './isBitSet',
+        './joinUrls',
+        './loadArrayBuffer',
+        './Math',
+        './Request',
+        './RequestType',
+        './RuntimeError',
+        './TaskProcessor'
+    ], function(
+        dbrootParser,
+        when,
+        appendForwardSlash,
+        Check,
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        GoogleEarthEnterpriseTileInformation,
+        isBitSet,
+        joinUrls,
+        loadArrayBuffer,
+        CesiumMath,
+        Request,
+        RequestType,
+        RuntimeError,
+        TaskProcessor) {
     'use strict';
 
     function stringToBuffer(str) {
@@ -158,7 +157,7 @@ define([
 
         /**
          * Gets the proxy used for metadata requests.
-         * @memberof GoogleEarthEnterpriseImageryProvider.prototype
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
          * @type {Proxy}
          * @readonly
          */
@@ -170,7 +169,7 @@ define([
 
         /**
          * Gets a promise that resolves to true when the metadata is ready for use.
-         * @memberof GoogleEarthEnterpriseProvider.prototype
+         * @memberof GoogleEarthEnterpriseMetadata.prototype
          * @type {Promise.<Boolean>}
          * @readonly
          */
@@ -211,10 +210,8 @@ define([
                 if (!isBitSet(x, bitmask)) { // Right to left
                     digit |= 1;
                 }
-            } else {
-                if (isBitSet(x, bitmask)) { // Left to right
-                    digit |= 1;
-                }
+            } else if (isBitSet(x, bitmask)) { // Left to right
+                digit |= 1;
             }
 
             quadkey += digit;

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defined',
         './defineProperties',
@@ -22,6 +21,7 @@ define([
      * @see EllipsoidTerrainProvider
      * @see CesiumTerrainProvider
      * @see VRTheWorldTerrainProvider
+     * @see GoogleEarthEnterpriseTerrainProvider
      */
     function TerrainProvider() {
         DeveloperError.throwInstantiationError();

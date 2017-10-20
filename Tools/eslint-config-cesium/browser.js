@@ -6,7 +6,7 @@ module.exports = {
         amd: true,
         browser: true
     },
-    plugins: [
-        'html'
-    ]
+    rules: {
+        'no-implicit-globals': 'error'
+    }
 };

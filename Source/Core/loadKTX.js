@@ -1,17 +1,16 @@
-/*global define*/
 define([
         '../ThirdParty/when',
+        './Check',
         './CompressedTextureBuffer',
         './defined',
-        './DeveloperError',
         './loadArrayBuffer',
         './PixelFormat',
         './RuntimeError'
     ], function(
         when,
+        Check,
         CompressedTextureBuffer,
         defined,
-        DeveloperError,
         loadArrayBuffer,
         PixelFormat,
         RuntimeError) {
@@ -72,9 +71,7 @@ define([
      */
     function loadKTX(urlOrBuffer, headers, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(urlOrBuffer)) {
-            throw new DeveloperError('urlOrBuffer is required.');
-        }
+        Check.defined('urlOrBuffer', urlOrBuffer);
         //>>includeEnd('debug');
 
         var loadPromise;
@@ -192,13 +189,8 @@ define([
             if (glFormat !== 0) {
                 throw new RuntimeError('glFormat must be zero when the texture is compressed.');
             }
-            if (numberOfMipmapLevels === 0) {
-                throw new RuntimeError('Generating mipmaps for a compressed texture is unsupported.');
-            }
-        } else {
-            if (glBaseInternalFormat !== glFormat) {
-                throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
-            }
+        } else if (glBaseInternalFormat !== glFormat) {
+            throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
         }
 
         if (pixelDepth !== 0) {
@@ -213,9 +205,11 @@ define([
         }
 
         // Only use the level 0 mipmap
-        if (PixelFormat.isCompressedFormat(glInternalFormat) && numberOfMipmapLevels > 1) {
-            var levelSize = PixelFormat.compressedTextureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight);
-            texture = texture.slice(0, levelSize);
+        if (numberOfMipmapLevels > 1) {
+            var levelSize = PixelFormat.isCompressedFormat(glInternalFormat) ?
+                PixelFormat.compressedTextureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight) :
+                PixelFormat.textureSizeInBytes(glInternalFormat, pixelWidth, pixelHeight);
+            texture = new Uint8Array(texture.buffer, texture.byteOffset, levelSize);
         }
 
         return new CompressedTextureBuffer(glInternalFormat, pixelWidth, pixelHeight, texture);

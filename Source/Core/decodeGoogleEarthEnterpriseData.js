@@ -1,12 +1,11 @@
-/*global define*/
 define([
-    './Check',
-    './defined',
-    './RuntimeError'
-], function(
-    Check,
-    defined,
-    RuntimeError) {
+        './Check',
+        './defined',
+        './RuntimeError'
+    ], function(
+        Check,
+        defined,
+        RuntimeError) {
     'use strict';
 
     var compressedMagic = 0x7468dead;

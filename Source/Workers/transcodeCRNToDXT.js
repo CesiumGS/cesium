@@ -1,19 +1,17 @@
-/*global define*/
 define([
-    '../Core/CompressedTextureBuffer',
-    '../Core/defined',
-    '../Core/PixelFormat',
-    '../Core/RuntimeError',
-    '../ThirdParty/crunch',
-    './createTaskProcessorWorker'
-], function(
-    CompressedTextureBuffer,
-    defined,
-    PixelFormat,
-    RuntimeError,
-    crunch,
-    createTaskProcessorWorker
-) {
+        '../Core/CompressedTextureBuffer',
+        '../Core/defined',
+        '../Core/PixelFormat',
+        '../Core/RuntimeError',
+        '../ThirdParty/crunch',
+        './createTaskProcessorWorker'
+    ], function(
+        CompressedTextureBuffer,
+        defined,
+        PixelFormat,
+        RuntimeError,
+        crunch,
+        createTaskProcessorWorker) {
     'use strict';
 
     // Modified from texture-tester
@@ -134,8 +132,12 @@ define([
         // Mipmaps are unsupported, so copy the level 0 texture
         // When mipmaps are supported, a copy will still be necessary as dxtData is a view on the heap.
         var length = PixelFormat.compressedTextureSizeInBytes(format, width, height);
+
+        // Get a copy of the 0th mip level. dxtData will exceed length when there are more mip levels.
+        // Equivalent to dxtData.slice(0, length), which is not supported in IE11
+        var level0DXTDataView = dxtData.subarray(0, length);
         var level0DXTData = new Uint8Array(length);
-        level0DXTData.set(dxtData, 0);
+        level0DXTData.set(level0DXTDataView, 0);
 
         transferableObjects.push(level0DXTData.buffer);
         return new CompressedTextureBuffer(format, width, height, level0DXTData);

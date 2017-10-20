@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/ComponentDatatype',
@@ -273,17 +272,16 @@ define([
         var attributeLocations;
         var instances = parameters.instances;
         var length = instances.length;
+        var pickOffsets;
 
         if (length > 0) {
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
                 attributeLocations = GeometryPipeline.createAttributeLocations(geometries[0]);
+                if (parameters.createPickOffsets) {
+                    pickOffsets = createInstancePickOffsets(instances, geometries);
+                }
             }
-        }
-
-        var pickOffsets;
-        if (parameters.createPickOffsets && geometries.length > 0) {
-            pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 
         var boundingSpheres = new Array(length);
