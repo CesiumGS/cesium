@@ -2,6 +2,7 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Check',
         '../../Core/Color',
+        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -13,6 +14,7 @@ define([
         buildModuleUrl,
         Check,
         Color,
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
@@ -29,15 +31,17 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
+     * @param {Boolean} [disableSecurity=false] Sets whether security is disabled for displaying descriptions.  Do not use unless you know you can trust contents of the description.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    function InfoBox(container) {
+    function InfoBox(container, disableSecurity) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('container', container);
         //>>includeEnd('debug')
 
         container = getElement(container);
+        disableSecurity = defaultValue(disableSecurity, false);
 
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-infoBox';
@@ -45,23 +49,23 @@ define([
 css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyless }');
         container.appendChild(infoElement);
 
-        var titleTextContainer = document.createElement('div');
-        titleTextContainer.setAttribute('data-bind', 'ifnot: securityDisabled');
-        infoElement.appendChild(titleTextContainer);
+        if (disableSecurity) {
+            var titleHtmlContainer = document.createElement('div');
+            infoElement.appendChild(titleHtmlContainer);
 
-        var titleTextElement = document.createElement('div');
-        titleTextElement.className = 'cesium-infoBox-title';
-        titleTextElement.setAttribute('data-bind', 'text: titleText');
-        titleTextContainer.appendChild(titleTextElement);
+            var titleHtmlElement = document.createElement('div');
+            titleHtmlElement.className = 'cesium-infoBox-title';
+            titleHtmlElement.setAttribute('data-bind', 'html: titleText');
+            titleHtmlContainer.appendChild(titleHtmlElement);
+        } else {
+            var titleTextContainer = document.createElement('div');
+            infoElement.appendChild(titleTextContainer);
 
-        var titleHtmlContainer = document.createElement('div');
-        titleHtmlContainer.setAttribute('data-bind', 'if: securityDisabled');
-        infoElement.appendChild(titleHtmlContainer);
-
-        var titleHtmlElement = document.createElement('div');
-        titleHtmlElement.className = 'cesium-infoBox-title';
-        titleHtmlElement.setAttribute('data-bind', 'html: titleText');
-        titleHtmlContainer.appendChild(titleHtmlElement);
+            var titleTextElement = document.createElement('div');
+            titleTextElement.className = 'cesium-infoBox-title';
+            titleTextElement.setAttribute('data-bind', 'text: titleText');
+            titleTextContainer.appendChild(titleTextElement);
+        }
 
         var cameraElement = document.createElement('button');
         cameraElement.type = 'button';
@@ -83,7 +87,10 @@ click: function () { closeClicked.raiseEvent(this); }');
 
         var frame = document.createElement('iframe');
         frame.className = 'cesium-infoBox-iframe';
-        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40)}, attr: {"sandbox": sandboxOptions}');
+        if (!disableSecurity) {
+            frame.setAttribute('sandbox', 'allow-same-origin allow-popups allow-forms'); //allow-pointer-lock allow-scripts allow-top-navigation
+        }
+        frame.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40)}');
         frame.setAttribute('allowfullscreen', true);
         infoElement.appendChild(frame);
 
@@ -94,7 +101,6 @@ click: function () { closeClicked.raiseEvent(this); }');
         this._element = infoElement;
         this._frame = frame;
         this._viewModel = viewModel;
-        this._viewModel.securityDisabled = this._disableSecurity;
         this._descriptionSubscription = undefined;
 
         var that = this;

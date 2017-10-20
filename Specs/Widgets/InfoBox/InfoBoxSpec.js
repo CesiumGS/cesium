@@ -68,18 +68,12 @@ defineSuite([
         expect(infoBox.container.id).toBe(testContainer.id);
     });
 
-    it('can set disableSecurity', function() {
-        infoBox = new InfoBox(testContainer);
+    it('can set securityDisabled', function() {
+        infoBox = new InfoBox(testContainer, true);
 
-        infoBox.viewModel.securityDisabled = true;
         var title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
         expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("html");
         expect(infoBox.frame.getAttribute("sandbox")).toEqual(null);
-
-        infoBox.viewModel.securityDisabled = false;
-        title = infoBox._element.getElementsByClassName("cesium-infoBox-title")[0];
-        expect(title.getAttribute("data-bind").split(": titleText")[0]).toEqual("text");
-        expect(infoBox.frame.getAttribute("sandbox")).toEqual("allow-same-origin allow-popups allow-forms");
     });
 
     it('throws if container is undefined', function() {
