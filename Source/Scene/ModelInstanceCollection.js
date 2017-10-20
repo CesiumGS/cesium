@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
@@ -17,6 +16,7 @@ define([
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
         './getAttributeOrUniformBySemantic',
@@ -42,6 +42,7 @@ define([
         Buffer,
         BufferUsage,
         DrawCommand,
+        Pass,
         ShaderSource,
         when,
         getAttributeOrUniformBySemantic,
@@ -108,11 +109,14 @@ define([
         this._instancingSupported = false;
         this._dynamic = defaultValue(options.dynamic, false);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._cull = defaultValue(options.cull, true); // Undocumented option
         this._ready = false;
         this._readyPromise = when.defer();
         this._state = LoadState.NEEDS_LOAD;
         this._dirty = false;
+
+        // Undocumented options
+        this._cull = defaultValue(options.cull, true);
+        this._opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._instances = createInstances(this, options.instances);
 
@@ -604,7 +608,8 @@ define([
             pickVertexShaderLoaded : undefined,
             pickFragmentShaderLoaded : undefined,
             pickUniformMapLoaded : undefined,
-            ignoreCommands : true
+            ignoreCommands : true,
+            opaquePass : collection._opaquePass
         };
 
         if (allowPicking && !usesBatchTable) {

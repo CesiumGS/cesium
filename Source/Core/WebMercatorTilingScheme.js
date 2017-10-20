@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian2',
         './defaultValue',

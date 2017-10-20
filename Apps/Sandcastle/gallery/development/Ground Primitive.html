@@ -68,7 +68,8 @@ function createOverlappingPolygons(withAlpha) {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 1'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     // Same polygon slightly offset and overlapping.
@@ -89,7 +90,8 @@ function createOverlappingPolygons(withAlpha) {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 2'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     // Same polygon slightly offset and overlapping.
@@ -110,7 +112,8 @@ function createOverlappingPolygons(withAlpha) {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(color)
             },
             id : 'polygon 3'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 }
 
@@ -204,7 +207,8 @@ Sandcastle.addToolbarButton('Batching', function() {
     var show = new Cesium.ShowGeometryInstanceAttribute(true);
     var instances = createBatchedInstances(color, show);
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstances : instances
+        geometryInstances : instances,
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     viewOverlappingPolygons();
@@ -216,7 +220,8 @@ Sandcastle.addToolbarButton('Batch Picking', function() {
     var instances = createBatchedInstances(color, show);
 
     var primitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstances : instances
+        geometryInstances : instances,
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     color = new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 0.5);
@@ -230,7 +235,8 @@ Sandcastle.addToolbarButton('Batch Picking', function() {
     }
 
     var pickPrimitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstances : instances
+        geometryInstances : instances,
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     viewOverlappingPolygons();
@@ -270,7 +276,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
             },
             id : 'circle'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     // Ellipse Geometry
@@ -285,7 +292,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                  color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 1.0, 0.5))
             },
             id : 'ellipse'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     // Corridor Geometry
@@ -303,7 +311,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
             },
             id : 'corridor'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 
     // Rectangle geometry
@@ -317,7 +326,8 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
                 color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
             },
             id : 'rectangle'
-        })
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
     }));
 });
 

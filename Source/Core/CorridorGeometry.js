@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
@@ -54,6 +53,13 @@ define([
 
     var scratch1 = new Cartesian3();
     var scratch2 = new Cartesian3();
+
+    function scaleToSurface(positions, ellipsoid) {
+        for (var i = 0; i < positions.length; i++) {
+            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
+        }
+        return positions;
+    }
 
     function addNormals(attr, normal, left, front, back, vertexFormat) {
         var normals = attr.normals;
@@ -699,6 +705,7 @@ define([
     var scratchCartographicMax = new Cartographic();
 
     function computeRectangle(positions, ellipsoid, width, cornerType) {
+        positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var length = cleanPositions.length;
         if (length < 2 || width <= 0) {
@@ -965,14 +972,15 @@ define([
         var width = corridorGeometry._width;
         var extrudedHeight = corridorGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
+        var ellipsoid = corridorGeometry._ellipsoid;
 
+        positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
 
-        var ellipsoid = corridorGeometry._ellipsoid;
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
             ellipsoid : ellipsoid,

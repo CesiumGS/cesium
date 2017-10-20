@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/GlobeSurfaceTile',
         'Core/Cartesian3',
@@ -88,7 +87,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : 'https://cesiumjs.org/smallTerrain'
+                url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
             });
         });
 

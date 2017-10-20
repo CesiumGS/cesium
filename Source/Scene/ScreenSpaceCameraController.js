@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -9,12 +8,14 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/HeadingPitchRoll',
         '../Core/IntersectionTests',
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
         '../Core/Plane',
         '../Core/Quaternion',
         '../Core/Ray',
@@ -22,7 +23,6 @@ define([
         './CameraEventAggregator',
         './CameraEventType',
         './MapMode2D',
-        './OrthographicFrustum',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -36,12 +36,14 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        HeadingPitchRoll,
         IntersectionTests,
         isArray,
         KeyboardEventModifier,
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
         Plane,
         Quaternion,
         Ray,
@@ -49,7 +51,6 @@ define([
         CameraEventAggregator,
         CameraEventType,
         MapMode2D,
-        OrthographicFrustum,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -447,6 +448,9 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchCartesianTwo = new Cartesian3();
     var scratchCartesianThree = new Cartesian3();
+    var scratchZoomViewOptions = {
+      orientation: new HeadingPitchRoll()
+    };
 
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
@@ -485,6 +489,11 @@ define([
         var scene = object._scene;
         var camera = scene.camera;
         var mode = scene.mode;
+
+        var orientation = scratchZoomViewOptions.orientation;
+        orientation.heading = camera.heading;
+        orientation.pitch = camera.pitch;
+        orientation.roll = camera.roll;
 
         if (camera.frustum instanceof OrthographicFrustum) {
             if (Math.abs(distance) > 0.0) {
@@ -647,6 +656,7 @@ define([
                         Cartesian3.cross(camera.direction, camera.up, camera.right);
                         Cartesian3.cross(camera.right, camera.direction, camera.up);
 
+                        camera.setView(scratchZoomViewOptions);
                         return;
                     }
 
@@ -692,6 +702,8 @@ define([
         } else {
             camera.zoomIn(distance);
         }
+
+        camera.setView(scratchZoomViewOptions);
     }
 
     var translate2DStart = new Ray();

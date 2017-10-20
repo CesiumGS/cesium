@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -107,6 +106,10 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.image = undefined;
+            if (defined(billboard._removeCallbackFunc)) {
+                billboard._removeCallbackFunc();
+                billboard._removeCallbackFunc = undefined;
+            }
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
@@ -219,12 +222,10 @@ define([
                     // no texture, and therefore no billboard, for this glyph.
                     // so, completely unbind glyph.
                     unbindGlyph(labelCollection, glyph);
-                } else {
+                } else if (defined(glyph.textureInfo)) {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (defined(glyph.textureInfo)) {
-                        glyph.textureInfo = undefined;
-                    }
+                    glyph.textureInfo = undefined;
                 }
             } else {
                 // create a glyph object

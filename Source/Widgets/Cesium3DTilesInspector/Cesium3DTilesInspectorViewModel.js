@@ -1,32 +1,31 @@
-/*global define*/
 define([
-        '../../Scene/Cesium3DTileFeature',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/Cesium3DTileStyle',
-        '../../Scene/Cesium3DTileColorBlendMode',
         '../../Core/Check',
         '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../ThirdParty/knockout',
-        '../../Scene/PerformanceDisplay',
         '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType'
-], function(
-        Cesium3DTileFeature,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        Cesium3DTileColorBlendMode,
+        '../../Core/ScreenSpaceEventType',
+        '../../Scene/Cesium3DTileColorBlendMode',
+        '../../Scene/Cesium3DTileFeature',
+        '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTileStyle',
+        '../../Scene/PerformanceDisplay',
+        '../../ThirdParty/knockout'
+    ], function(
         Check,
         Color,
         defined,
         defineProperties,
         destroyObject,
-        knockout,
-        PerformanceDisplay,
         ScreenSpaceEventHandler,
-        ScreenSpaceEventType) {
+        ScreenSpaceEventType,
+        Cesium3DTileColorBlendMode,
+        Cesium3DTileFeature,
+        Cesium3DTileset,
+        Cesium3DTileStyle,
+        PerformanceDisplay,
+        knockout) {
     'use strict';
 
     function getPickTileset(viewModel) {
@@ -37,6 +36,22 @@ define([
             }
             viewModel.pickActive = false;
         };
+    }
+
+    function selectTilesetOnHover (viewModel, value) {
+        if (value) {
+            viewModel._eventHandler.setInputAction(function(e) {
+                var pick = viewModel._scene.pick(e.endPosition);
+                if (defined(pick) && pick.primitive instanceof Cesium3DTileset) {
+                    viewModel.tileset = pick.primitive;
+                }
+            }, ScreenSpaceEventType.MOUSE_MOVE);
+        } else {
+            viewModel._eventHandler.removeInputAction(ScreenSpaceEventType.MOUSE_MOVE);
+
+            // Restore hover-over selection to its current value
+            viewModel.picking = viewModel.picking;
+        }
     }
 
     var stringOptions = {
@@ -549,7 +564,6 @@ define([
         });
         /**
          * Displays the number of commands, points, triangles and features used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
@@ -570,12 +584,31 @@ define([
         });
         /**
          * Displays the memory used per tile.  This property is observable.
-         * @memberof Cesium3DTilesInspectorViewModel.prototype
          *
          * @type {Boolean}
          * @default false
          */
         this.showMemoryUsage = false;
+
+        var showUrl = knockout.observable();
+        knockout.defineProperty(this, 'showUrl', {
+            get : function() {
+                return showUrl();
+            },
+            set : function(value) {
+                showUrl(value);
+                if (defined(that._tileset)) {
+                    that._tileset.debugShowUrl = value;
+                }
+            }
+        });
+        /**
+         * Gets or sets the flag to show the tile url.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.showUrl = false;
 
         var maximumScreenSpaceError = knockout.observable();
         knockout.defineProperty(this, 'maximumScreenSpaceError', {
@@ -818,10 +851,14 @@ define([
         this._definedProperties = ['properties', 'dynamicScreenSpaceError', 'colorBlendMode', 'picking', 'colorize', 'wireframe', 'showBoundingVolumes',
                                    'showContentBoundingVolumes', 'showRequestVolumes', 'freezeFrame', 'maximumScreenSpaceError', 'dynamicScreenSpaceErrorDensity', 'baseScreenSpaceError',
                                    'skipScreenSpaceErrorFactor', 'skipLevelOfDetail', 'skipLevels', 'immediatelyLoadDesiredLevelOfDetail', 'loadSiblings', 'dynamicScreenSpaceErrorDensitySliderValue',
-                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage'];
+                                   'dynamicScreenSpaceErrorFactor', 'pickActive', 'showOnlyPickedTileDebugLabel', 'showGeometricError', 'showRenderingStatistics', 'showMemoryUsage', 'showUrl'];
         this._removePostRenderEvent = scene.postRender.addEventListener(function() {
             that._update();
         });
+
+        if (!defined(this._tileset)) {
+            selectTilesetOnHover(this, true);
+        }
     }
 
     defineProperties(Cesium3DTilesInspectorViewModel.prototype, {
@@ -929,7 +966,8 @@ define([
                                     'showOnlyPickedTileDebugLabel',
                                     'showGeometricError',
                                     'showRenderingStatistics',
-                                    'showMemoryUsage'];
+                                    'showMemoryUsage',
+                                    'showUrl'];
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
@@ -954,6 +992,7 @@ define([
 
                 this._statisticsText = getStatistics(tileset, false);
                 this._pickStatisticsText = getStatistics(tileset, true);
+                selectTilesetOnHover(this, false);
             }
         },
 
@@ -971,11 +1010,11 @@ define([
                     return;
                 }
                 var currentFeature = this._feature;
-                if (defined(currentFeature)) {
+                if (defined(currentFeature) && !currentFeature.content.isDestroyed()) {
                     // Restore original color to feature that is no longer selected
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
-                        currentFeature.color = this._style.color.evaluateColor(frameState, currentFeature, scratchColor);
+                        currentFeature.color = defined(this._style.color) ? this._style.color.evaluateColor(frameState, currentFeature, scratchColor) : Color.WHITE;
                     } else {
                         currentFeature.color = oldColor;
                     }
@@ -1004,7 +1043,7 @@ define([
                 }
                 var currentTile = this._tile;
 
-                if (defined(currentTile) && !hasFeatures(currentTile.content)) {
+                if (defined(currentTile) && !currentTile.isDestroyed() && !hasFeatures(currentTile.content)) {
                     // Restore original color to tile that is no longer selected
                     currentTile.color = oldColor;
                 }
@@ -1186,6 +1225,13 @@ define([
         }
 
         if (defined(tileset)) {
+            if (tileset.isDestroyed()) {
+                this.tile = undefined;
+                this.feature = undefined;
+                this.tileset = undefined;
+                return;
+            }
+
             var style = tileset.style;
             if (this._style !== tileset.style) {
                 if (this._shouldStyle) {
@@ -1228,6 +1274,8 @@ define([
 
     /**
      * Generates an HTML string of the statistics
+     *
+     * @function
      * @param {Cesium3DTileset} tileset The tileset
      * @param {Boolean} isPick Whether this is getting the statistics for the pick pass
      * @returns {String} The formatted statistics

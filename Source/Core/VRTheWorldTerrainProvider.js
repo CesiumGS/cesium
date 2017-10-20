@@ -1,11 +1,9 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Credit',
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Event',
@@ -26,7 +24,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -278,15 +275,6 @@ define([
         var proxy = this._proxy;
         if (defined(proxy)) {
             url = proxy.getURL(url);
-        }
-
-        if (typeof request === 'boolean') {
-            deprecationWarning('throttleRequests', 'The throttleRequest parameter for requestTileGeometry was deprecated in Cesium 1.35.  It will be removed in 1.37.');
-            request = new Request({
-                throttle : request,
-                throttleByServer : request,
-                type : RequestType.TERRAIN
-            });
         }
 
         var promise = loadImage(url, undefined, request);

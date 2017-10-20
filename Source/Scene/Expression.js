@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -7,6 +6,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/Math',
         '../Core/RuntimeError',
@@ -20,6 +20,7 @@ define([
         Color,
         defined,
         defineProperties,
+        DeveloperError,
         isArray,
         CesiumMath,
         RuntimeError,
@@ -476,7 +477,7 @@ define([
                 if (j < 0) {
                     throw new RuntimeError('Unmatched {.');
                 }
-                result += "czm_" + exp.substr(i + 2, j - (i + 2));
+                result += 'czm_' + exp.substr(i + 2, j - (i + 2));
                 exp = exp.substr(j + 1);
                 i = exp.indexOf('${');
             }
@@ -897,27 +898,27 @@ define([
 
     function getEvaluateUnaryFunction(call) {
         var evaluate = unaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
             return evaluate(call, left);
         };
     }
 
     function getEvaluateBinaryFunction(call) {
         var evaluate = binaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
-            var right = this._right.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
+            var right = this._right.evaluate(frameState, feature);
             return evaluate(call, left, right);
         };
     }
 
     function getEvaluateTernaryFunction(call) {
         var evaluate = ternaryFunctions[call];
-        return function(feature) {
-            var left = this._left.evaluate(feature);
-            var right = this._right.evaluate(feature);
-            var test = this._test.evaluate(feature);
+        return function(frameState, feature) {
+            var left = this._left.evaluate(frameState, feature);
+            var right = this._right.evaluate(frameState, feature);
+            var test = this._test.evaluate(frameState, feature);
             return evaluate(call, left, right, test);
         };
     }
@@ -1717,6 +1718,11 @@ define([
                 }
                 break;
             case ExpressionNodeType.LITERAL_VECTOR:
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(left)) {
+                    throw new DeveloperError('left should always be defined for type ExpressionNodeType.LITERAL_VECTOR');
+                }
+                //>>includeEnd('debug');
                 var length = left.length;
                 var vectorExpression = value + '(';
                 for (var i = 0; i < length; ++i) {

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ShadowMap',
         'Core/BoundingSphere',
@@ -14,6 +13,7 @@ defineSuite([
         'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
+        'Core/OrthographicOffCenterFrustum',
         'Core/PixelFormat',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -24,7 +24,6 @@ defineSuite([
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
-        'Scene/OrthographicOffCenterFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/ShadowMode',
@@ -46,6 +45,7 @@ defineSuite([
         HeightmapTerrainData,
         JulianDate,
         CesiumMath,
+        OrthographicOffCenterFrustum,
         PixelFormat,
         Transforms,
         WebGLConstants,
@@ -56,7 +56,6 @@ defineSuite([
         Camera,
         Globe,
         Model,
-        OrthographicOffCenterFrustum,
         PerInstanceColorAppearance,
         Primitive,
         ShadowMode,

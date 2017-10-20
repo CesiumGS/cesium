@@ -29,7 +29,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-// In this demo doorknobs, doors, roofs, and walls are styled via the batch table hierarchy.
+// Doorknobs, doors, roofs, and walls are styled with the batch table hierarchy.
 // Since buildings and zones are not backed by geometry they are not styled directly. However
 // styles may be written that take building and zone properties into account.
 //
@@ -82,17 +82,11 @@ function startup(Cesium) {
 //     * doorknob_name
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
-var inspectorViewModel = viewer.cesium3DTilesInspector.viewModel;
-
 viewer.clock.currentTime = new Cesium.JulianDate(2457522.154792);
 
-var scene = viewer.scene;
-var url = '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy';
-var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : url
+var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : '../../../Specs/Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy'
 }));
-inspectorViewModel.tileset = tileset;
 
 tileset.readyPromise.then(function() {
     var boundingSphere = tileset.boundingSphere;
@@ -185,33 +179,28 @@ var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 
 // When a feature is left clicked, print its class name and properties
 handler.setInputAction(function(movement) {
-    if (!inspectorViewModel.picking) {
+    var feature = viewer.scene.pick(movement.position);
+    if (!Cesium.defined(feature)) {
         return;
     }
-
-    var feature = inspectorViewModel.feature;
-    if (Cesium.defined(feature)) {
-        console.log('Class: ' + feature.getExactClassName());
-        console.log('Properties:');
-        var propertyNames = feature.getPropertyNames();
-        var length = propertyNames.length;
-        for (var i = 0; i < length; ++i) {
-            var name = propertyNames[i];
-            var value = feature.getProperty(name);
-            console.log('  ' + name + ': ' + value);
-        }
+    console.log('Class: ' + feature.getExactClassName());
+    console.log('Properties:');
+    var propertyNames = feature.getPropertyNames();
+    var length = propertyNames.length;
+    for (var i = 0; i < length; ++i) {
+        var name = propertyNames[i];
+        var value = feature.getProperty(name);
+        console.log('  ' + name + ': ' + value);
     }
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 // When a feature is middle clicked, hide it
 handler.setInputAction(function(movement) {
-    if (!inspectorViewModel.picking) {
+    var feature = viewer.scene.pick(movement.position);
+    if (!Cesium.defined(feature)) {
         return;
     }
-
-    if (Cesium.defined(inspectorViewModel.feature)) {
-        inspectorViewModel.feature.show = false;
-    }
+    feature.show = false;
 }, Cesium.ScreenSpaceEventType.MIDDLE_CLICK);
 
 //Sandcastle_End

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './buildModuleUrl',
         './Color',
@@ -210,7 +209,7 @@ define([
         canvas.width = size;
         canvas.height = size;
 
-        var context2D = canvas.getContext("2d");
+        var context2D = canvas.getContext('2d');
         drawPin(context2D, color, size);
 
         if (defined(url)) {

@@ -1,16 +1,10 @@
 {
   "asset": {
-    "version": "0.0"
-  },
-  "properties": {
-    "Height": {
-      "minimum": 20,
-      "maximum": 20
-    }
+    "version": "1.0"
   },
   "geometricError": 70,
   "root": {
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "region": [
         -1.3197004795898053,

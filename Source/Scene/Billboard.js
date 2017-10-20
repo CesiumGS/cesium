@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -77,22 +76,47 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
-            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
-        }
-        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
-            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
-        }
-        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
-            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
-        }
-        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
-            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
-        }
         if (defined(options.disableDepthTestDistance) && options.disableDepthTestDistance < 0.0) {
             throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
         }
         //>>includeEnd('debug');
+
+        var translucencyByDistance = options.translucencyByDistance;
+        var pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        var scaleByDistance = options.scaleByDistance;
+        var distanceDisplayCondition = options.distanceDisplayCondition;
+        if (defined(translucencyByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (translucencyByDistance.far <= translucencyByDistance.near) {
+                throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            translucencyByDistance = NearFarScalar.clone(translucencyByDistance);
+        }
+        if (defined(pixelOffsetScaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (pixelOffsetScaleByDistance.far <= pixelOffsetScaleByDistance.near) {
+                throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScaleByDistance);
+        }
+        if (defined(scaleByDistance)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (scaleByDistance.far <= scaleByDistance.near) {
+                throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+            }
+            //>>includeEnd('debug');
+            scaleByDistance = NearFarScalar.clone(scaleByDistance);
+        }
+        if (defined(distanceDisplayCondition)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+                throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near.');
+            }
+            //>>includeEnd('debug');
+            distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
+        }
 
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
@@ -109,11 +133,11 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
         this._width = options.width;
         this._height = options.height;
-        this._scaleByDistance = options.scaleByDistance;
-        this._translucencyByDistance = options.translucencyByDistance;
-        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
+        this._scaleByDistance = scaleByDistance;
+        this._translucencyByDistance = translucencyByDistance;
+        this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._distanceDisplayCondition = distanceDisplayCondition;
         this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
