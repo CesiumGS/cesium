@@ -1,10 +1,12 @@
 define([
+        '../Core/Check',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../ThirdParty/when',
         './CubeMap'
     ], function(
+        Check,
         defined,
         DeveloperError,
         loadImage,
@@ -50,9 +52,7 @@ define([
      */
     function loadCubeMap(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
-        }
+        Check.defined('context', context);
         if ((!defined(urls)) ||
             (!defined(urls.positiveX)) ||
             (!defined(urls.negativeX)) ||

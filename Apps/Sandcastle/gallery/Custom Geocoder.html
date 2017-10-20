@@ -51,7 +51,7 @@ function OpenStreetMapNominatimGeocoder() {
  * @returns {Promise<GeocoderResult[]>}
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
-    var endpoint = 'http://nominatim.openstreetmap.org/search?';
+    var endpoint = 'https://nominatim.openstreetmap.org/search?';
     var query = 'format=json&q=' + input;
     var requestString = endpoint + query;
     return Cesium.loadJson(requestString)
