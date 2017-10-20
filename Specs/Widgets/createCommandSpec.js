@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/createCommand',
         'Specs/getArguments',
@@ -7,8 +6,7 @@ defineSuite([
         createCommand,
         getArguments,
         knockout) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var spyFunction;
     var spyFunctionReturnValue = 5;

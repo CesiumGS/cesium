@@ -1,15 +1,13 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the position relative to the terrain.
      *
-     * @namespace
-     * @alias HeightReference
+     * @exports HeightReference
      */
     var HeightReference = {
         /**

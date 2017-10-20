@@ -1,10 +1,8 @@
-/*global define*/
 define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -19,7 +17,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -29,7 +26,7 @@ define([
         Uri,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
@@ -38,7 +35,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service.
+     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
      *        to pass to the WMS server in the GetMap URL.
@@ -48,7 +45,8 @@ define([
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
-     *        GetFeatureInfo or if you don't want this provider's features to be pickable.
+     *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
+     *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -66,13 +64,16 @@ define([
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
@@ -81,14 +82,14 @@ define([
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
-     *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+     *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -105,24 +106,6 @@ define([
 
         var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
-        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
-            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
-
-            //>>includeStart('debug', pragmas.debug);
-            if (defined(options.getFeatureInfoFormats)) {
-                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson or options.getFeatureInfoAsXml are specified.');
-            }
-            //>>includeEnd('debug');
-
-            getFeatureInfoFormats = [];
-            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
-                getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
-            }
-            if (defaultValue(options.getFeatureInfoAsXml, true)) {
-                getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
-            }
-        }
-
         // Build the template URLs for tiles and pickFeatures.
         var uri = new Uri(options.url);
         var queryOptions = queryToObject(defaultValue(uri.query, ''));
@@ -131,12 +114,11 @@ define([
 
         var pickFeaturesUri;
         var pickFeaturesQueryOptions;
-        if (defaultValue(options.enablePickFeatures, true)) {
-            pickFeaturesUri = new Uri(options.url);
-            pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-            var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-            pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
-        }
+
+        pickFeaturesUri = new Uri(options.url);
+        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
 
         function setParameter(name, value) {
             if (!defined(queryOptions[name])) {
@@ -149,7 +131,19 @@ define([
         }
 
         setParameter('layers', options.layers);
-        setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+
+        // Use SRS or CRS based on the WMS version.
+        if (parseFloat(parameters.version) >= 1.3) {
+          // Use CRS with 1.3.0 and going forward.
+          // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
+          // bbox requests.
+          setParameter('crs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+        }
+        else {
+          // SRS for WMS 1.1.0 or 1.1.1.
+          setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+        }
+
         setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
         setParameter('width', '{width}');
         setParameter('height', '{height}');
@@ -192,11 +186,13 @@ define([
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
             proxy : options.proxy,
+            subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : getFeatureInfoFormats
+            getFeatureInfoFormats : getFeatureInfoFormats,
+            enablePickFeatures: options.enablePickFeatures
         });
-    };
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -355,6 +351,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
@@ -381,6 +389,25 @@ define([
             get : function() {
                 return this._tileProvider.hasAlphaChannel;
             }
+        },
+
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapServiceImageryProvider#pickFeatures} will
+         * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+         * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._tileProvider.enablePickFeatures;
+            },
+            set : function(enablePickFeatures)  {
+                this._tileProvider.enablePickFeatures = enablePickFeatures;
+            }
         }
     });
 
@@ -405,6 +432,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -412,8 +440,8 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        return this._tileProvider.requestImage(x, y, level);
+    WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
+        return this._tileProvider.requestImage(x, y, level, request);
     };
 
     /**

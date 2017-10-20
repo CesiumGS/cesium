@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/SphereGeometry'
     ], function(
         defined,
         SphereGeometry) {
-    "use strict";
+    'use strict';
 
     return function(sphereGeometry, offset) {
         if (defined(offset)) {

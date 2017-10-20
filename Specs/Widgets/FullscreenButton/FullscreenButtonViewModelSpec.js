@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/FullscreenButton/FullscreenButtonViewModel',
         'Core/Fullscreen'
     ], function(
         FullscreenButtonViewModel,
         Fullscreen) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor sets default values', function() {
         var viewModel = new FullscreenButtonViewModel();

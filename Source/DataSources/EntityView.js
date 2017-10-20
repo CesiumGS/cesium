@@ -1,37 +1,32 @@
-/*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/HeadingPitchRange',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Transforms',
-        '../Scene/HeadingPitchRange',
         '../Scene/SceneMode'
     ], function(
-        BoundingSphere,
         Cartesian3,
-        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        HeadingPitchRange,
         JulianDate,
         CesiumMath,
         Matrix3,
         Matrix4,
         Transforms,
-        HeadingPitchRange,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var updateTransformMatrix3Scratch1 = new Matrix3();
     var updateTransformMatrix3Scratch2 = new Matrix3();
@@ -51,6 +46,7 @@ define([
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var hasBasis = false;
+            var invertVelocity = false;
             var xBasis;
             var yBasis;
             var zBasis;
@@ -58,8 +54,16 @@ define([
             if (mode === SceneMode.SCENE3D) {
                 // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
                 // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-                deltaTime = JulianDate.addSeconds(time, 0.001, deltaTime);
+                JulianDate.addSeconds(time, 0.001, deltaTime);
                 var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
+
+                // If no valid position at (time + 0.001), sample at (time - 0.001) and invert the vector
+                if (!defined(deltaCartesian)) {
+                    JulianDate.addSeconds(time, -0.001, deltaTime);
+                    deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
+                    invertVelocity = true;
+                }
+
                 if (defined(deltaCartesian)) {
                     var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
                     var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, updateTransformMatrix3Scratch2);
@@ -118,6 +122,11 @@ define([
 
                         // Y is along the angular momentum vector (e.g. "orbit normal")
                         yBasis = Cartesian3.cross(zBasis, inertialDeltaCartesian, updateTransformCartesian3Scratch3);
+
+                        if(invertVelocity) {
+                            yBasis = Cartesian3.multiplyByScalar(yBasis, -1, yBasis);
+                        }
+
                         if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON7)) {
                             // X is along the cross of y and z (right handed basis / in the direction of motion)
                             xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
@@ -136,8 +145,8 @@ define([
                 }
             }
 
-            if (defined(that._boundingSphereOffset)) {
-                Cartesian3.add(that._boundingSphereOffset, cartesian, cartesian);
+            if (defined(that.boundingSphere)) {
+                cartesian = that.boundingSphere.center;
             }
 
             var position;
@@ -197,9 +206,8 @@ define([
      * @param {Entity} entity The entity to track with the camera.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
-     * @param {BoundingSphere} [boundingSphere] An initial bounding sphere for setting the default view.
      */
-    var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
+    function EntityView(entity, scene, ellipsoid) {
 
         /**
          * The entity to track with the camera.
@@ -220,12 +228,10 @@ define([
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         /**
-         * Gets or sets an initial bounding sphere for viewing the entity.
-         * @type {Entity}
+         * The bounding sphere of the object.
+         * @type {BoundingSphere}
          */
-        this.boundingSphere = BoundingSphere.clone(boundingSphere);
-
-        this._boundingSphereOffset = undefined;
+        this.boundingSphere = undefined;
 
         //Shadow copies of the objects so we can detect changes.
         this._lastEntity = undefined;
@@ -235,7 +241,7 @@ define([
         this._defaultOffset3D = undefined;
 
         this._offset3D = new Cartesian3();
-    };
+    }
 
     // STATIC properties defined here, not per-instance.
     defineProperties(EntityView, {
@@ -265,9 +271,10 @@ define([
     * Should be called each animation frame to update the camera
     * to the latest settings.
     * @param {JulianDate} time The current animation time.
+    * @param {BoundingSphere} boundingSphere bounding sphere of the object.
     *
     */
-    EntityView.prototype.update = function(time) {
+    EntityView.prototype.update = function(time, boundingSphere) {
         var scene = this.scene;
         var entity = this.entity;
         var ellipsoid = this.ellipsoid;
@@ -308,13 +315,8 @@ define([
         if (objectChanged) {
             var viewFromProperty = entity.viewFrom;
             var hasViewFrom = defined(viewFromProperty);
-            var sphere = this.boundingSphere;
-            this._boundingSphereOffset = undefined;
 
-            if (!hasViewFrom && defined(sphere)) {
-                var controller = scene.screenSpaceCameraController;
-                controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, sphere.radius * 0.5);
-
+            if (!hasViewFrom && defined(boundingSphere)) {
                 //The default HPR is not ideal for high altitude objects so
                 //we scale the pitch as we get further from the earth for a more
                 //downward view.
@@ -326,8 +328,8 @@ define([
                     scratchHeadingPitchRange.pitch *= factor;
                 }
 
-                camera.viewBoundingSphere(sphere, scratchHeadingPitchRange);
-                this._boundingSphereOffset = Cartesian3.subtract(sphere.center, entity.position.getValue(time), new Cartesian3());
+                camera.viewBoundingSphere(boundingSphere, scratchHeadingPitchRange);
+                this.boundingSphere = boundingSphere;
                 updateLookAt = false;
                 saveCamera = false;
             } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {

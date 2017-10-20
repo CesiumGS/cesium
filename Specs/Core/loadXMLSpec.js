@@ -1,12 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/loadXML',
-        'Core/RequestErrorEvent'
+        'Core/Request',
+        'Core/RequestErrorEvent',
+        'Core/RequestScheduler'
     ], function(
         loadXML,
-        RequestErrorEvent) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Request,
+        RequestErrorEvent,
+        RequestScheduler) {
+    'use strict';
 
     var fakeXHR;
 
@@ -137,5 +139,20 @@ defineSuite([
         expect(rejectedError instanceof RequestErrorEvent).toBe(true);
         expect(rejectedError.statusCode).toEqual(404);
         expect(rejectedError.response).toEqual(error);
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadXML(testUrl, undefined, request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 });

@@ -1,25 +1,25 @@
-/*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
-        '../Shaders/PostProcessFilters/PassThrough'
+        '../Renderer/RenderState',
+        '../Renderer/Texture'
     ], function(
         defined,
-        defineProperties,
         destroyObject,
         PixelFormat,
+        Framebuffer,
         PixelDatatype,
-        PassThrough) {
-    "use strict";
-    /*global WebGLRenderingContext*/
+        RenderState,
+        Texture) {
+    'use strict';
 
     /**
      * @private
      */
-    var PickDepth = function() {
+    function PickDepth() {
         this.framebuffer = undefined;
 
         this._depthTexture = undefined;
@@ -27,7 +27,7 @@ define([
         this._copyDepthCommand = undefined;
 
         this._debugPickDepthViewportCommand = undefined;
-    };
+    }
 
     function executeDebugPickDepth(pickDepth, context, passState) {
         if (!defined(pickDepth._debugPickDepthViewportCommand)) {
@@ -66,7 +66,8 @@ define([
     }
 
     function createTextures(pickDepth, context, width, height) {
-        pickDepth._depthTexture = context.createTexture2D({
+        pickDepth._depthTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
@@ -80,7 +81,8 @@ define([
 
         createTextures(pickDepth, context, width, height);
 
-        pickDepth.framebuffer = context.createFramebuffer({
+        pickDepth.framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [pickDepth._depthTexture],
             destroyAttachments : false
         });
@@ -107,7 +109,7 @@ define([
                 '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
-                renderState : context.createRenderState(),
+                renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return pickDepth._textureToCopy;

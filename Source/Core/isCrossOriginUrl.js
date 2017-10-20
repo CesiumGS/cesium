@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     var a;
 
@@ -12,7 +11,7 @@ define([
      *
      * @private
      */
-    var isCrossOriginUrl = function(url) {
+    function isCrossOriginUrl(url) {
         if (!defined(a)) {
             a = document.createElement('a');
         }
@@ -29,7 +28,7 @@ define([
         a.href = a.href; // IE only absolutizes href on get, not set
 
         return protocol !== a.protocol || host !== a.host;
-    };
+    }
 
     return isCrossOriginUrl;
 });

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Animation/AnimationViewModel',
         'Core/ClockRange',
@@ -11,8 +10,7 @@ defineSuite([
         ClockStep,
         JulianDate,
         ClockViewModel) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var clockViewModel;
     beforeEach(function() {
@@ -487,9 +485,9 @@ defineSuite([
         viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
 
-        //Play breaks realtime state
+        //Play does not break realtime state
         viewModel.playForwardViewModel.command();
-        verifyForwardState(viewModel);
+        verifyRealtimeState(viewModel);
         expect(clockViewModel.multiplier).toEqual(1);
 
         viewModel.playRealtimeViewModel.command();
@@ -500,7 +498,7 @@ defineSuite([
         verifyForwardState(viewModel);
     });
 
-    it('real time mode toggles only if shouldAnimate is true', function() {
+    it('real time mode toggles off but not back on when shouldAnimate changes', function() {
         var viewModel = new AnimationViewModel(clockViewModel);
 
         viewModel.playRealtimeViewModel.command();
@@ -510,7 +508,7 @@ defineSuite([
         expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
 
         clockViewModel.shouldAnimate = true;
-        expect(viewModel.playRealtimeViewModel.toggled).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
     });
 
     it('Shuttle ring angles set expected multipliers', function() {
@@ -612,7 +610,7 @@ defineSuite([
         var originalTicks = [0.0, 1.0, 2.0];
         animationViewModel.setShuttleRingTicks(originalTicks);
 
-        var ticks = animationViewModel.getShuttleRingTicks(ticks);
+        var ticks = animationViewModel.getShuttleRingTicks();
         ticks.push(99);
         ticks[0] = -99;
         expect(animationViewModel.getShuttleRingTicks()).toEqual(originalTicks);

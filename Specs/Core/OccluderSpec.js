@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Occluder',
         'Core/BoundingSphere',
@@ -15,8 +14,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         Visibility) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {
@@ -256,7 +254,7 @@ defineSuite([
         expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
-    it('compute occludee point from rectangle throws without an rectangle', function() {
+    it('compute occludee point from rectangle throws without a rectangle', function() {
         expect(function() {
             return Occluder.computeOccludeePointFromRectangle();
         }).toThrowDeveloperError();

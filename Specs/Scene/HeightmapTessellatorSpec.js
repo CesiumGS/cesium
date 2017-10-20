@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/HeightmapTessellator',
         'Core/Cartesian2',
@@ -15,8 +14,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         WebMercatorProjection) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('throws when heightmap is not provided', function() {
         expect(function() {
@@ -71,23 +69,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws when vertices is not provided', function() {
-        expect(function() {
-            HeightmapTessellator.computeVertices({
-                heightmap : [1.0, 2.0, 3.0, 4.0],
-                width : 2,
-                height : 2,
-                nativeRectangle : {
-                    west : 10.0,
-                    south : 20.0,
-                    east : 20.0,
-                    north : 30.0
-                },
-                skirtHeight : 10.0
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('throws when nativeRectangle is not provided', function() {
         expect(function() {
             HeightmapTessellator.computeVertices({
@@ -120,9 +101,7 @@ defineSuite([
     it('creates mesh without skirt', function() {
         var width = 3;
         var height = 3;
-        var vertices = new Float32Array(width * height * 6);
         var options = {
-            vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
             height : height,
@@ -139,7 +118,8 @@ defineSuite([
                 CesiumMath.toRadians(20.0),
                 CesiumMath.toRadians(40.0))
         };
-        HeightmapTessellator.computeVertices(options);
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
 
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
@@ -173,9 +153,7 @@ defineSuite([
     it('creates mesh with skirt', function() {
         var width = 3;
         var height = 3;
-        var vertices = new Float32Array((width + 2) * (height + 2) * 6);
         var options = {
-            vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
             height : height,
@@ -187,7 +165,8 @@ defineSuite([
                 north : 40.0
             }
         };
-        HeightmapTessellator.computeVertices(options);
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
 
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
@@ -208,10 +187,10 @@ defineSuite([
                 }
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
-                    longitude : longitude,
-                    latitude : latitude,
-                    height : heightSample
-                });
+                                                                                   longitude : longitude,
+                                                                                   latitude : latitude,
+                                                                                   height : heightSample
+                                                                               });
 
                 var index = ((j + 1) * (width + 2) + i + 1) * 6;
                 var vertexPosition = new Cartesian3(vertices[index], vertices[index + 1], vertices[index + 2]);
@@ -224,12 +203,57 @@ defineSuite([
         }
     });
 
+    it('creates quantized mesh', function() {
+        var width = 3;
+        var height = 3;
+        var options = {
+            heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+            width : width,
+            height : height,
+            skirtHeight : 10.0,
+            nativeRectangle : {
+                west : 0.01,
+                east : 0.02,
+                south : 0.01,
+                north : 0.02
+            }
+        };
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var nativeRectangle = options.nativeRectangle;
+
+        for (var j = -1; j <= height; ++j) {
+            var realJ = CesiumMath.clamp(j, 0, height - 1);
+            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, realJ / (height - 1));
+            latitude = CesiumMath.toRadians(latitude);
+            for (var i = -1; i <= width; ++i) {
+                var realI = CesiumMath.clamp(i, 0, width - 1);
+                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, realI / (width - 1));
+                longitude = CesiumMath.toRadians(longitude);
+
+                var heightSample = options.heightmap[realJ * width + realI];
+
+                if (realI !== i || realJ !== j) {
+                    heightSample -= options.skirtHeight;
+                }
+
+                var index = ((j + 1) * (width + 2) + i + 1);
+                var expectedVertexPosition = ellipsoid.cartographicToCartesian({
+                                                                                   longitude : longitude,
+                                                                                   latitude : latitude,
+                                                                                   height : heightSample
+                                                                               });
+                expect(results.encoding.decodePosition(vertices, index)).toEqualEpsilon(expectedVertexPosition, 1.0);
+            }
+        }
+    });
+
     it('tessellates web mercator heightmaps', function() {
         var width = 3;
         var height = 3;
-        var vertices = new Float32Array(width * height * 6);
         var options = {
-            vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
             height : height,
@@ -242,7 +266,8 @@ defineSuite([
             },
             isGeographic : false
         };
-        HeightmapTessellator.computeVertices(options);
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new WebMercatorProjection(ellipsoid);
@@ -285,9 +310,7 @@ defineSuite([
     it('supports multi-element little endian heights', function() {
         var width = 3;
         var height = 3;
-        var vertices = new Float32Array(width * height * 6);
         var options = {
-            vertices : vertices,
             heightmap : [1.0, 2.0, 100.0,
                          3.0, 4.0, 100.0,
                          5.0, 6.0, 100.0,
@@ -317,7 +340,8 @@ defineSuite([
                 elementMultiplier : 10
             }
         };
-        HeightmapTessellator.computeVertices(options);
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
 
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;
@@ -352,9 +376,7 @@ defineSuite([
     it('supports multi-element big endian heights', function() {
         var width = 3;
         var height = 3;
-        var vertices = new Float32Array(width * height * 6);
         var options = {
-            vertices : vertices,
             heightmap : [1.0, 2.0, 100.0,
                          3.0, 4.0, 100.0,
                          5.0, 6.0, 100.0,
@@ -385,7 +407,8 @@ defineSuite([
                 isBigEndian : true
             }
         };
-        HeightmapTessellator.computeVertices(options);
+        var results = HeightmapTessellator.computeVertices(options);
+        var vertices = results.vertices;
 
         var ellipsoid = Ellipsoid.WGS84;
         var nativeRectangle = options.nativeRectangle;

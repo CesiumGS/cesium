@@ -1,10 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/Matrix4',
+        'Core/DistanceDisplayCondition',
         'Core/JulianDate',
+        'Core/Matrix4',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'DataSources/CompositePositionProperty',
@@ -24,8 +24,9 @@ defineSuite([
         PathVisualizer,
         Cartesian3,
         Color,
-        Matrix4,
+        DistanceDisplayCondition,
         JulianDate,
+        Matrix4,
         ReferenceFrame,
         TimeInterval,
         CompositePositionProperty,
@@ -41,8 +42,7 @@ defineSuite([
         TimeIntervalCollectionPositionProperty,
         SceneMode,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var visualizer;
@@ -86,7 +86,7 @@ defineSuite([
         var entityCollection = new EntityCollection();
         var visualizer = new PathVisualizer(scene, entityCollection);
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(1);
-        visualizer = visualizer.destroy();
+        visualizer.destroy();
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
@@ -112,6 +112,25 @@ defineSuite([
         expect(scene.primitives.length).toEqual(0);
     });
 
+    it('adding and removing an entity path without rendering does not crash.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        var position = new SampledPositionProperty();
+        position.addSamples(times, positions);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        testObject.position = position;
+        testObject.path = new PathGraphics();
+
+        //Before we fixed the issue, the below remove call would cause a crash
+        //when visualizer.update was not called at least once after the entity was added.
+        entityCollection.remove(testObject);
+    });
+
     it('A PathGraphics causes a primitive to be created and updated.', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
         var updateTime = new JulianDate(0.5, 0);
@@ -134,6 +153,7 @@ defineSuite([
         path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
         path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
+        path.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 20.0));
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -148,6 +168,7 @@ defineSuite([
         expect(primitive.positions[2]).toEqual(testObject.position.getValue(JulianDate.addSeconds(updateTime, path.leadTime.getValue(), new JulianDate())));
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.distanceDisplayCondition).toEqual(testObject.path.distanceDisplayCondition.getValue(updateTime));
 
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
@@ -350,6 +371,7 @@ defineSuite([
         //internal cache used by the visualizer, instead it just hides it.
         entityCollection.removeAll();
         expect(primitive.show).toEqual(false);
+        expect(primitive.id).toBeUndefined();
     });
 
     it('Visualizer sets entity property.', function() {
@@ -492,7 +514,7 @@ defineSuite([
         expect(result).toEqual([new Cartesian3(0, 0, 3)]);
     });
 
-    var CustomPositionProperty = function(innerProperty) {
+    function CustomPositionProperty(innerProperty) {
         this.SampledProperty = innerProperty;
         this.isConstant = innerProperty.isConstant;
         this.definitionChanged = innerProperty.definitionChanged;
@@ -509,7 +531,7 @@ defineSuite([
         this.equals = function(other) {
             return innerProperty.equals(other);
         };
-    };
+    }
 
     it('subSample works for custom properties', function() {
         var t1 = new JulianDate(0, 0);
@@ -533,7 +555,7 @@ defineSuite([
         expect(result).toEqual([sampledProperty.getValue(t1), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 2, new JulianDate())), sampledProperty.getValue(updateTime), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 3, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 4, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 5, new JulianDate())), sampledProperty.getValue(JulianDate.addSeconds(t1, maximumStep * 6, new JulianDate()))]);
     });
 
-    it('subSample works for composite properties', function() {
+    function createCompositeTest(useReferenceProperty){
         var t1 = new JulianDate(0, 0);
         var t2 = new JulianDate(1, 0);
         var t3 = new JulianDate(2, 0);
@@ -612,7 +634,15 @@ defineSuite([
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 43200;
         var result = [];
-        PathVisualizer._subSample(property, t1, t6, updateTime, referenceFrame, maximumStep, result);
+
+        var propertyToTest = property;
+        if (useReferenceProperty) {
+            var testReference = entities.getOrCreateEntity('testReference');
+            testReference.position = property;
+            propertyToTest = new ReferenceProperty(entities, 'testReference', ['position']);
+        }
+
+        PathVisualizer._subSample(propertyToTest, t1, t6, updateTime, referenceFrame, maximumStep, result);
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
@@ -620,6 +650,14 @@ defineSuite([
                                 sampledProperty.getValue(t4),
                                 targetEntity.position.getValue(t5),
                                 scaledProperty.getValue(t6)]);
+    }
+
+    it('subSample works for composite properties', function() {
+        createCompositeTest(false);
+    });
+
+    it('subSample works for composite properties wrapped in reference properties', function() {
+        createCompositeTest(true);
     });
 
 }, 'WebGL');

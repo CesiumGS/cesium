@@ -2,9 +2,10 @@ uniform float u_maxTotalPointSize;
 
 attribute vec4 positionHighAndSize;
 attribute vec4 positionLowAndOutline;
-attribute vec4 compressedAttribute0;        // color, outlineColor, pick color
-attribute vec4 compressedAttribute1;        // show, translucency by distance, some free space
-attribute vec4 scaleByDistance;             // near, nearScale, far, farScale
+attribute vec4 compressedAttribute0;                       // color, outlineColor, pick color
+attribute vec4 compressedAttribute1;                       // show, translucency by distance, some free space
+attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
+attribute vec3 distanceDisplayConditionAndDisableDepth;    // near, far, disableDepthTestDistance
 
 varying vec4 v_color;
 varying vec4 v_outlineColor;
@@ -101,7 +102,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -138,9 +139,37 @@ void main()
     }
 #endif
 
+#ifdef DISTANCE_DISPLAY_CONDITION
+    float nearSq = distanceDisplayConditionAndDisableDepth.x;
+    float farSq = distanceDisplayConditionAndDisableDepth.y;
+    if (lengthSq < nearSq || lengthSq > farSq) {
+        positionEC.xyz = vec3(0.0);
+    }
+#endif
+
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
+
+#ifdef DISABLE_DEPTH_DISTANCE
+    float disableDepthTestDistance = distanceDisplayConditionAndDisableDepth.z;
+    if (disableDepthTestDistance == 0.0 && czm_minimumDisableDepthTestDistance != 0.0)
+    {
+        disableDepthTestDistance = czm_minimumDisableDepthTestDistance;
+    }
+
+    if (disableDepthTestDistance != 0.0)
+    {
+        // Don't try to "multiply both sides" by w.  Greater/less-than comparisons won't work for negative values of w.
+        float zclip = gl_Position.z / gl_Position.w;
+        bool clipped = (zclip < -1.0 || zclip > 1.0);
+        if (!clipped && (disableDepthTestDistance < 0.0 || (lengthSq > 0.0 && lengthSq < disableDepthTestDistance)))
+        {
+            // Position z on the near plane.
+            gl_Position.z = -gl_Position.w;
+        }
+    }
+#endif
 
     v_color = color;
     v_color.a *= translucency;

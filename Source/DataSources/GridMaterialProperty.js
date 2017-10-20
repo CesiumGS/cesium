@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Color',
@@ -17,7 +16,7 @@ define([
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultCellAlpha = 0.1;
@@ -38,7 +37,7 @@ define([
      *
      * @constructor
      */
-    var GridMaterialProperty = function(options) {
+    function GridMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -58,7 +57,7 @@ define([
         this.lineCount = options.lineCount;
         this.lineThickness = options.lineThickness;
         this.lineOffset = options.lineOffset;
-    };
+    }
 
     defineProperties(GridMaterialProperty.prototype, {
         /**

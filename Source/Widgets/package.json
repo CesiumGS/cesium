@@ -1,6 +1,0 @@
-{
-	"name": "Widgets",
-	"description": "Cesium Widgets",
-	"version": "0.6.0",
-	"dojoBuild": "Widgets.profile.js"
-}

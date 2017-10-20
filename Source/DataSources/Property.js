@@ -1,17 +1,14 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Iso8601'
+        '../Core/DeveloperError'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
-        Iso8601) {
-    "use strict";
+        DeveloperError) {
+    'use strict';
 
     /**
      * The interface for all properties, which represent a value that can optionally vary over time.
@@ -28,9 +25,9 @@ define([
      * @see PositionProperty
      * @see ReferenceProperty
      */
-    var Property = function() {
+    function Property() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(Property.prototype, {
         /**

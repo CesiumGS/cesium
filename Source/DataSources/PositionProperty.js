@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/defined',
@@ -15,7 +14,7 @@ define([
         Matrix3,
         ReferenceFrame,
         Transforms) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for all {@link Property} objects that define a world
@@ -30,9 +29,9 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = function() {
+    function PositionProperty() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(PositionProperty.prototype, {
         /**
@@ -92,6 +91,7 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @function
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

@@ -1,7 +1,5 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TileCoordinatesImageryProvider',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
@@ -10,18 +8,25 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         TileCoordinatesImageryProvider,
-        defined,
         Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
         ImageryProvider,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new TileCoordinatesImageryProvider();
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {

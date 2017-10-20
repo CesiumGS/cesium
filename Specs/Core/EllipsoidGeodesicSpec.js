@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EllipsoidGeodesic',
         'Core/Cartographic',
@@ -9,8 +8,7 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('throws without start', function() {
         expect(function() {
@@ -244,13 +242,5 @@ defineSuite([
 
         expect(expectedMid.longitude).toEqualEpsilon(result.longitude, CesiumMath.EPSILON13);
         expect(expectedMid.latitude).toEqualEpsilon(result.latitude, CesiumMath.EPSILON13);
-    });
-
-    it('doesn\'t modify incoming cartographics', function(){
-        var start = new Cartographic(1,2,3);
-        var end = new Cartographic(2,3,4);
-        var geodesic = new EllipsoidGeodesic(start, end);
-        expect(start.height).toEqual(3);
-        expect(end.height).toEqual(4);
     });
 });

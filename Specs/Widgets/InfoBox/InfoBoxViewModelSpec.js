@@ -1,12 +1,8 @@
-/*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel',
-        'Specs/pollToPromise'
+        'Widgets/InfoBox/InfoBoxViewModel'
     ], function(
-        InfoBoxViewModel,
-        pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        InfoBoxViewModel) {
+    'use strict';
 
     it('constructor sets expected values', function() {
         var viewModel = new InfoBoxViewModel();

@@ -1,15 +1,13 @@
-/*global define*/
 define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for interpolation algorithms.
      *
-     * @namespace
-     * @alias InterpolationAlgorithm
+     * @exports InterpolationAlgorithm
      *
      * @see LagrangePolynomialApproximation
      * @see LinearApproximation
@@ -28,7 +26,7 @@ define([
      * @function
      *
      * @param {Number} degree The desired degree of interpolation.
-     * @returns The number of required data points needed for the desired degree of interpolation.
+     * @returns {Number} The number of required data points needed for the desired degree of interpolation.
      */
     InterpolationAlgorithm.getRequiredDataPoints = DeveloperError.throwInstantiationError;
 

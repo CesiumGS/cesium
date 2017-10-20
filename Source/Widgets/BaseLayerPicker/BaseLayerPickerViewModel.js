@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -17,7 +16,7 @@ define([
         isArray,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link BaseLayerPicker}.
@@ -34,7 +33,7 @@ define([
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
      * @exception {DeveloperError} terrainProviderViewModels must be an array.
      */
-    var BaseLayerPickerViewModel = function(options) {
+    function BaseLayerPickerViewModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var globe = options.globe;
@@ -191,7 +190,7 @@ define([
 
         this.selectedImagery = defaultValue(options.selectedImageryProviderViewModel, imageryProviderViewModels[0]);
         this.selectedTerrain = defaultValue(options.selectedTerrainProviderViewModel, terrainProviderViewModels[0]);
-    };
+    }
 
     defineProperties(BaseLayerPickerViewModel.prototype, {
         /**

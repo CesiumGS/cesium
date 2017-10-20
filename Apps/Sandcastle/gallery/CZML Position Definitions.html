@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Position Definitions">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Position Definitions",
+    "version" : "1.0"
+}, {
+    "id" : "point1",
+    "name": "point in cartographic degrees",
+    "position" : {
+        "cartographicDegrees" : [-111.0, 40.0, 150000.0]
+    },
+    "point": {
+        "color": {
+            "rgba": [100, 0, 200, 255]
+        },
+        "outlineColor": {
+            "rgba": [200, 0, 200, 255]
+        },
+        "pixelSize": {
+            "number": 10
+        }
+    }
+}, {
+    "id" : "point2",
+    "name": "point in cartesian coordinates",
+    "position" : {
+        "cartesian" : [1216469.9357990976, -4736121.71856379, 4081386.8856866374]
+    },
+    "point": {
+        "color": {
+            "rgba": [0, 100, 200, 255]
+        },
+        "outlineColor": {
+            "rgba": [200, 0, 200, 255]
+        },
+        "pixelSize": {
+            "number": 10
+        }
+    }
+}, {
+    "id" : "point 3",
+    "name": "point in cartographic radians",
+    "position" : {
+        "cartographicRadians" : [Math.PI, 3 * Math.PI/4, 150000]
+    },
+    "point": {
+        "color": {
+            "rgba": [10, 200, 10, 255]
+        },
+        "outlineColor": {
+            "rgba": [200, 0, 200, 255]
+        },
+        "pixelSize": {
+            "number": 10
+        }
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

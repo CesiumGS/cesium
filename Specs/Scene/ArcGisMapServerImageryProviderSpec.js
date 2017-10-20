@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ArcGisMapServerImageryProvider',
         'Core/Cartesian2',
@@ -6,13 +5,13 @@ defineSuite([
         'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
         'Scene/DiscardMissingTileImagePolicy',
@@ -30,13 +29,13 @@ defineSuite([
         Cartographic,
         DefaultProxy,
         defined,
-        GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         queryToObject,
         Rectangle,
+        RequestScheduler,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         DiscardMissingTileImagePolicy,
@@ -47,11 +46,14 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
+    'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -81,7 +83,7 @@ defineSuite([
     }
 
     function stubJSONPCall(baseUrl, result, withProxy, token) {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
             setTimeout(function() {
                 window[functionName](result);
@@ -127,6 +129,36 @@ defineSuite([
             }]
         }
     };
+
+    it('resolves readyPromise', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        stubJSONPCall(baseUrl, webMercatorResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(e.message).toContain(baseUrl);
+            expect(provider.ready).toBe(false);
+        });
+    });
 
     it('supports tiled servers in web mercator projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
@@ -309,14 +341,16 @@ defineSuite([
 
     it('supports non-tiled servers with various constructor parameters', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
+        var token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, {
             "currentVersion" : 10.01,
             "copyrightText" : "Test copyright text"
-        });
+        }, undefined, token);
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl,
+            token: token,
             tileWidth: 128,
             tileHeight: 512,
             tilingScheme: new WebMercatorTilingScheme(),
@@ -357,6 +391,7 @@ defineSuite([
                 expect(params.transparent).toEqual('true');
                 expect(params.size).toEqual('128,512');
                 expect(params.layers).toEqual('show:foo,bar');
+                expect(params.token).toEqual(token);
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -572,6 +607,9 @@ defineSuite([
             if (tries < 3) {
                 error.retry = true;
             }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -592,6 +630,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
@@ -660,6 +699,65 @@ defineSuite([
             var ne = projection.unproject(new Cartesian2(1.8830976498143446E7, -265936.19697360107));
             var rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
             expect(provider.rectangle).toEqual(rectangle);
+        });
+    });
+
+    it('constrains extent to the tiling scheme\'s rectangle', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var webMercatorOutsideBoundsResult = {
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -20037508.342787,
+                    "y" : 20037508.342787
+                },
+                "spatialReference" : {
+                    "wkid" : 102100
+                },
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 156543.033928,
+                    "scale" : 591657527.591555
+                }, {
+                    "level" : 1,
+                    "resolution" : 78271.5169639999,
+                    "scale" : 295828763.795777
+                }, {
+                    "level" : 2,
+                    "resolution" : 39135.7584820001,
+                    "scale" : 147914381.897889
+                }]
+            },
+            fullExtent : {
+                "xmin" :  -2.0037507067161843E7,
+                "ymin" : -1.4745615008589065E7,
+                "xmax" : 2.0037507067161843E7,
+                "ymax" : 3.0240971958386205E7,
+                "spatialReference" : {
+                    "wkid" : 102100
+                }
+            }
+        };
+
+        stubJSONPCall(baseUrl, webMercatorOutsideBoundsResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        expect(provider.url).toEqual(baseUrl);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.rectangle.west >= -Math.PI).toBe(true);
+            expect(provider.rectangle.east <= Math.PI).toBe(true);
+            expect(provider.rectangle.south >= -WebMercatorProjection.MaximumLatitude).toBe(true);
+            expect(provider.rectangle.north <= WebMercatorProjection.MaximumLatitude).toBe(true);
         });
     });
 
@@ -847,6 +945,38 @@ defineSuite([
                 return provider.ready;
             }).then(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('returns undefined if enablePickFeatures is dynamically set to false', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                enablePickFeatures : true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('does not return undefined if enablePickFeatures is dynamically set to true', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                enablePickFeatures : false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
             });
         });
 

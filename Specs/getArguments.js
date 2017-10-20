@@ -1,4 +1,3 @@
-/*global define*/
 define([], function() {
     'use strict';
 
@@ -17,9 +16,9 @@ define([], function() {
      * @alias getArguments
      * @return {Array} The arguments passed to the function.
      */
-    var getArguments = function() {
+    function getArguments() {
         return arguments;
-    };
+    }
 
     return getArguments;
 });

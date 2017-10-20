@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Rectangle',
         'Core/Cartesian3',
@@ -13,8 +12,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var west = -0.9;
     var south = 0.5;
@@ -84,6 +82,34 @@ defineSuite([
         expect(rectangle.north).toEqual(CesiumMath.toRadians(north));
     });
 
+    it('fromRadians produces expected values.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var rectangle = Rectangle.fromRadians(west, south, east, north);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
+    });
+
+    it('fromRadians works with a result parameter.', function() {
+        var west = -1.0;
+        var south = -2.0;
+        var east = 1.0;
+        var north = 2.0;
+
+        var result = new Rectangle();
+        var rectangle = Rectangle.fromRadians(west, south, east, north, result);
+        expect(result).toBe(rectangle);
+        expect(rectangle.west).toEqual(west);
+        expect(rectangle.south).toEqual(south);
+        expect(rectangle.east).toEqual(east);
+        expect(rectangle.north).toEqual(north);
+    });
+
     it('fromCartographicArray produces expected values.', function() {
         var minLon = new Cartographic(-0.1, 0.3, 0.0);
         var minLat = new Cartographic(0.0, -0.2, 0.0);
@@ -94,6 +120,19 @@ defineSuite([
         expect(rectangle.west).toEqual(minLon.longitude);
         expect(rectangle.south).toEqual(minLat.latitude);
         expect(rectangle.east).toEqual(maxLon.longitude);
+        expect(rectangle.north).toEqual(maxLat.latitude);
+    });
+
+    it('fromCartographicArray produces rectangle that crosses IDL.', function() {
+        var minLon = Cartographic.fromDegrees(-178, 3);
+        var minLat = Cartographic.fromDegrees(-179, -4);
+        var maxLon = Cartographic.fromDegrees(178, 3);
+        var maxLat = Cartographic.fromDegrees(179, 4);
+
+        var rectangle = Rectangle.fromCartographicArray([minLat, minLon, maxLat, maxLon]);
+        expect(rectangle.east).toEqual(minLon.longitude);
+        expect(rectangle.south).toEqual(minLat.latitude);
+        expect(rectangle.west).toEqual(maxLon.longitude);
         expect(rectangle.north).toEqual(maxLat.latitude);
     });
 
@@ -111,6 +150,57 @@ defineSuite([
         expect(rectangle.east).toEqual(maxLon.longitude);
         expect(rectangle.north).toEqual(maxLat.latitude);
     });
+
+    it('fromCartesianArray produces expected values.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84);
+        expect(rectangle.west).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON15);
+        expect(rectangle.east).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
+    });
+
+    it('fromCartesianArray produces rectangle that crosses IDL.', function() {
+        var minLon = Cartographic.fromDegrees(-178, 3);
+        var minLat = Cartographic.fromDegrees(-179, -4);
+        var maxLon = Cartographic.fromDegrees(178, 3);
+        var maxLat = Cartographic.fromDegrees(179, 4);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84);
+        expect(rectangle.east).toEqual(minLon.longitude);
+        expect(rectangle.south).toEqual(minLat.latitude);
+        expect(rectangle.west).toEqual(maxLon.longitude);
+        expect(rectangle.north).toEqual(maxLat.latitude);
+    });
+
+    it('fromCartesianArray works with a result parameter.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var result = new Rectangle();
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84, result);
+        expect(result).toBe(rectangle);
+        expect(rectangle.west).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON15);
+        expect(rectangle.east).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
+    });
+
 
     it('clone works without a result parameter.', function() {
         var rectangle = new Rectangle(west, south, east, north);
@@ -176,6 +266,12 @@ defineSuite([
     it('fromCartographicArray throws with no array', function() {
         expect(function() {
             Rectangle.fromCartographicArray(undefined, new Rectangle());
+        }).toThrowDeveloperError();
+    });
+
+    it('fromCartesianArray throws with no array', function() {
+        expect(function() {
+            Rectangle.fromCartesianArray(undefined, undefined, new Rectangle());
         }).toThrowDeveloperError();
     });
 
@@ -490,6 +586,98 @@ defineSuite([
         expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
     });
 
+    it('union works without a result parameter', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+        var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('union works with a result parameter', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+        var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+        var result = new Rectangle(-1.0, -1.0, 10.0, 10.0);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('union works with first rectangle crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, -0.5, 0.9);
+        var rectangle2 = new Rectangle(-0.85, 0.0, -0.4, 0.8);
+        var expected = new Rectangle(0.5, 0.0, -0.4, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('union works with second rectangle crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.6, 0.0, -0.2, 0.8);
+        var expected = new Rectangle(0.5, 0.0, -0.2, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('union works with both rectangles crossing the IDL', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, -0.4, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, -0.5, 0.8);
+        var expected = new Rectangle(0.4, 0.0, -0.4, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('expand works if rectangle needs to grow right', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.85, 0.5);
+        var expected = new Rectangle(0.5, 0.1, 0.85, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow left', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.4, 0.5);
+        var expected = new Rectangle(0.4, 0.1, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow up', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 1.0);
+        var expected = new Rectangle(0.5, 0.1, 0.75, 1.0);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow down', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 0.0);
+        var expected = new Rectangle(0.5, 0.0, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle does not need to grow', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 0.5);
+        var expected = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works with a result parameter', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.85, 1.0);
+        var expected = new Rectangle(0.5, 0.1, 0.85, 1.0);
+        var result = new Rectangle();
+        var returnedResult = Rectangle.expand(rectangle, cartographic, result);
+        expect(returnedResult).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
+
     it('contains works', function() {
         var rectangle = new Rectangle(west, south, east, north);
         expect(Rectangle.contains(rectangle, new Cartographic(west, south))).toEqual(true);
@@ -634,6 +822,32 @@ defineSuite([
         var rectangle = new Rectangle(west, south, east, north);
         expect(function() {
             Rectangle.intersection(rectangle, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('union throws with no rectangle', function() {
+        expect(function() {
+            Rectangle.union(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('union throws with no otherRectangle', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        expect(function() {
+            Rectangle.intersection(rectangle, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('expand throws with no rectangle', function() {
+        expect(function() {
+            Rectangle.expand(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('expand throws with no cartographic', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        expect(function() {
+            Rectangle.expand(rectangle, undefined);
         }).toThrowDeveloperError();
     });
 

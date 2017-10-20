@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/SimplePolylineGeometry',
         'Core/BoundingSphere',
@@ -17,8 +16,7 @@ defineSuite([
         CesiumMath,
         PrimitiveType,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor throws with no positions', function() {
         expect(function() {

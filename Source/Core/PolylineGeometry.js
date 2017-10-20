@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Color',
@@ -18,6 +18,7 @@ define([
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -35,7 +36,7 @@ define([
         PolylinePipeline,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchInterpolateColorsArray = [];
 
@@ -88,6 +89,7 @@ define([
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.followSurface=true. Determines the number of positions in the buffer.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -110,7 +112,7 @@ define([
      * });
      * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
      */
-    var PolylineGeometry = function(options) {
+    function PolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -121,8 +123,8 @@ define([
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (width < 1.0) {
-            throw new DeveloperError('width must be greater than or equal to one.');
+        if (typeof width !== 'number') {
+            throw new DeveloperError('width must be a number');
         }
         if (defined(colors) && ((colorsPerVertex && colors.length < positions.length) || (!colorsPerVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
@@ -147,15 +149,16 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {PolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolylineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -197,6 +200,8 @@ define([
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
@@ -218,6 +223,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolylineGeometry} [result] The object into which to store the result.
+     * @returns {PolylineGeometry} The modified result parameter or a new PolylineGeometry instance if one was not provided.
      */
     PolylineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -297,21 +303,22 @@ define([
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
-        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-
         var i;
         var j;
         var k;
 
-        var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
-
+        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
         var positionsLength = positions.length;
-        if (positionsLength < 2) {
+
+        // A width of a pixel or less is not a valid geometry, but in order to support external data
+        // that may have errors we treat this as an empty geometry.
+        if (positionsLength < 2 || width <= 0.0) {
             return undefined;
         }
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
@@ -370,10 +377,6 @@ define([
         var expandAndWidthIndex = 0;
         var stIndex = 0;
         var colorIndex = 0;
-
-        var segmentLength;
-        var segmentIndex = 0;
-        var count = 0;
         var position;
 
         for (j = 0; j < positionsLength; ++j) {

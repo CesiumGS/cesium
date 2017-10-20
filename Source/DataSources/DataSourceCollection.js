@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -15,18 +14,18 @@ define([
         DeveloperError,
         Event,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of {@link DataSource} instances.
      * @alias DataSourceCollection
      * @constructor
      */
-    var DataSourceCollection = function() {
+    function DataSourceCollection() {
         this._dataSources = [];
         this._dataSourceAdded = new Event();
         this._dataSourceRemoved = new Event();
-    };
+    }
 
     defineProperties(DataSourceCollection.prototype, {
         /**
@@ -166,6 +165,7 @@ define([
      * Gets a data source by index from the collection.
      *
      * @param {Number} index the index to retrieve.
+     * @returns {DataSource} The data source at the specified index.
      */
     DataSourceCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -201,10 +201,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceCollection#isDestroyed
      *
      * @example
      * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
+     *
+     * @see DataSourceCollection#isDestroyed
      */
     DataSourceCollection.prototype.destroy = function() {
         this.removeAll(true);

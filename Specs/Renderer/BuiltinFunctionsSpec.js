@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
@@ -13,8 +12,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var context;
 
@@ -26,7 +24,7 @@ defineSuite([
         context.destroyForSpecs();
     });
 
-    it('has czm_tranpose (2x2)', function() {
+    it('has czm_transpose (2x2)', function() {
         var fs =
             'void main() { ' +
             '  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); ' +
@@ -34,10 +32,13 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
-    it('has czm_tranpose (3x3)', function() {
+    it('has czm_transpose (3x3)', function() {
         var fs =
             'void main() { ' +
             '  mat3 m = mat3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0); ' +
@@ -45,10 +46,13 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
-    it('has czm_tranpose (4x4)', function() {
+    it('has czm_transpose (4x4)', function() {
         var fs =
             'void main() { ' +
             '  mat4 m = mat4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);' +
@@ -56,7 +60,10 @@ defineSuite([
             '  gl_FragColor = vec4(czm_transpose(m) == mt); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
@@ -68,7 +75,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -82,7 +89,10 @@ defineSuite([
             '  gl_FragColor = vec4(all(lessThan(diff, vec2(czm_epsilon6))));' +
             '}';
 
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_windowToEyeCoordinates', function() {
@@ -94,7 +104,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -108,27 +118,33 @@ defineSuite([
             '  gl_FragColor = vec4(all(lessThan(diff, vec3(czm_epsilon6))));' +
             '}';
 
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_tangentToEyeSpaceMatrix', function() {
         var fs =
             'void main() { ' +
             '  vec3 tangent = vec3(1.0, 0.0, 0.0); ' +
-            '  vec3 binormal = vec3(0.0, 1.0, 0.0); ' +
+            '  vec3 bitangent = vec3(0.0, 1.0, 0.0); ' +
             '  vec3 normal = vec3(0.0, 0.0, 1.0); ' +
             '  mat3 expected = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0); ' +
-            '  mat3 actual = czm_tangentToEyeSpaceMatrix(normal, tangent, binormal); ' +
+            '  mat3 actual = czm_tangentToEyeSpaceMatrix(normal, tangent, bitangent); ' +
             '  gl_FragColor = vec4(actual == expected); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_translateRelativeToEye', function() {
         var camera = createCamera({
             offset : new Cartesian3(1.0, 2.0, 3.0)
         });
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);
@@ -150,7 +166,11 @@ defineSuite([
             '  gl_FragColor = vec4(p == vec4(5.0, 3.0, 1.0, 1.0)); ' +
             '}';
 
-        context.verifyDrawForSpecs(fs, uniformMap);
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender();
     });
 
     it('has czm_antialias', function() {
@@ -161,7 +181,10 @@ defineSuite([
             '  vec4 result = czm_antialias(color0, color1, color1, 0.5);' +
             ' gl_FragColor = vec4(result == color1);' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point at ray origin', function() {
@@ -169,7 +192,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 0.0) == vec3(0.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point in front of ray origin', function() {
@@ -177,7 +203,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(1.0, 0.0, 0.0)), 2.0) == vec3(2.0, 0.0, 0.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('czm_pointAlongRay: point behind ray origin', function() {
@@ -185,7 +214,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(czm_pointAlongRay(czm_ray(vec3(0.0), vec3(0.0, 1.0, 0.0)), -2.0) == vec3(0.0, -2.0, 0.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_octDecode(vec2)', function() {
@@ -193,7 +225,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(vec2(128.0, 128.0)) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_octDecode(float)', function() {
@@ -201,7 +236,10 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = vec4(all(lessThanEqual(abs(czm_octDecode(32896.0) - vec3(0.0, 0.0, 1.0)), vec3(0.01)))); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_octDecode(vec2, vec3, vec3, vec3)', function() {
@@ -214,15 +252,21 @@ defineSuite([
             '  decoded = decoded && all(lessThanEqual(abs(c - vec3(0.0, 0.0, 1.0)), vec3(0.01)));' +
             '  gl_FragColor = vec4(decoded);' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_decompressTextureCoordinates', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8390656.0) == vec2(0.5, 0.5)); ' +
+            '  gl_FragColor = vec4(czm_decompressTextureCoordinates(8386559.0) == vec2(0.4998779, 0.4998779)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has signNotZero : float', function() {
@@ -232,7 +276,10 @@ defineSuite([
             '                      czm_signNotZero(5.0) == 1.0, ' +
             '                      czm_signNotZero(-5.0) == -1.0, 1.0); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has signNotZero : vec2', function() {
@@ -243,7 +290,10 @@ defineSuite([
             '                      czm_signNotZero(vec2(-1.0, -1.0)) == vec2(-1.0, -1.0), ' +
             '                      czm_signNotZero(vec2(-1.0, 0.0)) == vec2(-1.0, 1.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has signNotZero : vec3', function() {
@@ -254,7 +304,10 @@ defineSuite([
             '                      czm_signNotZero(vec3(-1.0, -1.0, -1.0)) == vec3(-1.0, -1.0, -1.0), ' +
             '                      czm_signNotZero(vec3(-1.0, 0.0, 1.0)) == vec3(-1.0, 1.0, 1.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has signNotZero : vec4', function() {
@@ -265,7 +318,10 @@ defineSuite([
             '                      czm_signNotZero(vec4(-1.0, -1.0, -1.0, -1.0)) == vec4(-1.0), ' +
             '                      czm_signNotZero(vec4(-1.0, 0.0, 1.0, -10.0)) == vec4(-1.0, 1.0, 1.0, -1.0)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('has czm_cosineAndSine in all 4 quadrants', function() {
@@ -279,7 +335,10 @@ defineSuite([
             '                      isBounded(czm_cosineAndSine(-czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(-czm_piOverFour).y, -0.707107, -0.707106), ' +
             '                      isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).y, -0.707107, -0.707106)); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 
     it('can calculate nearFarScalar', function() {
@@ -291,6 +350,20 @@ defineSuite([
             '                      czm_nearFarScalar(testNearFarScalar, 20.0 * 20.0) == 0.0, ' +
             '                      czm_nearFarScalar(testNearFarScalar, 50.0 * 50.0) == 0.0); ' +
             '}';
-        context.verifyDrawForSpecs(fs);
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_cascadeColor', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
     });
 }, 'WebGL');

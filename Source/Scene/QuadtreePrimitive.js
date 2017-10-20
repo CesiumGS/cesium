@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -8,7 +7,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getTimestamp',
-        '../Core/Queue',
+        '../Core/Math',
+        '../Core/OrthographicFrustum',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Visibility',
@@ -26,7 +26,8 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
-        Queue,
+        CesiumMath,
+        OrthographicFrustum,
         Ray,
         Rectangle,
         Visibility,
@@ -35,7 +36,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
-    "use strict";
+    'use strict';
 
     /**
      * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
@@ -58,7 +59,7 @@ define([
      *        frame, so the actual number of resident tiles may be higher.  The value of
      *        this property will not affect visual quality.
      */
-    var QuadtreePrimitive = function QuadtreePrimitive(options) {
+    function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.tileProvider)) {
             throw new DeveloperError('options.tileProvider is required.');
@@ -93,11 +94,11 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
-        this._tileTraversalQueue = new Queue();
-        this._tileLoadQueue = [];
+        this._tileLoadQueueHigh = []; // high priority tiles are preventing refinement
+        this._tileLoadQueueMedium = []; // medium priority tiles are being rendered
+        this._tileLoadQueueLow = []; // low priority tiles were refined past or are non-visible parts of quads.
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
-        this._levelZeroTilesReady = false;
         this._loadQueueTimeSlice = 5.0;
 
         this._addHeightCallbacks = [];
@@ -129,7 +130,10 @@ define([
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
-    };
+
+        this._tileLoadProgressEvent = new Event();
+        this._lastTileLoadQueueLength = 0;
+    }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -140,6 +144,18 @@ define([
         tileProvider : {
             get : function() {
                 return this._tileProvider;
+            }
+        },
+        /**
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
+         *
+         * @memberof QuadtreePrimitive.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get : function() {
+                return this._tileLoadProgressEvent;
             }
         }
     });
@@ -176,6 +192,8 @@ define([
         }
 
         this._levelZeroTiles = undefined;
+
+        this._tileProvider.cancelReprojections();
     };
 
     /**
@@ -220,13 +238,21 @@ define([
     QuadtreePrimitive.prototype.updateHeight = function(cartographic, callback) {
         var primitive = this;
         var object = {
-            position : undefined,
+            positionOnEllipsoidSurface : undefined,
             positionCartographic : cartographic,
             level : -1,
             callback : callback
         };
 
         object.removeFunc = function() {
+            var addedCallbacks = primitive._addHeightCallbacks;
+            var length = addedCallbacks.length;
+            for (var i = 0; i < length; ++i) {
+                if (addedCallbacks[i] === object) {
+                    addedCallbacks.splice(i, 1);
+                    break;
+                }
+            }
             primitive._removeHeightCallbacks.push(object);
         };
 
@@ -235,28 +261,89 @@ define([
     };
 
     /**
-     * Updates the primitive.
-     *
-     * @param {Context} context The rendering context to use.
-     * @param {FrameState} frameState The state of the current frame.
-     * @param {DrawCommand[]} commandList The list of draw commands.  The primitive will usually add
-     *        commands to this array during the update call.
+     * @private
      */
-    QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
+    QuadtreePrimitive.prototype.beginFrame = function(frameState) {
+        var passes = frameState.passes;
+        if (!passes.render) {
+            return;
+        }
+
+        // Gets commands for any texture re-projections and updates the credit display
+        this._tileProvider.initialize(frameState);
+
+        var debug = this._debug;
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        this._tileLoadQueueHigh.length = 0;
+        this._tileLoadQueueMedium.length = 0;
+        this._tileLoadQueueLow.length = 0;
+        this._tileReplacementQueue.markStartOfRenderFrame();
+    };
+
+    /**
+     * @private
+     */
+    QuadtreePrimitive.prototype.update = function(frameState) {
         var passes = frameState.passes;
 
         if (passes.render) {
-            this._tileProvider.beginUpdate(context, frameState, commandList);
+            this._tileProvider.beginUpdate(frameState);
 
-            selectTilesForRendering(this, context, frameState);
-            processTileLoadQueue(this, context, frameState);
-            createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+            selectTilesForRendering(this, frameState);
+            createRenderCommandsForSelectedTiles(this, frameState);
 
-            this._tileProvider.endUpdate(context, frameState, commandList);
+            this._tileProvider.endUpdate(frameState);
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.endUpdate(context, frameState, commandList);
+            this._tileProvider.updateForPick(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    QuadtreePrimitive.prototype.endFrame = function(frameState) {
+        var passes = frameState.passes;
+        if (!passes.render || frameState.mode === SceneMode.MORPHING) {
+            // Only process the load queue for a single pass.
+            // Don't process the load queue or update heights during the morph flights.
+            return;
+        }
+
+        // Load/create resources for terrain and imagery. Prepare texture re-projections for the next frame.
+        processTileLoadQueue(this, frameState);
+        updateHeights(this, frameState);
+
+        var debug = this._debug;
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
+
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
         }
     };
 
@@ -290,41 +377,42 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreePrimitive#isDestroyed
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     *
+     * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
-    function selectTilesForRendering(primitive, context, frameState) {
-        var debug = primitive._debug;
+    var comparisonPoint;
+    var centerScratch = new Cartographic();
+    function compareDistanceToPoint(a, b) {
+        var center = Rectangle.center(a.rectangle, centerScratch);
+        var alon = center.longitude - comparisonPoint.longitude;
+        var alat = center.latitude - comparisonPoint.latitude;
 
+        center = Rectangle.center(b.rectangle, centerScratch);
+        var blon = center.longitude - comparisonPoint.longitude;
+        var blat = center.latitude - comparisonPoint.latitude;
+
+        return (alon * alon + alat * alat) - (blon * blon + blat * blat);
+    }
+
+    function selectTilesForRendering(primitive, frameState) {
+        var debug = primitive._debug;
         if (debug.suspendLodUpdate) {
             return;
         }
 
         var i;
-        var j;
         var len;
 
         // Clear the render list.
         var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
-
-        var traversalQueue = primitive._tileTraversalQueue;
-        traversalQueue.clear();
-
-        debug.maxDepth = 0;
-        debug.tilesVisited = 0;
-        debug.tilesCulled = 0;
-        debug.tilesRendered = 0;
-        debug.tilesWaitingForChildren = 0;
-
-        primitive._tileLoadQueue.length = 0;
-        primitive._tileReplacementQueue.markStartOfRenderFrame();
 
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
@@ -345,6 +433,12 @@ define([
         var tile;
         var levelZeroTiles = primitive._levelZeroTiles;
 
+        // Sort the level zero tiles by the distance from the center to the camera.
+        // The level zero tiles aren't necessarily a nice neat quad, so we can use the
+        // quadtree ordering we use elsewhere in the tree
+        comparisonPoint = frameState.camera.positionCartographic;
+        levelZeroTiles.sort(compareDistanceToPoint);
+
         var customDataAdded = primitive._addHeightCallbacks;
         var customDataRemoved = primitive._removeHeightCallbacks;
         var frameNumber = frameState.frameNumber;
@@ -359,109 +453,261 @@ define([
             customDataRemoved.length = 0;
         }
 
-        // Enqueue the root tiles that are renderable and visible.
+        // Our goal with load ordering is to first load all of the tiles we need to
+        // render the current scene at full detail.  Loading any other tiles is just
+        // a form of prefetching, and we need not do it at all (other concerns aside).  This
+        // simple and obvious statement gets more complicated when we realize that, because
+        // we don't have bounding volumes for the entire terrain tile pyramid, we don't
+        // precisely know which tiles we need to render the scene at full detail, until we do
+        // some loading.
+        //
+        // So our load priority is (from high to low):
+        // 1. Tiles that we _would_ render, except that they're not sufficiently loaded yet.
+        //    Ideally this would only include tiles that we've already determined to be visible,
+        //    but since we don't have reliable visibility information until a tile is loaded,
+        //    and because we (currently) must have all children in a quad renderable before we
+        //    can refine, this pretty much means tiles we'd like to refine to, regardless of
+        //    visibility. (high)
+        // 2. Tiles that we're rendering. (medium)
+        // 3. All other tiles. (low)
+        //
+        // Within each priority group, tiles should be loaded in approximate near-to-far order,
+        // but currently they're just loaded in our traversal order which makes no guarantees
+        // about depth ordering.
+
+        // Traverse in depth-first, near-to-far order.
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
-            if (tile.needsLoading) {
-                queueTileLoad(primitive, tile);
-            }
-            if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-                traversalQueue.enqueue(tile);
+            if (!tile.renderable) {
+                if (tile.needsLoading) {
+                    primitive._tileLoadQueueHigh.push(tile);
+                }
+                ++debug.tilesWaitingForChildren;
+            } else if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+                visitTile(primitive, frameState, tile);
             } else {
+                if (tile.needsLoading) {
+                    primitive._tileLoadQueueLow.push(tile);
+                }
                 ++debug.tilesCulled;
-                if (!tile.renderable) {
-                    ++debug.tilesWaitingForChildren;
-                }
             }
         }
 
-        // Traverse the tiles in breadth-first order.
-        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
-        // This maximizes the average detail across the scene and results in fewer sharp transitions
-        // between very different LODs.
-        while (defined((tile = traversalQueue.dequeue()))) {
-            ++debug.tilesVisited;
+        frameState.afterRender.push(createTileProgressFunction(primitive));
+    }
 
-            primitive._tileReplacementQueue.markTileRendered(tile);
-            tile._updateCustomData(frameNumber);
+    function createTileProgressFunction(primitive) {
+        return function() {
+            raiseTileLoadProgressEvent(primitive);
+        };
+    }
 
-            if (tile.level > debug.maxDepth) {
-                debug.maxDepth = tile.level;
+    function visitTile(primitive, frameState, tile) {
+        var debug = primitive._debug;
+
+        ++debug.tilesVisited;
+
+        primitive._tileReplacementQueue.markTileRendered(tile);
+        tile._updateCustomData(frameState.frameNumber);
+
+        if (tile.level > debug.maxDepth) {
+            debug.maxDepth = tile.level;
+        }
+
+        if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
+            // This tile meets SSE requirements, so render it.
+            if (tile.needsLoading) {
+                // Rendered tile meeting SSE loads with medium priority.
+                primitive._tileLoadQueueMedium.push(tile);
             }
+            addTileToRenderList(primitive, tile);
+            return;
+        }
 
-            // There are a few different algorithms we could use here.
-            // This one doesn't load children unless we refine to them.
-            // We may want to revisit this in the future.
+        var southwestChild = tile.southwestChild;
+        var southeastChild = tile.southeastChild;
+        var northwestChild = tile.northwestChild;
+        var northeastChild = tile.northeastChild;
+        var allAreRenderable = southwestChild.renderable && southeastChild.renderable &&
+                               northwestChild.renderable && northeastChild.renderable;
+        var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
+                              northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
 
-            if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
-                // This tile meets SSE requirements, so render it.
+        if (allAreRenderable) {
+            if (allAreUpsampled) {
+                // No point in rendering the children because they're all upsampled.  Render this tile instead.
                 addTileToRenderList(primitive, tile);
-            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
-                // SSE is not good enough and children are loaded, so refine.
-                var children = tile.children;
-                // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
-                for (i = 0, len = children.length; i < len; ++i) {
-                    if (tileProvider.computeTileVisibility(children[i], frameState, occluders) !== Visibility.NONE) {
-                        traversalQueue.enqueue(children[i]);
-                    } else {
-                        ++debug.tilesCulled;
-                    }
+
+                // Load the children even though we're (currently) not going to render them.
+                // A tile that is "upsampled only" right now might change its tune once it does more loading.
+                // A tile that is upsampled now and forever should also be done loading, so no harm done.
+                queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
+
+                if (tile.needsLoading) {
+                    // Rendered tile that's not waiting on children loads with medium priority.
+                    primitive._tileLoadQueueMedium.push(tile);
                 }
             } else {
-                // SSE is not good enough but not all children are loaded, so render this tile anyway.
-                addTileToRenderList(primitive, tile);
+                // SSE is not good enough and children are loaded, so refine.
+                // No need to add the children to the load queue because they'll be added (if necessary) when they're visited.
+                visitVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState);
+
+                if (tile.needsLoading) {
+                    // Tile is not rendered, so load it with low priority.
+                    primitive._tileLoadQueueLow.push(tile);
+                }
             }
-        }
+        } else {
+            // We'd like to refine but can't because not all of our children are renderable.  Load the refinement blockers with high priority and
+            // render this tile in the meantime.
+            queueChildLoadNearToFar(primitive, frameState.camera.positionCartographic, southwestChild, southeastChild, northwestChild, northeastChild);
+            addTileToRenderList(primitive, tile);
 
-        if (debug.enableDebugOutput) {
-            if (debug.tilesVisited !== debug.lastTilesVisited ||
-                debug.tilesRendered !== debug.lastTilesRendered ||
-                debug.tilesCulled !== debug.lastTilesCulled ||
-                debug.maxDepth !== debug.lastMaxDepth ||
-                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-
-                /*global console*/
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
-
-                debug.lastTilesVisited = debug.tilesVisited;
-                debug.lastTilesRendered = debug.tilesRendered;
-                debug.lastTilesCulled = debug.tilesCulled;
-                debug.lastMaxDepth = debug.maxDepth;
-                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            if (tile.needsLoading) {
+                // We will refine this tile when it's possible, so load this tile only with low priority.
+                primitive._tileLoadQueueLow.push(tile);
             }
         }
     }
 
-    function screenSpaceError(primitive, context, frameState, tile) {
-        if (frameState.mode === SceneMode.SCENE2D) {
-            return screenSpaceError2D(primitive, context, frameState, tile);
+    function queueChildLoadNearToFar(primitive, cameraPosition, southwest, southeast, northwest, northeast) {
+        if (cameraPosition.longitude < southwest.east) {
+            if (cameraPosition.latitude < southwest.north) {
+                // Camera in southwest quadrant
+                queueChildTileLoad(primitive, southwest);
+                queueChildTileLoad(primitive, southeast);
+                queueChildTileLoad(primitive, northwest);
+                queueChildTileLoad(primitive, northeast);
+            } else {
+                // Camera in northwest quadrant
+                queueChildTileLoad(primitive, northwest);
+                queueChildTileLoad(primitive, southwest);
+                queueChildTileLoad(primitive, northeast);
+                queueChildTileLoad(primitive, southeast);
+            }
+        } else if (cameraPosition.latitude < southwest.north) {
+            // Camera southeast quadrant
+            queueChildTileLoad(primitive, southeast);
+            queueChildTileLoad(primitive, southwest);
+            queueChildTileLoad(primitive, northeast);
+            queueChildTileLoad(primitive, northwest);
+        } else {
+            // Camera in northeast quadrant
+            queueChildTileLoad(primitive, northeast);
+            queueChildTileLoad(primitive, northwest);
+            queueChildTileLoad(primitive, southeast);
+            queueChildTileLoad(primitive, southwest);
+        }
+    }
+
+    function queueChildTileLoad(primitive, childTile) {
+        primitive._tileReplacementQueue.markTileRendered(childTile);
+        if (childTile.needsLoading) {
+            if (childTile.renderable) {
+                primitive._tileLoadQueueLow.push(childTile);
+            } else {
+                // A tile blocking refine loads with high priority
+                primitive._tileLoadQueueHigh.push(childTile);
+            }
+        }
+    }
+
+    function visitVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, frameState) {
+        var cameraPosition = frameState.camera.positionCartographic;
+        var tileProvider = primitive._tileProvider;
+        var occluders = primitive._occluders;
+
+        if (cameraPosition.longitude < southwest.rectangle.east) {
+            if (cameraPosition.latitude < southwest.rectangle.north) {
+                // Camera in southwest quadrant
+                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+            } else {
+                // Camera in northwest quadrant
+                visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+                visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+            }
+        } else if (cameraPosition.latitude < southwest.rectangle.north) {
+            // Camera southeast quadrant
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+        } else {
+            // Camera in northeast quadrant
+            visitIfVisible(primitive, northeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, northwest, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southeast, tileProvider, frameState, occluders);
+            visitIfVisible(primitive, southwest, tileProvider, frameState, occluders);
+        }
+    }
+
+    function visitIfVisible(primitive, tile, tileProvider, frameState, occluders) {
+        if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+            visitTile(primitive, frameState, tile);
+        } else {
+            ++primitive._debug.tilesCulled;
+            primitive._tileReplacementQueue.markTileRendered(tile);
+        }
+    }
+    /**
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new one.
+     */
+    function raiseTileLoadProgressEvent(primitive) {
+        var currentLoadQueueLength = primitive._tileLoadQueueHigh.length + primitive._tileLoadQueueMedium.length + primitive._tileLoadQueueLow.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
+        }
+    }
+
+    function screenSpaceError(primitive, frameState, tile) {
+        if (frameState.mode === SceneMode.SCENE2D || frameState.camera.frustum instanceof OrthographicFrustum) {
+            return screenSpaceError2D(primitive, frameState, tile);
         }
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
+        var distance = tile._distance;
+        var height = frameState.context.drawingBufferHeight;
+        var sseDenominator = frameState.camera.frustum.sseDenominator;
 
-        var height = context.drawingBufferHeight;
+        var error = (maxGeometricError * height) / (distance * sseDenominator);
 
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var fovy = frustum.fovy;
+        if (frameState.fog.enabled) {
+            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+        }
 
-        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        return error;
     }
 
-    function screenSpaceError2D(primitive, context, frameState, tile) {
+    function screenSpaceError2D(primitive, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
+        if (defined(frustum._offCenterFrustum)) {
+            frustum = frustum._offCenterFrustum;
+        }
+
+        var context = frameState.context;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
-        return maxGeometricError / pixelSize;
+        var error = maxGeometricError / pixelSize;
+
+        if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
+            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+        }
+
+        return error;
     }
 
     function addTileToRenderList(primitive, tile) {
@@ -469,41 +715,13 @@ define([
         ++primitive._debug.tilesRendered;
     }
 
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile) {
-        var allRenderable = true;
-        var allUpsampledOnly = true;
-
-        var children = tile.children;
-        for (var i = 0, len = children.length; i < len; ++i) {
-            var child = children[i];
-
-            primitive._tileReplacementQueue.markTileRendered(child);
-
-            allUpsampledOnly = allUpsampledOnly && child.upsampledFromParent;
-            allRenderable = allRenderable && child.renderable;
-
-            if (child.needsLoading) {
-                queueTileLoad(primitive, child);
-            }
-        }
-
-        if (!allRenderable) {
-            ++primitive._debug.tilesWaitingForChildren;
-        }
-
-        // If all children are upsampled from this tile, we just render this tile instead of its children.
-        return allRenderable && !allUpsampledOnly;
-    }
-
-    function queueTileLoad(primitive, tile) {
-        primitive._tileLoadQueue.push(tile);
-    }
-
-    function processTileLoadQueue(primitive, context, frameState) {
-        var tileLoadQueue = primitive._tileLoadQueue;
+    function processTileLoadQueue(primitive, frameState) {
+        var tileLoadQueueHigh = primitive._tileLoadQueueHigh;
+        var tileLoadQueueMedium = primitive._tileLoadQueueMedium;
+        var tileLoadQueueLow = primitive._tileLoadQueueLow;
         var tileProvider = primitive._tileProvider;
 
-        if (tileLoadQueue.length === 0) {
+        if (tileLoadQueueHigh.length === 0 && tileLoadQueueMedium.length === 0 && tileLoadQueueLow.length === 0) {
             return;
         }
 
@@ -511,17 +729,18 @@ define([
         // we're allowed to keep.
         primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
-        var startTime = getTimestamp();
-        var timeSlice = primitive._loadQueueTimeSlice;
-        var endTime = startTime + timeSlice;
+        var endTime = getTimestamp() + primitive._loadQueueTimeSlice;
 
-        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
-            var tile = tileLoadQueue[i];
+        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh);
+        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium);
+        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow);
+    }
+
+    function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue) {
+        for (var i = 0, len = loadQueue.length; i < len && getTimestamp() < endTime; ++i) {
+            var tile = loadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
-            tileProvider.loadTile(context, frameState, tile);
-            if (getTimestamp() >= endTime) {
-                break;
-            }
+            tileProvider.loadTile(frameState, tile);
         }
     }
 
@@ -542,26 +761,40 @@ define([
         var ellipsoid = projection.ellipsoid;
 
         while (tilesToUpdateHeights.length > 0) {
-            var tile = tilesToUpdateHeights[tilesToUpdateHeights.length - 1];
-            if (tile !== primitive._lastTileUpdated) {
-                primitive._lastTileIndex = 0;
-            }
-
+            var tile = tilesToUpdateHeights[0];
             var customData = tile.customData;
             var customDataLength = customData.length;
 
             var timeSliceMax = false;
-            for (var i = primitive._lastTileIndex; i < customDataLength; ++i) {
+            var i;
+            for (i = primitive._lastTileIndex; i < customDataLength; ++i) {
                 var data = customData[i];
 
                 if (tile.level > data.level) {
-                    if (!defined(data.position)) {
-                        data.position = ellipsoid.cartographicToCartesian(data.positionCartographic);
+                    if (!defined(data.positionOnEllipsoidSurface)) {
+                        // cartesian has to be on the ellipsoid surface for `ellipsoid.geodeticSurfaceNormal`
+                        data.positionOnEllipsoidSurface = Cartesian3.fromRadians(data.positionCartographic.longitude, data.positionCartographic.latitude, 0.0, ellipsoid);
                     }
 
                     if (mode === SceneMode.SCENE3D) {
-                        Cartesian3.clone(Cartesian3.ZERO, scratchRay.origin);
-                        Cartesian3.normalize(data.position, scratchRay.direction);
+                        var surfaceNormal = ellipsoid.geodeticSurfaceNormal(data.positionOnEllipsoidSurface, scratchRay.direction);
+
+                        // compute origin point
+
+                        // Try to find the intersection point between the surface normal and z-axis.
+                        // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+                        var rayOrigin = ellipsoid.getSurfaceNormalIntersectionWithZAxis(data.positionOnEllipsoidSurface, 11500.0, scratchRay.origin);
+
+                        // Theoretically, not with Earth datums, the intersection point can be outside the ellipsoid
+                        if (!defined(rayOrigin)) {
+                            // intersection point is outside the ellipsoid, try other value
+                            // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
+                            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+
+                            // multiply by the *positive* value of the magnitude
+                            var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchPosition);
+                            Cartesian3.subtract(data.positionOnEllipsoidSurface, vectorToMinimumPoint, scratchRay.origin);
+                        }
                     } else {
                         Cartographic.clone(data.positionCartographic, scratchCartographic);
 
@@ -592,10 +825,11 @@ define([
                     }
 
                     var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
+                    var parentTile = tile.parent;
                     if ((defined(tileDataAvailable) && !tileDataAvailable) ||
-                           (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
-                                   !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
-                            data.removeFunc();
+                        (defined(parentTile) && defined(parentTile.data) && defined(parentTile.data.terrainData) &&
+                         !parentTile.data.terrainData.isChildAvailable(parentTile.x, parentTile.y, child.x, child.y))) {
+                        data.removeFunc();
                     }
                 }
 
@@ -606,37 +840,29 @@ define([
             }
 
             if (timeSliceMax) {
-                primitive._lastTileUpdated = tile;
                 primitive._lastTileIndex = i;
                 break;
             } else {
-                tilesToUpdateHeights.pop();
+                primitive._lastTileIndex = 0;
+                tilesToUpdateHeights.shift();
             }
         }
     }
 
-    function tileDistanceSortFunction(a, b) {
-        return a._distance - b._distance;
-    }
-
-    function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
+    function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
-        tilesToRender.sort(tileDistanceSortFunction);
-
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
-            tileProvider.showTileThisFrame(tile, context, frameState, commandList);
+            tileProvider.showTileThisFrame(tile, frameState);
 
             if (tile._frameRendered !== frameState.frameNumber - 1) {
                 tilesToUpdateHeights.push(tile);
             }
             tile._frameRendered = frameState.frameNumber;
         }
-
-        updateHeights(primitive, frameState);
     }
 
     return QuadtreePrimitive;

@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Ray',
         'Core/Cartesian3'
     ], function(
         Ray,
         Cartesian3) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor create zero valued Ray', function() {
         var ray = new Ray();

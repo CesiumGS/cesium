@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PositionPropertyArray',
         'Core/Cartesian3',
@@ -13,8 +12,7 @@ defineSuite([
         ReferenceFrame,
         ConstantPositionProperty,
         SampledPositionProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = JulianDate.now();
 

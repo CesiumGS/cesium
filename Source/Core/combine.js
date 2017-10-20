@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defaultValue',
         './defined'
     ], function(
         defaultValue,
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * Merges two objects, copying their properties onto a new combined object. When two objects have the same
@@ -38,7 +37,7 @@ define([
      *
      * @exports combine
      */
-    var combine = function(object1, object2, deep) {
+    function combine(object1, object2, deep) {
         deep = defaultValue(deep, false);
 
         var result = {};
@@ -74,7 +73,7 @@ define([
             }
         }
         return result;
-    };
+    }
 
     return combine;
 });

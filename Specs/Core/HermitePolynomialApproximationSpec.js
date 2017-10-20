@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/HermitePolynomialApproximation'
     ], function(
         HermitePolynomialApproximation) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/

@@ -1,16 +1,20 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
+        'Renderer/Framebuffer',
+        'Renderer/RenderState',
+        'Renderer/Texture',
         'Specs/createContext'
     ], 'Renderer/Clear', function(
         BoundingRectangle,
         Color,
         ClearCommand,
+        Framebuffer,
+        RenderState,
+        Texture,
         createContext) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var context;
 
@@ -24,37 +28,37 @@ defineSuite([
 
     it('default clear', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
     it('clears to white', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
     });
 
     it('clears with a color mask', function() {
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
 
         var command = new ClearCommand({
             color : Color.WHITE,
-            renderState : context.createRenderState({
+            renderState : RenderState.fromCache({
                 colorMask : {
                     red : true,
                     green : false,
                     blue : true,
-                    alpha : false
+                    alpha : true
                 }
             })
         });
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 0, 255, 0]);
+        expect(context).toReadPixels([255, 0, 255, 255]);
     });
 
     it('clears with scissor test', function() {
@@ -63,10 +67,10 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
         command.color = Color.BLACK;
-        command.renderState = context.createRenderState({
+        command.renderState = RenderState.fromCache({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle()
@@ -74,9 +78,9 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(context).toReadPixels([255, 255, 255, 255]);
 
-        command.renderState = context.createRenderState({
+        command.renderState = RenderState.fromCache({
             scissorTest : {
                 enabled : true,
                 rectangle : new BoundingRectangle(0, 0, 1, 1)
@@ -84,15 +88,17 @@ defineSuite([
         });
 
         command.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(context).toReadPixels([0, 0, 0, 255]);
     });
 
     it('clears a framebuffer color attachment', function() {
-        var colorTexture = context.createTexture2D({
+        var colorTexture = new Texture({
+            context : context,
             width : 1,
             height : 1
         });
-        var framebuffer = context.createFramebuffer({
+        var framebuffer = new Framebuffer({
+            context : context,
             colorTextures : [colorTexture]
         });
 
@@ -102,9 +108,10 @@ defineSuite([
         });
         command.execute(context);
 
-        expect(context.readPixels({
+        expect({
+            context : context,
             framebuffer : framebuffer
-        })).toEqual([0, 255, 0, 255]);
+        }).toReadPixels([0, 255, 0, 255]);
 
         framebuffer = framebuffer.destroy();
     });

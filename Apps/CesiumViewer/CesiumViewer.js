@@ -1,17 +1,15 @@
-/*global define*/
 define([
         'Cesium/Core/Cartesian3',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
-        'Cesium/Core/getFilenameFromUri',
         'Cesium/Core/Math',
-        'Cesium/Core/queryToObject',
         'Cesium/Core/objectToQuery',
+        'Cesium/Core/queryToObject',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
+        'Cesium/Scene/createTileMapServiceImageryProvider',
         'Cesium/DataSources/GpxDataSource',
-        'Cesium/Scene/TileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -20,20 +18,18 @@ define([
         Cartesian3,
         defined,
         formatError,
-        getFilenameFromUri,
         CesiumMath,
-        queryToObject,
         objectToQuery,
+        queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
+        createTileMapServiceImageryProvider,
         GpxDataSource,
-        TileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
-    "use strict";
-    /*global console*/
+    'use strict';
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -50,7 +46,7 @@ define([
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
-        imageryProvider = new TileMapServiceImageryProvider({
+        imageryProvider = createTileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
@@ -68,7 +64,7 @@ define([
         var message = formatError(exception);
         console.error(message);
         if (!document.querySelector('.cesium-widget-errorPanel')) {
-            window.alert(message);
+            window.alert(message); //eslint-disable-line no-alert
         }
         return;
     }
@@ -107,6 +103,10 @@ define([
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
+            loadPromise = KmlDataSource.load(source, {
+                camera: scene.camera,
+                canvas: scene.canvas
+            });
             loadPromise = KmlDataSource.load(source);
         } else if(/\.gpx$/i.test(source)){
             loadPromise = GpxDataSource.load(source);
@@ -160,14 +160,17 @@ define([
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
             viewer.camera.setView({
-                position: Cartesian3.fromDegrees(longitude, latitude, height),
-                heading: heading,
-                pitch: pitch,
-                roll: roll
+                destination: Cartesian3.fromDegrees(longitude, latitude, height),
+                orientation: {
+                    heading: heading,
+                    pitch: pitch,
+                    roll: roll
+                }
             });
         }
     }
 
+    var camera = viewer.camera;
     function saveCamera() {
         var position = camera.positionCartographic;
         var hpr = '';
@@ -178,20 +181,11 @@ define([
         history.replaceState(undefined, '', '?' + objectToQuery(endUserOptions));
     }
 
-    var updateTimer;
+    var timeout;
     if (endUserOptions.saveCamera !== 'false') {
-        var camera = viewer.camera;
-        camera.moveStart.addEventListener(function() {
-            if (!defined(updateTimer)) {
-                updateTimer = window.setInterval(saveCamera, 1000);
-            }
-        });
-        camera.moveEnd.addEventListener(function() {
-            if (defined(updateTimer)) {
-                window.clearInterval(updateTimer);
-                updateTimer = undefined;
-            }
-            saveCamera();
+        camera.changed.addEventListener(function() {
+            window.clearTimeout(timeout);
+            timeout = window.setTimeout(saveCamera, 1000);
         });
     }
 

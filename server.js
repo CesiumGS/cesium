@@ -1,12 +1,13 @@
+/*eslint-env node*/
+'use strict';
 (function() {
-    "use strict";
-    /*global console,require,__dirname,process*/
-    /*jshint es3:false*/
-
     var express = require('express');
     var compression = require('compression');
+    var fs = require('fs');
     var url = require('url');
     var request = require('request');
+
+    var gzipHeader = Buffer.from('1F8B08', 'hex');
 
     var yargs = require('yargs').options({
         'port' : {
@@ -37,16 +38,46 @@
 
     // eventually this mime type configuration will need to change
     // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
+    // *NOTE* Any changes you make here must be mirrored in web.config.
     var mime = express.static.mime;
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
-        'model/vnd.gltf+json' : ['gltf'],
-        'model/vnd.gltf.binary' : ['bgltf'],
+        'image/crn' : ['crn'],
+        'image/ktx' : ['ktx'],
+        'model/gltf+json' : ['gltf'],
+        'model/gltf-binary' : ['bgltf', 'glb'],
+        'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt'],
         'text/plain' : ['glsl']
-    });
+    }, true);
 
     var app = express();
     app.use(compression());
+    app.use(function(req, res, next) {
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+        next();
+    });
+
+    function checkGzipAndNext(req, res, next) {
+        var reqUrl = url.parse(req.url, true);
+        var filePath = reqUrl.pathname.substring(1);
+
+        var readStream = fs.createReadStream(filePath, { start: 0, end: 2 });
+        readStream.on('error', function(err) {
+            next();
+        });
+
+        readStream.on('data', function(chunk) {
+            if (chunk.equals(gzipHeader)) {
+                res.header('Content-Encoding', 'gzip');
+            }
+            next();
+        });
+    }
+
+    var knownTilesetFormats = [/\.b3dm/, /\.pnts/, /\.i3dm/, /\.cmpt/, /\.glb/, /tileset.*\.json$/];
+    app.get(knownTilesetFormats, checkGzipAndNext);
+
     app.use(express.static(__dirname));
 
     function getRemoteUrlFromParam(req) {

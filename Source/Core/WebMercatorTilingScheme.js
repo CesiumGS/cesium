@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian2',
         './defaultValue',
@@ -15,7 +14,7 @@ define([
         Ellipsoid,
         Rectangle,
         WebMercatorProjection) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry referenced to a {@link WebMercatorProjection}, EPSG:3857.  This is
@@ -40,7 +39,7 @@ define([
      *        globe is covered in the longitude direction and an equal distance is covered in the latitude
      *        direction, resulting in a square projection.
      */
-    var WebMercatorTilingScheme = function WebMercatorTilingScheme(options) {
+    function WebMercatorTilingScheme(options) {
         options = defaultValue(options, {});
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -63,7 +62,7 @@ define([
         var northeast = this._projection.unproject(this._rectangleNortheastInMeters);
         this._rectangle = new Rectangle(southwest.longitude, southwest.latitude,
                                   northeast.longitude, northeast.latitude);
-    };
+    }
 
     defineProperties(WebMercatorTilingScheme.prototype, {
         /**
@@ -121,7 +120,7 @@ define([
     };
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      *
      * @param {Rectangle} rectangle The rectangle to transform.
@@ -147,7 +146,7 @@ define([
     };
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      *
      * @param {Number} x The integer x coordinate of the tile.

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/CorridorOutlineGeometry',
         'Core/Cartesian3',
@@ -11,8 +10,7 @@ defineSuite([
         CornerType,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('throws without positions', function() {
         expect(function() {
@@ -36,7 +34,14 @@ defineSuite([
             ]),
             width: 10000
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
+
+        geometry = CorridorOutlineGeometry.createGeometry(new CorridorOutlineGeometry({
+            positions :  [new Cartesian3(-1349511.388149118, -5063973.22857992, 3623141.6372688496), //same lon/lat, different height
+                          new Cartesian3(-1349046.4811926484, -5062228.688739784, 3621885.0521561056)],
+            width: 10000
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('computes positions', function() {
@@ -49,8 +54,8 @@ defineSuite([
             width : 30000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 12);
-        expect(m.indices.length).toEqual(2 * 12);
+        expect(m.attributes.position.values.length).toEqual(12 * 3); // 6 left + 6 right
+        expect(m.indices.length).toEqual(12 * 2);
     });
 
     it('computes positions extruded', function() {
@@ -64,8 +69,8 @@ defineSuite([
             extrudedHeight: 30000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 24);
-        expect(m.indices.length).toEqual(2 * 12 * 2 + 8);
+        expect(m.attributes.position.values.length).toEqual(24 * 3); // 6 positions * 4 for a box at each position
+        expect(m.indices.length).toEqual(28 * 2); // 5 segments * 4 lines per segment + 4 lines * 2 ends
     });
 
     it('computes right turn', function() {
@@ -79,8 +84,8 @@ defineSuite([
             width : 30000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 8);
-        expect(m.indices.length).toEqual(2 * 8);
+        expect(m.attributes.position.values.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 2);
     });
 
     it('computes left turn', function() {
@@ -94,8 +99,8 @@ defineSuite([
             width : 30000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 8);
-        expect(m.indices.length).toEqual(2 * 8);
+        expect(m.attributes.position.values.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 2);
     });
 
     it('computes with rounded corners', function() {
@@ -110,10 +115,12 @@ defineSuite([
             width : 30000
         }));
 
-        var endCaps = 180/5*2;
-        var corners = 90/5*2;
-        expect(m.attributes.position.values.length).toEqual(3 * (11 + endCaps + corners));
-        expect(m.indices.length).toEqual(2 * (11 + endCaps + corners));
+        var endCaps = 72; // 36 points * 2 end caps
+        var corners = 37; // 18 for one corner + 19 for the other
+        var numVertices = 10 + endCaps + corners;
+        var numLines = 10 + endCaps + corners;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numLines * 2);
     });
 
     it('computes with beveled corners', function() {
@@ -128,8 +135,32 @@ defineSuite([
             width : 30000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 10);
-        expect(m.indices.length).toEqual(2 * 10);
+        expect(m.attributes.position.values.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(10 * 2);
+    });
+
+    it('undefined is returned if there are less than two positions or the width is equal to ' +
+       'or less than zero', function() {
+        var corridorOutline0 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-72.0, 35.0]),
+            width : 100000
+        });
+        var corridorOutline1 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-67.655, 0.0, -67.655, 15.0, -67.655, 20.0]),
+            width : 0
+        });
+        var corridorOutline2 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-67.655, 0.0, -67.655, 15.0, -67.655, 20.0]),
+            width : -100
+        });
+
+        var geometry0 = CorridorOutlineGeometry.createGeometry(corridorOutline0);
+        var geometry1 = CorridorOutlineGeometry.createGeometry(corridorOutline1);
+        var geometry2 = CorridorOutlineGeometry.createGeometry(corridorOutline2);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
 
     var positions = Cartesian3.fromDegreesArray([

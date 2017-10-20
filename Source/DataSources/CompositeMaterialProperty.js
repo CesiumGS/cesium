@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -13,7 +12,7 @@ define([
         Event,
         CompositeProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link CompositeProperty} which is also a {@link MaterialProperty}.
@@ -21,11 +20,11 @@ define([
      * @alias CompositeMaterialProperty
      * @constructor
      */
-    var CompositeMaterialProperty = function() {
+    function CompositeMaterialProperty() {
         this._definitionChanged = new Event();
         this._composite = new CompositeProperty();
         this._composite.definitionChanged.addEventListener(CompositeMaterialProperty.prototype._raiseDefinitionChanged, this);
-    };
+    }
 
     defineProperties(CompositeMaterialProperty.prototype, {
         /**

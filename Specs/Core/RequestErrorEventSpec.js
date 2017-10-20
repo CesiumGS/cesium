@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/RequestErrorEvent'
     ], function(
         RequestErrorEvent) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('parses response headers provided as a string', function() {
         var event = new RequestErrorEvent(404, 'foo', 'This-is-a-test: first\r\nAnother: second value!');

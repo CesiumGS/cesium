@@ -1,13 +1,14 @@
-/*global define*/
 define([
         'Core/Event',
+        'DataSources/EntityCluster',
         'DataSources/EntityCollection'
     ], function(
         Event,
+        EntityCluster,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
-    var MockDataSource = function() {
+    function MockDataSource() {
         //Values to be fiddled with by the test
         this.changedEvent = new Event();
         this.errorEvent = new Event();
@@ -18,8 +19,8 @@ define([
         this.isLoading = false;
         this.loadingEvent = new Event();
         this.destroyed = false;
-    };
-
+        this.clustering = new EntityCluster();
+    }
     MockDataSource.prototype.update = function() {
         return true;
     };

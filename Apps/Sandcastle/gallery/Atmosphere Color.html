@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Adjust hue, saturation, and brightness of the sky/atmosphere.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table>
+    <tbody><tr>
+        <td>hueShift</td>
+        <td>
+            <input type="range" min="-1" max="1" step="0.01" data-bind="value: hueShift, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: hueShift">
+        </td>
+    </tr>
+    <tr>
+        <td>saturationShift</td>
+        <td>
+            <input type="range" min="-1" max="1" step="0.01" data-bind="value: saturationShift, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: saturationShift">
+        </td>
+    </tr>
+    <tr>
+        <td>brightnessShift</td>
+        <td>
+            <input type="range" min="-1" max="1" step="0.01" data-bind="value: brightnessShift, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: brightnessShift">
+        </td>
+    </tr>
+</tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    sceneModePicker:false
+});
+var scene = viewer.scene;
+var skyAtmosphere = scene.skyAtmosphere;
+
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    hueShift: 0.0,
+    saturationShift: 0.0,
+    brightnessShift: 0.0
+};
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+// Make the skyAtmosphere's HSB parameters subscribers of the viewModel.
+function subscribeParameter(name) {
+    Cesium.knockout.getObservable(viewModel, name).subscribe(
+        function(newValue) {
+            skyAtmosphere[name] = newValue;
+        }
+    );
+}
+
+subscribeParameter('hueShift');
+subscribeParameter('saturationShift');
+subscribeParameter('brightnessShift');
+
+Sandcastle.addToggleButton('Lighting', scene.globe.enableLighting, function(checked) {
+    scene.globe.enableLighting = checked;
+});
+
+Sandcastle.addToggleButton('Fog', scene.fog.enabled, function(checked) {
+    scene.fog.enabled = checked;
+});
+
+var camera = viewer.camera;
+camera.setView({
+    destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+    orientation: {
+        heading : -Cesium.Math.PI_OVER_TWO,
+        pitch : 0.2,
+        roll : 0.0
+    }
+});
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

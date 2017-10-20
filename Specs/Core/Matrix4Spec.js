@@ -1,20 +1,20 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Matrix4',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix3',
-        'Core/Quaternion'
+        'Core/Quaternion',
+        'Core/TranslationRotationScale'
     ], function(
         Matrix4,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix3,
-        Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Quaternion,
+        TranslationRotationScale) {
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -226,6 +226,40 @@ defineSuite([
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
+    it('fromTranslationRotationScale works without a result parameter', function() {
+        var expected = new Matrix4(
+            7.0,  0.0, 0.0, 1.0,
+            0.0,  0.0, 9.0, 2.0,
+            0.0, -8.0, 0.0, 3.0,
+            0.0,  0.0, 0.0, 1.0);
+
+        var trs = new TranslationRotationScale(new Cartesian3(1.0, 2.0, 3.0),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
+            new Cartesian3(7.0, 8.0, 9.0));
+
+        var returnedResult = Matrix4.fromTranslationRotationScale(trs);
+        expect(returnedResult).not.toBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('fromTranslationRotationScale works with a result parameter', function() {
+        var expected = new Matrix4(
+            7.0,  0.0, 0.0, 1.0,
+            0.0,  0.0, 9.0, 2.0,
+            0.0, -8.0, 0.0, 3.0,
+            0.0,  0.0, 0.0, 1.0);
+
+        var trs = new TranslationRotationScale(new Cartesian3(1.0, 2.0, 3.0),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
+            new Cartesian3(7.0, 8.0, 9.0));
+
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromTranslationRotationScale(trs, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).not.toBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
     it('fromTranslation works with a result parameter', function() {
         var expected = new Matrix4(1.0, 0.0, 0.0, 10.0, 0.0, 1.0, 0.0, 11.0, 0.0, 0.0, 1.0, 12.0, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix4();
@@ -294,8 +328,8 @@ defineSuite([
     it('fromCamera works without a result parameter', function() {
         var expected = Matrix4.IDENTITY;
         var returnedResult = Matrix4.fromCamera({
-            eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+            position : Cartesian3.ZERO,
+            direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         });
         expect(expected).toEqual(returnedResult);
@@ -305,8 +339,8 @@ defineSuite([
         var expected = Matrix4.IDENTITY;
         var result = new Matrix4();
         var returnedResult = Matrix4.fromCamera({
-            eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+            position : Cartesian3.ZERO,
+            direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         }, result);
         expect(returnedResult).toBe(result);
@@ -1061,19 +1095,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromCamera throws without eye', function() {
+    it('fromCamera throws without position', function() {
         expect(function() {
             Matrix4.fromCamera({
-                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+                direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
                 up : Cartesian3.UNIT_Y
             });
         }).toThrowDeveloperError();
     });
 
-    it('fromCamera throws without target', function() {
+    it('fromCamera throws without direction', function() {
         expect(function() {
             Matrix4.fromCamera({
-                eye : Cartesian3.ZERO,
+                position : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Y
             });
         }).toThrowDeveloperError();
@@ -1082,8 +1116,8 @@ defineSuite([
     it('fromCamera throws without up', function() {
         expect(function() {
             Matrix4.fromCamera({
-                eye : Cartesian3.ZERO,
-                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+                position : Cartesian3.ZERO,
+                direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
             });
         }).toThrowDeveloperError();
     });
@@ -1681,14 +1715,13 @@ defineSuite([
 
     it('computeInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            var left = 0, right = 0, bottom = 0, top = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
         }).toThrowDeveloperError();
     });
 
     it('computeViewportTransformation works', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeViewportTransformation ({
                 x : 0,
                 y : 0,
@@ -1696,5 +1729,19 @@ defineSuite([
                 height : 6.0
             }, 0.0, 2.0);
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix4 objects can be used as array like objects', function() {
+        var matrix = new Matrix4(
+                1, 5, 9, 13,
+                2, 6, 10, 14,
+                3, 7, 11, 15,
+                4, 8, 12, 16);
+        expect(matrix.length).toEqual(16);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

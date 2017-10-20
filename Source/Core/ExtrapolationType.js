@@ -1,15 +1,14 @@
-/*global define*/
 define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Constants to determine how an interpolated value is extrapolated
      * when querying outside the bounds of available data.
-     * @namespace
-     * @alias ExtrapolationType
+     *
+     * @exports ExtrapolationType
      *
      * @see SampledProperty
      */

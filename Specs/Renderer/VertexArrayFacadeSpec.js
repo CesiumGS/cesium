@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/VertexArrayFacade',
         'Core/ComponentDatatype',
@@ -9,8 +8,7 @@ defineSuite([
         ComponentDatatype,
         BufferUsage,
         createContext) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var context;
 

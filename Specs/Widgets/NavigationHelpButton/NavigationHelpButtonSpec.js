@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Core/FeatureDetection',
@@ -7,8 +6,7 @@ defineSuite([
         NavigationHelpButton,
         FeatureDetection,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can create and destroy', function() {
         var container = document.createElement('span');
@@ -18,7 +16,7 @@ defineSuite([
         var widget = new NavigationHelpButton({
             container : 'testContainer'
         });
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toBe(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();

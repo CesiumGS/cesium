@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BingMapsApi',
         '../Core/Cartesian2',
@@ -8,9 +7,10 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/jsonp',
+        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -26,16 +26,17 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
+        loadJsonp,
         CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.
@@ -74,25 +75,26 @@ define([
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : '//dev.virtualearth.net',
+     *     url : 'https://dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
+     *
+     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var BingMapsImageryProvider = function BingMapsImageryProvider(options) {
+    function BingMapsImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -102,6 +104,7 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
+        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
 
         this._url = options.url;
         this._tileProtocol = options.tileProtocol;
@@ -113,17 +116,13 @@ define([
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
-         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * Changing this value after creating an {@link ImageryLayer} for this provider will have
          * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
          * @default 1.0
          */
         this.defaultGamma = 1.0;
-        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
-            this.defaultGamma = 1.3;
-        }
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -140,6 +139,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
@@ -196,16 +196,18 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + metadataUrl + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
-            var metadata = jsonp(metadataUrl, {
+            var metadata = loadJsonp(metadataUrl, {
                 callbackParameterName : 'jsonp',
                 proxy : that._proxy
             });
@@ -213,7 +215,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(BingMapsImageryProvider.prototype, {
         /**
@@ -442,6 +444,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
@@ -484,12 +498,20 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
 
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
-        return getRectangleAttribution(this._attributionList, level, rectangle);
+        var result = getRectangleAttribution(this._attributionList, level, rectangle);
+
+        if (defined(this._keyErrorCredit)) {
+            result.push(this._keyErrorCredit);
+        }
+
+        return result;
     };
 
     /**
@@ -499,6 +521,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -506,7 +529,7 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
+    BingMapsImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
@@ -514,7 +537,7 @@ define([
         //>>includeEnd('debug');
 
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return ImageryProvider.loadImage(this, url, request);
     };
 
     /**
@@ -531,7 +554,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    BingMapsImageryProvider.prototype.pickFeatures = function() {
+    BingMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

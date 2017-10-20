@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PrimitivePipeline',
         'Core/BoundingSphere',
@@ -19,8 +18,7 @@ defineSuite([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can pack and unpack geometry', function() {
         var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({

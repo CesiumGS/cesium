@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines the interface for a geometry updater.  A GeometryUpdater maps
@@ -27,9 +26,9 @@ define([
      * @see RectangleGeometryUpdater
      * @see WallGeometryUpdater
      */
-    var GeometryUpdater = function(entity, scene) {
+    function GeometryUpdater(entity, scene) {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(GeometryUpdater, {
         /**

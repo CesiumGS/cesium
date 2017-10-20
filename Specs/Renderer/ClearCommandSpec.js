@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/ClearCommand',
         'Core/Color'
     ], function(
         ClearCommand,
         Color) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructs with defaults', function() {
         var c = new ClearCommand();

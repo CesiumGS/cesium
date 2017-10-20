@@ -1,4 +1,6 @@
+#ifdef GL_OES_standard_derivatives
 #extension GL_OES_standard_derivatives : enable
+#endif
 
 uniform vec4 color;
 
@@ -13,23 +15,28 @@ float getPointOnLine(vec2 p0, vec2 p1, float x)
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
-    
+
     vec2 st = materialInput.st;
-    
+
+#ifdef GL_OES_standard_derivatives
     float base = 1.0 - abs(fwidth(st.s)) * 10.0;
+#else
+    float base = 0.99; // 1% of the line will be the arrow head
+#endif
+
     vec2 center = vec2(1.0, 0.5);
     float ptOnUpperLine = getPointOnLine(vec2(base, 1.0), center, st.s);
     float ptOnLowerLine = getPointOnLine(vec2(base, 0.0), center, st.s);
-    
+
     float halfWidth = 0.15;
     float s = step(0.5 - halfWidth, st.t);
     s *= 1.0 - step(0.5 + halfWidth, st.t);
     s *= 1.0 - step(base, st.s);
-    
+
     float t = step(base, materialInput.st.s);
     t *= 1.0 - step(ptOnUpperLine, st.t);
     t *= step(ptOnLowerLine, st.t);
-    
+
     // Find the distance from the closest separator (region between two colors)
     float dist;
     if (st.s < base)
@@ -49,11 +56,11 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
         float d3 = abs(st.t - ptOnLowerLine);
         dist = min(min(d1, d2), d3);
     }
-    
+
     vec4 outsideColor = vec4(0.0);
     vec4 currentColor = mix(outsideColor, color, clamp(s + t, 0.0, 1.0));
     vec4 outColor = czm_antialias(outsideColor, color, currentColor, dist);
-    
+
     material.diffuse = outColor.rgb;
     material.alpha = outColor.a;
     return material;

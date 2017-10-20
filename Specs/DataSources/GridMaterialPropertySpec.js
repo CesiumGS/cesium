@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/GridMaterialProperty',
         'Core/Cartesian2',
@@ -17,8 +16,7 @@ defineSuite([
         ConstantProperty,
         SampledProperty,
         TimeIntervalCollectionProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();

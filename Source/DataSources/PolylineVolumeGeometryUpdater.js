@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -7,6 +6,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -16,6 +17,7 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -29,6 +31,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         Event,
         GeometryInstance,
         Iso8601,
@@ -38,28 +42,31 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var scratchColor = new Color();
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.polylinePositions = undefined;
         this.shapePositions = undefined;
         this.cornerType = undefined;
         this.granularity = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for polyline volumes.
@@ -70,7 +77,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var PolylineVolumeGeometryUpdater = function(entity, scene) {
+    function PolylineVolumeGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -93,9 +100,11 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polylineVolume', entity.polylineVolume, undefined);
-    };
+    }
 
     defineProperties(PolylineVolumeGeometryUpdater, {
         /**
@@ -221,6 +230,31 @@ define([
             }
         },
         /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof PolylineVolumeGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof PolylineVolumeGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -308,6 +342,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -316,11 +352,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -353,13 +391,15 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
             geometry : new PolylineVolumeOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -437,6 +477,8 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(polylineVolume.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(polylineVolume.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(polylineVolume.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(polylineVolume.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var granularity = polylineVolume.granularity;
         var outlineWidth = polylineVolume.outlineWidth;
@@ -492,14 +534,13 @@ define([
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
-    };
-
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
@@ -532,6 +573,8 @@ define([
         options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
         options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
         if (!defined(polylineVolume.fill) || polylineVolume.fill.getValue(time)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
@@ -549,7 +592,8 @@ define([
                     geometry : new PolylineVolumeGeometry(options)
                 }),
                 appearance : appearance,
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
 
@@ -575,7 +619,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };

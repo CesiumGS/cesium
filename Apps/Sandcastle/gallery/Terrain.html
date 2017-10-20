@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Visualize worldwide, high-resolution terrain.">
     <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,17 +25,19 @@
 <div id="toolbar">
 <div id="terrainMenu"></div>
 <div id="zoomButtons"></div>
-<div id="toggleLighting"></div>
 <div id="sampleButtons"></div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+// set lighting to true
+viewer.scene.globe.enableLighting = true;
+
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : '//assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
     requestVertexNormals : true
 });
@@ -45,7 +47,7 @@ viewer.terrainProvider = cesiumTerrainProviderMeshes;
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
 var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-    url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+    url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
     credit : 'Terrain data courtesy VT MÄK'
 });
 
@@ -59,14 +61,14 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain - no effects',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world'
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
         });
     }
 }, {
     text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestVertexNormals : true
         });
         viewer.scene.globe.enableLighting = true;
@@ -75,7 +77,7 @@ Sandcastle.addToolbarMenu([{
     text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
     onselect : function() {
         viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestWaterMask : true
         });
     }
@@ -94,10 +96,7 @@ Sandcastle.addToolbarMenu([{
 Sandcastle.addDefaultToolbarMenu([{
     text : 'Mount Everest',
     onselect : function() {
-        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
-        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
-        viewer.camera.lookAt(target, offset);
-        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+        lookAtMtEverest();
     }
 }, {
     text : 'Half Dome',
@@ -119,7 +118,14 @@ Sandcastle.addDefaultToolbarMenu([{
 
 var terrainSamplePositions;
 
-function sampleTerrainSuccess() {
+function lookAtMtEverest() {
+    var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+    var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+    viewer.camera.lookAt(target, offset);
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+function sampleTerrainSuccess(terrainSamplePositions) {
     var ellipsoid = Cesium.Ellipsoid.WGS84;
 
     //By default, Cesium does not obsure geometry
@@ -142,30 +148,27 @@ function sampleTerrainSuccess() {
             },
             label : {
                 text : position.height.toFixed(1),
+                font : '10pt monospace',
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
-                scale : 0.3,
                 pixelOffset : new Cesium.Cartesian2(0, -14),
-                fillColor : Cesium.Color.RED,
-                outlineColor : Cesium.Color.WHITE
+                fillColor : Cesium.Color.BLACK,
+                outlineColor : Cesium.Color.BLACK,
+                showBackground : true,
+                backgroundColor : new Cesium.Color(0.9, 0.9, 0.9, 0.7),
+                backgroundPadding : new Cesium.Cartesian2(4, 3)
             }
         });
     }
     viewer.entities.resumeEvents();
 }
 
-Sandcastle.addToolbarButton('Toggle Lighting', function() {
-    viewer.scene.globe.enableLighting = !viewer.scene.globe.enableLighting;
-}, 'toggleLighting');
-
-
-Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
+function createGrid(rectangleHalfSize) {
     var gridWidth = 41;
     var gridHeight = 41;
     var everestLatitude = Cesium.Math.toRadians(27.988257);
     var everestLongitude = Cesium.Math.toRadians(86.925145);
-    var rectangleHalfSize = 0.005;
     var e = new Cesium.Rectangle(everestLongitude - rectangleHalfSize, everestLatitude - rectangleHalfSize, everestLongitude + rectangleHalfSize, everestLatitude + rectangleHalfSize);
-    terrainSamplePositions = [];
+    var terrainSamplePositions = [];
     for (var y = 0; y < gridHeight; ++y) {
         for (var x = 0; x < gridWidth; ++x) {
             var longitude = Cesium.Math.lerp(e.west, e.east, x / (gridWidth - 1));
@@ -174,9 +177,29 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
             terrainSamplePositions.push(position);
         }
     }
+    return terrainSamplePositions;
+}
 
+Sandcastle.addToggleButton('Enable Lighting', viewer.scene.globe.enableLighting, function(checked) {
+    viewer.scene.globe.enableLighting = checked;
+});
+
+Sandcastle.addToggleButton('Enable fog', viewer.scene.fog.enabled, function(checked) {
+    viewer.scene.fog.enabled = checked;
+});
+
+Sandcastle.addToolbarButton('Sample Everest Terrain at Level 9', function() {
+    var terrainSamplePositions = createGrid(0.005);
     Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+    lookAtMtEverest();
 }, 'sampleButtons');
+
+Sandcastle.addToolbarButton('Sample Most Detailed Everest Terrain', function() {
+    var terrainSamplePositions = createGrid(0.0005);
+    Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, terrainSamplePositions), sampleTerrainSuccess);
+    lookAtMtEverest();
+}, 'sampleButtons');
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

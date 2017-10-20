@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines the interface for data sources, which turn arbitrary data into a
@@ -17,9 +16,9 @@ define([
      * @see Entity
      * @see DataSourceDisplay
      */
-    var DataSource = function() {
+    function DataSource() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(DataSource.prototype, {
         /**
@@ -76,6 +75,24 @@ define([
          * @type {Event}
          */
         loadingEvent : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof DataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof DataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
             get : DeveloperError.throwInstantiationError
         }
     });

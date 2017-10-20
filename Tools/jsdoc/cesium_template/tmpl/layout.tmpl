@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?js= (title ? (title + ' - ') : '') + 'Cesium Documentation' ?></title>
 
     <!--[if lt IE 9]>
@@ -13,24 +14,13 @@
 </head>
 <body>
 
-<div id="bkgd">
-
-<div class="nav">
-    <div class="menu">
-        <a href="index.html"><img id="cesium-logo" src="images/CesiumLogo.jpg" class="menuLogo"></a>
-        <div class="divider"></div>
-
-        <input type="text" class="classFilter" id="ClassFilter" placeholder="Filter">
-
-        <?js= this.nav ?>
-    </div>
-</div>
-
-<div class="nav navStatic"></div>
-
 <div id="main">
 
-    <h1 class="page-title"><?js= title ?></h1>
+    <h1 class="page-title">
+        <a href="index.html"><img src="images/CesiumLogo.png" class="cesiumLogo"></a>
+        <?js= title ?>
+        <div class="titleCenterer"></div>
+    </h1>
 
     <?js= content ?>
 
@@ -39,9 +29,12 @@
     </footer>
 </div>
 
+<div class="nav">
+    <div class="menu">
+        <input type="text" class="classFilter" id="ClassFilter" placeholder="Search">
+        <?js= this.nav ?>
+    </div>
 </div>
-
-<br clear="both">
 
 <script>
 if (window.frameElement) {
@@ -53,15 +46,6 @@ if (window.frameElement) {
     ele.href = window.location.href;
     ele.title = 'Pop out';
     document.getElementById('main').appendChild(ele);
-
-    ele = document.createElement('a');
-    ele.className = 'back';
-    ele.href = 'index.html';
-    ele.title = 'Home';
-    ele.target = '_self';
-    document.getElementById('main').appendChild(ele);
-} else {
-    document.getElementById('bkgd').className = 'show-bkgd';
 }
 
 // Set targets on external links.  Sandcastle and GitHub shouldn't be embedded in any iframe.

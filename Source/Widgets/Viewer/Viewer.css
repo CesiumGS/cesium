@@ -66,6 +66,16 @@
     overflow: hidden;
 }
 
+.cesium-viewer-vrContainer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
+}
+
 .cesium-viewer-toolbar {
     display: block;
     position: absolute;
@@ -84,4 +94,15 @@
     position: relative;
     display: inline-block;
     margin: 0 3px;
+}
+
+.cesium-viewer-cesium3DTilesInspectorContainer {
+    display: block;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    max-height: 100%;
+    padding-bottom: 70px;
+    box-sizing: border-box;
+    overflow: auto;
 }

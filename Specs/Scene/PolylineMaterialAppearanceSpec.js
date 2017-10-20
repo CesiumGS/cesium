@@ -1,49 +1,38 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PolylineMaterialAppearance',
         'Core/Cartesian3',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         PolylineMaterialAppearance,
         Cartesian3,
         GeometryInstance,
         PolylineGeometry,
-        ClearCommand,
         Appearance,
         Material,
         Primitive,
-        createCamera,
-        createContext,
-        createFrameState,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        createScene) {
+    'use strict';
 
-    var context;
-    var us;
-    var frameState;
+    var scene;
+    var primitive;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
-    beforeEach(function() {
-        frameState = createFrameState(createCamera());
-        us = context.uniformState;
-        us.update(context, frameState);
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
     });
 
     it('constructor', function() {
@@ -60,12 +49,12 @@ defineSuite([
     });
 
     it('renders', function() {
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new PolylineGeometry({
                     positions : [
-                        new Cartesian3(0.0, -1.0, 0.0),
-                        new Cartesian3(0.0, 1.0, 0.0)
+                        new Cartesian3(0.0, -10000000, 0.0),
+                        new Cartesian3(0.0, 1000000.0, 0.0)
                     ],
                     width : 10.0,
                     vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT,
@@ -79,11 +68,10 @@ defineSuite([
             asynchronous : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

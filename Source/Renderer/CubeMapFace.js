@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
@@ -9,12 +8,12 @@ define([
         defineProperties,
         DeveloperError,
         PixelDatatype) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
      */
-    var CubeMapFace = function(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
+    function CubeMapFace(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
         this._gl = gl;
         this._texture = texture;
         this._textureTarget = textureTarget;
@@ -24,7 +23,7 @@ define([
         this._size = size;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
-    };
+    }
 
     defineProperties(CubeMapFace.prototype, {
         pixelFormat : {
@@ -59,7 +58,8 @@ define([
      *
      * @example
      * // Create a cubemap with 1x1 faces, and make the +x face red.
-     * var cubeMap = context.createCubeMap({
+     * var cubeMap = new CubeMap({
+     *   context : context
      *   width : 1,
      *   height : 1
      * });

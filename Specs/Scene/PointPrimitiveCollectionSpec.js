@@ -1,26 +1,32 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/PointPrimitiveCollection',
+        'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/DistanceDisplayCondition',
         'Core/Math',
         'Core/NearFarScalar',
-        'Scene/OrthographicFrustum',
+        'Core/Rectangle',
+        'Scene/BlendOption',
+        'Scene/PointPrimitive',
         'Specs/createScene'
     ], function(
         PointPrimitiveCollection,
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Color,
+        DistanceDisplayCondition,
         CesiumMath,
         NearFarScalar,
-        OrthographicFrustum,
+        Rectangle,
+        BlendOption,
+        PointPrimitive,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var camera;
@@ -65,13 +71,15 @@ defineSuite([
         expect(p.outlineWidth).toEqual(0.0);
         expect(p.scaleByDistance).not.toBeDefined();
         expect(p.translucencyByDistance).not.toBeDefined();
+        expect(p.distanceDisplayCondition).not.toBeDefined();
+        expect(p.disableDepthTestDistance).toEqual(0.0);
         expect(p.id).not.toBeDefined();
     });
 
     it('can add and remove before first render.', function() {
         var p = pointPrimitives.add();
         pointPrimitives.remove(p);
-        expect(scene.renderForSpecs()).toBeDefined();
+        scene.renderForSpecs();
     });
 
     it('explicitly constructs a pointPrimitive', function() {
@@ -94,6 +102,8 @@ defineSuite([
             outlineWidth : 4.0,
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            disableDepthTestDistance : 10.0,
             id : 'id'
         });
 
@@ -111,6 +121,8 @@ defineSuite([
         expect(p.outlineWidth).toEqual(4.0);
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
+        expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(p.disableDepthTestDistance).toEqual(10.0);
         expect(p.id).toEqual('id');
     });
 
@@ -124,6 +136,8 @@ defineSuite([
         p.outlineWidth = 4.0;
         p.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
         p.translucencyByDistance = new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0);
+        p.distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
+        p.disableDepthTestDistance = 10.0;
 
         expect(p.show).toEqual(false);
         expect(p.position).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -139,10 +153,36 @@ defineSuite([
         expect(p.outlineWidth).toEqual(4.0);
         expect(p.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(p.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+        expect(p.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
+        expect(p.disableDepthTestDistance).toEqual(10.0);
     });
 
     it('is not destroyed', function() {
         expect(pointPrimitives.isDestroyed()).toEqual(false);
+    });
+
+    it('renders pointPrimitive in multiple passes', function() {
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.LIME
+        });
+        camera.position = new Cartesian3(2.0, 0.0, 0.0);
+
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
+        pointPrimitives.blendOption = BlendOption.OPAQUE_AND_TRANSLUCENT;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(2);
+
+        frameState.commandList.length = 0;
+        pointPrimitives.blendOption = BlendOption.OPAQUE;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
+
+        frameState.commandList.length = 0;
+        pointPrimitives.blendOption = BlendOption.TRANSLUCENT;
+        pointPrimitives.update(frameState);
+        expect(frameState.commandList.length).toEqual(1);
     });
 
     it('disables pointPrimitive scaleByDistance', function() {
@@ -169,10 +209,10 @@ defineSuite([
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('renders pointPrimitive with translucencyByDistance', function() {
@@ -183,10 +223,10 @@ defineSuite([
         });
 
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('throws scaleByDistance with nearDistance === farDistance', function() {
@@ -236,6 +276,73 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             p.translucencyByDistance = translucency;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders pointPrimitive with distanceDisplayCondition', function() {
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            color : Color.LIME,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene).toRender([0, 255, 0, 255]);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene).toRender([0, 0, 0, 255]);
+    });
+
+    it('throws new pointPrimitive with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            pointPrimitives.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var p = pointPrimitives.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            p.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
+    });
+
+    it('renders with disableDepthTestDistance', function() {
+        var p = pointPrimitives.add({
+            position : new Cartesian3(-1.0, 0.0, 0.0),
+            pixelSize : 10.0,
+            color : Color.LIME
+        });
+        pointPrimitives.add({
+            position : Cartesian3.ZERO,
+            pixelSize : 10.0,
+            color : Color.BLUE
+        });
+
+        expect(scene).toRender([0 , 0, 255, 255]);
+
+        p.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        expect(scene).toRender([0, 255, 0, 255]);
+    });
+
+    it('throws with new point primitive with invalid disableDepthTestDistance (< 0.0)', function() {
+        expect(function() {
+            pointPrimitives.add({
+                disableDepthTestDistance : -1.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with disableDepthTestDistance set less than 0.0', function() {
+        var p = pointPrimitives.add();
+        expect(function() {
+            p.disableDepthTestDistance = -1.0;
         }).toThrowDeveloperError();
     });
 
@@ -370,7 +477,7 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('modifies and removes a pointPrimitive, then renders', function() {
@@ -383,11 +490,11 @@ defineSuite([
             color : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         p1.pixelSize = 2.0;
         pointPrimitives.remove(p1);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('renders a green pointPrimitive', function() {
@@ -396,7 +503,7 @@ defineSuite([
             color : Color.LIME
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 
     it('adds and renders a pointPrimitive', function() {
@@ -405,14 +512,14 @@ defineSuite([
             color : Color.LIME
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         pointPrimitives.add({
             position : new Cartesian3(1.0, 0.0, 0.0), // Closer to camera
             color : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('removes and renders a pointPrimitive', function() {
@@ -425,10 +532,10 @@ defineSuite([
             color : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
 
         pointPrimitives.remove(bluePointPrimitive);
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 
     it('removes all pointPrimitives and renders', function() {
@@ -437,10 +544,10 @@ defineSuite([
             color : Color.LIME
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         pointPrimitives.removeAll();
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
     });
 
     it('removes all pointPrimitives, adds a pointPrimitive, and renders', function() {
@@ -449,7 +556,7 @@ defineSuite([
             color : Color.LIME
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         pointPrimitives.removeAll();
         pointPrimitives.add({
@@ -457,7 +564,7 @@ defineSuite([
             color : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('renders using pointPrimitive show property', function() {
@@ -471,12 +578,12 @@ defineSuite([
             color : Color.BLUE
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         greenPointPrimitive.show = false;
         bluePointPrimitive.show = true;
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('renders using pointPrimitive position property', function() {
@@ -485,13 +592,13 @@ defineSuite([
             color : Color.LIME
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         p.position = new Cartesian3(20.0, 0.0, 0.0); // Behind camera
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene).toRender([0, 0, 0, 255]);
 
         p.position = new Cartesian3(1.0, 0.0, 0.0);  // Back in front of camera
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 
     it('renders using pointPrimitive color property', function() {
@@ -500,14 +607,14 @@ defineSuite([
             color : Color.WHITE
         });
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
 
         p.color = new Color(1.0, 0.0, 1.0, 1.0);
-        expect(scene.renderForSpecs()).toEqual([255, 0, 255, 255]);
+        expect(scene).toRender([255, 0, 255, 255]);
 
         // Update a second time since it goes through a different vertex array update path
         p.color = new Color(0.0, 1.0, 0.0, 1.0);
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -518,7 +625,7 @@ defineSuite([
         });
         pointPrimitives.debugShowBoundingVolume = true;
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene).notToRender([0, 0, 0, 255]);
     });
 
     it('updates 10% of pointPrimitives', function() {
@@ -531,17 +638,17 @@ defineSuite([
         }
 
         // First render - default pointPrimitive color is white.
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
 
         pointPrimitives.get(3).color = new Color(0.0, 1.0, 0.0, 1.0);
 
         // Second render - pointPrimitive is green
-        expect(scene.renderForSpecs()).toEqual([0, 255, 0, 255]);
+        expect(scene).toRender([0, 255, 0, 255]);
 
         pointPrimitives.get(3).color = new Color(1.0, 0.0, 0.0, 1.0);
 
         // Third render - update goes through a different vertex array update path
-        expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
+        expect(scene).toRender([255, 0, 0, 255]);
     });
 
     it('renders more than 64K pointPrimitives', function() {
@@ -557,7 +664,7 @@ defineSuite([
             color : Color.WHITE
         });
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
     });
 
     it('is picked', function() {
@@ -567,9 +674,10 @@ defineSuite([
             id : 'id'
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
-        expect(pick.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id');
+        });
     });
 
     it('can change pick id', function() {
@@ -579,15 +687,17 @@ defineSuite([
             id : 'id'
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
-        expect(pick.id).toEqual('id');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id');
+        });
 
         p.id = 'id2';
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
-        expect(pick.id).toEqual('id2');
+        expect(scene).toPickAndCall(function(result) {
+            expect(result.primitive).toEqual(p);
+            expect(result.id).toEqual('id2');
+        });
     });
 
     it('is not picked', function() {
@@ -597,8 +707,7 @@ defineSuite([
             color : Color.WHITE
         });
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks a pointPrimitive using scaleByDistance', function() {
@@ -610,15 +719,13 @@ defineSuite([
         var scaleByDistance = new NearFarScalar(1.0, 4.0, 3.0e9, 2.0);
         p.scaleByDistance = scaleByDistance;
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
+        expect(scene).toPickPrimitive(p);
 
         scaleByDistance.nearValue = 0.0;
         scaleByDistance.farValue = 0.0;
         p.scaleByDistance = scaleByDistance;
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('picks a pointPrimitive using translucencyByDistance', function() {
@@ -630,15 +737,13 @@ defineSuite([
         var translucency = new NearFarScalar(1.0, 0.9, 3.0e9, 0.8);
         p.translucencyByDistance = translucency;
 
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(p);
+        expect(scene).toPickPrimitive(p);
 
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;
         p.translucencyByDistance = translucency;
 
-        pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
+        expect(scene).notToPick();
     });
 
     it('computes screen space position', function() {
@@ -676,6 +781,42 @@ defineSuite([
         expect(function() {
             p.computeScreenSpacePosition();
         }).toThrowDeveloperError();
+    });
+
+    it('computes screen space bounding box', function() {
+        var size = 10;
+
+        var p = pointPrimitives.add({
+            size : size
+        });
+
+        var halfWidth = size * 0.5;
+        var halfHeight = halfWidth;
+
+        var bbox = PointPrimitive.getScreenSpaceBoundingBox(p, Cartesian2.ZERO);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(size);
+        expect(bbox.height).toEqual(size);
+    });
+
+    it('computes screen space bounding box with result', function() {
+        var size = 10;
+
+        var p = pointPrimitives.add({
+            size : size
+        });
+
+        var halfWidth = size * 0.5;
+        var halfHeight = halfWidth;
+
+        var result = new BoundingRectangle();
+        var bbox = PointPrimitive.getScreenSpaceBoundingBox(p, Cartesian2.ZERO, result);
+        expect(bbox.x).toEqual(-halfWidth);
+        expect(bbox.y).toEqual(-halfHeight);
+        expect(bbox.width).toEqual(size);
+        expect(bbox.height).toEqual(size);
+        expect(bbox).toBe(result);
     });
 
     it('equals another pointPrimitive', function() {
@@ -735,7 +876,7 @@ defineSuite([
         });
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var positions = [one.position, two.position];
         var expected = BoundingSphere.fromPoints(positions);
@@ -757,7 +898,7 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -782,23 +923,15 @@ defineSuite([
             position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = maxRadii * Math.PI;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = 0.01 * maxRadii;
-        orthoFrustum.far = 60.0 * maxRadii;
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
-        // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        camera.frustum = orthoFrustum;
-
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),

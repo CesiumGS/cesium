@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian3',
@@ -31,7 +30,7 @@ define([
         CesiumMath,
         PolylinePipeline,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
         var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
@@ -93,8 +92,6 @@ define([
      *
      * @see SimplePolylineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Simple%20Polyline.html|Cesium Sandcastle Simple Polyline Demo}
-     *
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.SimplePolylineGeometry({
@@ -106,7 +103,7 @@ define([
      * });
      * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
      */
-    var SimplePolylineGeometry = function(options) {
+    function SimplePolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -137,15 +134,16 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 3;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {SimplePolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     SimplePolylineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -183,6 +181,8 @@ define([
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     /**
@@ -191,6 +191,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {SimplePolylineGeometry} [result] The object into which to store the result.
+     * @returns {SimplePolylineGeometry} The modified result parameter or a new SimplePolylineGeometry instance if one was not provided.
      */
     SimplePolylineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

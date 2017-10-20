@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,7 +6,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A model's material with modifiable parameters.  A glTF material
@@ -23,11 +22,11 @@ define([
      *
      * @see Model#getMaterial
      */
-    var ModelMaterial = function(model, material, id) {
+    function ModelMaterial(model, material, id) {
         this._name = material.name;
         this._id = id;
         this._uniformMap = model._uniformMaps[id];
-    };
+    }
 
     defineProperties(ModelMaterial.prototype, {
         /**

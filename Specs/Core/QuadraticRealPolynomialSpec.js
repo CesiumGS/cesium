@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/QuadraticRealPolynomial',
         'Core/Math'
     ], function(
         QuadraticRealPolynomial,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('discriminant throws without a', function() {
         expect(function() {

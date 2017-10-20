@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Timeline/Timeline',
         'Core/Clock'
     ], function(
         Timeline,
         Clock) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var container;
     beforeEach(function(){

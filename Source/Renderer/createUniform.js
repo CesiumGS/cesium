@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -21,13 +20,12 @@ define([
         Matrix3,
         Matrix4,
         RuntimeError) {
-    "use strict";
-    /*global console*/
+    'use strict';
 
     /**
      * @private
      */
-    var createUniform = function(gl, activeUniform, uniformName, location) {
+    function createUniform(gl, activeUniform, uniformName, location) {
         switch (activeUniform.type) {
             case gl.FLOAT:
                 return new UniformFloat(gl, activeUniform, uniformName, location);
@@ -61,9 +59,7 @@ define([
             default:
                 throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
         }
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
+    }
 
     function UniformFloat(gl, activeUniform, uniformName, location) {
         /**
@@ -137,7 +133,9 @@ define([
                 this._gl.uniform3f(this._location, v.x, v.y, v.z);
             }
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid vec3 value for uniform "' + this._activethis.name + '".');
+            //>>includeEnd('debug');
         }
     };
 
@@ -170,7 +168,9 @@ define([
                 this._gl.uniform4f(this._location, v.x, v.y, v.z, v.w);
             }
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Invalid vec4 value for uniform "' + this._activethis.name + '".');
+            //>>includeEnd('debug');
         }
     };
 

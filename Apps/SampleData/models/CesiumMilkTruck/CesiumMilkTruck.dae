@@ -333,7 +333,7 @@
         <light id="Light-polyRender006" name="Render">
             <technique_common>
                 <ambient>
-                    <color sid="ambient_light_rgb">0 0 0</color>
+                    <color sid="ambient_light_rgb">0.2 0.2 0.2</color>
                 </ambient>
             </technique_common>
         </light>

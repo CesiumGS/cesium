@@ -1,14 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/loadImageViaBlob',
-        'Core/defined',
+        'Core/Request',
+        'Core/RequestScheduler',
         'ThirdParty/when'
     ], function(
         loadImageViaBlob,
-        defined,
+        Request,
+        RequestScheduler,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
 
@@ -80,5 +80,20 @@ defineSuite([
         expect(success).toEqual(false);
         expect(failure).toEqual(true);
         expect(loadedImage).toBeUndefined();
+    });
+
+    it('returns undefined if the request is throttled', function() {
+        var oldMaximumRequests = RequestScheduler.maximumRequests;
+        RequestScheduler.maximumRequests = 0;
+
+        var request = new Request({
+            throttle : true
+        });
+
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadImageViaBlob(testUrl, request);
+        expect(promise).toBeUndefined();
+
+        RequestScheduler.maximumRequests = oldMaximumRequests;
     });
 });

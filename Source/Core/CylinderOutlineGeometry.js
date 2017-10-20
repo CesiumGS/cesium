@@ -1,13 +1,13 @@
-/*global define*/
+
 define([
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './ComponentDatatype',
         './CylinderGeometryLibrary',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -17,17 +17,17 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Check,
         ComponentDatatype,
         CylinderGeometryLibrary,
         defaultValue,
         defined,
-        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var radiusScratch = new Cartesian2();
 
@@ -41,18 +41,16 @@ define([
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surfaces of the cylinder.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
      * @exception {DeveloperError} options.topRadius must be greater than 0.
      * @exception {DeveloperError} options.bottomRadius must be greater than 0.
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
-     * @exception {DeveloperError} options.slices must be greater that 3.
+     * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderOutlineGeometry.createGeometry
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder%20Outline.html|Cesium Sandcastle Cylinder Outline Demo}
      *
      * @example
      * // create cylinder geometry
@@ -63,7 +61,7 @@ define([
      * });
      * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
-    var CylinderOutlineGeometry = function(options) {
+    function CylinderOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -73,21 +71,10 @@ define([
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length) || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0.');
-        }
-        if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0.');
-        }
-        if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0.');
-        }
-        if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
-        }
-        if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3.');
-        }
+        Check.typeOf.number('options.positions', length);
+        Check.typeOf.number('options.topRadius', topRadius);
+        Check.typeOf.number('options.bottomRadius', bottomRadius);
+        Check.typeOf.number.greaterThanOrEquals('options.slices', slices, 3);
         //>>includeEnd('debug');
 
         this._length = length;
@@ -96,7 +83,7 @@ define([
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
         this._workerName = 'createCylinderOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -106,20 +93,17 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CylinderOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CylinderOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.typeOf.object('value', value);
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -129,6 +113,8 @@ define([
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex++] = value._slices;
         array[startingIndex]   = value._numberOfVerticalLines;
+
+        return array;
     };
 
     var scratchOptions = {
@@ -145,12 +131,11 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CylinderOutlineGeometry} [result] The object into which to store the result.
+     * @returns {CylinderOutlineGeometry} The modified result parameter or a new CylinderOutlineGeometry instance if one was not provided.
      */
     CylinderOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
+        Check.defined('array', array);
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -183,7 +168,7 @@ define([
      * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
      *
      * @param {CylinderOutlineGeometry} cylinderGeometry A description of the cylinder outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CylinderOutlineGeometry.createGeometry = function(cylinderGeometry) {
         var length = cylinderGeometry._length;
@@ -191,6 +176,10 @@ define([
         var bottomRadius = cylinderGeometry._bottomRadius;
         var slices = cylinderGeometry._slices;
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
+
+        if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
+            return;
+        }
 
         var numVertices = slices * 2;
 
@@ -205,7 +194,8 @@ define([
 
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices * 2);
         var index = 0;
-        for (var i = 0; i < slices - 1; i++) {
+        var i;
+        for (i = 0; i < slices - 1; i++) {
             indices[index++] = i;
             indices[index++] = i + 1;
             indices[index++] = i + slices;

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/SceneModePicker/SceneModePicker',
         'Core/FeatureDetection',
@@ -9,8 +8,7 @@ defineSuite([
         FeatureDetection,
         createScene,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
 
@@ -28,7 +26,7 @@ defineSuite([
         document.body.appendChild(container);
 
         var widget = new SceneModePicker('testContainer', scene);
-        expect(widget.container).toBe(container);
+        expect(widget.container.id).toBe(container.id);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();

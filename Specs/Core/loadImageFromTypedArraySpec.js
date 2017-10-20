@@ -1,16 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/loadImageFromTypedArray',
-        'Core/defined',
-        'Core/loadArrayBuffer',
-        'ThirdParty/when'
+        'Core/loadArrayBuffer'
     ], function(
         loadImageFromTypedArray,
-        defined,
-        loadArrayBuffer,
-        when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,fail*/
+        loadArrayBuffer) {
+    'use strict';
 
     it('can load an image', function() {
         return loadArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {

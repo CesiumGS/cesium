@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/ClockViewModel',
         'Core/Clock',
@@ -11,8 +10,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         JulianDate) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();

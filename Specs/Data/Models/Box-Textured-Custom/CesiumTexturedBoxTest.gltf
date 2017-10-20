@@ -65,8 +65,11 @@
     "asset": {
         "generator": "collada2gltf@",
         "premultipliedAlpha": true,
-        "profile": "WebGL 1.0.2",
-        "version": 0.8
+        "profile": {
+            "api": "WebGL",
+            "version": "1.0.2"
+        },
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -91,30 +94,29 @@
     },
     "images": {
         "Image0001": {
-            "uri": "Cesium_Logo_Flat.png"
+            "name": "Image0001",
+            "uri": "Cesium_Logo_Flat.jpg"
         }
     },
     "materials": {
         "Effect-Texture": {
-            "instanceTechnique": {
-                "technique": "technique0",
-                "values": {
-                    "diffuse": "texture_Image0001",
-                    "shininess": 256,
-                    "specular": [
-                        0.2,
-                        0.2,
-                        0.2,
-                        1
-                    ],
+            "name": "Texture",
+            "technique": "technique0",
+            "values": {
+                "diffuse": "texture_Image0001",
+                "shininess": 256,
+                "specular": [
+                    0.20000000298023224,
+                    0.20000000298023224,
+                    0.20000000298023224,
+                    1
+                ],
 
-                    "vec2" : [0, 0],
-                    "mat2" : [0, 0, 0, 0],
-                    "mat3" : [0, 0, 0, 0, 0, 0, 0, 0, 0],
-                    "mat4" : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                }
-            },
-            "name": "Texture"
+                "vec2" : [0, 0],
+                "mat2" : [0, 0, 0, 0],
+                "mat3" : [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "mat4" : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            }
         }
     },
     "meshes": {
@@ -129,7 +131,7 @@
                     },
                     "indices": "accessor_21",
                     "material": "Effect-Texture",
-                    "primitive": 4
+                    "mode": 4
                 }
             ]
         }
@@ -272,6 +274,11 @@
     "skins": {},
     "techniques": {
         "technique0": {
+            "attributes": {
+                "a_normal": "normal",
+                "a_position": "position",
+                "a_texcoord0": "texcoord0"
+            },
             "parameters": {
                 "diffuse": {
                     "type": 35678
@@ -347,6 +354,71 @@
                     "semantic": "VIEWPORT",
                     "type": 35666
                 },
+                "nodeModelMatrix": {
+                    "semantic": "MODEL",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewMatrix": {
+                    "semantic": "VIEW",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeProjectionMatrix": {
+                    "semantic": "PROJECTION",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewProjectionMatrix": {
+                    "semantic": "MODELVIEWPROJECTION",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelInverseMatrix": {
+                    "semantic": "MODELINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewInverseMatrix": {
+                    "semantic": "VIEWINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewInverseMatrix": {
+                    "semantic": "MODELVIEWINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeProjectionInverseMatrix" : {
+                    "semantic": "PROJECTIONINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewProjectionInverseMatrix": {
+                    "semantic": "MODELVIEWPROJECTIONINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelInverseTransposeMatrix": {
+                    "semantic": "MODELINVERSETRANSPOSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewInverseTransposeMatrix": {
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewportMatrix": {
+                    "semantic": "VIEWPORT",
+                    "type": 35666,
+                    "node" : "node_3"
+                },
                 "vec2": {
                     "type": 35664
                 },
@@ -360,67 +432,48 @@
                     "type": 35676
                 }
             },
-            "pass": "defaultPass",
-            "passes": {
-                "defaultPass": {
-                    "details": {
-                        "commonProfile": {
-                            "extras": {
-                                "doubleSided": false
-                            },
-                            "lightingModel": "Phong",
-                            "parameters": [
-                                "diffuse",
-                                "modelViewMatrix",
-                                "normalMatrix",
-                                "projectionMatrix",
-                                "shininess",
-                                "specular"
-                            ],
-                            "texcoordBindings": {
-                                "diffuse": "TEXCOORD_0"
-                            }
-                        },
-                        "type": "COLLADA-1.4.1/commonProfile"
-                    },
-                    "instanceProgram": {
-                        "attributes": {
-                            "a_normal": "normal",
-                            "a_position": "position",
-                            "a_texcoord0": "texcoord0"
-                        },
-                        "program": "program_0",
-                        "uniforms": {
-                            "u_diffuse": "diffuse",
-                            "u_modelViewMatrix": "modelViewMatrix",
-                            "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_shininess": "shininess",
-                            "u_specular": "specular",
+            "program": "program_0",
+            "states": {
+                "enable": [
+                    2929,
+                    2884
+                ]
+            },
+            "uniforms": {
+                "u_diffuse": "diffuse",
+                "u_modelViewMatrix": "modelViewMatrix",
+                "u_normalMatrix": "normalMatrix",
+                "u_projectionMatrix": "projectionMatrix",
+                "u_shininess": "shininess",
+                "u_specular": "specular",
 
-                            "u_modelMatrix": "modelMatrix",
-                            "u_viewMatrix": "viewMatrix",
-                            "u_modelViewProjectionMatrix": "modelViewProjectionMatrix",
-                            "u_modelInverseMatrix": "modelInverseMatrix",
-                            "u_viewInverseMatrix": "viewInverseMatrix",
-                            "u_modelViewInverseMatrix": "modelViewInverseMatrix",
-                            "u_modelViewProjectionInverseMatrix": "modelViewProjectionInverseMatrix",
-                            "u_projectionInverseMatrix": "projectionInverseMatrix",
-                            "u_modelInverseTransposeMatrix": "modelInverseTransposeMatrix",
-                            "u_viewport": "viewportMatrix",
-                            "u_vec2": "vec2",
-                            "u_mat2": "mat2",
-                            "u_mat3": "mat3",
-                            "u_mat4": "mat4"
-                        }
-                    },
-                    "states": {
-                        "enable": [
-                            2884,
-                            2929
-                        ]
-                    }
-                }
+                "u_modelMatrix": "modelMatrix",
+                "u_viewMatrix": "viewMatrix",
+                "u_modelViewProjectionMatrix": "modelViewProjectionMatrix",
+                "u_modelInverseMatrix": "modelInverseMatrix",
+                "u_viewInverseMatrix": "viewInverseMatrix",
+                "u_modelViewInverseMatrix": "modelViewInverseMatrix",
+                "u_modelViewProjectionInverseMatrix": "modelViewProjectionInverseMatrix",
+                "u_projectionInverseMatrix": "projectionInverseMatrix",
+                "u_modelInverseTransposeMatrix": "modelInverseTransposeMatrix",
+                "u_viewport": "viewportMatrix",
+                "u_nodeModelMatrix": "nodeModelMatrix",
+                "u_nodeViewMatrix": "nodeViewMatrix",
+                "u_nodeProjectionMatrix": "nodeProjectionMatrix",
+                "u_nodeModelViewMatrix": "nodeModelViewMatrix",
+                "u_nodeModelViewProjectionMatrix": "nodeModelViewProjectionMatrix",
+                "u_nodeModelInverseMatrix": "nodeModelInverseMatrix",
+                "u_nodeViewInverseMatrix": "nodeViewInverseMatrix",
+                "u_nodeModelViewInverseMatrix": "nodeModelViewInverseMatrix",
+                "u_nodeModelViewProjectionInverseMatrix": "nodeModelViewProjectionInverseMatrix",
+                "u_nodeProjectionInverseMatrix": "nodeProjectionInverseMatrix",
+                "u_nodeModelInverseTransposeMatrix": "nodeModelInverseTransposeMatrix",
+                "u_nodeModelViewInverseTransposeMatrix": "nodeModelViewInverseTransposeMatrix",
+                "u_nodeViewport": "nodeViewportMatrix",
+                "u_vec2": "vec2",
+                "u_mat2": "mat2",
+                "u_mat3": "mat3",
+                "u_mat4": "mat4"
             }
         }
     },

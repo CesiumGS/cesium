@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartographic',
@@ -17,7 +16,7 @@ define([
         DeveloperError,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * The map projection used by Google Maps, Bing Maps, and most of ArcGIS Online, EPSG:3857.  This
@@ -31,11 +30,11 @@ define([
      *
      * @see GeographicProjection
      */
-    var WebMercatorProjection = function(ellipsoid) {
+    function WebMercatorProjection(ellipsoid) {
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._semimajorAxis = this._ellipsoid.maximumRadius;
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
-    };
+    }
 
     defineProperties(WebMercatorProjection.prototype, {
         /**

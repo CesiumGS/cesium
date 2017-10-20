@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('clone', function() {
         var vertexFormat = new VertexFormat({

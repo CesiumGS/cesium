@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -11,7 +10,7 @@ define([
         defineProperties,
         DeveloperError,
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model which exposes the properties of a toggle button.
@@ -23,7 +22,7 @@ define([
      * @param {Boolean} [options.toggled=false] A boolean indicating whether the button should be initially toggled.
      * @param {String} [options.tooltip=''] A string containing the button's tooltip.
      */
-    var ToggleButtonViewModel = function(command, options) {
+    function ToggleButtonViewModel(command, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(command)) {
             throw new DeveloperError('command is required.');
@@ -49,7 +48,7 @@ define([
         this.tooltip = defaultValue(options.tooltip, '');
 
         knockout.track(this, ['toggled', 'tooltip']);
-    };
+    }
 
     defineProperties(ToggleButtonViewModel.prototype, {
         /**

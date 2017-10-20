@@ -1,53 +1,48 @@
-/*global define*/
 define([
         './Cartesian2',
         './Cartesian3',
+        './Check',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
         Cartesian2,
         Cartesian3,
+        Check,
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Attribute compression and decompression functions.
      *
-     * @namespace
-     * @alias AttributeCompression
+     * @exports AttributeCompression
      *
      * @private
      */
     var AttributeCompression = {};
 
     /**
-     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-rangeMax] following the 'oct' encoding.
      *
-     * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
+     * Oct encoding is a compact representation of unit length vectors.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
      * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
      *
-     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
-     * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
-     * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
+     * @param {Cartesian3} vector The normalized vector to be compressed into 2 component 'oct' encoding.
+     * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
+     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
+     * @returns {Cartesian2} The 2 component oct-encoded unit length vector.
      *
-     * @exception {DeveloperError} vector must be defined.
-     * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} vector must be normalized.
      *
-     * @see AttributeCompression.octDecode
+     * @see AttributeCompression.octDecodeInRange
      */
-    AttributeCompression.octEncode = function(vector, result) {
+    AttributeCompression.octEncodeInRange = function(vector, rangeMax, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(vector)) {
-            throw new DeveloperError('vector is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('vector', vector);
+        Check.defined('result', result);
         var magSquared = Cartesian3.magnitudeSquared(vector);
         if (Math.abs(magSquared - 1.0) > CesiumMath.EPSILON6) {
             throw new DeveloperError('vector must be normalized.');
@@ -63,10 +58,26 @@ define([
             result.y = (1.0 - Math.abs(x)) * CesiumMath.signNotZero(y);
         }
 
-        result.x = CesiumMath.toSNorm(result.x);
-        result.y = CesiumMath.toSNorm(result.y);
+        result.x = CesiumMath.toSNorm(result.x, rangeMax);
+        result.y = CesiumMath.toSNorm(result.y, rangeMax);
 
         return result;
+    };
+
+    /**
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
+     *
+     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
+     * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
+     * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
+     *
+     * @exception {DeveloperError} vector must be normalized.
+     *
+     * @see AttributeCompression.octEncodeInRange
+     * @see AttributeCompression.octDecode
+     */
+    AttributeCompression.octEncode = function(vector, result) {
+        return AttributeCompression.octEncodeInRange(vector, 255, result);
     };
 
     /**
@@ -74,26 +85,24 @@ define([
      *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
+     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} result must be defined.
-     * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
+     * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and rangeMax.
      *
-     * @see AttributeCompression.octEncode
+     * @see AttributeCompression.octEncodeInRange
      */
-    AttributeCompression.octDecode = function(x, y, result) {
+    AttributeCompression.octDecodeInRange = function(x, y, rangeMax, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
-        if (x < 0 || x > 255 || y < 0 || y > 255) {
-            throw new DeveloperError('x and y must be a signed normalized integer between 0 and 255');
+        Check.defined('result', result);
+        if (x < 0 || x > rangeMax || y < 0 || y > rangeMax) {
+            throw new DeveloperError('x and y must be a signed normalized integer between 0 and ' + rangeMax);
         }
         //>>includeEnd('debug');
 
-        result.x = CesiumMath.fromSNorm(x);
-        result.y = CesiumMath.fromSNorm(y);
+        result.x = CesiumMath.fromSNorm(x, rangeMax);
+        result.y = CesiumMath.fromSNorm(y, rangeMax);
         result.z = 1.0 - (Math.abs(result.x) + Math.abs(result.y));
 
         if (result.z < 0.0)
@@ -107,18 +116,31 @@ define([
     };
 
     /**
+     * Decodes a unit-length vector in 2 byte 'oct' encoding to a normalized 3-component vector.
+     *
+     * @param {Number} x The x component of the oct-encoded unit length vector.
+     * @param {Number} y The y component of the oct-encoded unit length vector.
+     * @param {Cartesian3} result The decoded and normalized vector.
+     * @returns {Cartesian3} The decoded and normalized vector.
+     *
+     * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and 255.
+     *
+     * @see AttributeCompression.octDecodeInRange
+     */
+    AttributeCompression.octDecode = function(x, y, result) {
+        return AttributeCompression.octDecodeInRange(x, y, 255, result);
+    };
+
+    /**
      * Packs an oct encoded vector into a single floating-point number.
      *
      * @param {Cartesian2} encoded The oct encoded vector.
      * @returns {Number} The oct encoded vector packed into a single float.
      *
-     * @exception {DeveloperError} encoded is required.
      */
     AttributeCompression.octPackFloat = function(encoded) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(encoded)) {
-            throw new DeveloperError('encoded is required.');
-        }
+        Check.defined('encoded', encoded);
         //>>includeEnd('debug');
         return 256.0 * encoded.x + encoded.y;
     };
@@ -132,7 +154,6 @@ define([
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @returns {Number} The 2 byte oct-encoded unit length vector.
      *
-     * @exception {DeveloperError} vector must be defined.
      * @exception {DeveloperError} vector must be normalized.
      */
     AttributeCompression.octEncodeFloat = function(vector) {
@@ -147,14 +168,10 @@ define([
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} value must be defined.
-     * @exception {DeveloperError} result must be defined.
      */
     AttributeCompression.octDecodeFloat = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
+        Check.defined('value', value);
         //>>includeEnd('debug');
 
         var temp = value / 256.0;
@@ -174,25 +191,13 @@ define([
      * @param {Cartesian2} result The 'oct' encoded vectors packed into two floating-point numbers.
      * @returns {Cartesian2} The 'oct' encoded vectors packed into two floating-point numbers.
      *
-     * @exception {DeveloperError} v1 must be defined.
-     * @exception {DeveloperError} v2 must be defined.
-     * @exception {DeveloperError} v3 must be defined.
-     * @exception {DeveloperError} result must be defined.
      */
     AttributeCompression.octPack = function(v1, v2, v3, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(v1)) {
-            throw new DeveloperError('v1 is required.');
-        }
-        if (!defined(v2)) {
-            throw new DeveloperError('v2 is required.');
-        }
-        if (!defined(v3)) {
-            throw new DeveloperError('v3 is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('v1', v1);
+        Check.defined('v2', v2);
+        Check.defined('v3', v3);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var encoded1 = AttributeCompression.octEncodeFloat(v1);
@@ -211,26 +216,13 @@ define([
      * @param {Cartesian3} v1 One decoded and normalized vector.
      * @param {Cartesian3} v2 One decoded and normalized vector.
      * @param {Cartesian3} v3 One decoded and normalized vector.
-     *
-     * @exception {DeveloperError} packed must be defined.
-     * @exception {DeveloperError} v1 must be defined.
-     * @exception {DeveloperError} v2 must be defined.
-     * @exception {DeveloperError} v3 must be defined.
      */
     AttributeCompression.octUnpack = function(packed, v1, v2, v3) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(packed)) {
-            throw new DeveloperError('packed is required.');
-        }
-        if (!defined(v1)) {
-            throw new DeveloperError('v1 is required.');
-        }
-        if (!defined(v2)) {
-            throw new DeveloperError('v2 is required.');
-        }
-        if (!defined(v3)) {
-            throw new DeveloperError('v3 is required.');
-        }
+        Check.defined('packed', packed);
+        Check.defined('v1', v1);
+        Check.defined('v2', v2);
+        Check.defined('v3', v3);
         //>>includeEnd('debug');
 
         var temp = packed.x / 65536.0;
@@ -249,20 +241,18 @@ define([
     /**
      * Pack texture coordinates into a single float. The texture coordinates will only preserve 12 bits of precision.
      *
-     * @param {Cartesian2} textureCoordinates The texture coordinates to compress
+     * @param {Cartesian2} textureCoordinates The texture coordinates to compress.  Both coordinates must be in the range 0.0-1.0.
      * @returns {Number} The packed texture coordinates.
      *
-     * @exception {DeveloperError} textureCoordinates is required.
      */
     AttributeCompression.compressTextureCoordinates = function(textureCoordinates) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(textureCoordinates)) {
-            throw new DeveloperError('textureCoordinates is required.');
-        }
+        Check.defined('textureCoordinates', textureCoordinates);
         //>>includeEnd('debug');
 
-        var x = textureCoordinates.x === 1.0 ? 4095.0 : (textureCoordinates.x * 4096.0) | 0;
-        var y = textureCoordinates.y === 1.0 ? 4095.0 : (textureCoordinates.y * 4096.0) | 0;
+        // Move x and y to the range 0-4095;
+        var x = (textureCoordinates.x * 4095.0) | 0;
+        var y = (textureCoordinates.y * 4095.0) | 0;
         return 4096.0 * x + y;
     };
 
@@ -273,22 +263,17 @@ define([
      * @param {Cartesian2} result The decompressed texture coordinates.
      * @returns {Cartesian2} The modified result parameter.
      *
-     * @exception {DeveloperError} compressed is required.
-     * @exception {DeveloperError} result is required.
      */
     AttributeCompression.decompressTextureCoordinates = function(compressed, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(compressed)) {
-            throw new DeveloperError('compressed is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.defined('compressed', compressed);
+        Check.defined('result', result);
         //>>includeEnd('debug');
 
         var temp = compressed / 4096.0;
-        result.x = Math.floor(temp) / 4096.0;
-        result.y = temp - Math.floor(temp);
+        var xZeroTo4095 = Math.floor(temp);
+        result.x = xZeroTo4095 / 4095.0;
+        result.y = (compressed - xZeroTo4095 * 4096) / 4095;
         return result;
     };
 

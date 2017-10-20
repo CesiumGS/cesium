@@ -1,14 +1,35 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Geocoder/Geocoder',
-        'Specs/createScene'
+        'Core/Cartesian3',
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
         Geocoder,
-        createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Cartesian3,
+        createScene,
+        when) {
+    'use strict';
 
     var scene;
+
+    var mockDestination = new Cartesian3(1.0, 2.0, 3.0);
+    var geocoderResults = [{
+        displayName: 'a',
+        destination: mockDestination
+    }, {
+        displayName: 'b',
+        destination: mockDestination
+    }, {
+        displayName: 'c',
+        destination: mockDestination
+    }];
+
+    var customGeocoderOptions = {
+        autoComplete : true,
+        geocode : function (input) {
+            return when.resolve(geocoderResults);
+        }
+    };
     beforeEach(function() {
         scene = createScene();
     });
@@ -19,22 +40,16 @@ defineSuite([
 
     it('constructor sets expected properties', function() {
         var flightDuration = 1234;
-        var url = 'bing.invalid/';
-        var key = 'testKey';
 
         var geocoder = new Geocoder({
             container : document.body,
             scene : scene,
-            flightDuration : flightDuration,
-            url : url,
-            key : key
+            flightDuration : flightDuration
         });
 
         var viewModel = geocoder.viewModel;
         expect(viewModel.scene).toBe(scene);
         expect(viewModel.flightDuration).toBe(flightDuration);
-        expect(viewModel.url).toBe(url);
-        expect(viewModel.key).toBe(key);
         geocoder.destroy();
     });
 
@@ -81,4 +96,34 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+
+    it('automatic suggestions can be navigated by arrow up/down keys', function() {
+        var container = document.createElement('div');
+        container.id = 'testContainer';
+        document.body.appendChild(container);
+        var geocoder = new Geocoder({
+            container : 'testContainer',
+            scene : scene,
+            geocoderServices : [customGeocoderOptions]
+        });
+        var viewModel = geocoder._viewModel;
+        viewModel._searchText = 'some_text';
+        viewModel._updateSearchSuggestions(viewModel);
+
+        expect(viewModel._selectedSuggestion).toEqual(undefined);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('c');
+        viewModel._handleArrowDown(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowDown(viewModel);
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion.displayName).toEqual('a');
+        viewModel._handleArrowUp(viewModel);
+        expect(viewModel._selectedSuggestion).toBeUndefined();
+        document.body.removeChild(container);
+    });
+
 }, 'WebGL');

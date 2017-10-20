@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/Entity',
         'Core/Cartesian3',
@@ -53,8 +52,7 @@ defineSuite([
         PolylineVolumeGraphics,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -79,6 +77,7 @@ defineSuite([
         expect(entity.rectangle).toBeUndefined();
         expect(entity.viewFrom).toBeUndefined();
         expect(entity.wall).toBeUndefined();
+        expect(entity.entityCollection).toBeUndefined();
 
         var options = {
             id : 'someId',
@@ -135,6 +134,8 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
+
+        expect(entity.entityCollection).toBeUndefined();
     });
 
     it('isAvailable is always true if no availability defined.', function() {
@@ -221,8 +222,6 @@ defineSuite([
         source.addProperty(propertyName);
         source[propertyName] = value;
 
-        var listener = jasmine.createSpy('listener');
-
         var target = new Entity({
             id : 'target'
         });
@@ -242,13 +241,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('_getModelMatrix returns undefined when position is undefined.', function() {
+    it('computeModelMatrix throws if no time specified.', function() {
         var entity = new Entity();
-        entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
-        expect(entity._getModelMatrix(new JulianDate())).toBeUndefined();
+        expect(function() {
+            entity.computeModelMatrix();
+        }).toThrowDeveloperError();
     });
 
-    it('_getModelMatrix returns correct value.', function() {
+    it('computeModelMatrix returns undefined when position is undefined.', function() {
+        var entity = new Entity();
+        entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        expect(entity.computeModelMatrix(new JulianDate())).toBeUndefined();
+    });
+
+    it('computeModelMatrix returns correct value.', function() {
         var entity = new Entity();
 
         var position = new Cartesian3(123456, 654321, 123456);
@@ -258,28 +264,28 @@ defineSuite([
         entity.position = new ConstantProperty(position);
         entity.orientation = new ConstantProperty(orientation);
 
-        var modelMatrix = entity._getModelMatrix(new JulianDate());
+        var modelMatrix = entity.computeModelMatrix(new JulianDate());
         var expected = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation), position);
         expect(modelMatrix).toEqual(expected);
     });
 
-    it('_getModelMatrix returns ENU when quaternion is undefined.', function() {
+    it('computeModelMatrix returns ENU when quaternion is undefined.', function() {
         var entity = new Entity();
         var position = new Cartesian3(123456, 654321, 123456);
         entity.position = new ConstantProperty(position);
 
-        var modelMatrix = entity._getModelMatrix(new JulianDate());
+        var modelMatrix = entity.computeModelMatrix(new JulianDate());
         var expected = Transforms.eastNorthUpToFixedFrame(position);
         expect(modelMatrix).toEqual(expected);
     });
 
-    it('_getModelMatrix works with result parameter.', function() {
+    it('computeModelMatrix works with result parameter.', function() {
         var entity = new Entity();
         var position = new Cartesian3(123456, 654321, 123456);
         entity.position = new ConstantProperty(position);
 
         var result = new Matrix4();
-        var modelMatrix = entity._getModelMatrix(new JulianDate(), result);
+        var modelMatrix = entity.computeModelMatrix(new JulianDate(), result);
         var expected = Transforms.eastNorthUpToFixedFrame(position);
         expect(modelMatrix).toBe(result);
         expect(modelMatrix).toEqual(expected);
@@ -288,10 +294,24 @@ defineSuite([
     it('can add and remove custom properties.', function() {
         var entity = new Entity();
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+
         entity.addProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
+
         entity.removeProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+    });
+
+    it('can re-add removed properties', function() {
+        var entity = new Entity();
+        entity.addProperty('bob');
+        entity.removeProperty('bob');
+        entity.addProperty('bob');
+        expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
     });
 
     it('addProperty throws with no property specified.', function() {
@@ -458,5 +478,22 @@ defineSuite([
         expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
         expect(entity.show).toBe(true);
         expect(entity.isShowing).toBe(false);
+    });
+
+    it('isShowing works when removing parent.', function() {
+        var entity = new Entity();
+        entity.parent = new Entity({
+            show : false
+        });
+        expect(entity.isShowing).toBe(false);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entity.parent = undefined;
+
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
+        expect(entity.isShowing).toBe(true);
     });
 });

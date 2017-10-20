@@ -1,13 +1,15 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
-        'Core/jsonp',
         'Core/loadImage',
+        'Core/loadJsonp',
         'Core/loadWithXhr',
         'Core/Rectangle',
+        'Core/RequestScheduler',
+        'Renderer/ComputeEngine',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
@@ -15,19 +17,22 @@ defineSuite([
         'Scene/NeverTileDiscardPolicy',
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
-        'Scene/TileMapServiceImageryProvider',
+        'Scene/UrlTemplateImageryProvider',
         'Scene/WebMapServiceImageryProvider',
-        'Specs/createContext',
+        'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
         EllipsoidTerrainProvider,
-        jsonp,
         loadImage,
+        loadJsonp,
         loadWithXhr,
         Rectangle,
+        RequestScheduler,
+        ComputeEngine,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
+        createTileMapServiceImageryProvider,
         GlobeSurfaceTile,
         Imagery,
         ImageryLayerCollection,
@@ -35,27 +40,31 @@ defineSuite([
         NeverTileDiscardPolicy,
         QuadtreeTile,
         SingleTileImageryProvider,
-        TileMapServiceImageryProvider,
+        UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
-        createContext,
+        createScene,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
-    var context;
+    var scene;
+    var computeEngine;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        computeEngine = new ComputeEngine(scene.context);
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
+        computeEngine.destroy();
     });
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
+
+        scene.frameState.commandList.length = 0;
     });
 
     function CustomDiscardPolicy() {
@@ -96,19 +105,20 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.context, imagery);
                 expect(imagery.state).toEqual(ImageryState.INVALID);
                 imagery.releaseReference();
             });
         });
     });
 
-    it('reprojects web mercator images', function() {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
+    function createWebMercatorProvider() {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
                 "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
@@ -142,11 +152,14 @@ defineSuite([
             loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
-        var provider = new BingMapsImageryProvider({
+        return new BingMapsImageryProvider({
             url : 'http://host.invalid',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
+    }
 
+    it('reprojects web mercator images when necessary', function() {
+        var provider = createWebMercatorProvider();
         var layer = new ImageryLayer(provider);
 
         return pollToPromise(function() {
@@ -155,24 +168,185 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    var textureBeforeReprojection = imagery.texture;
-                    layer._reprojectTexture(context, imagery);
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, true);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    scene.frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
+                        expect(imagery.texture).toBeDefined();
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
+                });
+            });
+        });
+    });
+
+    it('does not reproject web mercator images when not necessary', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    expect(imagery.textureWebMercator).toBeDefined();
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+                        imagery.releaseReference();
+                    });
+                });
+            });
+        });
+    });
+
+    it('reprojects web mercator images later if it becomes necessary later', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 1, 3);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    var textureBeforeReprojection = imagery.textureWebMercator;
+                    layer._reprojectTexture(scene.frameState, imagery, false);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).not.toBeDefined();
+
+                        layer._reprojectTexture(scene.frameState, imagery, true);
+                        layer.queueReprojectionCommands(scene.frameState);
+                        scene.frameState.commandList[0].execute(computeEngine);
+
+                        return pollToPromise(function() {
+                            return imagery.state === ImageryState.READY;
+                        }).then(function() {
+                            expect(imagery.texture).toBeDefined();
+                            expect(textureBeforeReprojection).not.toEqual(imagery.texture);
+                            imagery.releaseReference();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    it('assigns texture property when reprojection is skipped because the tile is very small', function() {
+        loadImage.createImage = function(url, crossOrigin, deferred) {
+            loadImage.defaultCreateImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+        };
+
+        var provider = new UrlTemplateImageryProvider({
+            url : 'http://example.com/{z}/{x}/{y}.png',
+            minimumLevel : 13,
+            maximumLevel: 19,
+            rectangle : Rectangle.fromDegrees(13.39657249732205, 52.49127999816725, 13.42722986993895, 52.50998943590507)
+        });
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 4400, 2686, 13);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    layer._reprojectTexture(scene.frameState, imagery, true);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toBe(0);
+
+                    return pollToPromise(function() {
+                        return imagery.state === ImageryState.READY;
+                    }).then(function() {
+                        expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture).toBe(imagery.textureWebMercator);
+                        imagery.releaseReference();
+                    });
+                });
+            });
+        });
+    });
+
+    it('cancels reprojection', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(scene.context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    layer._reprojectTexture(scene.frameState, imagery);
+                    layer.cancelReprojections();
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toEqual(0);
                 });
             });
         });
@@ -219,6 +393,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             imageryLayer._requestImagery(new Imagery(imageryLayer, 0, 0, 0));
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return errorRaised;
@@ -226,9 +401,26 @@ defineSuite([
         });
     });
 
+    it('getViewableRectangle works', function() {
+        var providerRectangle = Rectangle.fromDegrees(8.2, 61.09, 8.5, 61.7);
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Green4x4.png',
+            rectangle : providerRectangle
+        });
+
+        var layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
+        var layer = new ImageryLayer(provider, {
+            rectangle : layerRectangle
+        });
+
+        return layer.getViewableRectangle().then(function(rectangle) {
+            expect(rectangle).toEqual(Rectangle.intersection(providerRectangle, layerRectangle));
+        });
+    });
+
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -277,7 +469,7 @@ defineSuite([
                 url : 'Data/Images/Blue.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -323,7 +515,7 @@ defineSuite([
                 url : 'Data/Images/Green4x4.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 

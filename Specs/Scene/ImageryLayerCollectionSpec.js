@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayerCollection',
         'Core/Cartesian3',
@@ -35,8 +34,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var fakeProvider = {
             isReady : function() { return false; }
@@ -304,9 +302,8 @@ defineSuite([
             // update until the load queue is empty.
             return pollToPromise(function() {
                 globe._surface._debug.enableDebugOutput = true;
-                var commandList = [];
-                globe.update(scene.context, scene.frameState, commandList);
-                return globe._surface.tileProvider.ready && globe._surface._tileLoadQueue.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
+                scene.render();
+                return globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
             });
         }
 
@@ -418,7 +415,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider);
+            var currentLayer = globe.imageryLayers.addImageryProvider(provider);
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
@@ -434,6 +431,7 @@ defineSuite([
                     expect(features.length).toBe(1);
                     expect(features[0].name).toEqual('Foo');
                     expect(features[0].description).toContain('Foo!');
+                    expect(features[0].imageryLayer).toBe(currentLayer);
                 });
             });
         });
@@ -466,7 +464,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider1);
+            var currentLayer1 = globe.imageryLayers.addImageryProvider(provider1);
 
             var provider2 = {
                 ready : true,
@@ -495,7 +493,7 @@ defineSuite([
                 }
             };
 
-            globe.imageryLayers.addImageryProvider(provider2);
+            var currentLayer2 = globe.imageryLayers.addImageryProvider(provider2);
 
             return updateUntilDone(globe).then(function() {
                 var ellipsoid = Ellipsoid.WGS84;
@@ -511,8 +509,10 @@ defineSuite([
                     expect(features.length).toBe(2);
                     expect(features[0].name).toEqual('Bar');
                     expect(features[0].description).toContain('Bar!');
+                    expect(features[0].imageryLayer).toBe(currentLayer2);
                     expect(features[1].name).toEqual('Foo');
                     expect(features[1].description).toContain('Foo!');
+                    expect(features[1].imageryLayer).toBe(currentLayer1);
                 });
             });
         });
@@ -543,19 +543,16 @@ defineSuite([
                     // At level 1, only the northwest quadrant has a valid tile.
                     if (level !== 1 || (x === 0 && y === 0)) {
                         return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
-                    } else {
-                        return when.reject();
                     }
+                    return when.reject();
                 }
             };
 
             globe.imageryLayers.addImageryProvider(provider);
 
-            camera.viewRectangle(Rectangle.fromDegrees(-180.0, 0, 0, 90));
+            camera.setView({ destination : Rectangle.fromDegrees(-180.0, 0, 0, 90) });
 
             return updateUntilDone(globe).then(function() {
-                var ellipsoid = Ellipsoid.WGS84;
-
                 var ray = new Ray(camera.position, camera.direction);
                 var featuresPromise = scene.imageryLayers.pickImageryLayerFeatures(ray, scene);
 
@@ -569,4 +566,4 @@ defineSuite([
             });
         });
     });
-});
+}, 'WebGL');

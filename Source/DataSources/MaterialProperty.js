@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/defined',
@@ -11,7 +10,7 @@ define([
         defineProperties,
         DeveloperError,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for all {@link Property} objects that represent {@link Material} uniforms.
@@ -28,9 +27,9 @@ define([
      * @see PolylineOutlineMaterialProperty
      * @see StripeMaterialProperty
      */
-    var MaterialProperty = function() {
+    function MaterialProperty() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(MaterialProperty.prototype, {
         /**
@@ -80,6 +79,7 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @function
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

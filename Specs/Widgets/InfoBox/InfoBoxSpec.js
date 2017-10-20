@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/InfoBox/InfoBox',
         'Core/defined',
@@ -7,8 +6,7 @@ defineSuite([
         InfoBox,
         defined,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var testContainer;
     var infoBox;
@@ -62,7 +60,7 @@ defineSuite([
 
     it('constructor works with string id container', function() {
         infoBox = new InfoBox('testContainer');
-        expect(infoBox.container).toBe(testContainer);
+        expect(infoBox.container.id).toBe(testContainer.id);
     });
 
     it('throws if container is undefined', function() {

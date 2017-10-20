@@ -1,20 +1,20 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/Intersect',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Specs/createPackableSpecs'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Ellipsoid,
         GeographicProjection,
         Intersect,
-        Rectangle) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Rectangle,
+        createPackableSpecs) {
+    'use strict';
 
     it('default constructor sets expected values', function() {
         var rectangle = new BoundingRectangle();
@@ -110,7 +110,7 @@ defineSuite([
         expect(rectangle.height).toEqual(0.0);
     });
 
-    it('create a bounding rectangle from an rectangle', function() {
+    it('create a bounding rectangle from a rectangle', function() {
         var rectangle = Rectangle.MAX_VALUE;
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
         var expected = new BoundingRectangle(rectangle.west, rectangle.south, rectangle.east - rectangle.west, rectangle.north - rectangle.south);
@@ -254,4 +254,6 @@ defineSuite([
             BoundingRectangle.intersect(left, undefined);
         }).toThrowDeveloperError();
     });
+
+    createPackableSpecs(BoundingRectangle, new BoundingRectangle(1, 2, 3, 4), [1, 2, 3, 4]);
 });

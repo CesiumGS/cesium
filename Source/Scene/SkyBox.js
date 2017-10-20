@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
@@ -10,8 +9,12 @@ define([
         '../Core/Matrix4',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
+        '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/loadCubeMap',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
+        '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
         './BlendingState',
@@ -27,13 +30,17 @@ define([
         Matrix4,
         VertexFormat,
         BufferUsage,
+        CubeMap,
         DrawCommand,
         loadCubeMap,
+        RenderState,
+        ShaderProgram,
+        VertexArray,
         SkyBoxFS,
         SkyBoxVS,
         BlendingState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.
@@ -49,8 +56,6 @@ define([
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
-     * @see Scene#skyBox
-     * @see Transforms.computeTemeToPseudoFixedMatrix
      *
      * @example
      * scene.skyBox = new Cesium.SkyBox({
@@ -63,8 +68,11 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
+     *
+     * @see Scene#skyBox
+     * @see Transforms.computeTemeToPseudoFixedMatrix
      */
-    var SkyBox = function(options) {
+    function SkyBox(options) {
         /**
          * The sources used to create the cube map faces: an object
          * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
@@ -90,7 +98,7 @@ define([
             owner : this
         });
         this._cubeMap = undefined;
-    };
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -103,7 +111,9 @@ define([
      * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
-    SkyBox.prototype.update = function(context, frameState) {
+    SkyBox.prototype.update = function(frameState) {
+        var that = this;
+
         if (!this.show) {
             return undefined;
         }
@@ -117,6 +127,8 @@ define([
         if (!frameState.passes.render) {
             return undefined;
         }
+
+        var context = frameState.context;
 
         if (this._sources !== this.sources) {
             this._sources = this.sources;
@@ -149,7 +161,8 @@ define([
                 });
             } else {
                 this._cubeMap = this._cubeMap && this._cubeMap.destroy();
-                this._cubeMap = context.createCubeMap({
+                this._cubeMap = new CubeMap({
+                    context : context,
                     source : sources
                 });
             }
@@ -158,8 +171,6 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var that = this;
-
             command.uniformMap = {
                 u_cubeMap: function() {
                     return that._cubeMap;
@@ -172,13 +183,21 @@ define([
             }));
             var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
-            command.vertexArray = context.createVertexArrayFromGeometry({
-                geometry: geometry,
-                attributeLocations: attributeLocations,
-                bufferUsage: BufferUsage.STATIC_DRAW
+            command.vertexArray = VertexArray.fromGeometry({
+                context : context,
+                geometry : geometry,
+                attributeLocations : attributeLocations,
+                bufferUsage : BufferUsage.STATIC_DRAW
             });
-            command.shaderProgram = context.createShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
-            command.renderState = context.createRenderState({
+
+            command.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : SkyBoxVS,
+                fragmentShaderSource : SkyBoxFS,
+                attributeLocations : attributeLocations
+            });
+
+            command.renderState = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
         }
@@ -216,10 +235,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyBox#isDestroyed
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
+     *
+     * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {
         var command = this._command;

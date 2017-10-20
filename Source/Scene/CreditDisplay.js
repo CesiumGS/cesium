@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Credit',
         '../Core/defaultValue',
@@ -11,7 +10,7 @@ define([
         defined,
         destroyObject,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     function displayTextCredit(credit, container, delimiter) {
         if (!defined(credit.element)) {
@@ -156,7 +155,7 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-    var CreditDisplay = function(container, delimiter) {
+    function CreditDisplay(container, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
@@ -171,7 +170,6 @@ define([
         container.appendChild(textContainer);
 
         this._delimiter = defaultValue(delimiter, ' • ');
-        this._container = container;
         this._textContainer = textContainer;
         this._imageContainer = imageContainer;
         this._defaultImageCredits = [];
@@ -185,7 +183,13 @@ define([
             imageCredits : [],
             textCredits : []
         };
-    };
+
+        /**
+         * The HTML element where credits will be displayed.
+         * @type {HTMLElement}
+         */
+        this.container = container;
+    }
 
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container
@@ -265,8 +269,6 @@ define([
 
     /**
      * Resets the credit display to a beginning of frame state, clearing out current credits.
-     *
-     * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.beginFrame = function() {
         this._currentFrameCredits.imageCredits.length = 0;
@@ -275,8 +277,6 @@ define([
 
     /**
      * Sets the credit display to the end of frame state, displaying current credits in the credit container
-     *
-     * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.endFrame = function() {
         var textCredits = this._defaultTextCredits.concat(this._currentFrameCredits.textCredits);
@@ -302,8 +302,8 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     CreditDisplay.prototype.destroy = function() {
-        this._container.removeChild(this._textContainer);
-        this._container.removeChild(this._imageContainer);
+        this.container.removeChild(this._textContainer);
+        this.container.removeChild(this._imageContainer);
 
         return destroyObject(this);
     };

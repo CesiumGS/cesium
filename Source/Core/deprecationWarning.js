@@ -1,13 +1,12 @@
-/*global define,console*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './oneTimeWarning'
     ], function(
         defined,
-        DeveloperError) {
-    "use strict";
-
-    var warnings = {};
+        DeveloperError,
+        oneTimeWarning) {
+    'use strict';
 
     /**
      * Logs a deprecation message to the console.  Use this function instead of
@@ -21,7 +20,7 @@ define([
      *
      * @example
      * // Deprecated function or class
-     * var Foo = function() {
+     * function Foo() {
      *    deprecationWarning('Foo', 'Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead.');
      *    // ...
      * }
@@ -48,18 +47,15 @@ define([
      *
      * @private
      */
-    var deprecationWarning = function(identifier, message) {
+    function deprecationWarning(identifier, message) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(identifier) || !defined(message)) {
             throw new DeveloperError('identifier and message are required.');
         }
         //>>includeEnd('debug');
 
-        if (!defined(warnings[identifier])) {
-            warnings[identifier] = true;
-            console.log(message);
-        }
-    };
+        oneTimeWarning(identifier, message);
+    }
 
     return deprecationWarning;
 });

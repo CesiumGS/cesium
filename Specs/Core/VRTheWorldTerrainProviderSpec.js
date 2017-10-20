@@ -1,32 +1,33 @@
-/*global defineSuite*/
 defineSuite([
         'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
+        'Core/Request',
+        'Core/RequestScheduler',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         VRTheWorldTerrainProvider,
         DefaultProxy,
-        defined,
         GeographicTilingScheme,
         HeightmapTerrainData,
         loadImage,
         loadWithXhr,
         CesiumMath,
+        Request,
+        RequestScheduler,
         TerrainProvider,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     beforeEach(function() {
+        RequestScheduler.clearForSpecs();
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();
@@ -61,6 +62,12 @@ defineSuite([
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
+    function createRequest() {
+        return new Request({
+            throttleByServer : true
+        });
+    }
+
     it('conforms to TerrainProvider interface', function() {
         expect(VRTheWorldTerrainProvider).toConformToInterface(TerrainProvider);
     });
@@ -74,6 +81,17 @@ defineSuite([
             return new VRTheWorldTerrainProvider({
             });
         }).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new VRTheWorldTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('has error event', function() {
@@ -114,7 +132,7 @@ defineSuite([
         });
 
         expect(function() {
-            var t = provider.tilingScheme;
+            return provider.tilingScheme;
         }).toThrowDeveloperError();
     });
 
@@ -265,15 +283,15 @@ defineSuite([
             return pollToPromise(function() {
                return terrainProvider.ready;
             }).then(function() {
-                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                var promise;
+                var i;
+                for (i = 0; i < RequestScheduler.maximumRequestsPerServer; ++i) {
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
+                }
+                RequestScheduler.update();
                 expect(promise).toBeDefined();
 
-                var i;
-                for (i = 0; i < 10; ++i) {
-                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
-                }
-
-                promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                promise = terrainProvider.requestTileGeometry(0, 0, 0, createRequest());
                 expect(promise).toBeUndefined();
 
                 for (i = 0; i < deferreds.length; ++i) {

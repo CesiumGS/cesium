@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defaultValue',
         './defined',
@@ -7,7 +6,7 @@ define([
         defaultValue,
         defined,
         formatError) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.
@@ -26,7 +25,7 @@ define([
      * @param {Number} [timesRetried=0] The number of times this operation has been retried.
      * @param {Error} [error] The error or exception that occurred, if any.
      */
-    var TileProviderError = function TileProviderError(provider, message, x, y, level, timesRetried, error) {
+    function TileProviderError(provider, message, x, y, level, timesRetried, error) {
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
          * @type {ImageryProvider|TerrainProvider}
@@ -81,7 +80,7 @@ define([
          * @type {Error}
          */
         this.error = error;
-    };
+    }
 
     /**
      * Handles an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
@@ -126,7 +125,6 @@ define([
         if (event.numberOfListeners > 0) {
             event.raiseEvent(error);
         } else {
-            /*global console*/
             console.log('An error occurred in "' + provider.constructor.name + '": ' + formatError(message));
         }
 

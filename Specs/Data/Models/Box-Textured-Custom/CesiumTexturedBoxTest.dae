@@ -12,7 +12,7 @@
     </asset>
     <library_images>
         <image id="Image0001" name="Image0001">
-            <init_from>Cesium_Logo_Flat.png</init_from>
+            <init_from>Cesium_Logo_Flat.jpg</init_from>
         </image>
     </library_images>
     <library_materials>

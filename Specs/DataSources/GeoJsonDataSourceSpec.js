@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
@@ -7,7 +6,10 @@ defineSuite([
         'Core/JulianDate',
         'Core/PolygonHierarchy',
         'Core/RuntimeError',
+        'DataSources/CallbackProperty',
+        'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'Scene/HeightReference',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
@@ -17,10 +19,12 @@ defineSuite([
         JulianDate,
         PolygonHierarchy,
         RuntimeError,
+        CallbackProperty,
+        ConstantProperty,
         EntityCollection,
+        HeightReference,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
+    'use strict';
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -28,6 +32,7 @@ defineSuite([
     var defaultStroke;
     var defaultStrokeWidth;
     var defaultFill;
+    var defaultClampToGround;
 
     beforeAll(function() {
         defaultMarkerSize = GeoJsonDataSource.markerSize;
@@ -36,6 +41,7 @@ defineSuite([
         defaultStroke = GeoJsonDataSource.stroke;
         defaultStrokeWidth = GeoJsonDataSource.strokeWidth;
         defaultFill = GeoJsonDataSource.fill;
+        defaultClampToGround = GeoJsonDataSource.clampToGround;
     });
 
     beforeEach(function() {
@@ -45,6 +51,7 @@ defineSuite([
         GeoJsonDataSource.stroke = defaultStroke;
         GeoJsonDataSource.strokeWidth = defaultStrokeWidth;
         GeoJsonDataSource.fill = defaultFill;
+        GeoJsonDataSource.clampToGround = defaultClampToGround;
     });
 
     var time = new JulianDate();
@@ -94,6 +101,28 @@ defineSuite([
             type : 'name',
             properties : {
                 name : 'EPSG:4326'
+            }
+        }
+    };
+
+    var pointNamedCrsOgc = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:OGC:1.3:CRS84'
+            }
+        }
+    };
+
+    var pointNamedCrsEpsg = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:EPSG::4326'
             }
         }
     };
@@ -247,6 +276,32 @@ defineSuite([
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('setting name raises changed event', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.changedEvent.addEventListener(spy);
+
+        var newName = 'chester';
+        dataSource.name = newName;
+        expect(dataSource.name).toEqual(newName);
+        expect(spy.calls.count()).toEqual(1);
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('Works with null geometry', function() {
@@ -270,7 +325,7 @@ defineSuite([
         });
     });
 
-    it('Creates description from properties', function() {
+    it('Creates default description from properties', function() {
         var featureWithProperties = {
             type : 'Feature',
             geometry : point,
@@ -293,6 +348,88 @@ defineSuite([
             expect(description).toContain('dog');
             expect(description).toContain('cat');
             expect(description).toContain('liger');
+        });
+    });
+
+    it('Creates custom description string from properties', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat'
+            }
+        };
+
+        function testDescribe(properties) {
+            var desc = '';
+            for (var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    desc +=  key + ' = ' + value + '. ';
+                }
+            }
+            return desc;
+        }
+
+        var dataSource = new GeoJsonDataSource();
+        var options = {
+            describe: testDescribe
+        };
+        return dataSource.load(featureWithProperties, options).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeDefined();
+            var description = entity.description.getValue(time);
+            expect(description).toContain('prop1 = dog.');
+            expect(description).toContain('prop2 = cat.');
+        });
+    });
+
+    it('Creates custom description from properties, using a describeProperty', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat'
+            }
+        };
+
+        function testDescribe(properties) {
+            var desc = '';
+            for (var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    desc +=  key + ' = ' + value + '; ';
+                }
+            }
+            return desc;
+        }
+        function createDescriptionCallback(describe, properties, nameProperty) {
+            var description;
+            return function(time, result) {
+                if (!description) {
+                    description = describe(properties, nameProperty);
+                }
+                return description;
+            };
+        }
+        function testDescribeProperty(properties, nameProperty) {
+            return new CallbackProperty(createDescriptionCallback(testDescribe, properties, nameProperty), true);
+        }
+
+        var dataSource = new GeoJsonDataSource();
+        var options = {
+            describe: testDescribeProperty
+        };
+        return dataSource.load(featureWithProperties, options).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeDefined();
+            var description = entity.description.getValue(time);
+            expect(description).toContain('prop1 = dog;');
+            expect(description).toContain('prop2 = cat;');
         });
     });
 
@@ -340,7 +477,8 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.name).toBeUndefined();
-            expect(entity.properties).toBe(featureWithNullName.properties);
+            expect(entity.properties.name.getValue()).toBe(featureWithNullName.properties.name);
+            expect(entity.properties.getValue(time)).toEqual(featureWithNullName.properties);
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
             expect(entity.billboard).toBeDefined();
         });
@@ -387,6 +525,23 @@ defineSuite([
         });
     });
 
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            expect(entityCollection.owner).toEqual(dataSource);
+        });
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.entityCollection).toEqual(entityCollection);
+        });
+    });
+
     it('Works with point geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(point).then(function() {
@@ -396,6 +551,21 @@ defineSuite([
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
             expect(entity.billboard).toBeDefined();
             expect(entity.billboard.image).toBeDefined();
+        });
+    });
+
+    it('Works with point geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(point, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(point.properties);
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.image).toBeDefined();
+            expect(entity.billboard.heightReference.getValue(time)).toBe(HeightReference.CLAMP_TO_GROUND);
         });
     });
 
@@ -442,6 +612,28 @@ defineSuite([
         });
     });
 
+    it('Works with point geometry and unknown simplystyle', function() {
+        var geojson = {
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            properties : {
+                'marker-size' : 'large',
+                'marker-symbol' : 'notAnIcon',
+                'marker-color' : '#ffffff'
+            }
+        };
+
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(geojson).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.billboard).toBeDefined();
+            return when(dataSource._pinBuilder.fromColor(Color.WHITE, 64)).then(function(image) {
+                expect(entity.billboard.image.getValue()).toBe(image);
+            });
+        });
+    });
+
     it('Works with multipoint geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(multiPoint).then(function() {
@@ -458,6 +650,24 @@ defineSuite([
         });
     });
 
+    it('Works with multipoint geometry clamped to ground', function() {
+        GeoJsonDataSource.clampToGround = true;
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(multiPoint).then(function() {
+            var entityCollection = dataSource.entities;
+            var entities = entityCollection.values;
+            var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);
+            for (var i = 0; i < multiPoint.coordinates.length; i++) {
+                var entity = entities[i];
+                expect(entity.properties).toBe(multiPoint.properties);
+                expect(entity.position.getValue(time)).toEqual(expectedPositions[i]);
+                expect(entity.billboard).toBeDefined();
+                expect(entity.billboard.image).toBeDefined();
+                expect(entity.billboard.heightReference.getValue()).toBe(HeightReference.CLAMP_TO_GROUND);
+            }
+        });
+    });
+
     it('Works with lineString geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(lineString).then(function() {
@@ -467,6 +677,20 @@ defineSuite([
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue(time)).toEqual(2);
+        });
+    });
+
+    it('Works with lineString geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(lineString, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(lineString.properties);
+            expect(entity.corridor.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(entity.corridor.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.corridor.width.getValue(time)).toEqual(2);
         });
     });
 
@@ -486,6 +710,24 @@ defineSuite([
         });
     });
 
+    it('Works with multiLineString geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(multiLineString, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entities = entityCollection.values;
+            var lines = multiLineToCartesian(multiLineString);
+            for (var i = 0; i < multiLineString.coordinates.length; i++) {
+                var entity = entities[i];
+                expect(entity.properties).toBe(multiLineString.properties);
+                expect(entity.corridor.positions.getValue(time)).toEqual(lines[i]);
+                expect(entity.corridor.material.color.getValue(time)).toEqual(Color.YELLOW);
+                expect(entity.corridor.width.getValue(time)).toEqual(2);
+            }
+        });
+    });
+
     it('Works with polygon geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(polygon).then(function() {
@@ -498,6 +740,26 @@ defineSuite([
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polygon.height).toBeInstanceOf(ConstantProperty);
+        });
+    });
+
+    it('Works with polygon geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(polygon, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(polygon.properties);
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
+            expect(entity.polygon.perPositionHeight).toBeUndefined();
+            expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
+            expect(entity.polygon.outline.getValue(time)).toEqual(true);
+            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
+            expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polygon.height).toBeUndefined();
+
         });
     });
 
@@ -547,11 +809,15 @@ defineSuite([
             var entities = entityCollection.values;
 
             var polygon = entities[0];
-            expect(polygon.properties).toBe(topoJson.objects.polygon.properties);
+            expect(polygon.properties.myProps.getValue()).toBe(topoJson.objects.polygon.properties.myProps);
+            expect(polygon.properties.getValue(time)).toEqual(topoJson.objects.polygon.properties);
+
             expect(polygon.polygon.hierarchy).toBeDefined();
 
             var lineString = entities[1];
-            expect(lineString.properties).toBe(topoJson.objects.lineString.properties);
+            expect(lineString.properties.myProps.getValue()).toBe(topoJson.objects.lineString.properties.myProps);
+            expect(lineString.properties.getValue(time)).toEqual(topoJson.objects.lineString.properties);
+
             expect(lineString.polyline).toBeDefined();
         });
     });
@@ -642,6 +908,24 @@ defineSuite([
     it('Works with named crs', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(pointNamedCrs).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs OGC:1.3:CRS84', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsOgc).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs EPSG::4326', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsEpsg).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
@@ -866,11 +1150,8 @@ defineSuite([
             crs : null
         };
 
-        return GeoJsonDataSource.load(featureWithNullCrs).then(function() {
-            fail('should not be called');
-        }).otherwise(function(error) {
-            expect(error).toBeInstanceOf(RuntimeError);
-            expect(error.message).toContain('crs is null.');
+        return GeoJsonDataSource.load(featureWithNullCrs).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toBe(0);
         });
     });
 

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,7 +10,7 @@ define([
         DeveloperError,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model that represents each item in the {@link BaseLayerPicker}.
@@ -30,7 +29,7 @@ define([
      * @see ImageryProvider
      * @see TerrainProvider
      */
-    var ProviderViewModel = function(options) {
+    function ProviderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.name)) {
             throw new DeveloperError('options.name is required.');
@@ -72,7 +71,7 @@ define([
         this.iconUrl = options.iconUrl;
 
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
-    };
+    }
 
     defineProperties(ProviderViewModel.prototype, {
         /**

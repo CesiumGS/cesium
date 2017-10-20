@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * Tests an object to see if it is an array.

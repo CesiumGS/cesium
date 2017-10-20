@@ -1,13 +1,12 @@
-/*global define*/
 define([
         './Cartesian3',
-        './defined',
-        './DeveloperError'
+        './Check',
+        './defined'
     ], function(
         Cartesian3,
-        defined,
-        DeveloperError) {
-    "use strict";
+        Check,
+        defined) {
+    'use strict';
 
     /**
      * A fixed-point encoding of a {@link Cartesian3} with 64-bit floating-point components, as two {@link Cartesian3}
@@ -22,7 +21,7 @@ define([
      *
      * @private
      */
-    var EncodedCartesian3 = function() {
+    function EncodedCartesian3() {
         /**
          * The high bits for each component.  Bits 0 to 22 store the whole value.  Bits 23 to 31 are not used.
          *
@@ -38,7 +37,7 @@ define([
          * @default {@link Cartesian3.ZERO}
          */
         this.low = Cartesian3.clone(Cartesian3.ZERO);
-    };
+    }
 
     /**
      * Encodes a 64-bit floating-point value as two floating-point values that, when converted to
@@ -58,9 +57,7 @@ define([
      */
     EncodedCartesian3.encode = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required');
-        }
+        Check.typeOf.number('value', value);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -106,9 +103,7 @@ define([
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
+        Check.typeOf.object('cartesian', cartesian);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
@@ -162,15 +157,9 @@ define([
      */
     EncodedCartesian3.writeElements = function(cartesian, cartesianArray, index) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        if (!defined(cartesianArray)) {
-            throw new DeveloperError('cartesianArray is required');
-        }
-        if (typeof index !== 'number' || index < 0) {
-            throw new DeveloperError('index must be a number greater than or equal to 0.');
-        }
+        Check.defined('cartesianArray', cartesianArray);
+        Check.typeOf.number('index', index);
+        Check.typeOf.number.greaterThanOrEquals('index', index, 0);
         //>>includeEnd('debug');
 
         EncodedCartesian3.fromCartesian(cartesian, encodedP);

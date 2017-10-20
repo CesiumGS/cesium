@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TimeInterval',
         'Core/JulianDate'
     ], function(
         TimeInterval,
         JulianDate) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     function returnTrue() {
         return true;

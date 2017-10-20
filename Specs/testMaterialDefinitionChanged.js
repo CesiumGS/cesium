@@ -1,10 +1,8 @@
-/*global define*/
 define([
         'DataSources/ColorMaterialProperty'
     ], function(
         ColorMaterialProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     function testMaterialDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TextureAtlas',
         'Core/BoundingRectangle',
@@ -6,10 +5,6 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/PixelFormat',
-        'Core/PrimitiveType',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
@@ -19,14 +14,9 @@ defineSuite([
         loadImage,
         CesiumMath,
         PixelFormat,
-        PrimitiveType,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
         createScene,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var atlas;
@@ -69,47 +59,25 @@ defineSuite([
         atlas = atlas && atlas.destroy();
     });
 
-    function draw(texture, textureCoordinates) {
+    function expectToRender(texture, textureCoordinates, expected) {
         var x = textureCoordinates.x + textureCoordinates.width / 2.0;
         var y = textureCoordinates.y + textureCoordinates.height / 2.0;
+        var fs =
+            'uniform sampler2D u_texture;' +
+            'void main() {' +
+            '  gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));' +
+            '}';
+        var uniformMap = {
+            u_texture : function() {
+                return texture;
+            }
+        };
 
-        var context = scene.context;
-        var vs = '\
-attribute vec4 position;\n\
-void main() {\n\
-  gl_PointSize = 1.0;\n\
-  gl_Position = position;\n\
-}';
-        var fs = '\
-uniform sampler2D u_texture;\n\
-void main() {\n\
-  gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));\n\
-}';
-        var sp = context.createShaderProgram(vs, fs, {
-            position : 0
-        });
-        sp.allUniforms.u_texture.value = texture;
-
-        var va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
-
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        command.execute(context);
-
-        sp = sp.destroy();
-        va = va.destroy();
-
-        return context.readPixels();
+        expect({
+            context : scene.context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender(expected);
     }
 
     it('creates a single image atlas', function() {
@@ -126,8 +94,8 @@ void main() {\n\
             expect(atlas.borderWidthInPixels).toEqual(0);
 
             var texture = atlas.texture;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
@@ -151,7 +119,7 @@ void main() {\n\
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
-            expect(draw(texture, coords)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, coords, [0, 255, 0, 255]);
         });
     });
 
@@ -175,8 +143,8 @@ void main() {\n\
             expect(texture.height).toEqual(atlasHeight);
 
             var coords = atlas.textureCoordinates[index];
-            expect(coords.x).toEqual(0.0 / atlasWidth);
-            expect(coords.y).toEqual(0.0 / atlasHeight);
+            expect(coords.x).toEqual(1.0 / atlasWidth);
+            expect(coords.y).toEqual(1.0 / atlasHeight);
             expect(coords.width).toEqual(1.0 / atlasWidth);
             expect(coords.height).toEqual(1.0 / atlasHeight);
         });
@@ -191,7 +159,7 @@ void main() {\n\
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
-            expect(draw(texture, coords)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, coords, [0, 255, 0, 255]);
         });
     });
 
@@ -209,8 +177,8 @@ void main() {\n\
 
             var texture = atlas.texture;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 5.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 8.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -233,7 +201,7 @@ void main() {\n\
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
-            expect(draw(texture, coords)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, coords, [0, 255, 0, 255]);
         });
     });
 
@@ -292,10 +260,10 @@ void main() {\n\
             var texture = atlas.texture;
 
             var greenCoords = atlas.textureCoordinates[greenIndex];
-            expect(draw(texture, greenCoords)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, greenCoords, [0, 255, 0, 255]);
 
             var blueCoords = atlas.textureCoordinates[blueIndex];
-            expect(draw(texture, blueCoords)).toEqual([0, 0, 255, 255]);
+            expectToRender(texture, blueCoords, [0, 0, 255, 255]);
         });
     });
 
@@ -325,10 +293,10 @@ void main() {\n\
             var c2 = atlas.textureCoordinates[bigRedIndex];
             var c3 = atlas.textureCoordinates[bigBlueIndex];
 
-            expect(draw(texture, c0)).toEqual([0, 255, 0, 255]);
-            expect(draw(texture, c1)).toEqual([0, 0, 255, 255]);
-            expect(draw(texture, c2)).toEqual([255, 0, 0, 255]);
-            expect(draw(texture, c3)).toEqual([0, 0, 255, 255]);
+            expectToRender(texture, c0, [0, 255, 0, 255]);
+            expectToRender(texture, c1, [0, 0, 255, 255]);
+            expectToRender(texture, c2, [255, 0, 0, 255]);
+            expectToRender(texture, c3, [0, 0, 255, 255]);
         });
     });
 
@@ -364,23 +332,23 @@ void main() {\n\
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
-            expect(c0.x).toEqualEpsilon(0.0 / atlasWidth, CesiumMath.EPSILON16);
-            expect(c0.y).toEqualEpsilon(0.0 / atlasHeight, CesiumMath.EPSILON16);
+            expect(c0.x).toEqualEpsilon(2.0 / atlasWidth, CesiumMath.EPSILON16);
+            expect(c0.y).toEqualEpsilon(2.0 / atlasHeight, CesiumMath.EPSILON16);
             expect(c0.width).toEqualEpsilon(greenImage.width / atlasWidth, CesiumMath.EPSILON16);
             expect(c0.height).toEqualEpsilon(greenImage.height / atlasHeight, CesiumMath.EPSILON16);
 
-            expect(c1.x).toEqualEpsilon((greenImage.width + atlas.borderWidthInPixels) / atlasWidth, CesiumMath.EPSILON16);
-            expect(c1.y).toEqualEpsilon(0.0 / atlasHeight, CesiumMath.EPSILON16);
+            expect(c1.x).toEqualEpsilon((greenImage.width + 2 * atlas.borderWidthInPixels) / atlasWidth, CesiumMath.EPSILON16);
+            expect(c1.y).toEqualEpsilon(2.0 / atlasHeight, CesiumMath.EPSILON16);
             expect(c1.width).toEqualEpsilon(blueImage.width / atlasWidth, CesiumMath.EPSILON16);
             expect(c1.height).toEqualEpsilon(blueImage.width / atlasHeight, CesiumMath.EPSILON16);
 
-            expect(c2.x).toEqualEpsilon((bigRedImage.width + atlas.borderWidthInPixels) / atlasWidth, CesiumMath.EPSILON16);
-            expect(c2.y).toEqualEpsilon(0.0 / atlasHeight, CesiumMath.EPSILON16);
+            expect(c2.x).toEqualEpsilon(2.0 / atlasWidth, CesiumMath.EPSILON16);
+            expect(c2.y).toEqualEpsilon((bigRedImage.height + atlas.borderWidthInPixels) / atlasHeight, CesiumMath.EPSILON16);
             expect(c2.width).toEqualEpsilon(bigRedImage.width / atlasWidth, CesiumMath.EPSILON16);
             expect(c2.height).toEqualEpsilon(bigRedImage.height / atlasHeight, CesiumMath.EPSILON16);
 
-            expect(c3.x).toEqualEpsilon(0.0 / atlasWidth, CesiumMath.EPSILON16);
-            expect(c3.y).toEqualEpsilon((greenImage.height + atlas.borderWidthInPixels) / atlasHeight, CesiumMath.EPSILON16);
+            expect(c3.x).toEqualEpsilon(2.0 / atlasWidth, CesiumMath.EPSILON16);
+            expect(c3.y).toEqualEpsilon((greenImage.height + 2 * atlas.borderWidthInPixels) / atlasHeight, CesiumMath.EPSILON16);
             expect(c3.width).toEqualEpsilon(bigBlueImage.width / atlasWidth, CesiumMath.EPSILON16);
             expect(c3.height).toEqualEpsilon(bigBlueImage.height / atlasHeight, CesiumMath.EPSILON16);
         });
@@ -412,10 +380,10 @@ void main() {\n\
             var c2 = atlas.textureCoordinates[bigRedIndex];
             var c3 = atlas.textureCoordinates[bigBlueIndex];
 
-            expect(draw(texture, c0)).toEqual([0, 255, 0, 255]);
-            expect(draw(texture, c1)).toEqual([0, 0, 255, 255]);
-            expect(draw(texture, c2)).toEqual([255, 0, 0, 255]);
-            expect(draw(texture, c3)).toEqual([0, 0, 255, 255]);
+            expectToRender(texture, c0, [0, 255, 0, 255]);
+            expectToRender(texture, c1, [0, 0, 255, 255]);
+            expectToRender(texture, c2, [255, 0, 0, 255]);
+            expectToRender(texture, c3, [0, 0, 255, 255]);
         });
     });
 
@@ -432,8 +400,8 @@ void main() {\n\
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -450,8 +418,8 @@ void main() {\n\
                 var texture = atlas.texture;
                 var coordinates = atlas.textureCoordinates;
 
-                var atlasWidth = 10.0;
-                var atlasHeight = 10.0;
+                var atlasWidth = 12.0;
+                var atlasHeight = 12.0;
                 expect(texture.width).toEqual(atlasWidth);
                 expect(texture.height).toEqual(atlasHeight);
 
@@ -463,7 +431,7 @@ void main() {\n\
 
                 // big green image
                 expect(coordinates[greenIndex].x).toEqual(0.0 / atlasWidth);
-                expect(coordinates[greenIndex].y).toEqual(1.0 / atlasHeight);
+                expect(coordinates[greenIndex].y).toEqual(2.0 / atlasHeight);
                 expect(coordinates[greenIndex].width).toEqual(4.0 / atlasWidth);
                 expect(coordinates[greenIndex].height).toEqual(4.0 / atlasHeight);
             });
@@ -484,7 +452,7 @@ void main() {\n\
             var coordinates = atlas.textureCoordinates;
 
             var blueCoords = coordinates[blueIndex];
-            expect(draw(texture, blueCoords)).toEqual([0, 0, 255, 255]);
+            expectToRender(texture, blueCoords, [0, 0, 255, 255]);
 
             return atlas.addImage(bigGreenImage.src, bigGreenImage).then(function(greenIndex) {
                 expect(atlas.numberOfImages).toEqual(2);
@@ -493,10 +461,10 @@ void main() {\n\
                 var coordinates = atlas.textureCoordinates;
 
                 var blueCoords = coordinates[blueIndex];
-                expect(draw(texture, blueCoords)).toEqual([0, 0, 255, 255]);
+                expectToRender(texture, blueCoords, [0, 0, 255, 255]);
 
                 var greenCoords = coordinates[greenIndex];
-                expect(draw(texture, greenCoords)).toEqual([0, 255, 0, 255]);
+                expectToRender(texture, greenCoords, [0, 255, 0, 255]);
             });
         });
     });
@@ -537,7 +505,7 @@ void main() {\n\
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
-            expect(draw(texture, coords)).toEqual([255, 0, 0, 255]);
+            expectToRender(texture, coords, [255, 0, 0, 255]);
         });
     });
 
@@ -565,13 +533,13 @@ void main() {\n\
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
-            expect(coordinates[greenIndex].x).toEqual(0.0 / atlasWidth);
-            expect(coordinates[greenIndex].y).toEqual(0.0 / atlasHeight);
+            expect(coordinates[greenIndex].x).toEqual(atlas.borderWidthInPixels / atlasWidth);
+            expect(coordinates[greenIndex].y).toEqual(atlas.borderWidthInPixels / atlasHeight);
             expect(coordinates[greenIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[greenIndex].height).toEqual(1.0 / atlasHeight);
 
-            expect(coordinates[blueIndex].x).toEqual(4.0 / atlasWidth);
-            expect(coordinates[blueIndex].y).toEqual(0.0 / atlasHeight);
+            expect(coordinates[blueIndex].x).toEqual(5.0 / atlasWidth);
+            expect(coordinates[blueIndex].y).toEqual(2.0 / atlasHeight);
             expect(coordinates[blueIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[blueIndex].height).toEqual(1.0 / atlasHeight);
         });
@@ -597,8 +565,8 @@ void main() {\n\
             var greenCoords = coordinates[greenIndex];
             var blueCoords = coordinates[blueIndex];
 
-            expect(draw(texture, greenCoords)).toEqual([0, 255, 0, 255]);
-            expect(draw(texture, blueCoords)).toEqual([0, 0, 255, 255]);
+            expectToRender(texture, greenCoords, [0, 255, 0, 255]);
+            expectToRender(texture, blueCoords, [0, 0, 255, 255]);
         });
     });
 
@@ -638,7 +606,7 @@ void main() {\n\
             var texture = atlas.texture;
             var coords = atlas.textureCoordinates[index];
 
-            expect(draw(texture, coords)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, coords, [0, 255, 0, 255]);
         });
     });
 
@@ -663,9 +631,9 @@ void main() {\n\
             var bigGreenCoordinates = atlas.textureCoordinates[bigGreenIndex];
             var bigRedCoordinates = atlas.textureCoordinates[bigRedIndex];
 
-            expect(draw(texture, blueCoordinates)).toEqual([0, 0, 255, 255]);
-            expect(draw(texture, bigGreenCoordinates)).toEqual([0, 255, 0, 255]);
-            expect(draw(texture, bigRedCoordinates)).toEqual([255, 0, 0, 255]);
+            expectToRender(texture, blueCoordinates, [0, 0, 255, 255]);
+            expectToRender(texture, bigGreenCoordinates, [0, 255, 0, 255]);
+            expectToRender(texture, bigRedCoordinates, [255, 0, 0, 255]);
         });
     });
 
@@ -693,8 +661,8 @@ void main() {\n\
                     var blueCoordinates = coordinates[blueIndex];
                     var greenCoordinates = coordinates[greenIndex];
 
-                    expect(draw(texture, blueCoordinates)).toEqual([0, 0, 255, 255]);
-                    expect(draw(texture, greenCoordinates)).toEqual([0, 255, 0, 255]);
+                    expectToRender(texture, blueCoordinates, [0, 0, 255, 255]);
+                    expectToRender(texture, greenCoordinates, [0, 255, 0, 255]);
                 });
             });
         });
@@ -723,8 +691,8 @@ void main() {\n\
             expect(atlas.numberOfImages).toEqual(5);
 
             var coordinates = atlas.textureCoordinates;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
 
             expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
             expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);
@@ -774,8 +742,8 @@ void main() {\n\
                 expect(atlas.numberOfImages).toEqual(6);
 
                 var coordinates = atlas.textureCoordinates;
-                var atlasWidth = 4.0;
-                var atlasHeight = 4.0;
+                var atlasWidth = 2.0;
+                var atlasHeight = 2.0;
 
                 expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
                 expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);
@@ -831,8 +799,8 @@ void main() {\n\
             var blueCoordinates = coordinates[blueIndex];
             var greenCoordinates = coordinates[greenIndex];
 
-            expect(draw(texture, blueCoordinates)).toEqual([0, 0, 255, 255]);
-            expect(draw(texture, greenCoordinates)).toEqual([0, 255, 0, 255]);
+            expectToRender(texture, blueCoordinates, [0, 0, 255, 255]);
+            expectToRender(texture, greenCoordinates, [0, 255, 0, 255]);
 
             // after loading 'Blue Image', further adds should not call the function
 

@@ -1,11 +1,10 @@
-/*global define*/
 define([
-        './defined',
-        './DeveloperError'
+        './Check',
+        './defined'
     ], function(
-        defined,
-        DeveloperError) {
-    "use strict";
+        Check,
+        defined) {
+    'use strict';
 
     /**
      * Finds an item in a sorted array.
@@ -23,23 +22,17 @@ define([
      *
      * @example
      * // Create a comparator function to search through an array of numbers.
-     * var comparator = function(a, b) {
+     * function comparator(a, b) {
      *     return a - b;
      * };
      * var numbers = [0, 2, 4, 6, 8];
      * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
      */
-    var binarySearch = function(array, itemToFind, comparator) {
+    function binarySearch(array, itemToFind, comparator) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required.');
-        }
-        if (!defined(itemToFind)) {
-            throw new DeveloperError('itemToFind is required.');
-        }
-        if (!defined(comparator)) {
-            throw new DeveloperError('comparator is required.');
-        }
+        Check.defined('array', array);
+        Check.defined('itemToFind', itemToFind);
+        Check.defined('comparator', comparator);
         //>>includeEnd('debug');
 
         var low = 0;
@@ -61,7 +54,7 @@ define([
             return i;
         }
         return ~(high + 1);
-    };
+    }
 
     /**
      * A function used to compare two items while performing a binary search.

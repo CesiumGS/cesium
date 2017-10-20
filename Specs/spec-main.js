@@ -30,7 +30,8 @@
             baseUrl: getQueryParameter('baseUrl') || '../Build/Cesium',
             paths: {
                 'Stubs': '../Stubs',
-                'Specs': '../../Specs'
+                'Specs': '../../Specs',
+                'Source' : '../../Source'
             },
             shim: {
                 'Cesium': {
@@ -45,7 +46,8 @@
             waitSeconds: 30,
             baseUrl: getQueryParameter('baseUrl') || '../Source',
             paths: {
-                'Specs': '../Specs'
+                'Specs': '../Specs',
+                'Source' : '.'
             }
         });
     }
@@ -202,12 +204,20 @@
          * More browser specific code - wrap the query string in an object and to allow for getting/setting parameters from the runner user interface.
          */
 
-         var queryString = Cesium.queryToObject(window.location.search.substring(1));
+        var queryString = Cesium.queryToObject(window.location.search.substring(1));
 
-         var queryStringForSpecFocus = Cesium.clone(queryString);
-         if (queryStringForSpecFocus.category === 'none') {
+        if (queryString.webglValidation !== undefined) {
+            window.webglValidation = true;
+        }
+
+        if (queryString.webglStub !== undefined) {
+            window.webglStub = true;
+        }
+
+        var queryStringForSpecFocus = Cesium.clone(queryString);
+        if (queryStringForSpecFocus.category === 'none') {
             delete queryStringForSpecFocus.category;
-         }
+        }
 
         var catchingExceptions = queryString['catch'];
         env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -32,6 +31,7 @@ define([
         './DataSourceClock',
         './Entity',
         './EntityCollection',
+        './EntityCluster',
         './LabelGraphics',
         './PathGraphics',
         './PolylineGraphics',
@@ -70,12 +70,13 @@ define([
         DataSourceClock,
         Entity,
         EntityCollection,
+        EntityCluster,
         LabelGraphics,
         PathGraphics,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         SampledPositionProperty) {
-    "use strict";
+    'use strict';
 
     var parser = new DOMParser();
     var autolinker = new Autolinker({
@@ -115,6 +116,11 @@ define([
         return url;
     }
 
+    var gpxNamespaces = [null, undefined, 'http://www.topografix.com/GPX/1/1'];
+    var namespaces = {
+        gpx : gpxNamespaces
+    };
+
     function getOrCreateEntity(node, entityCollection) {
         var id = queryStringAttribute(node, 'id');
         id = defined(id) ? id : createGuid();
@@ -128,11 +134,6 @@ define([
         var elevation = queryNumericValue(node, 'ele', namespaces.gpx);
         return Cartesian3.fromDegrees(longitude, latitude, elevation);
     }
-
-    var gpxNamespaces = [null, undefined, 'http://www.topografix.com/GPX/1/1'];
-    var namespaces = {
-        gpx : gpxNamespaces
-    };
 
     function queryNumericAttribute(node, attributeName) {
         if (!defined(node)) {
@@ -486,9 +487,9 @@ define([
             var id = queryStringValue(emailNode, 'id', namespaces.gpx);
             var domain = queryStringValue(emailNode, 'domain', namespaces.gpx);
             return id + '@' + domain;
-        } else {
-            return undefined;
         }
+
+        return undefined;
     }
     /**
      *  Receives a XML node and returns a linkType object, refer to
@@ -668,12 +669,10 @@ define([
         } else if (defined(old) && defined(current)) {
             if (old.name !== current.name || old.dec !== current.desc || old.src !== current.src || old.author !== current.author || old.copyright !== current.copyright || old.link !== current.link || old.time !== current.time || old.bounds !== current.bounds) {
                 return true;
-            } else {
-                return false;
             }
-        } else {
-            return true;
+            return false;
         }
+        return true;
     }
 
     /**
@@ -698,7 +697,7 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._clock = undefined;
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._version = undefined;
         this._creator = undefined;
@@ -706,6 +705,7 @@ define([
         this._isLoading = false;
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
+        this._entityCluster = new EntityCluster();
     };
 
     /**
@@ -826,6 +826,25 @@ define([
             get : function() {
                 return this._loading;
             }
+        },
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof CzmlDataSource.prototype
+         * @type {EntityCluster}
+         */
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
+            }
         }
     });
 
@@ -887,9 +906,9 @@ define([
                     }
                     return loadGpx(that, gpx, sourceUri, undefined);
                 });
-            } else {
-                return when(loadGpx(that, dataToLoad, sourceUri, undefined));
             }
+
+            return when(loadGpx(that, dataToLoad, sourceUri, undefined));
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);

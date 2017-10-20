@@ -1,9 +1,8 @@
-/*global define*/
 define([
         '../Core/defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * A priority queue of tiles to be replaced, if necessary, to make room for new tiles.  The queue
@@ -12,12 +11,12 @@ define([
      * @alias TileReplacementQueue
      * @private
      */
-    var TileReplacementQueue = function TileReplacementQueue() {
+    function TileReplacementQueue() {
         this.head = undefined;
         this.tail = undefined;
         this.count = 0;
         this._lastBeforeStartOfFrame = undefined;
-    };
+    }
 
     /**
      * Marks the start of the render frame.  Tiles before (closer to the head) this tile in the

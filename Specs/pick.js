@@ -1,21 +1,22 @@
-/*global define*/
 define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Core/defined',
         'Renderer/ClearCommand',
+        'Renderer/Pass',
         'Scene/CreditDisplay',
         'Scene/FrameState',
-        'Scene/Pass'
+        'Scene/JobScheduler'
     ], function(
         BoundingRectangle,
         Color,
         defined,
         ClearCommand,
+        Pass,
         CreditDisplay,
         FrameState,
-        Pass) {
-    "use strict";
+        JobScheduler) {
+    'use strict';
 
     function executeCommands(context, passState, commands) {
         var length = commands.length;
@@ -24,17 +25,20 @@ define([
         }
     }
 
-    function pick(context, frameState, primitives, x, y) {
+    function pick(frameState, primitives, x, y) {
+        frameState.commandList.length = 0;
+
+        var context = frameState.context;
+
         var rectangle = new BoundingRectangle(x, y, 1, 1);
         var pickFramebuffer = context.createPickFramebuffer();
         var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')))).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')), new JobScheduler())).passes;
         frameState.passes.pick = true;
 
-        var commands = [];
-        primitives.update(context, frameState, commands);
+        primitives.update(frameState);
 
         var clear = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -49,6 +53,7 @@ define([
             renderCommands[i] = [];
         }
 
+        var commands = frameState.commandList;
         var length = commands.length;
         for (i = 0; i < length; i++) {
             var command = commands[i];

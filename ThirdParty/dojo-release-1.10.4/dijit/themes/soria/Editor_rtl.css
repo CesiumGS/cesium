@@ -1,0 +1,7 @@
+/* Editor */
+.dijitRtl .soria .dijitEditorIcon {
+	background-image: url('../../icons/images/editorIconsEnabled_rtl.png'); /* editor icons sprite image - enabled state */
+}
+.dijitRtl .soria .dijitDisabled .dijitEditorIcon {
+	background-image: url('../../icons/images/editorIconsDisabled_rtl.png'); /* editor icons sprite image - disabled state */
+}

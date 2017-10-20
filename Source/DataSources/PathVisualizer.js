@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
@@ -43,7 +42,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
-    "use strict";
+    'use strict';
 
     var defaultResolution = 60.0;
     var defaultWidth = 1.0;
@@ -52,12 +51,12 @@ define([
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.polyline = undefined;
         this.index = undefined;
         this.updater = undefined;
-    };
+    }
 
     function subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var r = startingIndex;
@@ -228,25 +227,20 @@ define([
     }
 
     function reallySubSample(property, start, stop, updateTime, referenceFrame, maximumStep, index, result) {
-        var innerProperty = property;
-
-        while (innerProperty instanceof ReferenceProperty || innerProperty instanceof ScaledPositionProperty) {
-            if (innerProperty instanceof ReferenceProperty) {
-                innerProperty = innerProperty.resolvedProperty;
-            }
-            if (innerProperty instanceof ScaledPositionProperty) {
-                innerProperty = innerProperty._value;
-            }
+        //Unwrap any references until we have the actual property.
+        while (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
-        if (innerProperty instanceof SampledPositionProperty) {
-            var times = innerProperty._property._times;
+        if (property instanceof SampledPositionProperty) {
+            var times = property._property._times;
             index = subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof CompositePositionProperty) {
+        } else if (property instanceof CompositePositionProperty) {
             index = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof TimeIntervalCollectionPositionProperty) {
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
             index = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
-        } else if (innerProperty instanceof ConstantPositionProperty) {
+        } else if (property instanceof ConstantPositionProperty ||
+                   (property instanceof ScaledPositionProperty && Property.isConstant(property))) {
             index = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, index, result);
         } else {
             //Fallback to generic sampling.
@@ -266,13 +260,13 @@ define([
     }
 
     var toFixedScratch = new Matrix3();
-    var PolylineUpdater = function(scene, referenceFrame) {
+    function PolylineUpdater(scene, referenceFrame) {
         this._unusedIndexes = [];
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
         scene.primitives.add(this._polylineCollection);
-    };
+    }
 
     PolylineUpdater.prototype.update = function(time) {
         if (this._referenceFrame === ReferenceFrame.INERTIAL) {
@@ -366,9 +360,10 @@ define([
         var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
 
         polyline.show = true;
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
+        polyline.distanceDisplayCondition = Property.getValueOrUndefined(pathGraphics._distanceDisplayCondition, time, polyline.distanceDisplayCondition);
     };
 
     PolylineUpdater.prototype.removeObject = function(item) {
@@ -377,6 +372,7 @@ define([
             this._unusedIndexes.push(item.index);
             item.polyline = undefined;
             polyline.show = false;
+            polyline.id = undefined;
             item.index = undefined;
         }
     };
@@ -394,7 +390,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var PathVisualizer = function(scene, entityCollection) {
+    function PathVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -412,7 +408,7 @@ define([
         this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates all of the primitives created by this visualizer to match their
@@ -530,7 +526,9 @@ define([
             entity = removed[i];
             item = items.get(entity.id);
             if (defined(item)) {
-                item.updater.removeObject(item);
+                if (defined(item.updater)) {
+                    item.updater.removeObject(item);
+                }
                 items.remove(entity.id);
             }
         }

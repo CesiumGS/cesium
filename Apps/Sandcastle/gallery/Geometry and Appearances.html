@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Demonstrates the wide variety of available geometry and appearances.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 Cesium.Math.setRandomNumberSeed(1234);
 
@@ -176,7 +176,7 @@ for (i = 0; i < 5; ++i) {
             material : Cesium.Color.fromRandom({alpha : 0.5})
         }
     });
-    
+
     entities.add({
         position : Cesium.Cartesian3.fromDegrees(-98.0, 45.0, height),
         ellipsoid : {
@@ -327,7 +327,7 @@ for (i = 0; i < 5; ++i) {
             material : Cesium.Color.fromRandom({alpha : 0.5})
         }
     });
-    
+
     entities.add({
         rectangle : {
             coordinates : Cesium.Rectangle.fromDegrees(-67.0, 27.0, -63.0, 32.0),
@@ -354,7 +354,7 @@ for (i = 0; i < 5; ++i) {
             material : Cesium.Color.fromRandom({alpha : 1.0})
         }
     });
-    
+
     entities.add({
         position : Cesium.Cartesian3.fromDegrees(-100.0, 45.0, height),
         ellipsoid : {

@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * An hierarchy of linear rings which define a polygon and its holes.
@@ -14,7 +13,7 @@ define([
      * @param {Cartesian3[]} [positions] A linear ring defining the outer boundary of the polygon or hole.
      * @param {PolygonHierarchy[]} [holes] An array of polygon hierarchies defining holes in the polygon.
      */
-    var PolygonHierarchy = function(positions, holes) {
+    function PolygonHierarchy(positions, holes) {
         /**
          * A linear ring defining the outer boundary of the polygon or hole.
          * @type {Cartesian3[]}
@@ -26,7 +25,7 @@ define([
          * @type {PolygonHierarchy[]}
          */
         this.holes = defined(holes) ? holes : [];
-    };
+    }
 
     return PolygonHierarchy;
 });

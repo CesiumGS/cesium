@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/objectToQuery',
         'Core/queryToObject'
     ], function(
         objectToQuery,
         queryToObject) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can encode data', function() {
         var obj = {

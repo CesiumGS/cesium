@@ -1,9 +1,8 @@
-/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * Formats an error object into a String.  If available, uses name, message, and stack
@@ -14,7 +13,7 @@ define([
      * @param {Object} object The item to find in the array.
      * @returns {String} A string containing the formatted error.
      */
-    var formatError = function(object) {
+    function formatError(object) {
         var result;
 
         var name = object.name;
@@ -31,7 +30,7 @@ define([
         }
 
         return result;
-    };
+    }
 
     return formatError;
 });

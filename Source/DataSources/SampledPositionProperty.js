@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
@@ -21,7 +20,7 @@ define([
         PositionProperty,
         Property,
         SampledProperty) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.
@@ -32,7 +31,7 @@ define([
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      * @param {Number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
      */
-    var SampledPositionProperty = function(referenceFrame, numberOfDerivatives) {
+    function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
         numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
 
         var derivativeTypes;
@@ -51,7 +50,7 @@ define([
         this._property._definitionChanged.addEventListener(function() {
             this._definitionChanged.raiseEvent(this);
         }, this);
-    };
+    }
 
     defineProperties(SampledPositionProperty.prototype, {
         /**
@@ -274,8 +273,8 @@ define([
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
-    SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
-        this._property.addSamplesPackedArray(data, epoch);
+    SampledPositionProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
+        this._property.addSamplesPackedArray(packedSamples, epoch);
     };
 
     /**

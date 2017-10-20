@@ -1,11 +1,9 @@
-/*global define*/
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix2',
         '../Core/Matrix3',
@@ -17,19 +15,17 @@ define([
         Cartesian4,
         Color,
         defined,
-        defineProperties,
         DeveloperError,
         Matrix2,
         Matrix3,
         Matrix4,
         RuntimeError) {
-    "use strict";
-    /*global console*/
+    'use strict';
 
     /**
      * @private
      */
-    var createUniformArray = function(gl, activeUniform, uniformName, locations) {
+    function createUniformArray(gl, activeUniform, uniformName, locations) {
         switch (activeUniform.type) {
             case gl.FLOAT:
                 return new UniformArrayFloat(gl, activeUniform, uniformName, locations);
@@ -63,9 +59,7 @@ define([
             default:
                 throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + uniformName + '".');
         }
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
+    }
 
     function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
@@ -184,7 +178,9 @@ define([
                     changed = true;
                 }
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Invalid vec3 value.');
+                //>>includeEnd('debug');
             }
 
             j += 3;
@@ -244,7 +240,9 @@ define([
                     changed = true;
                 }
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Invalid vec4 value.');
+                //>>includeEnd('debug');
             }
 
             j += 4;

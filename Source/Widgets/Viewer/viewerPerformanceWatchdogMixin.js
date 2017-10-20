@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -11,8 +10,7 @@ define([
         defineProperties,
         DeveloperError,
         PerformanceWatchdog) {
-    "use strict";
-    /*global console*/
+    'use strict';
 
     /**
      * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.
@@ -21,6 +19,7 @@ define([
      * @exports viewerPerformanceWatchdogMixin
      *
      * @param {Viewer} viewer The viewer instance.
+     * @param {Object} [options] An object with properties.
      * @param {String} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
      *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
      *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
@@ -33,10 +32,12 @@ define([
      *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
      * });
      */
-    var viewerPerformanceWatchdogMixin = function(viewer, options) {
+    function viewerPerformanceWatchdogMixin(viewer, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -53,7 +54,7 @@ define([
                 }
             }
         });
-    };
+    }
 
     return viewerPerformanceWatchdogMixin;
 });

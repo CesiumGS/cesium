@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/Uri',
         './defined',
@@ -7,7 +6,7 @@ define([
         Uri,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Given a URI, returns the last segment of the URI, removing any path or query information.
@@ -20,7 +19,7 @@ define([
      * //fileName will be"simple.czml";
      * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
      */
-    var getFilenameFromUri = function(uri) {
+    function getFilenameFromUri(uri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');
@@ -35,7 +34,7 @@ define([
             path = path.substr(index + 1);
         }
         return path;
-    };
+    }
 
     return getFilenameFromUri;
 });

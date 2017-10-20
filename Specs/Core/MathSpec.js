@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Math'
     ], function(
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);
@@ -154,6 +152,20 @@ defineSuite([
     it('convertLongitudeRange throws for undefined', function() {
         expect(function() {
             CesiumMath.convertLongitudeRange();
+        }).toThrowDeveloperError();
+    });
+
+    it('clampToLatitudeRange (1)', function() {
+        expect(CesiumMath.clampToLatitudeRange(Math.PI)).toEqual(CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange (2)', function() {
+        expect(CesiumMath.clampToLatitudeRange(-Math.PI)).toEqual(-CesiumMath.PI_OVER_TWO);
+    });
+
+    it('clampToLatitudeRange throws for undefined', function() {
+        expect(function() {
+            CesiumMath.clampToLatitudeRange();
         }).toThrowDeveloperError();
     });
 
@@ -404,6 +416,22 @@ defineSuite([
     it('chordLength throws without radius', function() {
         expect(function() {
             CesiumMath.chordLength(0.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('logBase', function() {
+        expect(CesiumMath.logBase(64, 4)).toEqual(3);
+    });
+
+    it('logBase throws without number', function() {
+        expect(function() {
+            CesiumMath.logBase(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('logBase throws without base', function() {
+        expect(function() {
+            CesiumMath.logBase(64, undefined);
         }).toThrowDeveloperError();
     });
 });

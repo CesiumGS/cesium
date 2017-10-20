@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../ThirdParty/when',
         './Credit',
@@ -15,8 +14,9 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
+        './Request',
+        './RequestType',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileProviderError'
     ], function(
         when,
@@ -34,10 +34,11 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        Request,
+        RequestType,
         TerrainProvider,
-        throttleRequestByServer,
         TileProviderError) {
-    "use strict";
+    'use strict';
 
     function DataRectangle(rectangle, maxLevel) {
         this.rectangle = rectangle;
@@ -58,19 +59,22 @@ define([
      *                    specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
-     *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
+     *   url : 'https://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * viewer.terrainProvider = terrainProvider;
+     *
+     * @see TerrainProvider
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
+    function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = options.url;
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
@@ -79,6 +83,7 @@ define([
 
         this._errorEvent = new Event();
         this._ready = false;
+        this._readyPromise = when.defer();
 
         this._proxy = options.proxy;
 
@@ -88,7 +93,9 @@ define([
                 elementsPerHeight : 3,
                 stride : 4,
                 elementMultiplier : 256.0,
-                isBigEndian : true
+                isBigEndian : true,
+                lowestEncodedHeight : 0,
+                highestEncodedHeight : 256 * 256 * 256 - 1
             };
 
         var credit = options.credit;
@@ -133,6 +140,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(e) {
@@ -145,7 +153,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**
@@ -181,9 +189,11 @@ define([
          */
         tilingScheme : {
             get : function() {
+                //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
                     throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
                 }
+                //>>includeEnd('debug');
 
                 return this._tilingScheme;
             }
@@ -197,6 +207,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 
@@ -235,17 +257,17 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
+        //>>includeEnd('debug');
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
@@ -255,16 +277,9 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadImage);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = loadImage(url);
+        var promise = loadImage(url, undefined, request);
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;
@@ -286,9 +301,11 @@ define([
      * @returns {Number} The maximum geometric error.
      */
     VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
+        //>>includeEnd('debug');
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 

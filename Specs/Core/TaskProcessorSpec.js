@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TaskProcessor',
         'require',
@@ -7,8 +6,7 @@ defineSuite([
         TaskProcessor,
         require,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
+    'use strict';
 
     var taskProcessor;
 
@@ -23,7 +21,7 @@ defineSuite([
         }
 
         TaskProcessor._loaderConfig = {
-            baseUrl : absolutize(require.toUrl('Specs/../Source'))
+            baseUrl : absolutize(require.toUrl('Source'))
         };
     });
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<msGMLOutput xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <foo_layer>
+        <foo_feature>
+            <gml:boundedBy>
+                <gml:Box srsName="EPSG:3857">
+                    <gml:coordinates>12877615.339268,-3812818.722180 12923778.660278,-3723617.784077</gml:coordinates>
+                </gml:Box>
+            </gml:boundedBy>
+            <name>Hovercraft</name>
+        </foo_feature>
+    </foo_layer>
+</msGMLOutput>

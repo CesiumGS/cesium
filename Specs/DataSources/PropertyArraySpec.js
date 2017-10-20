@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/PropertyArray',
         'Core/JulianDate',
@@ -9,8 +8,7 @@ defineSuite([
         JulianDate,
         ConstantProperty,
         SampledProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = JulianDate.now();
 

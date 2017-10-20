@@ -1,19 +1,23 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Renderer/modernizeShader',
         '../Shaders/Builtin/CzmBuiltins',
         './AutomaticUniforms'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
+        modernizeShader,
         CzmBuiltins,
         AutomaticUniforms) {
-    "use strict";
+    'use strict';
 
     function removeComments(source) {
+        // remove inline comments
+        source = source.replace(/\/\/.*/g, '');
+        // remove multiline comment block
         return source.replace(/\/\*\*[\s\S]*?\*\//gm, function(match) {
             // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
             var numberOfLines = match.match(/\n/gm).length;
@@ -121,13 +125,15 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
-            for (j = 0; j < badNodes.length; ++j) {
-                message = message + badNodes[j].name + '\n';
+            for (var k = 0; k < badNodes.length; ++k) {
+                message = message + badNodes[k].name + '\n';
             }
             throw new DeveloperError(message);
         }
+        //>>includeEnd('debug');
     }
 
     function getBuiltinsAndAutomaticUniforms(shaderSource) {
@@ -147,7 +153,7 @@ define([
         return builtinsSource.replace(root.glslSource, '');
     }
 
-    function combineShader(shaderSource, isFragmentShader) {
+    function combineShader(shaderSource, isFragmentShader, context) {
         var i;
         var length;
 
@@ -166,9 +172,12 @@ define([
         // Extract existing shader version from sources
         var version;
         combinedSources = combinedSources.replace(/#version\s+(.*?)\n/gm, function(match, group1) {
+            //>>includeStart('debug', pragmas.debug);
             if (defined(version) && version !== group1) {
                 throw new DeveloperError('inconsistent versions found: ' + version + ' and ' + group1);
             }
+            //>>includeEnd('debug');
+
             // Extract #version to put at the top
             version = group1;
 
@@ -179,20 +188,24 @@ define([
             return '\n';
         });
 
+        // Extract shader extensions from sources
+        var extensions = [];
+        combinedSources = combinedSources.replace(/#extension.*\n/gm, function(match) {
+            // Extract extension to put at the top
+            extensions.push(match);
+
+            // Replace original #extension directive with a new line so the line numbers
+            // are not off by one.
+            return '\n';
+        });
+
+        // Remove precision qualifier
+        combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
+
         // Replace main() for picked if desired.
         var pickColorQualifier = shaderSource.pickColorQualifier;
         if (defined(pickColorQualifier)) {
-            combinedSources = combinedSources.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-            combinedSources += '\
-\n' + pickColorQualifier + ' vec4 czm_pickColor;\n\
-void main()\n\
-{\n\
-    czm_old_main();\n\
-    if (gl_FragColor.a == 0.0) {\n\
-        discard;\n\
-    }\n\
-    gl_FragColor = czm_pickColor;\n\
-}';
+            combinedSources = ShaderSource.createPickFragmentShaderSource(combinedSources, pickColorQualifier);
         }
 
         // combine into single string
@@ -201,7 +214,12 @@ void main()\n\
         // #version must be first
         // defaults to #version 100 if not specified
         if (defined(version)) {
-            result = '#version ' + version;
+            result = '#version ' + version + '\n';
+        }
+
+        var extensionsLength = extensions.length;
+        for (i = 0; i < extensionsLength; i++) {
+            result += extensions[i];
         }
 
         if (isFragmentShader) {
@@ -224,6 +242,12 @@ void main()\n\
             }
         }
 
+        // GLSLModernizer inserts its own layout qualifiers
+        // at this position in the source
+        if (context.webgl2) {
+            result += '#define OUTPUT_DECLARATION\n\n';
+        }
+
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -234,6 +258,11 @@ void main()\n\
 
         // append actual source
         result += combinedSources;
+
+        // modernize the source
+        if (context.webgl2) {
+            result = modernizeShader(result, isFragmentShader, true);
+        }
 
         return result;
     }
@@ -264,7 +293,7 @@ void main()\n\
      *
      * @private
      */
-    var ShaderSource = function(options) {
+    function ShaderSource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var pickColorQualifier = options.pickColorQualifier;
 
@@ -278,7 +307,7 @@ void main()\n\
         this.sources = defined(options.sources) ? options.sources.slice(0) : [];
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
-    };
+    }
 
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
@@ -289,22 +318,31 @@ void main()\n\
         });
     };
 
+    ShaderSource.replaceMain = function(source, renamedMain) {
+        renamedMain = 'void ' + renamedMain + '()';
+        return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
+    };
+
     /**
      * Create a single string containing the full, combined vertex shader with all dependencies and defines.
      *
+     * @param {Context} context The current rendering context
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedVertexShader = function() {
-        return combineShader(this, false);
+    ShaderSource.prototype.createCombinedVertexShader = function(context) {
+        return combineShader(this, false, context);
     };
 
     /**
      * Create a single string containing the full, combined fragment shader with all dependencies and defines.
      *
+     * @param {Context} context The current rendering context
+     *
      * @returns {String} The combined shader string.
      */
-    ShaderSource.prototype.createCombinedFragmentShader = function() {
-        return combineShader(this, true);
+    ShaderSource.prototype.createCombinedFragmentShader = function(context) {
+        return combineShader(this, true, context);
     };
 
     /**
@@ -327,6 +365,64 @@ void main()\n\
             }
         }
     }
+
+    ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
+        var pickMain = 'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
+    };
+
+    ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
+        var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
+        var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '       discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = czm_pickColor; \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    };
+
+    ShaderSource.findVarying = function(shaderSource, names) {
+        var sources = shaderSource.sources;
+
+        var namesLength = names.length;
+        for (var i = 0; i < namesLength; ++i) {
+            var name = names[i];
+
+            var sourcesLength = sources.length;
+            for (var j = 0; j < sourcesLength; ++j) {
+                if (sources[j].indexOf(name) !== -1) {
+                    return name;
+                }
+            }
+        }
+
+        return undefined;
+    };
+
+    var normalVaryingNames = ['v_normalEC', 'v_normal'];
+
+    ShaderSource.findNormalVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+    };
+
+    var positionVaryingNames = ['v_positionEC'];
+
+    ShaderSource.findPositionVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, positionVaryingNames);
+    };
 
     return ShaderSource;
 });

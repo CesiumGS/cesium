@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -9,7 +8,7 @@ define([
         defineProperties,
         DeveloperError,
         CesiumInspector) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.
@@ -27,10 +26,12 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerCesiumInspectorMixin);
      */
-    var viewerCesiumInspectorMixin = function(viewer) {
+    function viewerCesiumInspectorMixin(viewer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
+        //>>includeEnd('debug');
 
         var cesiumInspectorContainer = document.createElement('div');
         cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';
@@ -44,11 +45,7 @@ define([
                 }
             }
         });
-
-        viewer.scene.postRender.addEventListener(function() {
-            viewer.cesiumInspector.viewModel.update();
-        });
-    };
+    }
 
     return viewerCesiumInspectorMixin;
 });

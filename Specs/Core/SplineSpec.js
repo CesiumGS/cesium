@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Spline',
         'Core/Cartesian3',
@@ -7,8 +6,7 @@ defineSuite([
         Spline,
         Cartesian3,
         HermiteSpline) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('contructor throws', function() {
         expect(function() {

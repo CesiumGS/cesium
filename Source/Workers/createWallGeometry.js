@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/Ellipsoid',
@@ -7,7 +6,7 @@ define([
         defined,
         Ellipsoid,
         WallGeometry) {
-    "use strict";
+    'use strict';
 
     function createWallGeometry(wallGeometry, offset) {
         if (defined(offset)) {

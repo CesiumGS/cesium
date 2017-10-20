@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/Ellipsoid',
@@ -7,7 +6,7 @@ define([
         defined,
         Ellipsoid,
         PolylineGeometry) {
-    "use strict";
+    'use strict';
 
     function createPolylineGeometry(polylineGeometry, offset) {
         if (defined(offset)) {

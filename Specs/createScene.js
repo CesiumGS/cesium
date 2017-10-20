@@ -1,21 +1,20 @@
-/*global define*/
 define([
+        'Core/Cartesian2',
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
-        'Core/queryToObject',
         'Scene/Scene',
         'Specs/createCanvas',
-        'Specs/destroyCanvas'
+        'Specs/getWebGLStub'
     ], function(
+        Cartesian2,
         clone,
         defaultValue,
         defined,
-        queryToObject,
         Scene,
         createCanvas,
-        destroyCanvas) {
-    "use strict";
+        getWebGLStub) {
+    'use strict';
 
     function createScene(options) {
         options = defaultValue(options, {});
@@ -32,11 +31,14 @@ define([
         var contextOptions = options.contextOptions;
         contextOptions.webgl = defaultValue(contextOptions.webgl, {});
         contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+        contextOptions.webgl.stencil = defaultValue(contextOptions.webgl.stencil, true);
+        if (!!window.webglStub) {
+            contextOptions.getWebGLStub = getWebGLStub;
+        }
 
         var scene = new Scene(options);
 
-        var parameters = queryToObject(window.location.search.substring(1));
-        if (defined(parameters.webglValidation)) {
+        if (!!window.webglValidation) {
             var context = scene.context;
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;
@@ -46,15 +48,18 @@ define([
 
         // Add functions for test
         scene.destroyForSpecs = function() {
-            var canvas = scene.canvas;
-            scene.destroy();
-            destroyCanvas(canvas);
+            var canvas = this.canvas;
+            this.destroy();
+            document.body.removeChild(canvas);
         };
 
         scene.renderForSpecs = function(time) {
-            scene.initializeFrame();
-            scene.render(time);
-            return scene.context.readPixels();
+            this.initializeFrame();
+            this.render(time);
+        };
+
+        scene.pickForSpecs = function() {
+            this.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

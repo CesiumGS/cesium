@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -14,11 +13,15 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/Pass',
+        'Renderer/RenderState',
+        'Renderer/Sampler',
+        'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
+        'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
-        'Scene/Pass',
         'Scene/TextureAtlas',
         'Specs/createScene',
         'ThirdParty/when'
@@ -37,16 +40,19 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        Pass,
+        RenderState,
+        Sampler,
+        ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        VertexArray,
         BillboardCollection,
         BlendingState,
-        Pass,
         TextureAtlas,
         createScene,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var context;
@@ -104,7 +110,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });
@@ -142,25 +148,27 @@ defineSuite([
     it('renders primitive in closest frustum', function() {
         createBillboards();
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
 
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
     });
 
     it('renders primitive in middle frustum', function() {
         createBillboards();
         billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
+        expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it('renders primitive in last frustum', function() {
@@ -169,8 +177,8 @@ defineSuite([
         billboard0.color = color;
         billboard1.color = color;
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
-        expect(scene.renderForSpecs()).toEqual([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
+        expect(scene).toRender([255, 255, 255, 255]);
     });
 
     it('renders primitive in last frustum with debugShowFrustums', function() {
@@ -196,16 +204,15 @@ defineSuite([
         }
 
         expect(billboardCall).toBeDefined();
-        expect(billboardCall.args.length).toEqual(4);
-        expect(billboardCall.args[3]).toBeDefined();
-        expect(billboardCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+        expect(billboardCall.args.length).toEqual(2);
+        expect(billboardCall.object.shaderProgram.fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {
         bounded = defaultValue(bounded, true);
         closestFrustum = defaultValue(closestFrustum, false);
 
-        var Primitive = function() {
+        function Primitive() {
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
@@ -222,9 +229,8 @@ defineSuite([
                     return that._modelMatrix;
                 }
             };
-        };
-
-        Primitive.prototype.update = function(context, frameState, commandList) {
+        }
+        Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -241,26 +247,33 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-                var minimumCorner = Cartesian3.negate(maximumCorner, new Cartesian3());
+                var maximum = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+                var minimum = Cartesian3.negate(maximum, new Cartesian3());
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-                    minimumCorner: minimumCorner,
-                    maximumCorner: maximumCorner
+                    minimum : minimum,
+                    maximum : maximum
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-                this._va = context.createVertexArrayFromGeometry({
-                    geometry: geometry,
-                    attributeLocations: attributeLocations,
-                    bufferUsage: BufferUsage.STATIC_DRAW
+                this._va = VertexArray.fromGeometry({
+                    context : frameState.context,
+                    geometry : geometry,
+                    attributeLocations : attributeLocations,
+                    bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
-                this._rs = context.createRenderState({
+                this._sp = ShaderProgram.fromCache({
+                    context : frameState.context,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
+                this._rs = RenderState.fromCache({
                     blending : BlendingState.ALPHA_BLEND
                 });
             }
 
-            commandList.push(new DrawCommand({
+            frameState.commandList.push(new DrawCommand({
                 renderState : this._rs,
                 shaderProgram : this._sp,
                 vertexArray : this._va,
@@ -285,8 +298,8 @@ defineSuite([
         var primitive = createPrimitive(false);
         primitives.add(primitive);
 
-        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
-        expect(scene.renderForSpecs()).toEqual([255, 255, 0, 255]);
+        expect(scene).toRender([255, 255, 0, 255]);
+        expect(scene).toRender([255, 255, 0, 255]);
     });
 
     it('renders only in the closest frustum', function() {
@@ -300,17 +313,19 @@ defineSuite([
         primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
         primitives.add(primitive);
 
-        var pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
 
-        pixels = scene.renderForSpecs();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).not.toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).not.toEqual(0);
+            expect(rgba[1]).not.toEqual(0);
+            expect(rgba[2]).toEqual(0);
+            expect(rgba[3]).toEqual(255);
+        });
     });
 
     it('render without a central body or any primitives', function() {

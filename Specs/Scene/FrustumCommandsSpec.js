@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
-        'Scene/FrustumCommands',
-        'Scene/Pass'
+        'Renderer/Pass',
+        'Scene/FrustumCommands'
     ], function(
-        FrustumCommands,
-        Pass) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Pass,
+        FrustumCommands) {
+    'use strict';
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();

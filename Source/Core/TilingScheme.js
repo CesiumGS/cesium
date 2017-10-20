@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defineProperties',
         './DeveloperError'
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,
@@ -20,9 +19,11 @@ define([
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      */
-    var TilingScheme = function TilingScheme(options) {
+    function TilingScheme(options) {
+        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
-    };
+        //>>includeEnd('debug');
+    }
 
     defineProperties(TilingScheme.prototype, {
         /**
@@ -73,7 +74,7 @@ define([
     TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
-     * Transforms an rectangle specified in geodetic radians to the native coordinate system
+     * Transforms a rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      * @function
      *
@@ -86,7 +87,7 @@ define([
     TilingScheme.prototype.rectangleToNativeRectangle = DeveloperError.throwInstantiationError;
 
     /**
-     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
+     * Converts tile x, y coordinates and level to a rectangle expressed in the native coordinates
      * of the tiling scheme.
      * @function
      *

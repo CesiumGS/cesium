@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
@@ -9,12 +9,14 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './BlendOption',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
         './TextureAtlas',
         './VerticalOrigin'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         defaultValue,
         defined,
@@ -24,12 +26,13 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        BlendOption,
         HorizontalOrigin,
         Label,
         LabelStyle,
         TextureAtlas,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into
@@ -51,6 +54,27 @@ define([
         this.dimensions = dimensions;
     }
 
+    // Traditionally, leading is %20 of the font size.
+    var defaultLineSpacingPercent = 1.2;
+
+    var whitePixelCanvasId = 'ID_WHITE_PIXEL';
+    var whitePixelSize = new Cartesian2(4, 4);
+    var whitePixelBoundingRegion = new BoundingRectangle(1, 1, 1, 1);
+
+    function addWhitePixelCanvas(textureAtlas, labelCollection) {
+        var canvas = document.createElement('canvas');
+        canvas.width = whitePixelSize.x;
+        canvas.height = whitePixelSize.y;
+
+        var context2D = canvas.getContext('2d');
+        context2D.fillStyle = '#fff';
+        context2D.fillRect(0, 0, canvas.width, canvas.height);
+
+        textureAtlas.addImage(whitePixelCanvasId, canvas).then(function(index) {
+            labelCollection._whitePixelIndex = index;
+        });
+    }
+
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
     function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
@@ -59,13 +83,13 @@ define([
         writeTextToCanvasParameters.strokeColor = outlineColor;
         writeTextToCanvasParameters.strokeWidth = outlineWidth;
 
-        if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            writeTextToCanvasParameters.textBaseline = 'bottom';
+        if (verticalOrigin === VerticalOrigin.CENTER) {
+            writeTextToCanvasParameters.textBaseline = 'middle';
         } else if (verticalOrigin === VerticalOrigin.TOP) {
             writeTextToCanvasParameters.textBaseline = 'top';
         } else {
-            // VerticalOrigin.CENTER
-            writeTextToCanvasParameters.textBaseline = 'middle';
+            // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
+            writeTextToCanvasParameters.textBaseline = 'bottom';
         }
 
         writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
@@ -82,6 +106,10 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.image = undefined;
+            if (defined(billboard._removeCallbackFunc)) {
+                billboard._removeCallbackFunc();
+                billboard._removeCallbackFunc = undefined;
+            }
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
@@ -112,6 +140,42 @@ define([
 
         // presize glyphs to match the new text length
         glyphs.length = textLength;
+
+        var showBackground = label._showBackground && (text.split('\n').join('').length > 0);
+        var backgroundBillboard = label._backgroundBillboard;
+        var backgroundBillboardCollection = labelCollection._backgroundBillboardCollection;
+        if (!showBackground) {
+            if (defined(backgroundBillboard)) {
+                backgroundBillboardCollection.remove(backgroundBillboard);
+                label._backgroundBillboard = backgroundBillboard = undefined;
+            }
+        } else {
+            if (!defined(backgroundBillboard)) {
+                backgroundBillboard = backgroundBillboardCollection.add({
+                    collection : labelCollection,
+                    image : whitePixelCanvasId,
+                    imageSubRegion : whitePixelBoundingRegion
+                });
+                label._backgroundBillboard = backgroundBillboard;
+            }
+
+            backgroundBillboard.color = label._backgroundColor;
+            backgroundBillboard.show = label._show;
+            backgroundBillboard.position = label._position;
+            backgroundBillboard.eyeOffset = label._eyeOffset;
+            backgroundBillboard.pixelOffset = label._pixelOffset;
+            backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
+            backgroundBillboard.verticalOrigin = label._verticalOrigin;
+            backgroundBillboard.heightReference = label._heightReference;
+            backgroundBillboard.scale = label._scale;
+            backgroundBillboard.pickPrimitive = label;
+            backgroundBillboard.id = label._id;
+            backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
+            backgroundBillboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+            backgroundBillboard.scaleByDistance = label._scaleByDistance;
+            backgroundBillboard.distanceDisplayCondition = label._distanceDisplayCondition;
+            backgroundBillboard.disableDepthTestDistance = label._disableDepthTestDistance;
+        }
 
         var glyphTextureCache = labelCollection._glyphTextureCache;
 
@@ -158,12 +222,10 @@ define([
                     // no texture, and therefore no billboard, for this glyph.
                     // so, completely unbind glyph.
                     unbindGlyph(labelCollection, glyph);
-                } else {
+                } else if (defined(glyph.textureInfo)) {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (defined(glyph.textureInfo)) {
-                        glyph.textureInfo = undefined;
-                    }
+                    glyph.textureInfo = undefined;
                 }
             } else {
                 // create a glyph object
@@ -177,9 +239,10 @@ define([
             // if we have a texture, configure the existing billboard, or obtain one
             if (glyphTextureInfo.index !== -1) {
                 var billboard = glyph.billboard;
+                var spareBillboards = labelCollection._spareBillboards;
                 if (!defined(billboard)) {
-                    if (labelCollection._spareBillboards.length > 0) {
-                        billboard = labelCollection._spareBillboards.pop();
+                    if (spareBillboards.length > 0) {
+                        billboard = spareBillboards.pop();
                     } else {
                         billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
@@ -194,12 +257,16 @@ define([
                 billboard.pixelOffset = label._pixelOffset;
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
+                billboard.heightReference = label._heightReference;
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
                 billboard.translucencyByDistance = label._translucencyByDistance;
                 billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.scaleByDistance = label._scaleByDistance;
+                billboard.distanceDisplayCondition = label._distanceDisplayCondition;
+                billboard.disableDepthTestDistance = label._disableDepthTestDistance;
             }
         }
 
@@ -208,64 +275,147 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    // reusable Cartesian2 instance
+    function calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding) {
+        if (horizontalOrigin === HorizontalOrigin.CENTER) {
+            return -lineWidth / 2;
+        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+            return -(lineWidth + backgroundPadding.x);
+        }
+        return backgroundPadding.x;
+    }
+
+    // reusable Cartesian2 instances
     var glyphPixelOffset = new Cartesian2();
+    var scratchBackgroundPadding = new Cartesian2();
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
+        var text = label._text;
         var glyph;
         var dimensions;
-        var totalWidth = 0;
-        var maxHeight = 0;
-
+        var lastLineWidth = 0;
+        var maxLineWidth = 0;
+        var lineWidths = [];
+        var maxGlyphDescent = Number.NEGATIVE_INFINITY;
+        var maxGlyphY = 0;
+        var numberOfLines = 1;
         var glyphIndex = 0;
         var glyphLength = glyphs.length;
+
+        var backgroundBillboard = label._backgroundBillboard;
+        var backgroundPadding = scratchBackgroundPadding;
+        Cartesian2.clone(
+            (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
+            backgroundPadding);
+
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
-            totalWidth += dimensions.computedWidth;
-            maxHeight = Math.max(maxHeight, dimensions.height);
+            if (text.charAt(glyphIndex) === '\n') {
+                lineWidths.push(lastLineWidth);
+                ++numberOfLines;
+                lastLineWidth = 0;
+            } else {
+                glyph = glyphs[glyphIndex];
+                dimensions = glyph.dimensions;
+                maxGlyphY = Math.max(maxGlyphY, dimensions.height - dimensions.descent);
+                maxGlyphDescent = Math.max(maxGlyphDescent, dimensions.descent);
+
+                //Computing the line width must also account for the kerning that occurs between letters.
+                lastLineWidth += dimensions.width - dimensions.bounds.minx;
+                if (glyphIndex < glyphLength - 1) {
+                    lastLineWidth += glyphs[glyphIndex + 1].dimensions.bounds.minx;
+                }
+                maxLineWidth = Math.max(maxLineWidth, lastLineWidth);
+            }
         }
+        lineWidths.push(lastLineWidth);
+        var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
-        var widthOffset = 0;
-        if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            widthOffset -= totalWidth / 2 * scale;
-        } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            widthOffset -= totalWidth * scale;
-        }
+        var verticalOrigin = label._verticalOrigin;
+        var lineIndex = 0;
+        var lineWidth = lineWidths[lineIndex];
+        var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
+        var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
+        var otherLinesHeight = lineSpacing * (numberOfLines - 1);
 
-        glyphPixelOffset.x = widthOffset * resolutionScale;
+        glyphPixelOffset.x = widthOffset * scale * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var verticalOrigin = label._verticalOrigin;
+        var lineOffsetY = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
-            glyph = glyphs[glyphIndex];
-            dimensions = glyph.dimensions;
+            if (text.charAt(glyphIndex) === '\n') {
+                ++lineIndex;
+                lineOffsetY += lineSpacing;
+                lineWidth = lineWidths[lineIndex];
+                widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
+                glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+            } else {
+                glyph = glyphs[glyphIndex];
+                dimensions = glyph.dimensions;
 
-            if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                glyphPixelOffset.y = -dimensions.descent * scale;
-            } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+                if (verticalOrigin === VerticalOrigin.TOP) {
+                    glyphPixelOffset.y = dimensions.height - maxGlyphY - backgroundPadding.y;
+                } else if (verticalOrigin === VerticalOrigin.CENTER) {
+                    glyphPixelOffset.y = (otherLinesHeight + dimensions.height - maxGlyphY) / 2;
+                } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphPixelOffset.y = otherLinesHeight;
+                } else {
+                    // VerticalOrigin.BOTTOM
+                    glyphPixelOffset.y = otherLinesHeight + maxGlyphDescent + backgroundPadding.y;
+                }
+                glyphPixelOffset.y = (glyphPixelOffset.y - dimensions.descent - lineOffsetY) * scale * resolutionScale;
+
+                if (defined(glyph.billboard)) {
+                    glyph.billboard._setTranslate(glyphPixelOffset);
+                }
+
+                //Compute the next x offset taking into acocunt the kerning performed
+                //on both the current letter as well as the next letter to be drawn
+                //as well as any applied scale.
+                if (glyphIndex < glyphLength - 1) {
+                    var nextGlyph = glyphs[glyphIndex + 1];
+                    glyphPixelOffset.x += ((dimensions.width - dimensions.bounds.minx) + nextGlyph.dimensions.bounds.minx) * scale * resolutionScale;
+                }
+            }
+        }
+
+        if (defined(backgroundBillboard) && (text.split('\n').join('').length > 0)) {
+            if (horizontalOrigin === HorizontalOrigin.CENTER) {
+                widthOffset = -maxLineWidth / 2 - backgroundPadding.x;
+            } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
+                widthOffset = -(maxLineWidth + backgroundPadding.x * 2);
+            } else {
+                widthOffset = 0;
+            }
+            glyphPixelOffset.x = widthOffset * scale * resolutionScale;
+
+            if (verticalOrigin === VerticalOrigin.TOP) {
+                glyphPixelOffset.y = maxLineHeight - maxGlyphY - maxGlyphDescent;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = (maxLineHeight - maxGlyphY) / 2 - maxGlyphDescent;
+            } else if (verticalOrigin === VerticalOrigin.BASELINE) {
+                glyphPixelOffset.y = -backgroundPadding.y - maxGlyphDescent;
+            } else {
+                // VerticalOrigin.BOTTOM
+                glyphPixelOffset.y = 0;
             }
+            glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
 
-            glyphPixelOffset.y *= resolutionScale;
-
-            if (defined(glyph.billboard)) {
-                glyph.billboard._setTranslate(glyphPixelOffset);
-            }
-
-            glyphPixelOffset.x += dimensions.computedWidth * scale * resolutionScale;
+            backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
+            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
+            backgroundBillboard._setTranslate(glyphPixelOffset);
         }
     }
 
     function destroyLabel(labelCollection, label) {
         var glyphs = label._glyphs;
-        for ( var i = 0, len = glyphs.length; i < len; ++i) {
+        for (var i = 0, len = glyphs.length; i < len; ++i) {
             unbindGlyph(labelCollection, glyphs[i]);
+        }
+        if (defined(label._backgroundBillboard)) {
+            labelCollection._backgroundBillboardCollection.remove(label._backgroundBillboard);
+            label._backgroundBillboard = undefined;
         }
         label._labelCollection = undefined;
 
@@ -295,6 +445,9 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each label from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Scene} [options.scene] Must be passed in for labels that use the height reference property or will be depth tested against the globe.
+     * @param {BlendOption} [options.blendOption=BlendOption.OPAQUE_AND_TRANSLUCENT] The label blending option. The default
+     * is used for rendering both opaque and translucent labels. However, if either all of the labels are completely opaque or all are completely translucent,
+     * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve performance by up to 2x.
      *
      * @performance For best performance, prefer a few collections, each with many labels, to
      * many collections with only a few labels each.  Avoid having collections where some
@@ -320,12 +473,19 @@ define([
      *   text : 'Another label'
      * });
      */
-    var LabelCollection = function(options) {
+    function LabelCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
 
         this._textureAtlas = undefined;
+        this._backgroundTextureAtlas = undefined;
+        this._whitePixelIndex = undefined;
+
+        this._backgroundBillboardCollection = new BillboardCollection({
+            scene : this._scene
+        });
+        this._backgroundBillboardCollection.destroyTextureAtlas = false;
 
         this._billboardCollection = new BillboardCollection({
             scene : this._scene
@@ -381,7 +541,17 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-    };
+
+        /**
+         * The label blending option. The default is used for rendering both opaque and translucent labels.
+         * However, if either all of the labels are completely opaque or all are completely translucent,
+         * setting the technique to BillboardRenderTechnique.OPAQUE or BillboardRenderTechnique.TRANSLUCENT can improve
+         * performance by up to 2x.
+         * @type {BlendOption}
+         * @default BlendOption.OPAQUE_AND_TRANSLUCENT
+         */
+        this.blendOption = defaultValue(options.blendOption, BlendOption.OPAQUE_AND_TRANSLUCENT);
+    }
 
     defineProperties(LabelCollection.prototype, {
         /**
@@ -412,8 +582,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#remove
-     * @see LabelCollection#removeAll
      *
      * @example
      * // Example 1:  Add a label, specifying all the default values.
@@ -424,12 +592,20 @@ define([
      *   font : '30px sans-serif',
      *   fillColor : Cesium.Color.WHITE,
      *   outlineColor : Cesium.Color.BLACK,
+     *   outlineWidth : 1.0,
+     *   showBackground : false,
+     *   backgroundColor : new Cesium.Color(0.165, 0.165, 0.165, 0.8),
+     *   backgroundPadding : new Cesium.Cartesian2(7, 5),
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
      *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
-     *   verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-     *   scale : 1.0
+     *   verticalOrigin : Cesium.VerticalOrigin.BASELINE,
+     *   scale : 1.0,
+     *   translucencyByDistance : undefined,
+     *   pixelOffsetScaleByDistance : undefined,
+     *   heightReference : HeightReference.NONE,
+     *   distanceDisplayCondition : undefined
      * });
      *
      * @example
@@ -440,6 +616,9 @@ define([
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
+     *
+     * @see LabelCollection#remove
+     * @see LabelCollection#removeAll
      */
     LabelCollection.prototype.add = function(options) {
         var label = new Label(options, this);
@@ -464,13 +643,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#removeAll
-     * @see Label#show
      *
      * @example
      * var l = labels.add(...);
      * labels.remove(l);  // Returns true
+     *
+     * @see LabelCollection#add
+     * @see LabelCollection#removeAll
+     * @see Label#show
      */
     LabelCollection.prototype.remove = function(label) {
         if (defined(label) && label._labelCollection === this) {
@@ -492,18 +672,19 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#remove
      *
      * @example
      * labels.add(...);
      * labels.add(...);
      * labels.removeAll();
+     *
+     * @see LabelCollection#add
+     * @see LabelCollection#remove
      */
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
 
-        for ( var i = 0, len = labels.length; i < len; ++i) {
+        for (var i = 0, len = labels.length; i < len; ++i) {
             destroyLabel(this, labels[i]);
         }
 
@@ -539,7 +720,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#length
      *
      * @example
      * // Toggle the show property of every label in the collection
@@ -548,6 +728,8 @@ define([
      *   var l = billboards.get(i);
      *   l.show = !l.show;
      * }
+     *
+     * @see LabelCollection#length
      */
     LabelCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -562,17 +744,31 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, frameState, commandList) {
+    LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
+        var backgroundBillboardCollection = this._backgroundBillboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        backgroundBillboardCollection.modelMatrix = this.modelMatrix;
+        backgroundBillboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+        var context = frameState.context;
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
                 context : context
             });
             billboardCollection.textureAtlas = this._textureAtlas;
+        }
+
+        if (!defined(this._backgroundTextureAtlas)) {
+            this._backgroundTextureAtlas = new TextureAtlas({
+                context : context,
+                initialSize : whitePixelSize
+            });
+            backgroundBillboardCollection.textureAtlas = this._backgroundTextureAtlas;
+            addWhitePixelCanvas(this._backgroundTextureAtlas, this);
         }
 
         var uniformState = context.uniformState;
@@ -610,8 +806,13 @@ define([
             this._totalGlyphCount += glyphCountDifference;
         }
 
+        var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
+        billboardCollection.blendOption = blendOption;
+        backgroundBillboardCollection.blendOption = blendOption;
+
         this._labelsToUpdate.length = 0;
-        billboardCollection.update(context, frameState, commandList);
+        backgroundBillboardCollection.update(frameState);
+        billboardCollection.update(frameState);
     };
 
     /**
@@ -640,15 +841,18 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#isDestroyed
      *
      * @example
      * labels = labels && labels.destroy();
+     *
+     * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
         this.removeAll();
         this._billboardCollection = this._billboardCollection.destroy();
         this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
+        this._backgroundBillboardCollection = this._backgroundBillboardCollection.destroy();
+        this._backgroundTextureAtlas = this._backgroundTextureAtlas && this._backgroundTextureAtlas.destroy();
 
         return destroyObject(this);
     };

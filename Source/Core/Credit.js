@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './defined',
         './defineProperties',
@@ -7,7 +6,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var nextCreditId = 0;
     var creditToId = {};
@@ -26,7 +25,7 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-    var Credit = function(text, imageUrl, link) {
+    function Credit(text, imageUrl, link) {
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
         var hasText = (defined(text));
@@ -59,13 +58,14 @@ define([
         }
 
         this._id = id;
-    };
+    }
 
     defineProperties(Credit.prototype, {
         /**
          * The credit text
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         text : {
             get : function() {
@@ -77,6 +77,7 @@ define([
          * The source location for the image.
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         imageUrl : {
             get : function() {
@@ -88,6 +89,7 @@ define([
          * A URL location for the credit hyperlink
          * @memberof Credit.prototype
          * @type {String}
+         * @readonly
          */
         link : {
             get : function() {
@@ -98,6 +100,7 @@ define([
         /**
          * @memberof Credit.prototype
          * @type {Number}
+         * @readonly
          *
          * @private
          */
@@ -143,7 +146,7 @@ define([
     /**
      * Returns true if the credits are equal
      *
-     * @param {Credit} credits The credit to compare to.
+     * @param {Credit} credit The credit to compare to.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.prototype.equals = function(credit) {

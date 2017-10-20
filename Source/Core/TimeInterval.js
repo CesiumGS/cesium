@@ -1,19 +1,18 @@
-/*global define*/
 define([
+        './Check',
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './freezeObject',
         './JulianDate'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         freezeObject,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * An interval defined by a start and a stop time; optionally including those times as part of the interval.
@@ -35,8 +34,8 @@ define([
      * var timeInterval = new Cesium.TimeInterval({
      *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
      *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
-     *     isStartTimeIncluded : true,
-     *     iSStopTimeIncluded : false,
+     *     isStartIncluded : true,
+     *     isStopIncluded : false,
      *     data : Cesium.Cartesian3.fromDegrees(39.921037, -75.170082)
      * });
      *
@@ -68,7 +67,7 @@ define([
      * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
      * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
      */
-    var TimeInterval = function(options) {
+    function TimeInterval(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         /**
          * Gets or sets the start time of this interval.
@@ -101,7 +100,7 @@ define([
          * @default true
          */
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
-    };
+    }
 
     defineProperties(TimeInterval.prototype, {
         /**
@@ -139,12 +138,8 @@ define([
      */
     TimeInterval.fromIso8601 = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
-        if (!defined(options.iso8601)) {
-            throw new DeveloperError('options.iso8601 is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.string('options.iso8601', options.iso8601);
         //>>includeEnd('debug');
 
         var dates = options.iso8601.split('/');
@@ -180,9 +175,7 @@ define([
      */
     TimeInterval.toIso8601 = function(timeInterval, precision) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(timeInterval)) {
-            throw new DeveloperError('timeInterval is required.');
-        }
+        Check.typeOf.object('timeInterval', timeInterval);
         //>>includeEnd('debug');
 
         return JulianDate.toIso8601(timeInterval.start, precision) + '/' + JulianDate.toIso8601(timeInterval.stop, precision);
@@ -243,9 +236,7 @@ define([
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number.');
-        }
+        Check.typeOf.number('epsilon', epsilon);
         //>>includeEnd('debug');
 
         return left === right ||
@@ -269,12 +260,8 @@ define([
      */
     TimeInterval.intersect = function(left, right, result, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('left is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
         if (!defined(right)) {
@@ -317,12 +304,8 @@ define([
      */
     TimeInterval.contains = function(timeInterval, julianDate) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(timeInterval)) {
-            throw new DeveloperError('timeInterval is required.');
-        }
-        if (!defined(julianDate)) {
-            throw new DeveloperError('julianDate is required.');
-        }
+        Check.typeOf.object('timeInterval', timeInterval);
+        Check.typeOf.object('julianDate', julianDate);
         //>>includeEnd('debug');
 
         if (timeInterval.isEmpty) {

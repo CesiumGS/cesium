@@ -1,12 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EncodedCartesian3',
         'Core/Cartesian3'
     ], function(
         EncodedCartesian3,
         Cartesian3) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('construct with default values', function() {
         var encoded = new EncodedCartesian3();

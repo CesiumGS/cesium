@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/EllipsoidOutlineGeometry'
     ], function(
         defined,
         EllipsoidOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     return function(ellipsoidGeometry, offset) {
         if (defined(ellipsoidGeometry.buffer, offset)) {

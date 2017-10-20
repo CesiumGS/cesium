@@ -1,16 +1,16 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Matrix3',
         'Core/Cartesian3',
+        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Quaternion'
     ], function(
         Matrix3,
         Cartesian3,
+        HeadingPitchRoll,
         CesiumMath,
         Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();
@@ -42,9 +42,9 @@ defineSuite([
     it('can pack and unpack', function() {
         var array = [];
         var matrix = new Matrix3(
-                1.0, 2.0, 3.0,
-                4.0, 5.0, 6.0,
-                7.0, 8.0, 9.0);
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0);
         Matrix3.pack(matrix, array);
         expect(array.length).toEqual(Matrix3.packedLength);
         expect(Matrix3.unpack(array)).toEqual(matrix);
@@ -54,9 +54,9 @@ defineSuite([
         var packed = new Array(3);
         var offset = 3;
         var matrix = new Matrix3(
-                1.0, 2.0, 3.0,
-                4.0, 5.0, 6.0,
-                7.0, 8.0, 9.0);
+            1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0);
 
         Matrix3.pack(matrix, packed, offset);
         expect(packed.length).toEqual(offset + Matrix3.packedLength);
@@ -94,10 +94,10 @@ defineSuite([
         var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4, new Cartesian3());
-        var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
+        var quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
         var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
 
-        var returnedResult = Matrix3.fromQuaternion(quatnerion);
+        var returnedResult = Matrix3.fromQuaternion(quaternion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
@@ -108,19 +108,65 @@ defineSuite([
         var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4, new Cartesian3());
-        var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
+        var quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
         var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix3();
-        var returnedResult = Matrix3.fromQuaternion(quatnerion, result);
+        var returnedResult = Matrix3.fromQuaternion(quaternion, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('fromHeadingPitchRoll works without a result parameter', function() {
+        var sPiOver4 = Math.sin(CesiumMath.PI_OVER_FOUR);
+        var cPiOver4 = Math.cos(CesiumMath.PI_OVER_FOUR);
+        var sPiOver2 = Math.sin(CesiumMath.PI_OVER_TWO);
+        var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
+
+        var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4, new Cartesian3());
+        var quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
+        var headingPitchRoll = HeadingPitchRoll.fromQuaternion(quaternion);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromHeadingPitchRoll works with a result parameter', function() {
+        var sPiOver4 = Math.sin(CesiumMath.PI_OVER_FOUR);
+        var cPiOver4 = Math.cos(CesiumMath.PI_OVER_FOUR);
+        var sPiOver2 = Math.sin(CesiumMath.PI_OVER_TWO);
+        var cPiOver2 = Math.cos(CesiumMath.PI_OVER_TWO);
+
+        var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4, new Cartesian3());
+        var quaternion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
+        var headingPitchRoll = HeadingPitchRoll.fromQuaternion(quaternion);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('fromHeadingPitchRoll computed correctly', function() {
+        // Expected generated via STK Components
+        var expected = new Matrix3(
+            0.754406506735489, 0.418940943945763, 0.505330889696038,
+            0.133022221559489, 0.656295369162553, -0.742685314912828,
+            -0.642787609686539, 0.627506871597133, 0.439385041770705);
+
+        var headingPitchRoll = new HeadingPitchRoll(-CesiumMath.toRadians(10), -CesiumMath.toRadians(40), CesiumMath.toRadians(55));
+        var result = new Matrix3();
+        var returnedResult = Matrix3.fromHeadingPitchRoll(headingPitchRoll, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+
     it('fromScale works without a result parameter', function() {
         var expected = new Matrix3(
-                7.0, 0.0, 0.0,
-                0.0, 8.0, 0.0,
-                0.0, 0.0, 9.0);
+            7.0, 0.0, 0.0,
+            0.0, 8.0, 0.0,
+            0.0, 0.0, 9.0);
         var returnedResult = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0));
         expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
@@ -128,9 +174,9 @@ defineSuite([
 
     it('fromScale works with a result parameter', function() {
         var expected = new Matrix3(
-                7.0, 0.0, 0.0,
-                0.0, 8.0, 0.0,
-                0.0, 0.0, 9.0);
+            7.0, 0.0, 0.0,
+            0.0, 8.0, 0.0,
+            0.0, 0.0, 9.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0), result);
         expect(returnedResult).toBe(result);
@@ -140,9 +186,9 @@ defineSuite([
 
     it('fromUniformScale works without a result parameter', function() {
         var expected = new Matrix3(
-                2.0, 0.0, 0.0,
-                0.0, 2.0, 0.0,
-                0.0, 0.0, 2.0);
+            2.0, 0.0, 0.0,
+            0.0, 2.0, 0.0,
+            0.0, 0.0, 2.0);
         var returnedResult = Matrix3.fromUniformScale(2.0);
         expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqual(expected);
@@ -150,9 +196,9 @@ defineSuite([
 
     it('fromUniformScale works with a result parameter', function() {
         var expected = new Matrix3(
-                2.0, 0.0, 0.0,
-                0.0, 2.0, 0.0,
-                0.0, 0.0, 2.0);
+            2.0, 0.0, 0.0,
+            0.0, 2.0, 0.0,
+            0.0, 0.0, 2.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromUniformScale(2.0, result);
         expect(returnedResult).toBe(result);
@@ -161,9 +207,9 @@ defineSuite([
 
     it('fromCrossProduct works without a result parameter', function() {
         var expected = new Matrix3(
-                0.0, -3.0, -2.0,
-                3.0,  0.0, -1.0,
-                2.0,  1.0,  0.0);
+            0.0, -3.0, -2.0,
+            3.0, 0.0, -1.0,
+            2.0, 1.0, 0.0);
         var left = new Cartesian3(1.0, -2.0, 3.0);
         var returnedResult = Matrix3.fromCrossProduct(left);
         expect(returnedResult).not.toBe(expected);
@@ -184,9 +230,9 @@ defineSuite([
 
     it('fromCrossProduct works with a result parameter', function() {
         var expected = new Matrix3(
-                0.0, -3.0, -2.0,
-                3.0,  0.0, -1.0,
-                2.0,  1.0,  0.0);
+            0.0, -3.0, -2.0,
+            3.0, 0.0, -1.0,
+            2.0, 1.0, 0.0);
         var left = new Cartesian3(1.0, -2.0, 3.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromCrossProduct(left, result);
@@ -263,9 +309,9 @@ defineSuite([
 
     it('fromRotationX works with a result parameter', function() {
         var expected = new Matrix3(
-                1.0, 0.0,  0.0,
-                0.0, 0.0, -1.0,
-                0.0, 1.0,  0.0);
+            1.0, 0.0, 0.0,
+            0.0, 0.0, -1.0,
+            0.0, 1.0, 0.0);
         var result = new Matrix3();
         var matrix = Matrix3.fromRotationX(CesiumMath.toRadians(90.0), result);
         expect(matrix).toBe(result);
@@ -285,9 +331,9 @@ defineSuite([
 
     it('fromRotationY works with a result parameter', function() {
         var expected = new Matrix3(
-                 0.0, 0.0, 1.0,
-                 0.0, 1.0, 0.0,
-                -1.0, 0.0, 0.0);
+            0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0,
+            -1.0, 0.0, 0.0);
         var result = new Matrix3();
         var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0), result);
         expect(matrix).toBe(result);
@@ -307,9 +353,9 @@ defineSuite([
 
     it('fromRotationZ works with a result parameter', function() {
         var expected = new Matrix3(
-                0.0, -1.0, 0.0,
-                1.0,  0.0, 0.0,
-                0.0,  0.0, 1.0);
+            0.0, -1.0, 0.0,
+            1.0, 0.0, 0.0,
+            0.0, 0.0, 1.0);
         var result = new Matrix3();
         var matrix = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0), result);
         expect(matrix).toBe(result);
@@ -356,8 +402,8 @@ defineSuite([
 
     it('getElementIndex works', function() {
         var i = 0;
-        for ( var col = 0; col < 3; col++) {
-            for ( var row = 0; row < 3; row++) {
+        for (var col = 0; col < 3; col++) {
+            for (var row = 0; row < 3; row++) {
                 var index = Matrix3.getElementIndex(col, row);
                 expect(index).toEqual(i);
                 i++;
@@ -634,13 +680,15 @@ defineSuite([
     });
 
     it('computes eigenvalues and eigenvectors', function() {
-        var a = new Matrix3(4.0, -1.0, 1.0,
-                            -1.0, 3.0, -2.0,
-                            1.0, -2.0, 3.0);
+        var a = new Matrix3(
+          4.0, -1.0, 1.0,
+          -1.0, 3.0, -2.0,
+          1.0, -2.0, 3.0);
 
-        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
-                                           0.0, 6.0, 0.0,
-                                           0.0, 0.0, 1.0);
+        var expectedDiagonal = new Matrix3(
+          3.0, 0.0, 0.0,
+          0.0, 6.0, 0.0,
+          0.0, 0.0, 1.0);
 
         var decomposition = Matrix3.computeEigenDecomposition(a);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
@@ -659,16 +707,18 @@ defineSuite([
     });
 
     it('computes eigenvalues and eigenvectors with result parameters', function() {
-        var a = new Matrix3(4.0, -1.0, 1.0,
-                            -1.0, 3.0, -2.0,
-                            1.0, -2.0, 3.0);
+        var a = new Matrix3(
+          4.0, -1.0, 1.0,
+          -1.0, 3.0, -2.0,
+          1.0, -2.0, 3.0);
 
-        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
-                                           0.0, 6.0, 0.0,
-                                           0.0, 0.0, 1.0);
+        var expectedDiagonal = new Matrix3(
+          3.0, 0.0, 0.0,
+          0.0, 6.0, 0.0,
+          0.0, 0.0, 1.0);
         var result = {
-            unitary : new Matrix3(),
-            diagonal : new Matrix3()
+            unitary: new Matrix3(),
+            diagonal: new Matrix3()
         };
 
         var decomposition = Matrix3.computeEigenDecomposition(a, result);
@@ -1032,6 +1082,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromHeadingPitchRoll throws without quaternion parameter', function() {
+        expect(function() {
+            Matrix3.fromHeadingPitchRoll(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromScale throws without scale parameter', function() {
         expect(function() {
             Matrix3.fromScale(undefined);
@@ -1126,5 +1182,18 @@ defineSuite([
         expect(function() {
             Matrix3.inverse(new Matrix3());
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix3 objects can be used as array like objects', function() {
+        var matrix = new Matrix3(
+            1, 4, 7,
+            2, 5, 8,
+            3, 6, 9);
+        expect(matrix.length).toEqual(9);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for (var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

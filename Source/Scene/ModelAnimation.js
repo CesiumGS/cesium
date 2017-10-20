@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
@@ -13,7 +12,7 @@ define([
         JulianDate,
         ModelAnimationLoop,
         ModelAnimationState) {
-    "use strict";
+    'use strict';
 
     /**
      * An active glTF animation.  A glTF asset can contain animations.  An active animation
@@ -30,8 +29,8 @@ define([
      *
      * @see ModelAnimationCollection#add
      */
-    var ModelAnimation = function(options, model, runtimeAnimation) {
-        this._name = options.name;
+    function ModelAnimation(options, model, runtimeAnimation) {
+        this._name = runtimeAnimation.name;
         this._startTime = JulianDate.clone(options.startTime);
         this._delay = defaultValue(options.delay, 0.0); // in seconds
         this._stopTime = options.stopTime;
@@ -122,7 +121,7 @@ define([
         this._raiseStopEvent = function() {
             that.stop.raiseEvent(model, that);
         };
-    };
+    }
 
     defineProperties(ModelAnimation.prototype, {
         /**

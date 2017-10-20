@@ -1,11 +1,10 @@
-/*global define*/
 define([
         '../Core/BoxGeometry',
         '../Core/defined'
     ], function(
         BoxGeometry,
         defined) {
-    "use strict";
+    'use strict';
 
     return function(boxGeometry, offset) {
         if (defined(offset)) {

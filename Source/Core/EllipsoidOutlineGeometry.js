@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './BoundingSphere',
         './Cartesian3',
@@ -27,7 +26,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
     var cos = Math.cos;
@@ -43,13 +42,11 @@ define([
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
-     * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature .
+     * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
      *
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Outline.html|Cesium Sandcastle Ellipsoid Outline Demo}
      *
      * @example
      * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
@@ -59,13 +56,13 @@ define([
      * });
      * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
-    var EllipsoidOutlineGeometry = function(options) {
+    function EllipsoidOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var stackPartitions = defaultValue(options.stackPartitions, 10);
-        var slicePartitions = defaultValue(options.slicePartitions, 8);
-        var subdivisions = defaultValue(options.subdivisions, 128);
+        var stackPartitions = Math.round(defaultValue(options.stackPartitions, 10));
+        var slicePartitions = Math.round(defaultValue(options.slicePartitions, 8));
+        var subdivisions = Math.round(defaultValue(options.subdivisions, 128));
 
         //>>includeStart('debug', pragmas.debug);
         if (stackPartitions < 1) {
@@ -84,7 +81,7 @@ define([
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
         this._workerName = 'createEllipsoidOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -94,11 +91,12 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {EllipsoidOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     EllipsoidOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -118,6 +116,8 @@ define([
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
         array[startingIndex]   = value._subdivisions;
+
+        return array;
     };
 
     var scratchRadii = new Cartesian3();
@@ -134,6 +134,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {EllipsoidOutlineGeometry} [result] The object into which to store the result.
+     * @returns {EllipsoidOutlineGeometry} The modified result parameter or a new EllipsoidOutlineGeometry instance if one was not provided.
      */
     EllipsoidOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -170,10 +171,15 @@ define([
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var stackPartitions = ellipsoidGeometry._stackPartitions;
         var slicePartitions = ellipsoidGeometry._slicePartitions;

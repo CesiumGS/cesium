@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
         'Core/Cartesian2',
@@ -9,8 +8,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var selectionIndicatorElement = document.createElement('div');

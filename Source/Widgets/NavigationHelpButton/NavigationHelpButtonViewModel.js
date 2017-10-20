@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/defineProperties',
         '../../ThirdParty/knockout',
@@ -7,14 +6,14 @@ define([
         defineProperties,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link NavigationHelpButton}.
      * @alias NavigationHelpButtonViewModel
      * @constructor
      */
-    var NavigationHelpButtonViewModel = function() {
+    function NavigationHelpButtonViewModel() {
         /**
          * Gets or sets whether the instructions are currently shown.  This property is observable.
          * @type {Boolean}
@@ -43,7 +42,7 @@ define([
         this.tooltip = 'Navigation Instructions';
 
         knockout.track(this, ['tooltip', 'showInstructions', '_touch']);
-    };
+    }
 
     defineProperties(NavigationHelpButtonViewModel.prototype, {
         /**

@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defined',
         './DeveloperError'
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A convenience object that simplifies the common pattern of attaching event listeners
@@ -15,7 +14,6 @@ define([
      * @alias EventHelper
      * @constructor
      *
-     * @see Event
      *
      * @example
      * var helper = new Cesium.EventHelper();
@@ -25,10 +23,12 @@ define([
      *
      * // later...
      * helper.removeAll();
+     *
+     * @see Event
      */
-    var EventHelper = function() {
+    function EventHelper() {
         this._removalFunctions = [];
-    };
+    }
 
     /**
      * Adds a listener to an event, and records the registration to be cleaned up later.

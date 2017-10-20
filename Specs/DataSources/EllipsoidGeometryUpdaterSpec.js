@@ -1,9 +1,10 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/EllipsoidGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
         'Core/Quaternion',
         'Core/ShowGeometryInstanceAttribute',
@@ -19,6 +20,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -27,6 +29,8 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
         Quaternion,
         ShowGeometryInstanceAttribute,
@@ -42,11 +46,11 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = JulianDate.now();
     var scene;
@@ -83,6 +87,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -132,6 +138,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
     });
 
@@ -206,6 +214,7 @@ defineSuite([
         ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
         ellipsoid.slicePartitions = new ConstantProperty(options.slicePartitions);
         ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
+        ellipsoid.distanceDisplayCondition = options.distanceDisplayCondition;
         entity.ellipsoid = ellipsoid;
 
         var updater = new EllipsoidGeometryUpdater(entity, scene);
@@ -228,6 +237,9 @@ defineSuite([
                 expect(attributes.color).toBeUndefined();
             }
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
 
         if (options.outline) {
@@ -242,6 +254,9 @@ defineSuite([
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
             expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
         }
     }
 
@@ -274,6 +289,23 @@ defineSuite([
             stackPartitions : 32,
             slicePartitions : 64,
             subdivisions : 15
+        });
+    });
+
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
         });
     });
 
@@ -595,4 +627,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
         return scene;
     });
-});
+}, 'WebGL');

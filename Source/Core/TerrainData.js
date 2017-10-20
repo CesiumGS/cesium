@@ -1,11 +1,10 @@
-/*global define*/
 define([
         './defineProperties',
         './DeveloperError'
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile.  This type describes an
@@ -17,11 +16,19 @@ define([
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
-    var TerrainData = function TerrainData() {
+    function TerrainData() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainData.prototype, {
+        /**
+         * An array of credits for this tile.
+         * @memberof TerrainData.prototype
+         * @type {Credit[]}
+         */
+        credits : {
+            get : DeveloperError.throwInstantiationError
+        },
         /**
          * The water mask included in this terrain data, if any.  A water mask is a rectangular
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
@@ -65,6 +72,8 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      * @function
+     *
+     * @private
      *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.

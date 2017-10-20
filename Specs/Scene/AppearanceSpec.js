@@ -1,14 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/Appearance',
+        'Core/WebGLConstants',
         'Scene/BlendingState',
         'Scene/Material'
     ], function(
         Appearance,
+        WebGLConstants,
         BlendingState,
         Material) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,WebGLRenderingContext*/
+    'use strict';
 
     it('constructor', function() {
         var material = Material.fromType('Color');
@@ -87,7 +87,7 @@ defineSuite([
         expect(renderState.blending).toEqual(BlendingState.ALPHA_BLEND);
         expect(renderState.cull).toBeDefined();
         expect(renderState.cull.enabled).toEqual(true);
-        expect(renderState.cull.face).toEqual(WebGLRenderingContext.BACK);
+        expect(renderState.cull.face).toEqual(WebGLConstants.BACK);
     });
 
     it('isTranslucent', function() {
@@ -122,5 +122,4 @@ defineSuite([
         expect(rs.depthMask).toEqual(false);
         expect(rs.blending).toBe(BlendingState.ALPHA_BLEND);
     });
-
 });

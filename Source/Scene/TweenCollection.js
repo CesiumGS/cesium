@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/clone',
         '../Core/defaultValue',
@@ -19,7 +18,7 @@ define([
         getTimestamp,
         TimeConstants,
         TweenJS) {
-    "use strict";
+    'use strict';
 
     /**
      * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create
@@ -30,7 +29,7 @@ define([
      *
      * @private
      */
-    var Tween = function(tweens, tweenjs, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
+    function Tween(tweens, tweenjs, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
         this._tweens = tweens;
         this._tweenjs = tweenjs;
 
@@ -56,7 +55,7 @@ define([
          * @private
          */
         this.needsStart = true;
-    };
+    }
 
     defineProperties(Tween.prototype, {
         /**
@@ -178,9 +177,9 @@ define([
      *
      * @private
      */
-    var TweenCollection = function() {
+    function TweenCollection() {
         this._tweens = [];
-    };
+    }
 
     defineProperties(TweenCollection.prototype, {
         /**
@@ -535,13 +534,11 @@ define([
             if (tween.needsStart) {
                 tween.needsStart = false;
                 tweenjs.start(time);
+            } else if (tweenjs.update(time)) {
+                i++;
             } else {
-                if (tweenjs.update(time)) {
-                    i++;
-                } else {
-                    tweenjs.stop();
-                    tweens.splice(i, 1);
-                }
+                tweenjs.stop();
+                tweens.splice(i, 1);
             }
         }
     };

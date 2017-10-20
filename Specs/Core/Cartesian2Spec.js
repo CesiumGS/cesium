@@ -1,14 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/Cartesian2',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian2,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();
@@ -302,6 +302,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian2.normalize(Cartesian2.ZERO, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(4.0, 5.0);
@@ -317,6 +323,25 @@ defineSuite([
         var right = new Cartesian2(4.0, 5.0);
         var expectedResult = new Cartesian2(8.0, 15.0);
         var returnedResult = Cartesian2.multiplyComponents(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var result = new Cartesian2();
+        var expectedResult = new Cartesian2(0.5, 0.6);
+        var returnedResult = Cartesian2.divideComponents(left, right, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('divideComponents works with a result parameter that is an input parameter', function() {
+        var left = new Cartesian2(2.0, 3.0);
+        var right = new Cartesian2(4.0, 5.0);
+        var expectedResult = new Cartesian2(0.5, 0.6);
+        var returnedResult = Cartesian2.divideComponents(left, right, left);
         expect(left).toBe(returnedResult);
         expect(left).toEqual(expectedResult);
     });
@@ -607,6 +632,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throw with no left parameter', function() {
+        var right = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.divideComponents(undefined, right);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideComponents throw with no right parameter', function() {
+        var left = new Cartesian2(4.0, 5.0);
+        expect(function() {
+            Cartesian2.divideComponents(left, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no left parameter', function() {
         expect(function() {
             Cartesian2.add(undefined, new Cartesian2());
@@ -754,6 +793,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('divideComponents throws with no result', function() {
+        expect(function() {
+            Cartesian2.divideComponents(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
     it('add throws with no result', function() {
         expect(function() {
             Cartesian2.add(new Cartesian2(), new Cartesian2());
@@ -803,4 +848,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
+    createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
 });

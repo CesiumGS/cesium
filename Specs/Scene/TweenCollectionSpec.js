@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/TweenCollection',
         'Core/Color',
@@ -7,8 +6,7 @@ defineSuite([
         TweenCollection,
         Color,
         EasingFunction) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('add() adds a tween', function() {
         var startObject = {
@@ -75,7 +73,7 @@ defineSuite([
         var complete = jasmine.createSpy('complete');
 
         var tweens = new TweenCollection();
-        var tween = tweens.add({
+        tweens.add({
             startObject : {},
             stopObject : {},
             duration : 0.0,
@@ -173,13 +171,13 @@ defineSuite([
         var cancel = jasmine.createSpy('cancel');
 
         var tweens = new TweenCollection();
-        var tween = tweens.add({
+        tweens.add({
             startObject : {},
             stopObject : {},
             duration : 1.0,
             cancel : cancel
         });
-        var anotherTween = tweens.add({
+        tweens.add({
             startObject : {},
             stopObject : {},
             duration : 1.0,
@@ -259,7 +257,7 @@ defineSuite([
         var object = {
             property : 0.0
         };
-        var tween = tweens.addProperty({
+        tweens.addProperty({
             object : object,
             property : 'property',
             startValue : 0.0,
@@ -347,7 +345,7 @@ defineSuite([
                 darkColor : new Color()
             }
         };
-        var tween = tweens.addAlpha({
+        tweens.addAlpha({
             material : material,
             duration : 1.0
         });
@@ -385,7 +383,7 @@ defineSuite([
                 offset : 0.0
             }
         };
-        var tween = tweens.addOffsetIncrement({
+        tweens.addOffsetIncrement({
             material : material,
             duration : 1.0
         });

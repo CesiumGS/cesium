@@ -1,6 +1,6 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
@@ -28,10 +28,12 @@ define([
         './PolylineGraphics',
         './PolylineVolumeGraphics',
         './Property',
+        './PropertyBag',
         './RectangleGraphics',
         './WallGraphics'
     ], function(
         Cartesian3,
+        Check,
         createGuid,
         defaultValue,
         defined,
@@ -59,9 +61,10 @@ define([
         PolylineGraphics,
         PolylineVolumeGraphics,
         Property,
+        PropertyBag,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);
@@ -90,6 +93,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
      * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
      * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
      * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
      * @param {PositionProperty} [options.position] A Property specifying the entity position.
@@ -108,13 +112,14 @@ define([
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
+     * @param {PropertyBag} [options.properties] Arbitrary properties to associate with this entity.
      * @param {PolylineVolumeGraphics} [options.polylineVolume] A polylineVolume to associate with this entity.
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
+     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
-    var Entity = function(options) {
+    function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
@@ -130,7 +135,7 @@ define([
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
-                               'polyline', 'polylineVolume', 'position', 'rectangle', 'viewFrom', 'wall'];
+                               'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -164,6 +169,8 @@ define([
         this._polylineVolumeSubscription = undefined;
         this._position = undefined;
         this._positionSubscription = undefined;
+        this._properties = undefined;
+        this._propertiesSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
         this._viewFrom = undefined;
@@ -172,9 +179,15 @@ define([
         this._wallSubscription = undefined;
         this._children = [];
 
+        /**
+         * Gets or sets the entity collection that this entity belongs to.
+         * @type {EntityCollection}
+         */
+        this.entityCollection = undefined;
+
         this.parent = options.parent;
         this.merge(options);
-    };
+    }
 
     function updateShow(entity, children, isShowing) {
         var length = children.length;
@@ -270,7 +283,7 @@ define([
          */
         isShowing : {
             get : function() {
-                return this._show && (!defined(this._parent) || this._parent.isShowing);
+                return this._show && (!defined(this.entityCollection) || this.entityCollection.show) && (!defined(this._parent) || this._parent.isShowing);
             }
         },
         /**
@@ -296,7 +309,9 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(this);
+                if (defined(value)) {
+                    value._children.push(this);
+                }
 
                 var isShowing = this.isShowing;
 
@@ -310,7 +325,7 @@ define([
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
-         * @type {Event}
+         * @type {Array}
          */
         propertyNames : {
             get : function() {
@@ -408,6 +423,12 @@ define([
          */
         polylineVolume : createPropertyTypeDescriptor('polylineVolume', PolylineVolumeGraphics),
         /**
+         * Gets or sets the bag of arbitrary properties associated with this entity.
+         * @memberof Entity.prototype
+         * @type {PropertyBag}
+         */
+        properties : createPropertyTypeDescriptor('properties', PropertyBag),
+        /**
          * Gets or sets the position.
          * @memberof Entity.prototype
          * @type {PositionProperty}
@@ -438,7 +459,7 @@ define([
      * Given a time, returns true if this object should have data during that time.
      *
      * @param {JulianDate} time The time to check availability for.
-     * @returns true if the object should have data during the provided time, false otherwise.
+     * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
      */
     Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -490,17 +511,18 @@ define([
      */
     Entity.prototype.removeProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
+        var index = propertyNames.indexOf(propertyName);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-        if (propertyNames.indexOf(propertyName) === -1) {
+        if (index === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
         //>>includeEnd('debug');
 
-        this._propertyNames.push(propertyName);
+        this._propertyNames.splice(index, 1);
         delete this[propertyName];
     };
 
@@ -561,9 +583,16 @@ define([
     var orientationScratch = new Quaternion();
 
     /**
-     * @private
+     * Computes the model matrix for the entity's transform at specified time. Returns undefined if orientation or position
+     * are undefined.
+     *
+     * @param {JulianDate} time The time to retrieve model matrix for.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
      */
-    Entity.prototype._getModelMatrix = function(time, result) {
+    Entity.prototype.computeModelMatrix = function(time, result) {
+        Check.typeOf.object('time', time);
         var position = Property.getValueOrUndefined(this._position, time, positionScratch);
         if (!defined(position)) {
             return undefined;

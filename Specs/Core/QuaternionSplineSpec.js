@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/QuaternionSpline',
         'Core/Cartesian3',
@@ -9,8 +8,7 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var points;
     var times;

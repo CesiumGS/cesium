@@ -1,22 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EllipsoidTangentPlane',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/OrientedBoundingBox'
+        'Core/Ellipsoid'
     ], function(
         EllipsoidTangentPlane,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        Matrix3,
-        OrientedBoundingBox) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        Ellipsoid) {
+    'use strict';
 
     it('constructor defaults to WGS84', function() {
         var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0, 0);

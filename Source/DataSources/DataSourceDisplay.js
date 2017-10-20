@@ -1,12 +1,13 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
+        '../Scene/GroundPrimitive',
         './BillboardVisualizer',
         './BoundingSphereState',
         './BoxGeometryUpdater',
@@ -27,12 +28,14 @@ define([
         './WallGeometryUpdater'
     ], function(
         BoundingSphere,
+        Check,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         EventHelper,
+        GroundPrimitive,
         BillboardVisualizer,
         BoundingSphereState,
         BoxGeometryUpdater,
@@ -51,7 +54,7 @@ define([
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -65,18 +68,14 @@ define([
      *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
      */
-    var DataSourceDisplay = function(options) {
+    function DataSourceDisplay(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
-        if (!defined(options.scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(options.dataSourceCollection)) {
-            throw new DeveloperError('dataSourceCollection is required.');
-        }
+        Check.typeOf.object('options', options);
+        Check.typeOf.object('options.scene', options.scene);
+        Check.typeOf.object('options.dataSourceCollection', options.dataSourceCollection);
         //>>includeEnd('debug');
+
+        GroundPrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -96,7 +95,9 @@ define([
         var defaultDataSource = new CustomDataSource();
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
-    };
+
+        this._ready = false;
+    }
 
     /**
      * Gets or sets the default function which creates an array of visualizers used for visualization.
@@ -105,9 +106,9 @@ define([
      * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
-    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
-        return [new BillboardVisualizer(scene, entities),
+        return [new BillboardVisualizer(entityCluster, entities),
                 new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
                 new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
@@ -118,9 +119,9 @@ define([
                 new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
                 new GeometryVisualizer(WallGeometryUpdater, scene, entities),
-                new LabelVisualizer(scene, entities),
+                new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
-                new PointVisualizer(scene, entities),
+                new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities)];
     };
 
@@ -157,6 +158,18 @@ define([
             get : function() {
                 return this._defaultDataSource;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not all entities in the data source are ready
+         * @memberof DataSourceDisplay.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
         }
     });
 
@@ -186,10 +199,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceDisplay#isDestroyed
      *
      * @example
      * dataSourceDisplay = dataSourceDisplay.destroy();
+     *
+     * @see DataSourceDisplay#isDestroyed
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();
@@ -215,6 +229,11 @@ define([
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
+
+        if (!GroundPrimitive._initialized) {
+            this._ready = false;
+            return false;
+        }
 
         var result = true;
 
@@ -242,6 +261,8 @@ define([
         for (x = 0; x < vLength; x++) {
             result = visualizers[x].update(time) && result;
         }
+
+        this._ready = result;
 
         return result;
     };
@@ -275,6 +296,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!this._ready) {
+            return BoundingSphereState.PENDING;
+        }
+
         var i;
         var length;
         var dataSource = this._defaultDataSource;
@@ -300,7 +325,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
         var visualizersLength = visualizers.length;
@@ -328,17 +352,28 @@ define([
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizers = this._visualizersCallback(this._scene, dataSource);
-        dataSource._visualizers = visualizers;
+        var scene = this._scene;
+
+        var entityCluster = dataSource.clustering;
+        entityCluster._initialize(scene);
+
+        scene.primitives.add(entityCluster);
+
+        dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
+        var scene = this._scene;
+        var entityCluster = dataSource.clustering;
+        scene.primitives.remove(entityCluster);
+
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
             visualizers[i].destroy();
-            dataSource._visualizers = undefined;
         }
+
+        dataSource._visualizers = undefined;
     };
 
     /**
@@ -351,7 +386,7 @@ define([
      *
      * @example
      * function createVisualizers(scene, dataSource) {
-     *     return [new BillboardVisualizer(scene, dataSource.entities)];
+     *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
 

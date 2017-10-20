@@ -1,18 +1,14 @@
-/*global defineSuite*/
 defineSuite([
         'Core/PinBuilder',
         'Core/buildModuleUrl',
         'Core/Color',
-        'Core/defined',
         'ThirdParty/when'
     ], function(
         PinBuilder,
         buildModuleUrl,
         Color,
-        defined,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     function getPinColor(canvas) {
         var context2D = canvas.getContext("2d");

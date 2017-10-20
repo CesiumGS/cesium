@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'DataSources/DataSourceCollection',
         'Specs/MockDataSource',
@@ -7,8 +6,7 @@ defineSuite([
         DataSourceCollection,
         MockDataSource,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();

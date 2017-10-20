@@ -1,6 +1,0 @@
-{
-	"name": "Assets",
-	"description": "Cesium Assets",
-	"version": "0.6.0",
-	"dojoBuild": "Assets.profile.js"
-}

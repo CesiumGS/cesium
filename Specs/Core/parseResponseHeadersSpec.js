@@ -1,10 +1,8 @@
-/*global defineSuite*/
 defineSuite([
         'Core/parseResponseHeaders'
     ], function(
         parseResponseHeaders) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('returns an empty object literal when given falsy input', function() {
         expect(parseResponseHeaders()).toEqual({});

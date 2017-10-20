@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Credit',
         '../Core/defaultValue',
@@ -9,6 +8,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadImage',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
@@ -21,9 +21,10 @@ define([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides a single, top-level imagery tile.  The single image is assumed to use a
@@ -41,14 +42,14 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
-    var SingleTileImageryProvider = function(options) {
+    function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
 
@@ -80,6 +81,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var imageUrl = url;
         if (defined(proxy)) {
@@ -100,6 +102,7 @@ define([
             that._tileWidth = image.width;
             that._tileHeight = image.height;
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
         }
 
@@ -113,6 +116,7 @@ define([
                     0, 0, 0,
                     doRequest,
                     e);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function doRequest() {
@@ -120,8 +124,7 @@ define([
         }
 
         doRequest();
-    };
-
+    }
 
     defineProperties(SingleTileImageryProvider.prototype, {
         /**
@@ -304,6 +307,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
@@ -354,6 +369,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -361,7 +377,7 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    SingleTileImageryProvider.prototype.requestImage = function(x, y, level) {
+    SingleTileImageryProvider.prototype.requestImage = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
@@ -385,7 +401,7 @@ define([
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.
      */
-    SingleTileImageryProvider.prototype.pickFeatures = function() {
+    SingleTileImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
 

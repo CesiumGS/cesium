@@ -1,4 +1,3 @@
-/*global define*/
 define([
         'Core/BoundingSphere',
         'Core/JulianDate',
@@ -11,8 +10,7 @@ define([
         CesiumMath,
         BoundingSphereState,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = new JulianDate();
     function createDynamicGeometryBoundingSphereSpecs(Updater, entity, graphics, getScene) {
@@ -36,7 +34,7 @@ define([
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
-                expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);
+                expect(result).toEqualEpsilon(attributes.boundingSphere, CesiumMath.EPSILON6);
 
                 updater.destroy();
                 scene.primitives.removeAll();
@@ -63,7 +61,7 @@ define([
                 var primitive = scene.primitives.get(0);
                 expect(state).toBe(BoundingSphereState.DONE);
                 var attributes = primitive.getGeometryInstanceAttributes(entity);
-                expect(result).toEqualEpsilon(BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, new BoundingSphere()), CesiumMath.EPSILON6);
+                expect(result).toEqualEpsilon(attributes.boundingSphere, CesiumMath.EPSILON6);
 
                 updater.destroy();
                 scene.primitives.removeAll();

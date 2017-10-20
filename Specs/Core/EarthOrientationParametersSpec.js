@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/EarthOrientationParameters',
         'Core/defined',
@@ -9,8 +8,7 @@ defineSuite([
         defined,
         JulianDate,
         TimeStandard) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var officialLeapSeconds;
 

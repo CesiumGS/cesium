@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -7,15 +6,20 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipseGeometry',
         '../Core/EllipseOutlineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -29,30 +33,37 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         EllipseGeometry,
         EllipseOutlineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
+        oneTimeWarning,
         ShowGeometryInstanceAttribute,
+        GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
+    var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
     var scratchColor = new Color();
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.center = undefined;
@@ -64,7 +75,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.numberOfVerticalLines = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for ellipses.
@@ -75,7 +86,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var EllipseGeometryUpdater = function(entity, scene) {
+    function EllipseGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -99,9 +110,13 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
+        this._distanceDisplayConditionProperty = undefined;
+        this._onTerrain = false;
         this._options = new GeometryOptions(entity);
+
         this._onEntityPropertyChanged(entity, 'ellipse', entity.ellipse, undefined);
-    };
+    }
 
     defineProperties(EllipseGeometryUpdater, {
         /**
@@ -227,6 +242,31 @@ define([
             }
         },
         /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof EllipseGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this geometry will be displayed.
+         * @memberof EllipseGeometryUpdater.prototype
+         *
+         * @type {Property}
+         * @readonly
+         */
+        distanceDisplayConditionProperty : {
+            get : function() {
+                return this._distanceDisplayConditionProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -251,6 +291,18 @@ define([
         isClosed : {
             get : function() {
                 return this._isClosed;
+            }
+        },
+        /**
+         * Gets a value indicating if the geometry should be drawn on terrain.
+         * @memberof EllipseGeometryUpdater.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        onTerrain : {
+            get : function() {
+                return this._onTerrain;
             }
         },
         /**
@@ -316,6 +368,8 @@ define([
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -324,11 +378,13 @@ define([
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute,
                 color : color
             };
         } else {
             attributes = {
-                show : show
+                show : show,
+                distanceDisplayCondition : distanceDisplayConditionAttribute
             };
         }
 
@@ -361,13 +417,15 @@ define([
         var entity = this._entity;
         var isAvailable = entity.isAvailable(time);
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
+        var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
         return new GeometryInstance({
             id : entity,
             geometry : new EllipseOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && entity.isShowing && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                distanceDisplayCondition : DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition)
             }
         });
     };
@@ -447,6 +505,8 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(ellipse.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(ellipse.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(ellipse.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
@@ -455,9 +515,17 @@ define([
         var stRotation = ellipse.stRotation;
         var outlineWidth = ellipse.outlineWidth;
         var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) &&
+                        isColorMaterial && GroundPrimitive.isSupported(this._scene);
 
-        this._isClosed = defined(extrudedHeight);
+        if (outlineEnabled && onTerrain) {
+            oneTimeWarning(oneTimeWarning.geometryOutlines);
+            outlineEnabled = false;
+        }
+
         this._fillEnabled = fillEnabled;
+        this._onTerrain = onTerrain;
+        this._isClosed = defined(extrudedHeight) || onTerrain;
         this._outlineEnabled = outlineEnabled;
 
         if (!position.isConstant || //
@@ -469,7 +537,8 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(numberOfVerticalLines)) {
+            !Property.isConstant(numberOfVerticalLines) || //
+            (onTerrain && !Property.isConstant(material))) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -496,11 +565,12 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} groundPrimitives The ground primitives collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    EllipseGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    EllipseGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -511,20 +581,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        return new DynamicGeometryUpdater(primitives, this);
+        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
     };
 
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
-    };
-
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
@@ -532,13 +602,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
         var geometryUpdater = this._geometryUpdater;
+        var onTerrain = geometryUpdater._onTerrain;
+
+        var primitives = this._primitives;
+        var groundPrimitives = this._groundPrimitives;
+        if (onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._outlinePrimitive = undefined;
+        }
+        this._primitive = undefined;
+
+
         var entity = geometryUpdater._entity;
         var ellipse = entity.ellipse;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(ellipse.show, time, true)) {
@@ -563,28 +641,59 @@ define([
         options.stRotation = Property.getValueOrUndefined(ellipse.stRotation, time);
         options.numberOfVerticalLines = Property.getValueOrUndefined(ellipse.numberOfVerticalLines, time);
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
+        var distanceDisplayConditionProperty = this._geometryUpdater.distanceDisplayConditionProperty;
+        var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
+        var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
+
         if (Property.getValueOrDefault(ellipse.fill, time, true)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
-            options.vertexFormat = appearance.vertexFormat;
+            if (onTerrain) {
+                var currentColor = Color.WHITE;
+                if (defined(fillMaterialProperty.color)) {
+                    currentColor = fillMaterialProperty.color.getValue(time);
+                }
 
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new EllipseGeometry(options)
-                }),
-                appearance : appearance,
-                asynchronous : false
-            }));
+                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new EllipseGeometry(options),
+                        attributes: {
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor),
+                            distanceDisplayCondition : distanceDisplayConditionAttribute
+                        }
+                    }),
+                    asynchronous : false,
+                    shadows : shadows
+                }));
+            } else {
+                var appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+                options.vertexFormat = appearance.vertexFormat;
+
+                this._primitive = primitives.add(new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new EllipseGeometry(options)
+                    }),
+                    attributes : {
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
+                    },
+                    appearance : appearance,
+                    asynchronous : false,
+                    shadows : shadows
+                }));
+            }
         }
 
-        if (Property.getValueOrDefault(ellipse.outline, time, false)) {
+        if (!onTerrain && Property.getValueOrDefault(ellipse.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(ellipse.outlineColor, time, Color.BLACK, scratchColor);
@@ -596,7 +705,8 @@ define([
                     id : entity,
                     geometry : new EllipseOutlineGeometry(options),
                     attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor),
+                        distanceDisplayCondition : distanceDisplayConditionAttribute
                     }
                 }),
                 appearance : new PerInstanceColorAppearance({
@@ -606,7 +716,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };
@@ -621,7 +732,12 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (this._geometryUpdater._onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };

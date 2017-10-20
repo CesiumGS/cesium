@@ -1,9 +1,8 @@
-/*global define*/
 define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The state of a BoundingSphere computation being performed by a {@link Visualizer}.
