@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,6 +18,7 @@ define([
         './TextureMinificationFilter'
     ], function(
         Cartesian2,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -32,8 +34,6 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter) {
     'use strict';
-
-    var currentId = 0;
 
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -198,7 +198,7 @@ define([
             sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
         }
 
-        this._id = 'Texture_' + currentId++;
+        this._id = createGuid();
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -311,7 +311,13 @@ define([
     };
 
     defineProperties(Texture.prototype, {
-
+        /**
+         * A unique id for the texture
+         * @memberof Texture.prototype
+         * @type {String}
+         * @readonly
+         * @private
+         */
         id : {
             get : function() {
                 return this._id;

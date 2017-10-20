@@ -27,6 +27,7 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
@@ -64,6 +65,7 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
+        Texture,
         VertexArray,
         PolylineCommon,
         PolylineFS,
@@ -1014,7 +1016,7 @@ define([
     }
 
     function replacer(key, value) {
-        if(defined(value) && value.hasOwnProperty('id')) {
+        if (value instanceof Texture) {
             return value.id;
         }
 
