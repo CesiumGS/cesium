@@ -10,6 +10,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
@@ -87,6 +88,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         DistanceDisplayCondition,
@@ -160,7 +162,8 @@ define([
         return {};
     }
 
-    var boundingSphereCartesian3Scratch = new Cartesian3();
+    var scratchCartesian3Scale = new Cartesian3();
+    var scratchMaxmimCartesian3Scale = new Cartesian3();
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -321,7 +324,7 @@ define([
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -446,16 +449,22 @@ define([
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
         this._clampedModelMatrix = undefined;
 
+        var scale = options.scale;
+        if (typeof scale === 'number') {
+            deprecationWarning('options.scale', 'The numeric uniform options.scale property was deprecated in Cesium 1.36. It will be removed in 1.38. Use a Cartesian3 instead.');
+            options.scale = new Cartesian3(scale, scale, scale);
+        }
+
         /**
-         * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+         * A scale applied to this model before the {@link Model#modelMatrix}.
          * Values greater than <code>1.0</code> increase the size of the model; values
          * less than <code>1.0</code> decrease.
          *
-         * @type {Number}
+         * @type {Cartesian3}
          *
-         * @default 1.0
+         * @default new Cartesian3(1.0, 1.0, 1.0)
          */
-        this.scale = defaultValue(options.scale, 1.0);
+        this.scale = defaultValue(options.scale, new Cartesian3(1.0, 1.0, 1.0));
         this._scale = this.scale;
 
         /**
@@ -803,13 +812,13 @@ define([
                     modelMatrix = this._clampedModelMatrix;
                 }
 
-                var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
-                var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
-                Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
+                var modelScale = Matrix4.getScale(modelMatrix, scratchCartesian3Scale);
+                var scale = getMaximumScale(this.scale, this.maximumScale);
+                Cartesian3.multiplyComponents(modelScale, scale, modelScale);
 
                 var scaledBoundingSphere = this._scaledBoundingSphere;
-                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
-                scaledBoundingSphere.radius = Cartesian3.maximumComponent(nonUniformScale) * this._initialRadius;
+                scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, modelScale, scaledBoundingSphere.center);
+                scaledBoundingSphere.radius = Cartesian3.maximumComponent(modelScale) * this._initialRadius;
 
                 if (defined(this._rtcCenter)) {
                     Cartesian3.add(this._rtcCenter, scaledBoundingSphere.center, scaledBoundingSphere.center);
@@ -1105,7 +1114,7 @@ define([
      * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number|Cartesian3} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Number} [options.maximumScale] The maximum scale for the model.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
@@ -4214,8 +4223,19 @@ define([
     var scratchPosition = new Cartesian3();
     var scratchCartographic = new Cartographic();
 
+    function getMaximumScale (scale, maximumScale) {
+        if (defined(maximumScale)) {
+            var max = Cartesian3.maximumComponent(scale);
+            if (max > maximumScale) {
+                return Cartesian3.multiplyByScalar(scale, maximumScale / max, scratchMaxmimCartesian3Scale);
+            }
+        }
+
+        return scale;
+    }
+
     function getScale(model, frameState) {
-        var scale = model.scale;
+        var scale = Cartesian3.clone(model.scale, scratchCartesian3Scale);
 
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
@@ -4246,11 +4266,12 @@ define([
 
             // Maintain model's minimum pixel size
             if (diameterInPixels < model.minimumPixelSize) {
-                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
+                var scalar = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius) / Cartesian3.maximumComponent(scale);
+                scale = Cartesian3.multiplyByScalar(scale, scalar, scratchCartesian3Scale);
             }
         }
 
-        return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
+        return getMaximumScale (scale, model.maximumScale);
     }
 
     function releaseCachedGltf(model) {
@@ -4602,7 +4623,7 @@ define([
         var translucent = isTranslucent(this);
         var invisible = isInvisible(this);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
+        var show = this.show && displayConditionPassed && !this.scale.equals(Cartesian3.ZERO) && (!invisible || silhouette);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -4615,7 +4636,7 @@ define([
 
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                (this._scale !== this.scale) ||
+                (!this._scale.equals(this.scale)) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
                 (this._maximumScale !== this.maximumScale) ||
                 (this._heightReference !== this.heightReference) || this._heightChanged ||
@@ -4638,7 +4659,7 @@ define([
 
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
+                Matrix4.multiplyByScale(modelMatrix, scale, computedModelMatrix);
                 if (this._upAxis === Axis.Y) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this._upAxis === Axis.X) {

@@ -1,6 +1,7 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
@@ -16,6 +17,7 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Cartesian3,
         Color,
         defined,
         destroyObject,
@@ -30,7 +32,7 @@ define([
         Property) {
     'use strict';
 
-    var defaultScale = 1.0;
+    var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;

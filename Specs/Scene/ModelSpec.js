@@ -149,7 +149,7 @@ defineSuite([
             cesiumAirModel = model;
         }));
         modelPromises.push(loadModel(animBoxesUrl, {
-            scale : 2.0
+            scale : new Cartesian3(2.0, 2.0, 2.0)
         }).then(function(model) {
             animBoxesModel = model;
         }));
@@ -250,7 +250,7 @@ defineSuite([
         expect(texturedBoxModel.basePath).toEqual('./Data/Models/Box-Textured/');
         expect(texturedBoxModel.show).toEqual(false);
         expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
-        expect(texturedBoxModel.scale).toEqual(1.0);
+        expect(texturedBoxModel.scale).toEqual(new Cartesian3(1.0, 1.0, 1.0));
         expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
         expect(texturedBoxModel.maximumScale).toBeUndefined();
         expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
@@ -706,7 +706,7 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere when scale property is set', function() {
         var originalScale = texturedBoxModel.scale;
-        texturedBoxModel.scale = 10;
+        texturedBoxModel.scale = new Cartesian3(10.0, 10.0, 10.0);
 
         var boundingSphere = texturedBoxModel.boundingSphere;
         expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
@@ -718,7 +718,21 @@ defineSuite([
     it('boundingSphere returns the bounding sphere when maximumScale is reached', function() {
         var originalScale = texturedBoxModel.scale;
         var originalMaximumScale = texturedBoxModel.maximumScale;
-        texturedBoxModel.scale = 20;
+        texturedBoxModel.scale = new Cartesian3(20.0, 20.0, 20.0);
+        texturedBoxModel.maximumScale = 10;
+
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
+
+        texturedBoxModel.scale = originalScale;
+        texturedBoxModel.maximumScale = originalMaximumScale;
+    });
+
+    it('boundingSphere returns the bounding sphere when maximumScale is reached with non-uniform scaling', function() {
+        var originalScale = texturedBoxModel.scale;
+        var originalMaximumScale = texturedBoxModel.maximumScale;
+        texturedBoxModel.scale = new Cartesian3(10.0, 20.0, 5.0);
         texturedBoxModel.maximumScale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
@@ -730,14 +744,14 @@ defineSuite([
     });
 
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
-        var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
-        Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
+        var originalScale = texturedBoxModel.scale;
+        texturedBoxModel.scale = new Cartesian3(2, 5, 10);
 
         var boundingSphere = texturedBoxModel.boundingSphere;
         expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
         expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
-        texturedBoxModel.modelMatrix = originalMatrix;
+        texturedBoxModel.scale = originalScale;
     });
 
     it('destroys', function() {
@@ -1446,7 +1460,7 @@ defineSuite([
 
     it('Animates and renders', function() {
         return loadModel(animBoxesUrl, {
-            scale : 2.0
+            scale : new Cartesian3(2.0, 2.0, 2.0)
         }).then(function(m) {
             var node = m.getNode('inner_box');
             var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
@@ -1991,7 +2005,7 @@ defineSuite([
 
     it('loads a glTF 2.0 with textures', function() {
         return loadModel(boomBoxUrl).then(function(m) {
-            m.scale = 20.0; // Source model is very small, so scale up a bit
+            m.scale = new Cartesian3(20.0, 20.0, 20.0); // Source model is very small, so scale up a bit
             verifyRender(m);
             primitives.remove(m);
         });

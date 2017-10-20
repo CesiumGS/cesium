@@ -29,7 +29,7 @@ defineSuite([
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
             uri : '0',
-            scale : 1,
+            scale : new Cartesian3(1.0, 2.0, 3.0),
             show : false,
             minimumPixelSize : 2,
             maximumScale : 200,
@@ -100,7 +100,7 @@ defineSuite([
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
-        source.scale = new ConstantProperty(1.0);
+        source.scale = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
@@ -149,7 +149,7 @@ defineSuite([
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
-        source.scale = new ConstantProperty(1.0);
+        source.scale = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
@@ -168,7 +168,7 @@ defineSuite([
 
         var uri = new ConstantProperty('');
         var show = new ConstantProperty(true);
-        var scale = new ConstantProperty(1.0);
+        var scale = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
@@ -227,7 +227,7 @@ defineSuite([
         var source = new ModelGraphics();
         source.uri = new ConstantProperty('');
         source.show = new ConstantProperty(true);
-        source.scale = new ConstantProperty(1.0);
+        source.scale = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);

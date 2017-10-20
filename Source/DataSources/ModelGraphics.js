@@ -1,18 +1,22 @@
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './ConstantProperty',
         './createPropertyDescriptor',
         './NodeTransformationProperty',
         './PropertyBag'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        ConstantProperty,
         createPropertyDescriptor,
         NodeTransformationProperty,
         PropertyBag) {
@@ -40,7 +44,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.uri] A string Property specifying the URI of the glTF asset.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
-     * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
+     * @param {Property} [options.scale=new Cartesian3(1.0, 1.0, 1.0)] A Property specifying a scale value represented by a number or a {@link Cartesian3}.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
@@ -118,14 +122,20 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the numeric Property specifying a uniform linear scale
+         * Gets or sets the Property specifying a scale value represented by a {@link Cartesian3}
          * for this model. Values greater than 1.0 increase the size of the model while
          * values less than 1.0 decrease it.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default 1.0
+         * @default Cartesian3(1,0, 1.0, 1.0)
          */
-        scale : createPropertyDescriptor('scale'),
+        scale : createPropertyDescriptor('scale', undefined, function (value) {
+            if (typeof value === 'number') {
+                return new ConstantProperty(new Cartesian3(value, value, value));
+            }
+
+            return new ConstantProperty(value);
+        }),
 
         /**
          * Gets or sets the numeric Property specifying the approximate minimum

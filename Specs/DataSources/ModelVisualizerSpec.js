@@ -119,7 +119,7 @@ defineSuite([
 
         var model = new ModelGraphics();
         model.show = new ConstantProperty(true);
-        model.scale = new ConstantProperty(2);
+        model.scale = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
         model.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
@@ -147,7 +147,7 @@ defineSuite([
         var primitive = scene.primitives.get(0);
         visualizer.update(time);
         expect(primitive.show).toEqual(true);
-        expect(primitive.scale).toEqual(2);
+        expect(primitive.scale).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
         expect(primitive.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
