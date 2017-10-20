@@ -191,11 +191,7 @@ Sandcastle.addToolbarMenu([{
     text : 'Slope Color Ramp Material',
     onselect : function() {
         viewer.scene.globe.material = Cesium.Material.fromType('SlopeRamp');
-    }
-}, {
-    text : 'Slope Shading Material',
-    onselect : function() {
-        viewer.scene.globe.material = Cesium.Material.fromType('Slope');
+        viewer.scene.globe.material.uniforms.image = getColorRamp();
     }
 }], 'materialMenu');
 

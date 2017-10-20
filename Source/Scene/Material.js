@@ -31,7 +31,6 @@ define([
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
         '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/SlopeMaterial',
         '../Shaders/Materials/SlopeRampMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
@@ -69,7 +68,6 @@ define([
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
         RimLightingMaterial,
-        SlopeMaterial,
         SlopeRampMaterial,
         StripeMaterial,
         WaterMaterial,
@@ -245,10 +243,13 @@ define([
      *      <li><code>minHeight</code>: minimum height for the ramp.</li>
      *      <li><code>maxHeight</code>: maximum height for the ramp.</li>
      *  </ul>
+     *  <li>SlopeRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *  </ul>
+     * </ul>
      * </ul>
      * </div>
-
-
      *
      * @alias Material
      *
@@ -1521,23 +1522,9 @@ define([
             uniforms : {
                 image: Material.DefaultImageId,
                 minHeight: 0.0,
-                maxHeight: 10000.0
+                maxHeight: 10000.0,
             },
             source : ElevationRampMaterial
-        },
-        translucent : false
-    });
-
-    /**
-     * Gets the name of the slope material.
-     * @type {String}
-     * @readonly
-     */
-    Material.SlopeMaterialType = 'Slope';
-    Material._materialCache.addMaterial(Material.SlopeMaterialType, {
-        fabric : {
-            type : Material.SlopeMaterialType,
-            source : SlopeMaterial
         },
         translucent : false
     });
@@ -1551,6 +1538,9 @@ define([
     Material._materialCache.addMaterial(Material.SlopeRampMaterialType, {
         fabric : {
             type : Material.SlopeRampMaterialType,
+            uniforms : {
+                image: Material.DefaultImageId
+            },
             source : SlopeRampMaterial
         },
         translucent : false
