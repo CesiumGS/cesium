@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shader composition demos">
+    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="materialMenu"></div>
+<div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
+<table><tbody>
+    <tr>
+        <td>Contour Spacing</td>
+        <td>
+            <input type="range" min="1.0" max="500.0 step="1.0" data-bind="value: spacing, valueUpdate: 'input'">
+        </td>
+    </tr>
+</tbody>
+</table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+// set lighting to true
+viewer.scene.globe.enableLighting = true;
+
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
+// Enable lighting so the normal flows through the shader
+viewer.scene.globe.enableLighting = true;
+
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    spacing: 100.0
+};
+
+function getColorRamp() {
+    var ramp = document.createElement('canvas');
+    ramp.width = 100;
+    ramp.height = 1;
+    var ctx = ramp.getContext('2d');
+
+    var grd = ctx.createLinearGradient(0, 0, 100, 0);
+    grd.addColorStop(0, "black");
+
+    grd.addColorStop(0.25, "red");
+
+    grd.addColorStop(0.5, "blue");
+
+    grd.addColorStop(0.75, "green");
+
+    grd.addColorStop(1.0, "white");
+
+
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 1);
+    return ramp;
+}
+
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+// setup alternative terrain providers
+var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
+
+var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
+    url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+    credit : 'Terrain data courtesy VT MÄK'
+});
+
+Sandcastle.addToolbarMenu([{
+    text : 'CesiumTerrainProvider - STK World Terrain',
+    onselect : function() {
+        viewer.terrainProvider = cesiumTerrainProviderMeshes;
+        viewer.scene.globe.enableLighting = true;
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain - no effects',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
+        });
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            requestVertexNormals : true
+        });
+        viewer.scene.globe.enableLighting = true;
+    }
+}, {
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
+    onselect : function() {
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+            requestWaterMask : true
+        });
+    }
+}, {
+    text : 'EllipsoidTerrainProvider',
+    onselect : function() {
+        viewer.terrainProvider = ellipsoidProvider;
+    }
+}, {
+    text : 'VRTheWorldTerrainProvider',
+    onselect : function() {
+        viewer.terrainProvider = vrTheWorldProvider;
+    }
+}], 'terrainMenu');
+
+Sandcastle.addDefaultToolbarMenu([{
+    text : 'Mount Everest',
+    onselect : function() {
+        lookAtMtEverest();
+    }
+}, {
+    text : 'Half Dome',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'San Francisco Bay',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
+        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}], 'zoomButtons');
+
+function lookAtMtEverest() {
+    var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+    var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+    viewer.camera.lookAt(target, offset);
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'No Material',
+    onselect : function() {
+        viewer.scene.globe.material = undefined;
+    }
+}, {
+    text : 'Elevation Color Ramp Material',
+    onselect : function() {
+        viewer.scene.globe.material = Cesium.Material.fromType('ElevationRamp');
+        viewer.scene.globe.material.uniforms.image = getColorRamp();
+    }
+}, {
+    text : 'Elevation Contour Material',
+    onselect : function() {
+        viewer.scene.globe.material = Cesium.Material.fromType('ElevationContour');
+        viewer.scene.globe.material.uniforms.color = Cesium.Color.RED;
+    }
+}, {
+    text : 'Slope Color Ramp Material',
+    onselect : function() {
+        viewer.scene.globe.material = Cesium.Material.fromType('SlopeRamp');
+    }
+}, {
+    text : 'Slope Shading Material',
+    onselect : function() {
+        viewer.scene.globe.material = Cesium.Material.fromType('Slope');
+    }
+}], 'materialMenu');
+
+Cesium.knockout.getObservable(viewModel, 'spacing').subscribe(
+    function(newValue) {
+        if (viewer.scene.globe.material) {
+            viewer.scene.globe.material.uniforms.spacing = parseFloat(newValue);
+        }
+    }
+);
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

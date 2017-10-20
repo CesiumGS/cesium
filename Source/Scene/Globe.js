@@ -24,6 +24,7 @@ define([
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
+        './Material',
         './QuadtreePrimitive',
         './SceneMode',
         './ShadowMode'
@@ -53,6 +54,7 @@ define([
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
+        Material,
         QuadtreePrimitive,
         SceneMode,
         ShadowMode) {
@@ -79,14 +81,9 @@ define([
         this._imageryLayerCollection = imageryLayerCollection;
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
+        this._material = undefined;
 
-        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GroundAtmosphere, GlobeVS]
-        });
-
-        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-            sources : [GlobeFS]
-        });
+        this.dirtyShaders();
 
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
@@ -275,6 +272,24 @@ define([
         tileLoadProgressEvent : {
             get: function() {
                 return this._surface.tileLoadProgressEvent;
+            }
+        },
+
+        /**
+         * Gets or sets the material appearance of the Globe.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
+         * @memberof Globe.prototype
+         * @type {Material}
+         */
+        material: {
+            get: function() {
+                return this._material;
+            },
+            set: function(material) {
+                if (this._material !== material) {
+                    this._material = material;
+                    this.dirtyShaders();
+                }
             }
         }
     });
@@ -525,6 +540,10 @@ define([
             return;
         }
 
+        if (this._material) {
+            this._material.update(frameState.context);
+        }
+
         var surface = this._surface;
         var pass = frameState.passes;
 
@@ -548,6 +567,32 @@ define([
         if (frameState.passes.render) {
             this._surface.endFrame(frameState);
         }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.dirtyShaders = function() {
+        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GroundAtmosphere, GlobeVS]
+        });
+
+        var fragmentSources = [];
+        var fragmentDefines = [];
+        if (this._material) {
+            fragmentSources.push(this._material.shaderSource);
+            fragmentDefines.push("APPLY_MATERIAL");
+
+            // Set the material uniform map to the materials
+            this._surface._tileProvider.uniformMap = this._material._uniforms;
+        }
+        fragmentSources.push(GlobeFS);
+
+        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : fragmentSources,
+            defines: fragmentDefines
+        });
+        this._surfaceShaderSet.material = this._material;
     };
 
     /**

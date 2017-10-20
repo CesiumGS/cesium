@@ -21,6 +21,8 @@ define([
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
+        '../Shaders/Materials/ElevationContourMaterial',
+        '../Shaders/Materials/ElevationRampMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
@@ -29,6 +31,8 @@ define([
         '../Shaders/Materials/PolylineGlowMaterial',
         '../Shaders/Materials/PolylineOutlineMaterial',
         '../Shaders/Materials/RimLightingMaterial',
+        '../Shaders/Materials/SlopeMaterial',
+        '../Shaders/Materials/SlopeRampMaterial',
         '../Shaders/Materials/StripeMaterial',
         '../Shaders/Materials/Water',
         '../ThirdParty/when'
@@ -55,6 +59,8 @@ define([
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
+        ElevationContourMaterial,
+        ElevationRampMaterial,
         FadeMaterial,
         GridMaterial,
         NormalMapMaterial,
@@ -63,6 +69,8 @@ define([
         PolylineGlowMaterial,
         PolylineOutlineMaterial,
         RimLightingMaterial,
+        SlopeMaterial,
+        SlopeRampMaterial,
         StripeMaterial,
         WaterMaterial,
         when) {
@@ -226,8 +234,21 @@ define([
      *      <li><code>outlineColor</code>: diffuse color and alpha for the outline.</li>
      *      <li><code>outlineWidth</code>: width of the outline in pixels.</li>
      *  </ul>
+     *  <li>ElevationContour</li>
+     *  <ul>
+     *      <li><code>color</code>: color and alpha for the contour line.</li>
+     *      <li><code>spacing</code>: spacing for contour lines in meters.</li>
+     *  </ul>
+     *  <li>ElevationRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>minHeight</code>: minimum height for the ramp.</li>
+     *      <li><code>maxHeight</code>: maximum height for the ramp.</li>
+     *  </ul>
      * </ul>
      * </div>
+
+
      *
      * @alias Material
      *
@@ -1468,6 +1489,71 @@ define([
             var uniforms = material.uniforms;
             return (uniforms.color.alpha < 1.0) || (uniforms.outlineColor.alpha < 1.0);
         }
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationContourType = 'ElevationContour';
+    Material._materialCache.addMaterial(Material.ElevationContourType, {
+        fabric : {
+            type : Material.ElevationContourType,
+            uniforms : {
+                spacing: 100.0,
+                color: new Color(1.0, 0.0, 0.0, 1.0)
+            },
+            source : ElevationContourMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the elevation contour material.
+     * @type {String}
+     * @readonly
+     */
+    Material.ElevationRampType = 'ElevationRamp';
+    Material._materialCache.addMaterial(Material.ElevationRampType, {
+        fabric : {
+            type : Material.ElevationRampType,
+            uniforms : {
+                image: Material.DefaultImageId,
+                minHeight: 0.0,
+                maxHeight: 10000.0
+            },
+            source : ElevationRampMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the slope material.
+     * @type {String}
+     * @readonly
+     */
+    Material.SlopeMaterialType = 'Slope';
+    Material._materialCache.addMaterial(Material.SlopeMaterialType, {
+        fabric : {
+            type : Material.SlopeMaterialType,
+            source : SlopeMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the slope ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.SlopeRampMaterialType = 'SlopeRamp';
+    Material._materialCache.addMaterial(Material.SlopeRampMaterialType, {
+        fabric : {
+            type : Material.SlopeRampMaterialType,
+            source : SlopeRampMaterial
+        },
+        translucent : false
     });
 
     return Material;
