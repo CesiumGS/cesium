@@ -83,8 +83,6 @@ define([
         this._surfaceShaderSet = new GlobeSurfaceShaderSet();
         this._material = undefined;
 
-        this.dirtyShaders();
-
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({
                 terrainProvider : terrainProvider,
@@ -95,6 +93,8 @@ define([
 
         this._terrainProvider = terrainProvider;
         this._terrainProviderChanged = new Event();
+
+        this.dirtyShaders();
 
         /**
          * Determines if the globe will be shown.
@@ -585,6 +585,9 @@ define([
 
             // Set the material uniform map to the materials
             this._surface._tileProvider.uniformMap = this._material._uniforms;
+        }
+        else {
+            this._surface._tileProvider.uniformMap = undefined;
         }
         fragmentSources.push(GlobeFS);
 
