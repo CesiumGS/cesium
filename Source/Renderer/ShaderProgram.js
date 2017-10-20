@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,6 +11,7 @@ define([
         './createUniform',
         './createUniformArray'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -65,9 +67,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return options.context.shaderCache.getShaderProgram(options);
@@ -77,9 +77,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return options.context.shaderCache.replaceShaderProgram(options);
