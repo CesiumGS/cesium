@@ -99,6 +99,7 @@ defineSuite([
             source : blueImage
         });
 
+        expect(texture.id).toBeDefined();
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });

@@ -44,6 +44,38 @@ define([
         ImageryProvider) {
     'use strict';
 
+    var tags = {
+        '{x}': xTag,
+        '{y}': yTag,
+        '{z}': zTag,
+        '{s}': sTag,
+        '{reverseX}': reverseXTag,
+        '{reverseY}': reverseYTag,
+        '{reverseZ}': reverseZTag,
+        '{westDegrees}': westDegreesTag,
+        '{southDegrees}': southDegreesTag,
+        '{eastDegrees}': eastDegreesTag,
+        '{northDegrees}': northDegreesTag,
+        '{westProjected}': westProjectedTag,
+        '{southProjected}': southProjectedTag,
+        '{eastProjected}': eastProjectedTag,
+        '{northProjected}': northProjectedTag,
+        '{width}': widthTag,
+        '{height}': heightTag
+    };
+
+    var pickFeaturesTags = combine(tags, {
+        '{i}' : iTag,
+        '{j}' : jTag,
+        '{reverseI}' : reverseITag,
+        '{reverseJ}' : reverseJTag,
+        '{longitudeDegrees}' : longitudeDegreesTag,
+        '{latitudeDegrees}' : latitudeDegreesTag,
+        '{longitudeProjected}' : longitudeProjectedTag,
+        '{latitudeProjected}' : latitudeProjectedTag,
+        '{format}' : formatTag
+    });
+
     /**
      * Provides imagery by requesting tiles using a specified URL template.
      *
@@ -132,6 +164,7 @@ define([
      *        source does not support picking features or if you don't want this provider's features to be pickable. Note
      *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
      *        property.
+     * @param {Object} [options.customTags] Allow to replace custom keywords in the URL template. The object must have strings as keys and functions as values.
      *
      *
      * @example
@@ -156,6 +189,15 @@ define([
      *          'bbox={westProjected}%2C{southProjected}%2C{eastProjected}%2C{northProjected}&' +
      *          'width=256&height=256',
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
+     * });
+     * // Using custom tags in your template url.
+     * var custom = new Cesium.UrlTemplateImageryProvider({
+     *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
+     *    customTags : {
+     *        Time: function(imageryProvider, x, y , level) {
+     *            return '20171231'
+     *        }
+     *    }
      * });
      *
      * @see ArcGisMapServerImageryProvider
@@ -568,8 +610,33 @@ define([
             }
             that._credit = credit;
 
-            that._urlParts = urlTemplateToParts(that._url, tags); //eslint-disable-line no-use-before-define
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags); //eslint-disable-line no-use-before-define
+            var tag;
+            var allTags = {};
+            var allPickFeaturesTags = {};
+            for (tag in tags) {
+                if (tags.hasOwnProperty(tag)) {
+                    allTags[tag] = tags[tag];
+                }
+            }
+            for (tag in pickFeaturesTags) {
+                if (pickFeaturesTags.hasOwnProperty(tag)) {
+                    allPickFeaturesTags[tag] = pickFeaturesTags[tag];
+                }
+            }
+
+            var customTags = properties.customTags;
+            if (defined(customTags)) {
+                for (tag in customTags) {
+                    if (customTags.hasOwnProperty(tag)) {
+                        var targetTag = '{' + tag + '}';
+                        allTags[targetTag] = customTags[tag];
+                        allPickFeaturesTags[targetTag] = customTags[tag];
+                    }
+                }
+            }
+
+            that._urlParts = urlTemplateToParts(that._url, allTags);
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, allPickFeaturesTags);
             return true;
         });
     };
@@ -962,38 +1029,6 @@ define([
     function formatTag(imageryProvider, x, y, level, longitude, latitude, format) {
         return format;
     }
-
-    var tags = {
-        '{x}': xTag,
-        '{y}': yTag,
-        '{z}': zTag,
-        '{s}': sTag,
-        '{reverseX}': reverseXTag,
-        '{reverseY}': reverseYTag,
-        '{reverseZ}': reverseZTag,
-        '{westDegrees}': westDegreesTag,
-        '{southDegrees}': southDegreesTag,
-        '{eastDegrees}': eastDegreesTag,
-        '{northDegrees}': northDegreesTag,
-        '{westProjected}': westProjectedTag,
-        '{southProjected}': southProjectedTag,
-        '{eastProjected}': eastProjectedTag,
-        '{northProjected}': northProjectedTag,
-        '{width}': widthTag,
-        '{height}': heightTag
-    };
-
-    var pickFeaturesTags = combine(tags, {
-        '{i}' : iTag,
-        '{j}' : jTag,
-        '{reverseI}' : reverseITag,
-        '{reverseJ}' : reverseJTag,
-        '{longitudeDegrees}' : longitudeDegreesTag,
-        '{latitudeDegrees}' : latitudeDegreesTag,
-        '{longitudeProjected}' : longitudeProjectedTag,
-        '{latitudeProjected}' : latitudeProjectedTag,
-        '{format}' : formatTag
-    });
 
     return UrlTemplateImageryProvider;
 });
