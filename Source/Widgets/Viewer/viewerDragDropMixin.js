@@ -1,25 +1,27 @@
 define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/wrapFunction',
-        '../../DataSources/CzmlDataSource',
-        '../../DataSources/GeoJsonDataSource',
-        '../../DataSources/KmlDataSource',
-        '../getElement'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        wrapFunction,
-        CzmlDataSource,
-        GeoJsonDataSource,
-        KmlDataSource,
-        getElement) {
+    '../../Core/defaultValue',
+    '../../Core/defined',
+    '../../Core/defineProperties',
+    '../../Core/DeveloperError',
+    '../../Core/Event',
+    '../../Core/wrapFunction',
+    '../../DataSources/CzmlDataSource',
+    '../../DataSources/GeoJsonDataSource',
+    '../../DataSources/GmlDataSource',
+    '../../DataSources/KmlDataSource',
+    '../getElement'
+], function(
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Event,
+    wrapFunction,
+    CzmlDataSource,
+    GeoJsonDataSource,
+    GmlDataSource,
+    KmlDataSource,
+    getElement) {
     'use strict';
 
     /**
@@ -273,6 +275,11 @@ define([
                         proxy : proxy,
                         camera : scene.camera,
                         canvas : scene.canvas
+                    });
+                } else if (/\.gml$/i.test(fileName)) {
+                    loadPromise = GmlDataSource.load(file, {
+                        sourceUri : fileName,
+                        proxy : proxy
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);

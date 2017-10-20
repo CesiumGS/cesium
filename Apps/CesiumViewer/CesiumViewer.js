@@ -1,32 +1,34 @@
 define([
-        'Cesium/Core/Cartesian3',
-        'Cesium/Core/defined',
-        'Cesium/Core/formatError',
-        'Cesium/Core/Math',
-        'Cesium/Core/objectToQuery',
-        'Cesium/Core/queryToObject',
-        'Cesium/DataSources/CzmlDataSource',
-        'Cesium/DataSources/GeoJsonDataSource',
-        'Cesium/DataSources/KmlDataSource',
-        'Cesium/Scene/createTileMapServiceImageryProvider',
-        'Cesium/Widgets/Viewer/Viewer',
-        'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
-        'Cesium/Widgets/Viewer/viewerDragDropMixin',
-        'domReady!'
-    ], function(
-        Cartesian3,
-        defined,
-        formatError,
-        CesiumMath,
-        objectToQuery,
-        queryToObject,
-        CzmlDataSource,
-        GeoJsonDataSource,
-        KmlDataSource,
-        createTileMapServiceImageryProvider,
-        Viewer,
-        viewerCesiumInspectorMixin,
-        viewerDragDropMixin) {
+    'Cesium/Core/Cartesian3',
+    'Cesium/Core/defined',
+    'Cesium/Core/formatError',
+    'Cesium/Core/Math',
+    'Cesium/Core/objectToQuery',
+    'Cesium/Core/queryToObject',
+    'Cesium/DataSources/CzmlDataSource',
+    'Cesium/DataSources/GeoJsonDataSource',
+    'Cesium/DataSources/GmlDataSource',
+    'Cesium/DataSources/KmlDataSource',
+    'Cesium/Scene/createTileMapServiceImageryProvider',
+    'Cesium/Widgets/Viewer/Viewer',
+    'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
+    'Cesium/Widgets/Viewer/viewerDragDropMixin',
+    'domReady!'
+], function(
+    Cartesian3,
+    defined,
+    formatError,
+    CesiumMath,
+    objectToQuery,
+    queryToObject,
+    CzmlDataSource,
+    GeoJsonDataSource,
+    GmlDataSource,
+    KmlDataSource,
+    createTileMapServiceImageryProvider,
+    Viewer,
+    viewerCesiumInspectorMixin,
+    viewerDragDropMixin) {
     'use strict';
 
     /*
@@ -102,9 +104,11 @@ define([
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
             loadPromise = KmlDataSource.load(source, {
-                camera: scene.camera,
-                canvas: scene.canvas
+                camera : scene.camera,
+                canvas : scene.canvas
             });
+        } else if (/\.gml$/i.test(source)) {
+            loadPromise = GmlDataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }
@@ -155,17 +159,18 @@ define([
             var roll = ((splitQuery.length > 5) && (!isNaN(+splitQuery[5]))) ? CesiumMath.toRadians(+splitQuery[5]) : undefined;
 
             viewer.camera.setView({
-                destination: Cartesian3.fromDegrees(longitude, latitude, height),
-                orientation: {
-                    heading: heading,
-                    pitch: pitch,
-                    roll: roll
+                destination : Cartesian3.fromDegrees(longitude, latitude, height),
+                orientation : {
+                    heading : heading,
+                    pitch : pitch,
+                    roll : roll
                 }
             });
         }
     }
 
     var camera = viewer.camera;
+
     function saveCamera() {
         var position = camera.positionCartographic;
         var hpr = '';
