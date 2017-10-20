@@ -48,6 +48,7 @@ define([
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      * @param {Property} [options.rightToLeft=false] A Property specifying if to modify text when there is possibly rightToLeft characters.
+     * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
