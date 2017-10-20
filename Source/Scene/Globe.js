@@ -581,7 +581,7 @@ define([
         var fragmentDefines = [];
         if (this._material) {
             fragmentSources.push(this._material.shaderSource);
-            fragmentDefines.push("APPLY_MATERIAL");
+            fragmentDefines.push('APPLY_MATERIAL');
 
             // Set the material uniform map to the materials
             this._surface._tileProvider.uniformMap = this._material._uniforms;
