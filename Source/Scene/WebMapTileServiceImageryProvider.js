@@ -18,7 +18,7 @@ define([
         '../ThirdParty/when',
         './ImageryProvider',
         './TimeDynamicImagery'
-], function(
+    ], function(
         combine,
         Credit,
         defaultValue,

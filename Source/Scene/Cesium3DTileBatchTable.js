@@ -68,6 +68,9 @@ define([
         StencilOperation) {
     'use strict';
 
+    var DEFAULT_COLOR_VALUE = Color.WHITE;
+    var DEFAULT_SHOW_VALUE = true;
+
     /**
      * @private
      */
@@ -414,7 +417,7 @@ define([
         Check.typeOf.object('color', color);
         //>>includeEnd('debug');
 
-        if (Color.equals(color, Color.WHITE) && !defined(this._batchValues)) {
+        if (Color.equals(color, DEFAULT_COLOR_VALUE) && !defined(this._batchValues)) {
             // Avoid allocating since the default is white
             return;
         }
@@ -475,7 +478,7 @@ define([
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
-            return Color.clone(Color.WHITE, result);
+            return Color.clone(DEFAULT_COLOR_VALUE, result);
         }
 
         var batchValues = this._batchValues;
@@ -495,7 +498,7 @@ define([
 
     Cesium3DTileBatchTable.prototype.applyStyle = function(frameState, style) {
         if (!defined(style)) {
-            this.setAllColor(Color.WHITE);
+            this.setAllColor(DEFAULT_COLOR_VALUE);
             this.setAllShow(true);
             return;
         }
@@ -504,8 +507,8 @@ define([
         var length = this.featuresLength;
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            var color = style.color.evaluateColor(frameState, feature, scratchColor);
-            var show = style.show.evaluate(frameState, feature);
+            var color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            var show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
             this.setColor(i, color);
             this.setShow(i, show);
         }
@@ -1305,10 +1308,6 @@ define([
         // even though their style is opaque.
         var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
 
-        if (!translucentCommand) {
-            derivedCommand.pass = Pass.CESIUM_3D_TILE;
-        }
-
         derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
         derivedCommand.uniformMap.tile_translucentCommand = function() {
             return translucentCommand;
@@ -1343,8 +1342,12 @@ define([
             // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
+            // Stencil test is masked to the most significant 4 bits so the reference is shifted.
+            // This is to prevent clearing the stencil before classification which needs the least significant
+            // bits for increment/decrement operations.
             rs.stencilTest.enabled = true;
-            rs.stencilTest.reference = reference;
+            rs.stencilTest.mask = 0xF0;
+            rs.stencilTest.reference = reference << 4;
             rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
             rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
             derivedCommand.renderState = RenderState.fromCache(rs);

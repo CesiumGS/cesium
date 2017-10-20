@@ -4,7 +4,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Scene/OrthographicFrustum',
+        '../../Core/OrthographicFrustum',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../createCommand'
