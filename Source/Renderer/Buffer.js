@@ -37,8 +37,9 @@ define([
             throw new DeveloperError('Cannot pass in both options.sizeInBytes and options.typedArray.');
         }
 
-        if (defined(options.typedArray) && !(typeof options.typedArray === 'object' && typeof options.typedArray.byteLength === 'number')) {
-            throw new DeveloperError('options.typedArray must be a typed array');
+        if (defined(options.typedArray)) {
+            Check.typeOf.object('options.typedArray', options.typedArray);
+            Check.typeOf.number('options.typedArray.byteLength', options.typedArray.byteLength);
         }
 
         if (!BufferUsage.validate(options.usage)) {
@@ -58,9 +59,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (sizeInBytes <= 0) {
-            throw new DeveloperError('Buffer size must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('sizeInBytes', sizeInBytes, 0);
         //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();
@@ -183,7 +182,7 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((options.indexDatatype === IndexDatatype.UNSIGNED_INT) && !options.context.elementIndexUint) {
+        if (options.indexDatatype === IndexDatatype.UNSIGNED_INT && !options.context.elementIndexUint) {
             throw new DeveloperError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.');
         }
         //>>includeEnd('debug');
@@ -246,10 +245,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         Check.defined('arrayView', arrayView);
-
-        if (offsetInBytes + arrayView.byteLength > this._sizeInBytes) {
-            throw new DeveloperError('This buffer is not large enough.');
-        }
+        Check.typeOf.number.lessThanOrEquals('offsetInBytes + arrayView.byteLength', offsetInBytes + arrayView.byteLength, this._sizeInBytes);
         //>>includeEnd('debug');
 
         var gl = this._gl;

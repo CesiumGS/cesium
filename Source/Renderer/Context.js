@@ -1,89 +1,90 @@
 define([
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/Matrix4',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/WebGLConstants',
-        '../Shaders/ViewportQuadVS',
-        './BufferUsage',
-        './ClearCommand',
-        './ContextLimits',
-        './CubeMap',
-        './DrawCommand',
-        './PassState',
-        './PickFramebuffer',
-        './RenderState',
-        './ShaderCache',
-        './ShaderProgram',
-        './Texture',
-        './UniformState',
-        './VertexArray'
-    ], function(
-        Check,
-        clone,
-        Color,
-        ComponentDatatype,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        Matrix4,
-        PrimitiveType,
-        RuntimeError,
-        WebGLConstants,
-        ViewportQuadVS,
-        BufferUsage,
-        ClearCommand,
-        ContextLimits,
-        CubeMap,
-        DrawCommand,
-        PassState,
-        PickFramebuffer,
-        RenderState,
-        ShaderCache,
-        ShaderProgram,
-        Texture,
-        UniformState,
-        VertexArray) {
+    '../Core/Check',
+    '../Core/clone',
+    '../Core/Color',
+    '../Core/ComponentDatatype',
+    '../Core/createGuid',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/Geometry',
+    '../Core/GeometryAttribute',
+    '../Core/Matrix4',
+    '../Core/PrimitiveType',
+    '../Core/RuntimeError',
+    '../Core/WebGLConstants',
+    '../Shaders/ViewportQuadVS',
+    './BufferUsage',
+    './ClearCommand',
+    './ContextLimits',
+    './CubeMap',
+    './DrawCommand',
+    './PassState',
+    './PickFramebuffer',
+    './RenderState',
+    './ShaderCache',
+    './ShaderProgram',
+    './Texture',
+    './UniformState',
+    './VertexArray'
+], function(
+    Check,
+    clone,
+    Color,
+    ComponentDatatype,
+    createGuid,
+    defaultValue,
+    defined,
+    defineProperties,
+    destroyObject,
+    DeveloperError,
+    Geometry,
+    GeometryAttribute,
+    Matrix4,
+    PrimitiveType,
+    RuntimeError,
+    WebGLConstants,
+    ViewportQuadVS,
+    BufferUsage,
+    ClearCommand,
+    ContextLimits,
+    CubeMap,
+    DrawCommand,
+    PassState,
+    PickFramebuffer,
+    RenderState,
+    ShaderCache,
+    ShaderProgram,
+    Texture,
+    UniformState,
+    VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
+
     /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
         switch (error) {
-        case gl.INVALID_ENUM:
-            message += 'INVALID_ENUM';
-            break;
-        case gl.INVALID_VALUE:
-            message += 'INVALID_VALUE';
-            break;
-        case gl.INVALID_OPERATION:
-            message += 'INVALID_OPERATION';
-            break;
-        case gl.OUT_OF_MEMORY:
-            message += 'OUT_OF_MEMORY';
-            break;
-        case gl.CONTEXT_LOST_WEBGL:
-            message += 'CONTEXT_LOST_WEBGL lost';
-            break;
-        default:
-            message += 'Unknown (' + error + ')';
+            case gl.INVALID_ENUM:
+                message += 'INVALID_ENUM';
+                break;
+            case gl.INVALID_VALUE:
+                message += 'INVALID_VALUE';
+                break;
+            case gl.INVALID_OPERATION:
+                message += 'INVALID_OPERATION';
+                break;
+            case gl.OUT_OF_MEMORY:
+                message += 'OUT_OF_MEMORY';
+                break;
+            case gl.CONTEXT_LOST_WEBGL:
+                message += 'CONTEXT_LOST_WEBGL lost';
+                break;
+            default:
+                message += 'Unknown (' + error + ')';
         }
 
         return message;
@@ -92,7 +93,7 @@ define([
     function createErrorMessage(gl, glFunc, glFuncArguments, error) {
         var message = errorToString(gl, error) + ': ' + glFunc.name + '(';
 
-        for ( var i = 0; i < glFuncArguments.length; ++i) {
+        for (var i = 0; i < glFuncArguments.length; ++i) {
             if (i !== 0) {
                 message += ', ';
             }
@@ -303,33 +304,61 @@ define([
         if (webgl2) {
             var that = this;
 
-            glCreateVertexArray = function () { return that._gl.createVertexArray(); };
-            glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
-            glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
+            glCreateVertexArray = function() {
+                return that._gl.createVertexArray();
+            };
+            glBindVertexArray = function(vao) {
+                that._gl.bindVertexArray(vao);
+            };
+            glDeleteVertexArray = function(vao) {
+                that._gl.deleteVertexArray(vao);
+            };
 
-            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
-            glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
-            glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
+            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
+            };
+            glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                gl.drawArraysInstanced(mode, first, count, instanceCount);
+            };
+            glVertexAttribDivisor = function(index, divisor) {
+                gl.vertexAttribDivisor(index, divisor);
+            };
 
-            glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+            glDrawBuffers = function(buffers) {
+                gl.drawBuffers(buffers);
+            };
         } else {
             vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
             if (defined(vertexArrayObject)) {
-                glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
-                glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
-                glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
+                glCreateVertexArray = function() {
+                    return vertexArrayObject.createVertexArrayOES();
+                };
+                glBindVertexArray = function(vertexArray) {
+                    vertexArrayObject.bindVertexArrayOES(vertexArray);
+                };
+                glDeleteVertexArray = function(vertexArray) {
+                    vertexArrayObject.deleteVertexArrayOES(vertexArray);
+                };
             }
 
             instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
             if (defined(instancedArrays)) {
-                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
-                glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
-                glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
+                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                    instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
+                };
+                glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                    instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
+                };
+                glVertexAttribDivisor = function(index, divisor) {
+                    instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+                };
             }
 
             drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
             if (defined(drawBuffers)) {
-                glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
+                glDrawBuffers = function(buffers) {
+                    drawBuffers.drawBuffersWEBGL(buffers);
+                };
             }
         }
 
@@ -787,18 +816,18 @@ define([
                 var message;
 
                 switch (status) {
-                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                    message = 'Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.';
-                    break;
-                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                    message = 'Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.';
-                    break;
-                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                    message = 'Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.';
-                    break;
-                case gl.FRAMEBUFFER_UNSUPPORTED:
-                    message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
-                    break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                        message = 'Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.';
+                        break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                        message = 'Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.';
+                        break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                        message = 'Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.';
+                        break;
+                    case gl.FRAMEBUFFER_UNSUPPORTED:
+                        message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
+                        break;
                 }
 
                 throw new DeveloperError(message);
@@ -928,6 +957,9 @@ define([
             Check.typeOf.number.greaterThanOrEquals('drawCommand.count', count, 0);
         }
         Check.typeOf.number.greaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
+        if (instanceCount > 0 && !context.instancedArrays) {
+            throw new DeveloperError('Instanced arrays extension is not supported');
+        }
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
@@ -1032,10 +1064,10 @@ define([
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
                         values : [
-                           -1.0, -1.0,
+                            -1.0, -1.0,
                             1.0, -1.0,
-                            1.0,  1.0,
-                           -1.0,  1.0
+                            1.0, 1.0,
+                            -1.0, 1.0
                         ]
                     }),
 

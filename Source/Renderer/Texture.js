@@ -283,10 +283,9 @@ define([
         if (PixelFormat.isDepthFormat(pixelFormat) || PixelFormat.isCompressedFormat(pixelFormat)) {
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.');
         }
-
+        Check.defined('options.context', options.context);
         Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
         Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
-
         if (framebufferXOffset + width > gl.drawingBufferWidth) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
         }
@@ -445,16 +444,10 @@ define([
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
-
         Check.typeOf.number.greaterThanOrEquals('xOffset', xOffset, 0);
         Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
-
-        if (xOffset + source.width > this._width) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
-        }
-        if (yOffset + source.height > this._height) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
-        }
+        Check.typeOf.number.lessThanOrEquals('xOffset + source.width', xOffset + source.width, this._width);
+        Check.typeOf.number.lessThanOrEquals('yOffset + source.height', yOffset + source.height, this._height);
         //>>includeEnd('debug');
 
         var gl = this._context._gl;
@@ -517,13 +510,8 @@ define([
         Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
         Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
         Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
-
-        if (xOffset + width > this._width) {
-            throw new DeveloperError('xOffset + width must be less than or equal to width.');
-        }
-        if (yOffset + height > this._height) {
-            throw new DeveloperError('yOffset + height must be less than or equal to height.');
-        }
+        Check.typeOf.number.lessThanOrEquals('xOffset + width', xOffset + width, this._width);
+        Check.typeOf.number.lessThanOrEquals('yOffset + height', yOffset + height, this._height);
         //>>includeEnd('debug');
 
         var gl = this._context._gl;
