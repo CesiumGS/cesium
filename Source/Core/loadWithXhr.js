@@ -1,26 +1,26 @@
 /*globals process, require, Buffer*/ // For node.js
 define([
-    '../ThirdParty/when',
-    './Check',
-    './defaultValue',
-    './defined',
-    './DeveloperError',
-    './Request',
-    './RequestErrorEvent',
-    './RequestScheduler',
-    './RuntimeError',
-    './TrustedServers'
+        '../ThirdParty/when',
+        './Check',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './Request',
+        './RequestErrorEvent',
+        './RequestScheduler',
+        './RuntimeError',
+        './TrustedServers'
 ], function(
-    when,
-    Check,
-    defaultValue,
-    defined,
-    DeveloperError,
-    Request,
-    RequestErrorEvent,
-    RequestScheduler,
-    RuntimeError,
-    TrustedServers) {
+        when,
+        Check,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Request,
+        RequestErrorEvent,
+        RequestScheduler,
+        RuntimeError,
+        TrustedServers) {
     'use strict';
 
     /**
@@ -137,7 +137,7 @@ define([
             default:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Unhandled responseType: ' + responseType);
-            //>>includeEnd('debug');
+                //>>includeEnd('debug');
         }
     }
 
