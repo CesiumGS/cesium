@@ -255,6 +255,33 @@ define([
         return deferred.promise;
     }
 
+    function insertNamespaces(text) {
+        var namespaceMap = {
+            xsi : 'http://www.w3.org/2001/XMLSchema-instance'
+        };
+        var firstPart, lastPart, reg, declaration;
+
+        for (var key in namespaceMap) {
+            if (namespaceMap.hasOwnProperty(key)) {
+                reg = RegExp('[< ]' + key + ':');
+                declaration = 'xmlns:' + key + '=';
+                if (reg.test(text) && text.indexOf(declaration) === -1) {
+                    if (!defined(firstPart)) {
+                        firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                        lastPart = text.substr(firstPart.length);
+                    }
+                    firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
+                }
+            }
+        }
+
+        if (defined(firstPart)) {
+            text = firstPart + lastPart;
+        }
+
+        return text;
+    }
+
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
@@ -1842,7 +1869,9 @@ define([
 
                 var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
                 if (defined(rotation)) {
-                    geometry.rotation = CesiumMath.toRadians(rotation);
+                    var rotationRadians = CesiumMath.toRadians(rotation);
+                    geometry.rotation = rotationRadians;
+                    geometry.stRotation = rotationRadians;
                 }
             }
         }
@@ -2321,6 +2350,9 @@ define([
                         return readBlobAsText(dataToLoad).then(function(text) {
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
+
+                            //Insert missing namespaces
+                            text = insertNamespaces(text);
 
                             //IE raises an exception
                             var kml;
