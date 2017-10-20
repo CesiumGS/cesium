@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AttributeCompression',
         '../Core/BoundingSphere',
@@ -86,6 +85,7 @@ define([
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION_INDEX;
+    var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -99,7 +99,7 @@ define([
         eyeOffset : 5,                   // 4 bytes free
         scaleByDistance : 6,
         pixelOffsetScaleByDistance : 7,
-        distanceDisplayCondition : 8
+        distanceDisplayConditionAndDisableDepth : 8
     };
 
     var attributeLocationsInstanced = {
@@ -112,7 +112,7 @@ define([
         eyeOffset : 6,                  // texture range in w
         scaleByDistance : 7,
         pixelOffsetScaleByDistance : 8,
-        distanceDisplayCondition : 9
+        distanceDisplayConditionAndDisableDepth : 9
     };
 
     /**
@@ -208,6 +208,10 @@ define([
         this._shaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayCondition = false;
         this._compiledShaderDistanceDisplayConditionPick = false;
+
+        this._shaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistance = false;
+        this._compiledShaderDisableDepthDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -315,7 +319,7 @@ define([
         };
 
         var scene = this._scene;
-        if (defined(scene)) {
+        if (defined(scene) && defined(scene.terrainProviderChanged)) {
             this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
@@ -729,8 +733,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }, {
-            index : attributeLocations.distanceDisplayCondition,
-            componentsPerAttribute : 2,
+            index : attributeLocations.distanceDisplayConditionAndDisableDepth,
+            componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[DISTANCE_DISPLAY_CONDITION_INDEX]
         }];
@@ -1146,9 +1150,9 @@ define([
         }
     }
 
-    function writeDistanceDisplayCondition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i;
-        var writer = vafWriters[attributeLocations.distanceDisplayCondition];
+        var writer = vafWriters[attributeLocations.distanceDisplayConditionAndDisableDepth];
         var near = 0.0;
         var far = Number.MAX_VALUE;
 
@@ -1157,18 +1161,30 @@ define([
             near = distanceDisplayCondition.near;
             far = distanceDisplayCondition.far;
 
+            near *= near;
+            far *= far;
+
             billboardCollection._shaderDistanceDisplayCondition = true;
+        }
+
+        var disableDepthTestDistance = billboard.disableDepthTestDistance;
+        disableDepthTestDistance *= disableDepthTestDistance;
+        if (disableDepthTestDistance > 0.0) {
+            billboardCollection._shaderDisableDepthDistance = true;
+            if (disableDepthTestDistance === Number.POSITIVE_INFINITY) {
+                disableDepthTestDistance = -1.0;
+            }
         }
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, near, far);
+            writer(i, near, far, disableDepthTestDistance);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, near, far);
-            writer(i + 1, near, far);
-            writer(i + 2, near, far);
-            writer(i + 3, near, far);
+            writer(i + 0, near, far, disableDepthTestDistance);
+            writer(i + 1, near, far, disableDepthTestDistance);
+            writer(i + 2, near, far, disableDepthTestDistance);
+            writer(i + 3, near, far, disableDepthTestDistance);
         }
     }
 
@@ -1180,7 +1196,7 @@ define([
         writeEyeOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writeDistanceDisplayCondition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeDistanceDisplayConditionAndDepthDisable(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1338,85 +1354,83 @@ define([
             }
 
             this._billboardsToUpdateIndex = 0;
-        } else {
+        } else if (billboardsToUpdateLength > 0) {
             // Billboards were modified, but none were added or removed.
-            if (billboardsToUpdateLength > 0) {
-                var writers = scratchWriterArray;
-                writers.length = 0;
+            var writers = scratchWriterArray;
+            writers.length = 0;
 
-                if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
-                    writers.push(writePositionScaleAndRotation);
-                }
+            if (properties[POSITION_INDEX] || properties[ROTATION_INDEX] || properties[SCALE_INDEX]) {
+                writers.push(writePositionScaleAndRotation);
+            }
 
-                if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
-                    writers.push(writeCompressedAttrib0);
-                    if (this._instanced) {
-                        writers.push(writeEyeOffset);
-                    }
-                }
-
-                if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
-                    writers.push(writeCompressedAttrib1);
-                    writers.push(writeCompressedAttrib2);
-                }
-
-                if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
-                    writers.push(writeCompressedAttrib2);
-                }
-
-                if (properties[EYE_OFFSET_INDEX]) {
+            if (properties[IMAGE_INDEX_INDEX] || properties[PIXEL_OFFSET_INDEX] || properties[HORIZONTAL_ORIGIN_INDEX] || properties[VERTICAL_ORIGIN_INDEX] || properties[SHOW_INDEX]) {
+                writers.push(writeCompressedAttrib0);
+                if (this._instanced) {
                     writers.push(writeEyeOffset);
                 }
-
-                if (properties[SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writeScaleByDistance);
-                }
-
-                if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
-                    writers.push(writePixelOffsetScaleByDistance);
-                }
-
-                if (properties[DISTANCE_DISPLAY_CONDITION_INDEX]) {
-                    writers.push(writeDistanceDisplayCondition);
-                }
-
-                var numWriters = writers.length;
-                vafWriters = this._vaf.writers;
-
-                if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
-                    // If more than 10% of billboard change, rewrite the entire buffer.
-
-                    // PERFORMANCE_IDEA:  I totally made up 10% :).
-
-                    for (var m = 0; m < billboardsToUpdateLength; ++m) {
-                        var b = billboardsToUpdate[m];
-                        b._dirty = false;
-
-                        for ( var n = 0; n < numWriters; ++n) {
-                            writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
-                        }
-                    }
-                    this._vaf.commit(getIndexBuffer(context));
-                } else {
-                    for (var h = 0; h < billboardsToUpdateLength; ++h) {
-                        var bb = billboardsToUpdate[h];
-                        bb._dirty = false;
-
-                        for ( var o = 0; o < numWriters; ++o) {
-                            writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
-                        }
-
-                        if (this._instanced) {
-                            this._vaf.subCommit(bb._index, 1);
-                        } else {
-                            this._vaf.subCommit(bb._index * 4, 4);
-                        }
-                    }
-                    this._vaf.endSubCommits();
-                }
-
-                this._billboardsToUpdateIndex = 0;
             }
+
+            if (properties[IMAGE_INDEX_INDEX] || properties[ALIGNED_AXIS_INDEX] || properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
+                writers.push(writeCompressedAttrib1);
+                writers.push(writeCompressedAttrib2);
+            }
+
+            if (properties[IMAGE_INDEX_INDEX] || properties[COLOR_INDEX]) {
+                writers.push(writeCompressedAttrib2);
+            }
+
+            if (properties[EYE_OFFSET_INDEX]) {
+                writers.push(writeEyeOffset);
+            }
+
+            if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writeScaleByDistance);
+            }
+
+            if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
+                writers.push(writePixelOffsetScaleByDistance);
+            }
+
+            if (properties[DISTANCE_DISPLAY_CONDITION_INDEX] || properties[DISABLE_DEPTH_DISTANCE]) {
+                writers.push(writeDistanceDisplayConditionAndDepthDisable);
+            }
+
+            var numWriters = writers.length;
+            vafWriters = this._vaf.writers;
+
+            if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
+                // If more than 10% of billboard change, rewrite the entire buffer.
+
+                // PERFORMANCE_IDEA:  I totally made up 10% :).
+
+                for (var m = 0; m < billboardsToUpdateLength; ++m) {
+                    var b = billboardsToUpdate[m];
+                    b._dirty = false;
+
+                    for ( var n = 0; n < numWriters; ++n) {
+                        writers[n](this, context, textureAtlasCoordinates, vafWriters, b);
+                    }
+                }
+                this._vaf.commit(getIndexBuffer(context));
+            } else {
+                for (var h = 0; h < billboardsToUpdateLength; ++h) {
+                    var bb = billboardsToUpdate[h];
+                    bb._dirty = false;
+
+                    for ( var o = 0; o < numWriters; ++o) {
+                        writers[o](this, context, textureAtlasCoordinates, vafWriters, bb);
+                    }
+
+                    if (this._instanced) {
+                        this._vaf.subCommit(bb._index, 1);
+                    } else {
+                        this._vaf.subCommit(bb._index * 4, 4);
+                    }
+                }
+                this._vaf.endSubCommits();
+            }
+
+            this._billboardsToUpdateIndex = 0;
         }
 
         // If the number of total billboards ever shrinks considerably
@@ -1481,13 +1495,18 @@ define([
             }
         }
 
+        this._shaderDisableDepthDistance = this._shaderDisableDepthDistance || frameState.minimumDisableDepthTestDistance !== 0.0;
+        var vs;
+        var fs;
+
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
             (this._shaderAlignedAxis !== this._compiledShaderAlignedAxis) ||
             (this._shaderScaleByDistance !== this._compiledShaderScaleByDistance) ||
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistance) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition)) {
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance)) {
 
             vs = new ShaderSource({
                 sources : [BillboardCollectionVS]
@@ -1512,6 +1531,9 @@ define([
             }
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
+            }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -1572,6 +1594,7 @@ define([
             this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
             this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
         }
 
         if (!defined(this._spPick) ||
@@ -1580,7 +1603,8 @@ define([
             (this._shaderScaleByDistance !== this._compiledShaderScaleByDistancePick) ||
             (this._shaderTranslucencyByDistance !== this._compiledShaderTranslucencyByDistancePick) ||
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistancePick) ||
-            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick)) {
+            (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayConditionPick) ||
+            (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistancePick)) {
 
             vs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1608,6 +1632,9 @@ define([
             if (this._shaderDistanceDisplayCondition) {
                 vs.defines.push('DISTANCE_DISPLAY_CONDITION');
             }
+            if (this._shaderDisableDepthDistance) {
+                vs.defines.push('DISABLE_DEPTH_DISTANCE');
+            }
 
             fs = new ShaderSource({
                 defines : ['RENDER_FOR_PICK'],
@@ -1627,13 +1654,12 @@ define([
             this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
             this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
             this._compiledShaderDistanceDisplayConditionPick = this._shaderDistanceDisplayCondition;
+            this._compiledShaderDisableDepthDistancePick = this._shaderDisableDepthDistance;
         }
 
         var va;
         var vaLength;
         var command;
-        var vs;
-        var fs;
         var j;
 
         var commandList = frameState.commandList;

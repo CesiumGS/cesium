@@ -1,13 +1,12 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/SceneTransforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/OrthographicFrustum',
         'Core/Rectangle',
         'Scene/Camera',
-        'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
@@ -16,9 +15,9 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        OrthographicFrustum,
         Rectangle,
         Camera,
-        OrthographicFrustum,
         SceneMode,
         createScene) {
     'use strict';

@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
@@ -20,15 +19,15 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
         './MapMode2D',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
-        './PerspectiveFrustum',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -51,15 +50,15 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
         Quaternion,
         Ray,
         Rectangle,
         Transforms,
         CameraFlightPath,
         MapMode2D,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
         SceneMode) {
     'use strict';
 
@@ -608,14 +607,17 @@ define([
 
         if (directionChanged || transformChanged) {
             camera._directionWC = Matrix4.multiplyByPointAsVector(transform, direction, camera._directionWC);
+            Cartesian3.normalize(camera._directionWC, camera._directionWC);
         }
 
         if (upChanged || transformChanged) {
             camera._upWC = Matrix4.multiplyByPointAsVector(transform, up, camera._upWC);
+            Cartesian3.normalize(camera._upWC, camera._upWC);
         }
 
         if (rightChanged || transformChanged) {
             camera._rightWC = Matrix4.multiplyByPointAsVector(transform, right, camera._rightWC);
+            Cartesian3.normalize(camera._rightWC, camera._rightWC);
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
@@ -1273,7 +1275,7 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             this.flyTo({
-                destination : Rectangle.MAX_VALUE,
+                destination : Camera.DEFAULT_VIEW_RECTANGLE,
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });
@@ -1817,30 +1819,57 @@ define([
         }
         //>>includeEnd('debug');
 
+        var ratio;
         amount = amount * 0.5;
-        var newRight = frustum.right - amount;
-        var newLeft = frustum.left + amount;
 
-        var maxRight = camera._maxCoord.x;
-        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
-            maxRight *= camera.maximumZoomFactor;
+        if((Math.abs(frustum.top) + Math.abs(frustum.bottom)) > (Math.abs(frustum.left) + Math.abs(frustum.right))) {
+            var newTop = frustum.top - amount;
+            var newBottom = frustum.bottom + amount;
+
+            var maxBottom = camera._maxCoord.y;
+            if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+                maxBottom *= camera.maximumZoomFactor;
+            }
+
+            if (newBottom > maxBottom) {
+                newBottom = maxBottom;
+                newTop = -maxBottom;
+            }
+
+            if (newTop <= newBottom) {
+                newTop = 1.0;
+                newBottom = -1.0;
+            }
+
+            ratio = frustum.right / frustum.top;
+            frustum.top = newTop;
+            frustum.bottom = newBottom;
+            frustum.right = frustum.top * ratio;
+            frustum.left = -frustum.right;
+        } else {
+            var newRight = frustum.right - amount;
+            var newLeft = frustum.left + amount;
+
+            var maxRight = camera._maxCoord.x;
+            if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+                maxRight *= camera.maximumZoomFactor;
+            }
+
+            if (newRight > maxRight) {
+                newRight = maxRight;
+                newLeft = -maxRight;
+            }
+
+            if (newRight <= newLeft) {
+                newRight = 1.0;
+                newLeft = -1.0;
+            }
+            ratio = frustum.top / frustum.right;
+            frustum.right = newRight;
+            frustum.left = newLeft;
+            frustum.top = frustum.right * ratio;
+            frustum.bottom = -frustum.top;
         }
-
-        if (newRight > maxRight) {
-            newRight = maxRight;
-            newLeft = -maxRight;
-        }
-
-        if (newRight <= newLeft) {
-            newRight = 1.0;
-            newLeft = -1.0;
-        }
-
-        var ratio = frustum.top / frustum.right;
-        frustum.right = newRight;
-        frustum.left = newLeft;
-        frustum.top = frustum.right * ratio;
-        frustum.bottom = -frustum.top;
     }
 
     function zoom3D(camera, amount) {
@@ -2307,7 +2336,7 @@ define([
     }
 
     /**
-     * Get the camera position needed to view an rectangle on an ellipsoid or map
+     * Get the camera position needed to view a rectangle on an ellipsoid or map
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Cartesian3} [result] The camera position needed to view the rectangle
@@ -2394,6 +2423,11 @@ define([
             throw new DeveloperError('windowPosition is required.');
         }
         //>>includeEnd('debug');
+
+        var canvas = this._scene.canvas;
+        if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+            return undefined;
+        }
 
         if (!defined(result)) {
             result = new Cartesian3();
@@ -2826,6 +2860,8 @@ define([
             offset = HeadingPitchRange.clone(Camera.DEFAULT_OFFSET);
         }
 
+        var minimumZoom = camera._scene.screenSpaceCameraController.minimumZoomDistance;
+        var maximumZoom = camera._scene.screenSpaceCameraController.maximumZoomDistance;
         var range = offset.range;
         if (!defined(range) || range === 0.0) {
             var radius = boundingSphere.radius;
@@ -2836,6 +2872,7 @@ define([
             } else {
                 offset.range = distanceToBoundingSphere3D(camera, radius);
             }
+            offset.range = CesiumMath.clamp(offset.range, minimumZoom, maximumZoom);
         }
 
         return offset;
@@ -2916,7 +2953,6 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var scene2D = this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW;
         this._setTransform(Matrix4.IDENTITY);
         var offset = adjustBoundingSphereOffset(this, boundingSphere, options.offset);
@@ -3105,6 +3141,46 @@ define([
         }
 
         return result;
+    };
+
+    /**
+     * Switches the frustum/projection to perspective.
+     *
+     * This function is a no-op in 2D which must always be orthographic.
+     */
+    Camera.prototype.switchToPerspectiveFrustum = function() {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof PerspectiveFrustum) {
+            return;
+        }
+
+        var scene = this._scene;
+        this.frustum = new PerspectiveFrustum();
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.fov = CesiumMath.toRadians(60.0);
+    };
+
+    /**
+     * Switches the frustum/projection to orthographic.
+     *
+     * This function is a no-op in 2D which will always be orthographic.
+     */
+    Camera.prototype.switchToOrthographicFrustum = function() {
+        if (this._mode === SceneMode.SCENE2D || this.frustum instanceof OrthographicFrustum) {
+            return;
+        }
+
+        var scene = this._scene;
+        this.frustum = new OrthographicFrustum();
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+
+        // It doesn't matter what we set this to. The adjust below will correct the width based on the camera position.
+        this.frustum.width = Cartesian3.magnitude(this.position);
+
+        // Check the projection matrix. It will always be defined, but we need to force an off-center update.
+        var projectionMatrix = this.frustum.projectionMatrix;
+        if (defined(projectionMatrix)) {
+            this._adjustOrthographicFrustum(true);
+        }
     };
 
     /**

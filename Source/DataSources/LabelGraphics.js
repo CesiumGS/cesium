@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -48,6 +47,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
+     * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -92,6 +92,8 @@ define([
         this._scaleByDistanceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._disableDepthTestDistance = undefined;
+        this._disableDepthTestDistanceSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -309,7 +311,15 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the distance from the camera at which to disable the depth test to, for example, prevent clipping against terrain.
+         * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        disableDepthTestDistance : createPropertyDescriptor('disableDepthTestDistance')
     });
 
     /**
@@ -342,6 +352,7 @@ define([
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
         result.scaleByDistance = this.scaleByDistance;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.disableDepthTestDistance = this.disableDepthTestDistance;
         return result;
     };
 
@@ -374,10 +385,11 @@ define([
         this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
-        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
-        this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
+        this.translucencyByDistance = defaultValue(this.translucencyByDistance, source.translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this.pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
 
     return LabelGraphics;

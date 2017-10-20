@@ -1,12 +1,11 @@
-/*global define*/
 define([
+        './Check',
         './defined',
-        './defineProperties',
-        './DeveloperError'
+        './defineProperties'
     ], function(
+        Check,
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -65,9 +64,7 @@ define([
      */
     Event.prototype.addEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof listener !== 'function') {
-            throw new DeveloperError('listener is required and must be a function.');
-        }
+        Check.typeOf.func('listener', listener);
         //>>includeEnd('debug');
 
         this._listeners.push(listener);
@@ -91,9 +88,7 @@ define([
      */
     Event.prototype.removeEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof listener !== 'function') {
-            throw new DeveloperError('listener is required and must be a function.');
-        }
+        Check.typeOf.func('listener', listener);
         //>>includeEnd('debug');
 
         var listeners = this._listeners;
@@ -125,6 +120,10 @@ define([
         return false;
     };
 
+    function compareNumber(a,b) {
+        return b - a;
+    }
+
     /**
      * Raises the event by calling each registered listener with all supplied arguments.
      *
@@ -151,12 +150,15 @@ define([
         //Actually remove items removed in removeEventListener.
         var toRemove = this._toRemove;
         length = toRemove.length;
-        for (i = 0; i < length; i++) {
-            var index = toRemove[i];
-            listeners.splice(index, 1);
-            scopes.splice(index, 1);
+        if (length > 0) {
+            toRemove.sort(compareNumber);
+            for (i = 0; i < length; i++) {
+                var index = toRemove[i];
+                listeners.splice(index, 1);
+                scopes.splice(index, 1);
+            }
+            toRemove.length = 0;
         }
-        toRemove.length = 0;
 
         this._insideRaiseEvent = false;
     };

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Scene/createTileMapServiceImageryProvider',
         'Core/Cartesian2',
@@ -11,6 +10,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Rectangle',
+        'Core/RequestScheduler',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
@@ -31,6 +31,7 @@ defineSuite([
         loadWithXhr,
         CesiumMath,
         Rectangle,
+        RequestScheduler,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         Imagery,
@@ -40,6 +41,10 @@ defineSuite([
         pollToPromise,
         when) {
     'use strict';
+
+    beforeEach(function() {
+        RequestScheduler.clearForSpecs();
+    });
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -97,6 +102,41 @@ defineSuite([
         }).otherwise(function (e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('unsupported profile');
+        });
+    });
+
+    it('rejects readyPromise on invalid xml', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                var parser = new DOMParser();
+                var xmlString =
+                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                    '   <Title/>' +
+                    '   <Abstract/>' +
+                    '   <SRS>EPSG:4326</SRS>' +
+                    '   <Origin x="-90.0" y="-180.0"/>' +
+                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                    '   <TileSets profile="foobar">' +
+                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                    '   </TileSets>' +
+                    '</TileMap>';
+                var xml = parser.parseFromString(xmlString, "text/xml");
+                deferred.resolve(xml);
+            }, 1);
+        };
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        return provider.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain('expected tilesets or bbox attributes');
         });
     });
 
@@ -236,7 +276,7 @@ defineSuite([
     });
 
     it('routes resource request through a proxy if one is specified', function() {
-        /*jshint unused: false*/
+        /*eslint-disable no-unused-vars*/
         var proxy = new DefaultProxy('/proxy/');
         var requestMetadata = when.defer();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -252,10 +292,11 @@ defineSuite([
         return requestMetadata.promise.then(function(url) {
             expect(url.indexOf(proxy.getURL('server.invalid'))).toEqual(0);
         });
+        /*eslint-enable no-unused-vars*/
     });
 
     it('resource request takes a query string', function() {
-        /*jshint unused: false*/
+        /*eslint-disable no-unused-vars*/
         var requestMetadata = when.defer();
         spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             requestMetadata.resolve(url);
@@ -269,6 +310,7 @@ defineSuite([
         return requestMetadata.promise.then(function(url) {
             expect(/\?query=1$/.test(url)).toEqual(true);
         });
+        /*eslint-enable no-unused-vars*/
     });
 
     it('routes tile requests through a proxy if one is specified', function() {
@@ -358,6 +400,9 @@ defineSuite([
             if (tries < 3) {
                 error.retry = true;
             }
+            setTimeout(function() {
+                RequestScheduler.update();
+            }, 1);
         });
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -378,6 +423,7 @@ defineSuite([
             var imagery = new Imagery(layer, 0, 0, 0);
             imagery.addReference();
             layer._requestImagery(imagery);
+            RequestScheduler.update();
 
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;

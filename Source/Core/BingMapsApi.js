@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Credit',
         './defined'
@@ -42,7 +41,7 @@ define([
                 console.log(errorString);
                 printedBingWarning = true;
             }
-            return 'AudaMP3YocqmIOQrFAValZ9d_tFqS4JWwiSEnvt2jwP5lizGzV_mJxLaKaI0fWRT';
+            return 'Aig5SkZ4pNMN8b4rX-RUH2c_95mK-wjb4WL9k50K51faErEGnNsxgpWHXiqS3Rhe';
         }
 
         return BingMapsApi.defaultKey;

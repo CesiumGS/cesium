@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/TranslationRotationScale',
         'Core/Cartesian3',

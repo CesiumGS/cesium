@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoxOutlineGeometry',
         'Core/AxisAlignedBoundingBox',

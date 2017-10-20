@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Scene/PrimitivePipeline',
         './createTaskProcessorWorker'

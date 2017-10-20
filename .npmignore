@@ -1,3 +1,4 @@
+/.eslintcache
 /.externalToolBuilders
 /.gitattributes
 /.github
@@ -7,6 +8,7 @@
 /.project
 /.settings
 /.travis.yml
+/.vscode
 /Apps
 /Build/minifyShaders.state
 /Build/Stubs

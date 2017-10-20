@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Color',
@@ -87,6 +86,9 @@ define([
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
+
+        this._useScissorTest = false;
+        this._scissorRectangle = undefined;
     }
 
     function destroyTextures(oit) {
@@ -200,7 +202,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, framebuffer) {
+    OIT.prototype.update = function(context, passState, framebuffer) {
         if (!this.isSupported()) {
             return;
         }
@@ -312,9 +314,22 @@ define([
         this._viewport.width = width;
         this._viewport.height = height;
 
-        if (!defined(this._rs) || !BoundingRectangle.equals(this._viewport, this._rs.viewport)) {
+        var useScissorTest = !BoundingRectangle.equals(this._viewport, passState.viewport);
+        var updateScissor = useScissorTest !== this._useScissorTest;
+        this._useScissorTest = useScissorTest;
+
+        if (!BoundingRectangle.equals(this._scissorRectangle, passState.viewport)) {
+            this._scissorRectangle = BoundingRectangle.clone(passState.viewport, this._scissorRectangle);
+            updateScissor = true;
+        }
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._viewport, this._rs.viewport) || updateScissor) {
             this._rs = RenderState.fromCache({
-                viewport : this._viewport
+                viewport : this._viewport,
+                scissorTest : {
+                    enabled : this._useScissorTest,
+                    rectangle : this._scissorRectangle
+                }
             });
         }
 
@@ -426,20 +441,20 @@ define([
             // shader compilation errors.
 
             fs.sources.splice(0, 0,
-                    (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
-                    'vec4 czm_gl_FragColor;\n' +
-                    'bool czm_discard = false;\n');
+                (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
+                'vec4 czm_gl_FragColor;\n' +
+                'bool czm_discard = false;\n');
 
             fs.sources.push(
-                    'void main()\n' +
-                    '{\n' +
-                    '    czm_translucent_main();\n' +
-                    '    if (czm_discard)\n' +
-                    '    {\n' +
-                    '        discard;\n' +
-                    '    }\n' +
-                    source +
-                    '}\n');
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    if (czm_discard)\n' +
+                '    {\n' +
+                '        discard;\n' +
+                '    }\n' +
+                source +
+                '}\n');
 
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, keyword, {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
@@ -518,7 +533,7 @@ define([
         return result;
     };
 
-    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands, invertClassification) {
         var command;
         var derivedCommand;
         var j;
@@ -543,6 +558,12 @@ define([
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
         passState.framebuffer = oit._alphaFBO;
 
         for (j = 0; j < length; ++j) {
@@ -551,10 +572,16 @@ define([
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
         passState.framebuffer = framebuffer;
     }
 
-    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
@@ -567,22 +594,31 @@ define([
         var debugFramebuffer = oit._opaqueFBO;
         passState.framebuffer = oit._translucentFBO;
 
+        var command;
+        var derivedCommand;
+
         for (var j = 0; j < length; ++j) {
-            var command = commands[j];
-            var derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            command = commands[j];
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
+        }
+
+        if (defined(invertClassification)) {
+            command = invertClassification.unclassifiedCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
     }
 
-    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
+    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands, invertClassification) {
         if (this._translucentMRTSupport) {
-            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands);
+            executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands, invertClassification);
             return;
         }
 
-        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands);
+        executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands, invertClassification);
     };
 
     OIT.prototype.execute = function(context, passState) {

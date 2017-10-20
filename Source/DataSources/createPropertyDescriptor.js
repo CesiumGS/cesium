@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
@@ -23,8 +22,8 @@ define([
                     this[subscriptionName] = undefined;
                 }
 
-                var hasValue = defined(value);
-                if (hasValue && !defined(value.getValue) && defined(createPropertyCallback)) {
+                var hasValue = value !== undefined;
+                if (hasValue && (!defined(value) || !defined(value.getValue)) && defined(createPropertyCallback)) {
                     value = createPropertyCallback(value);
                 }
 

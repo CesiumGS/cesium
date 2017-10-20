@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Widgets/Timeline/Timeline',
         'Core/Clock'

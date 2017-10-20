@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Renderer/Renderbuffer',
         'Renderer/ContextLimits',

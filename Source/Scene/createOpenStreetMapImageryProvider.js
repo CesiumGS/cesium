@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Credit',
         '../Core/defaultValue',
@@ -41,7 +40,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
      * @see SingleTileImageryProvider
      * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
@@ -95,7 +94,7 @@ define([
             credit = new Credit(credit);
         }
 
-        var templateUrl = url + "{z}/{x}/{y}." + fileExtension;
+        var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;
 
         return new UrlTemplateImageryProvider({
             url: templateUrl,

@@ -1,8 +1,8 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
+        '../Core/buildModuleUrl',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -10,6 +10,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -28,7 +29,12 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/OrthographicFrustum',
+        '../Core/OrthographicOffCenterFrustum',
+        '../Core/PerspectiveFrustum',
+        '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
@@ -37,16 +43,18 @@ define([
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
+        '../Renderer/loadCubeMap',
         '../Renderer/Pass',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        './BrdfLutGenerator',
         './Camera',
         './CreditDisplay',
-        './CullingVolume',
         './DebugCameraPrimitive',
         './DepthPlane',
         './DeviceOrientationCameraController',
@@ -55,14 +63,12 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './InvertClassification',
+        './JobScheduler',
         './MapMode2D',
         './OIT',
-        './OrthographicFrustum',
-        './OrthographicOffCenterFrustum',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
         './PickDepth',
         './Primitive',
         './PrimitiveCollection',
@@ -77,6 +83,7 @@ define([
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
+        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -84,6 +91,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -102,7 +110,12 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        OrthographicFrustum,
+        OrthographicOffCenterFrustum,
+        PerspectiveFrustum,
+        PerspectiveOffCenterFrustum,
         PixelFormat,
+        RequestScheduler,
         ShowGeometryInstanceAttribute,
         Transforms,
         ClearCommand,
@@ -111,16 +124,18 @@ define([
         ContextLimits,
         DrawCommand,
         Framebuffer,
+        loadCubeMap,
         Pass,
         PassState,
         PixelDatatype,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
+        BrdfLutGenerator,
         Camera,
         CreditDisplay,
-        CullingVolume,
         DebugCameraPrimitive,
         DepthPlane,
         DeviceOrientationCameraController,
@@ -129,14 +144,12 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        InvertClassification,
+        JobScheduler,
         MapMode2D,
         OIT,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
         PerformanceDisplay,
         PerInstanceColorAppearance,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
         PickDepth,
         Primitive,
         PrimitiveCollection,
@@ -242,7 +255,8 @@ define([
         }
 
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._jobScheduler = new JobScheduler();
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
@@ -320,6 +334,11 @@ define([
 
         this._cameraStartFired = false;
         this._cameraMovedTime = undefined;
+
+        this._pickPositionCache = {};
+        this._pickPositionCacheDirty = false;
+
+        this._minimumDisableDepthTestDistance = 0.0;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -614,6 +633,28 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
+        /**
+         * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
+         * unclassified 3D Tile geometry will render with the color multiplied by {@link Scene#invertClassificationColor}.
+         * @type {Boolean}
+         * @default false
+         */
+        this.invertClassification = false;
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * <p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles.</p>
+         * <p>Also, when the color's alpha is less than 1.0, the WEBGL_depth_texture and EXT_frag_depth WebGL extensions must be supported.</p>
+         * @type {Color}
+         * @default Color.WHITE
+         */
+        this.invertClassificationColor = Color.clone(Color.WHITE);
+
+        this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
+        this._invertClassification = new InvertClassification();
+
+        this._brdfLutGenerator = new BrdfLutGenerator();
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -647,7 +688,8 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false
+            useFXAA : false,
+            useInvertClassification : false
         };
 
         this._useWebVR = false;
@@ -665,7 +707,7 @@ define([
         this.initializeFrame();
     }
 
-    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.99;
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
         /**
@@ -879,6 +921,10 @@ define([
          */
         imageryLayers : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.imageryLayers;
             }
         },
@@ -891,10 +937,16 @@ define([
          */
         terrainProvider : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.terrainProvider;
             },
             set : function(terrainProvider) {
-                this.globe.terrainProvider = terrainProvider;
+                if (defined(this.globe)) {
+                    this.globe.terrainProvider = terrainProvider;
+                }
             }
         },
 
@@ -907,6 +959,10 @@ define([
          */
         terrainProviderChanged : {
             get : function() {
+                if (!defined(this.globe)) {
+                    return undefined;
+                }
+
                 return this.globe.terrainProviderChanged;
             }
         },
@@ -1131,7 +1187,7 @@ define([
             }
         },
 
-         /**
+        /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
          * @memberof Scene.prototype
          *
@@ -1141,9 +1197,31 @@ define([
             get: function() {
                 return this._frameState.imagerySplitPosition;
             },
-
             set: function(value) {
                 this._frameState.imagerySplitPosition = value;
+            }
+        },
+
+        /**
+         * The distance from the camera at which to disable the depth test of billboards, labels and points
+         * to, for example, prevent clipping against terrain. When set to zero, the depth test should always
+         * be applied. When less than zero, the depth test should never be applied. Setting the disableDepthTestDistance
+         * property of a billboard, label or point will override this value.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 0.0
+         */
+        minimumDisableDepthTestDistance : {
+            get : function() {
+                return this._minimumDisableDepthTestDistance;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value) || value < 0.0) {
+                    throw new DeveloperError('minimumDisableDepthTestDistance must be greater than or equal to 0.0.');
+                }
+                //>>includeEnd('debug');
+                this._minimumDisableDepthTestDistance = value;
             }
         }
     });
@@ -1174,10 +1252,10 @@ define([
         Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
         Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
         return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -1248,6 +1326,8 @@ define([
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
         frameState.shadowMaps.length = 0;
+        frameState.brdfLutGenerator = scene._brdfLutGenerator;
+        frameState.environmentMap = scene.skyBox && scene.skyBox._cubeMap;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1257,6 +1337,16 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
+        frameState.invertClassification = scene.invertClassification;
+
+        scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
+        if (!InvertClassification.isTranslucencySupported(scene._context)) {
+            scene._actualInvertClassificationColor.alpha = 1.0;
+        }
+
+        frameState.invertClassificationColor = scene._actualInvertClassificationColor;
+
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
         } else {
@@ -1315,7 +1405,7 @@ define([
                 break;
             }
 
-            var pass = command instanceof ClearCommand ? Pass.OPAQUE : command.pass;
+            var pass = command.pass;
             var index = frustumCommands.indices[pass]++;
             frustumCommands.commands[pass][index] = command;
 
@@ -1393,12 +1483,6 @@ define([
             planes[k] = cullingVolume.planes[k];
         }
         cullingVolume = scratchCullingVolume;
-
-        // Determine visibility of celestial and terrestrial environment effects.
-        var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1604,6 +1688,11 @@ define([
             return;
         }
 
+        if (command instanceof ClearCommand) {
+            command.execute(context, passState);
+            return;
+        }
+
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
         var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
@@ -1651,7 +1740,7 @@ define([
                 scene._debugVolume = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : geometry,
-                        modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center, new Matrix4()),
+                        modelMatrix : Matrix4.fromTranslation(center),
                         attributes : {
                             color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
                         }
@@ -1710,10 +1799,14 @@ define([
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
+
+        if (defined(invertClassification)) {
+            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
+        }
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
@@ -1813,8 +1906,8 @@ define([
         var executeTranslucentCommands;
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
-                scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
-                    scene._oit.executeCommands(scene, executeFunction, passState, commands);
+                scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertClassification) {
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
@@ -1862,6 +1955,7 @@ define([
             }
 
             clearDepth.execute(context, passState);
+            scene._stencilClearCommand.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -1871,7 +1965,7 @@ define([
             }
 
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
-                globeDepth.update(context);
+                globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -1879,28 +1973,123 @@ define([
                 passState.framebuffer = fb;
             }
 
-            us.updatePass(Pass.GROUND);
-            commands = frustumCommands.commands[Pass.GROUND];
-            length = frustumCommands.indices[Pass.GROUND];
+            us.updatePass(Pass.TERRAIN_CLASSIFICATION);
+            commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
+            length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            // Clear the stencil after the ground pass
+            if (clearGlobeDepth) {
+                clearDepth.execute(context, passState);
+            }
+
+            if (!environmentState.useInvertClassification || picking) {
+                // Common/fastest path. Draw 3D Tiles and classification normally.
+
+                // Draw 3D Tiles
+                us.updatePass(Pass.CESIUM_3D_TILE);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                // Draw classifications. Modifies 3D Tiles color.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+            } else {
+                // When the invert classification color is opaque:
+                //    Main FBO (FBO1):                   Main_Color   + Main_DepthStencil
+                //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
+                //
+                //    1. Clear FBO2 color to vec4(0.0) for each frustum
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Main_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Main_DepthStencil has stencil bit set to 0 (unclassified) and
+                //           * Invert_Color !== vec4(0.0)
+                //
+                // When the invert classification color is translucent:
+                //    Main FBO (FBO1):                  Main_Color         + Main_DepthStencil
+                //    Invert classification FBO (FBO2): Invert_Color       + Invert_DepthStencil
+                //    IsClassified FBO (FBO3):          IsClassified_Color + Invert_DepthStencil
+                //
+                //    1. Clear FBO2 and FBO3 color to vec4(0.0), stencil to 0, and depth to 1.0
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO3, draw any color when
+                //           * Invert_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color !== vec4(0.0)
+                //    6. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color === vec4(0.0)
+                //
+                // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
+                //
+                scene._invertClassification.clear(context, passState);
+
+                var opaqueClassificationFramebuffer = passState.framebuffer;
+                passState.framebuffer = scene._invertClassification._fbo;
+
+                // Draw normally
+                us.updatePass(Pass.CESIUM_3D_TILE);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                // Set stencil
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                passState.framebuffer = opaqueClassificationFramebuffer;
+
+                // Fullscreen pass to copy classified fragments
+                scene._invertClassification.executeClassified(context, passState);
+                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                    // Fullscreen pass to copy unclassified fragments when alpha == 1.0
+                    scene._invertClassification.executeUnclassified(context, passState);
+                }
+
+                // Clear stencil set by the classification for the next classification pass
+                if (length > 0 && context.stencilBuffer) {
+                    scene._stencilClearCommand.execute(context, passState);
+                }
+
+                // Draw style over classification.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+            }
+
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
             }
 
-            if (clearGlobeDepth) {
-                clearDepth.execute(context, passState);
-                if (useDepthPlane) {
-                    depthPlane.execute(context, passState);
-                }
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
             }
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.GROUND + 1;
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 us.updatePass(pass);
@@ -1917,10 +2106,17 @@ define([
                 us.updateFrustum(frustum);
             }
 
+            var invertClassification;
+            if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+                // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
+                // Not executed when undefined.
+                invertClassification = scene._invertClassification;
+            }
+
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
-            executeTranslucentCommands(scene, executeCommand, passState, commands);
+            executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
             if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
@@ -1971,7 +2167,7 @@ define([
             var command = commandList[i];
             updateDerivedCommands(scene, command);
 
-            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.CESIUM_3D_TILE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
@@ -2045,10 +2241,16 @@ define([
         }
     }
 
+    var scratchEyeTranslation = new Cartesian3();
+
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
 
         var viewport = passState.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
 
         var frameState = scene._frameState;
         var camera = frameState.camera;
@@ -2056,12 +2258,13 @@ define([
         var depthOnly = frameState.passes.depth;
 
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+
             if (!depthOnly) {
                 updatePrimitives(scene);
             }
 
             createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
 
             if (!depthOnly) {
                 executeComputeCommands(scene);
@@ -2100,17 +2303,11 @@ define([
             executeCommands(scene, passState);
 
             Camera.clone(savedCamera, camera);
+        } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
+            executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else {
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth;
-            viewport.height = context.drawingBufferHeight;
-
-            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
-                executeCommandsInViewport(true, scene, passState, backgroundColor);
-            } else {
-                execute2DViewportCommands(scene, passState, backgroundColor);
-            }
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+            execute2DViewportCommands(scene, passState);
         }
     }
 
@@ -2121,12 +2318,16 @@ define([
     var scratch2DViewportCameraTransform = new Matrix4();
     var scratch2DViewportEyePoint = new Cartesian3();
     var scratch2DViewportWindowCoords = new Cartesian3();
+    var scratch2DViewport = new BoundingRectangle();
 
-    function execute2DViewportCommands(scene, passState, backgroundColor) {
+    function execute2DViewportCommands(scene, passState) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
-        var viewport = passState.viewport;
+
+        var originalViewport = passState.viewport;
+        var viewport = BoundingRectangle.clone(originalViewport, scratch2DViewport);
+        passState.viewport = viewport;
 
         var maxCartographic = scratch2DViewportCartographic;
         var maxCoord = scratch2DViewportMaxCoord;
@@ -2152,10 +2353,10 @@ define([
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
 
-        if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
-        } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
-            viewport.width = windowCoordinates.x;
+        if (x === 0.0 || windowCoordinates.x <= viewportX  || windowCoordinates.x >= viewportX + viewportWidth) {
+            executeCommandsInViewport(true, scene, passState);
+        } else if (Math.abs(viewportX + viewportWidth * 0.5 - windowCoordinates.x) < 1.0) {
+            viewport.width = windowCoordinates.x - viewport.x;
 
             camera.position.x *= CesiumMath.sign(camera.position.x);
 
@@ -2164,9 +2365,9 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
-            viewport.x = viewport.width;
+            viewport.x = windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
@@ -2176,9 +2377,9 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
-        } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
-            viewport.width = windowCoordinates.x;
+            executeCommandsInViewport(false, scene, passState);
+        } else if (windowCoordinates.x > viewportX + viewportWidth * 0.5) {
+            viewport.width = windowCoordinates.x - viewportX;
 
             var right = camera.frustum.right;
             camera.frustum.right = maxCoord.x - x;
@@ -2186,10 +2387,10 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
-            viewport.x += windowCoordinates.x;
-            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+            viewport.x = windowCoordinates.x;
+            viewport.width = viewportX + viewportWidth - windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
@@ -2199,10 +2400,10 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         } else {
             viewport.x = windowCoordinates.x;
-            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+            viewport.width = viewportX + viewportWidth - windowCoordinates.x;
 
             var left = camera.frustum.left;
             camera.frustum.left = -maxCoord.x - x;
@@ -2210,10 +2411,10 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(true, scene, passState, backgroundColor);
+            executeCommandsInViewport(true, scene, passState);
 
-            viewport.x = 0;
-            viewport.width = windowCoordinates.x;
+            viewport.x = viewportX;
+            viewport.width = windowCoordinates.x - viewportX;
 
             camera.position.x = -camera.position.x;
 
@@ -2223,15 +2424,13 @@ define([
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
-            executeCommandsInViewport(false, scene, passState, backgroundColor);
+            executeCommandsInViewport(false, scene, passState);
         }
 
         camera._setTransform(transform);
         Cartesian3.clone(position, camera.position);
         camera.frustum = frustum.clone();
-
-        viewport.x = viewportX;
-        viewport.width = viewportWidth;
+        passState.viewport = originalViewport;
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
@@ -2248,7 +2447,9 @@ define([
         createPotentiallyVisibleSet(scene);
 
         if (firstViewport) {
-            updateAndClearFramebuffers(scene, passState, backgroundColor);
+            if (defined(backgroundColor)) {
+                updateAndClearFramebuffers(scene, passState, backgroundColor);
+            }
             if (!depthOnly) {
                 executeComputeCommands(scene);
                 executeShadowMapCastCommands(scene);
@@ -2258,7 +2459,7 @@ define([
         executeCommands(scene, passState);
     }
 
-    function updateEnvironment(scene) {
+    function updateEnvironment(scene, passState) {
         var frameState = scene._frameState;
 
         // Update celestial and terrestrial environment effects.
@@ -2280,7 +2481,7 @@ define([
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(scene) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
@@ -2294,6 +2495,21 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
+
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        // Determine visibility of celestial and terrestrial environment effects.
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
+        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
     }
 
     function updateDebugFrustumPlanes(scene) {
@@ -2407,25 +2623,14 @@ define([
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
-            scene._globeDepth.update(context);
+            scene._globeDepth.update(context, passState);
             scene._globeDepth.clear(context, passState, clearColor);
         }
 
-        // Determine if there are any translucent surfaces in any of the frustums.
-        var renderTranslucentCommands = false;
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            if (frustumCommandsList[i].indices[Pass.TRANSLUCENT] > 0) {
-                renderTranslucentCommands = true;
-                break;
-            }
-        }
-
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var useOIT = environmentState.useOIT = !picking && renderTranslucentCommands && defined(scene._oit) && scene._oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            scene._oit.update(context, scene._globeDepth.framebuffer);
+            scene._oit.update(context, passState, scene._globeDepth.framebuffer);
             scene._oit.clear(context, passState, clearColor);
             environmentState.useOIT = scene._oit.isSupported();
         }
@@ -2433,7 +2638,7 @@ define([
         // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
         var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
         if (useFXAA) {
-            scene._fxaa.update(context);
+            scene._fxaa.update(context, passState);
             scene._fxaa.clear(context, passState, clearColor);
         }
 
@@ -2447,6 +2652,28 @@ define([
 
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
+        }
+
+        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        if (useInvertClassification) {
+            var depthFramebuffer;
+            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (environmentState.useGlobeDepthFramebuffer) {
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
+                }
+            }
+
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
+
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+            }
         }
     }
 
@@ -2520,9 +2747,9 @@ define([
         this._camera._updateCameraChanged();
     };
 
-    var scratchEyeTranslation = new Cartesian3();
-
     function render(scene, time) {
+        scene._pickPositionCacheDirty = true;
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
@@ -2541,6 +2768,7 @@ define([
         }
 
         scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2549,6 +2777,10 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
+
+        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
+        frameState.backgroundColor = backgroundColor;
+
         frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
@@ -2574,8 +2806,8 @@ define([
             scene.globe.beginFrame(frameState);
         }
 
-        updateEnvironment(scene);
-        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        updateEnvironment(scene, passState);
+        updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
@@ -2603,6 +2835,7 @@ define([
         }
 
         context.endFrame();
+        RequestScheduler.update();
         callAfterRenderFunctions(frameState);
 
         scene._postRender.raiseEvent(scene, time);
@@ -2729,18 +2962,35 @@ define([
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
      * potentially be set depending on the type of primitive.
+     * <p>
+     * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
+     * </p>
+     *
+     * @example
+     * // On mouse over, color the feature yellow.
+     * handler.setInputAction(function(movement) {
+     *     var feature = scene.pick(movement.endPosition);
+     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+     *         feature.color = Cesium.Color.YELLOW;
+     *     }
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [width=3] Width of the pick rectangle.
+     * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      */
-    Scene.prototype.pick = function(windowPosition) {
+    Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
+
+        rectangleWidth = defaultValue(width, 3.0);
+        rectangleHeight = defaultValue(height, rectangleWidth);
 
         var context = this._context;
         var us = context.uniformState;
@@ -2752,18 +3002,23 @@ define([
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 
+        this._jobScheduler.disableThisFrame();
+
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
+        frameState.invertClassification = false;
         frameState.passes.pick = true;
 
         us.update(frameState);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
-
+        scratchRectangle.width = rectangleWidth;
+        scratchRectangle.height = rectangleHeight;
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
+        updateEnvironment(this, passState);
         updateAndExecuteCommands(this, passState, scratchColorZero);
         resolveFramebuffers(this, passState);
 
@@ -2910,6 +3165,7 @@ define([
         passState.scissorTest.rectangle.width = 1;
         passState.scissorTest.rectangle.height = 1;
 
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 
@@ -2949,6 +3205,15 @@ define([
             throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
         }
         //>>includeEnd('debug');
+
+        var cacheKey = windowPosition.toString();
+
+        if (this._pickPositionCacheDirty){
+            this._pickPositionCache = {};
+            this._pickPositionCacheDirty = false;
+        } else if (this._pickPositionCache.hasOwnProperty(cacheKey)){
+            return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
+        }
 
         var context = this._context;
         var uniformState = context.uniformState;
@@ -3011,10 +3276,12 @@ define([
                     uniformState.update(this.frameState);
                 }
 
+                this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
                 return result;
             }
         }
 
+        this._pickPositionCache[cacheKey] = undefined;
         return undefined;
     };
 
@@ -3049,6 +3316,7 @@ define([
             var cart = projection.unproject(result, scratchPickPositionCartographic);
             ellipsoid.cartographicToCartesian(cart, result);
         }
+
         return result;
     };
 
@@ -3236,6 +3504,7 @@ define([
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
         this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
+        this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
@@ -3254,6 +3523,28 @@ define([
         }
 
         return destroyObject(this);
+    };
+
+    /**
+     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in cartesian coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.cartesianToCanvasCoordinates(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
     };
 
     return Scene;
