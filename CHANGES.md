@@ -7,6 +7,7 @@ Change Log
 * Fixed a bug that caused KML ground overlays to appear distorted when rotation was applied. [#5914](https://github.com/AnalyticalGraphicsInc/cesium/issues/5914)
 * Adds `invertClassification` and `invertClassificationColor` to `Scene`. When `invertClassification` is `true`, any 3D Tiles geometry that is not classified by a `ClassificationPrimitive` or `GroundPrimitive` will have its color multiplied by `invertClassificationColor`. [#5836](https://github.com/AnalyticalGraphicsInc/cesium/pull/5836)
 * Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL. [#5696](https://github.com/AnalyticalGraphicsInc/cesium/pull/5696)
+* Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
 
 ### 1.38 - 2017-10-02
 
