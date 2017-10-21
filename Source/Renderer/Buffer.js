@@ -68,6 +68,7 @@ define([
         gl.bindBuffer(bufferTarget, null);
 
         this._gl = gl;
+        this._webgl2 = options.context._webgl2;
         this._bufferTarget = bufferTarget;
         this._sizeInBytes = sizeInBytes;
         this._usage = usage;
@@ -252,6 +253,98 @@ define([
         var target = this._bufferTarget;
         gl.bindBuffer(target, this._buffer);
         gl.bufferSubData(target, offsetInBytes, arrayView);
+        gl.bindBuffer(target, null);
+    };
+
+    Buffer.prototype.copyFromBuffer = function(readBuffer, readOffset, writeOffset, sizeInBytes) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._webgl2) {
+            throw new DeveloperError('A WebGL 2 context is required.');
+        }
+        if (!defined(readBuffer)) {
+            throw new DeveloperError('readBuffer must be defined.');
+        }
+        if (!defined(sizeInBytes) || sizeInBytes <= 0) {
+            throw new DeveloperError('sizeInBytes must be defined and be greater than zero.');
+        }
+        if (!defined(readOffset) || readOffset < 0 || readOffset + sizeInBytes > readBuffer._sizeInBytes) {
+            throw new DeveloperError('readOffset must be greater than or equal to zero and readOffset + sizeInBytes must be less than of equal to readBuffer.sizeInBytes.');
+        }
+        if (!defined(writeOffset) || writeOffset < 0 || writeOffset + sizeInBytes > this._sizeInBytes) {
+            throw new DeveloperError('writeOffset must be greater than or equal to zero and writeOffset + sizeInBytes must be less than of equal to this.sizeInBytes.');
+        }
+        if (this._buffer === readBuffer._buffer && ((writeOffset >= readOffset && writeOffset < readOffset + sizeInBytes) || (readOffset > writeOffset && readOffset < writeOffset + sizeInBytes))) {
+            throw new DeveloperError('When readBuffer is equal to this, the ranges [readOffset + sizeInBytes) and [writeOffset, writeOffset + sizeInBytes) must not overlap.');
+        }
+        if ((this._bufferTarget === WebGLConstants.ELEMENT_ARRAY_BUFFER && readBuffer._bufferTarget !== WebGLConstants.ELEMENT_ARRAY_BUFFER) ||
+            (this._bufferTarget !== WebGLConstants.ELEMENT_ARRAY_BUFFER && readBuffer._bufferTarget === WebGLConstants.ELEMENT_ARRAY_BUFFER)) {
+            throw new DeveloperError('Can not copy an index buffer into another buffer type.');
+        }
+        //>>includeEnd('debug');
+
+        var readTarget = WebGLConstants.COPY_READ_BUFFER;
+        var writeTarget = WebGLConstants.COPY_WRITE_BUFFER;
+
+        var gl = this._gl;
+        gl.bindBuffer(writeTarget, this._buffer);
+        gl.bindBuffer(readTarget, readBuffer._buffer);
+        gl.copyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, sizeInBytes);
+        gl.bindBuffer(writeTarget, null);
+        gl.bindBuffer(readTarget, null);
+    };
+
+    Buffer.prototype.getBufferData = function(arrayView, sourceOffset, destinationOffset, length) {
+        sourceOffset = defaultValue(sourceOffset, 0);
+        destinationOffset = defaultValue(destinationOffset, 0);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._webgl2) {
+            throw new DeveloperError('A WebGL 2 context is required.');
+        }
+        if (!defined(arrayView)) {
+            throw new DeveloperError('arrayView is required.');
+        }
+
+        var copyLength;
+        var elementSize;
+        var arrayLength = arrayView.byteLength;
+        if (!defined(length)) {
+            if (defined(arrayLength)) {
+                copyLength = arrayLength - destinationOffset;
+                elementSize = 1;
+            } else {
+                arrayLength = arrayView.length;
+                copyLength = arrayLength - destinationOffset;
+                elementSize = arrayView.BYTES_PER_ELEMENT;
+            }
+        } else {
+            copyLength = length;
+            if (defined(arrayLength)) {
+                elementSize = 1;
+            } else {
+                arrayLength = arrayView.length;
+                elementSize = arrayView.BYTES_PER_ELEMENT;
+            }
+        }
+
+        if (destinationOffset < 0 || destinationOffset > arrayLength) {
+            throw new DeveloperError('destinationOffset must be greater than zero and less than the arrayView length.');
+        }
+        if (destinationOffset + copyLength > arrayLength) {
+            throw new DeveloperError('destinationOffset + length must be less than or equal to the arrayViewLength.');
+        }
+        if (sourceOffset < 0 || sourceOffset > this._sizeInBytes) {
+            throw new DeveloperError('sourceOffset must be greater than zero and less than the buffers size.');
+        }
+        if (sourceOffset + copyLength * elementSize > this._sizeInBytes) {
+            throw new DeveloperError('sourceOffset + length must be less than the buffers size.');
+        }
+        //>>includeEnd('debug');
+
+        var gl = this._gl;
+        var target = WebGLConstants.COPY_READ_BUFFER;
+        gl.bindBuffer(target, this._buffer);
+        gl.getBufferSubData(target, sourceOffset, arrayView, destinationOffset, length);
         gl.bindBuffer(target, null);
     };
 
