@@ -45,8 +45,6 @@ define([
      * @private
      */
     function PostProcessAmbientOcclusionStage() {
-        this._texture = undefined;
-        this._framebuffer = undefined;
         this._postProcess = undefined;
         this._randomTexture = undefined;
 
@@ -179,28 +177,7 @@ define([
         this._uniformValues.aoTexture = this._postProcess.outputColorTexture;
     };
 
-    function createResources(stage, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
-        var texture = new Texture({
-            context : context,
-            width : screenWidth,
-            height : screenHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.LINEAR,
-                magnificationFilter : TextureMagnificationFilter.LINEAR
-            })
-        });
-        var framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [texture],
-            destroyAttachments : false
-        });
-
+    function createResources(stage) {
         var generateUniformValues = stage._generateUniformValues;
         var blurXUniformValues = stage._blurXUniformValues;
         var blurYUniformValues = stage._blurYUniformValues;
@@ -233,15 +210,10 @@ define([
         blurXStage.show = true;
         blurYStage.show = true;
 
-        stage._texture = texture;
-        stage._framebuffer = framebuffer;
         stage._postProcess = postProcess;
-        stage._uniformValues.aoTexture = texture;
     }
 
     function destroyResources(stage) {
-        stage._texture = stage._texture && stage._texture.destroy();
-        stage._framebuffer = stage._framebuffer && stage._framebuffer.destroy();
         stage._postProcess = stage._postProcess && stage._postProcess.destroy();
     }
 
