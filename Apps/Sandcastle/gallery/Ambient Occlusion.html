@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Ambient Occlusion.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td>Ambient Occlusion</td>
+            <td>
+                <input type="checkbox" data-bind="checked: show">
+            </td>
+        </tr>
+        <tr>
+            <td>Ambient Occlusion Only</td>
+            <td>
+                <input type="checkbox" data-bind="checked: ambientOcclusionOnly">
+            </td>
+        </tr>
+        <tr>
+            <td>Intensity</td>
+            <td>
+                <input type="range" min="1" max="10" step="1" data-bind="value: intensity, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>Length Cap</td>
+            <td>
+                <input type="range" min="0" max="1" step="0.01" data-bind="value: lengthCap, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>Step Size</td>
+            <td>
+                <input type="range" min="1" max="10" step="0.01" data-bind="value: stepSize, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>Bias</td>
+            <td>
+                <input type="range" min="0" max="1" step="0.01" data-bind="value: bias, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>Kernel Size</td>
+            <td>
+                <input type="range" min="0" max="4" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'">
+            </td>
+        </tr>
+    </tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4'
+}));
+
+var viewModel = {
+    show : true,
+    ambientOcclusionOnly : false,
+    intensity : 3.0,
+    bias : 0.1,
+    lengthCap : 0.26,
+    stepSize : 1.95,
+    kernelSize : 0.86
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+for (var name in viewModel) {
+    if (viewModel.hasOwnProperty(name)) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
+    }
+}
+
+function updatePostProcess() {
+    var postProcess = viewer.scene.postProcess;
+    postProcess.ambientOcclusion.show = Boolean(viewModel.show);
+    postProcess.ambientOcclusion.uniformValues.aoOnly = Boolean(viewModel.ambientOcclusionOnly);
+    postProcess.ambientOcclusion.generateUniformValues.intensity = Number(viewModel.intensity);
+    postProcess.ambientOcclusion.generateUniformValues.bias = Number(viewModel.bias);
+    postProcess.ambientOcclusion.generateUniformValues.lenCap = Number(viewModel.lengthCap);
+    postProcess.ambientOcclusion.generateUniformValues.stepSize = Number(viewModel.stepSize);
+    postProcess.ambientOcclusion.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.ambientOcclusion.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
+}
+updatePostProcess();
+
+var camera = viewer.scene.camera;
+camera.position = new Cesium.Cartesian3(1234121.9491740603, -5086009.253843431, 3633365.2993020345);
+camera.direction = new Cesium.Cartesian3(-0.17858981588454467, -0.2750910876938125, -0.9446854350172652);
+camera.up = new Cesium.Cartesian3(0.13955391921919083, -0.9574962548451945, 0.2524393503160511);
+camera.right = Cesium.Cartesian3.cross(camera.direction, camera.up, new Cesium.Cartesian3());
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
