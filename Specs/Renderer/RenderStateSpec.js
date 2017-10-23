@@ -409,22 +409,9 @@ defineSuite([
         expect(cache[fullKey]).not.toBeDefined();
     });
 
-    it('freezes render states', function(){
-        if (window.release) {
-            return;
-        }
+    it('freezes render states', function() {
         var rs = RenderState.fromCache();
-        expect(function() {
-            rs.depthRange = {};
-        }).toThrow();
-
-        expect(function() {
-            rs.frontFace = WindingOrder.COUNTER_CLOCKWISE;
-        }).toThrow();
-
-        expect(function() {
-            rs._applyFunctions.push(function(){});
-        }).not.toThrow();
+        expect(Object.isFrozen(rs)).toBe(!window.specsUsingRelease);
     });
 
     it('fails to create (frontFace)', function() {
