@@ -2,7 +2,7 @@ define([
         '../Core/Check',
         '../Core/defineProperties',
         '../Core/destroyObject'
-], function(
+    ], function(
         Check,
         defineProperties,
         destroyObject) {
@@ -27,7 +27,7 @@ define([
         /**
          * @inheritDoc PostProcessStage#show
          */
-        this.show = false;
+        this.show = true;
     }
 
     defineProperties(PostProcessCompositeStage.prototype, {

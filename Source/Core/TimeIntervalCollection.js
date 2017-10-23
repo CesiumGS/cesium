@@ -1,27 +1,27 @@
 define([
-    './binarySearch',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError',
-    './Event',
-    './GregorianDate',
-    './isLeapYear',
-    './Iso8601',
-    './JulianDate',
-    './TimeInterval'
-], function(
-    binarySearch,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    GregorianDate,
-    isLeapYear,
-    Iso8601,
-    JulianDate,
-    TimeInterval) {
+        './binarySearch',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Event',
+        './GregorianDate',
+        './isLeapYear',
+        './Iso8601',
+        './JulianDate',
+        './TimeInterval'
+    ], function(
+        binarySearch,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        GregorianDate,
+        isLeapYear,
+        Iso8601,
+        JulianDate,
+        TimeInterval) {
     'use strict';
 
     function compareIntervalStartTimes(left, right) {

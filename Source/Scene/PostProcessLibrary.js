@@ -11,7 +11,7 @@ define([
         './PostProcessStage',
         '../Shaders/PostProcessFilters/FXAA',
         '../ThirdParty/Shaders/FXAA3_11'
-], function(
+    ], function(
         buildModuleUrl,
         defineProperties,
         destroyObject,

@@ -1,21 +1,21 @@
 define([
-    '../Core/Check',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/JulianDate',
-    '../Core/Request',
-    '../Core/RequestType'
-], function(
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    JulianDate,
-    Request,
-    RequestType) {
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/JulianDate',
+        '../Core/Request',
+        '../Core/RequestType'
+    ], function(
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        JulianDate,
+        Request,
+        RequestType) {
     'use strict';
 
     /**

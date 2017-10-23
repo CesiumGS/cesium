@@ -47,8 +47,9 @@ define([
      *
      * @param {Object} options An object with the following properties:
      * @param {PostProcessStage[]} options.stages The post processing stages to run.
-     * @param {Boolean} [options.overwriteInput=false] Whether to overwrite the input frambuffer color texture during post processing.
+     * @param {Boolean} [options.overwriteInput=false] Whether to overwrite the input color texture during post processing.
      * @param {Boolean} [options.blendOutput=false] Whether to alpha blend the post processing with the output framebuffer.
+     * @param {Boolean} [options.createOutputFramebuffer=false] Create an output framebuffer if none is supplied.
      *
      * @alias PostProcess
      * @constructor
@@ -61,7 +62,8 @@ define([
 
         this._stages = options.stages;
         this._overwriteInput = defaultValue(options.overwriteInput, false);
-        this._blendOutput = defaultValue(options.blendOutput, true);
+        this._blendOutput = defaultValue(options.blendOutput, false);
+        this._createOutputFramebuffer = defaultValue(options.createOutputFramebuffer, false);
 
         this._drawCommands = undefined;
         this._framebuffers = undefined;
@@ -87,6 +89,14 @@ define([
                 }
                 return false;
             }
+        },
+        outputColorTexture : {
+            get : function() {
+                if (!defined(this._outputFramebuffer)) {
+                    return undefined;
+                }
+                return this._outputFramebuffer.getColorTexture(0);
+            }
         }
     });
 
@@ -96,14 +106,15 @@ define([
     }
 
     function PostProcessCache() {
-        this.textures = [
-            new CachedTexture(),
-            new CachedTexture()
-        ];
+        this.textures = [];
     }
 
-    PostProcessCache.prototype.createTexture = function(index, context) {
-        var cachedTexture = this.textures[index];
+    PostProcessCache.prototype.getCachedTexture = function(index, context) {
+        var cachedTextures = this.textures;
+        if (index === cachedTextures.length) {
+            cachedTextures.push(new CachedTexture());
+        }
+        var cachedTexture = cachedTextures[index];
         var colorTexture = cachedTexture.texture;
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
@@ -124,11 +135,20 @@ define([
                 sampler : createSampler()
             });
         }
+
         return cachedTexture.texture;
     };
 
-    PostProcessCache.prototype.destroyTexture = function(index) {
-        var cachedTexture = this.textures[index];
+    PostProcessCache.prototype.destroyTexture = function(texture) {
+        var cachedTexture;
+        var cachedTextures = this.textures;
+        var length = cachedTextures.length;
+        for (var i = 0; i < length; ++i) {
+            cachedTexture = cachedTextures[i];
+            if (cachedTexture.texture === texture) {
+                break;
+            }
+        }
         var count = --cachedTexture.count;
         if (count === 0) {
             cachedTexture.texture.destroy();
@@ -144,7 +164,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 var colorTexture = colorTextures[i];
                 if (colorTexture !== inputColorTexture) {
-                    postProcess._cache.destroyTexture(i);
+                    postProcess._cache.destroyTexture(colorTexture);
                 }
             }
             postProcess._colorTextures = undefined;
@@ -159,6 +179,11 @@ define([
                 framebuffers[i].destroy();
             }
             postProcess._framebuffers = undefined;
+        }
+
+        if (postProcess._createOutputFramebuffer && defined(postProcess._outputFramebuffer)) {
+            postProcess._outputFramebuffer.destroy();
+            postProcess._outputFramebuffer = undefined;
         }
     }
 
@@ -196,7 +221,9 @@ define([
         });
     }
 
-    function createStages(postProcess, inputColorTexture, outputFramebuffer) {
+    function createStages(postProcess) {
+        var inputColorTexture = postProcess._inputColorTexture;
+        var outputColorTexture = postProcess.outputColorTexture;
         var activeStages = [];
         var inactiveStages = [];
         var stagesEnabled = [];
@@ -220,7 +247,6 @@ define([
         }
 
         // Cannot read and write to the same framebuffer simultaneously, add a passthrough stage.
-        var outputColorTexture = defined(outputFramebuffer) ? outputFramebuffer.getColorTexture(0) : undefined;
         if (inputColorTexture === outputColorTexture && activeStages.length === 1) {
             var passthroughStage = createPassthroughStage();
             activeStages.push(passthroughStage);
@@ -236,17 +262,34 @@ define([
         });
     }
 
-    function createTextures(postProcess, inputColorTexture, context) {
+    function getCachedTexture(postProcess, inputColorTexture, previousColorTexture, context) {
+        var texture;
+        var textureIndex = 0;
+        while (!defined(texture) || (texture === inputColorTexture) || (texture === previousColorTexture)) {
+            texture = postProcess._cache.getCachedTexture(textureIndex, context);
+            ++textureIndex;
+        }
+        return texture;
+    }
+
+    function createTextures(postProcess, context) {
+        var inputColorTexture = postProcess._inputColorTexture;
         var activeStages = postProcess._activeStages;
         var length = CesiumMath.clamp(activeStages.length - 1, 0, 2);
         var colorTextures = new Array(length);
         postProcess._colorTextures = colorTextures;
 
-        if (length >= 1) {
-            colorTextures[0] = postProcess._cache.createTexture(0, context);
+        if (length === 0) {
+            return;
         }
+
+        // Get the first ping-pong texture
+        colorTextures[0] = getCachedTexture(postProcess, inputColorTexture, inputColorTexture, context);
+
         if (length === 2) {
-            colorTextures[1] = postProcess._overwriteInput ? inputColorTexture : postProcess._cache.createTexture(1, context);
+            // If there are three or more stages a second ping-pong texture is required.
+            // If overwriteInput is true, use the input texture as the second ping-pong texture.
+            colorTextures[1] = postProcess._overwriteInput ? inputColorTexture : getCachedTexture(postProcess, inputColorTexture, colorTextures[0], context);
         }
     }
 
@@ -260,6 +303,24 @@ define([
             framebuffers[i] = new Framebuffer({
                 context : context,
                 colorTextures : [colorTextures[i]],
+                destroyAttachments : false
+            });
+        }
+
+        if (postProcess._createOutputFramebuffer) {
+            var screenWidth = context.drawingBufferWidth;
+            var screenHeight = context.drawingBufferHeight;
+            var colorTexture = new Texture({
+                context : context,
+                width : screenWidth,
+                height : screenHeight,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                sampler : createSampler()
+            });
+            postProcess._outputFramebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [colorTexture],
                 destroyAttachments : false
             });
         }
@@ -316,7 +377,7 @@ define([
         if (index === length - 1) {
             return outputFramebuffer;
         }
-        return  framebuffers[index % framebuffers.length];
+        return framebuffers[index % framebuffers.length];
     }
 
     function createDrawCommands(postProcess, context) {
@@ -353,7 +414,7 @@ define([
 
         if (inputColorTexture !== postProcess._inputColorTexture ||
             inputDepthTexture !== postProcess._inputDepthTexture ||
-            outputFramebuffer !== postProcess._outputFramebuffer) {
+            outputFramebuffer !== postProcess._outputFramebuffer && !postProcess._createOutputFramebuffer) {
             postProcess._inputColorTexture = inputColorTexture;
             postProcess._inputDepthTexture = inputDepthTexture;
             postProcess._outputFramebuffer = outputFramebuffer;
@@ -410,8 +471,8 @@ define([
         if (dirty) {
             destroyDrawCommands(this);
             destroyFramebuffers(this);
-            createStages(this, inputColorTexture, outputFramebuffer);
-            createTextures(this, inputColorTexture, context);
+            createStages(this);
+            createTextures(this, context);
             createFramebuffers(this, context);
             createDrawCommands(this, context);
         }
