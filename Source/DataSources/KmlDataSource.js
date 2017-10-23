@@ -1150,7 +1150,7 @@ define([
         // If there were empty <Icon> tags in the KML, then billboard.image was set to false above
         // However, in this case, the false value would have been converted to a property afterwards
         // Thus, we check if billboard.image is defined with value of false
-        } else if (billboard.image && !billboard.image.getValue()) {
+        } else if (!billboard.image.getValue()) {
             billboard.image = undefined;
         }
 
