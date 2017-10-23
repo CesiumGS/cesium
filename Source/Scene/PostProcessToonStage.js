@@ -37,21 +37,18 @@ define([
      * @private
      */
     function PostProcessToonStage() {
-        
-        this._ToonTexture = undefined;
-        this._ToonFramebuffer = undefined;
-        this._ToonPostProcess = undefined;
+        this._toonTexture = undefined;
+        this._toonFramebuffer = undefined;
+        this._toonPostProcess = undefined;
 
-        this._EdgeDetectionUniformValues = {
+        this._edgeDetectionUniformValues = {
             len : 0.1
         };
 
-        this._ToonUniformValues = {
-          
-        };
+        this._toonUniformValues = {};
 
         this._uniformValues = {
-            ToonTexture : undefined,
+            toonTexture : undefined,
             toonOnly : true
         };
 
@@ -62,14 +59,14 @@ define([
 
         this._fragmentShader =
             'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_ToonTexture; \n' +
+            'uniform sampler2D u_toonTexture; \n' +
             'uniform bool  u_toonOnly; \n' +
             'varying vec2 v_textureCoordinates; \n' +
-           
+
             'void main(void) \n' +
-            '{ \n' +            
-            '     gl_FragColor = texture2D(u_ToonTexture, v_textureCoordinates);\n' +
-            '     gl_FragColor = mix(texture2D(u_colorTexture, v_textureCoordinates), texture2D(u_ToonTexture, v_textureCoordinates), gl_FragColor.a);\n' +           
+            '{ \n' +
+            '     gl_FragColor = texture2D(u_toonTexture, v_textureCoordinates);\n' +
+            '     gl_FragColor = mix(texture2D(u_colorTexture, v_textureCoordinates), texture2D(u_toonTexture, v_textureCoordinates), gl_FragColor.a);\n' +
             '} \n';
     }
 
@@ -97,21 +94,21 @@ define([
             get : function() {
                 return this._fragmentShader;
             }
-        },        
+        },
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        EdgeDetectionUniformValues : {
+        edgeDetectionUniformValues : {
             get : function() {
-                return this._EdgeDetectionUniformValues;
+                return this._edgeDetectionUniformValues;
             }
         },
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        ToonUniformValues : {
+        toonUniformValues : {
             get : function() {
-                return this._ToonUniformValues;
+                return this._toonUniformValues;
             }
         }
 
@@ -130,7 +127,7 @@ define([
             createResources(this, frameState.context);
         }
 
-        this._ToonPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._ToonFramebuffer);
+        this._toonPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._toonFramebuffer);
     };
 
     function createSampler() {
@@ -145,7 +142,7 @@ define([
     function createResources(stage, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
-        var ToonTexture = new Texture({
+        var toonTexture = new Texture({
             context : context,
             width : screenWidth,
             height : screenHeight,
@@ -153,21 +150,21 @@ define([
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
-        var ToonFramebuffer = new Framebuffer({
+        var toonFramebuffer = new Framebuffer({
             context : context,
-            colorTextures : [ToonTexture],
+            colorTextures : [toonTexture],
             destroyAttachments : false
         });
 
-        var EdgeDetectionUniformValues = stage._EdgeDetectionUniformValues;
+        var edgeDetectionUniformValues = stage._edgeDetectionUniformValues;
 
-        var ToonUniformValues = stage._ToonUniformValues;
+        var toonUniformValues = stage._toonUniformValues;
 
-        var ToonShader =
+        var toonShader =
             '#extension GL_OES_standard_derivatives : enable \n' +
             'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_depthTexture; \n' +  
-            
+            'uniform sampler2D u_depthTexture; \n' +
+
             'varying vec2 v_textureCoordinates; \n' +
 
             'vec2 ScreenToView(vec2 uv) \n' +
@@ -191,7 +188,7 @@ define([
             '} \n' +
 
             'void main(void) \n' +
-            '{ \n' +   
+            '{ \n' +
             '    float depth = texture2D(u_depthTexture, v_textureCoordinates).r; \n' +
             '    vec4 posInCamera = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates), depth, 1.0); \n' +
             '    posInCamera = posInCamera / posInCamera.w; \n' +
@@ -201,9 +198,9 @@ define([
             '    gl_FragColor = vec4(depth);\n' +
             '} \n';
 
-        var EdgeDetectionShader =
+        var edgeDetectionShader =
             'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_depthTexture; \n' +  
+            'uniform sampler2D u_depthTexture; \n' +
             'uniform float u_len; \n' +
             'uniform float u_stepSize; \n' +
             'precision highp float; \n' +
@@ -225,7 +222,7 @@ define([
               'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, -pady)).x * 3.0; \n' +
               'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, 0.0)).x * 10.0; \n' +
               'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, pady)).x * 3.0; \n' +
-	
+
               'float vertEdge = 0.0; \n' +
 
               'vertEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, -pady)).x * 3.0; \n' +
@@ -246,39 +243,39 @@ define([
               '{ \n' +
               '   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); \n' +
               '} \n' +
-            
+
             '} \n';
-           
-        var ToonStage = new PostProcessStage({
-            fragmentShader : ToonShader,
-            uniformValues: ToonUniformValues
+
+        var toonStage = new PostProcessStage({
+            fragmentShader : toonShader,
+            uniformValues: toonUniformValues
         });
 
-        var EdgeDetectionStage = new PostProcessStage({
-            fragmentShader : EdgeDetectionShader,
-            uniformValues: EdgeDetectionUniformValues
+        var edgeDetectionStage = new PostProcessStage({
+            fragmentShader : edgeDetectionShader,
+            uniformValues: edgeDetectionUniformValues
         });
 
-        var ToonPostProcess = new PostProcess({
-            stages : [ToonStage, EdgeDetectionStage],
+        var toonPostProcess = new PostProcess({
+            stages : [toonStage, edgeDetectionStage],
             overwriteInput : false,
             blendOutput : false
         });
-       
-        ToonStage.show = true;
-        EdgeDetectionStage.show = true;
-      
 
-        stage._ToonTexture = ToonTexture;
-        stage._ToonFramebuffer = ToonFramebuffer;
-        stage._ToonPostProcess = ToonPostProcess;
-        stage._uniformValues.ToonTexture = ToonTexture;
+        toonStage.show = true;
+        edgeDetectionStage.show = true;
+
+
+        stage._toonTexture = toonTexture;
+        stage._toonFramebuffer = toonFramebuffer;
+        stage._toonPostProcess = toonPostProcess;
+        stage._uniformValues.toonTexture = toonTexture;
     }
 
     function destroyResources(stage) {
-        stage._ToonTexture = stage._ToonTexture && stage._ToonTexture.destroy();
-        stage._ToonFramebuffer = stage._ToonFramebuffer && stage._ToonFramebuffer.destroy();
-        stage._ToonPostProcess = stage._ToonPostProcess && stage._ToonPostProcess.destroy();
+        stage._toonTexture = stage._toonTexture && stage._toonTexture.destroy();
+        stage._toonFramebuffer = stage._toonFramebuffer && stage._toonFramebuffer.destroy();
+        stage._toonPostProcess = stage._toonPostProcess && stage._toonPostProcess.destroy();
     }
 
     /**

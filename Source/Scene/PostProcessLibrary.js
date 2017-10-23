@@ -362,6 +362,10 @@ define([
             'uniform float u_intensity; \n' +
             'varying vec2 v_textureCoordinates; \n' +
 
+            //whether it is in space or not
+            //6500000.0 is Emprical value
+            '#define DISTANCE_TO_SPACE 6500000.0 \n' +
+
             //return ndc from world coordinate biased earthRadius
             'vec4 getNDCFromWC(vec3 WC, float earthRadius) \n' +
             '{ \n' +
@@ -420,9 +424,7 @@ define([
             ' vec3 rgb = texture2D(u_colorTexture, v_textureCoordinates).rgb; \n' +
             ' bool isSpace = true; \n' +
 
-            //whether it is in space or not
-            //6500000.0 is Emprical value  
-            ' if(length(czm_viewerPositionWC.xyz) < 6500000.0) \n' +
+            ' if(length(czm_viewerPositionWC.xyz) < DISTANCE_TO_SPACE) \n' +
             '   isSpace = false; \n' +
 
             //Sun position
@@ -447,13 +449,13 @@ define([
             ' vec2 ghostVec = (vec2(0.5) - texcoord) * u_ghostDispersal; \n' +
             ' vec3 direction = normalize(vec3(ghostVec, 0.0)); \n' +
 
-            // sample ghosts:  
+            // sample ghosts:
             ' vec4 result = vec4(0.0);  \n' +
             ' vec4 ghost = vec4(0.0);  \n' +
             ' for (int i = 0; i < 4; ++i) \n' +
             ' { \n' +
             '  vec2 offset = fract(texcoord + ghostVec * float(i)); \n' +
-            // Only bright spots from the centre of the source image 
+            // Only bright spots from the centre of the source image
             '  ghost += textureDistorted(u_colorTexture, offset, direction.xy, distortion, isSpace); \n' +
             ' } \n' +
             ' result += ghost; \n' +
@@ -526,7 +528,7 @@ define([
 
     function createBloomStage() {
         return new PostProcessBloomStage();
-    }    
+    }
 
     function createToonStage() {
         return new PostProcessToonStage();
