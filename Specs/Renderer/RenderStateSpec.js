@@ -1,14 +1,16 @@
 defineSuite([
+        'Renderer/RenderState',
+        'Core/defined',
         'Core/WebGLConstants',
         'Core/WindingOrder',
         'Renderer/ContextLimits',
-        'Renderer/RenderState',
         'Specs/createContext'
     ], function(
+        RenderState,
+        defined,
         WebGLConstants,
         WindingOrder,
         ContextLimits,
-        RenderState,
         createContext) {
     'use strict';
 
@@ -408,6 +410,9 @@ defineSuite([
     });
 
     it('freezes render states', function(){
+        if (window.release) {
+            return;
+        }
         var rs = RenderState.fromCache();
         expect(function() {
             rs.depthRange = {};
