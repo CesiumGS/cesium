@@ -101,12 +101,12 @@ function updatePostProcess() {
     var postProcess = viewer.scene.postProcess;
     postProcess.ambientOcclusion.show = Boolean(viewModel.show);
     postProcess.ambientOcclusion.uniformValues.aoOnly = Boolean(viewModel.ambientOcclusionOnly);
-    postProcess.ambientOcclusion.aoGenerateUniformValues.intensity = Number(viewModel.intensity);
-    postProcess.ambientOcclusion.aoGenerateUniformValues.bias = Number(viewModel.bias);
-    postProcess.ambientOcclusion.aoGenerateUniformValues.lenCap = Number(viewModel.lengthCap);
-    postProcess.ambientOcclusion.aoGenerateUniformValues.stepSize = Number(viewModel.stepSize);
-    postProcess.ambientOcclusion.aoBlurXUniformValues.kernelSize = Number(viewModel.kernelSize);
-    postProcess.ambientOcclusion.aoBlurYUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.ambientOcclusion.generateUniformValues.intensity = Number(viewModel.intensity);
+    postProcess.ambientOcclusion.generateUniformValues.bias = Number(viewModel.bias);
+    postProcess.ambientOcclusion.generateUniformValues.lenCap = Number(viewModel.lengthCap);
+    postProcess.ambientOcclusion.generateUniformValues.stepSize = Number(viewModel.stepSize);
+    postProcess.ambientOcclusion.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.ambientOcclusion.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
 updatePostProcess();
 

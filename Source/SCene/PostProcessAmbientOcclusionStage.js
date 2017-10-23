@@ -45,12 +45,12 @@ define([
      * @private
      */
     function PostProcessAmbientOcclusionStage() {
-        this._aoTexture = undefined;
-        this._aoFramebuffer = undefined;
-        this._aoPostProcess = undefined;
+        this._texture = undefined;
+        this._framebuffer = undefined;
+        this._postProcess = undefined;
         this._randomTexture = undefined;
 
-        this._aoGenerateUniformValues = {
+        this._generateUniformValues = {
             randomTexture: undefined,
             intensity: 4.0,
             bias: 0.0,
@@ -58,13 +58,13 @@ define([
             stepSize: 2.0,
             frustumLength : 1000.0
         };
-        this._aoBlurXUniformValues = {
+        this._blurXUniformValues = {
             delta : 1.0,
             sigma : 2.0,
             direction : 0.0,
             kernelSize : 1.0
         };
-        this._aoBlurYUniformValues = {
+        this._blurYUniformValues = {
             delta : 1.0,
             sigma : 2.0,
             direction : 1.0,
@@ -112,25 +112,25 @@ define([
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        aoGenerateUniformValues : {
+        generateUniformValues : {
             get : function() {
-                return this._aoGenerateUniformValues;
+                return this._generateUniformValues;
             }
         },
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        aoBlurXUniformValues : {
+        blurXUniformValues : {
             get : function() {
-                return this._aoBlurXUniformValues;
+                return this._blurXUniformValues;
             }
         },
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        aoBlurYUniformValues : {
+        blurYUniformValues : {
             get : function() {
-                return this._aoBlurYUniformValues;
+                return this._blurYUniformValues;
             }
         }
     });
@@ -167,7 +167,7 @@ define([
                 })
             });
 
-            this._aoGenerateUniformValues.randomTexture = this._randomTexture;
+            this._generateUniformValues.randomTexture = this._randomTexture;
         }
 
         if (dirty) {
@@ -175,13 +175,13 @@ define([
             createResources(this, frameState.context);
         }
 
-        this._aoPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._aoFramebuffer);
+        this._postProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._framebuffer);
     };
 
     function createResources(stage, context) {
         var screenWidth = context.drawingBufferWidth;
         var screenHeight = context.drawingBufferHeight;
-        var aoTexture = new Texture({
+        var texture = new Texture({
             context : context,
             width : screenWidth,
             height : screenHeight,
@@ -194,53 +194,53 @@ define([
                 magnificationFilter : TextureMagnificationFilter.LINEAR
             })
         });
-        var aoFramebuffer = new Framebuffer({
+        var framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [aoTexture],
+            colorTextures : [texture],
             destroyAttachments : false
         });
 
-        var aoGenerateUniformValues = stage._aoGenerateUniformValues;
-        var aoBlurXUniformValues = stage._aoBlurXUniformValues;
-        var aoBlurYUniformValues = stage._aoBlurYUniformValues;
+        var generateUniformValues = stage._generateUniformValues;
+        var blurXUniformValues = stage._blurXUniformValues;
+        var blurYUniformValues = stage._blurYUniformValues;
 
         var blurFragmentShader = '#define AMBIENT_OCCLUSION\n' + GaussianBlur1D;
 
-        var aoGenerateStage = new PostProcessStage({
+        var generateStage = new PostProcessStage({
             fragmentShader : AmbientOcclusionGenerate,
-            uniformValues: aoGenerateUniformValues
+            uniformValues: generateUniformValues
         });
 
-        var aoBlurXStage = new PostProcessStage({
+        var blurXStage = new PostProcessStage({
             fragmentShader : blurFragmentShader,
-            uniformValues: aoBlurXUniformValues
+            uniformValues: blurXUniformValues
         });
 
-        var aoBlurYStage = new PostProcessStage({
+        var blurYStage = new PostProcessStage({
             fragmentShader : blurFragmentShader,
-            uniformValues: aoBlurYUniformValues
+            uniformValues: blurYUniformValues
         });
 
-        var aoPostProcess = new PostProcess({
-            stages : [aoGenerateStage, aoBlurXStage, aoBlurYStage],
+        var postProcess = new PostProcess({
+            stages : [generateStage, blurXStage, blurYStage],
             overwriteInput : false,
             blendOutput : false
         });
 
-        aoGenerateStage.show = true;
-        aoBlurXStage.show = true;
-        aoBlurYStage.show = true;
+        generateStage.show = true;
+        blurXStage.show = true;
+        blurYStage.show = true;
 
-        stage._aoTexture = aoTexture;
-        stage._aoFramebuffer = aoFramebuffer;
-        stage._aoPostProcess = aoPostProcess;
-        stage._uniformValues.aoTexture = aoTexture;
+        stage._texture = texture;
+        stage._framebuffer = framebuffer;
+        stage._postProcess = postProcess;
+        stage._uniformValues.aoTexture = texture;
     }
 
     function destroyResources(stage) {
-        stage._aoTexture = stage._aoTexture && stage._aoTexture.destroy();
-        stage._aoFramebuffer = stage._aoFramebuffer && stage._aoFramebuffer.destroy();
-        stage._aoPostProcess = stage._aoPostProcess && stage._aoPostProcess.destroy();
+        stage._texture = stage._texture && stage._texture.destroy();
+        stage._framebuffer = stage._framebuffer && stage._framebuffer.destroy();
+        stage._postProcess = stage._postProcess && stage._postProcess.destroy();
     }
 
     /**
