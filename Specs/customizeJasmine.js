@@ -140,6 +140,10 @@ define([
             window.webglStub = true;
         }
 
+        if (release) {
+            window.release = true;
+        }
+
         //env.catchExceptions(true);
 
         env.beforeEach(function () {
