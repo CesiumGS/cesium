@@ -57,7 +57,8 @@ define([
             intensity: 4.0,
             bias: 0.0,
             lenCap: 0.25,
-            stepSize: 2.0
+            stepSize: 2.0,
+            frustumLength : 1000.0
         };
 
         this._aoBlurUniformValues = {
