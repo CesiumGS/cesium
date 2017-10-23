@@ -191,6 +191,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
@@ -273,6 +276,9 @@ defineSuite([
                             return imagery.state === ImageryState.READY;
                         }).then(function() {
                             expect(imagery.texture).toBeDefined();
+                            expect(imagery.texture.sampler).toBeDefined();
+                            expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                            expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                             expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                             imagery.releaseReference();
                         });
@@ -319,6 +325,9 @@ defineSuite([
                         return imagery.state === ImageryState.READY;
                     }).then(function() {
                         expect(imagery.texture).toBeDefined();
+                        expect(imagery.texture.sampler).toBeDefined();
+                        expect(imagery.texture.sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                        expect(imagery.texture.sampler.magnificationFilter).toEqual(TextureMinificationFilter.LINEAR);
                         expect(imagery.texture).toBe(imagery.textureWebMercator);
                         imagery.releaseReference();
                     });
