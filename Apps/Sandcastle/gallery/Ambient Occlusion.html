@@ -105,7 +105,8 @@ function updatePostProcess() {
     postProcess.ambientOcclusion.aoGenerateUniformValues.bias = Number(viewModel.bias);
     postProcess.ambientOcclusion.aoGenerateUniformValues.lenCap = Number(viewModel.lengthCap);
     postProcess.ambientOcclusion.aoGenerateUniformValues.stepSize = Number(viewModel.stepSize);
-    postProcess.ambientOcclusion.aoBlurUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.ambientOcclusion.aoBlurXUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.ambientOcclusion.aoBlurYUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
 updatePostProcess();
 

@@ -157,13 +157,13 @@ define([
             var sigma = 2.0;
 
             uniformMap = {
-                delta : function() {
+                u_delta : function() {
                     return delta;
                 },
-                sigma : function() {
+                u_sigma : function() {
                     return sigma;
                 },
-                direction : function() {
+                u_direction : function() {
                     return 0.0;
                 }
             };
@@ -174,13 +174,13 @@ define([
             });
 
             uniformMap = {
-                delta : function() {
+                u_delta : function() {
                     return delta;
                 },
-                sigma : function() {
+                u_sigma : function() {
                     return sigma;
                 },
-                direction : function() {
+                u_direction : function() {
                     return 1.0;
                 }
             };
@@ -300,7 +300,7 @@ define([
             };
             this._brightPassCommand.renderState = downSampleRenderState;
 
-            this._blurXCommand.uniformMap.u_texture = function() {
+            this._blurXCommand.uniformMap.u_colorTexture = function() {
                 return that._downSampleFBO2.getColorTexture(0);
             };
             this._blurXCommand.uniformMap.u_step = function() {
@@ -308,7 +308,7 @@ define([
             };
             this._blurXCommand.renderState = downSampleRenderState;
 
-            this._blurYCommand.uniformMap.u_texture = function() {
+            this._blurYCommand.uniformMap.u_colorTexture = function() {
                 return that._downSampleFBO1.getColorTexture(0);
             };
             this._blurYCommand.uniformMap.u_step = function() {

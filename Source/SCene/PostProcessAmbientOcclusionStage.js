@@ -12,9 +12,8 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/AmbientOcclusion',
-        '../Shaders/PostProcessFilters/AmbientOcclusionBlurX',
-        '../Shaders/PostProcessFilters/AmbientOcclusionBlurY',
         '../Shaders/PostProcessFilters/AmbientOcclusionGenerate',
+        '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
         './PostProcessStage'
     ], function(
@@ -31,9 +30,8 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         AmbientOcclusion,
-        AmbientOcclusionBlurX,
-        AmbientOcclusionBlurY,
         AmbientOcclusionGenerate,
+        GaussianBlur1D,
         PostProcess,
         PostProcessStage) {
     'use strict';
@@ -60,8 +58,16 @@ define([
             stepSize: 2.0,
             frustumLength : 1000.0
         };
-
-        this._aoBlurUniformValues = {
+        this._aoBlurXUniformValues = {
+            delta : 1.0,
+            sigma : 2.0,
+            direction : 0.0,
+            kernelSize : 1.0
+        };
+        this._aoBlurYUniformValues = {
+            delta : 1.0,
+            sigma : 2.0,
+            direction : 1.0,
             kernelSize : 1.0
         };
 
@@ -114,22 +120,20 @@ define([
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        aoBlurUniformValues : {
+        aoBlurXUniformValues : {
             get : function() {
-                return this._aoBlurUniformValues;
+                return this._aoBlurXUniformValues;
+            }
+        },
+        /**
+         * @inheritdoc PostProcessStage#uniformValues
+         */
+        aoBlurYUniformValues : {
+            get : function() {
+                return this._aoBlurYUniformValues;
             }
         }
-
     });
-
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
 
     /**
      * @inheritdoc PostProcessStage#execute
@@ -155,7 +159,12 @@ define([
                     width : 256,
                     height : 256
                 },
-                sampler : createSampler()
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
             });
 
             this._aoGenerateUniformValues.randomTexture = this._randomTexture;
@@ -178,7 +187,12 @@ define([
             height : screenHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            })
         });
         var aoFramebuffer = new Framebuffer({
             context : context,
@@ -187,7 +201,10 @@ define([
         });
 
         var aoGenerateUniformValues = stage._aoGenerateUniformValues;
-        var aoBlurUniformValues = stage._aoBlurUniformValues;
+        var aoBlurXUniformValues = stage._aoBlurXUniformValues;
+        var aoBlurYUniformValues = stage._aoBlurYUniformValues;
+
+        var blurFragmentShader = '#define AMBIENT_OCCLUSION\n' + GaussianBlur1D;
 
         var aoGenerateStage = new PostProcessStage({
             fragmentShader : AmbientOcclusionGenerate,
@@ -195,13 +212,13 @@ define([
         });
 
         var aoBlurXStage = new PostProcessStage({
-            fragmentShader : AmbientOcclusionBlurX,
-            uniformValues: aoBlurUniformValues
+            fragmentShader : blurFragmentShader,
+            uniformValues: aoBlurXUniformValues
         });
 
         var aoBlurYStage = new PostProcessStage({
-            fragmentShader : AmbientOcclusionBlurY,
-            uniformValues: aoBlurUniformValues
+            fragmentShader : blurFragmentShader,
+            uniformValues: aoBlurYUniformValues
         });
 
         var aoPostProcess = new PostProcess({
