@@ -1146,7 +1146,11 @@ define([
 
         if (!defined(billboard.image)) {
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
-        } else if (billboard.image == false) {
+
+        // If there were empty <Icon> tags in the KML, then billboard.image was set to false above
+        // However, in this case, the false value would have been converted to a property afterwards
+        // Thus, we check if billboard.image is defined with value of false
+        } else if (billboard.image && !billboard.image.getValue()) {
             billboard.image = undefined;
         }
 
