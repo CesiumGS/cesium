@@ -119,6 +119,7 @@ define([
             distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
         }
 
+        this._text = defaultValue(options.text, '');
         this._show = defaultValue(options.show, true);
         this._font = defaultValue(options.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
@@ -154,9 +155,6 @@ define([
         this._mode = undefined;
 
         this._clusterShow = true;
-
-        this._rightToLeft = defaultValue(options.rightToLeft, false);
-        this.text = defaultValue(options.text, '');
 
         this._updateClamping();
     }
@@ -290,7 +288,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (this.rightToLeft) {
+                if (Label.enableRightToLeftDetection) {
                     if (this._originalValue === value) {
                         value = this._text;
                         return;
@@ -1050,46 +1048,6 @@ define([
                     }
                 }
             }
-        },
-
-        /**
-         * Determines whether or not run the reverseRtl algorithm on the text of the label
-         * @memberof Label.prototype
-         * @type {Boolean}
-         * @default false
-         *
-         * @example
-         * // Example 1.
-         * // Set a label's rightToLeft during init
-         * var myLabelEntity = viewer.entities.add({
-         *   label: {
-         *     id: 'my label',
-         *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
-         *     rightToLeft: true
-         *   }
-         * });
-         *
-         * @example
-         * // Example 2.
-         * var myLabelEntity = viewer.entities.add({
-         *   label: {
-         *     id: 'my label',
-         *     text: 'English text'
-         *   }
-         * });
-         * // Set a label's rightToLeft after init
-         * myLabelEntity.rightToLeft = true;
-         * myLabelEntity.text = 'טקסט חדש';
-         */
-        rightToLeft : {
-            get : function() {
-                return this._rightToLeft;
-            },
-            set : function(value) {
-                if (this._rightToLeft !== value) {
-                    this._rightToLeft = value;
-                }
-            }
         }
     });
 
@@ -1255,6 +1213,36 @@ define([
     Label.prototype.isDestroyed = function() {
         return false;
     };
+
+    /**
+     * Determines whether or not run the reverseRtl algorithm on the text of the label
+     * @memberof Label
+     * @type {Boolean}
+     * @default false
+     *
+     * @example
+     * // Set a label's rightToLeft before init
+     * Cesium.Label.enableRightToLeftDetection = true;
+     * var myLabelEntity = viewer.entities.add({
+         *   label: {
+         *     id: 'my label',
+         *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
+         *   }
+         * });
+     *
+     * @example
+     * // Example 2.
+     * var myLabelEntity = viewer.entities.add({
+         *   label: {
+         *     id: 'my label',
+         *     text: 'English text'
+         *   }
+         * });
+     * // Set a label's rightToLeft after init
+     * Cesium.Label.enableRightToLeftDetection = true;
+     * myLabelEntity.text = 'טקסט חדש';
+     */
+    Label.enableRightToLeftDetection = false;
 
     function convertTextToTypes(text, rtlChars) {
         var ltrChars = /[a-zA-Z0-9]/;

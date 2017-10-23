@@ -40,8 +40,7 @@ defineSuite([
             pixelOffsetScaleByDistance : new NearFarScalar(13, 14, 15, 16),
             scaleByDistance : new NearFarScalar(17, 18, 19, 20),
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
-            disableDepthTestDistance : 10.0,
-            rightToLeft : false
+            disableDepthTestDistance : 10.0
         };
 
         var label = new LabelGraphics(options);
@@ -61,7 +60,6 @@ defineSuite([
         expect(label.scaleByDistance).toBeInstanceOf(ConstantProperty);
         expect(label.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
         expect(label.disableDepthTestDistance).toBeInstanceOf(ConstantProperty);
-        expect(label.rightToLeft).toBeInstanceOf(ConstantProperty);
 
         expect(label.text.getValue()).toEqual(options.text);
         expect(label.font.getValue()).toEqual(options.font);
@@ -79,7 +77,6 @@ defineSuite([
         expect(label.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
         expect(label.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(label.disableDepthTestDistance.getValue()).toEqual(options.disableDepthTestDistance);
-        expect(label.rightToLeft.getValue()).toEqual(options.rightToLeft);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -101,7 +98,6 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
         source.disableDepthTestDistance = new ConstantProperty(10.0);
-        source.rightToLeft = new ConstantProperty(false);
 
         var target = new LabelGraphics();
         target.merge(source);
@@ -123,7 +119,6 @@ defineSuite([
         expect(target.scaleByDistance).toBe(source.scaleByDistance);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
-        expect(target.rightToLeft).toBe(source.rightToLeft);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -145,7 +140,6 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
         source.disableDepthTestDistance = new ConstantProperty(10.0);
-        source.rightToLeft = new ConstantProperty(true);
 
         var text = new ConstantProperty('my text');
         var font = new ConstantProperty('10px serif');
@@ -164,7 +158,6 @@ defineSuite([
         var scaleByDistance = new ConstantProperty(new NearFarScalar());
         var distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         var disableDepthTestDistance = new ConstantProperty(20.0);
-        var rightToLeft = new ConstantProperty(false);
 
         var target = new LabelGraphics();
         target.text = text;
@@ -184,7 +177,6 @@ defineSuite([
         target.scaleByDistance = scaleByDistance;
         target.distanceDisplayCondition = distanceDisplayCondition;
         target.disableDepthTestDistance = disableDepthTestDistance;
-        target.rightToLeft = rightToLeft;
 
         target.merge(source);
 
@@ -205,7 +197,6 @@ defineSuite([
         expect(target.scaleByDistance).toBe(scaleByDistance);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.disableDepthTestDistance).toBe(disableDepthTestDistance);
-        expect(target.rightToLeft).toBe(rightToLeft);
     });
 
     it('clone works', function() {
@@ -227,7 +218,6 @@ defineSuite([
         source.scaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
         source.disableDepthTestDistance = new ConstantProperty(10.0);
-        source.rightToLeft = new ConstantProperty(false);
 
         var result = source.clone();
         expect(result.text).toBe(source.text);
@@ -247,7 +237,6 @@ defineSuite([
         expect(result.scaleByDistance).toBe(source.scaleByDistance);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.disableDepthTestDistance).toBe(source.disableDepthTestDistance);
-        expect(result.rightToLeft).toBe(source.rightToLeft);
     });
 
     it('merge throws if source undefined', function() {
