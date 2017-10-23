@@ -729,6 +729,12 @@ define([
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
+
+        // If icon tags are present but blank, we do not want to show an icon
+        if (defined(iconNode) && !defined(icon)) {
+            icon = false;
+        }
+
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -1140,6 +1146,12 @@ define([
 
         if (!defined(billboard.image)) {
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+
+        // If there were empty <Icon> tags in the KML, then billboard.image was set to false above
+        // However, in this case, the false value would have been converted to a property afterwards
+        // Thus, we check if billboard.image is defined with value of false
+        } else if (billboard.image && !billboard.image.getValue()) {
+            billboard.image = undefined;
         }
 
         var scale = 1.0;
