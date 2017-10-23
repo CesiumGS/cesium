@@ -10,6 +10,9 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/AmbientOcclusion',
+        '../Shaders/PostProcessFilters/AmbientOcclusionBlurX',
+        '../Shaders/PostProcessFilters/AmbientOcclusionBlurY',
         '../Shaders/PostProcessFilters/AmbientOcclusionGenerate',
         './PostProcess',
         './PostProcessStage'
@@ -25,6 +28,9 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        AmbientOcclusion,
+        AmbientOcclusionBlurX,
+        AmbientOcclusionBlurY,
         AmbientOcclusionGenerate,
         PostProcess,
         PostProcessStage) {
@@ -57,20 +63,7 @@ define([
             kernelSize : 1.0
         };
 
-        this._fragmentShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_aoTexture; \n' +
-            'uniform bool u_HBAOonly; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main(void) \n' +
-            '{ \n' +
-            '    vec3 color = texture2D(u_colorTexture, v_textureCoordinates).rgb; \n' +
-            '    vec3 ao = texture2D(u_aoTexture, v_textureCoordinates).rgb; \n' +
-            '    if(u_HBAOonly) \n' +
-            '      gl_FragColor = vec4(ao, 1.0); \n' +
-            '    else \n' +
-            '      gl_FragColor = vec4(ao * color, 1.0); \n' +
-            '} \n';
+        this._fragmentShader = AmbientOcclusion;
 
         this._uniformValues = {
             aoTexture : undefined,
@@ -173,58 +166,18 @@ define([
         var aoGenerateUniformValues = stage._aoGenerateUniformValues;
         var aoBlurUniformValues = stage._aoBlurUniformValues;
 
-        var aoBlurXShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform float u_kernelSize; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main(void) \n' +
-            '{ \n' +
-            '    vec4 result = vec4(0.0); \n' +
-            '    vec2 recipalScreenSize = u_kernelSize / czm_viewport.zw; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(-recipalScreenSize.x*4.0, 0.0))*0.00390625; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(-recipalScreenSize.x*3.0, 0.0))*0.03125; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(-recipalScreenSize.x*2.0, 0.0))*0.109375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(-recipalScreenSize.x, 0.0))*0.21875; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates)*0.2734375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(recipalScreenSize.x, 0.0))*0.21875; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(recipalScreenSize.x*2.0, 0.0))*0.109375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(recipalScreenSize.x*3.0, 0.0))*0.03125; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(recipalScreenSize.x*4.0, 0.0))*0.00390625; \n' +
-            '    gl_FragColor = result; \n' +
-            '} \n';
-
-        var aoBlurYShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform float u_kernelSize; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main(void) \n' +
-            '{ \n' +
-            '    vec4 result = vec4(0.0); \n' +
-            '    vec2 recipalScreenSize = u_kernelSize / czm_viewport.zw; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, -recipalScreenSize.y*4.0))*0.00390625; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, -recipalScreenSize.y*3.0))*0.03125; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, -recipalScreenSize.y*2.0))*0.109375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, -recipalScreenSize.y))*0.21875; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates)*0.2734375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, recipalScreenSize.y))*0.21875; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, recipalScreenSize.y*2.0))*0.109375; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, recipalScreenSize.y*3.0))*0.03125; \n' +
-            '    result += texture2D(u_colorTexture, v_textureCoordinates + vec2(0.0, recipalScreenSize.y*4.0))*0.00390625; \n' +
-            '    gl_FragColor = result; \n' +
-            '} \n';
-
         var aoGenerateStage = new PostProcessStage({
             fragmentShader : AmbientOcclusionGenerate,
             uniformValues: aoGenerateUniformValues
         });
 
         var aoBlurXStage = new PostProcessStage({
-            fragmentShader : aoBlurXShader,
+            fragmentShader : AmbientOcclusionBlurX,
             uniformValues: aoBlurUniformValues
         });
 
         var aoBlurYStage = new PostProcessStage({
-            fragmentShader : aoBlurYShader,
+            fragmentShader : AmbientOcclusionBlurY,
             uniformValues: aoBlurUniformValues
         });
 
