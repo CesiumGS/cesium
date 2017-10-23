@@ -614,8 +614,11 @@ define([
             startIndex = indices.start;
             endIndex = indices.end;
 
-            for (var i = startIndex; i < endIndex; ++i) {
-                var colorCommand = colorCommands[i];
+            var i;
+            var colorCommand;
+
+            for (i = startIndex; i < endIndex; ++i) {
+                colorCommand = colorCommands[i];
                 colorCommand.owner = groundPrimitive;
                 colorCommand.modelMatrix = modelMatrix;
                 colorCommand.boundingVolume = boundingVolumes[boundingVolumeIndex(i, colorLength)];
@@ -623,6 +626,23 @@ define([
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
 
                 commandList.push(colorCommand);
+            }
+
+            if (frameState.invertClassification) {
+                var ignoreShowCommands = groundPrimitive._primitive._commandsIgnoreShow;
+                startIndex = 0;
+                endIndex = ignoreShowCommands.length;
+
+                for (i = startIndex; i < endIndex; ++i) {
+                    var bvIndex = Math.floor(i / 2);
+                    colorCommand = ignoreShowCommands[i];
+                    colorCommand.modelMatrix = modelMatrix;
+                    colorCommand.boundingVolume = boundingVolumes[bvIndex];
+                    colorCommand.cull = cull;
+                    colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+
+                    commandList.push(colorCommand);
+                }
             }
         }
 
