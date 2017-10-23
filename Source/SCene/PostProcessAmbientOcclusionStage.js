@@ -68,9 +68,8 @@ define([
 
         this._uniformValues = {
             aoTexture : undefined,
-            HBAOonly: false
+            aoOnly: false
         };
-
 
         /**
          * @inheritdoc PostProcessStage#show

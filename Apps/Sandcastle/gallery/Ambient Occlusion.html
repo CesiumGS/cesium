@@ -100,7 +100,7 @@ for (var name in viewModel) {
 function updatePostProcess() {
     var postProcess = viewer.scene.postProcess;
     postProcess.ambientOcclusion.show = Boolean(viewModel.show);
-    postProcess.ambientOcclusion.uniformValues.HBAOonly = Boolean(viewModel.ambientOcclusionOnly);
+    postProcess.ambientOcclusion.uniformValues.aoOnly = Boolean(viewModel.ambientOcclusionOnly);
     postProcess.ambientOcclusion.aoGenerateUniformValues.intensity = Number(viewModel.intensity);
     postProcess.ambientOcclusion.aoGenerateUniformValues.bias = Number(viewModel.bias);
     postProcess.ambientOcclusion.aoGenerateUniformValues.lenCap = Number(viewModel.lengthCap);

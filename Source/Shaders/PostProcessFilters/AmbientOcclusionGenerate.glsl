@@ -7,11 +7,15 @@ uniform float u_intensity;
 uniform float u_bias;
 uniform float u_lenCap;
 uniform float u_stepSize;
+
 varying vec2 v_textureCoordinates;
 
-vec2 ScreenToView(vec2 uv)
+vec4 clipToEye(vec2 uv, float depth)
 {
-    return vec2((uv.x * 2.0 - 1.0), ((1.0 - uv.y)*2.0 - 1.0)) ;
+    vec2 xy = vec2((uv.x * 2.0 - 1.0), ((1.0 - uv.y) * 2.0 - 1.0));
+    vec4 posEC = czm_inverseProjection * vec4(xy, depth, 1.0);
+    posEC = posEC / posEC.w;
+    return posEC;
 }
 
 //Reconstruct Normal from View position
@@ -23,40 +27,20 @@ vec3 GetNormal(vec3 posInCamera)
 }
 
 //Reconstruct Normal Without Edge Removation
-vec3 GetNormalXedge(vec3 posInCamera, float depthU, float depthD, float depthL, float depthR, vec2 pixelSize)
+vec3 GetNormalXEdge(vec3 posInCamera, float depthU, float depthD, float depthL, float depthR, vec2 pixelSize)
 {
-    vec4 posInCameraUp = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates - vec2(0.0, pixelSize.y)), depthU, 1.0);
-    posInCameraUp = posInCameraUp / posInCameraUp.w;
-    vec4 posInCameraDown = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates + vec2(0.0, pixelSize.y)), depthD, 1.0);
-    posInCameraDown = posInCameraDown / posInCameraDown.w;
-    vec4 posInCameraLeft = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates - vec2(pixelSize.x, 0.0)), depthL, 1.0);
-    posInCameraLeft = posInCameraLeft / posInCameraLeft.w;
-    vec4 posInCameraRight = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates + vec2(pixelSize.x, 0.0)), depthR, 1.0);
-    posInCameraRight = posInCameraRight / posInCameraRight.w;
-    vec3 UC = posInCamera.xyz - posInCameraUp.xyz;
-    vec3 DC = posInCameraDown.xyz - posInCamera.xyz;
-    vec3 LC = posInCamera.xyz - posInCameraLeft.xyz;
-    vec3 RC = posInCameraRight.xyz - posInCamera.xyz;
-    vec3 DX;
-    vec3 DY;
+    vec4 posInCameraUp = clipToEye(v_textureCoordinates - vec2(0.0, pixelSize.y), depthU);
+    vec4 posInCameraDown = clipToEye(v_textureCoordinates + vec2(0.0, pixelSize.y), depthD);
+    vec4 posInCameraLeft = clipToEye(v_textureCoordinates - vec2(pixelSize.x, 0.0), depthL);
+    vec4 posInCameraRight = clipToEye(v_textureCoordinates + vec2(pixelSize.x, 0.0), depthR);
 
-    if (length(UC) < length(DC))
-    {
-        DY = UC;
-    }
-    else
-    {
-        DY = DC;
-    }
+    vec3 up = posInCamera.xyz - posInCameraUp.xyz;
+    vec3 down = posInCameraDown.xyz - posInCamera.xyz;
+    vec3 left = posInCamera.xyz - posInCameraLeft.xyz;
+    vec3 right = posInCameraRight.xyz - posInCamera.xyz;
 
-    if (length(LC) < length(RC))
-    {
-        DX = LC;
-    }
-    else
-    {
-       DX = RC;
-    }
+    vec3 DX = length(left) < length(right) ? left : right;
+    vec3 DY = length(up) < length(down) ? up : down;
 
     return normalize(cross(DY, DX));
 }
@@ -64,18 +48,16 @@ vec3 GetNormalXedge(vec3 posInCamera, float depthU, float depthD, float depthL, 
 void main(void)
 {
     float depth = texture2D(u_depthTexture, v_textureCoordinates).r;
+    vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
 
-    vec4 posInCamera = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates), depth, 1.0);
-    posInCamera = posInCamera / posInCamera.w;
-
-    if(posInCamera.z < 1000.0)
+    if (posInCamera.z < 1000.0)
     {
         vec2 pixelSize = 1.0 / czm_viewport.zw;
         float depthU = texture2D(u_depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y)).r;
         float depthD = texture2D(u_depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y)).r;
         float depthL = texture2D(u_depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0)).r;
         float depthR = texture2D(u_depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r;
-        vec3 normalInCamera = GetNormalXedge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
+        vec3 normalInCamera = GetNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
 
         float AO = 0.0;
         vec2 sampleDirection = vec2(1.0, 0.0);
@@ -112,8 +94,7 @@ void main(void)
                     break;
 
                 float stepDepthInfo = texture2D(u_depthTexture, newCoords).r;
-                vec4 stepPosInCamera = czm_inverseProjection * vec4(ScreenToView(newCoords), stepDepthInfo, 1.0);
-                stepPosInCamera = stepPosInCamera / stepPosInCamera.w;
+                vec4 stepPosInCamera = clipToEye(newCoords, stepDepthInfo);
                 vec3 diffVec = stepPosInCamera.xyz - posInCamera.xyz;
                 float len = length(diffVec);
 
