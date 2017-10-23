@@ -34,6 +34,13 @@ define([
         VerticalOrigin) {
     'use strict';
 
+    var textTypes = freezeObject({
+        LTR : 0,
+        RTL : 1,
+        WEAK : 2,
+        BRACKETS : 3
+    });
+
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
             // only push label if it's not already been marked dirty
@@ -1249,45 +1256,34 @@ define([
         return false;
     };
 
-    function declareTypes() {
-        var TextTypes = {
-            LTR : 0,
-            RTL : 1,
-            WEAK : 2,
-            BRACKETS : 3
-        };
-        return freezeObject(TextTypes);
-    }
-
-    function convertTextToTypes(text, rtlDir, rtlChars) {
+    function convertTextToTypes(text, rtlChars) {
         var ltrChars = /[a-zA-Z0-9]/;
         var bracketsChars = /[()[\]{}<>]/;
         var parsedText = [];
         var word = '';
-        var types = declareTypes();
-        var lastType = rtlDir ? types.RTL : types.LTR;
+        var lastType = textTypes.LTR;
         var currentType = '';
         var textLength = text.length;
         for (var textIndex = 0; textIndex < textLength; ++textIndex) {
             var character = text.charAt(textIndex);
             if (rtlChars.test(character)) {
-                currentType = types.RTL;
+                currentType = textTypes.RTL;
             }
             else if (ltrChars.test(character)) {
-                currentType = types.LTR;
+                currentType = textTypes.LTR;
             }
             else if (bracketsChars.test(character)) {
-                currentType = types.BRACKETS;
+                currentType = textTypes.BRACKETS;
             }
             else {
-                currentType = types.WEAK;
+                currentType = textTypes.WEAK;
             }
 
             if (textIndex === 0) {
                 lastType = currentType;
             }
 
-            if (lastType === currentType && currentType !== types.BRACKETS) {
+            if (lastType === currentType && currentType !== textTypes.BRACKETS) {
                 word += character;
             }
             else {
@@ -1344,34 +1340,32 @@ define([
         for (var i = 0; i < texts.length; i++) {
             var text = texts[i];
             var rtlDir = rtlChars.test(text.charAt(0));
-            var parsedText = convertTextToTypes(text, rtlDir, rtlChars);
-
-            var types = declareTypes();
+            var parsedText = convertTextToTypes(text, rtlChars);
 
             var splicePointer = 0;
             var line = '';
             for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
                 var subText = parsedText[wordIndex];
-                var reverse = subText.Type === types.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
                 if (rtlDir) {
-                    if (subText.Type === types.RTL) {
+                    if (subText.Type === textTypes.RTL) {
                         line = reverseWord(subText.Word) + line;
                         splicePointer = 0;
                     }
-                    else if (subText.Type === types.LTR) {
+                    else if (subText.Type === textTypes.LTR) {
                         line = spliceWord(line, splicePointer, subText.Word);
                         splicePointer += subText.Word.length;
                     }
-                    else if (subText.Type === types.WEAK || subText.Type === types.BRACKETS) {
-                        if (subText.Type === types.WEAK && parsedText[wordIndex - 1].Type === types.BRACKETS) {
+                    else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                        if (subText.Type === textTypes.WEAK && parsedText[wordIndex - 1].Type === textTypes.BRACKETS) {
                             line = reverseWord(subText.Word) + line;
                         }
-                        else if (parsedText[wordIndex - 1].Type === types.RTL) {
+                        else if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
                             line = reverse + line;
                             splicePointer = 0;
                         }
                         else if (parsedText.length > wordIndex + 1) {
-                            if (parsedText[wordIndex + 1].Type === types.RTL) {
+                            if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                 line = reverse + line;
                                 splicePointer = 0;
                             }
@@ -1385,18 +1379,18 @@ define([
                         }
                     }
                 }
-                else if (subText.Type === types.RTL) {
+                else if (subText.Type === textTypes.RTL) {
                     line = spliceWord(line, splicePointer, reverseWord(subText.Word));
                 }
-                else if (subText.Type === types.LTR) {
+                else if (subText.Type === textTypes.LTR) {
                     line += subText.Word;
                     splicePointer = line.length;
                 }
-                else if (subText.Type === types.WEAK || subText.Type === types.BRACKETS) {
+                else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
                     if (wordIndex > 0) {
-                        if (parsedText[wordIndex - 1].Type === types.RTL) {
+                        if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
                             if (parsedText.length > wordIndex + 1) {
-                                if (parsedText[wordIndex + 1].Type === types.RTL) {
+                                if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                     line = spliceWord(line, splicePointer, reverse);
                                 }
                                 else {
