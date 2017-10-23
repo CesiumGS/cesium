@@ -172,14 +172,12 @@ defineSuite([
 
     it('fromRectangle throws with invalid rectangles', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 2.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -2.0, 4.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 1.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, -2.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -1.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -1.0, 4.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
     it('fromRectangle throws with non-revolution ellipsoids', function() {
