@@ -42,6 +42,8 @@ define([
             });
         }
 
+        window.specsUsingRelease = release;
+
         window.fdefineSuite = function(deps, name, suite, categories) {
             defineSuite(deps, name, suite, categories, true);
         };
@@ -138,10 +140,6 @@ define([
 
         if (webglStub) {
             window.webglStub = true;
-        }
-
-        if (release) {
-            window.release = true;
         }
 
         //env.catchExceptions(true);
