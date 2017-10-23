@@ -1,5 +1,6 @@
 define([
         '../Core/buildModuleUrl',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
@@ -18,6 +19,7 @@ define([
         './PostProcessStage'
     ], function(
         buildModuleUrl,
+        defined,
         defineProperties,
         destroyObject,
         PixelFormat,
@@ -48,11 +50,10 @@ define([
         this._aoTexture = undefined;
         this._aoFramebuffer = undefined;
         this._aoPostProcess = undefined;
-
-        var urlRandomNoiseTex = buildModuleUrl('Assets/Textures/HBAO/RandomNoiseTex.jpg');
+        this._randomTexture = undefined;
 
         this._aoGenerateUniformValues = {
-            randomTexture: urlRandomNoiseTex,
+            randomTexture: undefined,
             intensity: 4.0,
             bias: 0.0,
             lenCap: 0.25,
@@ -121,12 +122,43 @@ define([
 
     });
 
+    function createSampler() {
+        return new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
+    }
+
     /**
      * @inheritdoc PostProcessStage#execute
      */
     PostProcessAmbientOcclusionStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
         if (!this.show) {
             return;
+        }
+
+        if (!defined(this._randomTexture)) {
+            var length = 256 * 256 * 3;
+            var random = new Uint8Array(length);
+            for (var i = 0; i < length; i += 3) {
+                random[i] = Math.floor(Math.random() * 255.0);
+            }
+
+            this._randomTexture = new Texture({
+                context : frameState.context,
+                pixelFormat : PixelFormat.RGB,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+                source : {
+                    arrayBufferView : random,
+                    width : 256,
+                    height : 256
+                },
+                sampler : createSampler()
+            });
+
+            this._aoGenerateUniformValues.randomTexture = this._randomTexture;
         }
 
         if (dirty) {
@@ -136,15 +168,6 @@ define([
 
         this._aoPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._aoFramebuffer);
     };
-
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
 
     function createResources(stage, context) {
         var screenWidth = context.drawingBufferWidth;
@@ -215,6 +238,7 @@ define([
      */
     PostProcessAmbientOcclusionStage.prototype.destroy = function() {
         destroyResources(this);
+        this._randomTexture = this._randomTexture && this._randomTexture.destroy();
         return destroyObject(this);
     };
 
