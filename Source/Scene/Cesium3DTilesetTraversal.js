@@ -509,7 +509,7 @@ define([
         if (!tile.hasTilesetContent) {
             if (tile.refine === Cesium3DTileRefine.ADD) {
                 // Always load additive tiles
-                loadTile(tileset, tile, this.frameState);
+                loadTile(tileset, tile, this.frameState, true);
                 if (hasAdditiveContent(tile)) {
                     tileset._desiredTiles.push(tile);
                 }
@@ -635,9 +635,16 @@ define([
         }
     }
 
+    function checkAdditiveVisibility(tileset, tile, frameState) {
+        if (defined(tile.parent) && (tile.parent.refine === Cesium3DTileRefine.ADD)) {
+            return isVisibleAndMeetsSSE(tileset, tile, frameState);
+        }
+        return true;
+    }
+
     function loadTile(tileset, tile, frameState, checkVisibility) {
         if ((tile.contentUnloaded || tile.contentExpired) && tile._requestedFrame !== frameState.frameNumber) {
-            if (!checkVisibility || isVisibleAndMeetsSSE(tileset, tile, frameState)) {
+            if (!checkVisibility || checkAdditiveVisibility(tileset, tile, frameState)) {
                 tile._requestedFrame = frameState.frameNumber;
                 tileset._requestedTiles.push(tile);
             }

@@ -105,7 +105,6 @@ define([
                 }
                 // Load Binary chunk
                 else if (chunkType === 0x004E4942) {
-                    // Clone just the binary chunk so the underlying buffer can be freed
                     binaryBuffer = chunkBuffer;
                 }
             }
