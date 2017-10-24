@@ -13,7 +13,7 @@ vec4 clipToEye(vec2 uv, float depth)
     return posEC;
 }
 
-//Reconstruct normal from view position
+// Reconstruct normal from view position
 vec3 getNormal(vec3 posInCamera)
 {
     vec3 d1 = dFdx(posInCamera);

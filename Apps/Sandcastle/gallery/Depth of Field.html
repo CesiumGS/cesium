@@ -42,12 +42,6 @@
                 <input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'">
             </td>
         </tr>
-        <tr>
-            <td>Step Size</td>
-            <td>
-                <input type="range" min="1" max="10" step="0.1" data-bind="value: stepSize, valueUpdate: 'input'">
-            </td>
-        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -83,8 +77,7 @@ for (var i = 0; i < numberOfBalloons; ++i) {
 var viewModel = {
     depthOfFieldShow: true,
     focalDistance: 87,
-    kernelSize : 4,
-    stepSize : 2
+    kernelSize : 4
 };
 
 Cesium.knockout.track(viewModel);
@@ -100,8 +93,8 @@ function updatePostProcess() {
     var postProcess = viewer.scene.postProcess;
     postProcess.depthOfField.show = Boolean(viewModel.depthOfFieldShow);
     postProcess.depthOfField.uniformValues.focalDistance = Number(viewModel.focalDistance);
-    postProcess.depthOfField.dofBlurUniformValues.kernelSize = Number(viewModel.kernelSize);
-    postProcess.depthOfField.dofBlurUniformValues.stepSize = Number(viewModel.stepSize);
+    postProcess.depthOfField.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.depthOfField.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
 updatePostProcess();
 

@@ -178,25 +178,19 @@ define([
     };
 
     function createResources(stage) {
-        var generateUniformValues = stage._generateUniformValues;
-        var blurXUniformValues = stage._blurXUniformValues;
-        var blurYUniformValues = stage._blurYUniformValues;
-
-        var blurFragmentShader = '#define AMBIENT_OCCLUSION\n' + GaussianBlur1D;
+        var blurFragmentShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
 
         var generateStage = new PostProcessStage({
             fragmentShader : AmbientOcclusionGenerate,
-            uniformValues: generateUniformValues
+            uniformValues: stage._generateUniformValues
         });
-
         var blurXStage = new PostProcessStage({
             fragmentShader : blurFragmentShader,
-            uniformValues: blurXUniformValues
+            uniformValues: stage._blurXUniformValues
         });
-
         var blurYStage = new PostProcessStage({
             fragmentShader : blurFragmentShader,
-            uniformValues: blurYUniformValues
+            uniformValues: stage._blurYUniformValues
         });
 
         var postProcess = new PostProcess({
@@ -205,10 +199,6 @@ define([
             blendOutput : false,
             createOutputFramebuffer : true
         });
-
-        generateStage.show = true;
-        blurXStage.show = true;
-        blurYStage.show = true;
 
         stage._postProcess = postProcess;
     }

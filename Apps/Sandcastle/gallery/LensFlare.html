@@ -86,11 +86,11 @@ for (var name in viewModel) {
 function updatePostProcess() {
     var postProcess = viewer.scene.postProcess;
     postProcess.lensFlare.show = Boolean(viewModel.show);
-    postProcess.lensFlare._uniformValues.intensity = Number(viewModel.intensity);
-    postProcess.lensFlare._uniformValues.distortion = Number(viewModel.distortion);
-    postProcess.lensFlare._uniformValues.ghostDispersal = Number(viewModel.dispersion);
-    postProcess.lensFlare._uniformValues.haloWidth = Number(viewModel.haloWidth);
-    postProcess.lensFlare._uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
+    postProcess.lensFlare.uniformValues.intensity = Number(viewModel.intensity);
+    postProcess.lensFlare.uniformValues.distortion = Number(viewModel.distortion);
+    postProcess.lensFlare.uniformValues.ghostDispersal = Number(viewModel.dispersion);
+    postProcess.lensFlare.uniformValues.haloWidth = Number(viewModel.haloWidth);
+    postProcess.lensFlare.uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
 }
 updatePostProcess();
 

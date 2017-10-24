@@ -53,9 +53,7 @@ define([
             len : 0.1,
             color : Color.clone(Color.BLACK)
         };
-
         this._toonUniformValues = {};
-
         this._uniformValues = {
             toonTexture : undefined
         };
@@ -138,12 +136,10 @@ define([
     }
 
     function createResources(stage, context) {
-        var screenWidth = context.drawingBufferWidth;
-        var screenHeight = context.drawingBufferHeight;
         var toonTexture = new Texture({
             context : context,
-            width : screenWidth,
-            height : screenHeight,
+            width : context.drawingBufferWidth,
+            height : context.drawingBufferHeight,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
@@ -162,21 +158,15 @@ define([
             fragmentShader : Toon,
             uniformValues: toonUniformValues
         });
-
         var edgeDetectionStage = new PostProcessStage({
             fragmentShader : EdgeDetection,
             uniformValues: edgeDetectionUniformValues
         });
-
         var toonPostProcess = new PostProcess({
             stages : [toonStage, edgeDetectionStage],
             overwriteInput : false,
             blendOutput : false
         });
-
-        toonStage.show = true;
-        edgeDetectionStage.show = true;
-
 
         stage._toonTexture = toonTexture;
         stage._toonFramebuffer = toonFramebuffer;

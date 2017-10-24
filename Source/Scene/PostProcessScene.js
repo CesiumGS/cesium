@@ -71,9 +71,9 @@ define([
             this.depthView,
             this.ambientOcclusion,
             this.depthOfField,
-            this.bloom,
             this.lensFlare,
             this.toon,
+            this.bloom,
             this.fxaa
         ];
 

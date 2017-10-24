@@ -6,7 +6,7 @@ uniform float u_direction; // 0.0 for x direction, 1.0 for y direction
 
 uniform sampler2D u_colorTexture;
 
-#ifdef AMBIENT_OCCLUSION
+#ifdef USE_KERNEL_SIZE
 uniform float u_kernelSize;
 #else
 uniform vec2 u_step;
@@ -20,10 +20,9 @@ varying vec2 v_textureCoordinates;
 void main()
 {
     vec2 st = v_textureCoordinates;
-
     vec2 dir = vec2(1.0 - u_direction, u_direction);
 
-#ifdef AMBIENT_OCCLUSION
+#ifdef USE_KERNEL_SIZE
     vec2 step = vec2(u_kernelSize / czm_viewport.zw);
 #else
     vec2 step = u_step;
