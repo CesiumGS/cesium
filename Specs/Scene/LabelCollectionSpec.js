@@ -1864,6 +1864,7 @@ defineSuite([
         it('should reverse text when there is only hebrew characters and rightToLeft is true', function() {
             Label.enableRightToLeftDetection = true;
             var text = 'שלום';
+            var expectedText = 'םולש';
             var label = labels.add({
                 text : text
             });
@@ -1871,12 +1872,12 @@ defineSuite([
             scene.renderForSpecs();
 
             expect(label.text).not.toEqual(text);
-            expect(label.text).toEqual(text.split('').reverse().join(''));
+            expect(label.text).toEqual(expectedText);
         });
 
         it('should reverse text even if rightToLeft is set to true after creation of label', function() {
             var text = 'שלום';
-            var expectedText = 'םלוש';
+            var expectedText = 'םולש';
             var label = labels.add();
             Label.enableRightToLeftDetection = true;
             label.text = text;
@@ -1890,7 +1891,7 @@ defineSuite([
         it('should not change text if it updated to the same value, although rightToLeft is true', function() {
             Label.enableRightToLeftDetection = true;
             var text = 'שלום';
-            var expectedText = 'םלוש';
+            var expectedText = 'םולש';
             var label = labels.add({
                 text : text
             });

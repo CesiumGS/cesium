@@ -156,6 +156,8 @@ define([
 
         this._clusterShow = true;
 
+        this.text = defaultValue(options.text, '');
+
         this._updateClamping();
     }
 
@@ -1215,12 +1217,13 @@ define([
     };
 
     /**
-     * Determines whether or not run the reverseRtl algorithm on the text of the label
+     * Determines whether or not run the algorithm, that match the text of the label to right-to-left languages
      * @memberof Label
      * @type {Boolean}
      * @default false
      *
      * @example
+     * // Example 1.
      * // Set a label's rightToLeft before init
      * Cesium.Label.enableRightToLeftDetection = true;
      * var myLabelEntity = viewer.entities.add({
