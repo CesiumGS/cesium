@@ -204,7 +204,7 @@ void main()
 
     ///////////////////////////////////////////////////////////////////////////
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(DISTANCE_DISPLAY_CONDITION) || defined(DISABLE_DEPTH_DISTANCE)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -239,9 +239,25 @@ void main()
     }
 #endif
 
+// HACK to pass billboard position and cut distance
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
-    float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
-    pixelOffset *= pixelOffsetScale;
+    float position = pixelOffsetScaleByDistance.x;
+    float cutDistSq = pixelOffsetScaleByDistance.z * pixelOffsetScaleByDistance.z;
+    float cameraDistSq = lengthSq;
+    if (cutDistSq > 0.0 && cameraDistSq > cutDistSq)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
+    else if (position > 0.0)
+    {
+        // Empirical formula to create levels according to the distance x
+        // set xrange [0:40000]; plot floor(x / 1000), floor(sqrt(x/1000))
+        float level = floor(pow(cameraDistSq / 1000000.0, 0.20));
+        if (mod(position, pow(2.0, level)) > 0.5)
+        {
+            positionEC.xyz = vec3(0.0);
+        }
+    }
 #endif
 
 #ifdef DISTANCE_DISPLAY_CONDITION
