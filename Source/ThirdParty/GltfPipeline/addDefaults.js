@@ -57,13 +57,13 @@ define([
                         var defaults = {
                             ambient: [0.0, 0.0, 0.0, 1.0],
                             emission: [0.0, 0.0, 0.0, 1.0],
-                            transparency: [1.0]
+                            transparency: 1.0
                         };
                         if (technique !== 'CONSTANT') {
                             defaults.diffuse = [0.0, 0.0, 0.0, 1.0];
                             if (technique !== 'LAMBERT') {
                                 defaults.specular = [0.0, 0.0, 0.0, 1.0];
-                                defaults.shininess = [0.0];
+                                defaults.shininess = 0.0;
                             }
                         }
                         return {
@@ -384,14 +384,8 @@ define([
     }
 
     function selectDefaultScene(gltf) {
-        var scenes = gltf.scenes;
-
-        if (!defined(gltf.scene)) {
-            var scenesLength = scenes.length;
-            for (var sceneId = 0; sceneId < scenesLength; sceneId++) {
-                gltf.scene = sceneId;
-                break;
-            }
+        if (defined(gltf.scenes) && !defined(gltf.scene)) {
+            gltf.scene = 0;
         }
     }
 
