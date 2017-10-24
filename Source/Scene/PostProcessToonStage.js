@@ -1,4 +1,5 @@
 define([
+        '../Core/Color',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
@@ -10,9 +11,13 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/EdgeDetection',
+        '../Shaders/PostProcessFilters/Toon',
+        '../Shaders/PostProcessFilters/ToonComposite',
         './PostProcess',
         './PostProcessStage'
     ], function(
+        Color,
         defineProperties,
         destroyObject,
         PixelFormat,
@@ -24,6 +29,9 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        EdgeDetection,
+        Toon,
+        ToonComposite,
         PostProcess,
         PostProcessStage) {
     'use strict';
@@ -42,14 +50,14 @@ define([
         this._toonPostProcess = undefined;
 
         this._edgeDetectionUniformValues = {
-            len : 0.1
+            len : 0.1,
+            color : Color.clone(Color.BLACK)
         };
 
         this._toonUniformValues = {};
 
         this._uniformValues = {
-            toonTexture : undefined,
-            toonOnly : true
+            toonTexture : undefined
         };
 
         /**
@@ -57,17 +65,7 @@ define([
          */
         this.show = false;
 
-        this._fragmentShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_toonTexture; \n' +
-            'uniform bool  u_toonOnly; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-
-            'void main(void) \n' +
-            '{ \n' +
-            '     gl_FragColor = texture2D(u_toonTexture, v_textureCoordinates);\n' +
-            '     gl_FragColor = mix(texture2D(u_colorTexture, v_textureCoordinates), texture2D(u_toonTexture, v_textureCoordinates), gl_FragColor.a);\n' +
-            '} \n';
+        this._fragmentShader = ToonComposite;
     }
 
     defineProperties(PostProcessToonStage.prototype, {
@@ -160,99 +158,13 @@ define([
 
         var toonUniformValues = stage._toonUniformValues;
 
-        var toonShader =
-            '#extension GL_OES_standard_derivatives : enable \n' +
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_depthTexture; \n' +
-
-            'varying vec2 v_textureCoordinates; \n' +
-
-            'vec2 ScreenToView(vec2 uv) \n' +
-            '{ \n' +
-            '   return vec2((uv.x * 2.0 - 1.0), ((1.0 - uv.y)*2.0 - 1.0)) ; \n' +
-            '} \n' +
-
-            //Reconstruct Normal from View position
-            'vec3 GetNormal(vec3 posInCamera) \n' +
-            '{ \n' +
-            '  vec3 d1 = dFdx(posInCamera); \n' +
-            '  vec3 d2 = dFdy(posInCamera); \n' +
-            '  return normalize(cross(d2, d1)); \n' +
-            '} \n' +
-
-            'float LinearDepth(float depth) \n' +
-            '{ \n' +
-            ' float far= czm_currentFrustum.y; \n' +
-            ' float near = czm_currentFrustum.x; \n' +
-            ' return (2.0 * near) / (far + near - depth * (far - near)); \n' +
-            '} \n' +
-
-            'void main(void) \n' +
-            '{ \n' +
-            '    float depth = texture2D(u_depthTexture, v_textureCoordinates).r; \n' +
-            '    vec4 posInCamera = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates), depth, 1.0); \n' +
-            '    posInCamera = posInCamera / posInCamera.w; \n' +
-            '    vec3 normalInCamera = GetNormal(posInCamera.xyz); \n' +
-            '    vec4 normalInWorld = czm_inverseView * vec4(normalInCamera, 0.0); \n' +
-            '    depth = LinearDepth(depth); \n' +
-            '    gl_FragColor = vec4(depth);\n' +
-            '} \n';
-
-        var edgeDetectionShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_depthTexture; \n' +
-            'uniform float u_len; \n' +
-            'uniform float u_stepSize; \n' +
-            'precision highp float; \n' +
-
-            'varying vec2 v_textureCoordinates; \n' +
-
-            'void main(void) \n' +
-            '{ \n' +
-
-              'float padx = 1.0 / czm_viewport.z; \n' +
-              'float pady = 1.0 / czm_viewport.w; \n' +
-
-              'float horizEdge = 0.0; \n' +
-
-              'horizEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, -pady)).x * 3.0; \n' +
-              'horizEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, 0.0)).x * 10.0; \n' +
-              'horizEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, pady)).x * 3.0; \n' +
-
-              'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, -pady)).x * 3.0; \n' +
-              'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, 0.0)).x * 10.0; \n' +
-              'horizEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, pady)).x * 3.0; \n' +
-
-              'float vertEdge = 0.0; \n' +
-
-              'vertEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, -pady)).x * 3.0; \n' +
-              'vertEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(0.0, -pady)).x * 10.0; \n' +
-              'vertEdge -= texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, -pady)).x * 3.0; \n' +
-
-              'vertEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(-padx, pady)).x * 3.0; \n' +
-              'vertEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(0.0, pady)).x * 10.0; \n' +
-              'vertEdge += texture2D(u_depthTexture, v_textureCoordinates+ vec2(padx, pady)).x * 3.0; \n' +
-
-              'float len = sqrt(horizEdge*horizEdge + vertEdge*vertEdge); \n' +
-
-              'if (len > u_len) \n' +
-              '{ \n' +
-              '   gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); \n' +
-              '} \n' +
-              'else \n' +
-              '{ \n' +
-              '   gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0); \n' +
-              '} \n' +
-
-            '} \n';
-
         var toonStage = new PostProcessStage({
-            fragmentShader : toonShader,
+            fragmentShader : Toon,
             uniformValues: toonUniformValues
         });
 
         var edgeDetectionStage = new PostProcessStage({
-            fragmentShader : edgeDetectionShader,
+            fragmentShader : EdgeDetection,
             uniformValues: edgeDetectionUniformValues
         });
 

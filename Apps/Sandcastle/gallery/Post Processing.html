@@ -64,12 +64,6 @@
             </td>
         </tr>
         <tr>
-            <td>Composite Test</td>
-            <td>
-                <input type="checkbox" data-bind="checked: compositeTestShow">
-            </td>
-        </tr>
-        <tr>
             <td>Ambient Occlusion</td>
             <td>
                 <input type="checkbox" data-bind="checked: ambientOcclusionShow">
@@ -103,7 +97,6 @@ var viewModel = {
     textureOverlayShow: false,
     textureOverlayAlpha: 0.5,
     depthViewShow: false,
-    compositeTestShow: false,
     ambientOcclusionShow: false,
     fxaaShow: false
 };
@@ -127,7 +120,6 @@ function updatePostProcess() {
     postProcess.textureOverlay.show = Boolean(viewModel.textureOverlayShow);
     postProcess.textureOverlay.uniformValues.alpha = Number(viewModel.textureOverlayAlpha);
     postProcess.depthView.show = Boolean(viewModel.depthViewShow);
-    postProcess.compositeTest.show = Boolean(viewModel.compositeTestShow);
     postProcess.ambientOcclusion.show = Boolean(viewModel.ambientOcclusionShow);
     scene.fxaa = Boolean(viewModel.fxaaShow);
 }

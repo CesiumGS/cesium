@@ -40,10 +40,6 @@ define([
          */
         this.depthView = PostProcessLibrary.depthView;
         /**
-         * @inheritdoc PostProcessLibrary#compositeTest
-         */
-        this.compositeTest = PostProcessLibrary.compositeTest;
-        /**
          * @inheritdoc PostProcessLibrary#ambientOcclusion
          */
         this.ambientOcclusion = PostProcessLibrary.ambientOcclusion;
@@ -73,7 +69,6 @@ define([
             this.nightVision,
             this.textureOverlay,
             this.depthView,
-            this.compositeTest,
             this.ambientOcclusion,
             this.depthOfField,
             this.bloom,
