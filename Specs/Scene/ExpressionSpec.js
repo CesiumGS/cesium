@@ -2696,15 +2696,15 @@ defineSuite([
         expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
     });
 
-    it('throws if regex constructor has invalid pattern', function() {
+    it('does not throw SyntaxError if regex constructor has invalid pattern', function() {
         var expression = new Expression('regExp("(?<=\\s)" + ".")');
         expect(function() {
             expression.evaluate(frameState, undefined);
-        }).toThrowRuntimeError();
+        }).not.toThrowSyntaxError();
 
         expect(function() {
             return new Expression('regExp("(?<=\\s)")');
-        }).toThrowRuntimeError();
+        }).not.toThrowSyntaxError();
     });
 
     it('throws if regex constructor has invalid flags', function() {
