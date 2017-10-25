@@ -3311,34 +3311,22 @@ define([
     }
 
     var scratchCartesian = new Cartesian3();
-    var scratchMatrix = new Matrix4();
+    var scratchPlane = new Cartesian4();
 
-    function createClippingNormalsFunction(model) {
+    function createClippingPlanesFunction(model, context) {
         return function() {
             var planes = model.clippingPlanes;
             var length = planes.length;
-            var packedNormals = new Array(length);
+            var packedPlanes = new Array(length);
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
-                var transposeInverse = Matrix4.transpose(Matrix4.inverse(model.modelMatrix, scratchMatrix), scratchMatrix);
-                packedNormals[i] = Matrix4.multiplyByPointAsVector(transposeInverse, plane.normal, scratchCartesian).clone();
+                Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, scratchPlane);
+                Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
+                Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
+                scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
+                packedPlanes[i] = scratchPlane.clone();
             }
-            return packedNormals;
-        };
-    }
-
-    function createClippingPositionsFunction(model) {
-        return function() {
-            var planes = model.clippingPlanes;
-            var length = planes.length;
-            var packedPositions = new Array(length);
-            for (var i = 0; i < length; ++i) {
-                var plane = planes[i];
-                var localPosition = Cartesian3.add(Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian), model._boundingSphere.center, scratchCartesian);
-                var positionWC = Matrix4.multiplyByPoint(model.modelMatrix, localPosition, scratchCartesian);
-                packedPositions[i] = positionWC;
-            }
-            return packedPositions;
+            return packedPlanes;
         };
     }
 
@@ -3438,8 +3426,7 @@ define([
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clipNormals: createClippingNormalsFunction(model),
-                gltf_clipPositions: createClippingPositionsFunction(model)
+                gltf_clippingPlanes: createClippingPlanesFunction(model, context)
             });
 
             // Allow callback to modify the uniformMap
@@ -4237,12 +4224,11 @@ define([
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             'uniform int gltf_clippingPlanesLength; \n' +
-            'uniform vec3 gltf_clipNormals[czm_maxClippingPlanes]; \n' +
-            'uniform vec3 gltf_clipPositions[czm_maxClippingPlanes]; \n' +
+            'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    czm_clipPlanes(gltf_clippingPlanesLength, gltf_clipNormals, gltf_clipPositions); \n' +
+            '    czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '} \n';
 
         return shader;

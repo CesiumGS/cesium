@@ -1060,11 +1060,10 @@ define([
 
         var fs = 'varying vec4 v_color; \n' +
                  'uniform int u_clippingPlanesLength;' +
-                 'uniform vec3 u_clipNormals[czm_maxClippingPlanes]; \n' + // TODO Max doesn't have to be 6
-                 'uniform vec3 u_clipPositions[czm_maxClippingPlanes]; \n' +
+                 'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                  'void main() \n' +
                  '{ \n' +
-                 '    czm_clipPlanes(u_clippingPlanesLength, u_clipNormals, u_clipPositions); \n' +
+                 '    czm_clipPlanes(u_clippingPlanes, u_clippingPlanesLength); \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 

@@ -1,34 +1,33 @@
 /**
- * Procedural anti-aliasing by blurring two colors that meet at a sharp edge.
+ * Clip a fragment by an array of clipping planes.
  *
  * @name czm_clipPlanes
  * @glslFunction
  *
- * @param {int} clipPlanesLength The array length of clipping planes.
- * @param {vec3[]} clipNormals
- * @param {vec3[]} clipPositions
+ * @param {vec4[]} clippingPlanes The array of planes used to clip, defined in in eyespace.
+ * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  */
  const int czm_maxClippingPlanes = 6;
 
-void czm_clipPlanes (int clipPlanesLength, vec3[czm_maxClippingPlanes] clipNormals, vec3[czm_maxClippingPlanes] clipPositions)
+void czm_clipPlanes (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
 {
-    if (clipPlanesLength > 0)
+    if (clippingPlanesLength > 0)
     {
         bool clipped = false;
-        vec4 positionWC = czm_inverseView3D * czm_windowToEyeCoordinates(gl_FragCoord);
+        vec4 position = czm_windowToEyeCoordinates(gl_FragCoord);
         vec3 clipNormal = vec3(0.0, 0.0, 0.0);
         vec3 clipPosition = vec3(0.0, 0.0, 0.0);
 
         for (int i = 0; i < czm_maxClippingPlanes; ++i)
         {
-            if (i >= clipPlanesLength)
+            if (i >= clippingPlanesLength)
             {
                 break;
             }
 
-            clipNormal = clipNormals[i];
-            clipPosition = clipPositions[i];
-            clipped = clipped || (dot(clipNormal, (positionWC.xyz - clipPosition)) > czm_epsilon7);
+            clipNormal = clippingPlanes[i].xyz;
+            clipPosition = clippingPlanes[i].w * clipNormal;
+            clipped = clipped || (dot(clipNormal, (position.xyz - clipPosition)) > czm_epsilon7);
         }
 
         if (clipped)
