@@ -3,6 +3,7 @@ Change Log
 
 ### 1.39 - 2017-11-01
 
+* Added support for right-to-left languages in labels. [#5771](https://github.com/AnalyticalGraphicsInc/cesium/pull/5771)
 * Added the ability to load Cesium's assets from the local file system if security permissions allow it. [#5830](https://github.com/AnalyticalGraphicsInc/cesium/issues/5830)
 * Added function that inserts missing namespace declarations into KML files. [#5860](https://github.com/AnalyticalGraphicsInc/cesium/pull/5860)
 * Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.

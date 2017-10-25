@@ -122,7 +122,7 @@ define([
     }
 
     function rebindAllGlyphs(labelCollection, label) {
-        var text = label._text;
+        var text = label._renderedText;
         var textLength = text.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
@@ -290,7 +290,7 @@ define([
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
+        var text = label._renderedText;
         var glyph;
         var dimensions;
         var lastLineWidth = 0;
