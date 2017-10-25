@@ -143,7 +143,7 @@ Change Log
 * Updated glTF/glb MIME types. [#5420](https://github.com/AnalyticalGraphicsInc/cesium/issues/5420)
 * Added `Cesium.Math.randomBetween`.
 * Modified `defaultValue` to check for both `undefined` and `null`. [#5551](https://github.com/AnalyticalGraphicsInc/cesium/pull/5551)
-* The `throttleRequestByServer` function has been removed. Instead use `RequestScheduler.throttleRequest` to throttle requests.
+* The `throttleRequestByServer` function has been removed. Instead pass a `Request` object with `throttleByServer` set to `true` to any of following load functions: `loadWithXhr`, `loadArrayBuffer`, `loadBlob`, `loadImageViaBlob`, `loadText`, `loadJson`, `loadJsonp`, `loadXML`, `loadImageFromTypedArray`, `loadImage`, `loadCRN`, and `loadKTX`.
 
 ### 1.34 - 2017-06-01
 
