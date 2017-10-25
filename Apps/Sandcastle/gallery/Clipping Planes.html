@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A sample BIM dataset rendered with 3D Tiles.">
+    <meta name="description" content="User-defined clipping planes applied to a batched 3D Tileset, point cloud, and model.">
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -45,7 +45,21 @@
         <td>x</td>
         <td>
             <input type="range" min="-100" max="100" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: xOffset">
+            <input type="text" size="2" data-bind="value: xOffset">
+        </td>
+    </tr>
+    <tr>
+        <td>y</td>
+        <td>
+            <input type="range" min="-100" max="100" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
+            <input type="text" size="2" data-bind="value: yOffset">
+        </td>
+    </tr>
+    <tr>
+        <td>z</td>
+        <td>
+            <input type="range" min="-100" max="100" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
+            <input type="text" size="2" data-bind="value: zOffset">
         </td>
     </tr>
     </tbody></table>
@@ -55,26 +69,18 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-// Power Plant design model provided by Bentley Systems
 var viewer = new Cesium.Viewer('cesiumContainer');
 
-var viewModel = {
-    exampleType : 'BIM',
-    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
-    xOffset : 0.0
-};
-Cesium.knockout.track(viewModel);
-
-// Bind the viewModel to the DOM elements of the UI that call for it.
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
-var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
-
-var clippingPlanes = loadTileset(bimUrl);
+var defaultClippingPlanes = [
+    new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0),
+    new Cesium.Plane(Cesium.Cartesian3.UNIT_Y, 0),
+    new Cesium.Plane(Cesium.Cartesian3.UNIT_Z, 0)
+];
 
 function loadTileset (url) {
+    viewer.entities.removeAll();
+    viewer.scene.primitives.removeAll();
+
     var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url
     }));
@@ -87,14 +93,15 @@ function loadTileset (url) {
         throw(error);
     });
 
-    tileset.clippingPlanes = [ new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0) ];
+    tileset.clippingPlanes = defaultClippingPlanes;
     return tileset.clippingPlanes;
 }
 
-function loadModel (url, height) {
+function loadModel (url) {
     viewer.entities.removeAll();
+    viewer.scene.primitives.removeAll();
 
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height);
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1.0);
     var heading = Cesium.Math.toRadians(135);
     var pitch = 0;
     var roll = 0;
@@ -106,23 +113,47 @@ function loadModel (url, height) {
         position : position,
         orientation : orientation,
         model : {
-            uri : url,
-            minimumPixelSize : 128,
-            maximumScale : 20000
+            uri : url
         }
     });
 
     viewer.trackedEntity = entity;
 
-    entity.model.clippingPlanes = [ new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0) ];
+    entity.model.clippingPlanes = defaultClippingPlanes;
     return entity.model.clippingPlanes.getValue();
 }
 
-Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(
-    function(newValue) {
-        clippingPlanes[0].distance = parseFloat(newValue);
-    }
-);
+// Power Plant design model provided by Bentley Systems
+var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
+var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
+var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
+
+var clippingPlanes = loadTileset(bimUrl);
+
+// Track and create the bindings for the view model
+
+var viewModel = {
+    exampleType : 'BIM',
+    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
+    xOffset : 0.0,
+    yOffset: 0.0,
+    zOffset: 0.0
+};
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.track(viewModel);
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(function(newValue) {
+    clippingPlanes[0].distance = parseFloat(newValue);
+});
+
+Cesium.knockout.getObservable(viewModel, 'yOffset').subscribe(function(newValue) {
+    clippingPlanes[1].distance = parseFloat(newValue);
+});
+
+Cesium.knockout.getObservable(viewModel, 'zOffset').subscribe(function(newValue) {
+    clippingPlanes[2].distance = parseFloat(newValue);
+});
 
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
     function(newValue) {
@@ -131,7 +162,7 @@ Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
         } else if (newValue === 'Point Cloud') {
             clippingPlanes = loadTileset(pointCloudUrl);
         } else {
-            clippingPlanes = loadModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', 20.0);
+            clippingPlanes = loadModel(modelUrl);
         }
     }
 );
