@@ -10,6 +10,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/DepthOfField',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
         './PostProcessStage'
@@ -25,6 +26,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        DepthOfField,
         GaussianBlur1D,
         PostProcess,
         PostProcessStage) {
@@ -60,43 +62,7 @@ define([
             focalDistance : 5.0
         };
 
-        this._fragmentShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'uniform sampler2D u_texture; \n' +
-            'uniform sampler2D u_depthTexture; \n' +
-            'uniform float u_focalDistance; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-
-            'vec2 ScreenToView(vec2 uv) \n' +
-            '{ \n' +
-            '   return vec2((uv.x * 2.0 - 1.0), ((1.0 - uv.y)*2.0 - 1.0)) ; \n' +
-            '} \n' +
-
-            'float ComputeDepthBlur(float depth) \n' +
-            '{ \n' +
-            '    float f; \n' +
-            '    if (depth < u_focalDistance) \n' +
-            '    { \n' +
-            '        f = (u_focalDistance - depth) / (u_focalDistance - czm_currentFrustum.x); \n' +
-            '    } \n' +
-            '    else \n' +
-            '    { \n' +
-            '        f = (depth - u_focalDistance) / (czm_currentFrustum.y - u_focalDistance); \n' +
-            '        f = pow(f, 0.1); \n' +
-            '    } \n' +
-            '    f *= f; \n' +
-            '    return clamp(f, 0.0, 1.0); \n' +
-            '} \n' +
-
-            'void main(void) \n' +
-            '{ \n' +
-            '    float depth = texture2D(u_depthTexture, v_textureCoordinates).r; \n' +
-            '    vec4 posInCamera = czm_inverseProjection * vec4(ScreenToView(v_textureCoordinates), depth, 1.0); \n' +
-            '    posInCamera = posInCamera / posInCamera.w; \n' +
-            '    float d = ComputeDepthBlur(-posInCamera.z); \n' +
-            '    d = pow(d, 0.5); \n' +
-            '    gl_FragColor = mix(texture2D(u_colorTexture, v_textureCoordinates), texture2D(u_texture, v_textureCoordinates),d);\n' +
-            '} \n';
+        this._fragmentShader = DepthOfField;
 
         /**
          * @inheritdoc PostProcessStage#show
