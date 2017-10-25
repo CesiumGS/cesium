@@ -12,8 +12,8 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/EdgeDetection',
-        '../Shaders/PostProcessFilters/Toon',
-        '../Shaders/PostProcessFilters/ToonComposite',
+        '../Shaders/PostProcessFilters/Silhouette',
+        '../Shaders/PostProcessFilters/SilhouetteComposite',
         './PostProcess',
         './PostProcessStage'
     ], function(
@@ -30,32 +30,32 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         EdgeDetection,
-        Toon,
-        ToonComposite,
+        Silhouette,
+        SilhouetteComposite,
         PostProcess,
         PostProcessStage) {
     'use strict';
 
     /**
-     * Post process stage for Toon. Implements {@link PostProcessStage}.
+     * Post process stage for a silhouette. Implements {@link PostProcessStage}.
      *
-     * @alias PostProcessToonStage
+     * @alias PostProcessSilhouetteStage
      * @constructor
      *
      * @private
      */
-    function PostProcessToonStage() {
-        this._toonTexture = undefined;
-        this._toonFramebuffer = undefined;
-        this._toonPostProcess = undefined;
+    function PostProcessSilhouetteStage() {
+        this._texture = undefined;
+        this._framebuffer = undefined;
+        this._postProcess = undefined;
 
         this._edgeDetectionUniformValues = {
             len : 0.1,
             color : Color.clone(Color.BLACK)
         };
-        this._toonUniformValues = {};
+        this._silhouetteUniformValues = {};
         this._uniformValues = {
-            toonTexture : undefined
+            silhouetteTexture : undefined
         };
 
         /**
@@ -63,10 +63,10 @@ define([
          */
         this.show = false;
 
-        this._fragmentShader = ToonComposite;
+        this._fragmentShader = SilhouetteComposite;
     }
 
-    defineProperties(PostProcessToonStage.prototype, {
+    defineProperties(PostProcessSilhouetteStage.prototype, {
         /**
          * @inheritdoc PostProcessStage#ready
          */
@@ -102,9 +102,9 @@ define([
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        toonUniformValues : {
+        silhouetteUniformValues : {
             get : function() {
-                return this._toonUniformValues;
+                return this._silhouetteUniformValues;
             }
         }
 
@@ -113,7 +113,7 @@ define([
     /**
      * @inheritdoc PostProcessStage#execute
      */
-    PostProcessToonStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
+    PostProcessSilhouetteStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
         if (!this.show) {
             return;
         }
@@ -123,7 +123,7 @@ define([
             createResources(this, frameState.context);
         }
 
-        this._toonPostProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._toonFramebuffer);
+        this._postProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._framebuffer);
     };
 
     function createSampler() {
@@ -136,7 +136,7 @@ define([
     }
 
     function createResources(stage, context) {
-        var toonTexture = new Texture({
+        var texture = new Texture({
             context : context,
             width : context.drawingBufferWidth,
             height : context.drawingBufferHeight,
@@ -144,56 +144,52 @@ define([
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
         });
-        var toonFramebuffer = new Framebuffer({
+        var framebuffer = new Framebuffer({
             context : context,
-            colorTextures : [toonTexture],
+            colorTextures : [texture],
             destroyAttachments : false
         });
 
-        var edgeDetectionUniformValues = stage._edgeDetectionUniformValues;
-
-        var toonUniformValues = stage._toonUniformValues;
-
-        var toonStage = new PostProcessStage({
-            fragmentShader : Toon,
-            uniformValues: toonUniformValues
+        var silhouetteStage = new PostProcessStage({
+            fragmentShader : Silhouette,
+            uniformValues: stage._silhouetteUniformValues
         });
         var edgeDetectionStage = new PostProcessStage({
             fragmentShader : EdgeDetection,
-            uniformValues: edgeDetectionUniformValues
+            uniformValues: stage._edgeDetectionUniformValues
         });
-        var toonPostProcess = new PostProcess({
-            stages : [toonStage, edgeDetectionStage],
+        var postProcess = new PostProcess({
+            stages : [silhouetteStage, edgeDetectionStage],
             overwriteInput : false,
             blendOutput : false
         });
 
-        stage._toonTexture = toonTexture;
-        stage._toonFramebuffer = toonFramebuffer;
-        stage._toonPostProcess = toonPostProcess;
-        stage._uniformValues.toonTexture = toonTexture;
+        stage._texture = texture;
+        stage._framebuffer = framebuffer;
+        stage._postProcess = postProcess;
+        stage._uniformValues.silhouetteTexture = texture;
     }
 
     function destroyResources(stage) {
-        stage._toonTexture = stage._toonTexture && stage._toonTexture.destroy();
-        stage._toonFramebuffer = stage._toonFramebuffer && stage._toonFramebuffer.destroy();
-        stage._toonPostProcess = stage._toonPostProcess && stage._toonPostProcess.destroy();
+        stage._texture = stage._texture && stage._texture.destroy();
+        stage._framebuffer = stage._framebuffer && stage._framebuffer.destroy();
+        stage._postProcess = stage._postProcess && stage._postProcess.destroy();
     }
 
     /**
      * @inheritdoc PostProcessStage#isDestroyed
      */
-    PostProcessToonStage.prototype.isDestroyed = function() {
+    PostProcessSilhouetteStage.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * @inheritdoc PostProcessStage#destroy
      */
-    PostProcessToonStage.prototype.destroy = function() {
+    PostProcessSilhouetteStage.prototype.destroy = function() {
         destroyResources(this);
         return destroyObject(this);
     };
 
-    return PostProcessToonStage;
+    return PostProcessSilhouetteStage;
 });

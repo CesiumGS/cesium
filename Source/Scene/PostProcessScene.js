@@ -48,15 +48,17 @@ define([
          */
         this.depthOfField = PostProcessLibrary.depthOfField;
         /**
-         * @inheritdoc PostProcessLibrary#bloom
+         * @inheritdoc PostProcessLibrary#lensFlare
          */
         this.lensFlare = PostProcessLibrary.lensFlare;
-
+        /**
+         * @inheritDoc PostProcessLibrary#bloom
+         */
         this.bloom = PostProcessLibrary.bloom;
         /**
-         * @inheritdoc PostProcessLibrary#fxaa
+         * @inheritdoc PostProcessLibrary#silhouette
          */
-         this.toon = PostProcessLibrary.toon;
+         this.silhouette = PostProcessLibrary.silhouette;
         /**
          * @inheritdoc PostProcessLibrary#fxaa
          */
@@ -72,7 +74,7 @@ define([
             this.ambientOcclusion,
             this.depthOfField,
             this.lensFlare,
-            this.toon,
+            this.silhouette,
             this.bloom,
             this.fxaa
         ];

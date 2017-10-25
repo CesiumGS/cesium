@@ -6,7 +6,7 @@ define([
         './PostProcessAmbientOcclusionStage',
         './PostProcessDepthOfFieldStage',
         './PostProcessBloomStage',
-        './PostProcessToonStage',
+        './PostProcessSilhouetteStage',
         './PostProcessStage',
         '../Shaders/PostProcessFilters/BlackAndWhite',
         '../Shaders/PostProcessFilters/Brightness',
@@ -25,7 +25,7 @@ define([
         PostProcessAmbientOcclusionStage,
         PostProcessDepthOfFieldStage,
         PostProcessBloomStage,
-        PostProcessToonStage,
+        PostProcessSilhouetteStage,
         PostProcessStage,
         BlackAndWhite,
         Brightness,
@@ -167,9 +167,9 @@ define([
         /**
          * private
          */
-        toon : {
+        silhouette : {
             get : function() {
-                return createToonStage();
+                return createSilhouetteStage();
             }
         }
     });
@@ -257,8 +257,8 @@ define([
         return new PostProcessBloomStage();
     }
 
-    function createToonStage() {
-        return new PostProcessToonStage();
+    function createSilhouetteStage() {
+        return new PostProcessSilhouetteStage();
     }
 
     return PostProcessLibrary;
