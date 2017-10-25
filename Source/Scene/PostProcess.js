@@ -17,6 +17,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Shaders/PostProcessFilters/PassThrough',
         './BlendingState',
         './PostProcessStage'
     ], function(
@@ -38,6 +39,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        PassThrough,
         BlendingState,
         PostProcessStage) {
     'use strict';
@@ -206,18 +208,9 @@ define([
         }
     }
 
-    function createPassthroughStage() {
-        var fragmentShader =
-            'uniform sampler2D u_colorTexture; \n' +
-            'varying vec2 v_textureCoordinates; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    vec4 color = texture2D(u_colorTexture, v_textureCoordinates); \n' +
-            '    gl_FragColor = color; \n' +
-            '} \n';
-
+    function createPassThroughStage() {
         return new PostProcessStage({
-            fragmentShader : fragmentShader
+            fragmentShader : PassThrough
         });
     }
 
@@ -248,8 +241,8 @@ define([
 
         // Cannot read and write to the same framebuffer simultaneously, add a passthrough stage.
         if (inputColorTexture === outputColorTexture && activeStages.length === 1) {
-            var passthroughStage = createPassthroughStage();
-            activeStages.push(passthroughStage);
+            var passThroughStage = createPassThroughStage();
+            activeStages.push(passThroughStage);
         }
     }
 

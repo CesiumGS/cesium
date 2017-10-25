@@ -72,7 +72,7 @@ define([
 
         var that = this;
         this._uniformMap = {
-            u_texture : function() {
+            u_colorTexture : function() {
                 return that._texture;
             },
             u_depth : function() {
@@ -146,13 +146,13 @@ define([
 
     var translucentFS =
         '#extension GL_EXT_frag_depth : enable\n'+
-        'uniform sampler2D u_texture;\n' +
+        'uniform sampler2D u_colorTexture;\n' +
         'uniform sampler2D u_depth;\n' +
         'uniform sampler2D u_classified;\n' +
         'varying vec2 v_textureCoordinates;\n' +
         'void main()\n' +
         '{\n' +
-        '    vec4 color = texture2D(u_texture, v_textureCoordinates);\n' +
+        '    vec4 color = texture2D(u_colorTexture, v_textureCoordinates);\n' +
         '    if (color.a == 0.0)\n' +
         '    {\n' +
         '        discard;\n' +
@@ -176,11 +176,11 @@ define([
         '}\n';
 
     var opaqueFS =
-        'uniform sampler2D u_texture;\n' +
+        'uniform sampler2D u_colorTexture;\n' +
         'varying vec2 v_textureCoordinates;\n' +
         'void main()\n' +
         '{\n' +
-        '    vec4 color = texture2D(u_texture, v_textureCoordinates);\n' +
+        '    vec4 color = texture2D(u_colorTexture, v_textureCoordinates);\n' +
         '    if (color.a == 0.0)\n' +
         '    {\n' +
         '        discard;\n' +

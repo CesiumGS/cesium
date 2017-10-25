@@ -290,7 +290,7 @@ define([
                 viewport : downSampleViewport
             });
 
-            this._downSampleCommand.uniformMap.u_texture = function() {
+            this._downSampleCommand.uniformMap.u_colorTexture = function() {
                 return fbo.getColorTexture(0);
             };
             this._downSampleCommand.renderState = downSampleRenderState;
@@ -330,7 +330,7 @@ define([
             };
             this._blendCommand.renderState = upSampleRenderState;
 
-            this._fullScreenCommand.uniformMap.u_texture = function() {
+            this._fullScreenCommand.uniformMap.u_colorTexture = function() {
                 return fbo.getColorTexture(0);
             };
             this._fullScreenCommand.renderState = upSampleRenderState;
