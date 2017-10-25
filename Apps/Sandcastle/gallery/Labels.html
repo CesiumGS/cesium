@@ -123,7 +123,7 @@ function scaleByDistance() {
 
 function setRightToLeft() {
     Sandcastle.declare(setRightToLeft);
-    Cesium.Label.enableRightToLeftDetection = true;
+    Cesium.Label.enableRightToLeftDetection = true; //Only needs to be set once at the beginning of the application.
     viewer.entities.add({
         position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
         label : {
