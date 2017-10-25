@@ -1588,6 +1588,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.minimumDisableDepthTestDistance;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
+         *
+         * @alias czm_invertClassificationColor
+         * @glslUniform
+         */
+        czm_invertClassificationColor : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.invertClassificationColor;
+            }
         })
     };
 
