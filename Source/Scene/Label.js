@@ -119,7 +119,8 @@ define([
             distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
         }
 
-        this._text = defaultValue(options.text, '');
+        this._renderedText = undefined;
+        this._text = undefined;
         this._show = defaultValue(options.show, true);
         this._font = defaultValue(options.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
@@ -290,17 +291,9 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                if (Label.enableRightToLeftDetection) {
-                    if (this._originalValue === value) {
-                        value = this._text;
-                        return;
-                    }
-                    this._originalValue = value;
-                    value = reverseRtl(value);
-                }
-
                 if (this._text !== value) {
                     this._text = value;
+                    this._renderedText = Label.enableRightToLeftDetection ? reverseRtl(value) : value;
                     rebindAllGlyphs(this);
                 }
             }
@@ -1187,7 +1180,7 @@ define([
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
                this._heightReference === other._heightReference &&
-               this._text === other._text &&
+               this._renderedText === other._renderedText &&
                this._font === other._font &&
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._fillColor, other._fillColor) &&
