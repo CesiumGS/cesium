@@ -14,6 +14,7 @@ Change Log
 * Added `eyeSeparation` and `focalLength` properties to `Scene` to configure VR settings. [#5917](https://github.com/AnalyticalGraphicsInc/cesium/pull/5917)
 * Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL. [#5696](https://github.com/AnalyticalGraphicsInc/cesium/pull/5696)
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
+* Fix bright fog when terrain lighting is enabled. [#5934](https://github.com/AnalyticalGraphicsInc/cesium/pull/5934)
 
 ### 1.38 - 2017-10-02
 
