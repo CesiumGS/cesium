@@ -84,6 +84,7 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
+        './VelocityOrientationProperty',
         './VelocityVectorProperty',
         './WallGraphics'
     ], function(
@@ -172,23 +173,53 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
+        VelocityOrientationProperty,
         VelocityVectorProperty,
         WallGraphics) {
     'use strict';
 
+    // A marker type to distinguish CZML properties where we need to end up with a unit vector.
+    // The data is still loaded into Cartesian3 objects but they are normalized.
+    function UnitCartesian3() {}
+    UnitCartesian3.packedLength = Cartesian3.packedLength;
+    UnitCartesian3.unpack = Cartesian3.unpack;
+    UnitCartesian3.pack = Cartesian3.pack;
+
+    // As a side note, for the purposes of CZML, Quaternion always indicates a unit quaternion.
+
     var currentId;
 
-    function makeReference(collection, referenceString) {
+    function createReferenceProperty(entityCollection, referenceString) {
         if (referenceString[0] === '#') {
             referenceString = currentId + referenceString;
         }
-        return ReferenceProperty.fromString(collection, referenceString);
+        return ReferenceProperty.fromString(entityCollection, referenceString);
+    }
+
+    function createSpecializedProperty(type, entityCollection, packetData) {
+        if (defined(packetData.reference)) {
+            return createReferenceProperty(entityCollection, packetData.reference);
+        }
+
+        if (defined(packetData.velocityReference)) {
+            var referenceProperty = createReferenceProperty(entityCollection, packetData.velocityReference);
+            switch (type) {
+                case Cartesian3:
+                case UnitCartesian3:
+                    return new VelocityVectorProperty(referenceProperty, type === UnitCartesian3);
+                case Quaternion:
+                    return new VelocityOrientationProperty(referenceProperty);
+            }
+        }
+
+        throw new RuntimeError(JSON.stringify(packetData) + ' is not valid CZML.');
     }
 
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
     var scratchCartographic = new Cartographic();
     var scratchTimeInterval = new TimeInterval();
+    var scratchQuaternion = new Quaternion();
 
     function unwrapColorInterval(czmlInterval) {
         var rgbaf = czmlInterval.rgbaf;
@@ -398,17 +429,30 @@ define([
         throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
     }
 
-    function normalizePackedQuaternionArray(array, startingIndex) {
-        var x = array[startingIndex];
-        var y = array[startingIndex + 1];
-        var z = array[startingIndex + 2];
-        var w = array[startingIndex + 3];
+    function normalizePackedCartesianArray(array, startingIndex) {
+        Cartesian3.unpack(array, startingIndex, scratchCartesian);
+        Cartesian3.normalize(scratchCartesian, scratchCartesian);
+        Cartesian3.pack(scratchCartesian, array, startingIndex);
+    }
 
-        var inverseMagnitude = 1.0 / Math.sqrt(x * x + y * y + z * z + w * w);
-        array[startingIndex] = x * inverseMagnitude;
-        array[startingIndex + 1] = y * inverseMagnitude;
-        array[startingIndex + 2] = z * inverseMagnitude;
-        array[startingIndex + 3] = w * inverseMagnitude;
+    function unwrapUnitCartesianInterval(czmlInterval) {
+        var cartesian = unwrapCartesianInterval(czmlInterval);
+        if (cartesian.length === 3) {
+            normalizePackedCartesianArray(cartesian, 0);
+            return cartesian;
+        }
+
+        for (var i = 1; i < cartesian.length; i += 4) {
+            normalizePackedCartesianArray(cartesian, i);
+        }
+
+        return cartesian;
+    }
+
+    function normalizePackedQuaternionArray(array, startingIndex) {
+        Quaternion.unpack(array, startingIndex, scratchQuaternion);
+        Quaternion.normalize(scratchQuaternion, scratchQuaternion);
+        Quaternion.pack(scratchQuaternion, array, startingIndex);
     }
 
     function unwrapQuaternionInterval(czmlInterval) {
@@ -452,12 +496,13 @@ define([
         } else if (czmlInterval.hasOwnProperty('cartesian2')) {
             return Cartesian2;
         } else if (czmlInterval.hasOwnProperty('cartesian') ||
-                   czmlInterval.hasOwnProperty('unitCartesian') ||
-                   czmlInterval.hasOwnProperty('unitSpherical') ||
                    czmlInterval.hasOwnProperty('spherical') ||
                    czmlInterval.hasOwnProperty('cartographicRadians') ||
                    czmlInterval.hasOwnProperty('cartographicDegrees')) {
             return Cartesian3;
+        } else if (czmlInterval.hasOwnProperty('unitCartesian') ||
+                   czmlInterval.hasOwnProperty('unitSpherical')) {
+            return UnitCartesian3;
         } else if (czmlInterval.hasOwnProperty('rgba') ||
                    czmlInterval.hasOwnProperty('rgbaf')) {
             return Color;
@@ -514,6 +559,8 @@ define([
                 return czmlInterval.cartesian2;
             case Cartesian3:
                 return unwrapCartesianInterval(czmlInterval);
+            case UnitCartesian3:
+                return unwrapUnitCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
             case ColorBlendMode:
@@ -614,10 +661,17 @@ define([
         var isSampled;
         var unwrappedInterval;
         var unwrappedIntervalLength;
-        var isReference = defined(packetData.reference);
+
+        // CZML properties can be defined in many ways.  Most ways represent a structure for
+        // encoding a single value (number, string, cartesian, etc.)  Regardless of the value type,
+        // if it encodes a single value it will get loaded into a ConstantProperty eventually.
+        // Alternatively, there are ways of defining a property that require specialized
+        // client-side representation. Currently, these are ReferenceProperty,
+        // and client-side velocity computation properties such as VelocityVectorProperty.
+        var isValue = !defined(packetData.reference) && !defined(packetData.velocityReference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
-        if (!isReference) {
+        if (isValue) {
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri, query);
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
@@ -630,12 +684,10 @@ define([
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            if (isReference) {
-                object[propertyName] = makeReference(entityCollection, packetData.reference);
-            } else if (needsUnpacking) {
-                object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
+            if (isValue) {
+                object[propertyName] = new ConstantProperty(needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval);
             } else {
-                object[propertyName] = new ConstantProperty(unwrappedInterval);
+                object[propertyName] = createSpecializedProperty(type, entityCollection, packetData);
             }
             return;
         }
@@ -668,30 +720,30 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            if (isReference) {
-                combinedInterval.data = makeReference(entityCollection, packetData.reference);
-            } else if (needsUnpacking) {
-                combinedInterval.data = type.unpack(unwrappedInterval, 0);
+            if (isValue) {
+                combinedInterval.data = needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval;
             } else {
-                combinedInterval.data = unwrappedInterval;
+                combinedInterval.data = createSpecializedProperty(type, entityCollection, packetData);
             }
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                if (isReference) {
-                    property = new CompositeProperty();
-                } else {
+                if (isValue) {
                     property = new TimeIntervalCollectionProperty();
+                } else {
+                    property = new CompositeProperty();
                 }
                 object[propertyName] = property;
             }
 
-            if (!isReference && property instanceof TimeIntervalCollectionProperty) {
+            if (isValue && property instanceof TimeIntervalCollectionProperty) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositeProperty) {
                 //If the collection was already a CompositeProperty, use it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
+                if (isValue) {
+                    combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                }
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositeProperty but preserve the existing data.
@@ -708,7 +760,9 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantProperty and add it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
+                if (isValue) {
+                    combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                }
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -781,10 +835,10 @@ define([
         var unwrappedIntervalLength;
         var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
         var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
-        var isReference = defined(packetData.reference);
+        var isValue = !defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
-        if (!isReference) {
+        if (isValue) {
             if (defined(packetData.referenceFrame)) {
                 referenceFrame = ReferenceFrame[packetData.referenceFrame];
             }
@@ -796,10 +850,10 @@ define([
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            if (isReference) {
-                object[propertyName] = makeReference(entityCollection, packetData.reference);
-            } else {
+            if (isValue) {
                 object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
+            } else {
+                object[propertyName] = createReferenceProperty(entityCollection, packetData.reference);
             }
             return;
         }
@@ -832,28 +886,30 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            if (isReference) {
-                combinedInterval.data = makeReference(entityCollection, packetData.reference);
-            } else {
+            if (isValue) {
                 combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
+            } else {
+                combinedInterval.data = createReferenceProperty(entityCollection, packetData.reference);
             }
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                if (isReference) {
-                    property = new CompositePositionProperty(referenceFrame);
-                } else {
+                if (isValue) {
                     property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                } else {
+                    property = new CompositePositionProperty(referenceFrame);
                 }
                 object[propertyName] = property;
             }
 
-            if (!isReference && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
+            if (isValue && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
                 //If the collection was already a CompositePositionProperty, use it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                if (isValue) {
+                    combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                }
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositePositionProperty but preserve the existing data.
@@ -870,7 +926,9 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantPositionProperty and add it.
-                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                if (isValue) {
+                    combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                }
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -1117,7 +1175,7 @@ define([
         var references = packetData.references;
         if (defined(references)) {
             var properties = references.map(function(reference) {
-                return makeReference(entityCollection, reference);
+                return createReferenceProperty(entityCollection, reference);
             });
 
             var iso8601Interval = packetData.interval;
@@ -1154,7 +1212,7 @@ define([
     function processPositionsPacketData(object, propertyName, positionsData, entityCollection) {
         if (defined(positionsData.references)) {
             var properties = positionsData.references.map(function(reference) {
-                return makeReference(entityCollection, reference);
+                return createReferenceProperty(entityCollection, reference);
             });
 
             var iso8601Interval = positionsData.interval;
@@ -1230,11 +1288,7 @@ define([
             return;
         }
 
-        if (defined(packetData.velocityReference)) {
-            billboard.alignedAxis = new VelocityVectorProperty(makeReference(entityCollection, packetData.velocityReference), true);
-        } else {
-            processPacketData(Cartesian3, billboard, 'alignedAxis', packetData, interval, sourceUri, entityCollection, query);
-        }
+        processPacketData(UnitCartesian3, billboard, 'alignedAxis', packetData, interval, sourceUri, entityCollection, query);
     }
 
     function processBillboard(entity, packet, entityCollection, sourceUri, query) {
