@@ -29,6 +29,7 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
+        './DepthFunction',
         './getBinaryAccessor',
         './StencilFunction',
         './StencilOperation'
@@ -63,6 +64,7 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
+        DepthFunction,
         getBinaryAccessor,
         StencilFunction,
         StencilOperation) {
@@ -1342,6 +1344,9 @@ define([
             // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
             derivedCommand = DrawCommand.shallowClone(command);
             var rs = clone(derivedCommand.renderState, true);
+            if (rs.depthTest.enabled && rs.depthTest.func === DepthFunction.LESS) {
+                rs.depthTest.func = DepthFunction.LESS_OR_EQUAL;
+            }
             // Stencil test is masked to the most significant 4 bits so the reference is shifted.
             // This is to prevent clearing the stencil before classification which needs the least significant
             // bits for increment/decrement operations.
