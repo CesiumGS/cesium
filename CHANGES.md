@@ -1,6 +1,8 @@
 Change Log
 ==========
+
 ### 1.39 - 2017-11-01
+
 * Fixed a camera bug using lookAtTransform when tracking an entity. [#5850](https://github.com/AnalyticalGraphicsInc/cesium/issues/5850)
 * Added an upVector parameter to the Camera lookAtTransform method.
 * Added support for right-to-left languages in labels. [#5771](https://github.com/AnalyticalGraphicsInc/cesium/pull/5771)
