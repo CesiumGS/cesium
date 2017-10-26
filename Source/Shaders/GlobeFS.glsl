@@ -52,6 +52,10 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#if defined(FOG) && (defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING))
+uniform float u_minimumBrightness;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -201,8 +205,8 @@ void main()
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
 
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(ENABLE_DAYNIGHT_SHADING)
-    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), 0.1, 1.0);
-    fogColor = mix(vec3(0.0), fogColor, darken);
+    float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
+    fogColor *= darken;
 #endif
 
     gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
