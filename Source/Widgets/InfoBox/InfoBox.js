@@ -210,7 +210,9 @@ click: function () { closeClicked.raiseEvent(this); }');
         //We can't actually add anything into the frame until the load event is fired
         frame.addEventListener('load', function() {
             var frameDocument = frame.contentDocument;
-
+            if (frameDocument === null) {
+                return;
+            }
             //We inject default css into the content iframe,
             //end users can remove it or add their own via the exposed frame property.
             var cssLink = frameDocument.createElement('link');
