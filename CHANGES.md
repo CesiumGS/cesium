@@ -1,5 +1,10 @@
 Change Log
 ==========
+### 1.39 - 2017-11-02
+
+* Added `allowScripts` property to InfoBox which activates scripts inside entity description [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501)
+* Added ScriptsInInfoBox sandcastle example
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes
@@ -13,8 +18,6 @@ Change Log
 * Added support in CZML for expressing `orientation` as the velocity vector of an entity, using `velocityReference` syntax. [#5807](https://github.com/AnalyticalGraphicsInc/cesium/pull/5807)
 * Fixed CZML processing of `velocityReference` within an interval. [#5738](https://github.com/AnalyticalGraphicsInc/cesium/issues/5738)
 * Zoom about mouse now maintains camera heading, pitch, and roll [#4639](https://github.com/AnalyticalGraphicsInc/cesium/pull/5603)
-* Added `allowScripts` property to InfoBox which activates scripts inside entity description [#5501](https://github.com/AnalyticalGraphicsInc/cesium/issues/5501)
-* Added ScriptsInInfoBox sandcastle example
 * Fixed a bug in `PolylineCollection` preventing the display of more than 16K points in a single collection [#5538](https://github.com/AnalyticalGraphicsInc/cesium/pull/5782)
 
 ### 1.37 - 2017-09-01
