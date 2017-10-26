@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -8,6 +9,7 @@ define([
         '../Core/WebGLConstants',
         './BufferUsage'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -25,9 +27,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
 
         if (!defined(options.typedArray) && !defined(options.sizeInBytes)) {
             throw new DeveloperError('Either options.sizeInBytes or options.typedArray is required.');
@@ -37,8 +37,9 @@ define([
             throw new DeveloperError('Cannot pass in both options.sizeInBytes and options.typedArray.');
         }
 
-        if (defined(options.typedArray) && !(typeof options.typedArray === 'object' && typeof options.typedArray.byteLength === 'number')) {
-            throw new DeveloperError('options.typedArray must be a typed array');
+        if (defined(options.typedArray)) {
+            Check.typeOf.object('options.typedArray', options.typedArray);
+            Check.typeOf.number('options.typedArray.byteLength', options.typedArray.byteLength);
         }
 
         if (!BufferUsage.validate(options.usage)) {
@@ -58,9 +59,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (sizeInBytes <= 0) {
-            throw new DeveloperError('Buffer size must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('sizeInBytes', sizeInBytes, 0);
         //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();
@@ -119,9 +118,7 @@ define([
      */
     Buffer.createVertexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         return new Buffer({
@@ -180,15 +177,13 @@ define([
      */
     Buffer.createIndexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
 
         if (!IndexDatatype.validate(options.indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((options.indexDatatype === IndexDatatype.UNSIGNED_INT) && !options.context.elementIndexUint) {
+        if (options.indexDatatype === IndexDatatype.UNSIGNED_INT && !options.context.elementIndexUint) {
             throw new DeveloperError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.');
         }
         //>>includeEnd('debug');
@@ -250,12 +245,8 @@ define([
         offsetInBytes = defaultValue(offsetInBytes, 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!arrayView) {
-            throw new DeveloperError('arrayView is required.');
-        }
-        if (offsetInBytes + arrayView.byteLength > this._sizeInBytes) {
-            throw new DeveloperError('This buffer is not large enough.');
-        }
+        Check.defined('arrayView', arrayView);
+        Check.typeOf.number.lessThanOrEquals('offsetInBytes + arrayView.byteLength', offsetInBytes + arrayView.byteLength, this._sizeInBytes);
         //>>includeEnd('debug');
 
         var gl = this._gl;
