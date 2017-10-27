@@ -72,14 +72,13 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var defaultClippingPlanes = [
-    new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0),
-    new Cesium.Plane(Cesium.Cartesian3.UNIT_Y, 0),
-    new Cesium.Plane(Cesium.Cartesian3.UNIT_Z, 0)
+    new Cesium.Plane(new Cesium.Cartesian3(-1, 0, 0), 0.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0, -1, 0), 100.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0, 0, 1), 100.0)
 ];
 
 function loadTileset (url) {
-    viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
+    reset();
 
     var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url
@@ -98,10 +97,9 @@ function loadTileset (url) {
 }
 
 function loadModel (url) {
-    viewer.entities.removeAll();
-    viewer.scene.primitives.removeAll();
+    reset();
 
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 1.0);
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
     var heading = Cesium.Math.toRadians(135);
     var pitch = 0;
     var roll = 0;
@@ -136,8 +134,8 @@ var viewModel = {
     exampleType : 'BIM',
     exampleTypes : ['BIM', 'Model', 'Point Cloud'],
     xOffset : 0.0,
-    yOffset: 0.0,
-    zOffset: 0.0
+    yOffset: 100.0,
+    zOffset: 100.0
 };
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
@@ -166,6 +164,17 @@ Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
         }
     }
 );
+
+function reset () {
+    viewer.entities.removeAll();
+    viewer.scene.primitives.removeAll();
+
+    if (Cesium.defined(viewModel)) {
+        viewModel.xOffset = 0.0;
+        viewModel.yOffset = 100.0;
+        viewModel.zOffset = 100.0;
+    }
+}
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

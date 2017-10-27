@@ -4,11 +4,9 @@
  * @name czm_clipPlanes
  * @glslFunction
  *
- * @param {vec4[]} clippingPlanes The array of planes used to clip, defined in in eyespace.
+ * @param {vec4[]} clippingPlanes The array of planes used to clip, defined in eyespace.
  * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  */
- const int czm_maxClippingPlanes = 6;
-
 void czm_clipPlanes (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
 {
     if (clippingPlanesLength > 0)
