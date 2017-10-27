@@ -50,7 +50,7 @@ define([
         this._postProcess = undefined;
 
         this._edgeDetectionUniformValues = {
-            len : 0.1,
+            length : 0.5,
             color : Color.clone(Color.BLACK)
         };
         this._silhouetteUniformValues = {};

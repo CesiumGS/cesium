@@ -120,7 +120,7 @@ define([
         /**
          * @inheritdoc PostProcessStage#uniformValues
          */
-        bloomContrastBiasUniformValues : {
+        contrastBiasUniformValues : {
             get : function() {
                 return this._contrastBiasUniformValues;
             }

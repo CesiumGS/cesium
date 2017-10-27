@@ -1,6 +1,6 @@
 uniform sampler2D u_colorTexture;
 uniform sampler2D u_depthTexture;
-uniform float u_len;
+uniform float u_length;
 uniform float u_stepSize;
 uniform vec4 u_color;
 
@@ -36,6 +36,6 @@ void main(void)
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    float alpha = len > u_len ? 1.0 : 0.0;
+    float alpha = len > u_length ? 1.0 : 0.0;
     gl_FragColor = vec4(u_color.rgb, alpha);
 }
