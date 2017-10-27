@@ -23,36 +23,22 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>        
+    <table><tbody>
         <tr>
             <td>Bloom</td>
-            <td>
-                <input type="checkbox" data-bind="checked: show">
-            </td>
-        </tr>      
-        <tr>
-            <td>Contrast</td>
-            <td>
-                <input type="range" min="-255.0" max="255.0" step="0.01" data-bind="value: contrast, valueUpdate: 'input'">
-            </td>
-        </tr>    
-        <tr>
-            <td>Brightness</td>
-            <td>
-                <input type="range" min="-1.0" max="1.0" step="0.01" data-bind="value: brightness, valueUpdate: 'input'">
-            </td>
-        </tr>    
-        <tr>
-            <td>Kernel Size</td>
-            <td>
-                <input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'">
-            </td>
+            <td><input type="checkbox" data-bind="checked: show"></td>
         </tr>
         <tr>
-            <td>Step Size</td>
-            <td>
-                <input type="range" min="1" max="10" step="0.1" data-bind="value: stepSize, valueUpdate: 'input'">
-            </td>
+            <td>Contrast</td>
+            <td><input type="range" min="-255.0" max="255.0" step="0.01" data-bind="value: contrast, valueUpdate: 'input'"></td>
+        </tr>
+        <tr>
+            <td>Brightness</td>
+            <td><input type="range" min="-1.0" max="1.0" step="0.01" data-bind="value: brightness, valueUpdate: 'input'"></td>
+        </tr>
+        <tr>
+            <td>Kernel Size</td>
+            <td><input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'"></td>
         </tr>
     </tbody></table>
 </div>
@@ -61,34 +47,38 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var postProcess = scene.postProcess;
 
 function createModel(url, x, y, height) {
     var position = Cesium.Cartesian3.fromDegrees(x, y, height);
-    var heading = Cesium.Math.toRadians(0);
-    var pitch = 0;
-    var roll = 0;
-    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
-
-    var entity = viewer.entities.add({
+    viewer.entities.add({
         name : url,
         position : position,
-        orientation : orientation,
         model : {
-            uri : url           
+            uri : url
         }
     });
-    viewer.trackedEntity = entity;
 }
-var viewModel = {   
-    show: false,  
-    contrast: 128,   
-    brightness: -0.3,   
-    kernelSize : 7,
-    stepSize : 7
+
+var numberOfBalloons = 13;
+var lonIncrement = 0.00025;
+var initialLon = -122.99875;
+var lat = 44.0503706;
+var height = 100.0;
+
+var url = '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb';
+
+for (var i = 0; i < numberOfBalloons; ++i) {
+    var lon = initialLon + i * lonIncrement;
+    createModel(url, lon, lat, height);
+}
+
+var viewModel = {
+    show : true,
+    contrast : 128,
+    brightness : -0.3,
+    kernelSize : 7
 };
+
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
@@ -98,28 +88,19 @@ for (var name in viewModel) {
     }
 }
 
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99875, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.999, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99925, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.9995, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99975, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00025, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0005, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00075, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.001, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0015, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00175, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00125, 44.0503706, 100.0);
-
-function updatePostProcess() {   
+function updatePostProcess() {
+    var postProcess = viewer.scene.postProcess;
     postProcess.bloom.show = Boolean(viewModel.show);
-    postProcess.bloom.bloomContrastBiasUniformValues.contrast = Number(viewModel.contrast);  
-    postProcess.bloom.bloomContrastBiasUniformValues.brightness = Number(viewModel.brightness);   
-    postProcess.bloom.bloomBlurUniformValues.kernelSize = Number(viewModel.kernelSize);
-    postProcess.bloom.bloomBlurUniformValues.stepSize = Number(viewModel.stepSize);
+    postProcess.bloom.contrastBiasUniformValues.contrast = Number(viewModel.contrast);
+    postProcess.bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
+    postProcess.bloom.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
+    postProcess.bloom.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
+updatePostProcess();
 
+var target = Cesium.Cartesian3.fromDegrees(initialLon + lonIncrement, lat, height + 7.5);
+var offset = new Cesium.Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);
+viewer.scene.camera.lookAt(target, offset);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

@@ -23,20 +23,11 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>        
+    <table><tbody>
         <tr>
             <td>Edge Detection</td>
-            <td>
-                <input type="checkbox" data-bind="checked: show">
-            </td>
-        </tr>      
-        <tr>
-            <td>Dection Length</td>
-            <td>
-                <input type="range" min="0.001" max="0.2" step="0.001" data-bind="value: length, valueUpdate: 'input'">
-            </td>
-        </tr>       
-      
+            <td><input type="checkbox" data-bind="checked: show"></td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -44,30 +35,19 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var postProcess = scene.postProcess;
 
-function createModel(url, x, y, height) {
-    var position = Cesium.Cartesian3.fromDegrees(x, y, height);
-    var heading = Cesium.Math.toRadians(0);
-    var pitch = 0;
-    var roll = 0;
-    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706);
+var url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
+viewer.trackedEntity = viewer.entities.add({
+    name : url,
+    position : position,
+    model : {
+        uri : url
+    }
+});
 
-    var entity = viewer.entities.add({
-        name : url,
-        position : position,      
-        model : {
-            uri : url
-        }
-    });
-    viewer.trackedEntity = entity;
-}
-
-var viewModel = {   
-    show: false,  
-    length: 0.1
+var viewModel = {
+    show : true
 };
 
 Cesium.knockout.track(viewModel);
@@ -79,26 +59,12 @@ for (var name in viewModel) {
     }
 }
 
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99875, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.999, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99925, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.9995, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -122.99975, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00025, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0005, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00075, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.001, 44.0503706, 100.0);        
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.0015, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00175, 44.0503706, 100.0);
-createModel('../../SampleData/models/CesiumBalloon/CesiumBalloon.glb', -123.00125, 44.0503706, 100.0);
-        
-
-function updatePostProcess() {   
-    postProcess.toon.show = Boolean(viewModel.show);
-    postProcess.toon.EdgeDetectionUniformValues.len = Number(viewModel.length);
+function updatePostProcess() {
+    var postProcess = viewer.scene.postProcess;
+    postProcess.silhouette.show = Boolean(viewModel.show);
+    postProcess.silhouette.edgeDetectionUniformValues.color = Cesium.Color.YELLOW;
 }
-
+updatePostProcess();
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
