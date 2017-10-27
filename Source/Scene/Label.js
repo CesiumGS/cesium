@@ -1311,6 +1311,11 @@ define([
         }
     }
 
+    //To add another language, simply add it's Unicode block range(s) to the below regex.
+    var hebrew = '\u05D0-\u05EA';
+    var arabic = '\u0600-\u06FF\u0750–\u077F\u08A0–\u08FF';
+    var rtlChars = new RegExp('[' + hebrew + arabic + ']');
+
     /**
      *
      * @param {String} value the text to parse and reorder
@@ -1318,7 +1323,6 @@ define([
      * @private
      */
     function reverseRtl(value) {
-        var rtlChars = /[\u05D0-\u05EA]/;
         var texts = value.split('\n');
         var result = '';
         for (var i = 0; i < texts.length; i++) {
