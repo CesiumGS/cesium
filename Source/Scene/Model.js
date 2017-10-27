@@ -3312,6 +3312,7 @@ define([
 
     var scratchCartesian = new Cartesian3();
     var scratchPlane = new Cartesian4();
+    var scratchMatrix = new Matrix4();
 
     function createClippingPlanesFunction(model, context) {
         return function() {
@@ -3320,8 +3321,15 @@ define([
             var packedPlanes = new Array(length);
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
-                Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, scratchPlane);
+
+                var scale = Matrix4.getScale(context.uniformState.modelView3D, scratchCartesian);
+                Matrix4.inverse(context.uniformState.modelView3D, scratchMatrix);
+                Matrix4.multiplyByScale(scratchMatrix, scale, scratchMatrix);
+                Matrix4.inverse(scratchMatrix, scratchMatrix);
+
+                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, scratchPlane);
                 Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
+
                 Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
                 scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
                 packedPlanes[i] = scratchPlane.clone();
