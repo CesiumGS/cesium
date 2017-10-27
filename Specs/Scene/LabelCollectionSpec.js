@@ -1861,7 +1861,7 @@ defineSuite([
             Label.enableRightToLeftDetection = false;
         });
 
-        it('should not modify text when rightToLeft is true and there is no hebrew characters', function() {
+        it('should not modify text when rightToLeft is true and there are no RTL characters', function() {
             var text = 'bla bla bla';
             var label = labels.add({
                 text : text
@@ -1870,9 +1870,20 @@ defineSuite([
             expect(label.text).toEqual(text);
         });
 
-        it('should reverse text when there is only hebrew characters and rightToLeft is true', function() {
+        it('should reverse text when there are only hebrew characters and rightToLeft is true', function() {
             var text = 'שלום';
             var expectedText = 'םולש';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
+        });
+
+        it('should reverse text when there are only arabic characters and rightToLeft is true', function() {
+            var text = 'مرحبا';
+            var expectedText = 'ابحرم';
             var label = labels.add({
                 text : text
             });
