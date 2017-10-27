@@ -101,7 +101,7 @@ define([
         this.backFaceCulling = false;
         this._backFaceCulling = false;
 
-        // Whether or not the user enabled normal shading
+        // Whether to enable normal shading
         this.normalShading = true;
         this._normalShading = true;
 
@@ -788,8 +788,6 @@ define([
         var normalShading = content._normalShading;
         var vertexArray = content._drawCommand.vertexArray;
 
-        var normalsEnabled = (hasNormals && normalShading) || backFaceCulling;
-
         var colorStyleFunction;
         var showStyleFunction;
         var pointSizeStyleFunction;
@@ -841,7 +839,7 @@ define([
         var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
 
         //>>includeStart('debug', pragmas.debug);
-        if (usesNormalSemantic && !normalsEnabled) {
+        if (usesNormalSemantic && !hasNormals) {
             throw new DeveloperError('Style references the NORMAL semantic but the point cloud does not have normals');
         }
         //>>includeEnd('debug');
@@ -864,13 +862,20 @@ define([
             colorVertexAttribute.enabled = usesColors;
         }
 
+        var usesNormals = hasNormals && (normalShading || backFaceCulling || usesNormalSemantic);
+        if (hasNormals) {
+            // Disable the normal vertex attribute if normals are not used
+            var normalVertexAttribute = getVertexAttribute(vertexArray, normalLocation);
+            normalVertexAttribute.enabled = usesNormals;
+        }
+
         var attributeLocations = {
             a_position : positionLocation
         };
         if (usesColors) {
             attributeLocations.a_color = colorLocation;
         }
-        if (normalsEnabled) {
+        if (usesNormals) {
             attributeLocations.a_normal = normalLocation;
         }
         if (hasBatchIds) {
@@ -926,7 +931,7 @@ define([
                 vs += 'attribute vec3 a_color; \n';
             }
         }
-        if (normalsEnabled) {
+        if (usesNormals) {
             if (isOctEncoded16P) {
                 vs += 'attribute vec2 a_normal; \n';
             } else {
@@ -983,7 +988,7 @@ define([
         }
         vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
 
-        if (normalsEnabled) {
+        if (usesNormals) {
             if (isOctEncoded16P) {
                 vs += '    vec3 normal = czm_octDecode(a_normal); \n';
             } else {
@@ -1009,7 +1014,7 @@ define([
 
         vs += '    color = color * u_highlightColor; \n';
 
-        if (normalsEnabled) {
+        if (usesNormals && normalShading) {
             vs += '    normal = czm_normal * normal; \n' +
                   '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
@@ -1019,7 +1024,7 @@ define([
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
-        if (normalsEnabled) {
+        if (usesNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
                   '    gl_Position *= visible; \n';
         }
