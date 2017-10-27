@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/clone',
         '../Core/defaultValue',
@@ -23,18 +22,17 @@ define([
         Expression) {
     'use strict';
 
-    var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
-    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
-    var DEFAULT_JSON_NUMBER_EXPRESSION = 1.0;
-
     /**
+     * A style that is applied to a {@link Cesium3DTileset}.
+     * <p>
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
      *
      * @alias Cesium3DTileStyle
      * @constructor
      *
-     * @param {String|Object} [data] The url of a style or an object defining a style.
+     * @param {String|Object} [style] The url of a style or an object defining a style.
      *
      * @example
      * tileset.style = new Cesium.Cesium3DTileStyle({
@@ -50,11 +48,18 @@ define([
      *         description : '"Building id ${id} has height ${Height}."'
      *     }
      * });
+     *
+     * @example
+     * tileset.style = new Cesium.Cesium3DTileStyle({
+     *     color : 'vec4(${Temperature})',
+     *     pointSize : '${Temperature} * 2.0'
+     * });
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
-    function Cesium3DTileStyle(data) {
+    function Cesium3DTileStyle(style) {
         this._style = undefined;
         this._ready = false;
-        this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
         this._pointSize = undefined;
@@ -67,18 +72,18 @@ define([
         this._showShaderFunctionReady = false;
         this._pointSizeShaderFunctionReady = false;
 
-        var style = this;
-        if (typeof data === 'string') {
-            RequestScheduler.request(data, loadJson).then(function(styleJson) {
-                setup(style, styleJson);
-                style._readyPromise.resolve(style);
-            }).otherwise(function(error) {
-                style._readyPromise.reject(error);
-            });
+        var promise;
+        if (typeof style === 'string') {
+            promise = loadJson(style);
         } else {
-            setup(style, data);
-            style._readyPromise.resolve(style);
+            promise = when.resolve(style);
         }
+
+        var that = this;
+        this._readyPromise = promise.then(function(styleJson) {
+            setup(that, styleJson);
+            return that;
+        });
     }
 
     function setup(that, styleJson) {
@@ -86,64 +91,17 @@ define([
 
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
-        if (!defined(styleJson.color)) {
-            // If there is no color style do not create a shader function.
-            that._colorShaderFunctionReady = true;
-        }
-
-        if (!defined(styleJson.show)) {
-            // If there is no show style do not create a shader function.
-            that._showShaderFunctionReady = true;
-        }
-
-        if (!defined(styleJson.pointSize)) {
-            // If there is no point size style do not create a shader function.
-            that._pointSizeShaderFunctionReady = true;
-        }
-
-        var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
-        var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var pointSizeExpression = defaultValue(styleJson.pointSize, DEFAULT_JSON_NUMBER_EXPRESSION);
-
-        var expressions = styleJson.expressions;
-
-        var color;
-        if (typeof colorExpression === 'string') {
-            color = new Expression(colorExpression, expressions);
-        } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(colorExpression, expressions);
-        }
-
-        that._color = color;
-
-        var show;
-        if (typeof showExpression === 'boolean') {
-            show = new Expression(String(showExpression), expressions);
-        } else if (typeof showExpression === 'string') {
-            show = new Expression(showExpression, expressions);
-        } else if (defined(showExpression.conditions)) {
-            show = new ConditionsExpression(showExpression, expressions);
-        }
-
-        that._show = show;
-
-        var pointSize;
-        if (typeof pointSizeExpression === 'number') {
-            pointSize = new Expression(String(pointSizeExpression), expressions);
-        } else if (typeof pointSizeExpression === 'string') {
-            pointSize = new Expression(pointSizeExpression, expressions);
-        } else if (defined(pointSizeExpression.conditions)) {
-            pointSize = new ConditionsExpression(pointSizeExpression, expressions);
-        }
-
-        that._pointSize = pointSize;
+        that.color = styleJson.color;
+        that.show = styleJson.show;
+        that.pointSize = styleJson.pointSize;
 
         var meta = {};
         if (defined(styleJson.meta)) {
+            var defines = styleJson.defines;
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
-                    meta[property] = new Expression(metaJson[property], expressions);
+                    meta[property] = new Expression(metaJson[property], defines);
                 }
             }
         }
@@ -211,7 +169,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property. Alternatively a boolean, string, or object defining a show style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return or convert to a <code>Boolean</code>.
          * </p>
@@ -237,7 +196,27 @@ define([
          *     }
          * };
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a boolean
+         * style.show = true;
+         * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a string
+         * style.show = '${Height} > 0';
+         * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a condition
+         * style.show = {
+         *     conditions: [
+         *         ['${height} > 2', 'false'],
+         *         ['true', 'true']
+         *     ];
+         * };
          */
         show : {
             get : function() {
@@ -250,13 +229,25 @@ define([
                 return this._show;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._show = undefined;
+                } else if (typeof value === 'boolean') {
+                    this._show = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._show = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._show = new ConditionsExpression(value, defines);
+                } else {
+                    this._show = value;
+                }
                 this._showShaderFunctionReady = false;
-                this._show = value;
             }
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -282,7 +273,20 @@ define([
          *     }
          * };
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a string
+         * style.color = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a condition
+         * style.color = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         color : {
             get : function() {
@@ -295,13 +299,23 @@ define([
                 return this._color;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._color = undefined;
+                } else if (typeof value === 'string') {
+                    this._color = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._color = new ConditionsExpression(value, defines);
+                } else {
+                    this._color = value;
+                }
                 this._colorShaderFunctionReady = false;
-                this._color = value;
             }
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternatively a number, string, or object defining a pointSize style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return or convert to a <code>Number</code>.
          * </p>
@@ -327,7 +341,25 @@ define([
          *     }
          * };
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a number
+         * style.pointSize = 1.0;
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a string
+         * style.pointSize = '${height} / 10';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointSize expression with a condition
+         * style.pointSize =  {
+         *     conditions : [
+         *         ['${height} > 2', '1.0'],
+         *         ['true', '2.0']
+         *     ]
+         * };
          */
         pointSize : {
             get : function() {
@@ -340,8 +372,19 @@ define([
                 return this._pointSize;
             },
             set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._pointSize = undefined;
+                } else if (typeof value === 'number') {
+                    this._pointSize = new Expression(String(value));
+                } else if (typeof value === 'string') {
+                    this._pointSize = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._pointSize = new ConditionsExpression(value, defines);
+                } else {
+                    this._pointSize = value;
+                }
                 this._pointSizeShaderFunctionReady = false;
-                this._pointSize = value;
             }
         },
 
@@ -362,8 +405,6 @@ define([
          *     }
          * });
          * style.meta.description.evaluate(frameState, feature); // returns a String with the substituted variables
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         meta : {
             get : function() {
@@ -399,7 +440,7 @@ define([
         }
 
         this._colorShaderFunctionReady = true;
-        this._colorShaderFunction = this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4');
+        this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
         return this._colorShaderFunction;
     };
 
@@ -421,7 +462,7 @@ define([
         }
 
         this._showShaderFunctionReady = true;
-        this._showShaderFunction = this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool');
+        this._showShaderFunction = defined(this.show) ? this.show.getShaderFunction(functionName, attributePrefix, shaderState, 'bool') : undefined;
         return this._showShaderFunction;
     };
 
@@ -443,7 +484,7 @@ define([
         }
 
         this._pointSizeShaderFunctionReady = true;
-        this._pointSizeShaderFunction = this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float');
+        this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
         return this._pointSizeShaderFunction;
     };
 

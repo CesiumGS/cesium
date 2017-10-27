@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './AxisAlignedBoundingBox',
         './BoundingSphere',
@@ -219,6 +218,11 @@ define([
 
         var granularityX = rectangleWidth / (width - 1);
         var granularityY = rectangleHeight / (height - 1);
+
+		if (!isGeographic) {
+            rectangleWidth *= oneOverGlobeSemimajorAxis;
+            rectangleHeight *= oneOverGlobeSemimajorAxis;
+        }
 
         var radiiSquared = ellipsoid.radiiSquared;
         var radiiSquaredX = radiiSquared.x;

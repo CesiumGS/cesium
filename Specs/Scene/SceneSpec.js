@@ -1,14 +1,15 @@
-/*global defineSuite*/
 defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
         'Core/Math',
+        'Core/PerspectiveFrustum',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
@@ -27,13 +28,12 @@ defineSuite([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/PerspectiveFrustum',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/Scene',
+        'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
-        'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
@@ -43,12 +43,14 @@ defineSuite([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        CesiumTerrainProvider,
         Color,
         defined,
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
         CesiumMath,
+        PerspectiveFrustum,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
@@ -67,13 +69,12 @@ defineSuite([
         EllipsoidSurfaceAppearance,
         FrameState,
         Globe,
-        PerspectiveFrustum,
         Primitive,
         PrimitiveCollection,
         Scene,
+        SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
-        SceneTransforms,
         createCanvas,
         createScene,
         equals,
@@ -1120,6 +1121,50 @@ defineSuite([
         scene.cartesianToCanvasCoordinates(mockPosition, result);
 
         expect(SceneTransforms.wgs84ToWindowCoordinates).toHaveBeenCalledWith(scene, mockPosition, result);
+    });
+
+    it('Gets imageryLayers', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.imageryLayers).toBe(globe.imageryLayers);
+
+        scene.globe = undefined;
+        expect(scene.imageryLayers).toBeUndefined();
+    });
+
+    it('Gets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(scene.terrainProvider).toBeUndefined();
+    });
+
+    it('Sets terrainProvider', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        scene.terrainProvider = new CesiumTerrainProvider({
+            url: '//terrain/tiles'
+        });
+
+        expect(scene.terrainProvider).toBe(globe.terrainProvider);
+
+        scene.globe = undefined;
+        expect(function() {
+            scene.terrainProvider = new CesiumTerrainProvider({
+                url: '//newTerrain/tiles'
+            });
+        }).not.toThrow();
+    });
+
+    it('Gets terrainProviderChanged', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        expect(scene.terrainProviderChanged).toBe(globe.terrainProviderChanged);
+
+        scene.globe = undefined;
+        expect(scene.terrainProviderChanged).toBeUndefined();
     });
 
 }, 'WebGL');

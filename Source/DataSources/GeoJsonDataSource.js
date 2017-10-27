@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/Cartesian3',
         '../Core/Color',
@@ -12,7 +11,6 @@ define([
         '../Core/loadJson',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
-        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
@@ -42,7 +40,6 @@ define([
         loadJson,
         PinBuilder,
         PolygonHierarchy,
-        RequestScheduler,
         RuntimeError,
         HeightReference,
         VerticalOrigin,
@@ -141,7 +138,7 @@ define([
             var i = 2;
             var finalId = id;
             while (defined(entityCollection.getById(finalId))) {
-                finalId = id + "_" + i;
+                finalId = id + '_' + i;
                 i++;
             }
             id = finalId;
@@ -207,6 +204,30 @@ define([
         }
         return positions;
     }
+
+    var geoJsonObjectTypes = {
+        Feature : processFeature,
+        FeatureCollection : processFeatureCollection,
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
+
+    var geometryTypes = {
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon,
+        Topology : processTopology
+    };
 
     // GeoJSON processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, options) {
@@ -459,30 +480,6 @@ define([
         }
     }
 
-    var geoJsonObjectTypes = {
-        Feature : processFeature,
-        FeatureCollection : processFeatureCollection,
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
-
-    var geometryTypes = {
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon,
-        Topology : processTopology
-    };
-
     /**
      * A {@link DataSource} which processes both
      * {@link http://www.geojson.org/|GeoJSON} and {@link https://github.com/mbostock/topojson|TopoJSON} data.
@@ -686,13 +683,19 @@ define([
 
     defineProperties(GeoJsonDataSource.prototype, {
         /**
-         * Gets a human-readable name for this instance.
+         * Gets or sets a human-readable name for this instance.
          * @memberof GeoJsonDataSource.prototype
          * @type {String}
          */
         name : {
             get : function() {
                 return this._name;
+            },
+            set : function(value) {
+                if (this._name !== value) {
+                    this._name = value;
+                    this._changed.raiseEvent(this);
+                }
             }
         },
         /**
@@ -823,7 +826,7 @@ define([
             if (!defined(sourceUri)) {
                 sourceUri = data;
             }
-            promise = RequestScheduler.request(data, loadJson);
+            promise = loadJson(data);
         }
 
         options = {

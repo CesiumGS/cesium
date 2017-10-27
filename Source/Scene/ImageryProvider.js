@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/defined',
         '../Core/defineProperties',
@@ -6,10 +5,7 @@ define([
         '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/loadKTX',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestType'
+        '../Core/loadKTX'
     ], function(
         defined,
         defineProperties,
@@ -17,10 +13,7 @@ define([
         loadCRN,
         loadImage,
         loadImageViaBlob,
-        loadKTX,
-        Request,
-        RequestScheduler,
-        RequestType) {
+        loadKTX) {
     'use strict';
 
     /**
@@ -31,13 +24,18 @@ define([
      * @constructor
      *
      * @see ArcGisMapServerImageryProvider
-     * @see SingleTileImageryProvider
      * @see BingMapsImageryProvider
-     * @see GoogleEarthEnterpriseMapsProvider
-     * @see MapboxImageryProvider
      * @see createOpenStreetMapImageryProvider
-     * @see WebMapTileServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see GoogleEarthEnterpriseImageryProvider
+     * @see GoogleEarthEnterpriseMapsProvider
+     * @see GridImageryProvider
+     * @see MapboxImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileCoordinatesImageryProvider
+     * @see UrlTemplateImageryProvider
      * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
@@ -94,6 +92,22 @@ define([
          * @default undefined
          */
         this.defaultGamma = undefined;
+
+        /**
+         * The default texture minification filter to apply to this provider.
+         *
+         * @type {TextureMinificationFilter}
+         * @default undefined
+         */
+        this.defaultMinificationFilter = undefined;
+
+        /**
+         * The default texture magnification filter to apply to this provider.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default undefined
+         */
+        this.defaultMagnificationFilter = undefined;
 
         DeveloperError.throwInstantiationError();
     }
@@ -272,7 +286,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -311,32 +325,24 @@ define([
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
-     * @param {ImageryProvider} imageryProvider The imagery provider for the URL
+     * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
      * @param {String} url The URL of the image.
-     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url, distance) {
-        var requestFunction;
+    ImageryProvider.loadImage = function(imageryProvider, url, request) {
         if (ktxRegex.test(url)) {
-            requestFunction = loadKTX;
+            return loadKTX(url, undefined, request);
         } else if (crnRegex.test(url)) {
-            requestFunction = loadCRN;
+            return loadCRN(url, undefined, request);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            requestFunction = loadImageViaBlob;
-        } else {
-            requestFunction = loadImage;
+            return loadImageViaBlob(url, request);
         }
 
-        return RequestScheduler.schedule(new Request({
-            url : url,
-            requestFunction : requestFunction,
-            type : RequestType.IMAGERY,
-            distance : distance
-        }));
+        return loadImage(url, undefined, request);
     };
 
     return ImageryProvider;

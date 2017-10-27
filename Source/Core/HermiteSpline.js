@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './Cartesian3',
         './Cartesian4',
@@ -173,10 +172,11 @@ define([
      * });
      *
      * var p0 = spline.evaluate(times[0]);
-     * 
+     *
      * @see CatmullRomSpline
      * @see LinearSpline
      * @see QuaternionSpline
+     * @see WeightSpline
      */
     function HermiteSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

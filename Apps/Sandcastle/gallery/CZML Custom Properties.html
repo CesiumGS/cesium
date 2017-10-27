@@ -86,6 +86,9 @@ var czml = [{
     }
 }];
 
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = new Cesium.CzmlDataSource();
+
 // custom properties can be queried directly:
 Sandcastle.addToolbarButton('Print values', function() {
     var entity = dataSource.entities.getById('custom_property_object');
@@ -124,8 +127,6 @@ function scaleProperty(property, scalingFactor) {
     }, property.isConstant);
 }
 
-var viewer = new Cesium.Viewer('cesiumContainer');
-var dataSource = new Cesium.CzmlDataSource();
 dataSource.load(czml);
 viewer.dataSources.add(dataSource);
 viewer.zoomTo(dataSource);//Sandcastle_End

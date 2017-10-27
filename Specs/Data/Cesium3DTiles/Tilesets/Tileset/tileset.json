@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0",
+    "version": "1.0",
     "tilesetVersion": "1.2.3"
   },
   "properties": {
@@ -34,7 +34,7 @@
       ]
     },
     "geometricError": 70,
-    "refine": "add",
+    "refine": "ADD",
     "content": {
       "url": "parent.b3dm",
       "boundingVolume": {

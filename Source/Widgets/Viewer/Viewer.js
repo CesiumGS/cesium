@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
@@ -6,7 +5,6 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/deprecationWarning',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
@@ -52,7 +50,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         Event,
@@ -405,11 +402,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var scene3DOnly = defaultValue(options.scene3DOnly, false);
 
-        var deprecatedClock = options.clock;
-        if (defined(deprecatedClock)) {
-            deprecationWarning('Viewer.options.clock', 'Passing options.clock when creating a new Viewer instance was deprecated in Cesium 1.34 and will be removed in Cesium 1.37, pass options.clockViewModel instead.');
-        }
-
         var clock;
         var clockViewModel;
         var destroyClockViewModel = false;
@@ -417,7 +409,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clockViewModel = options.clockViewModel;
             clock = clockViewModel.clock;
         } else {
-            clock = defined(deprecatedClock) ? deprecatedClock : new Clock();
+            clock = new Clock();
             clockViewModel = new ClockViewModel(clock);
             destroyClockViewModel = true;
         }
@@ -607,8 +599,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Fullscreen
         var fullscreenButton;
         var fullscreenSubscription;
+        var fullscreenContainer;
         if (!defined(options.fullscreenButton) || options.fullscreenButton !== false) {
-            var fullscreenContainer = document.createElement('div');
+            fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, options.fullscreenElement);
@@ -1256,11 +1249,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         if (defined(selectionIndicatorViewModel)) {
                             selectionIndicatorViewModel.animateAppear();
                         }
-                    } else {
+                    } else if (defined(selectionIndicatorViewModel)) {
                         // Leave the info text in place here, it is needed during the exit animation.
-                        if (defined(selectionIndicatorViewModel)) {
-                            selectionIndicatorViewModel.animateDepart();
-                        }
+                        selectionIndicatorViewModel.animateDepart();
                     }
                     this._selectedEntityChanged.raiseEvent(value);
                 }
@@ -1916,8 +1907,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewer.trackedEntity = undefined;
 
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
-        var controller = scene.screenSpaceCameraController;
-        controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
 
         if (!viewer._zoomIsFlight) {
             camera.viewBoundingSphere(boundingSphere, viewer._zoomOptions);

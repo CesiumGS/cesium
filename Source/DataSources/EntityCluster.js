@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -149,6 +148,7 @@ define([
         cluster.point.show = false;
         cluster.label.show = true;
         cluster.label.text = numPoints.toLocaleString();
+        cluster.label.id = ids;
         cluster.billboard.position = cluster.label.position = cluster.point.position = position;
 
         entityCluster._clusterEvent.raiseEvent(ids, cluster);

@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/sampleTerrain',
         'Core/Cartographic',
@@ -30,7 +29,7 @@ defineSuite([
 
     it('queries heights from Small Terrain', function() {
         var terrainProvider = new CesiumTerrainProvider({
-            url : 'https://cesiumjs.org/smallTerrain'
+            url : 'https://s3.amazonaws.com/cesiumjs/smallTerrain'
         });
 
         var positions = [

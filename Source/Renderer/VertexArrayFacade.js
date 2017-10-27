@@ -1,5 +1,5 @@
-/*global define*/
 define([
+        '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,6 +10,7 @@ define([
         './BufferUsage',
         './VertexArray'
     ], function(
+        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -26,9 +27,7 @@ define([
      */
     function VertexArrayFacade(context, attributes, sizeInVertices, instanced) {
         //>>includeStart('debug', pragmas.debug);
-        if (!context) {
-            throw new DeveloperError('context is required.');
-        }
+        Check.defined('context', context);
         if (!attributes || (attributes.length === 0)) {
             throw new DeveloperError('At least one attribute is required.');
         }

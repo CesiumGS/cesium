@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Core/AssociativeArray',
         '../Core/Color',
@@ -19,7 +18,7 @@ define([
         GroundPrimitive,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
@@ -220,7 +219,7 @@ define([
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        
+
         var bs = primitive.getBoundingSphere(entity);
         if (!defined(bs)) {
             return BoundingSphereState.FAILED;

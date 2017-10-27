@@ -1,4 +1,3 @@
-/*global define*/
 define([
         '../Renderer/PixelDatatype',
         './freezeObject',

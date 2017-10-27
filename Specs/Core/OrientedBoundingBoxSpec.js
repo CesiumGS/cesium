@@ -1,4 +1,3 @@
-/*global defineSuite*/
 defineSuite([
         'Core/OrientedBoundingBox',
         'Core/BoundingSphere',
@@ -173,14 +172,12 @@ defineSuite([
 
     it('fromRectangle throws with invalid rectangles', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(1.0, -1.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, 1.0, -1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, 1.0, -2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, 2.0, -1.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 2.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -2.0, 4.0, 1.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -2.0, 1.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
         expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-1.0, -2.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
-        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-2.0, -1.0, 2.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
+        expect(function() { return OrientedBoundingBox.fromRectangle(new Rectangle(-4.0, -1.0, 4.0, 2.0), 0.0, 0.0, ellipsoid); }).toThrowDeveloperError();
     });
 
     it('fromRectangle throws with non-revolution ellipsoids', function() {
@@ -343,9 +340,8 @@ defineSuite([
             var d = -Cartesian3.dot(p0, n);
             if (Math.abs(d) > 0.0001 && Cartesian3.magnitudeSquared(n) > 0.0001) {
                 return new Plane(n, d);
-            } else {
-                return undefined;
             }
+            return undefined;
         };
 
         var pl;

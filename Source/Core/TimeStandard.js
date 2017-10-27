@@ -1,4 +1,3 @@
-/*global define*/
 define([
         './freezeObject'
     ], function(
@@ -20,12 +19,17 @@ define([
          * <code>UTC = TAI - deltaT</code> where <code>deltaT</code> is the number of leap
          * seconds which have been introduced as of the time in TAI.
          *
+         * @type {Number}
+         * @constant
          */
         UTC : 0,
 
         /**
          * Represents the International Atomic Time (TAI) time standard.
          * TAI is the principal time standard to which the other time standards are related.
+         *
+         * @type {Number}
+         * @constant
          */
         TAI : 1
     };
