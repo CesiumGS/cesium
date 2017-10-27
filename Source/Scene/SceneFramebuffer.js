@@ -116,10 +116,6 @@ define([
         }
     };
 
-    SceneFramebuffer.prototype.execute = function(context, passState) {
-        this._command.execute(context, passState);
-    };
-
     SceneFramebuffer.prototype.clear = function(context, passState, clearColor) {
         var framebuffer = passState.framebuffer;
 
