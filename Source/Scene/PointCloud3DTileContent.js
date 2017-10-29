@@ -1018,11 +1018,13 @@ define([
 
         if (hasNormals && backFaceCulling) {
             vs += '    float visible = step(-normal.z, 0.0); \n' +
-                  '    gl_Position *= visible; \n';
+                  '    gl_Position *= visible; \n' +
+                  '    gl_PointSize *= visible; \n';
         }
 
         if (hasShowStyle) {
-            vs += '    gl_Position *= show; \n';
+            vs += '    gl_Position *= show; \n' +
+                  '    gl_PointSize *= show; \n';
         }
 
         vs += '} \n';

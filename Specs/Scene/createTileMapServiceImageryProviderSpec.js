@@ -105,6 +105,41 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise on invalid xml', function() {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            // We can't resolve the promise immediately, because then the error would be raised
+            // before we could subscribe to it.  This a problem particular to tests.
+            setTimeout(function() {
+                var parser = new DOMParser();
+                var xmlString =
+                    '<TileMap version="1.0.0" tilemapservice="http://tms.osgeo.org/1.0.0">' +
+                    '   <Title/>' +
+                    '   <Abstract/>' +
+                    '   <SRS>EPSG:4326</SRS>' +
+                    '   <Origin x="-90.0" y="-180.0"/>' +
+                    '   <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>' +
+                    '   <TileSets profile="foobar">' +
+                    '       <TileSet href="2" units-per-pixel="39135.75848201024200" order="2"/>' +
+                    '       <TileSet href="3" units-per-pixel="19567.87924100512100" order="3"/>' +
+                    '   </TileSets>' +
+                    '</TileMap>';
+                var xml = parser.parseFromString(xmlString, "text/xml");
+                deferred.resolve(xml);
+            }, 1);
+        };
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        return provider.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain('expected tilesets or bbox attributes');
+        });
+    });
+
     it('requires the url to be specified', function() {
         function createWithoutUrl() {
             return createTileMapServiceImageryProvider({});
