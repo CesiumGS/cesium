@@ -1925,7 +1925,8 @@ define([
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
-                    scene._sunPostProcess.execute(context, framebuffer);
+                    scene._sunPostProcess.execute(context);
+                    scene._sunPostProcess.copy(context, framebuffer);
                     passState.framebuffer = framebuffer;
                 }
             }
@@ -2679,6 +2680,7 @@ define([
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
+            scene._sunPostProcess.clear(context, passState, clearColor);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
         } else if (usePostProcess) {

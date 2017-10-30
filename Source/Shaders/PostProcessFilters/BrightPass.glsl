@@ -1,4 +1,4 @@
-uniform sampler2D u_texture;
+uniform sampler2D u_colorTexture;
 
 uniform float u_avgLuminance;
 uniform float u_threshold;
@@ -17,14 +17,14 @@ float key(float avg)
 
 void main()
 {
-    vec4 color = texture2D(u_texture, v_textureCoordinates);
+    vec4 color = texture2D(u_colorTexture, v_textureCoordinates);
     vec3 xyz = czm_RGBToXYZ(color.rgb);
     float luminance = xyz.r;
-    
+
     float scaledLum = key(u_avgLuminance) * luminance / u_avgLuminance;
     float brightLum = max(scaledLum - u_threshold, 0.0);
     float brightness = brightLum / (u_offset + brightLum);
-    
+
     xyz.r = brightness;
     gl_FragColor = vec4(czm_XYZToRGB(xyz), 1.0);
 }
