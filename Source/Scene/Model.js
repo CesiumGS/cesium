@@ -340,6 +340,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
+     * @param {}
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -3316,21 +3317,16 @@ define([
 
     function createClippingPlanesFunction(model, context) {
         return function() {
+            Matrix4.multiply(context.uniformState.view3D, model.modelMatrix, scratchMatrix);
+
             var planes = model.clippingPlanes;
             var length = planes.length;
             var packedPlanes = new Array(length);
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
-
-                var scale = Matrix4.getScale(context.uniformState.modelView3D, scratchCartesian);
-                Matrix4.inverse(context.uniformState.modelView3D, scratchMatrix);
-                Matrix4.multiplyByScale(scratchMatrix, scale, scratchMatrix);
-                Matrix4.inverse(scratchMatrix, scratchMatrix);
-
                 Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, scratchPlane);
                 Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-
-                Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
+                Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
                 scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
                 packedPlanes[i] = scratchPlane.clone();
             }
