@@ -73,8 +73,9 @@ var handler = new Cesium.ScreenSpaceEventHandler(slider);
 var bMoveActive = false;
 
 function move(movement){
-	if(!bMoveActive)
+	if(!bMoveActive){
 		return;
+	}
 
 	var nMove = movement.endPosition.x ;//- movement.startPosition.x;
 	var splitPosition = (slider.offsetLeft + nMove) / slider.parentElement.offsetWidth;
