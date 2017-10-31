@@ -3317,7 +3317,7 @@ define([
 
     function createClippingPlanesFunction(model, context) {
         return function() {
-            Matrix4.multiply(context.uniformState.view3D, model.modelMatrix, scratchMatrix);
+            Matrix4.multiply(context.uniformState.view3D, model._computedModelMatrix, scratchMatrix);
 
             var planes = model.clippingPlanes;
             var length = planes.length;
@@ -3325,6 +3325,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, scratchPlane);
+                Cartesian3.normalize(scratchPlane, scratchPlane);
                 Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
                 Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
                 scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
