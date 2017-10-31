@@ -71,7 +71,7 @@ define([
         },
         fragmentShader : {
             get : function() {
-                return this._fragementShader;
+                return this._fragmentShader;
             }
         },
         outputTexture : {
@@ -105,10 +105,10 @@ define([
         }
 
         postProcess._uniformMap = combine(uniformMap, {
-            u_colorTexture : function() {
+            colorTexture : function() {
                 return postProcess._colorTexture;
             },
-            u_depthTexture : function() {
+            depthTexture : function() {
                 return postProcess._depthTexture;
             }
         });
@@ -234,10 +234,6 @@ define([
 
     PostProcess.prototype._setDepthTexture = function(texture) {
         this._depthTexture = texture;
-    };
-
-    PostProcess.prototype._getFramebuffer = function() {
-        return this._framebuffer;
     };
 
     PostProcess.prototype.execute = function(context) {

@@ -11,6 +11,7 @@ define([
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         '../Shaders/PostProcessFilters/PassThrough',
         './PostProcess2',
+        './PostProcessComposite2',
         './PostProcessSampleMode',
         './SceneFramebuffer'
     ], function(
@@ -26,6 +27,7 @@ define([
         GaussianBlur1D,
         PassThrough,
         PostProcess,
+        PostProcessComposite,
         PostProcessSampleMode,
         SceneFramebuffer) {
     'use strict';
@@ -46,9 +48,9 @@ define([
         var brightPass = processes[1] = new PostProcess({
             fragmentShader : BrightPass,
             uniformValues : {
-                u_avgLuminance : 0.5, // A guess at the average luminance across the entire scene
-                u_threshold : 0.25,
-                u_offset : 0.1
+                avgLuminance : 0.5, // A guess at the average luminance across the entire scene
+                threshold : 0.25,
+                offset : 0.1
             },
             textureScale : scale,
             forcePowerOfTwo : true
@@ -62,17 +64,17 @@ define([
         processes[2] = new PostProcess({
             fragmentShader : GaussianBlur1D,
             uniformValues : {
-                u_step : function() {
+                step : function() {
                     that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
                     return that._blurStep;
                 },
-                u_delta : function() {
+                delta : function() {
                     return that._delta;
                 },
-                u_sigma : function() {
+                sigma : function() {
                     return that._sigma;
                 },
-                u_direction : 0.0
+                direction : 0.0
             },
             textureScale : scale,
             forcePowerOfTwo : true
@@ -81,17 +83,17 @@ define([
         processes[3] = new PostProcess({
             fragmentShader : GaussianBlur1D,
             uniformValues : {
-                u_step : function() {
+                step : function() {
                     that._blurStep.x = that._blurStep.y = 1.0 / brightPass.outputTexture.width;
                     return that._blurStep;
                 },
-                u_delta : function() {
+                delta : function() {
                     return that._delta;
                 },
-                u_sigma : function() {
+                sigma : function() {
                     return that._sigma;
                 },
-                u_direction : 1.0
+                direction : 1.0
             },
             textureScale : scale,
             forcePowerOfTwo : true
@@ -108,10 +110,10 @@ define([
         processes[5] = new PostProcess({
             fragmentShader : AdditiveBlend,
             uniformValues : {
-                u_center : function() {
+                center : function() {
                     return that._uCenter;
                 },
-                u_radius : function() {
+                radius : function() {
                     return that._uRadius;
                 },
                 colorTexture2 : function() {
@@ -120,7 +122,9 @@ define([
             }
         });
 
-        this._processes = processes;
+        this._processes = new PostProcessComposite({
+            processes : processes
+        });
     }
 
     var sunPositionECScratch = new Cartesian4();
@@ -176,12 +180,7 @@ define([
 
     SunPostProcess.prototype.clear = function(context, passState, clearColor) {
         this._sceneFramebuffer.clear(context, passState, clearColor);
-
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].clear(context);
-        }
+        this._processes.clear(context);
     };
 
     SunPostProcess.prototype.update = function(passState) {
@@ -189,29 +188,19 @@ define([
         var viewport = passState.viewport;
         updateSunPosition(this, context, viewport);
 
+        var sceneFramebuffer = this._sceneFramebuffer;
+        sceneFramebuffer.update(context);
+        var framebuffer = sceneFramebuffer.getFramebuffer();
+
         var processes = this._processes;
-        var length = processes.length;
-
-        this._sceneFramebuffer.update(context);
-        var framebuffer = this._sceneFramebuffer.getFramebuffer();
-        processes[0]._setColorTexture(framebuffer.getColorTexture(0));
-        processes[0].update(context);
-
-        for (var i = 1; i < length; ++i) {
-            var process = processes[i];
-            process._setColorTexture(processes[i - 1].outputTexture);
-            process.update(context);
-        }
+        processes._setColorTexture(framebuffer.getColorTexture(0));
+        processes.update(context);
 
         return framebuffer;
     };
 
     SunPostProcess.prototype.execute = function(context) {
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].execute(context);
-        }
+        this._processes.execute(context);
     };
 
     SunPostProcess.prototype.copy = function(context, framebuffer) {
@@ -219,8 +208,8 @@ define([
             var that = this;
             this._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
                 uniformMap : {
-                    u_colorTexture : function() {
-                        return that._processes[that._processes.length - 1].outputTexture;
+                    colorTexture : function() {
+                        return that._processes.outputTexture;
                     }
                 },
                 owner : this
@@ -236,6 +225,7 @@ define([
     };
 
     SunPostProcess.prototype.destroy = function() {
+        this._processes.destroy();
         return destroyObject(this);
     };
 
