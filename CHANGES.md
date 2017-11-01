@@ -9,7 +9,7 @@ Change Log
 * Added support for the layer.json `parentUrl` property in `CesiumTerrainProvider` to allow for compositing of tilesets.
 * Fixed a bug that caused KML ground overlays to appear distorted when rotation was applied. [#5914](https://github.com/AnalyticalGraphicsInc/cesium/issues/5914)
 * Added two new properties to `ImageryLayer` that allow for adjusting the texture sampler used for up- and down-sampling of image tiles, namely `minificationFilter` and `magnificationFilter` with possible values `LINEAR` (the default) and `NEAREST` defined in `TextureMinificationFilter` and `TextureMagnificationFilter`. [#5846](https://github.com/AnalyticalGraphicsInc/cesium/issues/5846)
-* The enums `TextureMinificationFilter` and `TextureMagnificationFilter` have been made public to support the new texture filter properties mentioned above. 
+* The enums `TextureMinificationFilter` and `TextureMagnificationFilter` have been made public to support the new texture filter properties mentioned above.
 * KML files load when a Network Link fails [#5871](https://github.com/AnalyticalGraphicsInc/cesium/pull/5871)
 * Adds `invertClassification` and `invertClassificationColor` to `Scene`. When `invertClassification` is `true`, any 3D Tiles geometry that is not classified by a `ClassificationPrimitive` or `GroundPrimitive` will have its color multiplied by `invertClassificationColor`. [#5836](https://github.com/AnalyticalGraphicsInc/cesium/pull/5836)
 * Added `eyeSeparation` and `focalLength` properties to `Scene` to configure VR settings. [#5917](https://github.com/AnalyticalGraphicsInc/cesium/pull/5917)
@@ -17,6 +17,7 @@ Change Log
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
 * Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon. [#5819](https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
 * Fixed bright fog when terrain lighting is enabled and added `Fog.minimumBrightness` to affect how bright the fog will be when in complete darkness. [#5934](https://github.com/AnalyticalGraphicsInc/cesium/pull/5934)
+* Fixed using arrow keys in geocoder widget to select search suggestions. [#5943](https://github.com/AnalyticalGraphicsInc/cesium/issues/5943)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 
 ### 1.38 - 2017-10-02
