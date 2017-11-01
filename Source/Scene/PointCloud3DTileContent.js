@@ -375,7 +375,7 @@ define([
             content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         } else {
             // Use a default constant color
-            content._constantColor = Color.clone(Color.DARKGRAY, content._constantColor);
+            content._constantColor = Color.clone(Color.WHITE, content._constantColor);
         }
 
         content._isTranslucent = isTranslucent;
