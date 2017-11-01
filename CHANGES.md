@@ -17,6 +17,7 @@ Change Log
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
 * Fixed bug with placemarks in imported KML: placemarks with no specified icon would be displayed with default icon. [#5819](https://github.com/AnalyticalGraphicsInc/cesium/issues/5819)
 * Fixed bright fog when terrain lighting is enabled and added `Fog.minimumBrightness` to affect how bright the fog will be when in complete darkness. [#5934](https://github.com/AnalyticalGraphicsInc/cesium/pull/5934)
+* Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 
 ### 1.38 - 2017-10-02
 
