@@ -506,7 +506,7 @@ define([
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders)) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -850,6 +850,9 @@ define([
             },
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
+            },
+            u_minimumBrightness : function() {
+                return frameState.fog.minimumBrightness;
             },
 
             // make a separate object so that changes to the properties are seen on

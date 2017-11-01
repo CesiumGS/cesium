@@ -121,6 +121,17 @@ function scaleByDistance() {
     });
 }
 
+function setRightToLeft() {
+    Sandcastle.declare(setRightToLeft);
+    Cesium.Label.enableRightToLeftDetection = true; //Only needs to be set once at the beginning of the application.
+    viewer.entities.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        label : {
+            text : 'Master (אדון): Hello\nתלמיד (student): שלום'
+        }
+    });
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Add label',
     onselect : function() {
@@ -156,6 +167,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         scaleByDistance();
         Sandcastle.highlight(scaleByDistance);
+    }
+}, {
+    text : 'Set label with right-to-left language',
+    onselect : function() {
+        setRightToLeft();
+        Sandcastle.highlight(setRightToLeft);
     }
 }]);
 
