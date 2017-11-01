@@ -255,6 +255,33 @@ define([
         return deferred.promise;
     }
 
+    function insertNamespaces(text) {
+        var namespaceMap = {
+            xsi : 'http://www.w3.org/2001/XMLSchema-instance'
+        };
+        var firstPart, lastPart, reg, declaration;
+
+        for (var key in namespaceMap) {
+            if (namespaceMap.hasOwnProperty(key)) {
+                reg = RegExp('[< ]' + key + ':');
+                declaration = 'xmlns:' + key + '=';
+                if (reg.test(text) && text.indexOf(declaration) === -1) {
+                    if (!defined(firstPart)) {
+                        firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                        lastPart = text.substr(firstPart.length);
+                    }
+                    firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
+                }
+            }
+        }
+
+        if (defined(firstPart)) {
+            text = firstPart + lastPart;
+        }
+
+        return text;
+    }
+
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
@@ -702,6 +729,12 @@ define([
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
+
+        // If icon tags are present but blank, we do not want to show an icon
+        if (defined(iconNode) && !defined(icon)) {
+            icon = false;
+        }
+
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -1113,6 +1146,12 @@ define([
 
         if (!defined(billboard.image)) {
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+
+        // If there were empty <Icon> tags in the KML, then billboard.image was set to false above
+        // However, in this case, the false value would have been converted to a property afterwards
+        // Thus, we check if billboard.image is defined with value of false
+        } else if (!billboard.image.getValue()) {
+            billboard.image = undefined;
         }
 
         var scale = 1.0;
@@ -1842,7 +1881,9 @@ define([
 
                 var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
                 if (defined(rotation)) {
-                    geometry.rotation = CesiumMath.toRadians(rotation);
+                    var rotationRadians = CesiumMath.toRadians(rotation);
+                    geometry.rotation = rotationRadians;
+                    geometry.stRotation = rotationRadians;
                 }
             }
         }
@@ -2188,6 +2229,8 @@ define([
                     } else if (viewRefreshMode === 'onRegion') {
                         oneTimeWarning('kml-refrehMode-onRegion', 'KML - Unsupported viewRefreshMode: onRegion');
                     }
+                }).otherwise(function(error) {
+                    oneTimeWarning('An error occured during loading ' + linkUrl);
                 });
 
                 promises.push(promise);
@@ -2321,6 +2364,9 @@ define([
                         return readBlobAsText(dataToLoad).then(function(text) {
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
+
+                            //Insert missing namespaces
+                            text = insertNamespaces(text);
 
                             //IE raises an exception
                             var kml;
