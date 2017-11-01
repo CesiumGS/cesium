@@ -1,11 +1,10 @@
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_randomTexture;
-uniform sampler2D u_depthTexture;
-uniform float u_intensity;
-uniform float u_bias;
-uniform float u_lenCap;
-uniform float u_stepSize;
-uniform float u_frustumLength;
+uniform sampler2D randomTexture;
+uniform sampler2D depthTexture;
+uniform float intensity;
+uniform float bias;
+uniform float lengthCap;
+uniform float stepSize;
+uniform float frustumLength;
 
 varying vec2 v_textureCoordinates;
 
@@ -38,19 +37,19 @@ vec3 getNormalXEdge(vec3 posInCamera, float depthU, float depthD, float depthL, 
 
 void main(void)
 {
-    float depth = texture2D(u_depthTexture, v_textureCoordinates).r;
+    float depth = texture2D(depthTexture, v_textureCoordinates).r;
     vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
 
-    if (posInCamera.z > u_frustumLength) {
+    if (posInCamera.z > frustumLength) {
         gl_FragColor = vec4(1.0);
         return;
     }
 
     vec2 pixelSize = 1.0 / czm_viewport.zw;
-    float depthU = texture2D(u_depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y)).r;
-    float depthD = texture2D(u_depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y)).r;
-    float depthL = texture2D(u_depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0)).r;
-    float depthR = texture2D(u_depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r;
+    float depthU = texture2D(depthTexture, v_textureCoordinates- vec2(0.0, pixelSize.y)).r;
+    float depthD = texture2D(depthTexture, v_textureCoordinates+ vec2(0.0, pixelSize.y)).r;
+    float depthL = texture2D(depthTexture, v_textureCoordinates- vec2(pixelSize.x, 0.0)).r;
+    float depthR = texture2D(depthTexture, v_textureCoordinates+ vec2(pixelSize.x, 0.0)).r;
     vec3 normalInCamera = getNormalXEdge(posInCamera.xyz, depthU, depthD, depthL, depthR, pixelSize);
 
     float AO = 0.0;
@@ -60,7 +59,7 @@ void main(void)
     // RandomNoise
     vec2 noiseMapSize = vec2(256.0, 256.0);
     vec2 noiseScale = vec2(czm_viewport.z /  noiseMapSize.x, czm_viewport.w / noiseMapSize.y);
-    float randomVal = texture2D(u_randomTexture, v_textureCoordinates * noiseScale).x;
+    float randomVal = texture2D(randomTexture, v_textureCoordinates * noiseScale).x;
 
     float inverseViewportWidth = 1.0 / czm_viewport.z;
     float inverseViewportHeight = 1.0 / czm_viewport.w;
@@ -75,7 +74,7 @@ void main(void)
         //Rotate Sampling Direction
         vec2 rotatedSampleDirection = vec2(cosVal * sampleDirection.x - sinVal * sampleDirection.y, sinVal * sampleDirection.x + cosVal * sampleDirection.y);
         float localAO = 0.0;
-        float localStepSize = u_stepSize;
+        float localStepSize = stepSize;
 
         //Loop for each step
         for (int j = 0; j < 6; j++)
@@ -89,33 +88,33 @@ void main(void)
                 break;
             }
 
-            float stepDepthInfo = texture2D(u_depthTexture, newCoords).r;
+            float stepDepthInfo = texture2D(depthTexture, newCoords).r;
             vec4 stepPosInCamera = clipToEye(newCoords, stepDepthInfo);
             vec3 diffVec = stepPosInCamera.xyz - posInCamera.xyz;
             float len = length(diffVec);
 
-            if (len > u_lenCap)
+            if (len > lengthCap)
             {
                 break;
             }
 
             float dotVal = clamp(dot(normalInCamera, normalize(diffVec)), 0.0, 1.0 );
-            float weight = len / u_lenCap;
+            float weight = len / lengthCap;
             weight = 1.0 - weight * weight;
 
-            if(dotVal < u_bias)
+            if(dotVal < bias)
             {
                 dotVal = 0.0;
             }
 
             localAO = max(localAO, dotVal * weight);
-            localStepSize += u_stepSize;
+            localStepSize += stepSize;
         }
         AO += localAO;
     }
 
     AO /= float(4);
     AO = 1.0 - clamp(AO, 0.0, 1.0);
-    AO = pow(AO, u_intensity);
+    AO = pow(AO, intensity);
     gl_FragColor = vec4(vec3(AO), 1.0);
 }

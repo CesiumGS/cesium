@@ -1,8 +1,7 @@
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_depthTexture;
-uniform float u_length;
-uniform float u_stepSize;
-uniform vec4 u_color;
+uniform sampler2D depthTexture;
+uniform float length;
+uniform float stepSize;
+uniform vec4 color;
 
 varying vec2 v_textureCoordinates;
 
@@ -28,14 +27,14 @@ void main(void)
         float dir = directions[i];
         float scale = scalars[i];
 
-        horizEdge -= texture2D(u_depthTexture, v_textureCoordinates + vec2(-padx, dir * pady)).x * scale;
-        horizEdge += texture2D(u_depthTexture, v_textureCoordinates + vec2(padx, dir * pady)).x * scale;
+        horizEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(-padx, dir * pady)).x * scale;
+        horizEdge += texture2D(depthTexture, v_textureCoordinates + vec2(padx, dir * pady)).x * scale;
 
-        vertEdge -= texture2D(u_depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
-        vertEdge += texture2D(u_depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
+        vertEdge -= texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, -pady)).x * scale;
+        vertEdge += texture2D(depthTexture, v_textureCoordinates + vec2(dir * padx, pady)).x * scale;
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    float alpha = len > u_length ? 1.0 : 0.0;
-    gl_FragColor = vec4(u_color.rgb, alpha);
+    float alpha = len > length ? 1.0 : 0.0;
+    gl_FragColor = vec4(color.rgb, alpha);
 }

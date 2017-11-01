@@ -23,26 +23,28 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>
-        <tr>
-            <td>Depth Of Field</td>
-            <td>
-                <input type="checkbox" data-bind="checked: depthOfFieldShow">
-            </td>
-        </tr>
-        <tr>
-            <td>Focal Distance</td>
-            <td>
-                <input type="range" min="0.0" max="500.0" step="1" data-bind="value: focalDistance, valueUpdate: 'input'">
-            </td>
-        </tr>
-        <tr>
-            <td>Kernel Size</td>
-            <td>
-                <input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'">
-            </td>
-        </tr>
-    </tbody></table>
+<table><tbody>
+    <tr>
+        <td>Depth Of Field</td>
+        <td><input type="checkbox" data-bind="checked: show"></td>
+    </tr>
+    <tr>
+        <td>Focal Distance</td>
+        <td><input type="range" min="0.0" max="500.0" step="1" data-bind="value: focalDistance, valueUpdate: 'input'"/></td>
+    </tr>
+    <tr>
+        <td>Delta</td>
+        <td><input type="range" min="1" max="5" step="0.01" data-bind="value: delta, valueUpdate: 'input'"/></td>
+    </tr>
+    <tr>
+        <td>Sigma</td>
+        <td><input type="range" min="1" max="10" step="0.01" data-bind="value: sigma, valueUpdate: 'input'"/></td>
+    </tr>
+    <tr>
+        <td>Kernel Size</td>
+        <td><input type="range" min="0" max="7" step="0.01" data-bind="value: kernelSize, valueUpdate: 'input'"/></td>
+    </tr>
+</tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -75,26 +77,44 @@ for (var i = 0; i < numberOfBalloons; ++i) {
 }
 
 var viewModel = {
-    depthOfFieldShow: true,
-    focalDistance: 87,
-    kernelSize : 4
+    show : true,
+    focalDistance : 87,
+    delta : 1,
+    sigma : 3.78,
+    kernelSize : 2.46
 };
 
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name)) {
+    if (viewModel.hasOwnProperty(name) && name !== 'show') {
         Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
     }
 }
+Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess);
+
+var depthOfField;
+
+function updateShowPostProcess() {
+    var show = Boolean(viewModel.show);
+    if (show) {
+        depthOfField = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.depthOfField);
+    } else {
+        viewer.scene.postProcessCollection.removeAll();
+        depthOfField = undefined;
+    }
+}
+updateShowPostProcess();
 
 function updatePostProcess() {
-    var postProcess = viewer.scene.postProcess;
-    postProcess.depthOfField.show = Boolean(viewModel.depthOfFieldShow);
-    postProcess.depthOfField.uniformValues.focalDistance = Number(viewModel.focalDistance);
-    postProcess.depthOfField.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
-    postProcess.depthOfField.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
+    if (!Cesium.defined(depthOfField)) {
+        return;
+    }
+    depthOfField.uniformValues.focalDistance = Number(viewModel.focalDistance);
+    depthOfField.blurUniformValues.delta = Number(viewModel.delta);
+    depthOfField.blurUniformValues.sigma = Number(viewModel.sigma);
+    depthOfField.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
 updatePostProcess();
 

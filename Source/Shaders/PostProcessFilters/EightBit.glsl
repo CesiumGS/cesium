@@ -1,4 +1,4 @@
-uniform sampler2D u_colorTexture;
+uniform sampler2D colorTexture;
 
 varying vec2 v_textureCoordinates;
 
@@ -13,7 +13,7 @@ void main(void)
     {
         for (int j = 0; j < KERNEL_WIDTH; j++)
         {
-            averageValue += texture2D(u_colorTexture, integralPos + step * vec2(i, j)).rgb;
+            averageValue += texture2D(colorTexture, integralPos + step * vec2(i, j)).rgb;
         }
     }
     averageValue /= float(KERNEL_WIDTH * KERNEL_WIDTH);

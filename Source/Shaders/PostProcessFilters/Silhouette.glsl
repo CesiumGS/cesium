@@ -1,7 +1,6 @@
 #extension GL_OES_standard_derivatives : enable
 
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_depthTexture;
+uniform sampler2D depthTexture;
 
 varying vec2 v_textureCoordinates;
 
@@ -30,7 +29,7 @@ float linearDepth(float depth)
 
 void main(void)
 {
-    float depth = texture2D(u_depthTexture, v_textureCoordinates).r;
+    float depth = texture2D(depthTexture, v_textureCoordinates).r;
     vec4 posInCamera = clipToEye(v_textureCoordinates, depth);
     vec3 normalInCamera = getNormal(posInCamera.xyz);
     vec4 normalInWorld = czm_inverseView * vec4(normalInCamera, 0.0);

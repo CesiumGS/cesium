@@ -2,194 +2,101 @@ define([
         '../Core/Color',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Core/buildModuleUrl',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/EdgeDetection',
         '../Shaders/PostProcessFilters/Silhouette',
         '../Shaders/PostProcessFilters/SilhouetteComposite',
         './PostProcess',
-        './PostProcessStage'
+        './PostProcessComposite'
     ], function(
         Color,
         defineProperties,
         destroyObject,
-        PixelFormat,
-        buildModuleUrl,
-        Framebuffer,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         EdgeDetection,
         Silhouette,
         SilhouetteComposite,
         PostProcess,
-        PostProcessStage) {
+        PostProcessComposite) {
     'use strict';
 
     /**
-     * Post process stage for a silhouette. Implements {@link PostProcessStage}.
+     * Post process stage for a silhouette. Implements {@link PostProcess}.
      *
-     * @alias PostProcessSilhouetteStage
+     * @alias PostProcessSilhouette
      * @constructor
      *
      * @private
      */
-    function PostProcessSilhouetteStage() {
-        this._texture = undefined;
-        this._framebuffer = undefined;
-        this._postProcess = undefined;
+    function PostProcessSilhouette() {
+        var that = this;
+        var processes = new Array(3);
 
-        this._edgeDetectionUniformValues = {
-            length : 0.5,
-            color : Color.clone(Color.BLACK)
-        };
-        this._silhouetteUniformValues = {};
-        this._uniformValues = {
-            silhouetteTexture : undefined
-        };
+        processes[0] = new PostProcess({
+            fragmentShader : Silhouette
+        });
+        processes[1] = new PostProcess({
+            fragmentShader : EdgeDetection,
+            uniformValues : {
+                length : 0.5,
+                color : Color.clone(Color.BLACK)
+            }
+        });
+        processes[2] = new PostProcess({
+            fragmentShader : SilhouetteComposite,
+            uniformValues : {
+                originalColorTexture : function() {
+                    return that._initialTexture;
+                }
+            }
+        });
 
-        /**
-         * @inheritdoc PostProcessStage#show
-         */
-        this.show = false;
-
-        this._fragmentShader = SilhouetteComposite;
+        this._initialTexture = undefined;
+        this._postProcess = new PostProcessComposite({
+            processes : processes
+        });
     }
 
-    defineProperties(PostProcessSilhouetteStage.prototype, {
-        /**
-         * @inheritdoc PostProcessStage#ready
-         */
-        ready : {
-            get : function() {
-                return true;
-            }
-        },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
-        uniformValues : {
-            get : function() {
-                return this._uniformValues;
-            }
-        },
-        /**
-         * @inheritdoc PostProcessStage#fragmentShader
-         */
-        fragmentShader : {
-            get : function() {
-                return this._fragmentShader;
-            }
-        },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
+    defineProperties(PostProcessSilhouette.prototype, {
         edgeDetectionUniformValues : {
             get : function() {
-                return this._edgeDetectionUniformValues;
+                return this._postProcess.processes[1].uniformValues;
             }
         },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
-        silhouetteUniformValues : {
+        outputTexture : {
             get : function() {
-                return this._silhouetteUniformValues;
+                return this._postProcess.outputTexture;
             }
         }
-
     });
 
-    /**
-     * @inheritdoc PostProcessStage#execute
-     */
-    PostProcessSilhouetteStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
-        if (!this.show) {
-            return;
-        }
-
-        if (dirty) {
-            destroyResources(this);
-            createResources(this, frameState.context);
-        }
-
-        this._postProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._framebuffer);
+    PostProcessSilhouette.prototype.update = function(context) {
+        this._postProcess.update(context);
     };
 
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
+    PostProcessSilhouette.prototype.clear = function(context) {
+        this._postProcess.clear(context);
+    };
 
-    function createResources(stage, context) {
-        var texture = new Texture({
-            context : context,
-            width : context.drawingBufferWidth,
-            height : context.drawingBufferHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
-        });
-        var framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [texture],
-            destroyAttachments : false
-        });
+    PostProcessSilhouette.prototype._setColorTexture = function(texture) {
+        this._initialTexture = texture;
+        this._postProcess._setColorTexture(texture);
+    };
 
-        var silhouetteStage = new PostProcessStage({
-            fragmentShader : Silhouette,
-            uniformValues: stage._silhouetteUniformValues
-        });
-        var edgeDetectionStage = new PostProcessStage({
-            fragmentShader : EdgeDetection,
-            uniformValues: stage._edgeDetectionUniformValues
-        });
-        var postProcess = new PostProcess({
-            stages : [silhouetteStage, edgeDetectionStage],
-            overwriteInput : false,
-            blendOutput : false
-        });
+    PostProcessSilhouette.prototype._setDepthTexture = function(texture) {
+        this._postProcess._setDepthTexture(texture);
+    };
 
-        stage._texture = texture;
-        stage._framebuffer = framebuffer;
-        stage._postProcess = postProcess;
-        stage._uniformValues.silhouetteTexture = texture;
-    }
+    PostProcessSilhouette.prototype.execute = function(context) {
+        this._postProcess.execute(context);
+    };
 
-    function destroyResources(stage) {
-        stage._texture = stage._texture && stage._texture.destroy();
-        stage._framebuffer = stage._framebuffer && stage._framebuffer.destroy();
-        stage._postProcess = stage._postProcess && stage._postProcess.destroy();
-    }
-
-    /**
-     * @inheritdoc PostProcessStage#isDestroyed
-     */
-    PostProcessSilhouetteStage.prototype.isDestroyed = function() {
+    PostProcessSilhouette.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc PostProcessStage#destroy
-     */
-    PostProcessSilhouetteStage.prototype.destroy = function() {
-        destroyResources(this);
+    PostProcessSilhouette.prototype.destroy = function() {
+        this._postProcess.destroy();
         return destroyObject(this);
     };
 
-    return PostProcessSilhouetteStage;
+    return PostProcessSilhouette;
 });

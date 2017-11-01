@@ -76,25 +76,39 @@ var viewModel = {
     show : true,
     contrast : 128,
     brightness : -0.3,
-    kernelSize : 7
+    kernelSize : 5
 };
 
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name)) {
+    if (viewModel.hasOwnProperty(name) && name !== 'show') {
         Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
     }
 }
+Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess);
+
+var bloom;
+
+function updateShowPostProcess() {
+    var show = Boolean(viewModel.show);
+    if (show) {
+        bloom = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.bloom);
+    } else {
+        viewer.scene.postProcessCollection.removeAll();
+        bloom = undefined;
+    }
+}
+updateShowPostProcess();
 
 function updatePostProcess() {
-    var postProcess = viewer.scene.postProcess;
-    postProcess.bloom.show = Boolean(viewModel.show);
-    postProcess.bloom.contrastBiasUniformValues.contrast = Number(viewModel.contrast);
-    postProcess.bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
-    postProcess.bloom.blurXUniformValues.kernelSize = Number(viewModel.kernelSize);
-    postProcess.bloom.blurYUniformValues.kernelSize = Number(viewModel.kernelSize);
+    if (!Cesium.defined(bloom)) {
+        return;
+    }
+    bloom.contrastBiasUniformValues.contrast = Number(viewModel.contrast);
+    bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
+    bloom.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
 updatePostProcess();
 

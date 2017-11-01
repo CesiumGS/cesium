@@ -1,37 +1,23 @@
 define([
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
         '../Shaders/PostProcessFilters/DepthOfField',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         './PostProcess',
-        './PostProcessStage'
+        './PostProcessComposite',
+        './PostProcessSampleMode'
     ], function(
         defineProperties,
         destroyObject,
-        PixelFormat,
-        Framebuffer,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
         DepthOfField,
         GaussianBlur1D,
         PostProcess,
-        PostProcessStage) {
+        PostProcessComposite,
+        PostProcessSampleMode) {
     'use strict';
 
     /**
-     * Post process stage for depth of field. Implements {@link PostProcessStage}.
+     * Post process stage for depth of field. Implements {@link PostProcess}.
      *
      * @alias PostProcessDepthOfFieldStage
      * @constructor
@@ -39,157 +25,142 @@ define([
      * @private
      */
     function PostProcessDepthOfFieldStage() {
-        this._texture = undefined;
-        this._framebuffer = undefined;
-        this._postProcess = undefined;
+        var processes = new Array(3);
 
-        this._blurXUniformValues = {
-            delta : 1.0,
-            sigma : 2.0,
-            direction : 0.0,
-            kernelSize : 1.0
-        };
-        this._blurYUniformValues = {
-            delta : 1.0,
-            sigma : 2.0,
-            direction : 1.0,
-            kernelSize : 1.0
-        };
-        this._uniformValues = {
-            texture : undefined,
-            focalDistance : 5.0
-        };
+        var delta = 1.0;
+        var sigma = 2.0;
+        var kernelSize = 1.0;
 
-        this._fragmentShader = DepthOfField;
+        var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
 
-        /**
-         * @inheritdoc PostProcessStage#show
-         */
-        this.show = false;
+        var that = this;
+        processes[0] = new PostProcess({
+            fragmentShader : blurShader,
+            uniformValues: {
+                delta : delta,
+                sigma : sigma,
+                kernelSize : kernelSize,
+                direction : 0.0
+            },
+            samplingMode : PostProcessSampleMode.LINEAR
+        });
+        processes[1] = new PostProcess({
+            fragmentShader : blurShader,
+            uniformValues: {
+                delta : delta,
+                sigma : sigma,
+                kernelSize : kernelSize,
+                direction : 1.0
+            },
+            samplingMode : PostProcessSampleMode.LINEAR
+        });
+        processes[2] = new PostProcess({
+            fragmentShader : DepthOfField,
+            uniformValues : {
+                focalDistance : 5.0,
+                originalColorTexture : function() {
+                    return that._initialTexture;
+                }
+            }
+        });
+
+        this._initialTexture = undefined;
+        this._postProcess = new PostProcessComposite({
+            processes : processes
+        });
+
+        this._uniformValues = {};
+        defineProperties(this._uniformValues, {
+            focalDistance : {
+                get : function() {
+                    return that._postProcess.processes[2].uniformValues.focalDistance;
+                },
+                set : function(value) {
+                    that._postProcess.processes[2].uniformValues.focalDistance = value;
+                }
+            }
+        });
+
+        this._blurUniformValues = {};
+        defineProperties(this._blurUniformValues, {
+            delta : {
+                get : function() {
+                    return that._postProcess.processes[0].uniformValues.delta;
+                },
+                set : function(value) {
+                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
+                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    blurXUniforms.delta = blurYUniforms.delta = value;
+                }
+            },
+            sigma : {
+                get : function() {
+                    return that._postProcess.processes[0].uniformValues.sigma;
+                },
+                set : function(value) {
+                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
+                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    blurXUniforms.sigma = blurYUniforms.sigma = value;
+                }
+            },
+            kernelSize : {
+                get : function() {
+                    return that._postProcess.processes[0].uniformValues.kernelSize;
+                },
+                set : function(value) {
+                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
+                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
+                }
+            }
+        });
     }
 
     defineProperties(PostProcessDepthOfFieldStage.prototype, {
-        /**
-         * @inheritdoc PostProcessStage#ready
-         */
-        ready : {
-            get : function() {
-                return true;
-            }
-        },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
         uniformValues : {
             get : function() {
                 return this._uniformValues;
             }
         },
-        /**
-         * @inheritdoc PostProcessStage#fragmentShader
-         */
-        fragmentShader : {
+        blurUniformValues : {
             get : function() {
-                return this._fragmentShader;
+                return this._blurUniformValues;
             }
         },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
-        blurXUniformValues : {
+        outputTexture : {
             get : function() {
-                return this._blurXUniformValues;
-            }
-        },
-        /**
-         * @inheritdoc PostProcessStage#uniformValues
-         */
-        blurYUniformValues : {
-            get : function() {
-                return this._blurYUniformValues;
+                return this._postProcess.outputTexture;
             }
         }
     });
 
-    /**
-     * @inheritdoc PostProcessStage#execute
-     */
-    PostProcessDepthOfFieldStage.prototype.execute = function(frameState, inputColorTexture, inputDepthTexture, dirty) {
-        if (!this.show) {
-            return;
-        }
-
-        if (dirty) {
-            destroyResources(this);
-            createResources(this, frameState.context);
-        }
-
-        this._postProcess.execute(frameState, inputColorTexture, inputDepthTexture, this._framebuffer);
+    PostProcessDepthOfFieldStage.prototype.update = function(context) {
+        this._postProcess.update(context);
     };
 
-    function createSampler() {
-        return new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-    }
+    PostProcessDepthOfFieldStage.prototype.clear = function(context) {
+        this._postProcess.clear(context);
+    };
 
-    function createResources(stage, context) {
-        var texture = new Texture({
-            context : context,
-            width : context.drawingBufferWidth,
-            height : context.drawingBufferHeight,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
-            sampler : createSampler()
-        });
-        var framebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [texture],
-            destroyAttachments : false
-        });
+    PostProcessDepthOfFieldStage.prototype._setColorTexture = function(texture) {
+        this._initialTexture = texture;
+        this._postProcess._setColorTexture(texture);
+    };
 
-        var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
-        var blurXStage = new PostProcessStage({
-            fragmentShader : blurShader,
-            uniformValues: stage._blurXUniformValues
-        });
-        var blurYStage = new PostProcessStage({
-            fragmentShader : blurShader,
-            uniformValues: stage._blurYUniformValues
-        });
-        var postProcess = new PostProcess({
-            stages : [blurXStage, blurYStage],
-            overwriteInput : false,
-            blendOutput : false
-        });
+    PostProcessDepthOfFieldStage.prototype._setDepthTexture = function(texture) {
+        this._postProcess._setDepthTexture(texture);
+    };
 
-        stage._texture = texture;
-        stage._framebuffer = framebuffer;
-        stage._postProcess = postProcess;
-        stage._uniformValues.texture = texture;
-    }
+    PostProcessDepthOfFieldStage.prototype.execute = function(context) {
+        this._postProcess.execute(context);
+    };
 
-    function destroyResources(stage) {
-        stage._texture = stage._texture && stage._texture.destroy();
-        stage._framebuffer = stage._framebuffer && stage._framebuffer.destroy();
-        stage._postProcess = stage._postProcess && stage._postProcess.destroy();
-    }
-
-    /**
-     * @inheritdoc PostProcessStage#isDestroyed
-     */
     PostProcessDepthOfFieldStage.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * @inheritdoc PostProcessStage#destroy
-     */
     PostProcessDepthOfFieldStage.prototype.destroy = function() {
-        destroyResources(this);
+        this._postProcess.destroy();
         return destroyObject(this);
     };
 

@@ -69,7 +69,7 @@ define([
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
-        './PostProcessScene',
+        './PostProcessCollection',
         './Primitive',
         './PrimitiveCollection',
         './SceneFramebuffer',
@@ -151,7 +151,7 @@ define([
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
-        PostProcessScene,
+        PostProcessCollection,
         Primitive,
         PrimitiveCollection,
         SceneFramebuffer,
@@ -667,11 +667,11 @@ define([
          */
         this.eyeSeparation = undefined;
 
-        /*
+        /**
          * Post processing effects applied to the final render.
-         * @type {PostProcessScene}
+         * @type {PostProcessCollection}
          */
-        this.postProcess = new PostProcessScene();
+        this.postProcessCollection = new PostProcessCollection();
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
@@ -2670,12 +2670,15 @@ define([
             environmentState.useOIT = scene._oit.isSupported();
         }
 
-        var postProcess = scene.postProcess;
-        postProcess.fxaa.show = scene.fxaa;
-        var usePostProcess = environmentState.usePostProcess = !picking && postProcess.enabled;
+        var postProcess = scene.postProcessCollection;
+        //postProcess.fxaa.show = scene.fxaa;
+        var usePostProcess = environmentState.usePostProcess = !picking && postProcess.processes.length > 0;
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
+
+            postProcess.update(context);
+            postProcess.clear(context);
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
@@ -2742,11 +2745,19 @@ define([
         }
 
         if (usePostProcess) {
-            var outputFramebuffer = defaultFramebuffer;
+            //var outputFramebuffer = defaultFramebuffer;
+            //var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
+            //var inputColorTexture = inputFramebuffer.getColorTexture(0);
+            //var inputDepthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
+            //scene.postProcess.execute(scene._frameState, inputColorTexture, inputDepthTexture, outputFramebuffer);
+
             var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
-            var inputColorTexture = inputFramebuffer.getColorTexture(0);
-            var inputDepthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
-            scene.postProcess.execute(scene._frameState, inputColorTexture, inputDepthTexture, outputFramebuffer);
+
+            var postProcess = scene.postProcessCollection;
+            postProcess._setColorTexture(inputFramebuffer.getColorTexture(0));
+            postProcess._setDepthTexture(defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture);
+            postProcess.execute(context);
+            postProcess.copy(context, defaultFramebuffer);
         }
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {

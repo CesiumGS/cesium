@@ -1,11 +1,11 @@
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_dirtTexture;
-uniform sampler2D u_starTexture;
-uniform float u_distortion;
-uniform float u_ghostDispersal;
-uniform float u_haloWidth;
-uniform float u_earthRadius;
-uniform float u_intensity;
+uniform sampler2D colorTexture;
+uniform sampler2D dirtTexture;
+uniform sampler2D starTexture;
+uniform float distortion;
+uniform float ghostDispersal;
+uniform float haloWidth;
+uniform float earthRadius;
+uniform float intensity;
 
 varying vec2 v_textureCoordinates;
 
@@ -28,7 +28,7 @@ float isInEarth(vec2 texcoord, vec2 sceneSize)
 {
     vec2 NDC = texcoord * 2.0 - 1.0;
     vec4 earthPosSC = getNDCFromWC(vec3(0.0), 0.0);
-    vec4 earthPosSCEdge = getNDCFromWC(vec3(0.0), u_earthRadius * 1.5);
+    vec4 earthPosSCEdge = getNDCFromWC(vec3(0.0), earthRadius * 1.5);
     NDC.xy -= earthPosSC.xy;
 
     float X = abs(NDC.x) * sceneSize.x;
@@ -59,7 +59,7 @@ vec4 textureDistorted(sampler2D tex, vec2 texcoord, vec2 direction, vec3 distort
 
 void main(void)
 {
-    vec3 rgb = texture2D(u_colorTexture, v_textureCoordinates).rgb;
+    vec3 rgb = texture2D(colorTexture, v_textureCoordinates).rgb;
     bool isSpace = length(czm_viewerPositionWC.xyz) > DISTANCE_TO_SPACE;
 
     // Sun position
@@ -70,10 +70,10 @@ void main(void)
 
     vec2 texcoord = -v_textureCoordinates + vec2(1.0);
     vec2 texelSize = 1.0 / czm_viewport.zw;
-    vec3 distortion = vec3(-texelSize.x * u_distortion, 0.0, texelSize.x * u_distortion);
+    vec3 distortionVec = vec3(-texelSize.x * distortion, 0.0, texelSize.x * distortion);
 
     // ghost vector to image centre:
-    vec2 ghostVec = (vec2(0.5) - texcoord) * u_ghostDispersal;
+    vec2 ghostVec = (vec2(0.5) - texcoord) * ghostDispersal;
     vec3 direction = normalize(vec3(ghostVec, 0.0));
 
     // sample ghosts:
@@ -83,17 +83,17 @@ void main(void)
     {
         vec2 offset = fract(texcoord + ghostVec * float(i));
         // Only bright spots from the centre of the source image
-        ghost += textureDistorted(u_colorTexture, offset, direction.xy, distortion, isSpace);
+        ghost += textureDistorted(colorTexture, offset, direction.xy, distortionVec, isSpace);
     }
     result += ghost;
 
     // sample halo
-    vec2 haloVec = normalize(ghostVec) * u_haloWidth;
+    vec2 haloVec = normalize(ghostVec) * haloWidth;
     float weightForHalo = length(vec2(0.5) - fract(texcoord + haloVec)) / length(vec2(0.5));
     weightForHalo = pow(1.0 - weightForHalo, 5.0);
 
-    result += textureDistorted(u_colorTexture, texcoord + haloVec, direction.xy, distortion, isSpace) * weightForHalo * 1.5;
-    result += texture2D(u_dirtTexture, v_textureCoordinates);
+    result += textureDistorted(colorTexture, texcoord + haloVec, direction.xy, distortionVec, isSpace) * weightForHalo * 1.5;
+    result += texture2D(dirtTexture, v_textureCoordinates);
 
     // Rotating starburst texture's coordinate
     // dot(czm_view[0].xyz, vec3(0.0, 0.0, 1.0)) + dot(czm_view[1].xyz, vec3(0.0, 1.0, 0.0))
@@ -115,22 +115,22 @@ void main(void)
 
     if (!isSpace)
     {
-        result *= oneMinusWeightForLensFlare * u_intensity * 0.2;
+        result *= oneMinusWeightForLensFlare * intensity * 0.2;
     }
     else
     {
-        result *= oneMinusWeightForLensFlare * u_intensity;
-        result *= texture2D(u_starTexture, lensStarTexcoord) * pow(weightForLensFlare, 1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;
+        result *= oneMinusWeightForLensFlare * intensity;
+        result *= texture2D(starTexture, lensStarTexcoord) * pow(weightForLensFlare, 1.0) * max((1.0 - length(vec3(st1.xy, 0.0))), 0.0) * 2.0;
     }
 
     // If sun is in the screen space, add lens flare effect
     if( (sunPos.x >= -1.1 && sunPos.x <= 1.1) && (sunPos.y >= -1.1 && sunPos.y <= 1.1))
     {
-        result += texture2D(u_colorTexture, v_textureCoordinates);
+        result += texture2D(colorTexture, v_textureCoordinates);
     }
     else
     {
-        result = texture2D(u_colorTexture, v_textureCoordinates);
+        result = texture2D(colorTexture, v_textureCoordinates);
     }
 
     gl_FragColor = result;

@@ -10,8 +10,8 @@ define([
         '../Shaders/PostProcessFilters/BrightPass',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
         '../Shaders/PostProcessFilters/PassThrough',
-        './PostProcess2',
-        './PostProcessComposite2',
+        './PostProcess',
+        './PostProcessComposite',
         './PostProcessSampleMode',
         './SceneFramebuffer'
     ], function(

@@ -7,7 +7,6 @@ define([
         './PostProcessDepthOfFieldStage',
         './PostProcessBloomStage',
         './PostProcessSilhouetteStage',
-        './PostProcessStage',
         '../Shaders/PostProcessFilters/BlackAndWhite',
         '../Shaders/PostProcessFilters/Brightness',
         '../Shaders/PostProcessFilters/DepthView',
@@ -26,7 +25,6 @@ define([
         PostProcessDepthOfFieldStage,
         PostProcessBloomStage,
         PostProcessSilhouetteStage,
-        PostProcessStage,
         BlackAndWhite,
         Brightness,
         DepthView,
@@ -47,7 +45,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         blackAndWhite : {
@@ -60,7 +58,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         brightness : {
@@ -73,7 +71,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         eightBit : {
@@ -86,7 +84,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         nightVision : {
@@ -99,7 +97,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         textureOverlay : {
@@ -156,7 +154,7 @@ define([
          *
          * @memberof PostProcessLibrary
          *
-         * @type {PostProcessStage}
+         * @type {PostProcess}
          * @readonly
          */
         lensFlare : {
@@ -175,7 +173,7 @@ define([
     });
 
     function createBlackAndWhiteStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : BlackAndWhite,
             uniformValues : {
                 gradations : 5.0
@@ -184,7 +182,7 @@ define([
     }
 
     function createBrightnessStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : Brightness,
             uniformValues : {
                 brightness : 0.5
@@ -193,19 +191,19 @@ define([
     }
 
     function createEightBitStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : EightBit
         });
     }
 
     function createNightVisionStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : NightVision
         });
     }
 
     function createTextureOverlayStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : TextureOverlay,
             uniformValues : {
                 alpha : 0.5,
@@ -219,19 +217,19 @@ define([
             '#define FXAA_QUALITY_PRESET 39 \n' +
             FXAA3_11 + '\n' +
             FXAAFS;
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : fragmentShader
         });
     }
 
     function createDepthViewStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader : DepthView
         });
     }
 
     function createLensFlareStage() {
-        return new PostProcessStage({
+        return new PostProcess({
             fragmentShader: LensFlare,
             uniformValues: {
                 dirtTexture: buildModuleUrl('Assets/Textures/LensFlare/DirtMask.jpg'),

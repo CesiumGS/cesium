@@ -35,7 +35,6 @@ define([
         }
     });
 
-
     PostProcessComposite.prototype.update = function(context) {
         var processes = this._processes;
         var length = processes.length;

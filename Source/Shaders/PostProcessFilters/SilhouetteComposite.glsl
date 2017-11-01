@@ -1,10 +1,10 @@
-uniform sampler2D u_colorTexture;
-uniform sampler2D u_silhouetteTexture;
+uniform sampler2D colorTexture;
+uniform sampler2D originalColorTexture;
 
 varying vec2 v_textureCoordinates;
 
 void main(void)
 {
-    vec4 silhouetteColor = texture2D(u_silhouetteTexture, v_textureCoordinates);
-    gl_FragColor = mix(texture2D(u_colorTexture, v_textureCoordinates), silhouetteColor, silhouetteColor.a);
+    vec4 silhouetteColor = texture2D(colorTexture, v_textureCoordinates);
+    gl_FragColor = mix(texture2D(originalColorTexture, v_textureCoordinates), silhouetteColor, silhouetteColor.a);
 }
