@@ -2745,18 +2745,12 @@ define([
         }
 
         if (usePostProcess) {
-            //var outputFramebuffer = defaultFramebuffer;
-            //var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
-            //var inputColorTexture = inputFramebuffer.getColorTexture(0);
-            //var inputDepthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
-            //scene.postProcess.execute(scene._frameState, inputColorTexture, inputDepthTexture, outputFramebuffer);
-
             var inputFramebuffer = useOIT ? sceneFramebuffer : globeFramebuffer;
 
             var postProcess = scene.postProcessCollection;
-            postProcess._setColorTexture(inputFramebuffer.getColorTexture(0));
-            postProcess._setDepthTexture(defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture);
-            postProcess.execute(context);
+            var colorTexture = inputFramebuffer.getColorTexture(0);
+            var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
+            postProcess.execute(context, colorTexture, depthTexture);
             postProcess.copy(context, defaultFramebuffer);
         }
 

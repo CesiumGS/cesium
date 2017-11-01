@@ -91,17 +91,6 @@ Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess
 
 var bloom;
 
-function updateShowPostProcess() {
-    var show = Boolean(viewModel.show);
-    if (show) {
-        bloom = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.bloom);
-    } else {
-        viewer.scene.postProcessCollection.removeAll();
-        bloom = undefined;
-    }
-}
-updateShowPostProcess();
-
 function updatePostProcess() {
     if (!Cesium.defined(bloom)) {
         return;
@@ -110,7 +99,18 @@ function updatePostProcess() {
     bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
     bloom.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
-updatePostProcess();
+
+function updateShowPostProcess() {
+    var show = Boolean(viewModel.show);
+    if (show) {
+        bloom = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.bloom);
+        updatePostProcess();
+    } else {
+        viewer.scene.postProcessCollection.removeAll();
+        bloom = undefined;
+    }
+}
+updateShowPostProcess();
 
 var target = Cesium.Cartesian3.fromDegrees(initialLon + lonIncrement, lat, height + 7.5);
 var offset = new Cesium.Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);

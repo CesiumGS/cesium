@@ -25,7 +25,7 @@ define([
      * @private
      */
     function PostProcessBloomStage() {
-        var processes = new Array(4);
+        var processes = new Array(3);
 
         var delta = 1.0;
         var sigma = 2.0;
@@ -34,14 +34,14 @@ define([
         var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
 
         var that = this;
-        processes[0] = new PostProcess({
+        var contrastBias = processes[0] = new PostProcess({
             fragmentShader : ContrastBias,
             uniformValues : {
                 contrast : 0.0,
                 brightness : 0.0
             }
         });
-        processes[1] = new PostProcess({
+        var blurX = processes[1] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -50,7 +50,7 @@ define([
                 direction : 0.0
             }
         });
-        processes[2] = new PostProcess({
+        var blurY = processes[2] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -59,62 +59,63 @@ define([
                 direction : 1.0
             }
         });
-        processes[3] = new PostProcess({
+
+        this._bloomGenerateProcess = new PostProcessComposite({
+            processes : processes
+        });
+        this._bloomComposite = new PostProcess({
             fragmentShader : BloomComposite,
             uniformValues : {
                 glowOnly : false,
-                originalColorTexture : function() {
-                    return that._initialTexture;
+                bloomTexture : function() {
+                    return that._bloomGenerateProcess.outputTexture;
                 }
             }
-        });
-
-        this._initialTexture = undefined;
-        this._postProcess = new PostProcessComposite({
-            processes : processes
         });
 
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             glowOnly : {
                 get : function() {
-                    return that._postProcess.processes[3].uniformValues.glowOnly;
+                    return that._bloomComposite.uniformValues.glowOnly;
                 },
                 set : function(value) {
-                    that._postProcess.processes[3].uniformValues.glowOnly = value;
+                    that._bloomComposite.uniformValues.glowOnly = value;
                 }
             }
         });
+
+        this._contrastBiasUniformValues = contrastBias.uniformValues;
 
         this._blurUniformValues = {};
         defineProperties(this._blurUniformValues, {
             delta : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.delta;
+                    return blurX.uniformValues.delta;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.delta = blurYUniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.sigma;
+                    return blurX.uniformValues.sigma;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.sigma = blurYUniforms.sigma = value;
                 }
             },
             kernelSize : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.kernelSize;
+                    return blurX.uniformValues.kernelSize;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
                 }
             }
@@ -134,35 +135,29 @@ define([
         },
         contrastBiasUniformValues : {
             get : function() {
-                return this._postProcess.processes[0].uniformValues;
+                return this._contrastBiasUniformValues;
             }
         },
         outputTexture : {
             get : function() {
-                return this._postProcess.outputTexture;
+                return this._bloomComposite.outputTexture;
             }
         }
     });
 
     PostProcessBloomStage.prototype.update = function(context) {
-        this._postProcess.update(context);
+        this._bloomGenerateProcess.update(context);
+        this._bloomComposite.update(context);
     };
 
     PostProcessBloomStage.prototype.clear = function(context) {
-        this._postProcess.clear(context);
+        this._bloomGenerateProcess.clear(context);
+        this._bloomComposite.clear(context);
     };
 
-    PostProcessBloomStage.prototype._setColorTexture = function(texture) {
-        this._initialTexture = texture;
-        this._postProcess._setColorTexture(texture);
-    };
-
-    PostProcessBloomStage.prototype._setDepthTexture = function(texture) {
-        this._postProcess._setDepthTexture(texture);
-    };
-
-    PostProcessBloomStage.prototype.execute = function(context) {
-        this._postProcess.execute(context);
+    PostProcessBloomStage.prototype.execute = function(context, colorTexture, depthTexture) {
+        this._bloomGenerateProcess.execute(context, colorTexture, depthTexture);
+        this._bloomComposite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessBloomStage.prototype.isDestroyed = function() {
@@ -170,7 +165,8 @@ define([
     };
 
     PostProcessBloomStage.prototype.destroy = function() {
-        this._postProcess.destroy();
+        this._bloomGenerateProcess.destroy();
+        this._bloomComposite.destroy();
         return destroyObject(this);
     };
 

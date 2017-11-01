@@ -25,7 +25,7 @@ define([
      * @private
      */
     function PostProcessDepthOfFieldStage() {
-        var processes = new Array(3);
+        var processes = new Array(2);
 
         var delta = 1.0;
         var sigma = 2.0;
@@ -34,7 +34,7 @@ define([
         var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
 
         var that = this;
-        processes[0] = new PostProcess({
+        var blurX = processes[0] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -44,7 +44,7 @@ define([
             },
             samplingMode : PostProcessSampleMode.LINEAR
         });
-        processes[1] = new PostProcess({
+        var blurY = processes[1] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -54,29 +54,28 @@ define([
             },
             samplingMode : PostProcessSampleMode.LINEAR
         });
-        processes[2] = new PostProcess({
+
+        this._blurProcess = new PostProcessComposite({
+            processes : processes
+        });
+        this._depthOfFieldProcess = new PostProcess({
             fragmentShader : DepthOfField,
             uniformValues : {
                 focalDistance : 5.0,
-                originalColorTexture : function() {
-                    return that._initialTexture;
+                blurTexture : function() {
+                    return that._blurProcess.outputTexture;
                 }
             }
-        });
-
-        this._initialTexture = undefined;
-        this._postProcess = new PostProcessComposite({
-            processes : processes
         });
 
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             focalDistance : {
                 get : function() {
-                    return that._postProcess.processes[2].uniformValues.focalDistance;
+                    return that._depthOfFieldProcess.uniformValues.focalDistance;
                 },
                 set : function(value) {
-                    that._postProcess.processes[2].uniformValues.focalDistance = value;
+                    that._depthOfFieldProcess.uniformValues.focalDistance = value;
                 }
             }
         });
@@ -85,31 +84,31 @@ define([
         defineProperties(this._blurUniformValues, {
             delta : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.delta;
+                    return blurX.uniformValues.delta;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.delta = blurYUniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.sigma;
+                    return blurX.uniformValues.sigma;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.sigma = blurYUniforms.sigma = value;
                 }
             },
             kernelSize : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.kernelSize;
+                    return blurX.uniformValues.kernelSize;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[0].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[1].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
                 }
             }
@@ -129,30 +128,24 @@ define([
         },
         outputTexture : {
             get : function() {
-                return this._postProcess.outputTexture;
+                return this._depthOfFieldProcess.outputTexture;
             }
         }
     });
 
     PostProcessDepthOfFieldStage.prototype.update = function(context) {
-        this._postProcess.update(context);
+        this._blurProcess.update(context);
+        this._depthOfFieldProcess.update(context);
     };
 
     PostProcessDepthOfFieldStage.prototype.clear = function(context) {
-        this._postProcess.clear(context);
+        this._blurProcess.clear(context);
+        this._depthOfFieldProcess.clear(context);
     };
 
-    PostProcessDepthOfFieldStage.prototype._setColorTexture = function(texture) {
-        this._initialTexture = texture;
-        this._postProcess._setColorTexture(texture);
-    };
-
-    PostProcessDepthOfFieldStage.prototype._setDepthTexture = function(texture) {
-        this._postProcess._setDepthTexture(texture);
-    };
-
-    PostProcessDepthOfFieldStage.prototype.execute = function(context) {
-        this._postProcess.execute(context);
+    PostProcessDepthOfFieldStage.prototype.execute = function(context, colorTexture, depthTexture) {
+        this._blurProcess.execute(context, colorTexture, depthTexture);
+        this._depthOfFieldProcess.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessDepthOfFieldStage.prototype.isDestroyed = function() {
@@ -160,7 +153,8 @@ define([
     };
 
     PostProcessDepthOfFieldStage.prototype.destroy = function() {
-        this._postProcess.destroy();
+        this._blurProcess.destroy();
+        this._depthOfFieldProcess.destroy();
         return destroyObject(this);
     };
 

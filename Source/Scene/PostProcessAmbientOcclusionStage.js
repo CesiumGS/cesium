@@ -41,10 +41,9 @@ define([
      * @private
      */
     function PostProcessAmbientOcclusionStage() {
-        this._initialTexture = undefined;
         this._randomTexture = undefined;
 
-        var processes = new Array(4);
+        var processes = new Array(3);
 
         var delta = 1.0;
         var sigma = 2.0;
@@ -53,7 +52,7 @@ define([
         var blurShader = '#define USE_KERNEL_SIZE\n' + GaussianBlur1D;
 
         var that = this;
-        processes[0] = new PostProcess({
+        var generateProcess = processes[0] = new PostProcess({
             fragmentShader : AmbientOcclusionGenerate,
             uniformValues : {
                 intensity : 4.0,
@@ -66,7 +65,7 @@ define([
                 }
             }
         });
-        processes[1] = new PostProcess({
+        var blurX = processes[1] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -75,7 +74,7 @@ define([
                 direction : 0.0
             }
         });
-        processes[2] = new PostProcess({
+        var blurY = processes[2] = new PostProcess({
             fragmentShader : blurShader,
             uniformValues: {
                 delta : delta,
@@ -84,28 +83,28 @@ define([
                 direction : 1.0
             }
         });
-        processes[3] = new PostProcess({
+        this._generatePostProcess = new PostProcessComposite({
+            processes : processes
+        });
+
+        this._ambientOcclusionComposite = new PostProcess({
             fragmentShader : AmbientOcclusion,
             uniformValues : {
                 ambientOcclusionOnly : false,
-                originalColorTexture : function() {
-                    return that._initialTexture;
+                ambientOcclusionTexture : function() {
+                    return that._generatePostProcess.outputTexture;
                 }
             }
-        });
-
-        this._postProcess = new PostProcessComposite({
-            processes : processes
         });
 
         this._uniformValues = {};
         defineProperties(this._uniformValues, {
             ambientOcclusionOnly : {
                 get : function() {
-                    return that._postProcess.processes[3].uniformValues.ambientOcclusionOnly;
+                    return that._ambientOcclusionComposite.uniformValues.ambientOcclusionOnly;
                 },
                 set : function(value) {
-                    that._postProcess.processes[3].uniformValues.ambientOcclusionOnly = value;
+                    that._ambientOcclusionComposite.uniformValues.ambientOcclusionOnly = value;
                 }
             }
         });
@@ -114,42 +113,42 @@ define([
         defineProperties(this._generateUniformValues, {
             intensity : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.intensity;
+                    return generateProcess.uniformValues.intensity;
                 },
                 set : function(value) {
-                    that._postProcess.processes[0].uniformValues.intensity = value;
+                    generateProcess.uniformValues.intensity = value;
                 }
             },
             bias : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.bias;
+                    return generateProcess.uniformValues.bias;
                 },
                 set : function(value) {
-                    that._postProcess.processes[0].uniformValues.bias = value;
+                    generateProcess.uniformValues.bias = value;
                 }
             },
             lengthCap : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.lengthCap;
+                    return generateProcess.uniformValues.lengthCap;
                 },
                 set : function(value) {
-                    that._postProcess.processes[0].uniformValues.lengthCap = value;
+                    generateProcess.uniformValues.lengthCap = value;
                 }
             },
             stepSize : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.stepSize;
+                    return generateProcess.uniformValues.stepSize;
                 },
                 set : function(value) {
-                    that._postProcess.processes[0].uniformValues.stepSize = value;
+                    generateProcess.uniformValues.stepSize = value;
                 }
             },
             frustumLength : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.frustumLength;
+                    return generateProcess.uniformValues.frustumLength;
                 },
                 set : function(value) {
-                    that._postProcess.processes[0].uniformValues.frustumLength = value;
+                    generateProcess.uniformValues.frustumLength = value;
                 }
             }
         });
@@ -158,31 +157,31 @@ define([
         defineProperties(this._blurUniformValues, {
             delta : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.delta;
+                    return blurX.uniformValues.delta;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.delta = blurYUniforms.delta = value;
                 }
             },
             sigma : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.sigma;
+                    return blurX.uniformValues.sigma;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.sigma = blurYUniforms.sigma = value;
                 }
             },
             kernelSize : {
                 get : function() {
-                    return that._postProcess.processes[0].uniformValues.kernelSize;
+                    return blurX.uniformValues.kernelSize;
                 },
                 set : function(value) {
-                    var blurXUniforms = that._postProcess.processes[1].uniformValues;
-                    var blurYUniforms = that._postProcess.processes[2].uniformValues;
+                    var blurXUniforms = blurX.uniformValues;
+                    var blurYUniforms = blurY.uniformValues;
                     blurXUniforms.kernelSize = blurYUniforms.kernelSize = value;
                 }
             }
@@ -207,7 +206,7 @@ define([
         },
         outputTexture : {
             get : function() {
-                return this._postProcess.outputTexture;
+                return this._ambientOcclusionComposite.outputTexture;
             }
         }
     });
@@ -238,24 +237,18 @@ define([
             });
         }
 
-        this._postProcess.update(context);
+        this._generatePostProcess.update(context);
+        this._ambientOcclusionComposite.update(context);
     };
 
     PostProcessAmbientOcclusionStage.prototype.clear = function(context) {
-        this._postProcess.clear(context);
+        this._generatePostProcess.clear(context);
+        this._ambientOcclusionComposite.clear(context);
     };
 
-    PostProcessAmbientOcclusionStage.prototype._setColorTexture = function(texture) {
-        this._initialTexture = texture;
-        this._postProcess._setColorTexture(texture);
-    };
-
-    PostProcessAmbientOcclusionStage.prototype._setDepthTexture = function(texture) {
-        this._postProcess._setDepthTexture(texture);
-    };
-
-    PostProcessAmbientOcclusionStage.prototype.execute = function(context) {
-        this._postProcess.execute(context);
+    PostProcessAmbientOcclusionStage.prototype.execute = function(context, colorTexture, depthTexture) {
+        this._generatePostProcess.execute(context, colorTexture, depthTexture);
+        this._ambientOcclusionComposite.execute(context, colorTexture, depthTexture);
     };
 
     PostProcessAmbientOcclusionStage.prototype.isDestroyed = function() {
@@ -263,7 +256,8 @@ define([
     };
 
     PostProcessAmbientOcclusionStage.prototype.destroy = function() {
-        this._postProcess.destroy();
+        this._generatePostProcess.destroy();
+        this._ambientOcclusionComposite.destroy();
         this._randomTexture = this._randomTexture && this._randomTexture.destroy();
         return destroyObject(this);
     };

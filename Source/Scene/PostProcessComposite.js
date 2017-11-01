@@ -38,13 +38,8 @@ define([
     PostProcessComposite.prototype.update = function(context) {
         var processes = this._processes;
         var length = processes.length;
-
-        processes[0].update(context);
-
-        for (var i = 1; i < length; ++i) {
-            var process = processes[i];
-            process._setColorTexture(processes[i - 1].outputTexture);
-            process.update(context);
+        for (var i = 0; i < length; ++i) {
+            processes[i].update(context);
         }
     };
 
@@ -56,24 +51,12 @@ define([
         }
     };
 
-    PostProcessComposite.prototype._setColorTexture = function(texture) {
-        this._processes[0]._setColorTexture(texture);
-    };
-
-    PostProcessComposite.prototype._setDepthTexture = function(texture) {
+    PostProcessComposite.prototype.execute = function(context, colorTexture, depthTexture) {
         var processes = this._processes;
         var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            var process = processes[i];
-            process._setDepthTexture(texture);
-        }
-    };
-
-    PostProcessComposite.prototype.execute = function(context) {
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].execute(context);
+        processes[0].execute(context, colorTexture, depthTexture);
+        for (var i = 1; i < length; ++i) {
+            processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
         }
     };
 

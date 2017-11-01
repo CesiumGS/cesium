@@ -16,9 +16,6 @@ define([
 
     function PostProcessCollection() {
         this._processes = [];
-
-        this._colorTexture = undefined;
-        this._depthTexture = undefined;
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -55,12 +52,8 @@ define([
     PostProcessCollection.prototype.update = function(context) {
         var processes = this._processes;
         var length = processes.length;
-
-        processes[0].update(context);
-
-        for (var i = 1; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             var process = processes[i];
-            process._setColorTexture(processes[i - 1].outputTexture);
             process.update(context);
         }
     };
@@ -73,33 +66,12 @@ define([
         }
     };
 
-    PostProcessCollection.prototype._setColorTexture = function(texture) {
-        if (this._colorTexture === texture) {
-            return;
-        }
-        this._processes[0]._setColorTexture(texture);
-        this._colorTexture = texture;
-    };
-
-    PostProcessCollection.prototype._setDepthTexture = function(texture) {
-        if (this._depthTexture === texture) {
-            return;
-        }
-
+    PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
         var processes = this._processes;
         var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            var process = processes[i];
-            process._setDepthTexture(texture);
-        }
-        this._depthTexture = texture;
-    };
-
-    PostProcessCollection.prototype.execute = function(context) {
-        var processes = this._processes;
-        var length = processes.length;
-        for (var i = 0; i < length; ++i) {
-            processes[i].execute(context);
+        processes[0].execute(context, colorTexture, depthTexture);
+        for (var i = 1; i < length; ++i) {
+            processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
         }
     };
 

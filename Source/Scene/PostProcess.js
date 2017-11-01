@@ -220,7 +220,7 @@ define([
         }
 
         this._command.framebuffer = this._framebuffer;
-        this._command._renderState = this._renderState;
+        this._command.renderState = this._renderState;
         this._clearCommand.framebuffer = this._framebuffer;
     };
 
@@ -228,21 +228,18 @@ define([
         this._clearCommand.execute(context);
     };
 
-    PostProcess.prototype._setColorTexture = function(texture) {
-        this._colorTexture = texture;
-    };
-
-    PostProcess.prototype._setDepthTexture = function(texture) {
-        this._depthTexture = texture;
-    };
-
-    PostProcess.prototype.execute = function(context) {
+    PostProcess.prototype.execute = function(context, colorTexture, depthTexture) {
         if (!defined(this._command)) {
             return;
         }
+
+        this._colorTexture = colorTexture;
+        this._depthTexture = depthTexture;
+
         if (!Sampler.equals(this._colorTexture.sampler, this._sampler)) {
             this._colorTexture.sampler = this._sampler;
         }
+
         this._command.execute(context);
     };
 

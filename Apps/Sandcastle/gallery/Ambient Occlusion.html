@@ -86,17 +86,6 @@ Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess
 
 var ambientOcclusion;
 
-function updateShowPostProcess() {
-    var show = Boolean(viewModel.show);
-    if (show) {
-        ambientOcclusion = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.ambientOcclusion);
-    } else {
-        viewer.scene.postProcessCollection.removeAll();
-        ambientOcclusion = undefined;
-    }
-}
-updateShowPostProcess();
-
 function updatePostProcess() {
     if (!Cesium.defined(ambientOcclusion)) {
         return;
@@ -108,7 +97,18 @@ function updatePostProcess() {
     ambientOcclusion.generateUniformValues.stepSize = Number(viewModel.stepSize);
     ambientOcclusion.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
-updatePostProcess();
+
+function updateShowPostProcess() {
+    var show = Boolean(viewModel.show);
+    if (show) {
+        ambientOcclusion = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.ambientOcclusion);
+        updatePostProcess();
+    } else {
+        viewer.scene.postProcessCollection.removeAll();
+        ambientOcclusion = undefined;
+    }
+}
+updateShowPostProcess();
 
 var camera = viewer.scene.camera;
 camera.position = new Cesium.Cartesian3(1234121.9491740603, -5086009.253843431, 3633365.2993020345);

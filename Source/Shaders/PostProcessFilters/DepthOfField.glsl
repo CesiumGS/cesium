@@ -1,5 +1,5 @@
 uniform sampler2D colorTexture;
-uniform sampler2D originalColorTexture;
+uniform sampler2D blurTexture;
 uniform sampler2D depthTexture;
 uniform float focalDistance;
 
@@ -35,5 +35,5 @@ void main(void)
     float depth = texture2D(depthTexture, v_textureCoordinates).r;
     vec4 posInCamera = toEye(v_textureCoordinates, depth);
     float d = computeDepthBlur(-posInCamera.z);
-    gl_FragColor = mix(texture2D(originalColorTexture, v_textureCoordinates), texture2D(colorTexture, v_textureCoordinates), d);
+    gl_FragColor = mix(texture2D(colorTexture, v_textureCoordinates), texture2D(blurTexture, v_textureCoordinates), d);
 }

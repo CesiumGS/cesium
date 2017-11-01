@@ -193,14 +193,14 @@ define([
         var framebuffer = sceneFramebuffer.getFramebuffer();
 
         var processes = this._processes;
-        processes._setColorTexture(framebuffer.getColorTexture(0));
         processes.update(context);
 
         return framebuffer;
     };
 
     SunPostProcess.prototype.execute = function(context) {
-        this._processes.execute(context);
+        var colorTexture = this._sceneFramebuffer.getFramebuffer().getColorTexture(0);
+        this._processes.execute(context, colorTexture);
     };
 
     SunPostProcess.prototype.copy = function(context, framebuffer) {
