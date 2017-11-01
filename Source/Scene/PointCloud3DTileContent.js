@@ -136,6 +136,8 @@ define([
 
         this._features = undefined;
 
+        this._packedClippingPlanes  = [];
+
         /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
          */
@@ -513,7 +515,6 @@ define([
         }
 
         var scratchCartesian = new Cartesian3();
-        var scratchPlane = new Cartesian4();
 
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
@@ -533,14 +534,15 @@ define([
             u_clippingPlanes : function() {
                 var planes = content._tileset.clippingPlanes;
                 var length = planes.length;
-                var packedPlanes = new Array(length);
+                var packedPlanes = content._packedClippingPlanes;
                 for (var i = 0; i < length; ++i) {
                     var plane = planes[i];
-                    Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, scratchPlane);
+                    var packedPlane = packedPlanes[i];
+
+                    Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, packedPlane);
                     Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
                     Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
-                    scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
-                    packedPlanes[i] = scratchPlane.clone();
+                    packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
                 }
                 return packedPlanes;
             }
@@ -1261,6 +1263,16 @@ define([
         }
         if (passes.pick) {
             commandList.push(this._pickCommand);
+        }
+
+        // update clipping planes
+        var length = this._tileset.clippingPlanes.length;
+        if (this._packedClippingPlanes.length !== length) {
+            this._packedClippingPlanes = new Array(length);
+
+            for (var i = 0; i < length; ++i) {
+                this._packedClippingPlanes[i] = new Cartesian4();
+            }
         }
     };
 

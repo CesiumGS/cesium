@@ -340,7 +340,6 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
-     * @param {}
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -699,6 +698,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._packedClippingPlanes = [];
     }
 
     defineProperties(Model.prototype, {
@@ -3312,7 +3313,6 @@ define([
     }
 
     var scratchCartesian = new Cartesian3();
-    var scratchPlane = new Cartesian4();
     var scratchMatrix = new Matrix4();
 
     function createClippingPlanesFunction(model, context) {
@@ -3323,15 +3323,15 @@ define([
 
             var planes = model.clippingPlanes;
             var length = planes.length;
-            var packedPlanes = new Array(length);
+            var packedPlanes = model._packedClippingPlanes;
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
-                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, scratchPlane);
-                Cartesian3.normalize(scratchPlane, scratchPlane);
+                var packedPlane = packedPlanes[i];
+                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, packedPlane);
+                Cartesian3.normalize(packedPlane, packedPlane);
                 Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
                 Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
-                scratchPlane.w = Cartesian3.dot(scratchPlane, scratchCartesian);
-                packedPlanes[i] = scratchPlane.clone();
+                packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
             }
             return packedPlanes;
         };
@@ -4263,6 +4263,18 @@ define([
         }
     }
 
+    function updateClippingPlanes(model) {
+        var length = model.clippingPlanes.length;
+
+        if (model._packedClippingPlanes.length !== length) {
+            model._packedClippingPlanes= new Array(length);
+
+            for (var i = 0; i < length; ++i) {
+                model._packedClippingPlanes[i] = new Cartesian4();
+            }
+        }
+    }
+
     var scratchBoundingSphere = new BoundingSphere();
 
     function scaleInPixels(positionWC, radius, frameState) {
@@ -4727,6 +4739,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
+            updateClippingPlanes(this);
         }
 
         if (justLoaded) {
