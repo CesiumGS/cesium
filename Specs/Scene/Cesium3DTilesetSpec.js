@@ -720,6 +720,14 @@ defineSuite([
         });
     });
 
+    it('does not load additive tiles that are out of view', function() {
+        viewBottomLeft();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            expect(statistics.numberOfTilesWithContentReady).toEqual(2);
+        });
+    });
+
     it('culls with content box', function() {
         // Root tile has a content box that is half the extents of its box
         // Expect to cull root tile and three child tiles
@@ -2484,8 +2492,9 @@ defineSuite([
 
             scene.renderForSpecs();
 
-            // 2 for root tile, 2 for child, 1 for stencil clear
-            expect(statistics.numberOfCommands).toEqual(5);
+            // 2 for root tile, 1 for child, 1 for stencil clear
+            // Tiles that are marked as finalResolution, including leaves, do not create back face commands
+            expect(statistics.numberOfCommands).toEqual(4);
             expect(root.selected).toBe(true);
             expect(root._finalResolution).toBe(false);
             expect(root.children[0].children[0].children[3].selected).toBe(true);
@@ -2496,6 +2505,7 @@ defineSuite([
             var rs = commandList[1].renderState;
             expect(rs.cull.enabled).toBe(true);
             expect(rs.cull.face).toBe(CullFace.FRONT);
+            expect(rs.polygonOffset.enabled).toBe(true);
         });
     });
 
