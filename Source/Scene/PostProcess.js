@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/loadImage',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/destroyObject',
@@ -17,6 +18,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../ThirdParty/when',
         './PostProcessSampleMode'
     ], function(
         BoundingRectangle,
@@ -25,6 +27,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        loadImage,
         CesiumMath,
         PixelFormat,
         destroyObject,
@@ -37,6 +40,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        when,
         PostProcessSampleMode) {
     'use strict';
 
@@ -61,9 +65,22 @@ define([
 
         this._colorTexture = undefined;
         this._depthTexture = undefined;
+
+        this._actualUniformValues = {};
+        this._dirtyUniforms = [];
+        this._texturesToRelease = [];
+        this._texturesToCreate = [];
+        this._texturePromise = undefined;
+
+        this._ready = true;
     }
 
     defineProperties(PostProcess.prototype, {
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;
@@ -81,9 +98,40 @@ define([
         }
     });
 
-    function getUniformFunction(postProcess, name) {
+    function getUniformValueGetterAndSetter(postProcess, uniformValues, name) {
+        var currentValue = uniformValues[name];
+        var newType = typeof currentValue;
+        if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
+            newType === HTMLVideoElement || newType === ImageData) {
+            postProcess._dirtyUniforms.push(name);
+        }
+
+        return {
+            get : function() {
+                return uniformValues[name];
+            },
+            set : function(value) {
+                var currentValue = uniformValues[name];
+                uniformValues[name] = value;
+
+                if (typeof currentValue === Texture) {
+                    postProcess._texturesToRelease.push(currentValue);
+                }
+
+                var newType = typeof value;
+                if (newType === 'string' || newType === HTMLCanvasElement || newType === HTMLImageElement ||
+                    newType === HTMLVideoElement || newType === ImageData) {
+                    postProcess._dirtyUniforms.push(name);
+                } else {
+                    postProcess._actualUniformValues[name] = value;
+                }
+            }
+        };
+    }
+
+    function getUniformMapFunction(postProcess, name) {
         return function() {
-            return postProcess._uniformValues[name];
+            return postProcess._actualUniformValues[name];
         };
     }
 
@@ -93,16 +141,25 @@ define([
         }
 
         var uniformMap = {};
+        var newUniformValues = {};
         var uniformValues = postProcess._uniformValues;
+        var actualUniformValues = postProcess._actualUniformValues;
         for (var name in uniformValues) {
             if (uniformValues.hasOwnProperty(name)) {
                 if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] !== 'function') {
-                    uniformMap[name] = getUniformFunction(postProcess, name);
+                    uniformMap[name] = getUniformMapFunction(postProcess, name);
+                    newUniformValues[name] = getUniformValueGetterAndSetter(postProcess, uniformValues, name);
                 } else {
                     uniformMap[name] = uniformValues[name];
+                    newUniformValues[name] = uniformValues[name];
                 }
+
+                actualUniformValues[name] = uniformValues[name];
             }
         }
+
+        postProcess._uniformValues = {};
+        defineProperties(postProcess._uniformValues, newUniformValues);
 
         postProcess._uniformMap = combine(uniformMap, {
             colorTexture : function() {
@@ -194,6 +251,64 @@ define([
         }
     }
 
+    function createLoadImageFunction(postProcess, name) {
+        return function(image) {
+            postProcess._texturesToCreate.push({
+                name : name,
+                source : image
+            });
+        };
+    }
+
+    function updateUniformTextures(postProcess, context) {
+        var i;
+        var texture;
+        var name;
+
+        var texturesToRelease = postProcess._texturesToRelease;
+        var length = texturesToRelease.length;
+        for (i = 0; i < length; ++i) {
+            texture = texturesToRelease[i];
+            texture = texture && texture.destroy();
+        }
+        texturesToRelease.length = 0;
+
+        var texturesToCreate = postProcess._texturesToCreate;
+        length = texturesToCreate.length;
+        for (i = 0; i < length; ++i) {
+            var textureToCreate = texturesToCreate[i];
+            name = textureToCreate.name;
+            var source = textureToCreate.source;
+            postProcess._actualUniformValues[name] = new Texture({
+                context : context,
+                source : source
+            });
+        }
+        texturesToCreate.length = 0;
+
+        var dirtyUniforms = postProcess._dirtyUniforms;
+        if (dirtyUniforms.length === 0 || defined(postProcess._texturePromise)) {
+            return;
+        }
+
+        length = dirtyUniforms.length;
+        var uniformValues = postProcess._uniformValues;
+        var promises = new Array(length);
+        for (i = 0; i < length; ++i) {
+            name = dirtyUniforms[i];
+            var imageUrl = uniformValues[name];
+            promises.push(loadImage(imageUrl).then(createLoadImageFunction(postProcess, name)));
+        }
+
+        dirtyUniforms.length = 0;
+
+        postProcess._ready = false;
+        postProcess._texturePromise = when.all(promises).then(function() {
+            postProcess._ready = true;
+            postProcess._texturePromise = undefined;
+        });
+    }
+
     PostProcess.prototype.update = function(context) {
         var scale = this._textureScale;
         var width = context.drawingBufferWidth * scale;
@@ -209,6 +324,7 @@ define([
         }
 
         createUniformMap(this);
+        updateUniformTextures(this, context);
         updateFramebuffers(this, context, width, height);
         createDrawCommand(this, context);
         createSampler(this);
@@ -229,7 +345,7 @@ define([
     };
 
     PostProcess.prototype.execute = function(context, colorTexture, depthTexture) {
-        if (!defined(this._command)) {
+        if (!defined(this._command) || !this._ready) {
             return;
         }
 
@@ -253,6 +369,14 @@ define([
         if (defined(this._command)) {
             this._command.shaderProgram = this._command.shaderProgram && this._command.shaderProgram.destroy();
         }
+
+        var uniformValues = this._actualUniformValues;
+        for (var name in uniformValues) {
+            if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] === Texture) {
+                uniformValues[name].destroy();
+            }
+        }
+
         return destroyObject(this);
     };
 

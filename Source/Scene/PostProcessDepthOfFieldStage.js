@@ -116,6 +116,11 @@ define([
     }
 
     defineProperties(PostProcessDepthOfFieldStage.prototype, {
+        ready : {
+            get : function() {
+                return this._blurProcess.ready && this._depthOfFieldProcess.ready;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;

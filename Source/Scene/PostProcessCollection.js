@@ -16,6 +16,7 @@ define([
 
     function PostProcessCollection() {
         this._processes = [];
+        this._activeProcesses = [];
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -27,8 +28,12 @@ define([
         outputTexture : {
             get : function() {
                 var processes = this._processes;
-                if (processes.length > 0) {
-                    return processes[processes.length - 1].outputTexture;
+                var length = processes.length;
+                for (var i = length - 1; i >= 0; --i) {
+                    var process = processes[i];
+                    if (process.ready) {
+                        return process.outputTexture;
+                    }
                 }
                 return undefined;
             }
@@ -67,11 +72,26 @@ define([
     };
 
     PostProcessCollection.prototype.execute = function(context, colorTexture, depthTexture) {
+        var activeProcesses = this._activeProcesses;
         var processes = this._processes;
-        var length = processes.length;
-        processes[0].execute(context, colorTexture, depthTexture);
-        for (var i = 1; i < length; ++i) {
-            processes[i].execute(context, processes[i - 1].outputTexture, depthTexture);
+        var length = activeProcesses.length = processes.length;
+
+        var i;
+        var count = 0;
+        for (i = 0; i < length; ++i) {
+            var process = processes[i];
+            if (process.ready) {
+                activeProcesses[count++] = process;
+            }
+        }
+
+        if (count === 0) {
+            return;
+        }
+
+        activeProcesses[0].execute(context, colorTexture, depthTexture);
+        for (i = 1; i < length; ++i) {
+            activeProcesses[i].execute(context, processes[i - 1].outputTexture, depthTexture);
         }
     };
 

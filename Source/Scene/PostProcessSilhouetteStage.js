@@ -57,6 +57,11 @@ define([
     }
 
     defineProperties(PostProcessSilhouette.prototype, {
+        ready : {
+            get : function() {
+                return this._silhouetteGenerateProcess.ready && this._silhouetteProcess.ready;
+            }
+        },
         edgeDetectionUniformValues : {
             get : function() {
                 return this._edgeDetectionUniformValues;

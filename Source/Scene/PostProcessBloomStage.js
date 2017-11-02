@@ -123,6 +123,11 @@ define([
     }
 
     defineProperties(PostProcessBloomStage.prototype, {
+        ready : {
+            get : function() {
+                return this._bloomGenerateProcess.ready && this._bloomComposite.ready;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;

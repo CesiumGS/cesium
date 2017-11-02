@@ -23,6 +23,18 @@ define([
     }
 
     defineProperties(PostProcessComposite.prototype, {
+        ready : {
+            get : function() {
+                var processes = this._processes;
+                var length = processes.length;
+                for (var i = 0; i < length; ++i) {
+                    if (!processes.ready) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        },
         processes : {
             get : function() {
                 return this._processes;

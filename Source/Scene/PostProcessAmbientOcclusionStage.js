@@ -189,6 +189,11 @@ define([
     }
 
     defineProperties(PostProcessAmbientOcclusionStage.prototype, {
+        ready : {
+            get : function() {
+                return this._generatePostProcess.ready && this._ambientOcclusionComposite.ready;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;
