@@ -2672,7 +2672,7 @@ define([
 
         var postProcess = scene.postProcessCollection;
         //postProcess.fxaa.show = scene.fxaa;
-        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.processes.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled);
+        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.processes.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);

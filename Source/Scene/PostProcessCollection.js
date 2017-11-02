@@ -9,6 +9,7 @@ define([
         '../ThirdParty/Shaders/FXAA3_11',
         './PostProcess',
         './PostProcessAmbientOcclusionStage',
+        './PostProcessBloomStage',
         './PostProcessSampleMode'
     ], function(
         Check,
@@ -21,6 +22,7 @@ define([
         FXAA3_11,
         PostProcess,
         PostProcessAmbientOcclusionStage,
+        PostProcessBloomStage,
         PostProcessSampleMode) {
     'use strict';
 
@@ -38,8 +40,10 @@ define([
             sampleMode : PostProcessSampleMode.LINEAR
         });
         this._ao = new PostProcessAmbientOcclusionStage();
+        this._bloom = new PostProcessBloomStage();
 
         this._ao.enabled = false;
+        this._bloom.enabled = false;
     }
 
     defineProperties(PostProcessCollection.prototype, {
@@ -55,6 +59,7 @@ define([
 
                 readyAndEnabled = readyAndEnabled || (this._fxaa.ready && this._fxaa.enabled);
                 readyAndEnabled = readyAndEnabled || (this._ao.ready && this._ao.enabled);
+                readyAndEnabled = readyAndEnabled || (this._bloom.ready && this._bloom.enabled);
 
                 return readyAndEnabled;
             }
@@ -79,6 +84,10 @@ define([
                     }
                 }
 
+                if (this._bloom.enabled && this._bloom.ready) {
+                    return this._bloom.outputTexture;
+                }
+
                 if (this._ao.enabled && this._ao.ready) {
                     return this._ao.outputTexture;
                 }
@@ -94,6 +103,11 @@ define([
         ambientOcclusion : {
             get : function() {
                 return this._ao;
+            }
+        },
+        bloom : {
+            get : function() {
+                return this._bloom;
             }
         }
     });
@@ -115,6 +129,7 @@ define([
     PostProcessCollection.prototype.update = function(context) {
         this._fxaa.update(context);
         this._ao.update(context);
+        this._bloom.update(context);
 
         var processes = this._processes;
         var length = processes.length;
@@ -127,6 +142,7 @@ define([
     PostProcessCollection.prototype.clear = function(context) {
         this._fxaa.clear(context);
         this._ao.clear(context);
+        this._bloom.clear(context);
 
         var processes = this._processes;
         var length = processes.length;
@@ -151,14 +167,19 @@ define([
 
         var fxaa = this._fxaa;
         var ao = this._ao;
-        if (!fxaa.enabled && !ao.enabled && count === 0) {
+        var bloom = this._bloom;
+        if (!fxaa.enabled && !ao.enabled && !bloom.enabled && count === 0) {
             return;
         }
 
         var initialTexture = colorTexture;
         if (ao.enabled && ao.ready) {
-            ao.execute(context, colorTexture, depthTexture);
+            ao.execute(context, initialTexture, depthTexture);
             initialTexture = ao.outputTexture;
+        }
+        if (bloom.enabled && bloom.ready) {
+            bloom.execute(context, initialTexture, depthTexture);
+            initialTexture = bloom.outputTexture;
         }
 
         var lastTexture = initialTexture;

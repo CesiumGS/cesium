@@ -88,9 +88,8 @@ for (var name in viewModel) {
     }
 }
 
-var bloom = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.bloom);
-
 function updatePostProcess() {
+    var bloom = viewer.scene.postProcessCollection.bloom;
     bloom.enabled = Boolean(viewModel.show);
     bloom.contrastBiasUniformValues.contrast = Number(viewModel.contrast);
     bloom.contrastBiasUniformValues.brightness = Number(viewModel.brightness);
