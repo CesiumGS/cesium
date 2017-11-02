@@ -339,6 +339,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+     * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -577,6 +578,15 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
+         * An array of {@link Plane} used to clip the model.
+         *
+         * @type {Plane[]}
+         *
+         * @default []
+         */
+        this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+
+        /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
          * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
@@ -688,6 +698,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._packedClippingPlanes = [];
     }
 
     defineProperties(Model.prototype, {
@@ -2096,9 +2108,10 @@ define([
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
         var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+        var clippingFS = modifyShaderForClippingPlanes(blendFS);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(clippingFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -3293,6 +3306,37 @@ define([
         };
     }
 
+    function createClippingPlanesLengthFunction(model) {
+        return function() {
+            return model.clippingPlanes.length;
+        };
+    }
+
+    var scratchCartesian = new Cartesian3();
+    var scratchMatrix = new Matrix4();
+
+    function createClippingPlanesFunction(model, context) {
+        return function() {
+            var scale = getScale(model, context.uniformState.frameState);
+            Matrix4.multiplyByUniformScale(model.modelMatrix, scale, scratchMatrix);
+            Matrix4.multiply(context.uniformState.view3D, scratchMatrix, scratchMatrix);
+
+            var planes = model.clippingPlanes;
+            var length = planes.length;
+            var packedPlanes = model._packedClippingPlanes;
+            for (var i = 0; i < length; ++i) {
+                var plane = planes[i];
+                var packedPlane = packedPlanes[i];
+                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, packedPlane);
+                Cartesian3.normalize(packedPlane, packedPlane);
+                Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
+                Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
+                packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+            }
+            return packedPlanes;
+        };
+    }
+
     function createColorBlendFunction(model) {
         return function() {
             return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
@@ -3387,7 +3431,9 @@ define([
 
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
-                gltf_colorBlend : createColorBlendFunction(model)
+                gltf_colorBlend : createColorBlendFunction(model),
+                gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
+                gltf_clippingPlanes: createClippingPlanesFunction(model, context)
             });
 
             // Allow callback to modify the uniformMap
@@ -4181,6 +4227,20 @@ define([
         }
     }
 
+    function modifyShaderForClippingPlanes(shader) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
+        shader +=
+            'uniform int gltf_clippingPlanesLength; \n' +
+            'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_clip_main(); \n' +
+            '    czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '} \n';
+
+        return shader;
+    }
+
     function updateSilhouette(model, frameState) {
         // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
         // There are two silhouette commands:
@@ -4200,6 +4260,18 @@ define([
 
         if (dirty) {
             createSilhouetteCommands(model, frameState);
+        }
+    }
+
+    function updateClippingPlanes(model) {
+        var length = model.clippingPlanes.length;
+
+        if (model._packedClippingPlanes.length !== length) {
+            model._packedClippingPlanes = new Array(length);
+
+            for (var i = 0; i < length; ++i) {
+                model._packedClippingPlanes[i] = new Cartesian4();
+            }
         }
     }
 
@@ -4667,6 +4739,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
+            updateClippingPlanes(this);
         }
 
         if (justLoaded) {

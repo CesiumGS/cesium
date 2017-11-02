@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/PrimitiveType',
@@ -46,6 +47,7 @@ define([
         DeveloperError,
         FeatureDetection,
         getStringFromTypedArray,
+        Matrix3,
         Matrix4,
         oneTimeWarning,
         PrimitiveType,
@@ -133,6 +135,8 @@ define([
         this._geometryByteLength = 0;
 
         this._features = undefined;
+
+        this._packedClippingPlanes  = [];
 
         /**
          * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
@@ -510,6 +514,8 @@ define([
             }
         }
 
+        var scratchCartesian = new Cartesian3();
+
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -521,6 +527,24 @@ define([
             },
             u_constantColor : function() {
                 return content._constantColor;
+            },
+            u_clippingPlanesLength : function() {
+                return content._tileset.clippingPlanes.length;
+            },
+            u_clippingPlanes : function() {
+                var planes = content._tileset.clippingPlanes;
+                var length = planes.length;
+                var packedPlanes = content._packedClippingPlanes;
+                for (var i = 0; i < length; ++i) {
+                    var plane = planes[i];
+                    var packedPlane = packedPlanes[i];
+
+                    Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, packedPlane);
+                    Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
+                    Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
+                    packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+                }
+                return packedPlanes;
             }
         };
 
@@ -1030,8 +1054,11 @@ define([
         vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
+                 'uniform int u_clippingPlanesLength;' +
+                 'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                  'void main() \n' +
                  '{ \n' +
+                 '    czm_clipPlanes(u_clippingPlanes, u_clippingPlanesLength); \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 
@@ -1165,6 +1192,20 @@ define([
         var updateModelMatrix = modelMatrixChanged || this._mode !== frameState.mode;
 
         this._mode = frameState.mode;
+
+        // update clipping planes
+        var length = 0;
+        if (defined(this._tileset.clippingPlanes)) {
+            length = this._tileset.clippingPlanes.length;
+        }
+
+        if (this._packedClippingPlanes.length !== length) {
+            this._packedClippingPlanes = new Array(length);
+
+            for (var i = 0; i < length; ++i) {
+                this._packedClippingPlanes[i] = new Cartesian4();
+            }
+        }
 
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
