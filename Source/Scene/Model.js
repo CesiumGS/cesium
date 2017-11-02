@@ -4267,7 +4267,7 @@ define([
         var length = model.clippingPlanes.length;
 
         if (model._packedClippingPlanes.length !== length) {
-            model._packedClippingPlanes= new Array(length);
+            model._packedClippingPlanes = new Array(length);
 
             for (var i = 0; i < length; ++i) {
                 model._packedClippingPlanes[i] = new Cartesian4();

@@ -1193,6 +1193,16 @@ define([
 
         this._mode = frameState.mode;
 
+        // update clipping planes
+        var length = this._tileset.clippingPlanes.length;
+        if (this._packedClippingPlanes.length !== length) {
+            this._packedClippingPlanes = new Array(length);
+
+            for (var i = 0; i < length; ++i) {
+                this._packedClippingPlanes[i] = new Cartesian4();
+            }
+        }
+
         if (!defined(this._drawCommand)) {
             createResources(this, frameState);
             createShaders(this, frameState, tileset.style);
@@ -1263,16 +1273,6 @@ define([
         }
         if (passes.pick) {
             commandList.push(this._pickCommand);
-        }
-
-        // update clipping planes
-        var length = this._tileset.clippingPlanes.length;
-        if (this._packedClippingPlanes.length !== length) {
-            this._packedClippingPlanes = new Array(length);
-
-            for (var i = 0; i < length; ++i) {
-                this._packedClippingPlanes[i] = new Cartesian4();
-            }
         }
     };
 
