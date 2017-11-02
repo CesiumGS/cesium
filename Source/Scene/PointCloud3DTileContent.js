@@ -1194,7 +1194,11 @@ define([
         this._mode = frameState.mode;
 
         // update clipping planes
-        var length = this._tileset.clippingPlanes.length;
+        var length = 0;
+        if (defined(this._tileset.clippingPlanes)) {
+            length = this._tileset.clippingPlanes.length;
+        }
+
         if (this._packedClippingPlanes.length !== length) {
             this._packedClippingPlanes = new Array(length);
 
