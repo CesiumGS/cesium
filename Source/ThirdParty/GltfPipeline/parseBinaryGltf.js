@@ -83,7 +83,7 @@ define([
 
         // Load binary glTF version 2
         if (version === 2) {
-            length = headerView.getInt32(8);
+            length = headerView.getInt32(8, true);
             var byteOffset = 12;
             var binaryBuffer;
             while (byteOffset < length) {
