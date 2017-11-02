@@ -128,6 +128,14 @@ define([
                 return this._bloomGenerateProcess.ready && this._bloomComposite.ready;
             }
         },
+        enabled : {
+            get : function() {
+                return this._bloomGenerateProcess.enabled;
+            },
+            set : function(value) {
+                this._bloomComposite.enabled = this._bloomGenerateProcess.enabled = value;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;

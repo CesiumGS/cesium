@@ -28,11 +28,23 @@ define([
                 var processes = this._processes;
                 var length = processes.length;
                 for (var i = 0; i < length; ++i) {
-                    if (!processes.ready) {
+                    if (!processes[i].ready) {
                         return false;
                     }
                 }
                 return true;
+            }
+        },
+        enabled : {
+            get : function() {
+                return this._processes[0].enabled;
+            },
+            set : function(value) {
+                var processes = this._processes;
+                var length = processes.length;
+                for (var i = 0; i < length; ++i) {
+                    processes[i].enabled = value;
+                }
             }
         },
         processes : {

@@ -78,18 +78,14 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name) && name !== 'show') {
+    if (viewModel.hasOwnProperty(name)) {
         Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
     }
 }
-Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess);
-
-var ambientOcclusion;
 
 function updatePostProcess() {
-    if (!Cesium.defined(ambientOcclusion)) {
-        return;
-    }
+    var ambientOcclusion = viewer.scene.postProcessCollection.ambientOcclusion;
+    ambientOcclusion.enabled = Boolean(viewModel.show);
     ambientOcclusion.uniformValues.ambientOcclusionOnly = Boolean(viewModel.ambientOcclusionOnly);
     ambientOcclusion.generateUniformValues.intensity = Number(viewModel.intensity);
     ambientOcclusion.generateUniformValues.bias = Number(viewModel.bias);
@@ -97,18 +93,7 @@ function updatePostProcess() {
     ambientOcclusion.generateUniformValues.stepSize = Number(viewModel.stepSize);
     ambientOcclusion.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
-
-function updateShowPostProcess() {
-    var show = Boolean(viewModel.show);
-    if (show) {
-        ambientOcclusion = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.ambientOcclusion);
-        updatePostProcess();
-    } else {
-        viewer.scene.postProcessCollection.removeAll();
-        ambientOcclusion = undefined;
-    }
-}
-updateShowPostProcess();
+updatePostProcess();
 
 var camera = viewer.scene.camera;
 camera.position = new Cesium.Cartesian3(1234121.9491740603, -5086009.253843431, 3633365.2993020345);

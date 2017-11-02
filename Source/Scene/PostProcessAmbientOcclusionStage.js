@@ -194,6 +194,14 @@ define([
                 return this._generatePostProcess.ready && this._ambientOcclusionComposite.ready;
             }
         },
+        enabled : {
+            get : function() {
+                return this._generatePostProcess.enabled;
+            },
+            set : function(value) {
+                this._generatePostProcess.enabled = this._ambientOcclusionComposite.enabled = value;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;

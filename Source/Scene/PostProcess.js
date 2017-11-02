@@ -73,6 +73,9 @@ define([
         this._texturePromise = undefined;
 
         this._ready = true;
+
+        this.enabled = true;
+        this._enabled = this.enabled;
     }
 
     defineProperties(PostProcess.prototype, {
@@ -309,7 +312,33 @@ define([
         });
     }
 
+    function releaseResources(postProcess) {
+        destroyTextures(postProcess);
+        destroyFramebuffers(postProcess);
+        if (defined(postProcess._command)) {
+            postProcess._command.shaderProgram = postProcess._command.shaderProgram && postProcess._command.shaderProgram.destroy();
+            postProcess._command = undefined;
+        }
+
+        var uniformValues = postProcess._actualUniformValues;
+        for (var name in uniformValues) {
+            if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] === Texture) {
+                uniformValues[name].destroy();
+                postProcess._dirtyUniforms.push(name);
+            }
+        }
+    }
+
     PostProcess.prototype.update = function(context) {
+        if (this.enabled !== this._enabled && !this.enabled) {
+            releaseResources(this);
+        }
+
+        this._enabled = this.enabled;
+        if (!this._enabled) {
+            return;
+        }
+
         var scale = this._textureScale;
         var width = context.drawingBufferWidth * scale;
         var height = context.drawingBufferHeight * scale;
@@ -341,11 +370,14 @@ define([
     };
 
     PostProcess.prototype.clear = function(context) {
+        if (!this._enabled) {
+            return;
+        }
         this._clearCommand.execute(context);
     };
 
     PostProcess.prototype.execute = function(context, colorTexture, depthTexture) {
-        if (!defined(this._command) || !this._ready) {
+        if (!defined(this._command) || !this._ready || !this._enabled) {
             return;
         }
 
@@ -364,19 +396,7 @@ define([
     };
 
     PostProcess.prototype.destroy = function() {
-        destroyTextures(this);
-        destroyFramebuffers(this);
-        if (defined(this._command)) {
-            this._command.shaderProgram = this._command.shaderProgram && this._command.shaderProgram.destroy();
-        }
-
-        var uniformValues = this._actualUniformValues;
-        for (var name in uniformValues) {
-            if (uniformValues.hasOwnProperty(name) && typeof uniformValues[name] === Texture) {
-                uniformValues[name].destroy();
-            }
-        }
-
+        releaseResources(this);
         return destroyObject(this);
     };
 

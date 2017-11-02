@@ -59,16 +59,11 @@ for (var name in viewModel) {
     }
 }
 
-function updatePostProcess() {
-    var show = Boolean(viewModel.show);
-    var postProcessCollection = viewer.scene.postProcessCollection;
+var silhouette = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.silhouette);
 
-    if (show) {
-        var silhoette = postProcessCollection.add(Cesium.PostProcessLibrary.silhouette);
-        silhoette.edgeDetectionUniformValues.color = Cesium.Color.YELLOW;
-    } else {
-        postProcessCollection.removeAll();
-    }
+function updatePostProcess() {
+    silhouette.enabled = Boolean(viewModel.show);
+    silhouette.edgeDetectionUniformValues.color = Cesium.Color.YELLOW;
 }
 updatePostProcess();
 //Sandcastle_End

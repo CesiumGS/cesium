@@ -62,6 +62,14 @@ define([
                 return this._silhouetteGenerateProcess.ready && this._silhouetteProcess.ready;
             }
         },
+        enabled : {
+            get : function() {
+                return this._silhouetteProcess.enabled;
+            },
+            set : function(value) {
+                this._silhouetteProcess.enabled = this._silhouetteGenerateProcess.enabled = value;
+            }
+        },
         edgeDetectionUniformValues : {
             get : function() {
                 return this._edgeDetectionUniformValues;

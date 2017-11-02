@@ -88,35 +88,21 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name) && name !== 'show') {
+    if (viewModel.hasOwnProperty(name)) {
         Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
     }
 }
-Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess);
 
-var depthOfField;
+var depthOfField = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.depthOfField);
 
 function updatePostProcess() {
-    if (!Cesium.defined(depthOfField)) {
-        return;
-    }
+    depthOfField.enabled = Boolean(viewModel.show);
     depthOfField.uniformValues.focalDistance = Number(viewModel.focalDistance);
     depthOfField.blurUniformValues.delta = Number(viewModel.delta);
     depthOfField.blurUniformValues.sigma = Number(viewModel.sigma);
     depthOfField.blurUniformValues.kernelSize = Number(viewModel.kernelSize);
 }
-
-function updateShowPostProcess() {
-    var show = Boolean(viewModel.show);
-    if (show) {
-        depthOfField = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.depthOfField);
-        updatePostProcess();
-    } else {
-        viewer.scene.postProcessCollection.removeAll();
-        depthOfField = undefined;
-    }
-}
-updateShowPostProcess();
+updatePostProcess();
 
 var target = Cesium.Cartesian3.fromDegrees(initialLon + lonIncrement, lat, height + 7.5);
 var offset = new Cesium.Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);

@@ -76,37 +76,22 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 for (var name in viewModel) {
-    if (viewModel.hasOwnProperty(name) && name !== 'show') {
+    if (viewModel.hasOwnProperty(name)) {
         Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
     }
 }
-Cesium.knockout.getObservable(viewModel, 'show').subscribe(updateShowPostProcess);
 
-var lensFlare;
+var lensFlare = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.lensFlare);
 
 function updatePostProcess() {
-    if (!Cesium.defined(lensFlare)) {
-        return;
-    }
-    lensFlare.show = Boolean(viewModel.show);
+    lensFlare.enabled = Boolean(viewModel.show);
     lensFlare.uniformValues.intensity = Number(viewModel.intensity);
     lensFlare.uniformValues.distortion = Number(viewModel.distortion);
     lensFlare.uniformValues.ghostDispersal = Number(viewModel.dispersion);
     lensFlare.uniformValues.haloWidth = Number(viewModel.haloWidth);
     lensFlare.uniformValues.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
 }
-
-function updateShowPostProcess() {
-    var show = Boolean(viewModel.show);
-    if (show) {
-        lensFlare = viewer.scene.postProcessCollection.add(Cesium.PostProcessLibrary.lensFlare);
-        updatePostProcess();
-    } else {
-        viewer.scene.postProcessCollection.removeAll();
-        lensFlare = undefined;
-    }
-}
-updateShowPostProcess();
+updatePostProcess();
 
 var camera = viewer.scene.camera;
 

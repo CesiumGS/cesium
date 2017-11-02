@@ -2672,13 +2672,15 @@ define([
 
         var postProcess = scene.postProcessCollection;
         //postProcess.fxaa.show = scene.fxaa;
-        var usePostProcess = environmentState.usePostProcess = !picking && postProcess.processes.length > 0;
+        var usePostProcess = environmentState.usePostProcess = !picking && (postProcess.processes.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled);
         if (usePostProcess) {
             scene._sceneFramebuffer.update(context, passState);
             scene._sceneFramebuffer.clear(context, passState, clearColor);
 
             postProcess.update(context);
             postProcess.clear(context);
+
+            usePostProcess = environmentState.usePostProcess = postProcess.ready;
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {

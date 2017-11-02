@@ -121,6 +121,14 @@ define([
                 return this._blurProcess.ready && this._depthOfFieldProcess.ready;
             }
         },
+        enabled : {
+            get : function() {
+                return this._blurProcess.enabled;
+            },
+            set : function(value) {
+                this._blurProcess.enabled = this._depthOfFieldProcess.enabled;
+            }
+        },
         uniformValues : {
             get : function() {
                 return this._uniformValues;

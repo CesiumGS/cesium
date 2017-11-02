@@ -4,22 +4,61 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Shaders/PostProcessFilters/PassThrough'
+        '../Shaders/PostProcessFilters/FXAA',
+        '../Shaders/PostProcessFilters/PassThrough',
+        '../ThirdParty/Shaders/FXAA3_11',
+        './PostProcess',
+        './PostProcessAmbientOcclusionStage',
+        './PostProcessSampleMode'
     ], function(
         Check,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        PassThrough) {
+        FXAAFS,
+        PassThrough,
+        FXAA3_11,
+        PostProcess,
+        PostProcessAmbientOcclusionStage,
+        PostProcessSampleMode) {
     'use strict';
+
+    var fxaaFS =
+        '#define FXAA_QUALITY_PRESET 39 \n' +
+        FXAA3_11 + '\n' +
+        FXAAFS;
 
     function PostProcessCollection() {
         this._processes = [];
         this._activeProcesses = [];
+
+        this._fxaa = new PostProcess({
+            fragmentShader : fxaaFS,
+            sampleMode : PostProcessSampleMode.LINEAR
+        });
+        this._ao = new PostProcessAmbientOcclusionStage();
+
+        this._ao.enabled = false;
     }
 
     defineProperties(PostProcessCollection.prototype, {
+        ready : {
+            get : function() {
+                var readyAndEnabled = false;
+                var processes = this._processes;
+                var length = processes.length;
+                for (var i = length - 1; i >= 0; --i) {
+                    var process = processes[i];
+                    readyAndEnabled = readyAndEnabled || (process.ready && process.enabled);
+                }
+
+                readyAndEnabled = readyAndEnabled || (this._fxaa.ready && this._fxaa.enabled);
+                readyAndEnabled = readyAndEnabled || (this._ao.ready && this._ao.enabled);
+
+                return readyAndEnabled;
+            }
+        },
         processes : {
             get : function() {
                 return this._processes;
@@ -27,15 +66,34 @@ define([
         },
         outputTexture : {
             get : function() {
+                if (this._fxaa.enabled && this._fxaa.ready) {
+                    return this._fxaa.outputTexture;
+                }
+
                 var processes = this._processes;
                 var length = processes.length;
                 for (var i = length - 1; i >= 0; --i) {
                     var process = processes[i];
-                    if (process.ready) {
+                    if (process.ready && process.enabled) {
                         return process.outputTexture;
                     }
                 }
+
+                if (this._ao.enabled && this._ao.ready) {
+                    return this._ao.outputTexture;
+                }
+
                 return undefined;
+            }
+        },
+        fxaa : {
+            get : function() {
+                return this._fxaa;
+            }
+        },
+        ambientOcclusion : {
+            get : function() {
+                return this._ao;
             }
         }
     });
@@ -55,6 +113,9 @@ define([
     };
 
     PostProcessCollection.prototype.update = function(context) {
+        this._fxaa.update(context);
+        this._ao.update(context);
+
         var processes = this._processes;
         var length = processes.length;
         for (var i = 0; i < length; ++i) {
@@ -64,6 +125,9 @@ define([
     };
 
     PostProcessCollection.prototype.clear = function(context) {
+        this._fxaa.clear(context);
+        this._ao.clear(context);
+
         var processes = this._processes;
         var length = processes.length;
         for (var i = 0; i < length; ++i) {
@@ -80,18 +144,35 @@ define([
         var count = 0;
         for (i = 0; i < length; ++i) {
             var process = processes[i];
-            if (process.ready) {
+            if (process.ready && process.enabled) {
                 activeProcesses[count++] = process;
             }
         }
 
-        if (count === 0) {
+        var fxaa = this._fxaa;
+        var ao = this._ao;
+        if (!fxaa.enabled && !ao.enabled && count === 0) {
             return;
         }
 
-        activeProcesses[0].execute(context, colorTexture, depthTexture);
-        for (i = 1; i < length; ++i) {
-            activeProcesses[i].execute(context, processes[i - 1].outputTexture, depthTexture);
+        var initialTexture = colorTexture;
+        if (ao.enabled && ao.ready) {
+            ao.execute(context, colorTexture, depthTexture);
+            initialTexture = ao.outputTexture;
+        }
+
+        var lastTexture = initialTexture;
+
+        if (count > 0) {
+            activeProcesses[0].execute(context, initialTexture, depthTexture);
+            for (i = 1; i < count; ++i) {
+                activeProcesses[i].execute(context, activeProcesses[i - 1].outputTexture, depthTexture);
+            }
+            lastTexture = activeProcesses[count - 1].outputTexture;
+        }
+
+        if (fxaa.enabled && fxaa.ready) {
+            fxaa.execute(context, lastTexture, depthTexture);
         }
     };
 

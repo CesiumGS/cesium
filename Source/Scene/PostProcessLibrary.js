@@ -3,7 +3,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         './PostProcess',
-        './PostProcessAmbientOcclusionStage',
         './PostProcessDepthOfFieldStage',
         './PostProcessBloomStage',
         './PostProcessSilhouetteStage',
@@ -11,17 +10,14 @@ define([
         '../Shaders/PostProcessFilters/Brightness',
         '../Shaders/PostProcessFilters/DepthView',
         '../Shaders/PostProcessFilters/EightBit',
-        '../Shaders/PostProcessFilters/FXAA',
         '../Shaders/PostProcessFilters/LensFlare',
         '../Shaders/PostProcessFilters/NightVision',
-        '../Shaders/PostProcessFilters/TextureOverlay',
-        '../ThirdParty/Shaders/FXAA3_11'
+        '../Shaders/PostProcessFilters/TextureOverlay'
     ], function(
         buildModuleUrl,
         defineProperties,
         destroyObject,
         PostProcess,
-        PostProcessAmbientOcclusionStage,
         PostProcessDepthOfFieldStage,
         PostProcessBloomStage,
         PostProcessSilhouetteStage,
@@ -29,11 +25,9 @@ define([
         Brightness,
         DepthView,
         EightBit,
-        FXAAFS,
         LensFlare,
         NightVision,
-        TextureOverlay,
-        FXAA3_11) {
+        TextureOverlay) {
     'use strict';
 
     function PostProcessLibrary() {
@@ -108,30 +102,11 @@ define([
         /**
          * @private
          */
-        fxaa : {
-            get : function() {
-                return createFxaaStage();
-            }
-        },
-
-        /**
-         * @private
-         */
         depthView : {
             get : function() {
                 return createDepthViewStage();
             }
         },
-
-        /**
-         * private
-         */
-        ambientOcclusion : {
-            get : function() {
-                return createAmbientOcclusionStage();
-            }
-        },
-
         /**
          * private
          */
@@ -140,7 +115,6 @@ define([
                 return createDepthOfFieldStage();
             }
         },
-
         /**
          * private
          */
@@ -212,16 +186,6 @@ define([
         });
     }
 
-    function createFxaaStage() {
-        var fragmentShader =
-            '#define FXAA_QUALITY_PRESET 39 \n' +
-            FXAA3_11 + '\n' +
-            FXAAFS;
-        return new PostProcess({
-            fragmentShader : fragmentShader
-        });
-    }
-
     function createDepthViewStage() {
         return new PostProcess({
             fragmentShader : DepthView
@@ -241,10 +205,6 @@ define([
                 earthRadius: 0.0
             }
         });
-    }
-
-    function createAmbientOcclusionStage() {
-        return new PostProcessAmbientOcclusionStage();
     }
 
     function createDepthOfFieldStage() {
