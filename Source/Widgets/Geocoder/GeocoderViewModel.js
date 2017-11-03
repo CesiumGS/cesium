@@ -80,12 +80,12 @@ define([
         });
 
         this._searchCommand = createCommand(function() {
-            that.hideSuggestions();
             that._focusTextbox = false;
             if (defined(that._selectedSuggestion)) {
                 that.activateSuggestion(that._selectedSuggestion);
                 return false;
             }
+            that.hideSuggestions();
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
