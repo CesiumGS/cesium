@@ -15,8 +15,8 @@ define([
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram) {
         this.numberOfDayTextures = numberOfDayTextures;
         this.flags = flags;
-        this.shaderProgram = shaderProgram;
         this.material = material;
+        this.shaderProgram = shaderProgram;
     }
 
     /**

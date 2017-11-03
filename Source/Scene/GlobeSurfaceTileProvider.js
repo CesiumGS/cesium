@@ -1265,7 +1265,7 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             if (tileProvider.uniformMap) {
-                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
+                uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);

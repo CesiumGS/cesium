@@ -585,8 +585,7 @@ define([
 
             // Set the material uniform map to the materials
             this._surface._tileProvider.uniformMap = this._material._uniforms;
-        }
-        else {
+        } else {
             this._surface._tileProvider.uniformMap = undefined;
         }
         fragmentSources.push(GlobeFS);

@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Shader composition demos">
-    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <meta name="description" content="Apply materials to the globe.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -31,7 +31,7 @@
     <tr>
         <td>Contour Spacing</td>
         <td>
-            <input type="range" min="1.0" max="500.0 step="1.0" data-bind="value: spacing, valueUpdate: 'input'">
+            <input type="range" min="1.0" max="500.0" step="1.0" data-bind="value: spacing, valueUpdate: 'input'">
         </td>
     </tr>
 </tbody>
@@ -64,15 +64,10 @@ function getColorRamp() {
 
     var grd = ctx.createLinearGradient(0, 0, 100, 0);
     grd.addColorStop(0, "black");
-
     grd.addColorStop(0.25, "red");
-
     grd.addColorStop(0.5, "blue");
-
     grd.addColorStop(0.75, "green");
-
     grd.addColorStop(1.0, "white");
-
 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 1);
