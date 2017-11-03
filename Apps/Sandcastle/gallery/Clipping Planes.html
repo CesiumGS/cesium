@@ -44,25 +44,26 @@
     <tr>
         <td>x</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: xOffset">
         </td>
     </tr>
     <tr>
         <td>y</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: yOffset">
         </td>
     </tr>
     <tr>
         <td>z</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: zOffset">
         </td>
     </tr>
     </tbody></table>
+    <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
 </div>
 
 <script id="cesium_sandcastle_script">
@@ -77,10 +78,20 @@ var defaultClippingPlanes = [
     new Cesium.Plane(new Cesium.Cartesian3(0, 0, 1), 100.0)
 ];
 
-function loadTileset (url) {
+var viewModel = {
+    exampleType : 'BIM',
+    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
+    xOffset : 0.0,
+    yOffset: 100.0,
+    zOffset: 100.0,
+    debugBoundingVolumesEnabled: false
+};
+
+var tileset;
+function loadTileset (url, offeset) {
     reset();
 
-    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url
     }));
 
@@ -92,6 +103,7 @@ function loadTileset (url) {
         throw(error);
     });
 
+    tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
     tileset.clippingPlanes = defaultClippingPlanes;
     return tileset.clippingPlanes;
 }
@@ -131,14 +143,6 @@ var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 var clippingPlanes = loadTileset(bimUrl);
 
 // Track and create the bindings for the view model
-
-var viewModel = {
-    exampleType : 'BIM',
-    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
-    xOffset : 0.0,
-    yOffset: 100.0,
-    zOffset: 100.0
-};
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
 Cesium.knockout.applyBindings(viewModel, toolbar);
@@ -153,6 +157,10 @@ Cesium.knockout.getObservable(viewModel, 'yOffset').subscribe(function(newValue)
 
 Cesium.knockout.getObservable(viewModel, 'zOffset').subscribe(function(newValue) {
     clippingPlanes[2].distance = parseFloat(newValue);
+});
+
+Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
+    tileset.debugShowBoundingVolume = newValue;
 });
 
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(

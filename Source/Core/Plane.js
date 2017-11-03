@@ -3,13 +3,16 @@ define([
         './defined',
         './DeveloperError',
         './freezeObject',
-        './Math'
+        './Math',
+        './Matrix4'
     ], function(
         Cartesian3,
         defined,
         DeveloperError,
         freezeObject,
-        CesiumMath) {
+        CesiumMath,
+        Matrix4
+) {
     'use strict';
 
     /**
@@ -164,6 +167,34 @@ define([
         //>>includeEnd('debug');
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
+    };
+
+    var scratchPosition = new Cartesian3();
+    /**
+     * Transforms the plane by the given transformation matrix.
+     *
+     * @param {Plane} plane The plane.
+     * @param {Matrix4} transform The transformation matrix.
+     * @param {Plane} [result] The object into which to store the result.
+     * @returns {Plane} The plane transformed by the given transformation matrix.
+     */
+    Plane.transformPlane = function(plane, transform, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        if (!defined(transform)) {
+            throw new DeveloperError('transform is required.');
+        }
+        //>>includeEnd('debug');
+
+        Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
+        Cartesian3.normalize(scratchNormal, scratchNormal);
+
+        Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchPosition);
+        Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
+
+        return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
     };
 
     /**

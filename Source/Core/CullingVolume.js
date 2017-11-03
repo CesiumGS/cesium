@@ -111,14 +111,21 @@ define([
      * Determines whether a bounding volume intersects the culling volume.
      *
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
+     * @param {Function} [checkClipped] A function which takes the boundingVolume as a parameter, that if supplied,
+     *                                  will check to see if the tile has been entirely clipped by any tileset
+     *                                  clippingPlane.
      * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      */
-    CullingVolume.prototype.computeVisibility = function(boundingVolume) {
+    CullingVolume.prototype.computeVisibility = function(boundingVolume, checkClipped) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingVolume)) {
             throw new DeveloperError('boundingVolume is required.');
         }
         //>>includeEnd('debug');
+
+        if (defined(checkClipped) && checkClipped(boundingVolume)) {
+            return Intersect.OUTSIDE;
+        }
 
         var planes = this.planes;
         var intersecting = false;
@@ -142,11 +149,14 @@ define([
      *                                 volume, such that if (planeMask & (1 << planeIndex) === 0), for k < 31, then
      *                                 the parent (and therefore this) volume is completely inside plane[planeIndex]
      *                                 and that plane check can be skipped.
+     * @param {Function} [checkClipped] A function which takes the boundingVolume as a parameter, that if supplied,
+     *                                  will check to see if the tile has been entirely clipped by any tileset
+     *                                  clippingPlane.
      * @returns {Number} A plane mask as described above (which can be applied to this boundingVolume's children).
      *
      * @private
      */
-    CullingVolume.prototype.computeVisibilityWithPlaneMask = function(boundingVolume, parentPlaneMask) {
+    CullingVolume.prototype.computeVisibilityWithPlaneMask = function(boundingVolume, parentPlaneMask, checkClipped) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingVolume)) {
             throw new DeveloperError('boundingVolume is required.');
@@ -159,6 +169,10 @@ define([
         if (parentPlaneMask === CullingVolume.MASK_OUTSIDE || parentPlaneMask === CullingVolume.MASK_INSIDE) {
             // parent is completely outside or completely inside, so this child is as well.
             return parentPlaneMask;
+        }
+
+        if (defined(checkClipped) && checkClipped(boundingVolume)) {
+            return CullingVolume.MASK_OUTSIDE;
         }
 
         // Start with MASK_INSIDE (all zeros) so that after the loop, the return value can be compared with MASK_INSIDE.

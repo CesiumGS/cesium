@@ -24,7 +24,7 @@ void czm_clipPlanes (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPla
             }
 
             clipNormal = clippingPlanes[i].xyz;
-            clipPosition = clippingPlanes[i].w * clipNormal;
+            clipPosition = -clippingPlanes[i].w * clipNormal;
             clipped = clipped || (dot(clipNormal, (position.xyz - clipPosition)) > czm_epsilon7);
         }
 

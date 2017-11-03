@@ -31,6 +31,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/PixelFormat',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
@@ -108,6 +109,7 @@ define([
         Matrix3,
         Matrix4,
         PixelFormat,
+        Plane,
         PrimitiveType,
         Quaternion,
         Queue,
@@ -3312,7 +3314,7 @@ define([
         };
     }
 
-    var scratchCartesian = new Cartesian3();
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var scratchMatrix = new Matrix4();
 
     function createClippingPlanesFunction(model, context) {
@@ -3327,11 +3329,11 @@ define([
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 var packedPlane = packedPlanes[i];
-                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, packedPlane);
-                Cartesian3.normalize(packedPlane, packedPlane);
-                Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-                Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
-                packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+
+                Plane.transformPlane(plane, scratchMatrix, scratchPlane);
+
+                Cartesian3.clone(scratchPlane.normal, packedPlane);
+                packedPlane.w = scratchPlane.distance;
             }
             return packedPlanes;
         };

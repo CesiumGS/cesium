@@ -15,6 +15,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/Transforms',
@@ -50,6 +51,7 @@ define([
         Matrix3,
         Matrix4,
         oneTimeWarning,
+        Plane,
         PrimitiveType,
         RuntimeError,
         Transforms,
@@ -514,8 +516,8 @@ define([
             }
         }
 
-        var scratchCartesian = new Cartesian3();
-
+        var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+        var scratchMatrix = new Matrix4();
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -539,10 +541,11 @@ define([
                     var plane = planes[i];
                     var packedPlane = packedPlanes[i];
 
-                    Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, packedPlane);
-                    Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-                    Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
-                    packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+                    Matrix4.multiply(context.uniformState.view3D, content._modelMatrix, scratchMatrix);
+                    Plane.transformPlane(plane, scratchMatrix, scratchPlane);
+
+                    Cartesian3.clone(scratchPlane.normal, packedPlane);
+                    packedPlane.w = scratchPlane.distance;
                 }
                 return packedPlanes;
             }

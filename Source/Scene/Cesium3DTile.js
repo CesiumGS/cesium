@@ -14,6 +14,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -47,6 +48,7 @@ define([
         loadArrayBuffer,
         Matrix3,
         Matrix4,
+        Plane,
         Rectangle,
         Request,
         RequestScheduler,
@@ -323,6 +325,7 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
+        this._debugClipped = false;
 
         this._commandsLength = 0;
 
@@ -735,6 +738,28 @@ define([
         return frameState.mode !== SceneMode.SCENE3D ? tile._contentBoundingVolume2D : tile._contentBoundingVolume;
     }
 
+
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+    function getCheckClippedFunction (tile) {
+        return function (boundingVolume) {
+            tile._debugClipped = false;
+
+            var planes = tile._tileset.clippingPlanes;
+            var length = planes.length;
+            for (var i = 0; i < length; ++i) {
+                var plane = planes[i];
+                Plane.transformPlane(plane, tile._tileset._root.computedTransform, scratchPlane);
+                if (boundingVolume.intersectPlane(scratchPlane) === Intersect.INSIDE) {
+                    tile._debugClipped = true;
+                    return true;
+                }
+            }
+
+            return false;
+        };
+    }
+
+
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
@@ -747,7 +772,8 @@ define([
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
-        return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
+
+        return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask, getCheckClippedFunction(this));
     };
 
     /**
@@ -770,7 +796,7 @@ define([
         // tile's (not the content's) bounding volume intersects the culling volume?
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getContentBoundingVolume(this, frameState);
-        return cullingVolume.computeVisibility(boundingVolume);
+        return cullingVolume.computeVisibility(boundingVolume, getCheckClippedFunction(this));
     };
 
     /**
@@ -940,7 +966,7 @@ define([
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
+                var color = tile._finalResolution ? (hasContentBoundingVolume ? (tile._debugClipped ? Color.CYAN : Color.WHITE) : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
