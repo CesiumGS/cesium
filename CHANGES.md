@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.40 - 2017-12-01
+
+* Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
+
 ### 1.39 - 2017-11-01
 
 * Cesium now officially supports webpack. See our [Integrating Cesium and webpack blog post](https://cesium.com/blog/2017/10/18/cesium-and-webpack/) for more details.
