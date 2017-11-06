@@ -747,7 +747,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var plane = planes[i];
             Plane.transformPlane(plane, tile._tileset._root.computedTransform, scratchPlane);
-            if (boundingVolume.intersectPlane(scratchPlane) === Intersect.INSIDE) {
+            if (boundingVolume.intersectPlane(scratchPlane) === Intersect.OUTSIDE) {
                 return true;
             }
         }

@@ -73,17 +73,17 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var defaultClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(-1, 0, 0), 0.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, -1, 0), 100.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, 0, 1), 100.0)
+    new Cesium.Plane(new Cesium.Cartesian3(1, 0, 0), 0.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0, 1, 0), -100.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0, 0, -1), -100.0)
 ];
 
 var viewModel = {
     exampleType : 'BIM',
     exampleTypes : ['BIM', 'Model', 'Point Cloud'],
     xOffset : 0.0,
-    yOffset: 100.0,
-    zOffset: 100.0,
+    yOffset: -100.0,
+    zOffset: -100.0,
     debugBoundingVolumesEnabled: false
 };
 
@@ -181,8 +181,8 @@ function reset () {
 
     if (Cesium.defined(viewModel)) {
         viewModel.xOffset = 0.0;
-        viewModel.yOffset = 100.0;
-        viewModel.zOffset = 100.0;
+        viewModel.yOffset = -100.0;
+        viewModel.zOffset = -100.0;
     }
 }
 
