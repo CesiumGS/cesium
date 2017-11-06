@@ -534,6 +534,8 @@ define([
                 return content._tileset.clippingPlanes.length;
             },
             u_clippingPlanes : function() {
+                Matrix4.multiply(context.uniformState.view3D, content._modelMatrix, scratchMatrix);
+
                 var planes = content._tileset.clippingPlanes;
                 var length = planes.length;
                 var packedPlanes = content._packedClippingPlanes;
@@ -541,7 +543,6 @@ define([
                     var plane = planes[i];
                     var packedPlane = packedPlanes[i];
 
-                    Matrix4.multiply(context.uniformState.view3D, content._modelMatrix, scratchMatrix);
                     Plane.transformPlane(plane, scratchMatrix, scratchPlane);
 
                     Cartesian3.clone(scratchPlane.normal, packedPlane);

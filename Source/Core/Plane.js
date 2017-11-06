@@ -1,5 +1,7 @@
 define([
         './Cartesian3',
+        './Check',
+        './defaultValue',
         './defined',
         './DeveloperError',
         './freezeObject',
@@ -7,6 +9,8 @@ define([
         './Matrix4'
     ], function(
         Cartesian3,
+        Check,
+        defaultValue,
         defined,
         DeveloperError,
         freezeObject,
@@ -42,15 +46,11 @@ define([
      */
     function Plane(normal, distance) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(normal))  {
-            throw new DeveloperError('normal is required.');
-        }
+        Check.typeOf.object('normal', normal);
         if (!CesiumMath.equalsEpsilon(Cartesian3.magnitude(normal), 1.0, CesiumMath.EPSILON6)) {
             throw new DeveloperError('normal must be normalized.');
         }
-        if (!defined(distance)) {
-            throw new DeveloperError('distance is required.');
-        }
+        Check.typeOf.number('distance', distance);
         //>>includeEnd('debug');
 
         /**
@@ -89,12 +89,8 @@ define([
      */
     Plane.fromPointNormal = function(point, normal, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(point)) {
-            throw new DeveloperError('point is required.');
-        }
-        if (!defined(normal)) {
-            throw new DeveloperError('normal is required.');
-        }
+        Check.typeOf.object('point', point);
+        Check.typeOf.object('normal', normal);
         if (!CesiumMath.equalsEpsilon(Cartesian3.magnitude(normal), 1.0, CesiumMath.EPSILON6)) {
             throw new DeveloperError('normal must be normalized.');
         }
@@ -123,9 +119,7 @@ define([
      */
     Plane.fromCartesian4 = function(coefficients, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(coefficients)) {
-            throw new DeveloperError('coefficients is required.');
-        }
+        Check.typeOf.object('coefficients', coefficients);
         //>>includeEnd('debug');
 
         var normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
@@ -158,12 +152,8 @@ define([
      */
     Plane.getPointDistance = function(plane, point) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
-        if (!defined(point)) {
-            throw new DeveloperError('point is required.');
-        }
+        Check.typeOf.object('plane', plane);
+        Check.typeOf.object('point', point);
         //>>includeEnd('debug');
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
@@ -180,12 +170,8 @@ define([
      */
     Plane.transformPlane = function(plane, transform, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
-        if (!defined(transform)) {
-            throw new DeveloperError('transform is required.');
-        }
+        Check.typeOf.object('plane', plane);
+        Check.typeOf.object('transform', transform);
         //>>includeEnd('debug');
 
         Matrix4.multiplyByPointAsVector(transform, plane.normal, scratchNormal);
@@ -195,6 +181,10 @@ define([
         Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
 
         return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
+    };
+
+    Plane.prototype.origin = function (result) {
+        Cartesian3.multiplyByScalar(this.normal, this.distance, result);
     };
 
     /**

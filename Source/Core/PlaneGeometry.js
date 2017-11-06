@@ -1,5 +1,6 @@
 define([
     './BoundingSphere',
+    './Cartesian2',
     './Cartesian3',
     './Check',
     './ComponentDatatype',
@@ -16,6 +17,7 @@ define([
     './VertexFormat'
 ], function(
     BoundingSphere,
+    Cartesian2,
     Cartesian3,
     Check,
     ComponentDatatype,
@@ -31,9 +33,6 @@ define([
     TranslationRotationScale,
     VertexFormat) {
     'use strict';
-
-    var scratchCartesian = new Cartesian3();
-    var scratchMatrix = new Matrix4();
 
     /**
      * Describes a plane by a normal and distance from the origin in world coordinates.
@@ -64,58 +63,17 @@ define([
     function PlaneGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var min = options.minimum;
-        var max = options.maximum;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('min', min);
-        Check.typeOf.object('max', max);
-        //>>includeEnd('debug');
-
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
-        // only need a min and max, but they must be planar
-        this._minimum = min;
-        this._maximum = max;
         this._vertexFormat = vertexFormat;
         this._workerName = 'createPlaneGeometry';
     }
-
-    PlaneGeometry.fromPlane = function (options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var plane = options.plane;
-        var scale = defaultValue(options.scale, new Cartesian3(1.0, 1.0, 1.0));
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('plane', plane);
-        Check.typeOf.object('scale', scale);
-        //>>includeEnd('debug');
-
-        var min = new Cartesian3(-0.5, -0.5, 0.0);
-        var max = new Cartesian3( 0.5,  0.5, 0.0);
-
-        var location = Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-        var orientation = Quaternion.IDENTITY; // orient z-axis to plane normal
-
-        var transformation = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(
-            location, orientation, scale
-        ), scratchMatrix);
-
-        min = Matrix4.multiplyByPoint(transformation, min, min);
-        max = Matrix4.multiplyByPoint(transformation, max, max);
-        return new PlaneGeometry({
-            minimum : min,
-            maximum : max,
-            vertexFormat : options.vertexFormat
-        });
-    };
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    PlaneGeometry.packedLength = 2 * Cartesian3.packedLength + VertexFormat.packedLength;
+    PlaneGeometry.packedLength = VertexFormat.packedLength;
 
     /**
      * Stores the provided instance into the provided array.
@@ -134,19 +92,13 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        Cartesian3.pack(value._minimum, array, startingIndex);
-        Cartesian3.pack(value._maximum, array, startingIndex + Cartesian3.packedLength);
-        VertexFormat.pack(value._vertexFormat, array, startingIndex + 2 * Cartesian3.packedLength);
+        VertexFormat.pack(value._vertexFormat, array, startingIndex);
 
         return array;
     };
 
-    var scratchMin = new Cartesian3();
-    var scratchMax = new Cartesian3();
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
-        minimum: scratchMin,
-        maximum: scratchMax,
         vertexFormat: scratchVertexFormat
     };
 
@@ -165,21 +117,16 @@ define([
 
         startingIndex = defaultValue(startingIndex, 0);
 
-        var min = Cartesian3.unpack(array, startingIndex, scratchMin);
-        var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
-        var vertexFormat = VertexFormat.unpack(array, startingIndex + 2 * Cartesian3.packedLength, scratchVertexFormat);
+        var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
 
         if (!defined(result)) {
             return new PlaneGeometry(scratchOptions);
         }
 
-        result._minimum = Cartesian3.clone(min, result._minimum);
-        result._maximum = Cartesian3.clone(max, result._maximum);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
 
         return result;
     };
-
     /**
      * Computes the geometric representation of a plane, including its vertices, indices, and a bounding sphere.
      *
@@ -187,19 +134,14 @@ define([
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PlaneGeometry.createGeometry = function(planeGeometry) {
-        var min = planeGeometry._minimum;
-        var max = planeGeometry._maximum;
         var vertexFormat = planeGeometry._vertexFormat;
 
-        if (Cartesian3.equals(min, max)) {
-            return;
-        }
+        var min = new Cartesian3(-0.5, -0.5, 0.0);
+        var max = new Cartesian3( 0.5,  0.5, 0.0);
 
         var attributes = new GeometryAttributes();
         var indices;
         var positions;
-
-        // TODO: tangents should be the plane normal
 
         if (vertexFormat.position &&
             (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent)) {
@@ -210,30 +152,30 @@ define([
                 // +z face
                 positions[0]  = min.x;
                 positions[1]  = min.y;
-                positions[2]  = max.z;
+                positions[2]  = 0.0;
                 positions[3]  = max.x;
                 positions[4]  = min.y;
-                positions[5]  = max.z;
+                positions[5]  = 0.0;
                 positions[6]  = max.x;
                 positions[7]  = max.y;
-                positions[8]  = max.z;
+                positions[8]  = 0.0;
                 positions[9]  = min.x;
                 positions[10] = max.y;
-                positions[11] = max.z;
+                positions[11] = 0.0;
 
                 // -z face
                 positions[12] = min.x;
                 positions[13] = min.y;
-                positions[14] = min.z;
+                positions[14] = 0.0;
                 positions[15] = max.x;
                 positions[16] = min.y;
-                positions[17] = min.z;
+                positions[17] = 0.0;
                 positions[18] = max.x;
                 positions[19] = max.y;
-                positions[20] = min.z;
+                positions[20] = 0.0;
                 positions[21] = min.x;
                 positions[22] = max.y;
-                positions[23] = min.z;
+                positions[23] = 0.0;
 
                 attributes.position = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
@@ -447,8 +389,7 @@ define([
             indices[11] = 2;
         }
 
-        var diff = Cartesian3.subtract(max, min, scratchCartesian);
-        var radius = Cartesian3.magnitude(diff) * 0.5;
+        var radius = 0.5;
 
         return new Geometry({
             attributes : attributes,

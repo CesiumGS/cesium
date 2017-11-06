@@ -19,6 +19,7 @@ Change Log
 * Fixed removing multiple event listeners within event callbacks. [#5827](https://github.com/AnalyticalGraphicsInc/cesium/issues/5827)
 * Running `buildApps` now creates a built version of Sandcastle which uses the built version of Cesium for better performance.
 * Added `clippingPlanes` property to models and 3D Tilesets, which specify an array of planes to clip the object. [TODO]()
+* Added `Plane.transformPlane` function to apply a transformation to a plane. [TODO]()
 * Fixed a tileset traversal bug when the `skipLevelOfDetail` optimization is off. [#5869](https://github.com/AnalyticalGraphicsInc/cesium/issues/5869)
 
 ### 1.37 - 2017-09-01
