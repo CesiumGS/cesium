@@ -12,6 +12,7 @@ define([
         '../Core/Rectangle',
         '../Core/TaskProcessor',
         '../ThirdParty/when',
+        './ClassificationType',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
@@ -28,12 +29,13 @@ define([
         Rectangle,
         TaskProcessor,
         when,
+        ClassificationType,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
     'use strict';
 
     /**
-     * Renders a batch of pre-triangulated polygons draped on terrain.
+     * Renders a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
      *
      * @alias Vector3DTilePolygons
      * @constructor
@@ -42,10 +44,10 @@ define([
      * @param {Float32Array|Uint16Array} options.positions The positions of the polygons. The positions must be contiguous
      * so that the positions for polygon n are in [c, c + counts[n]] where c = sum{counts[0], counts[n - 1]} and they are the outer ring of
      * the polygon in counter-clockwise order.
-     * @param {Number[]} options.counts The number or positions in the each polygon.
-     * @param {Uint16Array|Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
+     * @param {Uint32Array} options.counts The number of positions in the each polygon.
+     * @param {Uint32Array} options.indices The indices of the triangulated polygons. The indices must be contiguous so that
      * the indices for polygon n are in [i, i + indexCounts[n]] where i = sum{indexCounts[0], indexCounts[n - 1]}.
-     * @param {Number[]} options.indexCounts The number of indices for each polygon.
+     * @param {Uint32Array} options.indexCounts The number of indices for each polygon.
      * @param {Number} options.minimumHeight The minimum height of the terrain covered by the tile.
      * @param {Number} options.maximumHeight The maximum height of the terrain covered by the tile.
      * @param {Float32Array} [options.polygonMinimumHeights] An array containing the minimum heights for each polygon.
@@ -54,32 +56,27 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The RTC center.
      * @param {Cesium3DTileBatchTable} options.batchTable The batch table for the tile containing the batched polygons.
-     * @param {Number[]} options.batchIds The batch ids for each polygon.
+     * @param {Uint16Array} options.batchIds The batch ids for each polygon.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of polygons.
      *
      * @private
      */
     function Vector3DTilePolygons(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+        // All of the private properties will be released except _readyPromise
+        // and _primitive after the Vector3DTilePrimitive is created.
         this._batchTable = options.batchTable;
 
-        // These arrays are released after VAO creation.
         this._batchIds = options.batchIds;
         this._positions = options.positions;
         this._counts = options.counts;
 
-        // These arrays are kept for re-batching indices based on colors.
-        // If WebGL 2 is supported, indices will be released and rebatching uses buffer-to-buffer copies.
         this._indices = options.indices;
         this._indexCounts = options.indexCounts;
         this._indexOffsets = undefined;
 
-        // Typed arrays transferred to web worker.
         this._batchTableColors = undefined;
         this._packedBuffer = undefined;
 
-        // Typed array transferred from web worker and released after vbo creation.
         this._batchedPositions = undefined;
         this._transferrableBatchIds = undefined;
         this._vertexBatchIds = undefined;
@@ -93,6 +90,11 @@ define([
         this._rectangle = options.rectangle;
         this._isCartographic = options.isCartographic;
         this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
+
+        if (this._isCartographic) {
+            this._modelMatrix = Matrix4.IDENTITY;
+            this._center = this._ellipsoid.cartographicToCartesian(Rectangle.center(this._rectangle));
+        }
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
@@ -114,6 +116,20 @@ define([
          * @default false
          */
         this.debugWireframe = false;
+
+        /**
+         * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
+         * @type {Boolean}
+         * @default false
+         */
+        this.forceRebatch = false;
+
+        /**
+         * What this tile will classify.
+         * @type {ClassificationType}
+         * @default ClassificationType.CESIUM_3D_TILE
+         */
+        this.classificationType = ClassificationType.CESIUM_3D_TILE;
     }
 
     defineProperties(Vector3DTilePolygons.prototype, {
@@ -165,9 +181,11 @@ define([
     });
 
     function packBuffer(polygons) {
-        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
+        var packedBuffer = new Float64Array(4 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
 
         var offset = 0;
+        packedBuffer[offset++] = polygons._indices.BYTES_PER_ELEMENT;
+
         packedBuffer[offset++] = polygons._minimumHeight;
         packedBuffer[offset++] = polygons._maximumHeight;
 
@@ -326,9 +344,31 @@ define([
                 pickObject : defaultValue(polygons._pickObject, polygons)
             });
 
+            polygons._batchTable = undefined;
+            polygons._batchIds = undefined;
+            polygons._positions = undefined;
+            polygons._counts = undefined;
+            polygons._indices = undefined;
+            polygons._indexCounts = undefined;
+            polygons._indexOffsets = undefined;
+            polygons._batchTableColors = undefined;
+            polygons._packedBuffer = undefined;
             polygons._batchedPositions = undefined;
             polygons._transferrableBatchIds = undefined;
             polygons._vertexBatchIds = undefined;
+            polygons._ellipsoid = undefined;
+            polygons._minimumHeight = undefined;
+            polygons._maximumHeight = undefined;
+            polygons._polygonMinimumHeights = undefined;
+            polygons._polygonMaximumHeights = undefined;
+            polygons._center = undefined;
+            polygons._rectangle = undefined;
+            polygons._isCartographic = undefined;
+            polygons._modelMatrix = undefined;
+            polygons._boundingVolume = undefined;
+            polygons._boundingVolumes = undefined;
+            polygons._batchedIndices = undefined;
+            polygons._pickObject = undefined;
             polygons._verticesPromise = undefined;
 
             polygons._readyPromise.resolve();
@@ -390,6 +430,8 @@ define([
         }
 
         this._primitive.debugWireframe = this.debugWireframe;
+        this._primitive.forceRebatch = this.forceRebatch;
+        this._primitive.classificationType = this.classificationType;
         this._primitive.update(frameState);
     };
 

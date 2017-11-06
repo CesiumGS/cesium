@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A sample photgrammetry dataset rendered with 3D Tiles.">
+    <meta name="description" content="A sample classification dataset rendered with 3D Tiles.">
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -22,80 +22,35 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-<table><tbody>
-<tr>
-    <td>show volume</td>
-    <td><input type="checkbox" data-bind="checked: enabled" /></td>
-</tr>
-<tr>
-    <td>invert classification</td>
-    <td><input type="checkbox" data-bind="checked: inverted" /></td>
-</tr>
-<tr>
-    <td>inverted red</td>
-    <td>
-        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedRed, valueUpdate: 'input'">
-        <input type="text" size="3" data-bind="value: invertedRed">
-    </td>
-</tr>
-<tr>
-    <td>inverted green</td>
-    <td>
-        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedGreen, valueUpdate: 'input'">
-        <input type="text" size="3" data-bind="value: invertedGreen">
-    </td>
-</tr>
-<tr>
-    <td>inverted blue</td>
-    <td>
-        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedBlue, valueUpdate: 'input'">
-        <input type="text" size="3" data-bind="value: invertedBlue">
-    </td>
-</tr>
-<tr>
-    <td>inverted alpha</td>
-    <td>
-        <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: invertedAlpha, valueUpdate: 'input'">
-        <input type="text" size="3" data-bind="value: invertedAlpha">
-    </td>
-</tr>
-</tbody></table>
-</div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.scene.debugShowFramesPerSecond = true;
-
-viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1458?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxYmJiNTAxOC1lOTg5LTQzN2EtODg1OC0zMWJjM2IxNGNlYmMiLCJpZCI6NDQsImFzc2V0cyI6WzE0NThdLCJpYXQiOjE0OTkyNjM4MjB9.1WKijRa-ILkmG6utrhDWX6rDgasjD7dZv-G5ZyCmkKg'
-}));
+viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'http://localhost:8002/tilesets/geometryTest/'
+    url : '../../../Specs/Data/Cesium3DTiles/Vector/VectorTileCombined/',
+    classificationType : Cesium.ClassificationType.TERRAIN
 }));
 
 classification.readyPromise.then(function(tileset) {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    viewer.camera.setView({ destination : Cesium.Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01) });
 
     tileset.style = new Cesium.Cesium3DTileStyle({
-        color : "rgba(255, 0, 0, 0.5)"
+        color : "rgba(255, 255, 0, 1.0)",
+        pointColor : "rgba(255, 255, 0, 1.0)",
+        pointSize : 20.0
     });
 }).otherwise(function(error) {
     throw(error);
 });
 
-viewer.scene.invertClassificationColor = new Cesium.Color(0.25, 0.25, 0.25, 1.0);
-
 var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
 var current = {
     feature : undefined,
-    originalColor : new Cesium.Color(),
-    originalShow : undefined
+    originalColor : new Cesium.Color()
 };
 
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
@@ -106,68 +61,27 @@ handler.setInputAction(function(movement) {
         // Restore original color to feature that is no longer selected
 
         // This assignment is necessary to work with the set property
-        current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
-        current.feature.show = current.originalShow;
+        if (Cesium.defined(current.feature.pointColor)) {
+            current.feature.pointColor = Cesium.Color.clone(current.originalColor, current.feature.pointColor);
+        } else {
+            current.feature.color = Cesium.Color.clone(current.originalColor, current.feature.color);
+        }
         current.feature = undefined;
     }
 
     if (Cesium.defined(pickedFeature) && (pickedFeature !== current.feature)) {
         current.feature = pickedFeature;
-        Cesium.Color.clone(pickedFeature.color, current.originalColor);
-        current.originalShow = pickedFeature.show;
-
-        // Highlight newly selected feature
-        pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
-        pickedFeature.show = true;
+        // Save original color and set to highlight color
+        if (Cesium.defined(pickedFeature.pointColor)) {
+            Cesium.Color.clone(pickedFeature.pointColor, current.originalColor);
+            pickedFeature.pointColor = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.pointColor);
+        } else {
+            Cesium.Color.clone(pickedFeature.color, current.originalColor);
+            pickedFeature.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedFeature.color);
+        }
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-var viewModel = {
-    enabled : classification.debugWireframe,
-    inverted : viewer.scene.invertClassification,
-    invertedRed : viewer.scene.invertClassificationColor.red,
-    invertedGreen : viewer.scene.invertClassificationColor.green,
-    invertedBlue : viewer.scene.invertClassificationColor.blue,
-    invertedAlpha : viewer.scene.invertClassificationColor.alpha
-};
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-
-Cesium.knockout.getObservable(viewModel, 'enabled').subscribe(
-    function(newValue) {
-        classification.debugWireframe = newValue;
-    }
-);
-Cesium.knockout.getObservable(viewModel, 'inverted').subscribe(
-    function(newValue) {
-        viewer.scene.invertClassification = newValue;
-        classification.style = new Cesium.Cesium3DTileStyle({
-            color : 'rgba(255, 0, 0, 0.5)',
-            show : !newValue
-        });
-    }
-);
-Cesium.knockout.getObservable(viewModel, 'invertedRed').subscribe(
-    function(newValue) {
-        viewer.scene.invertClassificationColor.red = parseFloat(newValue);
-    }
-);
-Cesium.knockout.getObservable(viewModel, 'invertedGreen').subscribe(
-    function(newValue) {
-        viewer.scene.invertClassificationColor.green = parseFloat(newValue);
-    }
-);
-Cesium.knockout.getObservable(viewModel, 'invertedBlue').subscribe(
-    function(newValue) {
-        viewer.scene.invertClassificationColor.blue = parseFloat(newValue);
-    }
-);
-Cesium.knockout.getObservable(viewModel, 'invertedAlpha').subscribe(
-    function(newValue) {
-        viewer.scene.invertClassificationColor.alpha = parseFloat(newValue);
-    }
-);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

@@ -6,6 +6,7 @@ define([
         '../Core/CylinderGeometry',
         '../Core/defined',
         '../Core/EllipsoidGeometry',
+        '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/VertexFormat',
         '../Scene/Vector3DTileBatch',
@@ -18,6 +19,7 @@ define([
         CylinderGeometry,
         defined,
         EllipsoidGeometry,
+        IndexDatatype,
         Matrix4,
         VertexFormat,
         Vector3DTileBatch,
@@ -201,13 +203,14 @@ define([
         return count;
     }
 
-    function packBuffer(batchedIndices, boundingVolumes) {
+    function packBuffer(indicesBytesPerElement, batchedIndices, boundingVolumes) {
         var numBVs = boundingVolumes.length;
-        var length = 1 + numBVs * BoundingSphere.packedLength + 1 + packedBatchedIndicesLength(batchedIndices);
+        var length = 1 + 1 + numBVs * BoundingSphere.packedLength + 1 + packedBatchedIndicesLength(batchedIndices);
 
         var packedBuffer = new Float64Array(length);
 
         var offset = 0;
+        packedBuffer[offset++] = indicesBytesPerElement;
         packedBuffer[offset++] = numBVs;
 
         for (var i = 0; i < numBVs; ++i) {
@@ -289,10 +292,10 @@ define([
 
         var positions = new Float32Array(numberOfPositions);
         var vertexBatchIds = new Uint16Array(numberOfPositions / 3);
-        var indices = new Uint32Array(numberOfIndices);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions / 3, numberOfIndices);
 
         var numberOfGeometries = numberOfBoxes + numberOfCylinders + numberOfEllipsoids + numberOfSpheres;
-        var batchIds = new Uint32Array(numberOfGeometries);
+        var batchIds = new Uint16Array(numberOfGeometries);
         var batchedIndices = new Array(numberOfGeometries);
         var indexOffsets = new Uint32Array(numberOfGeometries);
         var indexCounts = new Uint32Array(numberOfGeometries);
@@ -323,7 +326,7 @@ define([
         createPrimitive(options, ellipsoids, ellipsoidBatchIds, ellipsoidGeometry, ellipsoidModelMatrixAndBoundingVolume);
         createPrimitive(options, spheres, sphereBatchIds, ellipsoidGeometry, sphereModelMatrixAndBoundingVolume);
 
-        var packedBuffer = packBuffer(batchedIndices, boundingVolumes);
+        var packedBuffer = packBuffer(indices.BYTES_PER_ELEMENT, batchedIndices, boundingVolumes);
         transferableObjects.push(positions.buffer, vertexBatchIds.buffer, indices.buffer);
         transferableObjects.push(batchIds.buffer, indexOffsets.buffer, indexCounts.buffer);
         transferableObjects.push(packedBuffer.buffer);
