@@ -325,7 +325,6 @@ define([
         this._debugViewerRequestVolume = undefined;
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
-        this._debugClipped = false;
 
         this._commandsLength = 0;
 
@@ -742,15 +741,12 @@ define([
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     function getCheckClippedFunction (tile) {
         return function (boundingVolume) {
-            tile._debugClipped = false;
-
             var planes = tile._tileset.clippingPlanes;
             var length = planes.length;
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 Plane.transformPlane(plane, tile._tileset._root.computedTransform, scratchPlane);
                 if (boundingVolume.intersectPlane(scratchPlane) === Intersect.INSIDE) {
-                    tile._debugClipped = true;
                     return true;
                 }
             }
@@ -966,7 +962,7 @@ define([
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
-                var color = tile._finalResolution ? (hasContentBoundingVolume ? (tile._debugClipped ? Color.CYAN : Color.WHITE) : Color.RED) : Color.YELLOW;
+                var color = tile._finalResolution ? (hasContentBoundingVolume ? Color.WHITE : Color.RED) : Color.YELLOW;
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(color);
             }
             tile._debugBoundingVolume.update(frameState);
