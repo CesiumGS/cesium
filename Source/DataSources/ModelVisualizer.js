@@ -102,6 +102,7 @@ define([
             if (show) {
                 modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
+                headers = Property.getValueOrUndefined(modelGraphics._headers
                 show = defined(modelMatrix) && defined(uri);
             }
 
@@ -120,6 +121,7 @@ define([
                 }
                 model = Model.fromGltf({
                     url : uri,
+                    headers :
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });

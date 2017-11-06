@@ -4,6 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './ConstantProperty',
         './createPropertyDescriptor',
         './NodeTransformationProperty',
         './PropertyBag'
@@ -13,6 +14,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        ConstantProperty,
         createPropertyDescriptor,
         NodeTransformationProperty,
         PropertyBag) {
@@ -24,6 +26,10 @@ define([
 
     function createNodeTransformationPropertyBag(value) {
         return new PropertyBag(value, createNodeTransformationProperty);
+    }
+
+    function createHeadersProperty(value) {
+        return new ConstantProperty(
     }
 
     /**
@@ -39,6 +45,7 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.uri] A string Property specifying the URI of the glTF asset.
+     * @param {Property} [options.headers] An object containing HTTP headers to send with the request.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
@@ -73,6 +80,8 @@ define([
         this._shadowsSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
+        this._headers = undefined;
+        this._headersSubscription = undefined;
         this._runAnimations = undefined;
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
@@ -170,6 +179,13 @@ define([
          * @type {Property}
          */
         uri : createPropertyDescriptor('uri'),
+
+        /**
+         * Gets or sets the HTTP headers to send with the request.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        headers : createPropertyDescriptor('headers', undefined, createNodeTransformationPropertyBag),
 
         /**
          * Gets or sets the boolean Property specifying if glTF animations should be run.
