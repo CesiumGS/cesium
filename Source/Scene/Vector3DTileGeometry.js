@@ -9,6 +9,7 @@ define([
         '../Core/Matrix4',
         '../Core/TaskProcessor',
         '../ThirdParty/when',
+        './ClassificationType',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
@@ -22,10 +23,33 @@ define([
         Matrix4,
         TaskProcessor,
         when,
+        ClassificationType,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
     'use strict';
 
+    /**
+     * Renders a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
+     *
+     * @alias Vector3DTileGeometry
+     * @constructor
+     *
+     * @param {Object} options An object with following properties:
+     * @param {Float32Array} [options.boxes] The boxes in the tile.
+     * @param {Uint16Array} [options.boxBatchIds] The batch ids for each box.
+     * @param {Float32Array} [options.cylinders] The cylinders in the tile.
+     * @param {Uint16Array} [options.cylinderBatchIds] The batch ids for each cylinder.
+     * @param {Float32Array} [options.ellipsoids] The ellipsoids in the tile.
+     * @param {Uint16Array} [options.ellipsoidBatchIds] The batch ids for each ellipsoid.
+     * @param {Float32Array} [options.spheres] The spheres in the tile.
+     * @param {Uint16Array} [options.sphereBatchIds] The batch ids for each sphere.
+     * @param {Cartesian3} options.center The RTC center of all geometries.
+     * @param {Matrix4} options.modelMatrix The model matrix of all geometries. Applied after the individual geometry model matrices.
+     * @param {Cesium3DTileBatchTable} options.batchTable The batch table.
+     * @param {BoundingSphere} options.boundingVolume The bounding volume containing all of the geometry in the tile.
+     *
+     * @private
+     */
     function Vector3DTileGeometry(options) {
         // these will all be released after the primitive is created
         this._boxes = options.boxes;
@@ -69,6 +93,20 @@ define([
          * @default false
          */
         this.debugWireframe = false;
+
+        /**
+         * Forces a re-batch instead of waiting after a number of frames have been rendered. For testing only.
+         * @type {Boolean}
+         * @default false
+         */
+        this.forceRebatch = false;
+
+        /**
+         * What this tile will classify.
+         * @type {ClassificationType}
+         * @default ClassificationType.CESIUM_3D_TILE
+         */
+        this.classificationType = ClassificationType.CESIUM_3D_TILE;
     }
 
     defineProperties(Vector3DTileGeometry.prototype, {
@@ -138,6 +176,7 @@ define([
     function unpackBuffer(geometries, packedBuffer) {
         var offset = 0;
 
+        var indicesBytesPerElement = packedBuffer[offset++];
         var numBVS = packedBuffer[offset++];
         var bvs = geometries._boundingVolumes = new Array(numBVS);
 
@@ -170,6 +209,8 @@ define([
                 batchIds : batchIds
             });
         }
+
+        return indicesBytesPerElement;
     }
 
     var createVerticesTaskProcessor = new TaskProcessor('createVectorTileGeometries');
@@ -195,18 +236,29 @@ define([
 
             if (!defined(batchTableColors)) {
                 // Copy because they may be the views on the same buffer.
-                boxes = geometries._boxes = boxes.slice();
-                boxBatchIds = geometries._boxBatchIds = boxBatchIds.slice();
-                cylinders = geometries._cylinders = cylinders.slice();
-                cylinderBatchIds = geometries._cylinderBatchIds = cylinderBatchIds.slice();
-                ellipsoids = geometries._ellipsoids = ellipsoids.slice();
-                ellipsoidBatchIds = geometries._ellipsoidBatchIds = ellipsoidBatchIds.slice();
-                spheres = geometries._sphere = spheres.slice();
-                sphereBatchIds = geometries._sphereBatchIds = sphereBatchIds.slice();
+                var length = 0;
+                if (defined(geometries._boxes)) {
+                    boxes = geometries._boxes = boxes.slice();
+                    boxBatchIds = geometries._boxBatchIds = boxBatchIds.slice();
+                    length += boxBatchIds.length;
+                }
+                if (defined(geometries._cylinders)) {
+                    cylinders = geometries._cylinders = cylinders.slice();
+                    cylinderBatchIds = geometries._cylinderBatchIds = cylinderBatchIds.slice();
+                    length += cylinderBatchIds.length;
+                }
+                if (defined(geometries._ellipsoids)) {
+                    ellipsoids = geometries._ellipsoids = ellipsoids.slice();
+                    ellipsoidBatchIds = geometries._ellipsoidBatchIds = ellipsoidBatchIds.slice();
+                    length += ellipsoidBatchIds.length;
+                }
+                if (defined(geometries._spheres)) {
+                    spheres = geometries._sphere = spheres.slice();
+                    sphereBatchIds = geometries._sphereBatchIds = sphereBatchIds.slice();
+                    length += sphereBatchIds.length;
+                }
 
-                var length = boxBatchIds.length + cylinderBatchIds.length + ellipsoidBatchIds.length + sphereBatchIds.length;
                 batchTableColors = geometries._batchTableColors = new Uint32Array(length);
-
                 var batchTable = geometries._batchTable;
 
                 for (var i = 0; i < length; ++i) {
@@ -218,21 +270,29 @@ define([
             }
 
             var transferrableObjects = [];
-            transferrableObjects.push(boxes.buffer, boxBatchIds.buffer);
-            transferrableObjects.push(cylinders.buffer, cylinderBatchIds.buffer);
-            transferrableObjects.push(ellipsoids.buffer, ellipsoidBatchIds.buffer);
-            transferrableObjects.push(spheres.buffer, sphereBatchIds.buffer);
+            if (defined(boxes)) {
+                transferrableObjects.push(boxes.buffer, boxBatchIds.buffer);
+            }
+            if (defined(cylinders)) {
+                transferrableObjects.push(cylinders.buffer, cylinderBatchIds.buffer);
+            }
+            if (defined(ellipsoids)) {
+                transferrableObjects.push(ellipsoids.buffer, ellipsoidBatchIds.buffer);
+            }
+            if (defined(spheres)) {
+                transferrableObjects.push(spheres.buffer, sphereBatchIds.buffer);
+            }
             transferrableObjects.push(batchTableColors.buffer, packedBuffer.buffer);
 
             var parameters = {
-                boxes : boxes.buffer,
-                boxBatchIds : boxBatchIds.buffer,
-                cylinders : cylinders.buffer,
-                cylinderBatchIds : cylinderBatchIds.buffer,
-                ellipsoids : ellipsoids.buffer,
-                ellipsoidBatchIds : ellipsoidBatchIds.buffer,
-                spheres : spheres.buffer,
-                sphereBatchIds : sphereBatchIds.buffer,
+                boxes : defined(boxes) ? boxes.buffer : undefined,
+                boxBatchIds : defined(boxes) ? boxBatchIds.buffer : undefined,
+                cylinders : defined(cylinders) ? cylinders.buffer : undefined,
+                cylinderBatchIds : defined(cylinders) ? cylinderBatchIds.buffer : undefined,
+                ellipsoids : defined(ellipsoids) ? ellipsoids.buffer : undefined,
+                ellipsoidBatchIds : defined(ellipsoids) ? ellipsoidBatchIds.buffer : undefined,
+                spheres : defined(spheres) ? spheres.buffer : undefined,
+                sphereBatchIds : defined(spheres) ? sphereBatchIds.buffer : undefined,
                 batchTableColors : batchTableColors.buffer,
                 packedBuffer : packedBuffer.buffer
             };
@@ -245,14 +305,19 @@ define([
 
             when(verticesPromise, function(result) {
                 var packedBuffer = new Float64Array(result.packedBuffer);
-                unpackBuffer(geometries, packedBuffer);
+                var indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 
-                geometries._indices = new Uint32Array(result.indices);
+                if (indicesBytesPerElement === 2) {
+                    geometries._indices = new Uint16Array(result.indices);
+                } else {
+                    geometries._indices = new Uint32Array(result.indices);
+                }
+
                 geometries._indexOffsets = new Uint32Array(result.indexOffsets);
                 geometries._indexCounts = new Uint32Array(result.indexCounts);
 
                 geometries._positions = new Float32Array(result.positions);
-                geometries._vertexBatchIds = new Uint32Array(result.vertexBatchIds);
+                geometries._vertexBatchIds = new Uint16Array(result.vertexBatchIds);
 
                 geometries._batchIds = new Uint16Array(result.batchIds);
 
@@ -365,6 +430,8 @@ define([
         }
 
         this._primitive.debugWireframe = this.debugWireframe;
+        this._primitive.forceRebatch = this.forceRebatch;
+        this._primitive.classificationType = this.classificationType;
         this._primitive.update(frameState);
     };
 

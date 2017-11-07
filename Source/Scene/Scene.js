@@ -643,6 +643,8 @@ define([
 
         /**
          * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * <p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles.</p>
+         * <p>Also, when the color's alpha is less than 1.0, the WEBGL_depth_texture and EXT_frag_depth WebGL extensions must be supported.</p>
          * @type {Color}
          * @default Color.WHITE
          */
@@ -650,6 +652,18 @@ define([
 
         this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
         this._invertClassification = new InvertClassification();
+
+        /**
+         * The focal length for use when with cardboard or WebVR.
+         * @type {Number}
+         */
+        this.focalLength = undefined;
+
+        /**
+         * The eye separation distance in meters for use with cardboard or WebVR.
+         * @type {Number}
+         */
+        this.eyeSeparation = undefined;
 
         this._brdfLutGenerator = new BrdfLutGenerator();
 
@@ -2106,7 +2120,7 @@ define([
 
             var invertClassification;
             if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
-                // Fullscreen pass to copy unclassified fragments when alpha < 0.0.
+                // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
                 // Not executed when undefined.
                 invertClassification = scene._invertClassification;
             }
@@ -2280,8 +2294,8 @@ define([
             var savedCamera = Camera.clone(camera, scene._cameraVR);
 
             var near = camera.frustum.near;
-            var fo = near * 5.0;
-            var eyeSeparation = fo / 30.0;
+            var fo = near * defaultValue(scene.focalLength, 5.0);
+            var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
             var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
             camera.frustum.aspectRatio = viewport.width / viewport.height;

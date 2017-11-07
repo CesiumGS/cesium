@@ -855,7 +855,7 @@ define([
          * The highlight color of unclassified 3D Tiles.
          *
          * @memberof UniformState.prototype
-         * @type {Number}
+         * @type {Color}
          */
         invertClassificationColor : {
             get : function() {

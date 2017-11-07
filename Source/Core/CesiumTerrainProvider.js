@@ -21,6 +21,7 @@ define([
         './QuantizedMeshTerrainData',
         './Request',
         './RequestType',
+        './RuntimeError',
         './TerrainProvider',
         './TileAvailability',
         './TileProviderError'
@@ -47,10 +48,20 @@ define([
         QuantizedMeshTerrainData,
         Request,
         RequestType,
+        RuntimeError,
         TerrainProvider,
         TileAvailability,
         TileProviderError) {
     'use strict';
+
+    function LayerInformation(layer) {
+        this.isHeightmap = layer.isHeightmap;
+        this.tileUrlTemplates = layer.tileUrlTemplates;
+        this.availability = layer.availability;
+        this.hasVertexNormals = layer.hasVertexNormals;
+        this.hasWaterMask = layer.hasWaterMask;
+        this.littleEndianExtensionSize = layer.littleEndianExtensionSize;
+    }
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
@@ -118,14 +129,8 @@ define([
 
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
-
-        /**
-         * Boolean flag that indicates if the Terrain Server can provide vertex normals.
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
         this._hasVertexNormals = false;
+
         /**
          * Boolean flag that indicates if the client should request vertex normals from the server.
          * @type {Boolean}
@@ -133,7 +138,7 @@ define([
          * @private
          */
         this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);
-        this._littleEndianExtensionSize = true;
+
         /**
          * Boolean flag that indicates if the client should request tile watermasks from the server.
          * @type {Boolean}
@@ -143,7 +148,6 @@ define([
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
         this._errorEvent = new Event();
-        this._availability = undefined;
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -151,9 +155,12 @@ define([
         }
         this._credit = credit;
 
+        this._availability = undefined;
+
         this._ready = false;
         this._readyPromise = when.defer();
 
+        var lastUrl = this._url;
         var metadataUrl = joinUrls(this._url, 'layer.json');
         if (defined(this._proxy)) {
             metadataUrl = this._proxy.getURL(metadataUrl);
@@ -162,7 +169,11 @@ define([
         var that = this;
         var metadataError;
 
-        function metadataSuccess(data) {
+        var layers = this._layers = [];
+        var attribution = '';
+        var overallAvailability = [];
+
+        function parseMetadataSuccess(data) {
             var message;
 
             if (!data.format) {
@@ -177,8 +188,14 @@ define([
                 return;
             }
 
+            var hasVertexNormals = false;
+            var hasWaterMask = false;
+            var littleEndianExtensionSize = true;
+            var isHeightmap = false;
             if (data.format === 'heightmap-1.0') {
-                that._heightmapStructure = {
+                isHeightmap = true;
+                if (!defined(that._heightmapStructure)) {
+                    that._heightmapStructure = {
                         heightScale : 1.0 / 5.0,
                         heightOffset : -1000.0,
                         elementsPerHeight : 1,
@@ -188,7 +205,8 @@ define([
                         lowestEncodedHeight : 0,
                         highestEncodedHeight : 256 * 256 - 1
                     };
-                that._hasWaterMask = true;
+                }
+                hasWaterMask = true;
                 that._requestWaterMask = true;
             } else if (data.format.indexOf('quantized-mesh-1.') !== 0) {
                 message = 'The tile format "' + data.format + '" is invalid or not supported.';
@@ -196,38 +214,40 @@ define([
                 return;
             }
 
-            that._tileUrlTemplates = data.tiles;
-            for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                var template = new Uri(that._tileUrlTemplates[i]);
-                var baseUri = new Uri(that._url);
+            var tileUrlTemplates = data.tiles;
+            for (var i = 0; i < tileUrlTemplates.length; ++i) {
+                var template = new Uri(tileUrlTemplates[i]);
+                var baseUri = new Uri(lastUrl);
                 if (template.authority && !baseUri.authority) {
                     baseUri.authority = template.authority;
                     baseUri.scheme = template.scheme;
                 }
-                that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
+                tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
             }
 
-            that._availableTiles = data.available;
+            var availableTiles = data.available;
+            var availability;
+            if (defined(availableTiles)) {
+                availability = new TileAvailability(that._tilingScheme, availableTiles.length);
 
-            if (defined(that._availableTiles)) {
-                that._availability = new TileAvailability(that._tilingScheme, that._availableTiles.length);
-
-                for (var level = 0; level < that._availableTiles.length; ++level) {
+                for (var level = 0; level < availableTiles.length; ++level) {
                     if (that._availableLevels && that._availableLevels.indexOf(level) === -1) {
-                        that._availableTiles[level] = [];
+                        availableTiles[level] = [];
                     }
-                    var rangesAtLevel = that._availableTiles[level];
+                    var rangesAtLevel = availableTiles[level];
                     var yTiles = that._tilingScheme.getNumberOfYTilesAtLevel(level);
+                    if (!defined(overallAvailability[level])) {
+                        overallAvailability[level] = [];
+                    }
 
                     for (var rangeIndex = 0; rangeIndex < rangesAtLevel.length; ++rangeIndex) {
                         var range = rangesAtLevel[rangeIndex];
-                        that._availability.addAvailableTileRange(level, range.startX, yTiles - range.endY - 1, range.endX, yTiles - range.startY - 1);
+                        var yStart = yTiles - range.endY - 1;
+                        var yEnd = yTiles - range.startY - 1;
+                        overallAvailability[level].push([range.startX, yStart, range.endX, yEnd]);
+                        availability.addAvailableTileRange(level, range.startX, yStart, range.endX, yEnd);
                     }
                 }
-            }
-
-            if (!defined(that._credit) && defined(data.attribution) && data.attribution !== null) {
-                that._credit = new Credit(data.attribution);
             }
 
             // The vertex normals defined in the 'octvertexnormals' extension is identical to the original
@@ -237,17 +257,82 @@ define([
             // by setting the _littleEndianExtensionSize to false. Always prefer 'octvertexnormals'
             // over 'vertexnormals' if both extensions are supported by the server.
             if (defined(data.extensions) && data.extensions.indexOf('octvertexnormals') !== -1) {
-                that._hasVertexNormals = true;
+                hasVertexNormals = true;
             } else if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
-                that._hasVertexNormals = true;
-                that._littleEndianExtensionSize = false;
+                hasVertexNormals = true;
+                littleEndianExtensionSize = false;
             }
             if (defined(data.extensions) && data.extensions.indexOf('watermask') !== -1) {
-                that._hasWaterMask = true;
+                hasWaterMask = true;
             }
 
-            that._ready = true;
-            that._readyPromise.resolve(true);
+            that._hasWaterMask = that._hasWaterMask || hasWaterMask;
+            that._hasVertexNormals = that._hasVertexNormals || hasVertexNormals;
+            if (defined(data.attribution)) {
+                if (attribution.length > 0) {
+                    attribution += ' ';
+                }
+                attribution += data.attribution;
+            }
+            that._availableTiles = availableTiles;
+            layers.push(new LayerInformation({
+                isHeightmap: isHeightmap,
+                tileUrlTemplates: tileUrlTemplates,
+                availability: availability,
+                hasVertexNormals: hasVertexNormals,
+                hasWaterMask: hasWaterMask,
+                littleEndianExtensionSize: littleEndianExtensionSize
+            }));
+
+            var parentUrl = data.parentUrl;
+            if (defined(parentUrl)) {
+                if (!defined(availability)) {
+                    console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
+                    return when.resolve();
+                }
+                lastUrl = joinUrls(lastUrl, parentUrl);
+                metadataUrl = joinUrls(lastUrl, 'layer.json');
+                if (defined(that._proxy)) {
+                    metadataUrl = that._proxy.getURL(metadataUrl);
+                }
+                var parentMetadata = loadJson(metadataUrl);
+                return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
+            }
+
+            return when.resolve();
+        }
+
+        function parseMetadataFailure(data) {
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function metadataSuccess(data) {
+            parseMetadataSuccess(data)
+                .then(function() {
+                    if (defined(metadataError)) {
+                        return;
+                    }
+
+                    var length = overallAvailability.length;
+                    if (length > 0) {
+                        var availability = that._availability = new TileAvailability(that._tilingScheme, length);
+                        for (var level = 0; level < length; ++level) {
+                            var levelRanges = overallAvailability[level];
+                            for (var i = 0; i < levelRanges.length; ++i) {
+                                var range = levelRanges[i];
+                                availability.addAvailableTileRange(level, range[0], range[1], range[2], range[3]);
+                            }
+                        }
+                    }
+
+                    if (!defined(that._credit) && attribution.length > 0) {
+                        that._credit = new Credit(attribution);
+                    }
+
+                    that._ready = true;
+                    that._readyPromise.resolve(true);
+                });
         }
 
         function metadataFailure(data) {
@@ -264,8 +349,7 @@ define([
                 });
                 return;
             }
-            var message = 'An error occurred while accessing ' + metadataUrl + '.';
-            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            parseMetadataFailure(data);
         }
 
         function requestMetadata() {
@@ -327,7 +411,7 @@ define([
         });
     }
 
-    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY) {
+    function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY, littleEndianExtensionSize) {
         var pos = 0;
         var cartesian3Elements = 3;
         var boundingSphereElements = cartesian3Elements + 1;
@@ -422,7 +506,7 @@ define([
         while (pos < view.byteLength) {
             var extensionId = view.getUint8(pos, true);
             pos += Uint8Array.BYTES_PER_ELEMENT;
-            var extensionLength = view.getUint32(pos, provider._littleEndianExtensionSize);
+            var extensionLength = view.getUint32(pos, littleEndianExtensionSize);
             pos += Uint32Array.BYTES_PER_ELEMENT;
 
             if (extensionId === QuantizedMeshExtensionIds.OCT_VERTEX_NORMALS && provider._requestVertexNormals) {
@@ -496,7 +580,27 @@ define([
         }
         //>>includeEnd('debug');
 
-        var urlTemplates = this._tileUrlTemplates;
+        var layers = this._layers;
+        var layerToUse;
+        var layerCount = layers.length;
+
+        if (layerCount === 1) { // Optimized path for single layers
+            layerToUse = layers[0];
+        } else {
+            for (var i = 0; i < layerCount; ++i) {
+                var layer = layers[i];
+                if (!defined(layer.availability) || layer.availability.isTileAvailable(level, x, y)) {
+                    layerToUse = layer;
+                    break;
+                }
+            }
+        }
+
+        if (!defined(layerToUse)) {
+            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+        }
+
+        var urlTemplates = layerToUse.tileUrlTemplates;
         if (urlTemplates.length === 0) {
             return undefined;
         }
@@ -513,10 +617,10 @@ define([
         }
 
         var extensionList = [];
-        if (this._requestVertexNormals && this._hasVertexNormals) {
-            extensionList.push(this._littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
+        if (this._requestVertexNormals && layerToUse.hasVertexNormals) {
+            extensionList.push(layerToUse.littleEndianExtensionSize ? 'octvertexnormals' : 'vertexnormals');
         }
-        if (this._requestWaterMask && this._hasWaterMask) {
+        if (this._requestWaterMask && layerToUse.hasWaterMask) {
             extensionList.push('watermask');
         }
 
@@ -531,7 +635,7 @@ define([
             if (defined(that._heightmapStructure)) {
                 return createHeightmapTerrainData(that, buffer, level, x, y, tmsY);
             }
-            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY);
+            return createQuantizedMeshTerrainData(that, buffer, level, x, y, tmsY, layerToUse.littleEndianExtensionSize);
         });
     };
 
@@ -714,10 +818,17 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
-        if (!defined(this.availability)) {
+        if (!defined(this._availability)) {
             return undefined;
         }
-        return this.availability.isTileAvailable(level, x, y);
+        var available = this._availableTiles;
+        if (!available || available.length === 0) {
+          return undefined;
+        }
+        if (!available[level] || available[level].length === 0) {
+          return false;
+        }
+        return this._availability.isTileAvailable(level, x, y);
     };
 
     return CesiumTerrainProvider;

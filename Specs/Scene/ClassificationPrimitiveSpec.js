@@ -75,6 +75,7 @@ defineSuite([
         this._primitive = primitive;
         this.pass = Pass.GLOBE;
     }
+
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;

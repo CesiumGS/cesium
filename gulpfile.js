@@ -519,7 +519,7 @@ function getMimeType(filename) {
         return {type : 'application/font-woff', compress : false, isCompressed : false};
     }
 
-    var mimeType = mime.lookup(filename);
+    var mimeType = mime.getType(filename);
     var compress = compressible(mimeType);
     return {type : mimeType, compress : compress, isCompressed : false};
 }

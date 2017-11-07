@@ -110,6 +110,7 @@ define([
             },
             set : function(value) {
                 this._pointColor = Color.clone(value, this._pointColor);
+                setBillboardImage(this);
             }
         },
 
@@ -129,6 +130,7 @@ define([
             },
             set : function(value) {
                 this._pointSize = value;
+                setBillboardImage(this);
             }
         },
 
@@ -148,6 +150,7 @@ define([
             },
             set : function(value) {
                 this._pointOutlineColor = Color.clone(value, this._pointOutlineColor);
+                setBillboardImage(this);
             }
         },
 
@@ -167,6 +170,7 @@ define([
             },
             set : function(value) {
                 this._pointOutlineWidth = value;
+                setBillboardImage(this);
             }
         },
 
@@ -573,36 +577,41 @@ define([
         }
     });
 
-    Cesium3DTilePointFeature.prototype._setBillboardImage = function() {
-        var b = this._billboard;
-        if (defined(this._billboardImage) && this._billboardImage !== b.image) {
-            b.image = this._billboardImage;
+    Cesium3DTilePointFeature.defaultPointColor = Color.WHITE;
+    Cesium3DTilePointFeature.defaultPointOutlineColor = Color.BLACK;
+    Cesium3DTilePointFeature.defaultPointOutlineWidth = 0.0;
+    Cesium3DTilePointFeature.defaultPointSize = 8.0;
+
+    function setBillboardImage(feature) {
+        var b = feature._billboard;
+        if (defined(feature._billboardImage) && feature._billboardImage !== b.image) {
+            b.image = feature._billboardImage;
             return;
         }
 
-        if (defined(this._billboardImage)) {
+        if (defined(feature._billboardImage)) {
             return;
         }
 
-        var newColor = this._pointColor;
-        var newOutlineColor = this._pointOutlineColor;
-        var newOutlineWidth = this._pointOutlineWidth;
-        var newPointSize = this._pointSize;
+        var newColor = defaultValue(feature._pointColor, Cesium3DTilePointFeature.defaultPointColor);
+        var newOutlineColor = defaultValue(feature._pointOutlineColor, Cesium3DTilePointFeature.defaultPointOutlineColor);
+        var newOutlineWidth = defaultValue(feature._pointOutlineWidth, Cesium3DTilePointFeature.defaultPointOutlineWidth);
+        var newPointSize = defaultValue(feature._pointSize, Cesium3DTilePointFeature.defaultPointSize);
 
-        var currentColor = this._billboardColor;
-        var currentOutlineColor = this._billboardOutlineColor;
-        var currentOutlineWidth = this._billboardOutlineWidth;
-        var currentPointSize = this._billboardSize;
+        var currentColor = feature._billboardColor;
+        var currentOutlineColor = feature._billboardOutlineColor;
+        var currentOutlineWidth = feature._billboardOutlineWidth;
+        var currentPointSize = feature._billboardSize;
 
         if (Color.equals(newColor, currentColor) && Color.equals(newOutlineColor, currentOutlineColor) &&
             newOutlineWidth === currentOutlineWidth && newPointSize === currentPointSize) {
             return;
         }
 
-        this._billboardColor = Color.clone(newColor, this._billboardColor);
-        this._billboardOutlineColor = Color.clone(newOutlineColor, this._billboardOutlineColor);
-        this._billboardOutlineWidth = newOutlineWidth;
-        this._billboardSize = newPointSize;
+        feature._billboardColor = Color.clone(newColor, feature._billboardColor);
+        feature._billboardOutlineColor = Color.clone(newOutlineColor, feature._billboardOutlineColor);
+        feature._billboardOutlineWidth = newOutlineWidth;
+        feature._billboardSize = newPointSize;
 
         var centerAlpha = newColor.alpha;
         var cssColor = newColor.toCssColorString();
@@ -610,7 +619,7 @@ define([
         var textureId = JSON.stringify([cssColor, newPointSize, cssOutlineColor, newOutlineWidth]);
 
         b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPointSize));
-    };
+    }
 
     function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
         return function() {
