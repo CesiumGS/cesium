@@ -63,6 +63,7 @@
         </td>
     </tr>
     </tbody></table>
+    <input type="checkbox" value="false" data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"> Enable clipping planes
     <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
 </div>
 
@@ -73,14 +74,15 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var defaultClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(1, 0, 0), 0.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, 1, 0), -100.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, 0, -1), -100.0)
+    new Cesium.Plane(new Cesium.Cartesian3(1.0, 0.0, 0.0),    0.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 1.0, 0.0), -100.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
 ];
 
 var viewModel = {
     exampleType : 'BIM',
     exampleTypes : ['BIM', 'Model', 'Point Cloud'],
+    clippingPlanesEnabled: true,
     xOffset : 0.0,
     yOffset: -100.0,
     zOffset: -100.0,
@@ -88,7 +90,7 @@ var viewModel = {
 };
 
 var tileset;
-function loadTileset (url, offeset) {
+function loadTileset (url, offset) {
     reset();
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -105,6 +107,7 @@ function loadTileset (url, offeset) {
 
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
     tileset.clippingPlanes = defaultClippingPlanes;
+    tileset.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
     return tileset.clippingPlanes;
 }
 
@@ -163,6 +166,10 @@ Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscrib
     tileset.debugShowBoundingVolume = newValue;
 });
 
+Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(newValue) {
+    tileset.clippingPlanesEnabled = newValue;
+});
+
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
     function(newValue) {
         if (newValue === 'BIM') {
@@ -180,6 +187,7 @@ function reset () {
     viewer.scene.primitives.removeAll();
 
     if (Cesium.defined(viewModel)) {
+        viewModel.clippingPlanesEnabled = true;
         viewModel.xOffset = 0.0;
         viewModel.yOffset = -100.0;
         viewModel.zOffset = -100.0;

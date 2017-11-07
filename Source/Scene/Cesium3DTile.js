@@ -321,6 +321,7 @@ define([
         this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
+        this._clippingPlanesEnabled = true;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -744,15 +745,17 @@ define([
     function checkTileClipped(tile, boundingVolume) {
         var planes = tile._tileset.clippingPlanes;
         var length = planes.length;
+        var rootTransform = tile._tileset._root.computedTransform;
         for (var i = 0; i < length; ++i) {
             var plane = planes[i];
-            Plane.transformPlane(plane, tile._tileset._root.computedTransform, scratchPlane);
-            if (boundingVolume.intersectPlane(scratchPlane) === Intersect.OUTSIDE) {
-                return true;
+            Plane.transform(plane, rootTransform, scratchPlane);
+            var value = boundingVolume.intersectPlane(scratchPlane);
+            if (value !== Intersect.INSIDE) {
+                return value;
             }
         }
 
-        return false;
+        return Intersect.INSIDE;
     }
 
 
@@ -769,8 +772,12 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
 
-        if (checkTileClipped(this, boundingVolume)) {
-            return CullingVolume.MASK_OUTSIDE;
+        if (this._tileset.clippingPlanesEnabled) {
+            var clipped = checkTileClipped(this, boundingVolume);
+            this._clippingPlanesEnabled = (clipped !== Intersect.INSIDE);
+            if (clipped === Intersect.OUTSIDE) {
+                return CullingVolume.MASK_OUTSIDE;
+            }
         }
 
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
@@ -797,8 +804,12 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getContentBoundingVolume(this, frameState);
 
-        if (checkTileClipped(this, boundingVolume)) {
-            return Intersect.OUTSIDE;
+        if (this._tileset.clippingPlanesEnabled) {
+            var clipped = checkTileClipped(this, boundingVolume);
+            this._clippingPlanesEnabled = (clipped !== Intersect.INSIDE);
+            if (clipped === Intersect.OUTSIDE) {
+                return Intersect.OUTSIDE;
+            }
         }
 
         return cullingVolume.computeVisibility(boundingVolume);

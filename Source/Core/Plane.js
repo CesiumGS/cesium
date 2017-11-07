@@ -166,7 +166,7 @@ define([
      * @param {Plane} [result] The object into which to store the result.
      * @returns {Plane} The plane transformed by the given transformation matrix.
      */
-    Plane.transformPlane = function(plane, transform, result) {
+    Plane.transform = function(plane, transform, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('plane', plane);
         Check.typeOf.object('transform', transform);

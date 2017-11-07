@@ -342,6 +342,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
+     * @param {Boolean} [options.clippingPlanesEnabled=true] Optimization option. If set to false, the model will not perform clipping operations.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -587,6 +588,17 @@ define([
          * @default []
          */
         this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+
+        /**
+         * Optimization option. If set to false, the model will not perform clipping operations.
+         *
+         * @see Model.clippingPlanes
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -3308,6 +3320,12 @@ define([
         };
     }
 
+    function createClippingPlanesEnabledFunction(model) {
+        return function() {
+            return model.clippingPlanesEnabled;
+        }
+    }
+
     function createClippingPlanesLengthFunction(model) {
         return function() {
             return model.clippingPlanes.length;
@@ -3330,7 +3348,7 @@ define([
                 var plane = planes[i];
                 var packedPlane = packedPlanes[i];
 
-                Plane.transformPlane(plane, scratchMatrix, scratchPlane);
+                Plane.transform(plane, scratchMatrix, scratchPlane);
 
                 Cartesian3.clone(scratchPlane.normal, packedPlane);
                 packedPlane.w = scratchPlane.distance;
@@ -3434,6 +3452,7 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
+                gltf_clippingPlanesEnabled: createClippingPlanesEnabledFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context)
             });
@@ -4232,12 +4251,15 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
+            'uniform bool gltf_clippingPlanesEnabled; \n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '    if (gltf_clippingPlanesEnabled) { \n' +
+            '        czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '    } \n' +
             '} \n';
 
         return shader;

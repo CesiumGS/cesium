@@ -378,7 +378,8 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : tileset.clippingPlanes
+            clippingPlanes : tileset.clippingPlanes,
+            clippingPlanesEnabled : tileset.clippingPlanesEnabled && tile._clippingPlanesEnabled
         });
     }
 
@@ -449,6 +450,7 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
         this._model.clippingPlanes = this._tileset.clippingPlanes;
+        this._model.clippingPlanesEnabled = this._tileset.clippingPlanesEnabled && this._tile._clippingPlanesEnabled;
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands
