@@ -841,11 +841,10 @@ define([
             processor.enableAO && !processor.densityViewEnabled && !processor.stencilViewEnabled
         );
 
-        blendFS = addConstants(
-            blendFS,
-            'epsilon8',
-            1e-8
-        );
+        blendFS = addConstants(blendFS, 'epsilon8', 1e-8);
+
+        var pickBlendFS = addConstants(PointCloudPostProcessorBlendPass, 'enableAO', false);
+        pickBlendFS = addConstants(pickBlendFS, 'epsilon8', 1e-8);
 
         var blendUniformMap = {
             u_pointCloud_colorTexture : function() {
@@ -866,6 +865,13 @@ define([
         };
 
         var blendCommand = context.createViewportQuadCommand(blendFS, {
+            uniformMap : blendUniformMap,
+            renderState : blendRenderState,
+            pass : Pass.CESIUM_3D_TILE,
+            owner : processor
+        });
+
+        var pickBlendCommand = context.createViewportQuadCommand(pickBlendFS, {
             uniformMap : blendUniformMap,
             renderState : blendRenderState,
             pass : Pass.CESIUM_3D_TILE,
@@ -935,6 +941,7 @@ define([
         processor._drawCommands.regionGrowingCommands = regionGrowingCommands;
         processor._drawCommands.stencilCommands = stencilCommands;
         processor._drawCommands.blendCommand = blendCommand;
+        processor._drawCommands.pickBlendCommand = pickBlendCommand;
         processor._drawCommands.copyCommands = copyCommands;
         processor._drawCommands.debugViewCommand = debugViewCommand;
         processor._clearCommands = clearCommands;
@@ -1108,6 +1115,7 @@ define([
         var stencilCommands = this._drawCommands.stencilCommands;
         var clearCommands = this._clearCommands;
         var blendCommand = this._drawCommands.blendCommand;
+        var pickBlendCommand = this._drawCommands.pickBlendCommand;
         var debugViewCommand = this._drawCommands.debugViewCommand;
         var numRegionGrowingCommands = regionGrowingCommands.length;
 
@@ -1132,7 +1140,15 @@ define([
         }
 
         // Blend final result back into the main FBO
-        commandList.push(blendCommand);
+        var passes = frameState.passes;
+        var isPick = (passes.pick && !passes.render);
+
+        if (isPick) {
+            commandList.push(pickBlendCommand);
+        } else {
+            commandList.push(blendCommand);
+        }
+
         if ((this.aoViewEnabled && this.enableAO) || this.depthViewEnabled) {
             commandList.push(debugViewCommand);
         }
