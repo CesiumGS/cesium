@@ -11,7 +11,6 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/FeatureDetection',
         '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/Globe',
@@ -36,7 +35,6 @@ define([
         Ellipsoid,
         FeatureDetection,
         formatError,
-        requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         Globe,
@@ -69,7 +67,7 @@ define([
                     if (!defined(targetFrameRate)) {
                         widget.resize();
                         widget.render();
-                        requestAnimationFrame(render);
+                        widget._scene.requestAnimationFrame(render);
                     } else {
                         var interval = 1000.0 / targetFrameRate;
                         var delta = frameTime - lastFrameTime;
@@ -79,7 +77,7 @@ define([
                             widget.render();
                             lastFrameTime = frameTime - (delta % interval);
                         }
-                        requestAnimationFrame(render);
+                        widget._scene.requestAnimationFrame(render);
                     }
                 } catch (error) {
                     widget._useDefaultRenderLoop = false;
@@ -94,13 +92,11 @@ define([
             }
         }
 
-        requestAnimationFrame(render);
+        widget._scene.requestAnimationFrame(render);
     }
 
-    function configureCanvasSize(widget) {
+    function configureCanvasSize(widget, width, height) {
         var canvas = widget._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
         var resolutionScale = widget._resolutionScale;
         if (!widget._supportsImageRenderingPixelated) {
             resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
@@ -118,18 +114,16 @@ define([
         widget._canRender = width !== 0 && height !== 0;
     }
 
-    function configureCameraFrustum(widget) {
-        var canvas = widget._canvas;
-        var width = canvas.width;
-        var height = canvas.height;
-        if (width !== 0 && height !== 0) {
-            var frustum = widget._scene.camera.frustum;
-            if (defined(frustum.aspectRatio)) {
-                frustum.aspectRatio = width / height;
-            } else {
-                frustum.top = frustum.right * (height / width);
-                frustum.bottom = -frustum.top;
-            }
+    function configureCameraFrustum(widget, width, height) {
+        if (width === 0 && height === 0) {
+            return;
+        }
+        var frustum = widget._scene.camera.frustum;
+        if (defined(frustum.aspectRatio)) {
+            frustum.aspectRatio = width / height;
+        } else {
+            frustum.top = frustum.right * (height / width);
+            frustum.bottom = -frustum.top;
         }
     }
 
@@ -249,7 +243,9 @@ define([
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
-        configureCanvasSize(this);
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        configureCanvasSize(this, width, height);
 
         try {
             var scene = new Scene({
@@ -267,7 +263,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
-            configureCameraFrustum(this);
+            configureCameraFrustum(this, width, height);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
             var creditDisplay = scene.frameState.creditDisplay;
@@ -658,16 +654,30 @@ define([
      * <code>useDefaultRenderLoop</code> is set to false.
      */
     CesiumWidget.prototype.resize = function() {
-        var canvas = this._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var width;
+        var height;
+
+        var scene = this._scene;
+        var vrDisplay = scene.vrDisplay;
+        if (scene.useWebVR && defined(vrDisplay)) {
+            var leftEye = vrDisplay.getEyeParameters('left');
+            var rightEye = vrDisplay.getEyeParameters('right');
+
+            width = Math.max(leftEye.renderWidth, rightEye.renderWidth) * 2;
+            height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
+        } else {
+            var canvas = this._canvas;
+            width = canvas.clientWidth;
+            height = canvas.clientHeight;
+        }
+
         if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
         this._forceResize = false;
 
-        configureCanvasSize(this);
-        configureCameraFrustum(this);
+        configureCanvasSize(this, width, height);
+        configureCameraFrustum(this, width, height);
     };
 
     /**

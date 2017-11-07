@@ -26,6 +26,7 @@ define([
         '../Core/Interval',
         '../Core/JulianDate',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
@@ -34,6 +35,8 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
+        '../Core/Quaternion',
+        '../Core/requestAnimationFrame',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/Transforms',
@@ -107,6 +110,7 @@ define([
         Interval,
         JulianDate,
         CesiumMath,
+        Matrix3,
         Matrix4,
         mergeSort,
         Occluder,
@@ -115,6 +119,8 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
+        Quaternion,
+        requestAnimationFrame,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
         Transforms,
@@ -708,6 +714,19 @@ define([
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
+        this._vrDisplay = undefined;
+        this._requestAnimationFrameFunc = undefined;
+
+        if (defined(navigator.getVRDisplays)) {
+            var that = this;
+            navigator.getVRDisplays().then(function(displays) {
+                if (displays.length === 0) {
+                    return;
+                }
+                that._vrDisplay = displays[0];
+            });
+        }
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -1172,8 +1191,17 @@ define([
                 if (this._useWebVR) {
                     this._frameState.creditDisplay.container.style.visibility = 'hidden';
                     this._cameraVR = new Camera(this);
-                    if (!defined(this._deviceOrientationCameraController)) {
+
+                    if (!defined(this._vrDisplay) && !defined(this._deviceOrientationCameraController)) {
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
+                    }
+
+                    if (defined(this._vrDisplay)) {
+                        var that = this;
+                        this._vrDisplay.requestPresent([{ source : this._canvas }]).then(function() {
+                            window.cancelAnimationFrame(that._requestAnimationFrameFunc);
+                            that.requestAnimationFrame(that._requestAnimationFrameFunc);
+                        });
                     }
 
                     this._aspectRatioVR = this._camera.frustum.aspectRatio;
@@ -1182,9 +1210,21 @@ define([
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
 
+                    if (defined(this._vrDisplay)) {
+                        this._vrDisplay.exitPresent();
+                        this._vrDisplay.cancelAnimationFrame(this._requestAnimationFrameFunc);
+                        this.requestAnimationFrame(this._requestAnimationFrameFunc);
+                    }
+
                     this._camera.frustum.aspectRatio = this._aspectRatioVR;
                     this._camera.frustum.xOffset = 0.0;
                 }
+            }
+        },
+
+        vrDisplay : {
+            get : function() {
+                return this._vrDisplay;
             }
         },
 
@@ -1237,6 +1277,21 @@ define([
             }
         }
     });
+
+    Scene.prototype.requestAnimationFrame = function(func) {
+        var vrDisplay = this._vrDisplay;
+        if (this._useWebVR && defined(vrDisplay)) {
+            var render = function() {
+                func();
+                vrDisplay.submitFrame();
+            };
+            this._requestAnimationFrameFunc = render;
+            vrDisplay.requestAnimationFrame(render);
+        } else {
+            this._requestAnimationFrameFunc = func;
+            requestAnimationFrame(func);
+        }
+    };
 
     /**
      * Determines if a compressed texture format is supported.
@@ -2253,7 +2308,10 @@ define([
         }
     }
 
+    var scratchEyeViewMatrix = new Matrix4();
     var scratchEyeTranslation = new Cartesian3();
+    var scratchEyeRotation = new Matrix3();
+    var scratchEyeOrientation = new Quaternion();
 
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
         var context = scene._context;
@@ -2283,36 +2341,88 @@ define([
                 executeShadowMapCastCommands(scene);
             }
 
-            // Based on Calculating Stereo pairs by Paul Bourke
-            // http://paulbourke.net/stereographics/stereorender/
-
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth * 0.5;
-            viewport.height = context.drawingBufferHeight;
-
             var savedCamera = Camera.clone(camera, scene._cameraVR);
 
-            var near = camera.frustum.near;
-            var fo = near * defaultValue(scene.focalLength, 5.0);
-            var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
-            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+            var vrDisplay = scene._vrDisplay;
+            if (defined(vrDisplay)) {
+                var leftEye = vrDisplay.getEyeParameters('left');
+                var rightEye = vrDisplay.getEyeParameters('right');
 
-            camera.frustum.aspectRatio = viewport.width / viewport.height;
+                var width = Math.max(leftEye.renderWidth, rightEye.renderWidth);
+                var height = Math.max(leftEye.renderHeight, rightEye.renderHeight);
 
-            var offset = 0.5 * eyeSeparation * near / fo;
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = width;
+                viewport.height = height;
 
-            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = offset;
+                var frameData = new VRFrameData();
+                vrDisplay.getFrameData(frameData);
 
-            executeCommands(scene, passState);
+                var pose = frameData.pose;
+                var orientation = Quaternion.unpack(pose.orientation, 0, scratchEyeOrientation);
 
-            viewport.x = passState.viewport.width;
+                var pitch = orientation.x;
+                var yaw = orientation.y;
+                var roll = orientation.z;
 
-            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = -offset;
+                orientation.x = roll;
+                orientation.y = -pitch;
+                orientation.z = yaw;
 
-            executeCommands(scene, passState);
+                var rotation = Matrix3.fromQuaternion(orientation, scratchEyeRotation);
+                Matrix3.multiplyByVector(rotation, savedCamera.direction, camera.direction);
+                Matrix3.multiplyByVector(rotation, savedCamera.up, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+                Cartesian3.normalize(camera.direction, camera.direction);
+                Cartesian3.normalize(camera.up, camera.up);
+                Cartesian3.normalize(camera.right, camera.right);
+
+                var leftViewMatrix = Matrix4.unpack(frameData.leftViewMatrix, 0, scratchEyeViewMatrix);
+                var translation = Matrix4.getTranslation(leftViewMatrix, scratchEyeTranslation);
+                Cartesian3.add(translation, savedCamera.position, camera.position);
+
+                camera.frustum.xOffset = leftEye.offset[0];
+                executeCommands(scene, passState);
+
+                var rightViewMatrix = Matrix4.unpack(frameData.rightViewMatrix, 0, scratchEyeViewMatrix);
+                translation = Matrix4.getTranslation(rightViewMatrix, scratchEyeTranslation);
+                Cartesian3.add(translation, savedCamera.position, camera.position);
+
+                viewport.x = passState.viewport.width;
+                camera.frustum.xOffset = rightEye.offset[0];
+                executeCommands(scene, passState);
+            } else {
+                // Based on Calculating Stereo pairs by Paul Bourke
+                // http://paulbourke.net/stereographics/stereorender/
+
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth * 0.5;
+                viewport.height = context.drawingBufferHeight;
+
+                var near = camera.frustum.near;
+                var fo = near * defaultValue(scene.focalLength, 5.0);
+                var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+                var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+
+                camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+                var offset = 0.5 * eyeSeparation * near / fo;
+
+                Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = offset;
+
+                executeCommands(scene, passState);
+
+                viewport.x = passState.viewport.width;
+
+                Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = -offset;
+
+                executeCommands(scene, passState);
+            }
 
             Camera.clone(savedCamera, camera);
         } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {

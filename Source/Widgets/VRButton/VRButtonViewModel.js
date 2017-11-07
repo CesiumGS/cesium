@@ -65,20 +65,24 @@ define([
 
         if (isVRMode()) {
             scene.useWebVR = false;
-            if (viewModel._locked) {
-                unlockScreen();
-                viewModel._locked = false;
+            if (!defined(scene.vrDisplay)) {
+                if (viewModel._locked) {
+                    unlockScreen();
+                    viewModel._locked = false;
+                }
+                viewModel._noSleep.disable();
+                Fullscreen.exitFullscreen();
             }
-            viewModel._noSleep.disable();
-            Fullscreen.exitFullscreen();
             isVRMode(false);
         } else {
-            if (!Fullscreen.fullscreen) {
-                Fullscreen.requestFullscreen(viewModel._vrElement);
-            }
-            viewModel._noSleep.enable();
-            if (!viewModel._locked) {
-                viewModel._locked = lockScreen('landscape');
+            if (!defined(scene.vrDisplay)) {
+                if (!Fullscreen.fullscreen) {
+                    Fullscreen.requestFullscreen(viewModel._vrElement);
+                }
+                viewModel._noSleep.enable();
+                if (!viewModel._locked) {
+                    viewModel._locked = lockScreen('landscape');
+                }
             }
             scene.useWebVR = true;
             isVRMode(true);
