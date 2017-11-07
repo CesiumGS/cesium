@@ -3323,7 +3323,7 @@ define([
     function createClippingPlanesEnabledFunction(model) {
         return function() {
             return model.clippingPlanesEnabled;
-        }
+        };
     }
 
     function createClippingPlanesLengthFunction(model) {

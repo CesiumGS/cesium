@@ -531,7 +531,7 @@ define([
                 return content._constantColor;
             },
             u_clippingPlanesEnabled : function() {
-                return content._tileset.clippingPlanesEnabled && content._tile._clippingPlanesEnabled
+                return content._tileset.clippingPlanesEnabled && content._tile._clippingPlanesEnabled;
             },
             u_clippingPlanesLength : function() {
                 return content._tileset.clippingPlanes.length;

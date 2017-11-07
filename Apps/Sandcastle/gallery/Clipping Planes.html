@@ -73,6 +73,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+var clippingPlanes;
 var defaultClippingPlanes = [
     new Cesium.Plane(new Cesium.Cartesian3(1.0, 0.0, 0.0),    0.0),
     new Cesium.Plane(new Cesium.Cartesian3(0.0, 1.0, 0.0), -100.0),
@@ -90,7 +91,7 @@ var viewModel = {
 };
 
 var tileset;
-function loadTileset (url, offset) {
+function loadTileset(url) {
     reset();
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -106,12 +107,12 @@ function loadTileset (url, offset) {
     });
 
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
-    tileset.clippingPlanes = defaultClippingPlanes;
     tileset.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
-    return tileset.clippingPlanes;
+    clippingPlanes = tileset.clippingPlanes = defaultClippingPlanes.slice();
 }
 
-function loadModel (url) {
+var model;
+function loadModel(url) {
     reset();
 
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
@@ -133,9 +134,9 @@ function loadModel (url) {
     });
 
     viewer.trackedEntity = entity;
-
-    entity.model.clippingPlanes = defaultClippingPlanes;
-    return entity.model.clippingPlanes.getValue();
+    model = entity.model;
+    model.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
+    clippingPlanes = model.clippingPlanes = defaultClippingPlanes.slice();
 }
 
 // Power Plant design model provided by Bentley Systems
@@ -143,7 +144,7 @@ var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIU
 var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
-var clippingPlanes = loadTileset(bimUrl);
+loadTileset(bimUrl);
 
 // Track and create the bindings for the view model
 var toolbar = document.getElementById('toolbar');
@@ -163,21 +164,25 @@ Cesium.knockout.getObservable(viewModel, 'zOffset').subscribe(function(newValue)
 });
 
 Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
-    tileset.debugShowBoundingVolume = newValue;
+    if (Cesium.defined(tileset)) {
+        tileset.debugShowBoundingVolume = newValue;
+    }
 });
 
 Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(newValue) {
-    tileset.clippingPlanesEnabled = newValue;
+    if (Cesium.defined(tileset)) {
+        tileset.clippingPlanesEnabled = newValue;
+    }
 });
 
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
     function(newValue) {
         if (newValue === 'BIM') {
-            clippingPlanes = loadTileset(bimUrl);
+            loadTileset(bimUrl);
         } else if (newValue === 'Point Cloud') {
-            clippingPlanes = loadTileset(pointCloudUrl);
+            loadTileset(pointCloudUrl);
         } else {
-            clippingPlanes = loadModel(modelUrl);
+            loadModel(modelUrl);
         }
     }
 );
