@@ -244,6 +244,14 @@ defineSuite([
         });
     });
 
+    it('load inserts missing namespace declaration', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
     it('load rejects nonexistent URL', function() {
         return KmlDataSource.load('test.invalid', options).otherwise(function(e) {
             expect(e).toBeInstanceOf(RequestErrorEvent);
@@ -260,6 +268,42 @@ defineSuite([
         return KmlDataSource.load('Data/KML/empty.kmz', options).otherwise(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
             expect(e.message).toEqual('KMZ file does not contain a KML document.');
+        });
+    });
+
+    it('if load contains <icon> tag with no image included, no image is added', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleNoIcon.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(source.entities._entities._array[0]._billboard._image).toBeUndefined();
+        });
+    });
+
+    it('if load does not contain icon <style> tag for placemark, default yellow pin does show', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleNoStyle.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(source.entities._entities._array[0]._billboard._image._value).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
+        });
+    });
+
+    it('if load contains empty <IconStyle> tag for placemark, default yellow pin does show', function() {
+        var dataSource = new KmlDataSource(options);
+        return loadBlob('Data/KML/simpleEmptyIconStyle.kml').then(function(blob) {
+            return dataSource.load(blob);
+        }).then(function(source) {
+            expect(source.entities);
+            expect(source.entities.values.length).toEqual(1);
+            expect(source.entities._entities._array.length).toEqual(1);
+            expect(source.entities._entities._array[0]._billboard._image._value).toEqual(dataSource._pinBuilder.fromColor(Color.YELLOW, 64));
         });
     });
 
@@ -808,6 +852,7 @@ defineSuite([
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+            expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
         });
     });
 

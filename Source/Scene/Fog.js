@@ -24,7 +24,6 @@ define([
          * @default true
          */
         this.enabled = true;
-
         /**
          * A scalar that determines the density of the fog. Terrain that is in full fog are culled.
          * The density of the fog increases as this number approaches 1.0 and becomes less dense as it approaches zero.
@@ -44,6 +43,13 @@ define([
          * @default 2.0
          */
         this.screenSpaceErrorFactor = 2.0;
+        /**
+         * The minimum brightness of the fog color from lighting. A value of 0.0 can cause the fog to be completely black. A value of 1.0 will not affect
+         * the brightness at all.
+         * @type {Number}
+         * @default 0.1
+         */
+        this.minimumBrightness = 0.1;
     }
 
     // These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
@@ -135,6 +141,7 @@ define([
 
         frameState.fog.density = density;
         frameState.fog.sse = this.screenSpaceErrorFactor;
+        frameState.fog.minimumBrightness = this.minimumBrightness;
     };
 
     return Fog;
