@@ -653,6 +653,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._modelViewMatrix = new Matrix4(); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -3331,14 +3332,8 @@ define([
     }
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    var scratchMatrix = new Matrix4();
-
     function createClippingPlanesFunction(model, context) {
         return function() {
-            var scale = getScale(model, context.uniformState.frameState);
-            Matrix4.multiplyByUniformScale(model.modelMatrix, scale, scratchMatrix);
-            Matrix4.multiply(context.uniformState.view3D, scratchMatrix, scratchMatrix);
-
             var planes = model.clippingPlanes;
             var packedPlanes = model._packedClippingPlanes;
             var length = packedPlanes.length;
@@ -3346,7 +3341,7 @@ define([
                 var plane = planes[i];
                 var packedPlane = packedPlanes[i];
 
-                Plane.transform(plane, scratchMatrix, scratchPlane);
+                Plane.transform(plane, model._modelViewMatrix, scratchPlane);
 
                 Cartesian3.clone(scratchPlane.normal, packedPlane);
                 packedPlane.w = scratchPlane.distance;
@@ -4707,6 +4702,7 @@ define([
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
             var modelMatrix = this.modelMatrix;
+            var modelViewChanged = context.uniformState._modelViewDirty;
 
             var modeChanged = frameState.mode !== this._mode;
             this._mode = frameState.mode;
@@ -4720,6 +4716,8 @@ define([
                 modeChanged;
 
             if (modelTransformChanged || justLoaded) {
+                modelViewChanged = true;
+
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
                 updateClamping(this);
@@ -4742,6 +4740,10 @@ define([
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
                 }
+            }
+
+            if (this.clippingPlanesEnabled && modelViewChanged) {
+                Matrix4.multiply(context.uniformState.view3D, this._computedModelMatrix, this._modelViewMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed

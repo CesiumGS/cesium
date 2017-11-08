@@ -18,14 +18,14 @@ void czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clipp
 
         for (int i = 0; i < czm_maxClippingPlanes; ++i)
         {
-            if (i == clippingPlanesLength)
+            if (i == clippingPlanesLength || clipped)
             {
                 break;
             }
 
             clipNormal = clippingPlanes[i].xyz;
             clipPosition = -clippingPlanes[i].w * clipNormal;
-            clipped = clipped || (dot(clipNormal, (position.xyz - clipPosition)) <= 0.0);
+            clipped = dot(clipNormal, (position.xyz - clipPosition)) <= 0.0;
         }
 
         if (clipped)
