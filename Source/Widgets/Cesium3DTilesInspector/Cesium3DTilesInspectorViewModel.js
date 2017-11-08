@@ -1015,6 +1015,7 @@ define([
                     var frameState = this._scene.frameState;
                     if (!this.colorize && defined(this._style)) {
                         currentFeature.color = defined(this._style.color) ? this._style.color.evaluateColor(frameState, currentFeature, scratchColor) : Color.WHITE;
+                        currentFeature.color.alpha = defined(this._style.alpha) ? this._style.alpha.evaluate(frameState, currentFeature) : currentFeature.color.alpha;
                     } else {
                         currentFeature.color = oldColor;
                     }

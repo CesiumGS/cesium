@@ -508,7 +508,10 @@ define([
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
             var color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            var alpha = defined(style.alpha) ? style.alpha.evaluate(frameState, feature) : color.alpha;
             var show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+
+            color.alpha = alpha;
             this.setColor(i, color);
             this.setShow(i, show);
         }

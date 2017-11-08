@@ -789,6 +789,7 @@ define([
         var vertexArray = content._drawCommand.vertexArray;
 
         var colorStyleFunction;
+        var alphaStyleFunction;
         var showStyleFunction;
         var pointSizeStyleFunction;
         var styleTranslucent = isTranslucent;
@@ -803,9 +804,10 @@ define([
                 translucent : false
             };
             colorStyleFunction = style.getColorShaderFunction('getColorFromStyle', 'czm_tiles3d_style_', shaderState);
+            alphaStyleFunction = style.getAlphaShaderFunction('getAlphaFromStyle', 'czm_tiles3d_style_', shaderState);
             showStyleFunction = style.getShowShaderFunction('getShowFromStyle', 'czm_tiles3d_style_', shaderState);
             pointSizeStyleFunction = style.getPointSizeShaderFunction('getPointSizeFromStyle', 'czm_tiles3d_style_', shaderState);
-            if (defined(colorStyleFunction) && shaderState.translucent) {
+            if (defined(alphaStyleFunction) || (defined(colorStyleFunction) && shaderState.translucent)) {
                 styleTranslucent = true;
             }
         }
@@ -813,6 +815,7 @@ define([
         content._styleTranslucent = styleTranslucent;
 
         var hasColorStyle = defined(colorStyleFunction);
+        var hasAlphaStyle = defined(alphaStyleFunction);
         var hasShowStyle = defined(showStyleFunction);
         var hasPointSizeStyle = defined(pointSizeStyleFunction);
 
@@ -822,6 +825,10 @@ define([
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
             colorStyleFunction = modifyStyleFunction(colorStyleFunction);
+        }
+        if (hasAlphaStyle) {
+            getStyleableProperties(alphaStyleFunction, styleableProperties);
+            alphaStyleFunction = modifyStyleFunction(alphaStyleFunction);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
@@ -941,6 +948,10 @@ define([
             vs += colorStyleFunction;
         }
 
+        if (hasAlphaStyle) {
+            vs += alphaStyleFunction;
+        }
+
         if (hasShowStyle) {
             vs += showStyleFunction;
         }
@@ -992,6 +1003,10 @@ define([
 
         if (hasColorStyle) {
             vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
+        }
+
+        if (hasAlphaStyle) {
+            vs += '    color.a = getAlphaFromStyle(position, position_absolute, color, normal); \n';
         }
 
         if (hasShowStyle) {

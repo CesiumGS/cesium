@@ -61,14 +61,17 @@ define([
         this._style = undefined;
         this._ready = false;
         this._color = undefined;
+        this._alpha = undefined;
         this._show = undefined;
         this._pointSize = undefined;
         this._meta = undefined;
 
         this._colorShaderFunction = undefined;
+        this._alphaShaderFunction = undefined;
         this._showShaderFunction = undefined;
         this._pointSizeShaderFunction = undefined;
         this._colorShaderFunctionReady = false;
+        this._alphaShaderFunctionReady = false;
         this._showShaderFunctionReady = false;
         this._pointSizeShaderFunctionReady = false;
 
@@ -92,6 +95,7 @@ define([
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
 
         that.color = styleJson.color;
+        that.alpha = styleJson.alpha;
         that.show = styleJson.show;
         that.pointSize = styleJson.pointSize;
 
@@ -314,6 +318,74 @@ define([
         },
 
         /**
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>alpha</code> property. Alternatively a string or object defining an alpha style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
+         * <p>
+         * The expression must return a <code>Number</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     alpha : '${Temperature} / 100.0'
+         * });
+         * style.alpha.evaluate(frameState, feature); // returns a Number
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override alpha expression with a custom function
+         * style.alpha = {
+         *     evaluate : function(frameState, feature) {
+         *         return 0.5;
+         *     }
+         * };
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override alpha expression with a string
+         * style.alpha = '${height} / 10';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override alpha expression with a condition
+         * style.alpha =  {
+         *     conditions : [
+         *         ['${height} > 2', '1.0'],
+         *         ['true', '0.5']
+         *     ]
+         * };
+         */
+        alpha : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._alpha;
+            },
+            set : function(value) {
+                var defines = defaultValue(this._style, defaultValue.EMPTY_OBJECT).defines;
+                if (!defined(value)) {
+                    this._alpha = undefined;
+                } else if (typeof value === 'string') {
+                    this._alpha = new Expression(value, defines);
+                } else if (defined(value.conditions)) {
+                    this._alpha = new ConditionsExpression(value, defines);
+                } else {
+                    this._alpha = value;
+                }
+                this._alphaShaderFunctionReady = false;
+            }
+        },
+
+        /**
          * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternatively a number, string, or object defining a pointSize style can be used.
          * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
@@ -442,6 +514,28 @@ define([
         this._colorShaderFunctionReady = true;
         this._colorShaderFunction = defined(this.color) ? this.color.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
         return this._colorShaderFunction;
+    };
+
+    /**
+     * Gets the alpha shader function for this style.
+     *
+     * @param {String} functionName Name to give to the generated function.
+     * @param {String} attributePrefix Prefix that is added to any variable names to access vertex attributes.
+     * @param {Object} shaderState Stores information about the generated shader function, including whether it is translucent.
+     *
+     * @returns {String} The shader function.
+     *
+     * @private
+     */
+    Cesium3DTileStyle.prototype.getAlphaShaderFunction = function(functionName, attributePrefix, shaderState) {
+        if (this._alphaShaderFunctionReady) {
+            // Return the cached result, may be undefined
+            return this._alphaShaderFunction;
+        }
+
+        this._alphaShaderFunctionReady = true;
+        this._alphaShaderFunction = defined(this.alpha) ? this.alpha.getShaderFunction(functionName, attributePrefix, shaderState, 'vec4') : undefined;
+        return this._alphaShaderFunction;
     };
 
     /**

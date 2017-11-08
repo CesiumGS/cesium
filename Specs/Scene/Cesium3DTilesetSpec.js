@@ -1911,6 +1911,23 @@ defineSuite([
         });
     });
 
+    it('applies alpha style to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var color;
+            expect(scene).toRenderAndCall(function(rgba) {
+                color = rgba;
+            });
+
+            tileset.style = new Cesium3DTileStyle({alpha : '0.5'});
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba[0]).toBeLessThan(color[0]);
+                expect(rgba[1]).toBeLessThan(color[1]);
+                expect(rgba[2]).toBeLessThan(color[2]);
+                expect(rgba[3]).toEqual(255);
+            });
+        });
+    });
+
     it('loads style from uri', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // ${id} < 10 will always evaluate to true
