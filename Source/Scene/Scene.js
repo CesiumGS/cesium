@@ -653,6 +653,8 @@ define([
         this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
         this._invertClassification = new InvertClassification();
 
+        this.clipClassifications = false;
+
         /**
          * The focal length for use when with cardboard or WebVR.
          * @type {Number}
@@ -701,7 +703,8 @@ define([
             useGlobeDepthFramebuffer : false,
             useOIT : false,
             useFXAA : false,
-            useInvertClassification : false
+            useInvertClassification : false,
+            clipClassifications : false
         };
 
         this._useWebVR = false;
@@ -2071,7 +2074,9 @@ define([
                 passState.framebuffer = opaqueClassificationFramebuffer;
 
                 // Fullscreen pass to copy classified fragments
-                scene._invertClassification.executeClassified(context, passState);
+                if (!environmentState.clipClassifications) {
+                    scene._invertClassification.executeClassified(context, passState);
+                }
                 if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                     // Fullscreen pass to copy unclassified fragments when alpha == 1.0
                     scene._invertClassification.executeUnclassified(context, passState);
@@ -2089,6 +2094,14 @@ define([
                 for (j = 0; j < length; ++j) {
                     executeCommand(commands[j], scene, context, passState);
                 }
+            }
+
+            // Draw unclassified 3D Tiles
+            us.updatePass(Pass.CESIUM_3D_TILE_UNCLASSIFIED);
+            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_UNCLASSIFIED];
+            length = frustumCommands.indices[Pass.CESIUM_3D_TILE_UNCLASSIFIED];
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
             }
 
             if (length > 0 && context.stencilBuffer) {
@@ -2667,6 +2680,7 @@ define([
         }
 
         var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        environmentState.clipClassifications = useInvertClassification && scene.clipClassifications;
         if (useInvertClassification) {
             var depthFramebuffer;
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {

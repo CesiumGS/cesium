@@ -447,6 +447,7 @@ define([
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
+        this._model.opaquePass = this._tileset.applyClassification ? Pass.CESIUM_3D_TILE : Pass.CESIUM_3D_TILE_UNCLASSIFIED;
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands

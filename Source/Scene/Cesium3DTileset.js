@@ -522,6 +522,8 @@ define([
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
+        this.applyClassification = true;
+
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>

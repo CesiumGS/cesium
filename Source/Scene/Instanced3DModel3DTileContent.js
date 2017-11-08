@@ -512,6 +512,7 @@ define([
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
+        this._modelInstanceCollection._opaquePass = this._tileset.applyClassification ? Pass.CESIUM_3D_TILE : Pass.CESIUM_3D_TILE_UNCLASSIFIED;
         this._modelInstanceCollection.update(frameState);
 
         // If any commands were pushed, add derived commands

@@ -911,6 +911,7 @@ define([
 
         var instancingSupported = this._instancingSupported;
         var model = this._model;
+        model.opaquePass = this._opaquePass;
         model.update(frameState);
 
         if (model.ready && (this._state === LoadState.LOADING)) {
