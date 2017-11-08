@@ -530,20 +530,23 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
+            u_clippingPlanesEnabled : function() {
+                return content._tileset.clippingPlanesEnabled && content._tile._isClipped;
+            },
             u_clippingPlanesLength : function() {
-                return content._tileset.clippingPlanes.length;
+                return content._packedClippingPlanes.length;
             },
             u_clippingPlanes : function() {
                 Matrix4.multiply(context.uniformState.view3D, content._modelMatrix, scratchMatrix);
 
                 var planes = content._tileset.clippingPlanes;
-                var length = planes.length;
                 var packedPlanes = content._packedClippingPlanes;
+                var length = packedPlanes.length;
                 for (var i = 0; i < length; ++i) {
                     var plane = planes[i];
                     var packedPlane = packedPlanes[i];
 
-                    Plane.transformPlane(plane, scratchMatrix, scratchPlane);
+                    Plane.transform(plane, scratchMatrix, scratchPlane);
 
                     Cartesian3.clone(scratchPlane.normal, packedPlane);
                     packedPlane.w = scratchPlane.distance;
@@ -1058,11 +1061,14 @@ define([
         vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
+                 'uniform bool u_clippingPlanesEnabled; \n' +
                  'uniform int u_clippingPlanesLength;' +
                  'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                  'void main() \n' +
                  '{ \n' +
-                 '    czm_clipPlanes(u_clippingPlanes, u_clippingPlanesLength); \n' +
+                 '    if (u_clippingPlanesEnabled) { \n' +
+                 '        czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength); \n' +
+                 '    } \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 
