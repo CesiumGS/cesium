@@ -321,7 +321,7 @@ define([
         this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
-        this._clippingPlanesEnabled = true;
+        this._isClipped = true;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -776,7 +776,7 @@ define([
 
         if (this._tileset.clippingPlanesEnabled) {
             var clipped = checkTileClipped(this, boundingVolume);
-            this._clippingPlanesEnabled = (clipped !== Intersect.INSIDE);
+            this._isClipped = (clipped !== Intersect.INSIDE);
             if (clipped === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
             }
@@ -808,7 +808,7 @@ define([
 
         if (this._tileset.clippingPlanesEnabled) {
             var clipped = checkTileClipped(this, boundingVolume);
-            this._clippingPlanesEnabled = (clipped !== Intersect.INSIDE);
+            this._isClipped = (clipped !== Intersect.INSIDE);
             if (clipped === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             }
