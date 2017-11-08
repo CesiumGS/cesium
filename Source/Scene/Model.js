@@ -581,13 +581,11 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * An array of {@link Plane} used to clip the model.
+         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
          *
          * @type {Plane[]}
-         *
-         * @default []
          */
-        this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+        this.clippingPlanes = options.clippingPlanes;
 
         /**
          * Optimization option. If set to false, the model will not perform clipping operations.
@@ -3328,7 +3326,7 @@ define([
 
     function createClippingPlanesLengthFunction(model) {
         return function() {
-            return model.clippingPlanes.length;
+            return model._packedClippingPlanes.length;
         };
     }
 
@@ -3342,8 +3340,8 @@ define([
             Matrix4.multiply(context.uniformState.view3D, scratchMatrix, scratchMatrix);
 
             var planes = model.clippingPlanes;
-            var length = planes.length;
             var packedPlanes = model._packedClippingPlanes;
+            var length = packedPlanes.length;
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 var packedPlane = packedPlanes[i];
@@ -4258,7 +4256,7 @@ define([
             '{ \n' +
             '    gltf_clip_main(); \n' +
             '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '    } \n' +
             '} \n';
 
@@ -4288,7 +4286,11 @@ define([
     }
 
     function updateClippingPlanes(model) {
-        var length = model.clippingPlanes.length;
+        var length = 0;
+        var clippingPlanes = model.clippingPlanes;
+        if (defined(clippingPlanes)) {
+            length = clippingPlanes.length;
+        }
 
         if (model._packedClippingPlanes.length !== length) {
             model._packedClippingPlanes = new Array(length);

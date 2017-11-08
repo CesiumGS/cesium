@@ -744,14 +744,16 @@ define([
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     function checkTileClipped(tile, boundingVolume) {
         var planes = tile._tileset.clippingPlanes;
-        var length = planes.length;
-        var rootTransform = tile._tileset._root.computedTransform;
-        for (var i = 0; i < length; ++i) {
-            var plane = planes[i];
-            Plane.transform(plane, rootTransform, scratchPlane);
-            var value = boundingVolume.intersectPlane(scratchPlane);
-            if (value !== Intersect.INSIDE) {
-                return value;
+        if (defined(planes)) {
+            var length = planes.length;
+            var rootTransform = tile._tileset._root.computedTransform;
+            for (var i = 0; i < length; ++i) {
+                var plane = planes[i];
+                Plane.transform(plane, rootTransform, scratchPlane);
+                var value = boundingVolume.intersectPlane(scratchPlane);
+                if (value !== Intersect.INSIDE) {
+                    return value;
+                }
             }
         }
 
