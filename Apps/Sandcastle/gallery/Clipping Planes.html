@@ -36,34 +36,6 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <table><tbody>
-    <tr>
-        <td>Type</td>
-        <td><select data-bind="options: exampleTypes, value: exampleType"></select></td>
-    </tr>
-    <tr>
-        <td>x</td>
-        <td>
-            <input type="range" min="-150" max="150" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
-            <input type="text" size="2" data-bind="value: xOffset">
-        </td>
-    </tr>
-    <tr>
-        <td>y</td>
-        <td>
-            <input type="range" min="-150" max="150" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
-            <input type="text" size="2" data-bind="value: yOffset">
-        </td>
-    </tr>
-    <tr>
-        <td>z</td>
-        <td>
-            <input type="range" min="-150" max="150" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
-            <input type="text" size="2" data-bind="value: zOffset">
-        </td>
-    </tr>
-    </tbody></table>
-    <input type="checkbox" value="false" data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"> Enable clipping planes
     <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
 </div>
 
@@ -71,7 +43,13 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox: false,
+    selectionIndicator: false
+});
+var scene = viewer.scene;
+
+var planeScale = new Cesium.Cartesian2(300.0, 300.0);
 
 var clippingPlanes;
 var defaultClippingPlanes = [
@@ -81,14 +59,45 @@ var defaultClippingPlanes = [
 ];
 
 var viewModel = {
-    exampleType : 'BIM',
-    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
-    clippingPlanesEnabled: true,
-    xOffset : 0.0,
-    yOffset: -100.0,
-    zOffset: -100.0,
     debugBoundingVolumesEnabled: false
 };
+
+var targetX = 0.0;
+var planeEntities = [];
+var selectedPlane;
+
+// Select plane when mouse down
+var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+downHandler.setInputAction(function(movement) {
+    var pickedObject = scene.pick(movement.position);
+    if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id.plane)) {
+        selectedPlane = pickedObject.id.plane;
+        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
+        selectedPlane.outlineColor = Cesium.Color.WHITE;
+        scene.screenSpaceCameraController.enableInputs = false;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOWN);
+
+// Release plane on mouse up
+var upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+upHandler.setInputAction(function() {
+    if (Cesium.defined(selectedPlane)) {
+        selectedPlane.material = Cesium.Color.CYAN.withAlpha(0.1);
+        selectedPlane.outlineColor = Cesium.Color.CYAN;
+        selectedPlane = undefined;
+    }
+
+    scene.screenSpaceCameraController.enableInputs = true;
+}, Cesium.ScreenSpaceEventType.LEFT_UP);
+
+// Update plane on mouse move
+var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+moveHandler.setInputAction(function(movement) {
+    if (Cesium.defined(selectedPlane)) {
+        var deltaX = movement.endPosition.x - movement.startPosition.x;
+        targetX += deltaX;
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 var tileset;
 function loadTileset(url) {
@@ -102,6 +111,26 @@ function loadTileset(url) {
         var boundingSphere = tileset.boundingSphere;
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, boundingSphere.radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+        for (var i = 0; i < 1; ++i) {
+            var plane = clippingPlanes[i];
+            var entity = viewer.entities.add({
+                position : boundingSphere.center,
+                plane : {
+                    dimensions : planeScale,
+                    material : Cesium.Color.CYAN.withAlpha(0.1),
+                    normal: plane.normal,
+                    distance: new Cesium.CallbackProperty(function() {
+                        plane.distance = Cesium.Math.lerp(plane.distance, targetX, 0.1);
+                        return plane.distance;
+                    }, false),
+                    outline: true,
+                    outlineColor: Cesium.Color.CYAN
+                }
+            });
+
+            planeEntities.push(entity);
+        }
     }).otherwise(function(error) {
         throw(error);
     });
@@ -111,38 +140,8 @@ function loadTileset(url) {
     clippingPlanes = tileset.clippingPlanes = defaultClippingPlanes.slice();
 }
 
-var model;
-function loadModel(url) {
-    reset();
-
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
-    var heading = Cesium.Math.toRadians(135);
-    var pitch = 0;
-    var roll = 0;
-    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
-
-    var entity = viewer.entities.add({
-        name : url,
-        position : position,
-        orientation : orientation,
-        model : {
-            uri : url,
-            scale: 8,
-            minimumPixelSize: 100.0
-        }
-    });
-
-    viewer.trackedEntity = entity;
-    model = entity.model;
-    model.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
-    clippingPlanes = model.clippingPlanes = defaultClippingPlanes.slice();
-}
-
 // Power Plant design model provided by Bentley Systems
 var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
-var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
-var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
 loadTileset(bimUrl);
 
@@ -151,45 +150,16 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-Cesium.knockout.getObservable(viewModel, 'xOffset').subscribe(function(newValue) {
-    clippingPlanes[0].distance = parseFloat(newValue);
-});
-
-Cesium.knockout.getObservable(viewModel, 'yOffset').subscribe(function(newValue) {
-    clippingPlanes[1].distance = parseFloat(newValue);
-});
-
-Cesium.knockout.getObservable(viewModel, 'zOffset').subscribe(function(newValue) {
-    clippingPlanes[2].distance = parseFloat(newValue);
-});
-
 Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
     if (Cesium.defined(tileset)) {
         tileset.debugShowBoundingVolume = newValue;
     }
 });
-
-Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(newValue) {
-    if (Cesium.defined(tileset)) {
-        tileset.clippingPlanesEnabled = newValue;
-    }
-});
-
-Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
-    function(newValue) {
-        if (newValue === 'BIM') {
-            loadTileset(bimUrl);
-        } else if (newValue === 'Point Cloud') {
-            loadTileset(pointCloudUrl);
-        } else {
-            loadModel(modelUrl);
-        }
-    }
-);
-
-function reset () {
+    
+function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
+    planeEntities = [];
 
     if (Cesium.defined(viewModel)) {
         viewModel.clippingPlanesEnabled = true;

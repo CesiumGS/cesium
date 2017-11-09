@@ -23,6 +23,7 @@ define([
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
+        './PlaneGraphics',
         './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
@@ -56,6 +57,7 @@ define([
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
+        PlaneGraphics,
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
@@ -109,6 +111,7 @@ define([
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
+     * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
@@ -134,7 +137,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
+                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
@@ -159,6 +162,8 @@ define([
         this._orientationSubscription = undefined;
         this._path = undefined;
         this._pathSubscription = undefined;
+        this._plane = undefined;
+        this._planeSubscription = undefined;
         this._point = undefined;
         this._pointSubscription = undefined;
         this._polygon = undefined;
@@ -398,6 +403,12 @@ define([
          * @type {PathGraphics}
          */
         path : createPropertyTypeDescriptor('path', PathGraphics),
+        /**
+         * Gets or sets the plane.
+         * @memberof Entity.prototype
+         * @type {PlaneGraphics}
+         */
+        plane : createPropertyTypeDescriptor('plane', PlaneGraphics),
         /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype

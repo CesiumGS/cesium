@@ -183,10 +183,6 @@ define([
         return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
     };
 
-    Plane.prototype.origin = function (result) {
-        Cartesian3.multiplyByScalar(this.normal, this.distance, result);
-    };
-
     /**
      * A constant initialized to the XY plane passing through the origin, with normal in positive Z.
      *

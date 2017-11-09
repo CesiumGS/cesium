@@ -1,6 +1,5 @@
 define([
     './BoundingSphere',
-    './Cartesian2',
     './Cartesian3',
     './Check',
     './ComponentDatatype',
@@ -9,15 +8,10 @@ define([
     './Geometry',
     './GeometryAttribute',
     './GeometryAttributes',
-    './Matrix4',
-    './Plane',
     './PrimitiveType',
-    './Quaternion',
-    './TranslationRotationScale',
     './VertexFormat'
 ], function(
     BoundingSphere,
-    Cartesian2,
     Cartesian3,
     Check,
     ComponentDatatype,
@@ -26,11 +20,7 @@ define([
     Geometry,
     GeometryAttribute,
     GeometryAttributes,
-    Matrix4,
-    Plane,
     PrimitiveType,
-    Quaternion,
-    TranslationRotationScale,
     VertexFormat) {
     'use strict';
 
@@ -41,22 +31,15 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see Plane
-     * @see PlaneGeometry.fromDimensions
      * @see PlaneGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
-     *
      * @example
      * var planeGeometry = new Cesium.PlaneGeometry({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
      * });
      * var geometry = Cesium.PlaneGeometry.createGeometry(plane);
      */
@@ -389,13 +372,11 @@ define([
             indices[11] = 2;
         }
 
-        var radius = 0.5;
-
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, 0.5)
         });
     };
 
