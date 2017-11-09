@@ -70,7 +70,9 @@ var selectedPlane;
 var downHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 downHandler.setInputAction(function(movement) {
     var pickedObject = scene.pick(movement.position);
-    if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id.plane)) {
+    if (Cesium.defined(pickedObject) &&
+            Cesium.defined(pickedObject.id) &&
+            Cesium.defined(pickedObject.id.plane)) {
         selectedPlane = pickedObject.id.plane;
         selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.05);
         selectedPlane.outlineColor = Cesium.Color.WHITE;
@@ -155,7 +157,7 @@ Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscrib
         tileset.debugShowBoundingVolume = newValue;
     }
 });
-    
+
 function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
@@ -163,9 +165,6 @@ function reset() {
 
     if (Cesium.defined(viewModel)) {
         viewModel.clippingPlanesEnabled = true;
-        viewModel.xOffset = 0.0;
-        viewModel.yOffset = -100.0;
-        viewModel.zOffset = -100.0;
     }
 }
 
