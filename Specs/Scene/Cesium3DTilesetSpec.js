@@ -2492,8 +2492,9 @@ defineSuite([
 
             scene.renderForSpecs();
 
-            // 2 for root tile, 2 for child, 1 for stencil clear
-            expect(statistics.numberOfCommands).toEqual(5);
+            // 2 for root tile, 1 for child, 1 for stencil clear
+            // Tiles that are marked as finalResolution, including leaves, do not create back face commands
+            expect(statistics.numberOfCommands).toEqual(4);
             expect(root.selected).toBe(true);
             expect(root._finalResolution).toBe(false);
             expect(root.children[0].children[0].children[3].selected).toBe(true);
@@ -2504,6 +2505,7 @@ defineSuite([
             var rs = commandList[1].renderState;
             expect(rs.cull.enabled).toBe(true);
             expect(rs.cull.face).toBe(CullFace.FRONT);
+            expect(rs.polygonOffset.enabled).toBe(true);
         });
     });
 
