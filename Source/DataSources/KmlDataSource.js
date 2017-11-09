@@ -301,7 +301,6 @@ define([
         return text;
     }
 
-
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
