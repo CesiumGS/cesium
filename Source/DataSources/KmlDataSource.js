@@ -283,19 +283,19 @@ define([
     }
 
     function removeDuplicateNamespaces(text) {
-        var index = text.indexOf("xmlns:");
-        var endDeclaration = text.indexOf(">", index);
+        var index = text.indexOf('xmlns:');
+        var endDeclaration = text.indexOf('>', index);
         var namespace, startIndex, endIndex;
 
         while ((index !== -1) && (index < endDeclaration)) {
-            namespace = text.slice(index, text.indexOf("\"", index));
+            namespace = text.slice(index, text.indexOf('\"', index));
             startIndex = index;
             index = text.indexOf(namespace, index + 1);
             if (index !== -1) {
-                endIndex = text.indexOf("\"", (text.indexOf("\"", index) + 1));
+                endIndex = text.indexOf('\"', (text.indexOf('\"', index) + 1));
                 text = text.slice(0, index -1) + text.slice(endIndex + 1, text.length);
             }
-            index = text.indexOf("xmlns:", startIndex + 1);
+            index = text.indexOf('xmlns:', startIndex + 1);
         }
 
         return text;
