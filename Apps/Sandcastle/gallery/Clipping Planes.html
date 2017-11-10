@@ -53,8 +53,6 @@ var planeScale = new Cesium.Cartesian2(300.0, 300.0);
 
 var clippingPlanes;
 var defaultClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(1.0, 0.0, 0.0),    0.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0.0, 1.0, 0.0), -100.0),
     new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
 ];
 
@@ -62,7 +60,7 @@ var viewModel = {
     debugBoundingVolumesEnabled: false
 };
 
-var targetX = 0.0;
+var targetY = 0.0;
 var planeEntities = [];
 var selectedPlane;
 
@@ -96,8 +94,9 @@ upHandler.setInputAction(function() {
 var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 moveHandler.setInputAction(function(movement) {
     if (Cesium.defined(selectedPlane)) {
-        var deltaX = movement.endPosition.x - movement.startPosition.x;
-        targetX += deltaX;
+        var deltaY = movement.endPosition.y - movement.startPosition.y;
+        var screenScale = scene.camera.getPixelSize(tileset.boundingSphere, scene.drawingBufferWidth, scene.drawingBufferHeight);
+        targetY += deltaY * screenScale;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -123,7 +122,7 @@ function loadTileset(url) {
                     material : Cesium.Color.CYAN.withAlpha(0.1),
                     normal: plane.normal,
                     distance: new Cesium.CallbackProperty(function() {
-                        plane.distance = Cesium.Math.lerp(plane.distance, targetX, 0.1);
+                        plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
                         return plane.distance;
                     }, false),
                     outline: true,

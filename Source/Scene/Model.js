@@ -3332,10 +3332,15 @@ define([
     }
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    function createClippingPlanesFunction(model, context) {
+    function createClippingPlanesFunction(model) {
         return function() {
             var planes = model.clippingPlanes;
             var packedPlanes = model._packedClippingPlanes;
+
+            if (!model.clippingPlanesEnabled) {
+                return packedPlanes;
+            }
+
             var length = packedPlanes.length;
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
