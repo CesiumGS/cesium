@@ -235,6 +235,19 @@ define([
             }
         },
         /**
+         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
+         *
+         * @type {Plane[]}
+         */
+        terrainClippingPlanes : {
+            get : function() {
+                return this._surface.tileProvider.clippingPlanes;
+            },
+            set : function(value) {
+                this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        /**
          * The terrain provider providing surface geometry for this globe.
          * @type {TerrainProvider}
          *

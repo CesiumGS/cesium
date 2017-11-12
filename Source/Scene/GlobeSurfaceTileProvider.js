@@ -20,6 +20,7 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
@@ -64,6 +65,7 @@ define([
         Matrix4,
         OrientedBoundingBox,
         OrthographicFrustum,
+        Plane,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
@@ -158,6 +160,13 @@ define([
         this._baseColor = undefined;
         this._firstPassInitialColor = undefined;
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
+
+        /**
+         * Gets or sets the array of clipping planes, defined in world space;
+         * Each clipping plane selectively disables rendering contents on the outside of the plane.
+         * @type {Plane[]}
+         */
+        this.clippingPlanes = undefined;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -849,6 +858,12 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
+            u_clippingPlanesLength : function() {
+                return this.properties.clippingPlanes.length;
+            },
+            u_clippingPlanes : function() {
+                return this.properties.clippingPlanes;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -883,7 +898,8 @@ define([
                 waterMaskTranslationAndScale : new Cartesian4(),
 
                 minMaxHeight : new Cartesian2(),
-                scaleAndBias : new Matrix4()
+                scaleAndBias : new Matrix4(),
+                clippingPlanes : []
             }
         };
 
@@ -1006,6 +1022,7 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
@@ -1259,7 +1276,35 @@ define([
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            // update clipping planes
+            var length = 0;
+            var clippingPlanes = tileProvider.clippingPlanes;
+            if (defined(clippingPlanes)) {
+                length = clippingPlanes.length;
+            }
+            if (length !== uniformMapProperties.clippingPlanes.length) {
+                uniformMapProperties.clippingPlanes = new Array(length);
+
+                for (var i = 0; i < length; ++i) {
+                    uniformMapProperties.clippingPlanes[i] = new Cartesian4();
+                }
+            }
+
+            var packedPlanes = uniformMapProperties.clippingPlanes;
+            for (var j = 0; j < length; ++j) {
+                var plane = clippingPlanes[j];
+                var packedPlane = packedPlanes[j];
+
+                Plane.transform(plane, context.uniformState.view, scratchPlane);
+
+                Cartesian3.clone(scratchPlane.normal, packedPlane);
+                packedPlane.w = scratchPlane.distance;
+            }
+
+            // TODO: Optimization, determine if this tile is entirely clipped or entirely visible
+            var clippingPlanesEnabled = (uniformMapProperties.clippingPlanes.length > 0);
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

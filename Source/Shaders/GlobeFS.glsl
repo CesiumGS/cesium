@@ -52,6 +52,11 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+uniform int u_clippingPlanesLength;
+uniform vec4 u_clippingPlanes[czm_maxClippingPlanes];
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -141,6 +146,10 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
+#ifdef ENABLE_CLIPPING_PLANES
+    czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength);
+#endif
+
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
     // where the fragment shader sees textures coordinates < 0.0 and > 1.0 for the
     // fragments on the edges of tiles even though the vertex shader is outputting
