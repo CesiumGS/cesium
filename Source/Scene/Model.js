@@ -4256,7 +4256,8 @@ define([
             '{ \n' +
             '    gltf_clip_main(); \n' +
             '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        float amount = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        if (amount > 0.0 && amount < 1.0) gl_FragColor = vec4(1.0); \n' +
             '    } \n' +
             '} \n';
 
