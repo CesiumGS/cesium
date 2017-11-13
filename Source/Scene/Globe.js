@@ -540,7 +540,7 @@ define([
             return;
         }
 
-        if (this._material) {
+        if (defined(this._material)) {
             this._material.update(frameState.context);
         }
 
@@ -579,7 +579,7 @@ define([
 
         var fragmentSources = [];
         var fragmentDefines = [];
-        if (this._material) {
+        if (defined(this._material)) {
             fragmentSources.push(this._material.shaderSource);
             fragmentDefines.push('APPLY_MATERIAL');
 
