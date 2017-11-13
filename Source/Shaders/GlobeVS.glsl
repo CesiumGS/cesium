@@ -21,8 +21,11 @@ varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef APPLY_MATERIAL
 varying float v_slope;
 varying float v_height;
+#endif
 
 #ifdef FOG
 varying float v_distance;
@@ -170,8 +173,10 @@ void main()
     v_distance = length((czm_modelView3D * vec4(position3DWC, 1.0)).xyz);
 #endif
 
+#ifdef APPLY_MATERIAL
     vec3 finalNormal = normalize(v_normalMC);
     vec3 worldNormal = normalize(v_positionMC.xyz);
     v_slope = abs(dot(worldNormal, finalNormal));
     v_height = height;
+#endif
 }

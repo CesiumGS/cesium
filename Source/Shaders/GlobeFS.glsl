@@ -61,8 +61,11 @@ varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
+
+#ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+#endif
 
 #ifdef FOG
 varying float v_distance;

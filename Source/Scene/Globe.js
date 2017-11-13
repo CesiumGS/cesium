@@ -573,15 +573,12 @@ define([
      * @private
      */
     Globe.prototype.dirtyShaders = function() {
-        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GroundAtmosphere, GlobeVS]
-        });
+        var defines = [];
 
         var fragmentSources = [];
-        var fragmentDefines = [];
         if (defined(this._material)) {
             fragmentSources.push(this._material.shaderSource);
-            fragmentDefines.push('APPLY_MATERIAL');
+            defines.push('APPLY_MATERIAL');
 
             // Set the material uniform map to the materials
             this._surface._tileProvider.uniformMap = this._material._uniforms;
@@ -590,9 +587,14 @@ define([
         }
         fragmentSources.push(GlobeFS);
 
+        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GroundAtmosphere, GlobeVS],
+            defines: defines
+        });
+
         this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
             sources : fragmentSources,
-            defines: fragmentDefines
+            defines: defines
         });
         this._surfaceShaderSet.material = this._material;
     };
