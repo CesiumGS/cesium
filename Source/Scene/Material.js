@@ -240,8 +240,8 @@ define([
      *  <li>ElevationRamp</li>
      *  <ul>
      *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
-     *      <li><code>minHeight</code>: minimum height for the ramp.</li>
-     *      <li><code>maxHeight</code>: maximum height for the ramp.</li>
+     *      <li><code>minimumHeight</code>: minimum height for the ramp.</li>
+     *      <li><code>maximumHeight</code>: maximum height for the ramp.</li>
      *  </ul>
      *  <li>SlopeRamp</li>
      *  <ul>
@@ -1521,8 +1521,8 @@ define([
             type : Material.ElevationRampType,
             uniforms : {
                 image: Material.DefaultImageId,
-                minHeight: 0.0,
-                maxHeight: 10000.0,
+                minimumHeight: 0.0,
+                maximumHeight: 10000.0
             },
             source : ElevationRampMaterial
         },
