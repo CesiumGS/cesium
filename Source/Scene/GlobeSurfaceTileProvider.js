@@ -1264,7 +1264,7 @@ define([
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
-            if (tileProvider.uniformMap) {
+            if (defined(tileProvider.uniformMap)) {
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);
             }
 
