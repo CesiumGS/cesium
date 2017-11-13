@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Attach a custom data source to the geocoder widget.">
     <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
-    <title>Cesium Demo</title>
+    <title>Custom Geocoder Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
@@ -32,12 +32,15 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <div id="reverseGeocodeButton"></div>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 /**
- * This class is an example of a custom geocoder, and reverse geocoder. It provides both through the OpenStreetMap Nominatim service.
+ * This class is an example of a custom geocoder, and reverse geocoder. It provides both through the OpenStreetMap Nominatim service. Press the "Reverse Geocoder" button to go to Open Street Map headquarters. OpenStreetMap has more information in the UK than in the US. 
  * @alias OpenStreetMapNominatimGeocoder
  * @constructor
  */
@@ -46,11 +49,12 @@ function OpenStreetMapNominatimGeocoder() {
 
 /* *
  * Object for both input and result. Could be in external file to avoid code redundancy 
+ * Points to the headquarters of Open Street Map Foundation in the UK
  */
 var geoLocation = {
-         latitude: 0.00,
-         longitude: 0.00,
-         address: 'default address'
+        latitude: 52.551074, // OpenStreetMap Foundation headquarters in the UK
+        longitude: -1.818343,
+        address: 'default address'
 }; 
     
 /* search: looking for location of address, reverse: looking for address of a location */
@@ -69,7 +73,7 @@ var endpoint = 'https://nominatim.openstreetmap.org/';
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
     var query = 'format=json&q=' + input;
-    var requestString = endpoint + query;
+    var requestString = endpoint + action.search + query;
     return Cesium.loadJson(requestString)
         .then(function (results) {
             var bboxDegrees;
@@ -87,6 +91,13 @@ OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
             });
         });
 };
+
+/**
+* Instantiate the Cesium Viewer
+*/
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    geocoder: new OpenStreetMapNominatimGeocoder()
+});
     
 /**
  * The function called to geocode using this geocoder service.
@@ -105,11 +116,14 @@ function getAddressFromLocation(geoLocation, callback) {
       });  
       callback();
 }
+    
+/**
+* Add button to trigger reverse geocoding to hard-coded location
+*/
+Sandcastle.addToolbarButton('Reverse Geocoder', function() {
+    getAddressFromLocation(geoLocation, onReverseGeocodeCompletion);
+});
   
-/*********************************************************************
- * Functions below, could be in an external file. 
- * geoLocation object as well. This works locally but not in Sandcastle
- ********************************************************************/
 /**
  * Callback to fly the camera to the location chosen for reverse geocoding.
  */
@@ -118,63 +132,6 @@ function getAddressFromLocation(geoLocation, callback) {
              destination: Cesium.Cartesian3.fromDegrees(geoLocation.longitude, geoLocation.latitude, 25000.0)
           });
   }
-        
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    geocoder: new OpenStreetMapNominatimGeocoder()
-});
-    
-/**
- * Listen for the geocode search to be complete, to mark it with a point.
- */
- viewer.geocoder.viewModel.complete.addEventListener(function () {
-     if (!viewer.geocoder.viewModel.searchText.empty){        
-         setPointForSearchLocation();       
-     }
- });
-
- /**
- * Find the camera position after search, and put a point there.
- */
-  function setPointForSearchLocation() {
-      
-    var camera = this.viewer.camera;
-    var ellipsoid = this.viewer.scene.globe.ellipsoid;
-    var coordinate = ellipsoid.cartesianToCartographic(camera.position);
-    var lat =  Cesium.Math.toDegrees(coordinate.latitude);
-    var long = Cesium.Math.toDegrees(coordinate.longitude);
-    var announce = 'Latitude: ' + parseFloat(Math.round(lat * 100) / 100).toFixed(4) + '  ,Longitude: ' + parseFloat(Math.round(long * 100) / 100).toFixed(4);     
-       var home = viewer.entities.add({
-          name : announce,
-          // For Cesium fromDegrees, longitude before latitude.
-          position : Cesium.Cartesian3.fromDegrees(long, lat),
-          point : {
-             pixelSize : 15,
-             color : Cesium.Color.AQUAMARINE,
-             outlineColor : Cesium.Color.BLACK,
-             outlineWidth : 2
-          }
-      });
-  }
-    
- /**
- * Handler for left click of the mouse on the map, get latitude and longitude, and start reverse geocoding
- */   
-  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-  // Catch the mouse click, and convert the location into degrees  
-  handler.setInputAction(
-
-  // Translate mouse click into Geographic coordinates
-  function (click) {
-     var position = viewer.camera.pickEllipsoid(click.position);
-     var location = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
-     geoLocation.latitude = Cesium.Math.toDegrees(location.latitude);
-     geoLocation.longitude = Cesium.Math.toDegrees(location.longitude);
-     // Reverse geocode to get the address
-     getAddressFromLocation(geoLocation, onReverseGeocodeCompletion);
-   },
-      Cesium.ScreenSpaceEventType.LEFT_CLICK
-   );
 
  /**
  * Set a point and mark the address at reverse geocoded location.
@@ -186,7 +143,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
         position : Cesium.Cartesian3.fromDegrees(geoLocation.longitude, geoLocation.latitude),
         point : {
             pixelSize : 5,
-            color : Cesium.Color.RED,
+            color : Cesium.Color.BLUE,
             outlineColor : Cesium.Color.WHITE,
             outlineWidth : 2
         },

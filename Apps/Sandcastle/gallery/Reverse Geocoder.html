@@ -37,8 +37,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 /**
- * This class is an example of reverse geocoder using the default Cesium geocoder. 
+ * This class is an example of reverse geocoder using the default Cesium geocoder service (BingMaps). 
  * It also includes click handling and setting points at found or clicked locations. 
+ * To reverse geocode, click on any location on the globe to show the address.
  */
 
 /**
@@ -79,8 +80,8 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
        // We are not zooming in on the location.
   }
 /*********************************************************************
- * Functions below, could be in an external file. 
- * geoLocation object as well. This works locally but not in Sandcastle
+ * Functions below, could be in an external file for this and Custom Geocoder. 
+ * geoLocation object as well. 
  ********************************************************************/
 /**
  * Listen for the geocode search to be complete, to mark it with a point.
