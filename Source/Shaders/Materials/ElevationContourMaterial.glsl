@@ -1,18 +1,27 @@
+#ifdef GL_OES_standard_derivatives
+    #extension GL_OES_standard_derivatives : enable
+#endif
+
 uniform vec4 color;
+uniform float spacing;
+uniform float lineThickness;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
 
-    if (fract(materialInput.height / spacing) < 0.1)
-    {
-        material.diffuse = color.rgb;
-        material.alpha = color.a;
-    }
-    else
-    {
-        material.alpha = 0.0;
-    }
+    float distanceToContour = mod(materialInput.height, spacing);
+
+#ifdef GL_OES_standard_derivatives
+    float dxc = abs(dFdx(materialInput.height));
+    float dyc = abs(dFdy(materialInput.height));
+    float dF = max(dxc, dyc) * lineThickness;
+    material.alpha = (distanceToContour < dF) ? 1.0 : 0.0;
+#else
+    material.alpha = (distanceToContour < (czm_resolutionScale * lineThickness)) ? 1.0 : 0.0;
+#endif
+
+    material.diffuse = color.rgb;
 
     return material;
 }
