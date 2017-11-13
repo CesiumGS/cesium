@@ -37,22 +37,22 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 /**
- * This class is an example of reverse geocoder using the default Cesium geocoder service (BingMaps). 
- * It also includes click handling and setting points at found or clicked locations. 
+ * This class is an example of reverse geocoder using the default geocoder service (Bing Maps)
+ * It also includes click handling and setting points at found or clicked locations.
  * To reverse geocode, click on any location on the globe to show the address.
  */
 
 /**
-* Object for both input and result. Should be in external file, to avoid code redundancy. 
+* Object for both input and result. Should be in external file, to avoid code redundancy.
 */
 var geoLocation = {
          latitude: 0.00,
          longitude: 0.00,
          address: 'default address'
-}; 
-    
-var viewer = new Cesium.Viewer('cesiumContainer');    
-    
+};
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+
 var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
 
 /**
@@ -61,9 +61,9 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
  * @param {String} input The query to be sent to the geocoder service
  * Calling loadJsonp to bypass CORS on BingMaps
  */
-    function getAddressFromLocation(geoLocation) {  
+    function getAddressFromLocation(geoLocation) {
        var url = baseUrl + geoLocation.latitude + "," + geoLocation.longitude;
-        
+
        var promise = Cesium.loadJsonp(url, {
           parameters : {
              key : Cesium.BingMapsApi.getKey()
@@ -80,15 +80,15 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
        // We are not zooming in on the location.
   }
 /*********************************************************************
- * Functions below, could be in an external file for this and Custom Geocoder. 
- * geoLocation object as well. 
+ * Functions below, could be in an external file for this and Custom Geocoder.
+ * geoLocation object as well.
  ********************************************************************/
 /**
  * Listen for the geocode search to be complete, to mark it with a point.
  */
  viewer.geocoder.viewModel.complete.addEventListener(function () {
-     if (!viewer.geocoder.viewModel.searchText.empty){        
-         setPointForSearchLocation();       
+     if (!viewer.geocoder.viewModel.searchText.empty){
+         setPointForSearchLocation();
      }
  });
 
@@ -96,13 +96,14 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
  * Find the camera position after search, and put a point there.
  */
   function setPointForSearchLocation() {
-      
+
     var camera = this.viewer.camera;
     var ellipsoid = this.viewer.scene.globe.ellipsoid;
     var coordinate = ellipsoid.cartesianToCartographic(camera.position);
     var lat =  Cesium.Math.toDegrees(coordinate.latitude);
     var long = Cesium.Math.toDegrees(coordinate.longitude);
-    var announce = 'Latitude: ' + parseFloat(Math.round(lat * 100) / 100).toFixed(4) + '  ,Longitude: ' + parseFloat(Math.round(long * 100) / 100).toFixed(4);     
+    var announce = 'Latitude: ' + parseFloat(Math.round(lat * 100)/100).toFixed(4)+
+        ',Longitude: ' + parseFloat(Math.round(long * 100)/100).toFixed(4);
        var home = viewer.entities.add({
           name : announce,
           // For Cesium fromDegrees, longitude before latitude.
@@ -115,13 +116,13 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
           }
       });
   }
-    
+
  /**
  * Handler for left click of the mouse on the map, get latitude and longitude, and start reverse geocoding
- */   
+ */
   var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 
-  // Catch the mouse click, and convert the location into degrees  
+  // Catch the mouse click, and convert the location into degrees
   handler.setInputAction(
 
   // Translate mouse click into Geographic coordinates
@@ -138,8 +139,8 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
 
  /**
  * Set a point and mark the address at reverse geocoded location.
- */   
-  function setAddressPoint() {     
+ */
+  function setAddressPoint() {
        viewer.entities.add({
         name : 'Latitude: ' + geoLocation.latitude + ', Longitude:' + geoLocation.longitude,
         // Reverse the latitude and longitude when calling "fromDegrees"
@@ -159,8 +160,7 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
             pixelOffset : new Cesium.Cartesian2(0, -9)
         }
       });
-    } 
-    
+    }
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

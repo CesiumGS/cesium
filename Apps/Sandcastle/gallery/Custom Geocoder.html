@@ -40,29 +40,29 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 /**
- * This class is an example of a custom geocoder, and reverse geocoder. It provides both through the OpenStreetMap Nominatim service. Press the "Reverse Geocoder" button to go to Open Street Map headquarters. OpenStreetMap has more information in the UK than in the US. 
- * @alias OpenStreetMapNominatimGeocoder
- * @constructor
- */
+* This class is an example of a custom geocoder, and reverse geocoder. It provides both * * through the OpenStreetMap Nominatim service. Press the "Reverse Geocoder" button to go * * to OpenStreet Map headquarters. OpenStreetMap has more information in the UK than in the * US.
+* @alias OpenStreetMapNominatimGeocoder
+* @constructor
+*/
 function OpenStreetMapNominatimGeocoder() {
 }
 
-/* *
- * Object for both input and result. Could be in external file to avoid code redundancy 
+/**
+ * Object for both input and result. Could be in external file to avoid code redundancy
  * Points to the headquarters of Open Street Map Foundation in the UK
  */
 var geoLocation = {
-        latitude: 52.551074, // OpenStreetMap Foundation headquarters in the UK
-        longitude: -1.818343,
-        address: 'default address'
-}; 
-    
+    latitude:52.551074,
+    longitude:-1.818343,
+    address:'default address'
+};
+
 /* search: looking for location of address, reverse: looking for address of a location */
 var action = {
          search: 'search?',
          reverse: 'reverse?'
-     };
-        
+};
+
 var endpoint = 'https://nominatim.openstreetmap.org/';
 
 /**
@@ -98,13 +98,13 @@ OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     geocoder: new OpenStreetMapNominatimGeocoder()
 });
-    
+
 /**
  * The function called to reverse geocode using this geocoder service.
  *
  * @param {String} input The query to be sent to the geocoder service
  */
-function getAddressFromLocation(geoLocation, callback) { 
+function getAddressFromLocation(geoLocation, callback) {
      var query = 'format=json&lat=' + geoLocation.latitude + '&lon=' + geoLocation.longitude + '&zoom=18&addressdetails=1';
       var requestString = endpoint + action.reverse + query;
       var promise = Cesium.loadJson(requestString);
@@ -112,17 +112,17 @@ function getAddressFromLocation(geoLocation, callback) {
          console.log(result);
          geoLocation.address = result.display_name;
          setLocationPoint();
-      });  
+      });
       callback();
 }
-    
+
 /**
 * Add button to trigger reverse geocoding to hard-coded location
 */
 Sandcastle.addToolbarButton('Reverse Geocoder', function() {
     getAddressFromLocation(geoLocation, onReverseGeocodeCompletion);
 });
-  
+
 /**
  * Callback to fly the camera to the location chosen for reverse geocoding.
  */
@@ -134,8 +134,8 @@ Sandcastle.addToolbarButton('Reverse Geocoder', function() {
 
  /**
  * Set a point and mark the address at reverse geocoded location.
- */   
-  function setLocationPoint() {     
+ */
+  function setLocationPoint() {
        viewer.entities.add({
         name : 'address location',
         // Reverse the latitude and longitude when calling "fromDegrees"
@@ -155,8 +155,8 @@ Sandcastle.addToolbarButton('Reverse Geocoder', function() {
             pixelOffset : new Cesium.Cartesian2(0, -9)
         }
       });
-    } 
-    
+    }
+
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
