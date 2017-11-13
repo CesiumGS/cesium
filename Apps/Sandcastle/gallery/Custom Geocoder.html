@@ -100,10 +100,9 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
     
 /**
- * The function called to geocode using this geocoder service.
+ * The function called to reverse geocode using this geocoder service.
  *
  * @param {String} input The query to be sent to the geocoder service
- * @returns {Promise<GeocoderResult[]>}
  */
 function getAddressFromLocation(geoLocation, callback) { 
      var query = 'format=json&lat=' + geoLocation.latitude + '&lon=' + geoLocation.longitude + '&zoom=18&addressdetails=1';
