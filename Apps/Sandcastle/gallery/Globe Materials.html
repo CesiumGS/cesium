@@ -51,6 +51,9 @@ viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 viewer.scene.globe.enableLighting = true;
 
+// Set the clock so the lighting looks good on the initial viewpoint.
+viewer.clockViewModel.currentTime = Cesium.JulianDate.fromDate(new Date(2017, 8, 22, 0, 0, 0));
+
 // The viewModel tracks the state of our mini application.
 var viewModel = {
     spacing: 100.0
