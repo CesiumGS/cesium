@@ -165,6 +165,6 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/agsattrack/"><img src="http://cesiumjs.org/demos/images/agsattrack.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/weblvcsimulationviewer/"><img src="http://cesiumjs.org/demos/images/weblvcsimulationviewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/vega/"><img src="http://cesiumjs.org/demos/images/vega.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index/"><img src="http://cesiumjs.org/demos/images/Sandcastle.png" height="150" /></a>&nbsp;
+<a href="https://cesiumjs.org/Cesium/Apps/Sandcastle/"><img src="http://cesiumjs.org/demos/images/Sandcastle.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/"><img src="http://cesiumjs.org/images/CesiumViewer.jpg" height="150" /></a>&nbsp;
 </p>
