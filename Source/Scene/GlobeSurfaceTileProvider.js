@@ -167,6 +167,7 @@ define([
          * @type {Plane[]}
          */
         this.clippingPlanes = undefined;
+        this.clippingPlanesOrigin = new Cartesian3();
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -1023,6 +1024,7 @@ define([
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+    var scratchMatrix = new Matrix4();
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
@@ -1291,11 +1293,13 @@ define([
             }
 
             var packedPlanes = uniformMapProperties.clippingPlanes;
+            var origin = Matrix4.fromTranslation(tileProvider.clippingPlanesOrigin, scratchMatrix);
+            var transform = Matrix4.multiply(context.uniformState.view, origin, scratchMatrix);
             for (var j = 0; j < length; ++j) {
                 var plane = clippingPlanes[j];
                 var packedPlane = packedPlanes[j];
 
-                Plane.transform(plane, context.uniformState.view, scratchPlane);
+                Plane.transform(plane, transform, scratchPlane);
 
                 Cartesian3.clone(scratchPlane.normal, packedPlane);
                 packedPlane.w = scratchPlane.distance;

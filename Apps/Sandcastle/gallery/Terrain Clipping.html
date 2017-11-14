@@ -39,13 +39,15 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 var globe = viewer.scene.globe;
-
+globe.terrainClippingPlanesOrigin = new Cesium.Cartesian3(0.0, 0.0, 3000000.0); // Defines the "center" from which the planes' normals and offsets will orginate
 var planes = globe.terrainClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 1000000.0)
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 0.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, 1.0), 100000.0)
 ];
 
 window.setInterval(function () {
-    planes[0].distance -= 5.0;
+    planes[0].distance -= 50.0;
+    planes[1].distance += 50.0;
 }, 30);
 
 //Sandcastle_End
