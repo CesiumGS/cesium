@@ -432,7 +432,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
