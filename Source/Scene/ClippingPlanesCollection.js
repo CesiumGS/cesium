@@ -39,7 +39,7 @@ define([
          * @type {Plane}
          * @default []
          */
-        this.planes = defaultValue(options.planes, []); // TODO don't instantiate?
+        this.planes = defaultValue(options.planes, []);
 
         /**
          * Determines whether the clipping planes are active.
@@ -82,6 +82,7 @@ define([
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
+        this._geometries = undefined;
     }
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);

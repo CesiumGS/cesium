@@ -49,7 +49,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
-var planeScale = new Cesium.Cartesian2(300.0, 300.0);
+var planeScale = new Cesium.Cartesian2(500.0, 500.0);
 
 var defaultClippingPlanes = [
     new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
@@ -99,10 +99,14 @@ moveHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-function createPlaneUpdateFunction(plane) {
+var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
+function createPlaneUpdateFunction(tileset, plane) {
     return function () {
         plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
-        return plane.distance;
+
+        var transformedPlane = Cesium.Plane.transform(plane, tileset.modelMatrix, scratchPlane);
+        transformedPlane.distance = -transformedPlane.distance;
+        return transformedPlane;
     };
 }
 
@@ -114,9 +118,10 @@ function loadTileset(url) {
         url : url,
         clippingPlanes : new Cesium.ClippingPlanesCollection({
             planes : defaultClippingPlanes,
-            edgeWidth: 10.0,
+            edgeWidth: 1.0,
             edgeColor: Cesium.Color.CYAN
-        })
+        }),
+        modelMatrix : Cesium.Matrix4.fromUniformScale(2.0)
     }));
 
     tileset.readyPromise.then(function() {
@@ -124,22 +129,22 @@ function loadTileset(url) {
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, boundingSphere.radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-        for (var i = 0; i < 1; ++i) {
+        for (var i = 0; i < defaultClippingPlanes.length; ++i) {
             var plane = tileset.clippingPlanes.planes[i];
             var entity = viewer.entities.add({
                 position : boundingSphere.center,
                 plane : {
                     dimensions : planeScale,
                     material : Cesium.Color.CYAN.withAlpha(0.1),
-                    normal: plane.normal,
-                    distance: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane), false),
+                    plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(tileset, plane), false),
                     outline: true,
                     outlineColor: Cesium.Color.CYAN
-                }
+                },
             });
 
             planeEntities.push(entity);
         }
+
     }).otherwise(function(error) {
         throw(error);
     });

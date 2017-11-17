@@ -3361,7 +3361,7 @@ define([
     function createClippingPlanesEdgeColorFunction(model) {
         return function() {
             if (!defined(model.clippingPlanes)) {
-                return Cartesian4();
+                return scratchCartesian;
             }
 
             return Cartesian4.fromColor(model.clippingPlanes.edgeColor, scratchCartesian);

@@ -70,8 +70,7 @@ define([
     function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
-        this.normal = undefined;
-        this.distance = 0.0;
+        this.plane = undefined;
         this.dimensions = undefined;
     }
 
@@ -370,12 +369,8 @@ define([
         }
 
         var options = this._options;
-        var normal = options.normal;
-        var distance = options.distance;
-        var dimensions = options.dimensions;
 
         var modelMatrix = entity.computeModelMatrix(Iso8601.MINIMUM_VALUE);
-        //modelMatrix = createPrimitiveMatrix(normal, distance, dimensions, modelMatrix, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -409,13 +404,7 @@ define([
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
-        var options = this._options;
-        var normal = options.normal;
-        var distance = options.distance;
-        var dimensions = options.dimensions;
-
         var modelMatrix = entity.computeModelMatrix(Iso8601.MINIMUM_VALUE);
-        //modelMatrix = createPrimitiveMatrix(normal, distance, dimensions, modelMatrix, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -453,11 +442,9 @@ define([
             return;
         }
 
-        var plane = this._entity.plane;
+        var planeGraphics = this._entity.plane;
 
-
-
-        if (!defined(plane)) {
+        if (!defined(planeGraphics)) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -466,10 +453,10 @@ define([
             return;
         }
 
-        var fillProperty = plane.fill;
+        var fillProperty = planeGraphics.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
-        var outlineProperty = plane.outline;
+        var outlineProperty = planeGraphics.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
@@ -484,13 +471,12 @@ define([
             return;
         }
 
-        var normal = plane.normal;
-        var distance = plane.distance;
-        var dimensions = plane.dimensions;
+        var plane = planeGraphics.plane;
+        var dimensions = planeGraphics.dimensions;
         var position = entity.position;
 
-        var show = plane.show;
-        if (!defined(normal) || !defined(distance) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
+        var show = planeGraphics.show;
+        if (!defined(plane) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -499,25 +485,24 @@ define([
             return;
         }
 
-        var material = defaultValue(plane.material, defaultMaterial);
+        var material = defaultValue(planeGraphics.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(plane.outline, defaultOutline);
-        this._outlineColorProperty = outlineEnabled ? defaultValue(plane.outlineColor, defaultOutlineColor) : undefined;
-        this._shadowsProperty = defaultValue(plane.shadows, defaultShadows);
-        this._distanceDisplayConditionProperty = defaultValue(plane.distanceDisplayCondition, defaultDistanceDisplayCondition);
+        this._showOutlineProperty = defaultValue(planeGraphics.outline, defaultOutline);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(planeGraphics.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(planeGraphics.shadows, defaultShadows);
+        this._distanceDisplayConditionProperty = defaultValue(planeGraphics.distanceDisplayCondition, defaultDistanceDisplayCondition);
 
-        var outlineWidth = plane.outlineWidth;
+        var outlineWidth = planeGraphics.outlineWidth;
 
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
         if (!position.isConstant || //
             !Property.isConstant(entity.orientation) || //
-            !normal.isConstant || //
-            !distance.isConstant || //
+            !plane.isConstant || //
             !dimensions.isConstant || //
             !Property.isConstant(outlineWidth)) {
             if (!this._dynamic) {
@@ -527,8 +512,7 @@ define([
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
-            options.normal = normal.getValue(Iso8601.MINIMUM_VALUE, options.normal);
-            options.distance = distance.getValue(Iso8601.MINIMUM_VALUE, options.distance);
+            options.plane = plane.getValue(Iso8601.MINIMUM_VALUE, options.plane);
             options.dimensions = dimensions.getValue(Iso8601.MINIMUM_VALUE, options.dimensions);
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._dynamic = false;
@@ -583,25 +567,23 @@ define([
 
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
-        var plane = entity.plane;
-        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(plane.show, time, true)) {
+        var planeGraphics = entity.plane;
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(planeGraphics.show, time, true)) {
             return;
         }
 
         var options = this._options;
         var modelMatrix = entity.computeModelMatrix(time);
-        var normal = Property.getValueOrDefault(plane.normal, time, options.normal);
-        var distance = Property.getValueOrUndefined(plane.distance, time, options.distance);
-        var dimensions = Property.getValueOrUndefined(plane.dimensions, time, options.dimensions);
-        if (!defined(modelMatrix) || !defined(normal) || !defined(distance) || !defined(dimensions)) {
+        var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
+        var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
+        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
             return;
         }
 
-        options.normal = normal;
-        options.distance = distance;
+        options.plane = plane;
         options.dimensions = dimensions;
 
-        modelMatrix = createPrimitiveMatrix(normal, distance, dimensions, modelMatrix, modelMatrix);
+        modelMatrix = createPrimitiveMatrix(plane.normal, plane.distance, dimensions, modelMatrix, modelMatrix);
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
@@ -609,7 +591,7 @@ define([
         var distanceDisplayCondition = distanceDisplayConditionProperty.getValue(time);
         var distanceDisplayConditionAttribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(distanceDisplayCondition);
 
-        if (Property.getValueOrDefault(plane.fill, time, true)) {
+        if (Property.getValueOrDefault(planeGraphics.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
@@ -635,11 +617,11 @@ define([
             }));
         }
 
-        if (Property.getValueOrDefault(plane.outline, time, false)) {
+        if (Property.getValueOrDefault(planeGraphics.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
-            var outlineColor = Property.getValueOrClonedDefault(plane.outlineColor, time, Color.BLACK, scratchColor);
-            var outlineWidth = Property.getValueOrDefault(plane.outlineWidth, time, 1.0);
+            var outlineColor = Property.getValueOrClonedDefault(planeGraphics.outlineColor, time, Color.BLACK, scratchColor);
+            var outlineWidth = Property.getValueOrDefault(planeGraphics.outlineWidth, time, 1.0);
             var translucent = outlineColor.alpha !== 1.0;
 
             this._outlinePrimitive = primitives.add(new Primitive({

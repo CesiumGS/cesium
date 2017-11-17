@@ -450,10 +450,12 @@ define([
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes
-        var modelClippingPlanes = this._model.clippingPlanes.planes;
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        tilesetClippingPlanes.clone(modelClippingPlanes);
-        modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        if (defined(tilesetClippingPlanes)) {
+            var modelClippingPlanes = this._model.clippingPlanes.planes;
+            tilesetClippingPlanes.clone(modelClippingPlanes);
+            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        }
 
         this._model.update(frameState);
 
