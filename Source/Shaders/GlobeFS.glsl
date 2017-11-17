@@ -147,7 +147,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
-    czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength);
+    float clippingEdgeAmount = czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength);
 #endif
 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0
@@ -204,6 +204,11 @@ void main()
     vec4 finalColor = color;
 #endif
 
+#ifdef ENABLE_CLIPPING_PLANES
+    if (clippingEdgeAmount > 0.0 && clippingEdgeAmount < 0.5) { // Edge width
+        finalColor = vec4(1.0); // Edgecolor
+    }
+#endif
 
 #ifdef FOG
     const float fExposure = 2.0;

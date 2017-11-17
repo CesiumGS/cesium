@@ -4246,6 +4246,9 @@ define([
         }
     }
 
+    var edgeColor = 'vec4(1.0)';
+    var edgeWidth = '0.7';
+
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
@@ -4256,7 +4259,8 @@ define([
             '{ \n' +
             '    gltf_clip_main(); \n' +
             '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        float amount = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        if (amount > 0.0 && amount < '+ edgeWidth + ') gl_FragColor = ' + edgeColor + '; \n' +
             '    } \n' +
             '} \n';
 
