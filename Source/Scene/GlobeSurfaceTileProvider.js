@@ -164,10 +164,9 @@ define([
         /**
          * Gets or sets the array of clipping planes, defined in world space;
          * Each clipping plane selectively disables rendering contents on the outside of the plane.
-         * @type {Plane[]}
+         * @type {ClippingPlanesCollection}
          */
         this.clippingPlanes = undefined;
-        this.clippingPlanesOrigin = new Cartesian3();
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -865,6 +864,15 @@ define([
             u_clippingPlanes : function() {
                 return this.properties.clippingPlanes;
             },
+            u_clippingPlanesInclusive : function() {
+                return this.properties.clippingPlanesInclusive;
+            },
+            u_clippingPlanesEdgeColor : function() {
+                return this.properties.clippingPlanesEdgeColor;
+            },
+            u_clippingPlanesEdgeWidth : function() {
+                return this.properties.clippingPlanesEdgeWidth;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -900,7 +908,10 @@ define([
 
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
-                clippingPlanes : []
+                clippingPlanes : [],
+                clippingPlanesInclusive : true,
+                clippingPlanesEdgeColor : new Cartesian4(1.0, 1.0, 1.0, 1.0),
+                clippingPlanesEdgeWidth : 0.0
             }
         };
 
@@ -1281,8 +1292,9 @@ define([
             // update clipping planes
             var length = 0;
             var clippingPlanes = tileProvider.clippingPlanes;
+
             if (defined(clippingPlanes)) {
-                length = clippingPlanes.length;
+                length = clippingPlanes.planes.length;
             }
             if (length !== uniformMapProperties.clippingPlanes.length) {
                 uniformMapProperties.clippingPlanes = new Array(length);
@@ -1292,21 +1304,15 @@ define([
                 }
             }
 
-            var packedPlanes = uniformMapProperties.clippingPlanes;
-            var origin = Matrix4.fromTranslation(tileProvider.clippingPlanesOrigin, scratchMatrix);
-            var transform = Matrix4.multiply(context.uniformState.view, origin, scratchMatrix);
-            for (var j = 0; j < length; ++j) {
-                var plane = clippingPlanes[j];
-                var packedPlane = packedPlanes[j];
-
-                Plane.transform(plane, transform, scratchPlane);
-
-                Cartesian3.clone(scratchPlane.normal, packedPlane);
-                packedPlane.w = scratchPlane.distance;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                clippingPlanes.transformAndPackPlanes(context.uniformState.view, uniformMapProperties.clippingPlanes);
+                uniformMapProperties.clippingPlanesInclusive = clippingPlanes.inclusive;
+                uniformMapProperties.clippingPlanesEdgeColor = Cartesian4.fromColor(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
+                uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
             // TODO: Optimization, determine if this tile is entirely clipped or entirely visible
-            var clippingPlanesEnabled = (uniformMapProperties.clippingPlanes.length > 0);
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled);
             command.castShadows = castShadows;

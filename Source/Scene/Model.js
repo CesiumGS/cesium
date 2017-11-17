@@ -341,8 +341,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
-     * @param {Boolean} [options.clippingPlanesEnabled=true] Optimization option. If set to false, the model will not perform clipping operations.
+     * @param {ClippingPlanesCollection} [options.clippingPlanes] An array of {@link Plane} used to clip the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -583,20 +582,9 @@ define([
         /**
          * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
          *
-         * @type {Plane[]}
+         * @type {ClippingPlanesCollection}
          */
         this.clippingPlanes = options.clippingPlanes;
-
-        /**
-         * Optimization option. If set to false, the model will not perform clipping operations.
-         *
-         * @see Model.clippingPlanes
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -3321,7 +3309,12 @@ define([
 
     function createClippingPlanesEnabledFunction(model) {
         return function() {
-            return model.clippingPlanesEnabled;
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return false;
+            }
+
+            return clippingPlanes.enabled;
         };
     }
 
@@ -3331,27 +3324,47 @@ define([
         };
     }
 
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     function createClippingPlanesFunction(model) {
         return function() {
-            var planes = model.clippingPlanes;
+            var clippingPlanes = model.clippingPlanes;
             var packedPlanes = model._packedClippingPlanes;
 
-            if (!model.clippingPlanesEnabled) {
-                return packedPlanes;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                clippingPlanes.transformAndPackPlanes(model._modelViewMatrix, packedPlanes);
             }
 
-            var length = packedPlanes.length;
-            for (var i = 0; i < length; ++i) {
-                var plane = planes[i];
-                var packedPlane = packedPlanes[i];
-
-                Plane.transform(plane, model._modelViewMatrix, scratchPlane);
-
-                Cartesian3.clone(scratchPlane.normal, packedPlane);
-                packedPlane.w = scratchPlane.distance;
-            }
             return packedPlanes;
+        };
+    }
+
+    function createClippingPlanesInclusiveFunction(model) {
+        return function() {
+            if (!defined(model.clippingPlanes)) {
+                return true;
+            }
+
+            return model.clippingPlanes.inclusive;
+        };
+    }
+
+    function createClippingPlanesEdgeWidthFunction(model) {
+        return function() {
+            if (!defined(model.clippingPlanes)) {
+                return 0.0;
+            }
+
+            return model.clippingPlanes.edgeWidth;
+        };
+    }
+
+    var scratchCartesian = new Cartesian4();
+    function createClippingPlanesEdgeColorFunction(model) {
+        return function() {
+            if (!defined(model.clippingPlanes)) {
+                return Cartesian4();
+            }
+
+            return Cartesian4.fromColor(model.clippingPlanes.edgeColor, scratchCartesian);
         };
     }
 
@@ -3452,7 +3465,10 @@ define([
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesEnabled: createClippingPlanesEnabledFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model, context)
+                gltf_clippingPlanes: createClippingPlanesFunction(model, context),
+                gltf_clippingPlanesInclusive: createClippingPlanesInclusiveFunction(model),
+                gltf_clippingPlanesEdgeColor: createClippingPlanesEdgeColorFunction(model),
+                gltf_clippingPlanesEdgeWidth: createClippingPlanesEdgeWidthFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4246,21 +4262,23 @@ define([
         }
     }
 
-    var edgeColor = 'vec4(1.0)';
-    var edgeWidth = '0.7';
-
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             'uniform bool gltf_clippingPlanesEnabled; \n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
+            'uniform bool gltf_clippingPlanesInclusive; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeColor; \n' +
+            'uniform float gltf_clippingPlanesEdgeWidth; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
             '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        float amount = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
-            '        if (amount > 0.0 && amount < '+ edgeWidth + ') gl_FragColor = ' + edgeColor + '; \n' +
+            '        float clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesInclusive); \n' +
+            '        if (clipDistance < gltf_clippingPlanesEdgeWidth) { \n' +
+            '            gl_FragColor = gltf_clippingPlanesEdgeColor; \n' +
+            '        } \n' +
             '    } \n' +
             '} \n';
 
@@ -4293,7 +4311,7 @@ define([
         var length = 0;
         var clippingPlanes = model.clippingPlanes;
         if (defined(clippingPlanes)) {
-            length = clippingPlanes.length;
+            length = clippingPlanes.planes.length;
         }
 
         if (model._packedClippingPlanes.length !== length) {
@@ -4751,7 +4769,8 @@ define([
                 }
             }
 
-            if (this.clippingPlanesEnabled && modelViewChanged) {
+            var clippingPlanes = this.clippingPlanes;
+            if (defined(clippingPlanes) && clippingPlanes.enabled && modelViewChanged) {
                 Matrix4.multiply(context.uniformState.view3D, this._computedModelMatrix, this._modelViewMatrix);
             }
 

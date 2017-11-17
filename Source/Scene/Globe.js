@@ -235,22 +235,9 @@ define([
             }
         },
         /**
-         * A property specifying the reference location that each clipping plane treats as the origin.
-         *
-         * @type {Cartesian3}
-         */
-        terrainClippingPlanesOrigin : {
-            get : function() {
-                return this._surface.tileProvider.clippingPlanesOrigin;
-            },
-            set : function(value) {
-                this._surface.tileProvider.clippingPlanesOrigin = value;
-            }
-        },
-        /**
          * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
          *
-         * @type {Plane[]}
+         * @type {ClippingPlaneCollection}
          */
         terrainClippingPlanes : {
             get : function() {

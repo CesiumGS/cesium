@@ -39,12 +39,15 @@ var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 var globe = viewer.scene.globe;
-globe.terrainClippingPlanesOrigin = new Cesium.Cartesian3(0.0, 0.0, 3000000.0); // Defines the "center" from which the planes' normals and offsets will orginate
-var planes = globe.terrainClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 0.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, 1.0), 100000.0)
-];
+globe.terrainClippingPlanes = new Cesium.ClippingPlanesCollection({
+    transformationMatrix : Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.0, 0.0, 3000000.0)),
+    planes : [
+        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), 0.0),
+        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, 1.0), 100000.0)
+    ]
+});
 
+var planes = globe.terrainClippingPlanes.planes;
 window.setInterval(function () {
     planes[0].distance -= 50.0;
     planes[1].distance += 50.0;

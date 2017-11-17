@@ -743,8 +743,9 @@ define([
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     function checkTileClipped(tile, boundingVolume) {
-        var planes = tile._tileset.clippingPlanes;
-        if (defined(planes)) {
+        var clippingPlanes = tile._tileset.clippingPlanes;
+        if (defined(clippingPlanes)) {
+            var planes = clippingPlanes.planes;
             var length = planes.length;
             var rootTransform = tile._tileset._root.computedTransform;
             for (var i = 0; i < length; ++i) {

@@ -51,7 +51,6 @@ var scene = viewer.scene;
 
 var planeScale = new Cesium.Cartesian2(300.0, 300.0);
 
-var clippingPlanes;
 var defaultClippingPlanes = [
     new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
 ];
@@ -100,12 +99,24 @@ moveHandler.setInputAction(function(movement) {
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
+function createPlaneUpdateFunction(plane) {
+    return function () {
+        plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
+        return plane.distance;
+    };
+}
+
 var tileset;
 function loadTileset(url) {
     reset();
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url
+        url : url,
+        clippingPlanes : new Cesium.ClippingPlanesCollection({
+            planes : defaultClippingPlanes,
+            edgeWidth: 10.0,
+            edgeColor: Cesium.Color.CYAN
+        })
     }));
 
     tileset.readyPromise.then(function() {
@@ -114,17 +125,14 @@ function loadTileset(url) {
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         for (var i = 0; i < 1; ++i) {
-            var plane = clippingPlanes[i];
+            var plane = tileset.clippingPlanes.planes[i];
             var entity = viewer.entities.add({
                 position : boundingSphere.center,
                 plane : {
                     dimensions : planeScale,
                     material : Cesium.Color.CYAN.withAlpha(0.1),
                     normal: plane.normal,
-                    distance: new Cesium.CallbackProperty(function() {
-                        plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
-                        return plane.distance;
-                    }, false),
+                    distance: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane), false),
                     outline: true,
                     outlineColor: Cesium.Color.CYAN
                 }
@@ -137,8 +145,6 @@ function loadTileset(url) {
     });
 
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
-    tileset.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
-    clippingPlanes = tileset.clippingPlanes = defaultClippingPlanes.slice();
 }
 
 // Power Plant design model provided by Bentley Systems
@@ -161,10 +167,6 @@ function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
     planeEntities = [];
-
-    if (Cesium.defined(viewModel)) {
-        viewModel.clippingPlanesEnabled = true;
-    }
 }
 
 //Sandcastle_End
