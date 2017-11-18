@@ -78,6 +78,10 @@ define([
             if (baseUri.path !== '' && baseUri.path !== '/') {
                 url = url.replace(/\/?$/, '/');
                 baseUri.path = baseUri.path.replace(/^\/?/g, '');
+
+                if (baseUri.authority === '') {
+                    url += '/';
+                }
             }
         }
 
