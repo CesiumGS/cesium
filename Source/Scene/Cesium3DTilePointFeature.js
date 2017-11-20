@@ -481,7 +481,7 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the distance where depth testing will be disabled.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
