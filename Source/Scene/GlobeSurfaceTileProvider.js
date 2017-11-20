@@ -507,6 +507,15 @@ define([
             }
         }
 
+        var clippingPlanes = this.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
+            tile.isClipped = (planeIntersection !== Intersect.INSIDE);
+            if (planeIntersection === Intersect.OUTSIDE) {
+                return Intersect.OUTSIDE;
+            }
+        }
+
         var intersection = cullingVolume.computeVisibility(boundingVolume);
         if (intersection === Intersect.OUTSIDE) {
             return Visibility.NONE;
@@ -1290,17 +1299,19 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             // update clipping planes
-            var length = 0;
-            var clippingPlanes = tileProvider.clippingPlanes;
+            if (tile.isClipped) {
+                var length = 0;
+                var clippingPlanes = tileProvider.clippingPlanes;
 
-            if (defined(clippingPlanes)) {
-                length = clippingPlanes.planes.length;
-            }
-            if (length !== uniformMapProperties.clippingPlanes.length) {
-                uniformMapProperties.clippingPlanes = new Array(length);
+                if (defined(clippingPlanes)) {
+                    length = clippingPlanes.planes.length;
+                }
+                if (length !== uniformMapProperties.clippingPlanes.length) {
+                    uniformMapProperties.clippingPlanes = new Array(length);
 
-                for (var i = 0; i < length; ++i) {
-                    uniformMapProperties.clippingPlanes[i] = new Cartesian4();
+                    for (var i = 0; i < length; ++i) {
+                        uniformMapProperties.clippingPlanes[i] = new Cartesian4();
+                    }
                 }
             }
 
@@ -1311,7 +1322,6 @@ define([
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
-            // TODO: Optimization, determine if this tile is entirely clipped or entirely visible
             var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled);

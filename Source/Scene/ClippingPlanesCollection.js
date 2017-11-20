@@ -6,6 +6,7 @@ define([
     '../Core/Color',
     '../Core/defaultValue',
     '../Core/defined',
+    '../Core/Intersect',
     '../Core/Matrix4',
     '../Core/Plane'
 ], function(
@@ -16,6 +17,7 @@ define([
     Color,
     defaultValue,
     defined,
+    Intersect,
     Matrix4,
     Plane) {
     'use strict';
@@ -81,8 +83,6 @@ define([
          * @default 0.0
          */
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
-
-        this._geometries = undefined;
     }
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
@@ -136,6 +136,49 @@ define([
         result.edgeWidth = this.edgeWidth;
 
         return result;
+    };
+
+    /**
+     * Determines the type intersection with the planes of this bounding collection and the specified {@link BoundingVolume}.
+     *
+     * @param {BoundingVolume} boundingVolume The volume to determine the intersection with the planes.
+     * @param {Matrix4} [parentTransform] An additional matrix to transform the plane to world coordinates.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
+     *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
+     *                      if the entire volume is on the opposite side and should be clipped, and
+     *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
+     */
+    ClippingPlanesCollection.prototype.computeIntersectionWithBoundingVolume = function (boundingVolume, parentTransform) {
+        var planes = this.planes;
+        var length = planes.length;
+
+        var transformation = this.transformationMatrix;
+        if (defined(parentTransform)) {
+            transformation = Matrix4.multiply(transformation, parentTransform, scratchMatrix);
+        }
+
+        // If the clipping planes are inclusive, the volume must be outside of all planes to be considered completely
+        // clipped. Otherwise, if the volume can be outside any the planes, it is considered completely clipped.
+        // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
+        var intersection = Intersect.INSIDE;
+        if (this.inclusive && length > 0) {
+            intersection = Intersect.OUTSIDE;
+        }
+        for (var i = 0; i < length; ++i) {
+            var plane = planes[i];
+
+            Plane.transform(plane, transformation, scratchPlane);
+
+            var value = boundingVolume.intersectPlane(scratchPlane);
+            if (value === Intersect.INTERSECTING) {
+                intersection = value;
+            } else if ((this.inclusive && value === Intersect.INSIDE) ||
+                       (!this.inclusive && value === Intersect.OUTSIDE)) {
+                return value;
+            }
+        }
+
+        return intersection;
     };
 
     return ClippingPlanesCollection;

@@ -744,10 +744,10 @@ define([
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     function checkTileClipped(tile, boundingVolume) {
         var clippingPlanes = tile._tileset.clippingPlanes;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var planes = clippingPlanes.planes;
             var length = planes.length;
-            var rootTransform = tile._tileset._root.computedTransform;
+            var rootTransform = tile._tileset._root.computedTransform; // TODO, factor in inclusive/exclusive, transform
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 Plane.transform(plane, rootTransform, scratchPlane);
@@ -775,10 +775,13 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
 
-        if (this._tileset.clippingPlanesEnabled) {
-            var clipped = checkTileClipped(this, boundingVolume);
-            this._isClipped = (clipped !== Intersect.INSIDE);
-            if (clipped === Intersect.OUTSIDE) {
+        var tileset = this._tileset;
+        var clippingPlanes = tileset.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var tileTransform = tileset._root.computedTransform;
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            this._isClipped = (intersection !== Intersect.INSIDE);
+            if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
             }
         }
@@ -807,10 +810,13 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getContentBoundingVolume(this, frameState);
 
-        if (this._tileset.clippingPlanesEnabled) {
-            var clipped = checkTileClipped(this, boundingVolume);
-            this._isClipped = (clipped !== Intersect.INSIDE);
-            if (clipped === Intersect.OUTSIDE) {
+        var tileset = this._tileset;
+        var clippingPlanes = tileset.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var tileTransform = tileset._root.computedTransform;
+            var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
+            this._isClipped = (intersection !== Intersect.INSIDE);
+            if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             }
         }
