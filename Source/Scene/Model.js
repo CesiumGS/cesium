@@ -2054,7 +2054,7 @@
             'void main() \n' +
             '{ \n' +
             '    gltf_morph_main(); \n' +
-            '    v_position = u_projectionMatrix * (u_modelViewMatrix * vec4(a_position,1.0)); \n' +
+            '    v_position = gl_Position; \n' +
             '} \n';
 
         return shader;
