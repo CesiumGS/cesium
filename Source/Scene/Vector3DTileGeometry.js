@@ -1,4 +1,5 @@
 define([
+        '../Core/arraySlice',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -13,6 +14,7 @@ define([
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
+        arraySlice,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -238,23 +240,23 @@ define([
                 // Copy because they may be the views on the same buffer.
                 var length = 0;
                 if (defined(geometries._boxes)) {
-                    boxes = geometries._boxes = boxes.slice();
-                    boxBatchIds = geometries._boxBatchIds = boxBatchIds.slice();
+                    boxes = geometries._boxes = arraySlice(boxes);
+                    boxBatchIds = geometries._boxBatchIds = arraySlice(boxBatchIds);
                     length += boxBatchIds.length;
                 }
                 if (defined(geometries._cylinders)) {
-                    cylinders = geometries._cylinders = cylinders.slice();
-                    cylinderBatchIds = geometries._cylinderBatchIds = cylinderBatchIds.slice();
+                    cylinders = geometries._cylinders = arraySlice(cylinders);
+                    cylinderBatchIds = geometries._cylinderBatchIds = arraySlice(cylinderBatchIds);
                     length += cylinderBatchIds.length;
                 }
                 if (defined(geometries._ellipsoids)) {
-                    ellipsoids = geometries._ellipsoids = ellipsoids.slice();
-                    ellipsoidBatchIds = geometries._ellipsoidBatchIds = ellipsoidBatchIds.slice();
+                    ellipsoids = geometries._ellipsoids = arraySlice(ellipsoids);
+                    ellipsoidBatchIds = geometries._ellipsoidBatchIds = arraySlice(ellipsoidBatchIds);
                     length += ellipsoidBatchIds.length;
                 }
                 if (defined(geometries._spheres)) {
-                    spheres = geometries._sphere = spheres.slice();
-                    sphereBatchIds = geometries._sphereBatchIds = sphereBatchIds.slice();
+                    spheres = geometries._sphere = arraySlice(spheres);
+                    sphereBatchIds = geometries._sphereBatchIds = arraySlice(sphereBatchIds);
                     length += sphereBatchIds.length;
                 }
 
@@ -303,7 +305,7 @@ define([
                 return;
             }
 
-            when(verticesPromise, function(result) {
+            verticesPromise.then(function(result) {
                 var packedBuffer = new Float64Array(result.packedBuffer);
                 var indicesBytesPerElement = unpackBuffer(geometries, packedBuffer);
 

@@ -267,14 +267,9 @@ define([
             var minLon = Number.POSITIVE_INFINITY;
             var maxLon = Number.NEGATIVE_INFINITY;
 
-            // TODO: potentially using an releasing a lot of memory here
-            var polygonPositions = [];
-            var bvPositions = [];
-
-            var position;
-
             for (j = 0; j < polygonCount; ++j) {
-                position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                ellipsoid.scaleToGeodeticSurface(position, position);
 
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
@@ -285,29 +280,12 @@ define([
                 minLon = Math.min(lon, minLon);
                 maxLon = Math.max(lon, maxLon);
 
-                var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
-                polygonPositions.push(Cartesian3.clone(scaledPosition));
-            }
-
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(polygonPositions, ellipsoid);
-            var positions2D = tangentPlane.projectPointsOntoPlane(polygonPositions);
-
-            var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
-                polygonPositions.reverse();
-            }
-
-            for (j = 0; j < polygonCount; ++j) {
-                position = polygonPositions[j];
-
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMinimumHeight, scratchScaledNormal);
                 var minHeightPosition = Cartesian3.add(position, scaledNormal, scratchMinHeightPosition);
 
                 scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMaximumHeight, scaledNormal);
                 var maxHeightPosition = Cartesian3.add(position, scaledNormal, scratchMaxHeightPosition);
-
-                bvPositions.push(Cartesian3.clone(minHeightPosition), Cartesian3.clone(maxHeightPosition));
 
                 Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
                 Cartesian3.subtract(minHeightPosition, center, minHeightPosition);

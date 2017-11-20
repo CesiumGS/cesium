@@ -503,11 +503,6 @@ define([
 
         var batchIds = getBatchIds(featureTableJson, featureTableBinary);
 
-        var pickObject = {
-            content : content,
-            primitive : content._tileset
-        };
-
         byteOffset += byteOffset % 4;
 
         if (numberOfPolygons > 0) {
@@ -547,7 +542,6 @@ define([
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : batchIds.polygons,
-                pickObject : pickObject,
                 modelMatrix : modelMatrix
             });
         }

@@ -96,8 +96,6 @@ define([
 
         this._batchedIndices = undefined;
 
-        this._pickObject = options.pickObject;
-
         this._ready = false;
         this._readyPromise = when.defer();
 
@@ -332,8 +330,7 @@ define([
                 batchedIndices : polygons._batchedIndices,
                 boundingVolume : polygons._boundingVolume,
                 boundingVolumes : polygons._boundingVolumes,
-                center : polygons._center,
-                pickObject : defaultValue(polygons._pickObject, polygons)
+                center : polygons._center
             });
 
             polygons._batchTable = undefined;
@@ -358,7 +355,6 @@ define([
             polygons._boundingVolume = undefined;
             polygons._boundingVolumes = undefined;
             polygons._batchedIndices = undefined;
-            polygons._pickObject = undefined;
             polygons._verticesPromise = undefined;
 
             polygons._readyPromise.resolve();

@@ -291,6 +291,9 @@ define([
     var scratchColor4 = new Color();
     var scratchColor5 = new Color();
     var scratchColor6 = new Color();
+    var scratchScaleByDistance = new NearFarScalar();
+    var scratchTranslucencyByDistance = new NearFarScalar();
+    var scratchDistanceDisplayCondition = new DistanceDisplayCondition();
 
     /**
      * Apply a style to the content.
@@ -371,21 +374,31 @@ define([
 
             if (defined(style.scaleByDistance)) {
                 var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
-                feature.scaleByDistance = new NearFarScalar(scaleByDistanceCart4.x, scaleByDistanceCart4.y, scaleByDistanceCart4.z, scaleByDistanceCart4.w);
+                scratchScaleByDistance.near = scaleByDistanceCart4.x;
+                scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
+                scratchScaleByDistance.far = scaleByDistanceCart4.z;
+                scratchScaleByDistance.farValue = scaleByDistanceCart4.w;
+                feature.scaleByDistance = scratchScaleByDistance;
             } else {
-                feature.scaleBydistance = undefined;
+                feature.scaleByDistance = undefined;
             }
 
             if (defined(style.translucencyByDistance)) {
                 var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(frameState, feature);
-                feature.translucencyByDistance = new NearFarScalar(translucencyByDistanceCart4.x, translucencyByDistanceCart4.y, translucencyByDistanceCart4.z, translucencyByDistanceCart4.w);
+                scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
+                scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
+                scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
+                scratchTranslucencyByDistance.farValue = translucencyByDistanceCart4.w;
+                feature.translucencyByDistance = scratchTranslucencyByDistance;
             } else {
                 feature.translucencyByDistance = undefined;
             }
 
             if (defined(style.distanceDisplayCondition)) {
                 var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
-                feature.distanceDisplayCondition = new DistanceDisplayCondition(distanceDisplayConditionCart2.x, distanceDisplayConditionCart2.y);
+                scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
+                scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
+                feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
             } else {
                 feature.distanceDisplayCondition = undefined;
             }
