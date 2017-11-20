@@ -190,6 +190,7 @@ define([
             var billboardCollection = points._billboardCollection = new BillboardCollection({batchTable : batchTable});
             var labelCollection = points._labelCollection = new LabelCollection({batchTable : batchTable});
             var polylineCollection = points._polylineCollection = new PolylineCollection();
+            polylineCollection._useHighlightColor = true;
 
             var numberOfPoints = positions.length / 3;
             for (var i = 0; i < numberOfPoints; ++i) {
@@ -248,7 +249,15 @@ define([
      * @param {Color} color The debug color.
      */
     Vector3DTilePoints.prototype.applyDebugSettings = function(enabled, color) {
-        // TODO
+        if (enabled) {
+            Color.clone(color, this._billboardCollection._highlightColor);
+            Color.clone(color, this._labelCollection._highlightColor);
+            Color.clone(color, this._polylineCollection._highlightColor);
+        } else {
+            Color.clone(Color.WHITE, this._billboardCollection._highlightColor);
+            Color.clone(Color.WHITE, this._labelCollection._highlightColor);
+            Color.clone(Color.WHITE, this._polylineCollection._highlightColor);
+        }
     };
 
     function clearStyle(polygons, features) {

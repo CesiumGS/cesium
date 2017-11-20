@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -18,6 +19,7 @@ define([
     ], function(
         BoundingRectangle,
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -502,6 +504,8 @@ define([
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
 
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
          * When this is the identity matrix, the labels are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -812,6 +816,9 @@ define([
         var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
         billboardCollection.blendOption = blendOption;
         backgroundBillboardCollection.blendOption = blendOption;
+
+        billboardCollection._highlightColor = this._highlightColor;
+        backgroundBillboardCollection._highlightColor = this._highlightColor;
 
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);

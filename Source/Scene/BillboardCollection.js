@@ -314,10 +314,15 @@ define([
             BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
         ];
 
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+
         var that = this;
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
+            },
+            u_highlightColor : function() {
+                return that._highlightColor;
             }
         };
 
@@ -1581,9 +1586,11 @@ define([
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
+            var vectorDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
+
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
-                    defines : ['OPAQUE'],
+                    defines : ['OPAQUE', vectorDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1595,7 +1602,7 @@ define([
                 });
 
                 fs = new ShaderSource({
-                    defines : ['TRANSLUCENT'],
+                    defines : ['TRANSLUCENT', vectorDefine],
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
@@ -1609,6 +1616,7 @@ define([
 
             if (this._blendOption === BlendOption.OPAQUE) {
                 fs = new ShaderSource({
+                    defines : [vectorDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1622,6 +1630,7 @@ define([
 
             if (this._blendOption === BlendOption.TRANSLUCENT) {
                 fs = new ShaderSource({
+                    defines : vectorDefine,
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
