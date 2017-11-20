@@ -40,7 +40,7 @@ define([
      * // On mouse over, display all the properties for a feature in the console log.
      * handler.setInputAction(function(movement) {
      *     var feature = scene.pick(movement.endPosition);
-     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+     *     if (feature instanceof Cesium.Cesium3DTilePointFeature) {
      *         var propertyNames = feature.getPropertyNames();
      *         var length = propertyNames.length;
      *         for (var i = 0; i < length; ++i) {
@@ -498,7 +498,8 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the horizontal origin of this point, which determines if the point is
+         * to the left, center, or right of its anchor position.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
@@ -514,7 +515,8 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the horizontal origin of this point's text, which determines if the point's text is
+         * to the left, center, or right of its anchor position.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *

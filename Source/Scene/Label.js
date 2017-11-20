@@ -147,6 +147,7 @@ define([
         this._labelCollection = labelCollection;
         this._glyphs = [];
         this._backgroundBillboard = undefined;
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;

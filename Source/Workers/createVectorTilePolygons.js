@@ -35,12 +35,10 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchRectangle = new Rectangle();
-    var scratchMatrix4 = new Matrix4();
     var scratchScalars = {
         min : undefined,
         max : undefined,
-        indexBytesPerElement : undefined,
-        isCartographic : undefined
+        indexBytesPerElement : undefined
     };
 
     function unpackBuffer(buffer) {
@@ -59,11 +57,6 @@ define([
         offset += Ellipsoid.packedLength;
 
         Rectangle.unpack(packedBuffer, offset, scratchRectangle);
-        offset += Rectangle.packedLength;
-
-        scratchScalars.isCartographic = packedBuffer[offset++] === 1.0;
-
-        Matrix4.unpack(packedBuffer, offset, scratchMatrix4);
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -148,8 +141,6 @@ define([
         var rectangle = scratchRectangle;
         var minHeight = scratchScalars.min;
         var maxHeight = scratchScalars.max;
-        var modelMatrix = scratchMatrix4;
-        var isCartographic = scratchScalars.isCartographic;
 
         var minimumHeights = parameters.minimumHeights;
         var maximumHeights = parameters.maximumHeights;
@@ -175,13 +166,8 @@ define([
             var x = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
             var y = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
 
-            var decodedPosition;
-            if (isCartographic) {
-                var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
-                decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
-            } else {
-                decodedPosition = Cartesian3.fromElements(x, y, 0.0, scratchEncodedPosition);
-            }
+            var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
+            var decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
             Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
         }
 
@@ -289,7 +275,6 @@ define([
 
             for (j = 0; j < polygonCount; ++j) {
                 position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-                Matrix4.multiplyByPoint(modelMatrix, position, position);
 
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
@@ -337,17 +322,13 @@ define([
                 batchIdIndex += 2;
             }
 
-            if (isCartographic) {
-                rectangle = scratchBVRectangle;
-                rectangle.west = minLon;
-                rectangle.east = maxLon;
-                rectangle.south = minLat;
-                rectangle.north = maxLat;
+            rectangle = scratchBVRectangle;
+            rectangle.west = minLon;
+            rectangle.east = maxLon;
+            rectangle.south = minLat;
+            rectangle.north = maxLat;
 
-                boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
-            } else {
-                boundingVolumes[i] = OrientedBoundingBox.fromPoints(bvPositions);
-            }
+            boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
 
             var indicesIndex = buffer.indexOffset;
 

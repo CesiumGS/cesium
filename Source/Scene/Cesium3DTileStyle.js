@@ -353,7 +353,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -363,6 +364,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointColor expression with a string
+         * style.pointColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointColor expression with a condition
+         * style.pointColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         pointColor : {
             get : function() {
@@ -380,9 +396,10 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointSize</code> property. Alternatively a string or object defining a point size style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
-         * The expression must return or convert to a <code>Number</code>.
+         * The expression must return a <code>Number</code>.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -443,7 +460,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -453,6 +471,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointOutlineColor expression with a string
+         * style.pointOutlineColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointOutlineColor expression with a condition
+         * style.pointOutlineColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         pointOutlineColor : {
             get : function() {
@@ -470,7 +503,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineWidth</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>pointOutlineWidth</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
@@ -480,6 +514,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointOutlineWidth expression with a string
+         * style.pointOutlineWidth = '5';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override pointOutlineWidth expression with a condition
+         * style.pointOutlineWidth = {
+         *     conditions : [
+         *         ['${height} > 2', '5'],
+         *         ['true', '0']
+         *     ]
+         * };
          */
         pointOutlineWidth : {
             get : function() {
@@ -497,7 +546,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -507,6 +557,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelColor expression with a string
+         * style.labelColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelColor expression with a condition
+         * style.labelColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         labelColor : {
             get : function() {
@@ -524,7 +589,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -534,6 +600,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelOutlineColor expression with a string
+         * style.labelOutlineColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelOutlineColor expression with a condition
+         * style.labelOutlineColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         labelOutlineColor : {
             get : function() {
@@ -551,7 +632,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineWidth</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOutlineWidth</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
@@ -561,6 +643,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelOutlineWidth expression with a string
+         * style.labelOutlineWidth = '5';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override labelOutlineWidth expression with a condition
+         * style.labelOutlineWidth = {
+         *     conditions : [
+         *         ['${height} > 2', '5'],
+         *         ['true', '0']
+         *     ]
+         * };
          */
         labelOutlineWidth : {
             get : function() {
@@ -578,7 +675,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>font</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>font</code> property. Alternatively a string or object defining a string style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
@@ -603,8 +701,6 @@ define([
          *         return '24px Helvetica';
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         font : {
             get : function() {
@@ -622,9 +718,10 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelStyle</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>label style</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
-         * The expression must return or convert to a <code>LabelStyle</code>.
+         * The expression must return a <code>LabelStyle</code>.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -637,7 +734,7 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
          * });
-         * style.labelStyle.evaluate(frameState, feature); // returns a Cesium.LabelStyle
+         * style.labelStyle.evaluate(frameState, feature); // returns a LabelStyle
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -647,8 +744,6 @@ define([
          *         return LabelStyle.FILL;
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         labelStyle : {
             get : function() {
@@ -666,7 +761,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelText</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelText</code> property. Alternatively a string or object defining a string style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
@@ -679,20 +775,18 @@ define([
          *
          * @example
          * var style = new Cesium3DTileStyle({
-         *     text : '(${Temperature} > 90) ? ">90" : "<=90"'
+         *     labelText : '(${Temperature} > 90) ? ">90" : "<=90"'
          * });
-         * style.text.evaluate(frameState, feature); // returns a String
+         * style.labelText.evaluate(frameState, feature); // returns a String
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override text expression with a custom function
-         * style.text = {
+         * // Override labelText expression with a custom function
+         * style.labelText = {
          *     evaluate : function(frameState, feature) {
          *         return 'Example label text';
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         labelText : {
             get : function() {
@@ -710,7 +804,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -720,6 +815,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override backgroundColor expression with a string
+         * style.backgroundColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override backgroundColor expression with a condition
+         * style.backgroundColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         backgroundColor : {
             get : function() {
@@ -737,7 +847,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundPadding</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundPadding</code> property. Alternatively a string or object defining a vec2 style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
@@ -747,6 +858,12 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override backgroundPadding expression with a string
+         * style.backgroundPadding = 'vec2(5.0, 7.0)';
+         * style.backgroundPadding.evaluate(frameState, feature); // returns a Cartesian2
          */
         backgroundPadding : {
             get : function() {
@@ -764,7 +881,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundEnabled</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>backgroundEnabled</code> property. Alternatively a string or object defining a boolean style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Boolean</code>.
          * </p>
@@ -774,6 +892,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override backgroundEnabled expression with a string
+         * style.backgroundEnabled = 'true';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override backgroundEnabled expression with a condition
+         * style.backgroundEnabled = {
+         *     conditions : [
+         *         ['${height} > 2', 'true'],
+         *         ['true', 'false']
+         *     ]
+         * };
          */
         backgroundEnabled : {
             get : function() {
@@ -791,7 +924,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>scaleByDistance</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>scaleByDistance</code> property. Alternatively a string or object defining a vec4 style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Cartesian4</code>.
          * </p>
@@ -801,6 +935,12 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override scaleByDistance expression with a string
+         * style.scaleByDistance = 'vec4(1.5e2, 2.0, 1.5e7, 0.5)';
+         * style.scaleByDistance.evaluate(frameState, feature); // returns a Cartesian4
          */
         scaleByDistance : {
             get : function() {
@@ -818,7 +958,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>translucencyByDistance</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>translucencyByDistance</code> property. Alternatively a string or object defining a vec4 style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Cartesian4</code>.
          * </p>
@@ -828,6 +969,12 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override translucencyByDistance expression with a string
+         * style.translucencyByDistance = 'vec4(1.5e2, 1.0, 1.5e7, 0.2)';
+         * style.translucencyByDistance.evaluate(frameState, feature); // returns a Cartesian4
          */
         translucencyByDistance : {
             get : function() {
@@ -845,7 +992,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>distanceDisplayCondition</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>distanceDisplayCondition</code> property. Alternatively a string or object defining a vec2 style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Cartesian2</code>.
          * </p>
@@ -855,6 +1003,12 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override distanceDisplayCondition expression with a string
+         * style.distanceDisplayCondition = 'vec2(0.0, 5.5e6)';
+         * style.distanceDisplayCondition.evaluate(frameState, feature); // returns a Cartesian2
          */
         distanceDisplayCondition : {
             get : function() {
@@ -872,7 +1026,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>heightOffset</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>heightOffset</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
@@ -882,6 +1037,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override heightOffset expression with a string
+         * style.heightOffset = '2.0';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override heightOffset expression with a condition
+         * style.heightOffset = {
+         *     conditions : [
+         *         ['${height} > 2', '4.0'],
+         *         ['true', '2.0']
+         *     ]
+         * };
          */
         heightOffset : {
             get : function() {
@@ -899,7 +1069,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineEnabled</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineEnabled</code> property. Alternatively a string or object defining a boolean style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Boolean</code>.
          * </p>
@@ -909,6 +1080,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override anchorLineEnabled expression with a string
+         * style.anchorLineEnabled = 'true';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override anchorLineEnabled expression with a condition
+         * style.anchorLineEnabled = {
+         *     conditions : [
+         *         ['${height} > 2', 'true'],
+         *         ['true', 'false']
+         *     ]
+         * };
          */
         anchorLineEnabled : {
             get : function() {
@@ -926,7 +1112,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineColor</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>anchorLineColor</code> property. Alternatively a string or object defining a color style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Color</code>.
          * </p>
@@ -936,6 +1123,21 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override anchorLineColor expression with a string
+         * style.anchorLineColor = 'color("blue")';
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override anchorLineColor expression with a condition
+         * style.anchorLineColor = {
+         *     conditions : [
+         *         ['${height} > 2', 'color("cyan")'],
+         *         ['true', 'color("blue")']
+         *     ]
+         * };
          */
         anchorLineColor : {
             get : function() {
@@ -953,7 +1155,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>image</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>image</code> property. Alternatively a string or object defining a string style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>String</code>.
          * </p>
@@ -978,8 +1181,6 @@ define([
          *         return '/url/to/image';
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         image : {
             get : function() {
@@ -997,7 +1198,8 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>disableDepthTestDistance</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>disableDepthTestDistance</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
          * The expression must return a <code>Number</code>.
          * </p>
@@ -1007,6 +1209,12 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override disableDepthTestDistance expression with a string
+         * style.disableDepthTestDistance = '1000.0';
+         * style.disableDepthTestDistance.evaluate(frameState, feature); // returns a Number
          */
         disableDepthTestDistance : {
             get : function() {
@@ -1024,9 +1232,10 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>origin</code> property.
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>origin</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
-         * The expression must return or convert to a <code>HorizontalOrigin</code>.
+         * The expression must return a <code>HorizontalOrigin</code>.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1039,18 +1248,16 @@ define([
          * var style = new Cesium3DTileStyle({
          *     origin : HorizontalOrigin.LEFT
          * });
-         * style.origin.evaluate(frameState, feature); // returns a Cesium.HorizontalOrigin
+         * style.origin.evaluate(frameState, feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override labelStyle expression with a custom function
+         * // Override origin expression with a custom function
          * style.origin = {
          *     evaluate : function(frameState, feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         origin : {
             get : function() {
@@ -1068,9 +1275,10 @@ define([
         },
 
         /**
-         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOrigin</code> property.
+         Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>labelOrigin</code> property. Alternatively a string or object defining a number style can be used.
+         * The getter will return the internal {@link Expression} or {@link ConditionsExpression}, which may differ from the value provided to the setter.
          * <p>
-         * The expression must return or convert to a <code>HorizontalOrigin</code>.
+         * The expression must return a <code>HorizontalOrigin</code>.
          * </p>
          *
          * @memberof Cesium3DTileStyle.prototype
@@ -1083,18 +1291,16 @@ define([
          * var style = new Cesium3DTileStyle({
          *     labelOrigin : HorizontalOrigin.LEFT
          * });
-         * style.labelOrigin.evaluate(frameState, feature); // returns a Cesium.HorizontalOrigin
+         * style.labelOrigin.evaluate(frameState, feature); // returns a HorizontalOrigin
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
-         * // Override labelStyle expression with a custom function
+         * // Override labelOrigin expression with a custom function
          * style.labelOrigin = {
          *     evaluate : function(frameState, feature) {
          *         return HorizontalOrigin.CENTER;
          *     }
          * };
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         labelOrigin : {
             get : function() {

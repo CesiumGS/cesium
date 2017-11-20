@@ -318,8 +318,7 @@ define([
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
-            },
-            tile_translucentCommand : function() { return false; }
+            }
         };
 
         var scene = this._scene;
