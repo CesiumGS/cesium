@@ -4,6 +4,8 @@ Change Log
 ### 1.40 - 2017-12-01
 
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
+* Fixed `Invalid asm.js: Invalid member of stdlib` console error by recompiling crunch.js with latest emscripten toolchain. [#5847](https://github.com/AnalyticalGraphicsInc/cesium/issues/5847)
+* Added CZML support for `polyline.depthFailMaterial`, `label.scaleByDistance`, `distanceDisplayCondition`, and `disableDepthTestDistance`. [#5986](https://github.com/AnalyticalGraphicsInc/cesium/pull/5986)
 * Added function that removes duplicate namespace declarations while loading a  KML. [#5972](https://github.com/AnalyticalGraphicsInc/cesium/pull/5972)
 
 ### 1.39 - 2017-11-01
