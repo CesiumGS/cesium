@@ -3,7 +3,8 @@ Change Log
 
 ## TODO release
 
-* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies an array of planes to clip the object. [TODO]()
+* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to clip the object. [TODO]()
+* Added `terrainClippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to clip the terrain.
 * Added `Plane.transformPlane` function to apply a transformation to a plane. [TODO]()
 * Added `PlaneGeometry` and `PlaneOutlineGeometry` primitives
 * Added `PlaneGraphics` and `plane` property to `Entity`.
