@@ -594,7 +594,7 @@ define([
          *
          * @type {Boolean}
          *
-         * @default false
+         * @default true
          */
         this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
 
@@ -3332,7 +3332,7 @@ define([
     }
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    function createClippingPlanesFunction(model, context) {
+    function createClippingPlanesFunction(model) {
         return function() {
             var planes = model.clippingPlanes;
             var packedPlanes = model._packedClippingPlanes;

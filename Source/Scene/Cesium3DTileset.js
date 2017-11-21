@@ -535,7 +535,7 @@ define([
          * Optimization option. If set to false, the tileset will not perform clipping operations.
          *
          * @type {Boolean}
-         * @default {undefined}
+         * @default {true}
          * @see Cesium3DTileset.clippingPlanes
          */
         this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
