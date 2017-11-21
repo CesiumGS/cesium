@@ -55,7 +55,7 @@ Before we can merge a pull request, we require a signed Contributor License Agre
 * [individuals](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt) and
 * [corporations](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt).
 
-This only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium using the [Apache 2.0 License](LICENSE.md).
+This only needs to be completed once, and enables contributions to all of the projects under the [Analytical Graphics Inc](https://github.com/AnalyticalGraphicsInc) organization, including Cesium.  The CLA ensures you retain copyright to your contributions, and provides us the right to use, modify, and redistribute your contributions using the [Apache 2.0 License](LICENSE.md).
 
 Please email a completed CLA with all fields filled in to [cla@agi.com](mailto:cla@agi.com).  Related questions are also welcome.
 
@@ -82,6 +82,6 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 # Code of Conduct
 
-One of Cesium's strengths is our community.  Our contributors and users are pushing the 3D geospatial field to amazing new levels.  We rely on an open, friendly, inclusive environment to facilitate this.  As such, we follow the [Contributor Covenant](http://contributor-covenant.org/)'s [Code of Conduct](http://contributor-covenant.org/version/1/4/code_of_conduct.md) to ensure a harassment-free experience in the Cesium community.  Any unacceptable behavior can be confidentiality sent to the core team at pcozzi@agi.com.
+One of Cesium's strengths is our community.  Our contributors and users are pushing the 3D geospatial field to amazing new levels.  We rely on an open, friendly, inclusive environment to facilitate this.  As such, we follow the [Contributor Covenant](http://contributor-covenant.org/)'s [Code of Conduct](http://contributor-covenant.org/version/1/4/code_of_conduct.md) to ensure a harassment-free experience in the Cesium community.  Any unacceptable behavior can be confidentially sent to the core team at pcozzi@agi.com.
 
 This applies to the main Cesium repo, forum, twitter, and all channels, including all repos in the [AnalyticalGraphicsInc](https://github.com/AnalyticalGraphicsInc) GitHub organization.

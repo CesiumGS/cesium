@@ -63,6 +63,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './InvertClassification',
         './JobScheduler',
         './MapMode2D',
         './OIT',
@@ -143,6 +144,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        InvertClassification,
         JobScheduler,
         MapMode2D,
         OIT,
@@ -631,6 +633,38 @@ define([
             enabled : defaultValue(options.shadows, false)
         });
 
+        /**
+         * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
+         * unclassified 3D Tile geometry will render with the color multiplied by {@link Scene#invertClassificationColor}.
+         * @type {Boolean}
+         * @default false
+         */
+        this.invertClassification = false;
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link Scene#invertClassification} is <code>true</code>.
+         * <p>When the color's alpha is less than 1.0, the unclassified portions of the 3D Tiles will not blend correctly with the classified positions of the 3D Tiles.</p>
+         * <p>Also, when the color's alpha is less than 1.0, the WEBGL_depth_texture and EXT_frag_depth WebGL extensions must be supported.</p>
+         * @type {Color}
+         * @default Color.WHITE
+         */
+        this.invertClassificationColor = Color.clone(Color.WHITE);
+
+        this._actualInvertClassificationColor = Color.clone(this._invertClassificationColor);
+        this._invertClassification = new InvertClassification();
+
+        /**
+         * The focal length for use when with cardboard or WebVR.
+         * @type {Number}
+         */
+        this.focalLength = undefined;
+
+        /**
+         * The eye separation distance in meters for use with cardboard or WebVR.
+         * @type {Number}
+         */
+        this.eyeSeparation = undefined;
+
         this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -666,7 +700,8 @@ define([
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useFXAA : false
+            useFXAA : false,
+            useInvertClassification : false
         };
 
         this._useWebVR = false;
@@ -1164,7 +1199,7 @@ define([
             }
         },
 
-         /**
+        /**
          * Gets or sets the position of the Imagery splitter within the viewport.  Valid values are between 0.0 and 1.0.
          * @memberof Scene.prototype
          *
@@ -1229,10 +1264,10 @@ define([
         Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
         Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
         return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
-            Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
-            Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     }
 
     function updateDerivedCommands(scene, command) {
@@ -1315,6 +1350,15 @@ define([
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
+        frameState.invertClassification = scene.invertClassification;
+
+        scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
+        if (!InvertClassification.isTranslucencySupported(scene._context)) {
+            scene._actualInvertClassificationColor.alpha = 1.0;
+        }
+
+        frameState.invertClassificationColor = scene._actualInvertClassificationColor;
+
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
         } else {
@@ -1767,10 +1811,14 @@ define([
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
+
+        if (defined(invertClassification)) {
+            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
+        }
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
@@ -1870,8 +1918,8 @@ define([
         var executeTranslucentCommands;
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
-                scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
-                    scene._oit.executeCommands(scene, executeFunction, passState, commands);
+                scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertClassification) {
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
@@ -1919,6 +1967,7 @@ define([
             }
 
             clearDepth.execute(context, passState);
+            scene._stencilClearCommand.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -1947,22 +1996,103 @@ define([
                 clearDepth.execute(context, passState);
             }
 
-            us.updatePass(Pass.CESIUM_3D_TILE);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
+            if (!environmentState.useInvertClassification || picking) {
+                // Common/fastest path. Draw 3D Tiles and classification normally.
+
+                // Draw 3D Tiles
+                us.updatePass(Pass.CESIUM_3D_TILE);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                // Draw classifications. Modifies 3D Tiles color.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+            } else {
+                // When the invert classification color is opaque:
+                //    Main FBO (FBO1):                   Main_Color   + Main_DepthStencil
+                //    Invert classification FBO (FBO2) : Invert_Color + Main_DepthStencil
+                //
+                //    1. Clear FBO2 color to vec4(0.0) for each frustum
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Main_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Main_DepthStencil has stencil bit set to 0 (unclassified) and
+                //           * Invert_Color !== vec4(0.0)
+                //
+                // When the invert classification color is translucent:
+                //    Main FBO (FBO1):                  Main_Color         + Main_DepthStencil
+                //    Invert classification FBO (FBO2): Invert_Color       + Invert_DepthStencil
+                //    IsClassified FBO (FBO3):          IsClassified_Color + Invert_DepthStencil
+                //
+                //    1. Clear FBO2 and FBO3 color to vec4(0.0), stencil to 0, and depth to 1.0
+                //    2. Draw 3D Tiles to FBO2
+                //    3. Draw classification to FBO2
+                //    4. Fullscreen pass to FBO3, draw any color when
+                //           * Invert_DepthStencil has the stencil bit set > 0 (classified)
+                //    5. Fullscreen pass to FBO1, draw Invert_Color when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color !== vec4(0.0)
+                //    6. Fullscreen pass to FBO1, draw Invert_Color * czm_invertClassificationColor when:
+                //           * Invert_Color !== vec4(0.0) and
+                //           * IsClassified_Color === vec4(0.0)
+                //
+                // NOTE: Step six when translucent invert color occurs after the TRANSLUCENT pass
+                //
+                scene._invertClassification.clear(context, passState);
+
+                var opaqueClassificationFramebuffer = passState.framebuffer;
+                passState.framebuffer = scene._invertClassification._fbo;
+
+                // Draw normally
+                us.updatePass(Pass.CESIUM_3D_TILE);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                // Set stencil
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
+
+                passState.framebuffer = opaqueClassificationFramebuffer;
+
+                // Fullscreen pass to copy classified fragments
+                scene._invertClassification.executeClassified(context, passState);
+                if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                    // Fullscreen pass to copy unclassified fragments when alpha == 1.0
+                    scene._invertClassification.executeUnclassified(context, passState);
+                }
+
+                // Clear stencil set by the classification for the next classification pass
+                if (length > 0 && context.stencilBuffer) {
+                    scene._stencilClearCommand.execute(context, passState);
+                }
+
+                // Draw style over classification.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
             }
 
             if (length > 0 && context.stencilBuffer) {
                 scene._stencilClearCommand.execute(context, passState);
-            }
-
-            us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
             }
 
             if (clearGlobeDepth && useDepthPlane) {
@@ -1971,7 +2101,7 @@ define([
 
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
-            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION + 1;
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
                 us.updatePass(pass);
@@ -1988,10 +2118,17 @@ define([
                 us.updateFrustum(frustum);
             }
 
+            var invertClassification;
+            if (!picking && environmentState.useInvertClassification && scene.frameState.invertClassificationColor.alpha < 1.0) {
+                // Fullscreen pass to copy unclassified fragments when alpha < 1.0.
+                // Not executed when undefined.
+                invertClassification = scene._invertClassification;
+            }
+
             us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
-            executeTranslucentCommands(scene, executeCommand, passState, commands);
+            executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
             if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
@@ -2157,8 +2294,8 @@ define([
             var savedCamera = Camera.clone(camera, scene._cameraVR);
 
             var near = camera.frustum.near;
-            var fo = near * 5.0;
-            var eyeSeparation = fo / 30.0;
+            var fo = near * defaultValue(scene.focalLength, 5.0);
+            var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
             var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
             camera.frustum.aspectRatio = viewport.width / viewport.height;
@@ -2528,6 +2665,28 @@ define([
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
         }
+
+        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        if (useInvertClassification) {
+            var depthFramebuffer;
+            if (scene.frameState.invertClassificationColor.alpha === 1.0) {
+                if (environmentState.useGlobeDepthFramebuffer) {
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
+                }
+            }
+
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
+
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
+            }
+        }
     }
 
     function resolveFramebuffers(scene, passState) {
@@ -2860,6 +3019,7 @@ define([
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
+        frameState.invertClassification = false;
         frameState.passes.pick = true;
 
         us.update(frameState);
@@ -3377,7 +3537,7 @@ define([
         return destroyObject(this);
     };
 
-     /**
+    /**
      * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
      * HTML element at the same screen position as an object in the scene.
      *

@@ -208,7 +208,14 @@ define([
              * @type {Number}
              * @default undefined
              */
-            sse : undefined
+            sse : undefined,
+            /**
+             * The minimum brightness of terrain with fog applied.
+             *
+             * @type {Number}
+             * @default undefined
+             */
+            minimumBrightness : undefined
         };
 
         /**
@@ -296,6 +303,20 @@ define([
          * @type {Number}
          */
         this.minimumDisableDepthTestDistance = undefined;
+
+        /**
+         * When <code>false</code>, 3D Tiles will render normally. When <code>true</code>, classified 3D Tile geometry will render normally and
+         * unclassified 3D Tile geometry will render with the color multiplied with {@link FrameState#invertClassificationColor}.
+         * @type {Boolean}
+         * @default false
+         */
+        this.invertClassification = false;
+
+        /**
+         * The highlight color of unclassified 3D Tile geometry when {@link FrameState#invertClassification} is <code>true</code>.
+         * @type {Color}
+         */
+        this.invertClassificationColor = undefined;
     }
 
     /**

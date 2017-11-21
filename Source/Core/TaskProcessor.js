@@ -137,7 +137,7 @@ define([
 
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (defined(require.toUrl)) {
+        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
             bootstrapMessage.loaderConfig.baseUrl =
                 getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {

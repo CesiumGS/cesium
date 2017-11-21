@@ -283,7 +283,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/AnimationWidget.png" width="211" height="142" alt="" />
+     * <img src="Images/AnimationWidget.png" width="211" height="142" alt="" />
      * <br />Animation widget
      * </span>
      * <br /><br />
