@@ -1,6 +1,6 @@
 define([
         '../Core/defined',
-        '../Core/DeveloperError',
+        '../Core/DeveloperError'
     ], function(
         defined,
         DeveloperError) {

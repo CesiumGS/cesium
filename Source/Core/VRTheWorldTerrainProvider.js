@@ -14,8 +14,6 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
-        './Request',
-        './RequestType',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -34,8 +32,6 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
-        Request,
-        RequestType,
         TerrainProvider,
         TileProviderError) {
     'use strict';
