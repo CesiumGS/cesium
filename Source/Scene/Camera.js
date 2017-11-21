@@ -2811,20 +2811,28 @@ define([
         var that = this;
         var flightTween;
 
+        var eventuallyCleanCurrentFlight = function () {
+            if(flightTween === that._currentFlight) {
+                that._currentFlight = undefined;
+            }
+        };
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
         newOptions.pitch = orientation.pitch;
         newOptions.roll = orientation.roll;
         newOptions.duration = options.duration;
         newOptions.complete = function () {
-            if(flightTween === that._currentFlight){
-                that._currentFlight = undefined;
-            }
+            eventuallyCleanCurrentFlight();
             if (defined(options.complete)) {
                 options.complete();
             }
         };
-        newOptions.cancel = options.cancel;
+        newOptions.cancel =  function () {
+            eventuallyCleanCurrentFlight();
+            if (defined(options.cancel)) {
+                options.cancel();
+            }
+        };
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
         newOptions.maximumHeight = options.maximumHeight;
