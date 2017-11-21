@@ -29,8 +29,13 @@ define([
      * @alias ClippingPlanesCollection
      * @constructor
      *
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
-     * globe.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Plane[]} [options.planes=[]] An array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
+     * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
+     * @param {Matrix4} [options.transformationMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
+     * @param {Boolean} [options.inclusive=true] If true, the region to be clipped must be included in all planes in this collection. Otherwise, a region will be clipped if included in any plane in the collection.
+     * @param {Color} [options.edgeColor=Color.WHITE] The color applied to hughlight the edge along which an object is clipped.
+     * @param {Number} [options.edgeWidth=0.0] The width of the highlight applied to the edge along which an object is clipped.
      */
     function ClippingPlanesCollection(options) {
         var options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -52,7 +57,7 @@ define([
         this.enabled = defaultValue(options.enabled, true);
 
         /**
-         * A transformation matrix specifying the coordinate system for this collection.
+         * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
          *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
@@ -69,7 +74,7 @@ define([
         this.inclusive = defaultValue(options.inclusive, true);
 
         /**
-         * The color of the highlighted clipped edge.
+         * The color applied to hughlight the edge along which an object is clipped.
          *
          * @type {Color}
          * @default Color.WHITE
@@ -77,7 +82,7 @@ define([
         this.edgeColor = defaultValue(options.edgeColor, Color.WHITE);
 
         /**
-         * The width of the clipped edge to highlight.
+         * The width of the highlight applied to the edge along which an object is clipped.
          *
          * @type {Number}
          * @default 0.0
@@ -142,7 +147,7 @@ define([
      * Determines the type intersection with the planes of this bounding collection and the specified {@link BoundingVolume}.
      *
      * @param {BoundingVolume} boundingVolume The volume to determine the intersection with the planes.
-     * @param {Matrix4} [parentTransform] An additional matrix to transform the plane to world coordinates.
+     * @param {Matrix4} [parentTransform] An optional, additional matrix to transform the plane to world coordinates.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
      *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
      *                      if the entire volume is on the opposite side and should be clipped, and

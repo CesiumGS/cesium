@@ -341,7 +341,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {ClippingPlanesCollection} [options.clippingPlanes] An array of {@link Plane} used to clip the model.
+     * @param {ClippingPlanesCollection} [options.clippingPlanes] The {@link ClippingPlanesCollection} used to selectively disable rendering the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -580,7 +580,7 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
+         * The {@link ClippingPlanesCollection} used to selectively disable rendering the model.
          *
          * @type {ClippingPlanesCollection}
          */
