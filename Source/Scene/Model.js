@@ -31,6 +31,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/PixelFormat',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
@@ -108,6 +109,7 @@ define([
         Matrix3,
         Matrix4,
         PixelFormat,
+        Plane,
         PrimitiveType,
         Quaternion,
         Queue,
@@ -340,6 +342,7 @@ define([
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
+     * @param {Boolean} [options.clippingPlanesEnabled=true] Optimization option. If set to false, the model will not perform clipping operations.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -578,13 +581,22 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * An array of {@link Plane} used to clip the model.
+         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
          *
          * @type {Plane[]}
-         *
-         * @default []
          */
-        this.clippingPlanes = defaultValue(options.clippingPlanes, []);
+        this.clippingPlanes = options.clippingPlanes;
+
+        /**
+         * Optimization option. If set to false, the model will not perform clipping operations.
+         *
+         * @see Model.clippingPlanes
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -641,6 +653,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._modelViewMatrix = new Matrix4(); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -3306,32 +3319,32 @@ define([
         };
     }
 
-    function createClippingPlanesLengthFunction(model) {
+    function createClippingPlanesEnabledFunction(model) {
         return function() {
-            return model.clippingPlanes.length;
+            return model.clippingPlanesEnabled;
         };
     }
 
-    var scratchCartesian = new Cartesian3();
-    var scratchMatrix = new Matrix4();
-
-    function createClippingPlanesFunction(model, context) {
+    function createClippingPlanesLengthFunction(model) {
         return function() {
-            var scale = getScale(model, context.uniformState.frameState);
-            Matrix4.multiplyByUniformScale(model.modelMatrix, scale, scratchMatrix);
-            Matrix4.multiply(context.uniformState.view3D, scratchMatrix, scratchMatrix);
+            return model._packedClippingPlanes.length;
+        };
+    }
 
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+    function createClippingPlanesFunction(model) {
+        return function() {
             var planes = model.clippingPlanes;
-            var length = planes.length;
             var packedPlanes = model._packedClippingPlanes;
+            var length = packedPlanes.length;
             for (var i = 0; i < length; ++i) {
                 var plane = planes[i];
                 var packedPlane = packedPlanes[i];
-                Matrix4.multiplyByPointAsVector(scratchMatrix, plane.normal, packedPlane);
-                Cartesian3.normalize(packedPlane, packedPlane);
-                Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-                Matrix4.multiplyByPoint(scratchMatrix, scratchCartesian, scratchCartesian);
-                packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+
+                Plane.transform(plane, model._modelViewMatrix, scratchPlane);
+
+                Cartesian3.clone(scratchPlane.normal, packedPlane);
+                packedPlane.w = scratchPlane.distance;
             }
             return packedPlanes;
         };
@@ -3432,6 +3445,7 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
+                gltf_clippingPlanesEnabled: createClippingPlanesEnabledFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context)
             });
@@ -4230,12 +4244,15 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
+            'uniform bool gltf_clippingPlanesEnabled; \n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    czm_clipPlanes(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '    if (gltf_clippingPlanesEnabled) { \n' +
+            '        czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '    } \n' +
             '} \n';
 
         return shader;
@@ -4264,7 +4281,11 @@ define([
     }
 
     function updateClippingPlanes(model) {
-        var length = model.clippingPlanes.length;
+        var length = 0;
+        var clippingPlanes = model.clippingPlanes;
+        if (defined(clippingPlanes)) {
+            length = clippingPlanes.length;
+        }
 
         if (model._packedClippingPlanes.length !== length) {
             model._packedClippingPlanes = new Array(length);
@@ -4681,6 +4702,7 @@ define([
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
             var modelMatrix = this.modelMatrix;
+            var modelViewChanged = context.uniformState._modelViewDirty;
 
             var modeChanged = frameState.mode !== this._mode;
             this._mode = frameState.mode;
@@ -4694,6 +4716,8 @@ define([
                 modeChanged;
 
             if (modelTransformChanged || justLoaded) {
+                modelViewChanged = true;
+
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
                 updateClamping(this);
@@ -4716,6 +4740,10 @@ define([
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
                 }
+            }
+
+            if (this.clippingPlanesEnabled && modelViewChanged) {
+                Matrix4.multiply(context.uniformState.view3D, this._computedModelMatrix, this._modelViewMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed

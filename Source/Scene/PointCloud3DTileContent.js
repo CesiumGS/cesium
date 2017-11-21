@@ -15,6 +15,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/Transforms',
@@ -50,6 +51,7 @@ define([
         Matrix3,
         Matrix4,
         oneTimeWarning,
+        Plane,
         PrimitiveType,
         RuntimeError,
         Transforms,
@@ -514,8 +516,8 @@ define([
             }
         }
 
-        var scratchCartesian = new Cartesian3();
-
+        var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+        var scratchMatrix = new Matrix4();
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -528,21 +530,26 @@ define([
             u_constantColor : function() {
                 return content._constantColor;
             },
+            u_clippingPlanesEnabled : function() {
+                return content._tileset.clippingPlanesEnabled && content._tile._isClipped;
+            },
             u_clippingPlanesLength : function() {
-                return content._tileset.clippingPlanes.length;
+                return content._packedClippingPlanes.length;
             },
             u_clippingPlanes : function() {
+                Matrix4.multiply(context.uniformState.view3D, content._modelMatrix, scratchMatrix);
+
                 var planes = content._tileset.clippingPlanes;
-                var length = planes.length;
                 var packedPlanes = content._packedClippingPlanes;
+                var length = packedPlanes.length;
                 for (var i = 0; i < length; ++i) {
                     var plane = planes[i];
                     var packedPlane = packedPlanes[i];
 
-                    Matrix3.multiplyByVector(context.uniformState.normal, plane.normal, packedPlane);
-                    Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchCartesian);
-                    Matrix4.multiplyByPoint(context.uniformState.modelView3D, scratchCartesian, scratchCartesian);
-                    packedPlane.w = Cartesian3.dot(packedPlane, scratchCartesian);
+                    Plane.transform(plane, scratchMatrix, scratchPlane);
+
+                    Cartesian3.clone(scratchPlane.normal, packedPlane);
+                    packedPlane.w = scratchPlane.distance;
                 }
                 return packedPlanes;
             }
@@ -1054,11 +1061,14 @@ define([
         vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
+                 'uniform bool u_clippingPlanesEnabled; \n' +
                  'uniform int u_clippingPlanesLength;' +
                  'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
                  'void main() \n' +
                  '{ \n' +
-                 '    czm_clipPlanes(u_clippingPlanes, u_clippingPlanesLength); \n' +
+                 '    if (u_clippingPlanesEnabled) { \n' +
+                 '        czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength); \n' +
+                 '    } \n' +
                  '    gl_FragColor = v_color; \n' +
                  '} \n';
 

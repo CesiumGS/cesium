@@ -2,6 +2,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/CullingVolume',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -14,6 +15,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/Rectangle',
         '../Core/Request',
         '../Core/RequestScheduler',
@@ -35,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Color,
+        CullingVolume,
         defaultValue,
         defined,
         defineProperties,
@@ -47,6 +50,7 @@ define([
         loadArrayBuffer,
         Matrix3,
         Matrix4,
+        Plane,
         Rectangle,
         Request,
         RequestScheduler,
@@ -317,6 +321,7 @@ define([
         this._lastVisitedFrame = undefined;
         this._ancestorWithContent = undefined;
         this._ancestorWithLoadedContent = undefined;
+        this._isClipped = true;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -735,6 +740,27 @@ define([
         return frameState.mode !== SceneMode.SCENE3D ? tile._contentBoundingVolume2D : tile._contentBoundingVolume;
     }
 
+
+    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+    function checkTileClipped(tile, boundingVolume) {
+        var planes = tile._tileset.clippingPlanes;
+        if (defined(planes)) {
+            var length = planes.length;
+            var rootTransform = tile._tileset._root.computedTransform;
+            for (var i = 0; i < length; ++i) {
+                var plane = planes[i];
+                Plane.transform(plane, rootTransform, scratchPlane);
+                var value = boundingVolume.intersectPlane(scratchPlane);
+                if (value !== Intersect.INSIDE) {
+                    return value;
+                }
+            }
+        }
+
+        return Intersect.INSIDE;
+    }
+
+
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
@@ -747,6 +773,15 @@ define([
     Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
+
+        if (this._tileset.clippingPlanesEnabled) {
+            var clipped = checkTileClipped(this, boundingVolume);
+            this._isClipped = (clipped !== Intersect.INSIDE);
+            if (clipped === Intersect.OUTSIDE) {
+                return CullingVolume.MASK_OUTSIDE;
+            }
+        }
+
         return cullingVolume.computeVisibilityWithPlaneMask(boundingVolume, parentVisibilityPlaneMask);
     };
 
@@ -770,6 +805,15 @@ define([
         // tile's (not the content's) bounding volume intersects the culling volume?
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getContentBoundingVolume(this, frameState);
+
+        if (this._tileset.clippingPlanesEnabled) {
+            var clipped = checkTileClipped(this, boundingVolume);
+            this._isClipped = (clipped !== Intersect.INSIDE);
+            if (clipped === Intersect.OUTSIDE) {
+                return Intersect.OUTSIDE;
+            }
+        }
+
         return cullingVolume.computeVisibility(boundingVolume);
     };
 

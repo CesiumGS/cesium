@@ -1,5 +1,11 @@
 Change Log
 ==========
+
+## TODO release
+
+* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies an array of planes to clip the object. [TODO]()
+* Added `Plane.transformPlane` function to apply a transformation to a plane. [TODO]()
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes
@@ -18,7 +24,6 @@ Change Log
 * Fixed a 3D Tiles point cloud bug causing a stray point to appear at the center of the screen on certain hardware. [#5599](https://github.com/AnalyticalGraphicsInc/cesium/issues/5599)
 * Fixed removing multiple event listeners within event callbacks. [#5827](https://github.com/AnalyticalGraphicsInc/cesium/issues/5827)
 * Running `buildApps` now creates a built version of Sandcastle which uses the built version of Cesium for better performance.
-* Added `clippingPlanes` property to models and 3D Tilesets, which specify an array of planes to clip the object. [TODO]()
 * Fixed a tileset traversal bug when the `skipLevelOfDetail` optimization is off. [#5869](https://github.com/AnalyticalGraphicsInc/cesium/issues/5869)
 
 ### 1.37 - 2017-09-01

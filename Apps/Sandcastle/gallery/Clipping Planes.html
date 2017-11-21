@@ -44,25 +44,27 @@
     <tr>
         <td>x</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: xOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: xOffset">
         </td>
     </tr>
     <tr>
         <td>y</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: yOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: yOffset">
         </td>
     </tr>
     <tr>
         <td>z</td>
         <td>
-            <input type="range" min="-100" max="100" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
+            <input type="range" min="-150" max="150" step="1" data-bind="value: zOffset, valueUpdate: 'input'">
             <input type="text" size="2" data-bind="value: zOffset">
         </td>
     </tr>
     </tbody></table>
+    <input type="checkbox" value="false" data-bind="checked: clippingPlanesEnabled, valueUpdate: 'input'"> Enable clipping planes
+    <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
 </div>
 
 <script id="cesium_sandcastle_script">
@@ -71,16 +73,28 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+var clippingPlanes;
 var defaultClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(-1, 0, 0), 0.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, -1, 0), 100.0),
-    new Cesium.Plane(new Cesium.Cartesian3(0, 0, 1), 100.0)
+    new Cesium.Plane(new Cesium.Cartesian3(1.0, 0.0, 0.0),    0.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 1.0, 0.0), -100.0),
+    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
 ];
 
-function loadTileset (url) {
+var viewModel = {
+    exampleType : 'BIM',
+    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
+    clippingPlanesEnabled: true,
+    xOffset : 0.0,
+    yOffset: -100.0,
+    zOffset: -100.0,
+    debugBoundingVolumesEnabled: false
+};
+
+var tileset;
+function loadTileset(url) {
     reset();
 
-    var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url
     }));
 
@@ -92,11 +106,13 @@ function loadTileset (url) {
         throw(error);
     });
 
-    tileset.clippingPlanes = defaultClippingPlanes;
-    return tileset.clippingPlanes;
+    tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
+    tileset.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
+    clippingPlanes = tileset.clippingPlanes = defaultClippingPlanes.slice();
 }
 
-function loadModel (url) {
+var model;
+function loadModel(url) {
     reset();
 
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
@@ -118,9 +134,9 @@ function loadModel (url) {
     });
 
     viewer.trackedEntity = entity;
-
-    entity.model.clippingPlanes = defaultClippingPlanes;
-    return entity.model.clippingPlanes.getValue();
+    model = entity.model;
+    model.clippingPlanesEnabled = viewModel.clippingPlanesEnabled;
+    clippingPlanes = model.clippingPlanes = defaultClippingPlanes.slice();
 }
 
 // Power Plant design model provided by Bentley Systems
@@ -128,17 +144,9 @@ var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIU
 var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
-var clippingPlanes = loadTileset(bimUrl);
+loadTileset(bimUrl);
 
 // Track and create the bindings for the view model
-
-var viewModel = {
-    exampleType : 'BIM',
-    exampleTypes : ['BIM', 'Model', 'Point Cloud'],
-    xOffset : 0.0,
-    yOffset: 100.0,
-    zOffset: 100.0
-};
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
 Cesium.knockout.applyBindings(viewModel, toolbar);
@@ -155,14 +163,26 @@ Cesium.knockout.getObservable(viewModel, 'zOffset').subscribe(function(newValue)
     clippingPlanes[2].distance = parseFloat(newValue);
 });
 
+Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
+    if (Cesium.defined(tileset)) {
+        tileset.debugShowBoundingVolume = newValue;
+    }
+});
+
+Cesium.knockout.getObservable(viewModel, 'clippingPlanesEnabled').subscribe(function(newValue) {
+    if (Cesium.defined(tileset)) {
+        tileset.clippingPlanesEnabled = newValue;
+    }
+});
+
 Cesium.knockout.getObservable(viewModel, 'exampleType').subscribe(
     function(newValue) {
         if (newValue === 'BIM') {
-            clippingPlanes = loadTileset(bimUrl);
+            loadTileset(bimUrl);
         } else if (newValue === 'Point Cloud') {
-            clippingPlanes = loadTileset(pointCloudUrl);
+            loadTileset(pointCloudUrl);
         } else {
-            clippingPlanes = loadModel(modelUrl);
+            loadModel(modelUrl);
         }
     }
 );
@@ -172,9 +192,10 @@ function reset () {
     viewer.scene.primitives.removeAll();
 
     if (Cesium.defined(viewModel)) {
+        viewModel.clippingPlanesEnabled = true;
         viewModel.xOffset = 0.0;
-        viewModel.yOffset = 100.0;
-        viewModel.zOffset = 100.0;
+        viewModel.yOffset = -100.0;
+        viewModel.zOffset = -100.0;
     }
 }
 
