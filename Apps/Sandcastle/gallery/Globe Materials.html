@@ -121,7 +121,7 @@ function getColorRamp(selectedShading) {
     var ctx = ramp.getContext('2d');
 
     var values = selectedShading === 'elevation' ? elevationRamp : slopeRamp;
-    
+
     var grd = ctx.createLinearGradient(0, 0, 100, 0);
     grd.addColorStop(values[0], '#000000'); //black
     grd.addColorStop(values[1], '#2747E0'); //blue
@@ -133,7 +133,7 @@ function getColorRamp(selectedShading) {
 
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 1);
-    
+
     return ramp;
 }
 
@@ -196,7 +196,7 @@ function updateMaterial() {
     if (selectedShading !== 'none') {
         shadingUniforms.image = getColorRamp(selectedShading);
     }
-        
+
     globe.material = material;
 }
 
