@@ -374,7 +374,9 @@ define([
                 addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
             }
         });
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     var scratch2DTo3DFrustumOrtho = new OrthographicFrustum();
@@ -476,7 +478,9 @@ define([
                     morph();
                 }
             });
-            transitioner._currentTweens.push(tween);
+            if (tween) {
+              transitioner._currentTweens.push(tween);
+            }
         } else {
             morph();
         }
@@ -520,7 +524,9 @@ define([
                 complete(transitioner);
             }
         });
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     var scratchCVTo2DStartPos = new Cartesian3();
@@ -616,7 +622,9 @@ define([
                 morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
             }
         });
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     var scratch3DTo2DCartographic = new Cartographic();
@@ -739,7 +747,9 @@ define([
                 complete(transitioner);
             }
         });
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
@@ -783,7 +793,9 @@ define([
                     complete(transitioner);
                 }
             });
-            transitioner._currentTweens.push(tween);
+            if (tween) {
+              transitioner._currentTweens.push(tween);
+            }
         }
 
         if (transitioner._morphToOrthographic) {
@@ -827,7 +839,9 @@ define([
                 addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, complete);
             }
         });
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     function addMorphTimeAnimations(transitioner, scene, start, stop, duration, complete) {
@@ -848,7 +862,9 @@ define([
         }
 
         var tween = scene.tweens.addProperty(options);
-        transitioner._currentTweens.push(tween);
+        if (tween) {
+          transitioner._currentTweens.push(tween);
+        }
     }
 
     function complete3DCallback(camera3D) {
