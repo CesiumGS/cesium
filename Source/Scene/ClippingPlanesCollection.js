@@ -23,8 +23,7 @@ define([
     'use strict';
 
     /**
-     * The globe rendered in the scene, including its terrain ({@link ClippingPlanesCollection#terrainProvider})
-     * and imagery layers ({@link ClippingPlanesCollection#imageryLayers}).  Access the globe using {@link Scene#globe}.
+     * Contains the options to specify a set of clipping planes. Clipping planes selectively disable rendering on an object on the outside of the specified list of {@link Plane}.
      *
      * @alias ClippingPlanesCollection
      * @constructor
