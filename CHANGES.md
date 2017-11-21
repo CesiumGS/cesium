@@ -1,5 +1,9 @@
 Change Log
 ==========
+### 1.40 - ...
+
+* Added ability to create partial ellipsoid volumes using new geometry options: inner radii, min/max azimuth, min/max elevation.
+
 ### 1.38 - 2017-10-02
 
 * Breaking changes
