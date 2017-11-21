@@ -209,7 +209,7 @@ define([
      * @param {TweenCollection~TweenUpdateCallback} [options.update] The callback to call at each animation update (usually tied to the a rendered frame).
      * @param {TweenCollection~TweenCompleteCallback} [options.complete] The callback to call when the tween finishes animating.
      * @param {TweenCollection~TweenCancelledCallback} [options.cancel] The callback to call if the tween is canceled either because {@link Tween#cancelTween} was called or because the tween was removed from the collection.
-     * @returns {Tween} The tween.
+     * @returns {Tween} The tween or null if the duration is 0.
      *
      * @exception {DeveloperError} options.duration must be positive.
      */
@@ -230,7 +230,7 @@ define([
             if (defined(options.complete)) {
                 options.complete();
             }
-            return new Tween(this);
+            return null;
         }
 
         var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
