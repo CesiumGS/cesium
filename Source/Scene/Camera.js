@@ -872,6 +872,18 @@ define([
         },
 
         /**
+         * Gets whether the camera is currently flying.
+         * @memberof Camera.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        flying : {
+            get : function() {
+                return !!this._currentFlight;
+            }
+        },
+
+        /**
          * Gets the event that will be raised at when the camera starts to move.
          * @memberof Camera.prototype
          * @type {Event}
