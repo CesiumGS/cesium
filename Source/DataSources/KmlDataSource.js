@@ -285,7 +285,7 @@ define([
     function removeDuplicateNamespaces(text) {
         var index = text.indexOf('xmlns:');
         var endDeclaration = text.indexOf('>', index);
-        var namespace, startIndex, endIndex, duplicateRemoved;
+        var namespace, startIndex, endIndex;
 
         while ((index !== -1) && (index < endDeclaration)) {
             namespace = text.slice(index, text.indexOf('\"', index));
