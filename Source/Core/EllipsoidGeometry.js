@@ -465,6 +465,7 @@ define([
                 var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
 
+                // TODO: this still needs to be updated to work with new geometry logic
                 if (vertexFormat.st) {
                     var normalST = Cartesian2.negate(normal, scratchNormalST);
 
@@ -490,6 +491,7 @@ define([
                     normals[normalIndex++] = normal.z;
                 }
 
+                // TODO: this still needs to be updated to work with new geometry logic
                 if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
                     if (i < slicePartitions || i > vertexCount - slicePartitions - 1) {
