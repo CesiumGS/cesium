@@ -4,7 +4,6 @@
         "html"
     ],
     "rules": {
-        "comma-dangle": ["error", "never"],
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
     }
 }
