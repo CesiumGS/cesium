@@ -65,6 +65,7 @@ define([
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
 
     var radiiScratch = new Cartesian3();
+    var innerRadiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
@@ -670,6 +671,18 @@ define([
             options.slicePartitions = slicePartitions;
             options.subdivisions = subdivisions;
             options.radii = in3D ? unitSphere : radii;
+            var innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, time, innerRadiiScratch);
+            if (in3D) {
+               var mag = Cartesian3.magnitude(radii);
+               var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
+               options.innerRadii = innerRadiiUnit;
+            } else {
+               options.innerRadii = innerRadii;
+            }
+            options.azimuthMin = Property.getValueOrUndefined(ellipsoid.azimuthMin, time);
+            options.azimuthMax = Property.getValueOrUndefined(ellipsoid.azimuthMax, time);
+            options.elevationMin = Property.getValueOrUndefined(ellipsoid.elevationMin, time);
+            options.elevationMax = Property.getValueOrUndefined(ellipsoid.elevationMax, time);
 
             appearance = new MaterialAppearance({
                 material : material,
