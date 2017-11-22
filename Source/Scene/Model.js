@@ -3323,7 +3323,7 @@ define([
             return model._packedClippingPlanes.length;
         };
     }
-
+    
     function createClippingPlanesFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
