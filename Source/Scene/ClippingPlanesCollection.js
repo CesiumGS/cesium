@@ -61,7 +61,7 @@ define([
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
          */
-        this.transformationMatrix = defaultValue(options.transformationMatrix, Matrix4.IDENTITY);
+        this.transformationMatrix = defaultValue(options.transformationMatrix, Matrix4.clone(Matrix4.IDENTITY));
 
         /**
          * If true, the region to be clipped must be included in all planes in this collection.
@@ -78,7 +78,7 @@ define([
          * @type {Color}
          * @default Color.WHITE
          */
-        this.edgeColor = defaultValue(options.edgeColor, Color.WHITE);
+        this.edgeColor = defaultValue(options.edgeColor, Color.clone(Color.WHITE));
 
         /**
          * The width of the highlight applied to the edge along which an object is clipped.
@@ -108,9 +108,9 @@ define([
 
         var transform = Matrix4.multiply(viewMatrix, this.transformationMatrix, scratchMatrix);
 
-        for (var j = 0; j < length; ++j) {
-            var plane = planes[j];
-            var packedPlane = array[j];
+        for (var i = 0; i < length; ++i) {
+            var plane = planes[i];
+            var packedPlane = array[i];
 
             Plane.transform(plane, transform, scratchPlane);
 

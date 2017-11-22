@@ -36,6 +36,7 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
+    <select data-bind="options: exampleTypes, value: currentExampleType"></select>
     <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
 </div>
 
@@ -49,14 +50,15 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
-var planeScale = new Cesium.Cartesian2(500.0, 500.0);
-
 var defaultClippingPlanes = [
     new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
 ];
 
+var clipObjects = ['BIM', 'Point Cloud', 'Model'];
 var viewModel = {
-    debugBoundingVolumesEnabled: false
+    debugBoundingVolumesEnabled : false,
+    exampleTypes : clipObjects,
+    currentExampleType : clipObjects[0]
 };
 
 var targetY = 0.0;
@@ -94,17 +96,17 @@ var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 moveHandler.setInputAction(function(movement) {
     if (Cesium.defined(selectedPlane)) {
         var deltaY = movement.endPosition.y - movement.startPosition.y;
-        var screenScale = scene.camera.getPixelSize(tileset.boundingSphere, scene.drawingBufferWidth, scene.drawingBufferHeight);
-        targetY += deltaY * screenScale;
+        //var screenScale = scene.camera.getPixelSize(tileset.boundingSphere, scene.drawingBufferWidth, scene.drawingBufferHeight);
+        targetY += deltaY;// * screenScale;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
 var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
-function createPlaneUpdateFunction(tileset, plane) {
+function createPlaneUpdateFunction(plane, transform) {
     return function () {
         plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
 
-        var transformedPlane = Cesium.Plane.transform(plane, tileset.modelMatrix, scratchPlane);
+        var transformedPlane = Cesium.Plane.transform(plane, transform, scratchPlane);
         transformedPlane.distance = -transformedPlane.distance;
         return transformedPlane;
     };
@@ -112,37 +114,37 @@ function createPlaneUpdateFunction(tileset, plane) {
 
 var tileset;
 function loadTileset(url) {
-    reset();
-
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
         clippingPlanes : new Cesium.ClippingPlanesCollection({
             planes : defaultClippingPlanes,
             edgeWidth: 1.0,
             edgeColor: Cesium.Color.CYAN
-        }),
-        modelMatrix : Cesium.Matrix4.fromUniformScale(2.0)
+        })
     }));
 
     tileset.readyPromise.then(function() {
         var boundingSphere = tileset.boundingSphere;
-        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, boundingSphere.radius * 4.0));
+        var radius = boundingSphere.radius;
+
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
         for (var i = 0; i < defaultClippingPlanes.length; ++i) {
-            var plane = tileset.clippingPlanes.planes[i];
-            var entity = viewer.entities.add({
+            var clippingPlanes = tileset.clippingPlanes;
+            var plane = clippingPlanes.planes[i];
+            var planeEntity = viewer.entities.add({
                 position : boundingSphere.center,
                 plane : {
-                    dimensions : planeScale,
+                    dimensions : new Cesium.Cartesian2(radius * 2.5, radius * 2.5),
                     material : Cesium.Color.CYAN.withAlpha(0.1),
-                    plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(tileset, plane), false),
+                    plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, tileset.modelMatrix), false),
                     outline: true,
                     outlineColor: Cesium.Color.CYAN
-                },
+                }
             });
 
-            planeEntities.push(entity);
+            planeEntities.push(planeEntity);
         }
 
     }).otherwise(function(error) {
@@ -152,8 +154,58 @@ function loadTileset(url) {
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
 }
 
+var modelEntity;
+function loadModel(url) {
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+    var heading = Cesium.Math.toRadians(135.0);
+    var pitch = 0.0;
+    var roll = 0.0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+    var entity = viewer.entities.add({
+        name : url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : url,
+            scale: 8,
+            minimumPixelSize: 100.0,
+            clippingPlanes : new Cesium.ClippingPlanesCollection({
+                planes : defaultClippingPlanes,
+                edgeWidth: 1.0,
+                edgeColor: Cesium.Color.CYAN,
+                transformationMatrix: Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO))
+            })
+        }
+    });
+
+    viewer.trackedEntity = entity;
+    modelEntity = entity.model;
+
+    console.log(modelEntity);
+
+    for (var i = 0; i < defaultClippingPlanes.length; ++i) {
+        var clippingPlanes = tileset.clippingPlanes;
+        var plane = clippingPlanes.planes[i];
+        var planeEntity = viewer.entities.add({
+            position : position,
+            plane : {
+                dimensions : new Cesium.Cartesian2(300.0, 300.0),
+                material : Cesium.Color.CYAN.withAlpha(0.1),
+                plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, Cesium.Matrix4.IDENTITY), false),
+                outline: true,
+                outlineColor: Cesium.Color.CYAN
+            }
+        });
+
+        planeEntities.push(planeEntity);
+    }
+}
+
 // Power Plant design model provided by Bentley Systems
 var bimUrl = 'https://beta.cesium.com/api/assets/1459?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjUyM2I5Yy01YmRhLTQ0MjktOGI0Zi02MDdmYzBjMmY0MjYiLCJpZCI6NDQsImFzc2V0cyI6WzE0NTldLCJpYXQiOjE0OTkyNjQ3ODF9.SW_rwY-ic0TwQBeiweXNqFyywoxnnUBtcVjeCmDGef4';
+var pointCloudUrl = 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM';
+var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
 loadTileset(bimUrl);
 
@@ -161,6 +213,21 @@ loadTileset(bimUrl);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.track(viewModel);
 Cesium.knockout.applyBindings(viewModel, toolbar);
+
+Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(function(newValue) {
+    reset();
+
+    if (newValue === clipObjects[0]) {
+        loadTileset(bimUrl);
+    } else if (newValue === clipObjects[1]) {
+        loadTileset(pointCloudUrl);
+        tileset.readyPromise.then(function () {
+            tileset.clippingPlanes.transformationMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+        });
+    } else {
+        loadModel(modelUrl);
+    }
+});
 
 Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
     if (Cesium.defined(tileset)) {

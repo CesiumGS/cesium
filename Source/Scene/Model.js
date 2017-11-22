@@ -2108,11 +2108,15 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
-        var clippingFS = modifyShaderForClippingPlanes(blendFS);
+        var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
+
+        var clippingPlanes = model.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            finalFS = modifyShaderForClippingPlanes(finalFS);
+        }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(clippingFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -3307,23 +3311,12 @@ define([
         };
     }
 
-    function createClippingPlanesEnabledFunction(model) {
-        return function() {
-            var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
-                return false;
-            }
-
-            return clippingPlanes.enabled;
-        };
-    }
-
     function createClippingPlanesLengthFunction(model) {
         return function() {
             return model._packedClippingPlanes.length;
         };
     }
-    
+
     function createClippingPlanesFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
@@ -3463,7 +3456,6 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanesEnabled: createClippingPlanesEnabledFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context),
                 gltf_clippingPlanesInclusive: createClippingPlanesInclusiveFunction(model),
@@ -4265,7 +4257,6 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
-            'uniform bool gltf_clippingPlanesEnabled; \n' +
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'uniform bool gltf_clippingPlanesInclusive; \n' +
@@ -4274,11 +4265,9 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        float clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesInclusive); \n' +
-            '        if (clipDistance < gltf_clippingPlanesEdgeWidth) { \n' +
-            '            gl_FragColor = gltf_clippingPlanesEdgeColor; \n' +
-            '        } \n' +
+            '    float clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesInclusive); \n' +
+            '    if (clipDistance < gltf_clippingPlanesEdgeWidth) { \n' +
+            '        gl_FragColor = gltf_clippingPlanesEdgeColor; \n' +
             '    } \n' +
             '} \n';
 
