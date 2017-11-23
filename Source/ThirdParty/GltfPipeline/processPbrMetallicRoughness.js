@@ -164,7 +164,7 @@ define([
         for (var name in parameterValues) {
             //generate shader parameters
             if (parameterValues.hasOwnProperty(name)) {
-                var valType = getPBRValueType(name, parameterValues[name]);
+                var valType = getPBRValueType(name);
                 if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
@@ -373,37 +373,37 @@ define([
         fragmentShader += 'const float M_PI = 3.141592653589793;\n';
 
         fragmentShader += 'vec3 lambertianDiffuse(vec3 baseColor) \n' +
-                          '{\n' +
-                          '    return baseColor / M_PI;\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return baseColor / M_PI;\n' +
+            '}\n\n';
 
         fragmentShader += 'vec3 fresnelSchlick2(vec3 f0, vec3 f90, float VdotH) \n' +
-                          '{\n' +
-                          '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return f0 + (f90 - f0) * pow(clamp(1.0 - VdotH, 0.0, 1.0), 5.0);\n' +
+            '}\n\n';
 
         fragmentShader += 'vec3 fresnelSchlick(float metalness, float VdotH) \n' +
-                          '{\n' +
-                          '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return metalness + (vec3(1.0) - metalness) * pow(1.0 - VdotH, 5.0);\n' +
+            '}\n\n';
 
         fragmentShader += 'float smithVisibilityG1(float NdotV, float roughness) \n' +
-                          '{\n' +
-                          '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
-                          '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;\n' +
+            '    return NdotV / (NdotV * (1.0 - k) + k);\n' +
+            '}\n\n';
 
         fragmentShader += 'float smithVisibilityGGX(float roughness, float NdotL, float NdotV) \n' +
-                          '{\n' +
-                          '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    return smithVisibilityG1(NdotL, roughness) * smithVisibilityG1(NdotV, roughness);\n' +
+            '}\n\n';
 
         fragmentShader += 'float GGX(float roughness, float NdotH) \n' +
-                          '{\n' +
-                          '    float roughnessSquared = roughness * roughness;\n' +
-                          '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
-                          '    return roughnessSquared / (M_PI * f * f);\n' +
-                          '}\n\n';
+            '{\n' +
+            '    float roughnessSquared = roughness * roughness;\n' +
+            '    float f = (NdotH * roughnessSquared - NdotH) * NdotH + 1.0;\n' +
+            '    return roughnessSquared / (M_PI * f * f);\n' +
+            '}\n\n';
 
         fragmentShader += 'void main(void) \n{\n';
 
@@ -421,9 +421,9 @@ define([
                 } else {
                     // Add standard derivatives extension
                     fragmentShader = '#ifdef GL_OES_standard_derivatives\n' +
-                                     '#extension GL_OES_standard_derivatives : enable\n' +
-                                     '#endif\n' +
-                                     fragmentShader;
+                        '#extension GL_OES_standard_derivatives : enable\n' +
+                        '#endif\n' +
+                        fragmentShader;
                     // Compute tangents
                     fragmentShader += '#ifdef GL_OES_standard_derivatives\n';
                     fragmentShader += '    vec3 pos_dx = dFdx(v_positionEC);\n';
@@ -675,9 +675,7 @@ define([
         return techniqueId;
     }
 
-    function getPBRValueType(paramName, paramValue) {
-        var value;
-
+    function getPBRValueType(paramName) {
         switch (paramName) {
             case 'baseColorFactor':
                 return WebGLConstants.FLOAT_VEC4;

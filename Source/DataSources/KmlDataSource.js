@@ -256,23 +256,30 @@ define([
     }
 
     function insertNamespaces(text) {
-	var namespaceMap = {
-	    'xsi:' : ["xmlns:xsi=", "'http://www.w3.org/2001/XMLSchema-instance'"]
-	}
-	var firstPart;
-	var lastPart;
+        var namespaceMap = {
+            xsi : 'http://www.w3.org/2001/XMLSchema-instance'
+        };
+        var firstPart, lastPart, reg, declaration;
 
-	if(text.trim().substr(0, 5) !== '<?xml')
-	    text = "<?xml version='1.0' encoding='UTF-8'?>" + text;
-		
-	for (var key in namespaceMap){
-	    if(text.indexOf(key) !== -1 && text.indexOf(namespaceMap[key][0]) === -1) {
-		firstPart = text.substr(0, text.indexOf('<kml') + 4);
-		lastPart = text.substr(firstPart.length);
-		text = firstPart + ' ' + namespaceMap[key][0] + namespaceMap[key][1] + lastPart;
-	    }
-	}
-	return text; 
+        for (var key in namespaceMap) {
+            if (namespaceMap.hasOwnProperty(key)) {
+                reg = RegExp('[< ]' + key + ':');
+                declaration = 'xmlns:' + key + '=';
+                if (reg.test(text) && text.indexOf(declaration) === -1) {
+                    if (!defined(firstPart)) {
+                        firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                        lastPart = text.substr(firstPart.length);
+                    }
+                    firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
+                }
+            }
+        }
+
+        if (defined(firstPart)) {
+            text = firstPart + lastPart;
+        }
+
+        return text;
     }
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
@@ -1863,7 +1870,9 @@ define([
 
                 var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
                 if (defined(rotation)) {
-                    geometry.rotation = CesiumMath.toRadians(rotation);
+                    var rotationRadians = CesiumMath.toRadians(rotation);
+                    geometry.rotation = rotationRadians;
+                    geometry.stRotation = rotationRadians;
                 }
             }
         }
@@ -2343,8 +2352,8 @@ define([
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
 
-			    //Insert missing namespaces
-			    text = insertNamespaces(text);
+                            //Insert missing namespaces
+                            text = insertNamespaces(text);
 
                             //IE raises an exception
                             var kml;

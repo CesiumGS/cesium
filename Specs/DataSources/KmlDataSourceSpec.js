@@ -245,14 +245,16 @@ defineSuite([
     });
 
     it('load inserts missing namespace declaration into kml', function() {
-        return KmlDataSource.load('Data/KML/undeclaredNamespaces.kml').then(funtion(source) {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
     });
 
     it('load inserts missing namespace declaration into kmz', function() {
-        return KmlDataSource.load('Data/KML/undeclaredNamespaces.kmz').then(funtion(source) {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kmz').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
@@ -822,6 +824,7 @@ defineSuite([
             expect(entity.polygon).toBeUndefined();
             expect(entity.rectangle.coordinates.getValue()).toEqualEpsilon(Rectangle.fromDegrees(3, 1, 4, 2), CesiumMath.EPSILON14);
             expect(entity.rectangle.rotation.getValue()).toEqual(Math.PI / 4);
+            expect(entity.rectangle.stRotation.getValue()).toEqual(Math.PI / 4);
         });
     });
 
