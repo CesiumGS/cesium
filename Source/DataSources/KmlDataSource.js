@@ -277,6 +277,7 @@ define([
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
+            text = insertNamespaces(text);
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
         });
