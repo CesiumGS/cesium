@@ -367,6 +367,7 @@ define([
     var scratchAdjustHeightTransform = new Matrix4();
     var scratchAdjustHeightCartographic = new Cartographic();
 
+    Camera.enableSuspendTerrainAdjustment = true;
     Camera.prototype._adjustHeightForTerrain = function() {
         var scene = this._scene;
 
@@ -375,7 +376,7 @@ define([
         var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
         var minimumZoomDistance = screenSpaceCameraController.minimumZoomDistance;
 
-        if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
+        if ((Camera.enableSuspendTerrainAdjustment && this._suspendTerrainAdjustment) || !enableCollisionDetection) {
             return;
         }
 
