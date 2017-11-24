@@ -57,7 +57,6 @@ define([
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
         '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-        '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -134,7 +133,6 @@ define([
         parseBinaryGltf,
         processModelMaterialsCommon,
         processPbrMetallicRoughness,
-        removePipelineExtras,
         updateVersion,
         Uri,
         when,
@@ -2306,16 +2304,16 @@ define([
                     sampler : sampler,
                     flipY : false
                 });
-            }
-            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-
-            if (mipmap) {
-                tx.generateMipmap();
+                // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+                if (mipmap) {
+                    tx.generateMipmap();
+                }
             }
         }
-
-        model._rendererResources.textures[gltfTexture.id] = tx;
-        model._texturesByteLength += tx.sizeInBytes;
+        if (defined(tx)) {
+            model._rendererResources.textures[gltfTexture.id] = tx;
+            model._texturesByteLength += tx.sizeInBytes;
+        }
     }
 
     var scratchCreateTextureJob = new CreateTextureJob();

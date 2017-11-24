@@ -5,6 +5,9 @@ module.exports = {
     env: {
         node: true
     },
+    parserOptions: {
+        ecmaVersion: 6
+    },
     rules: {
         'global-require' : 'error',
         'no-buffer-constructor' : 'error',

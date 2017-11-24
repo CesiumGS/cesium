@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
+        '../Core/freezeObject',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -24,6 +25,7 @@ define([
         defineProperties,
         DeveloperError,
         DistanceDisplayCondition,
+        freezeObject,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -31,6 +33,13 @@ define([
         LabelStyle,
         VerticalOrigin) {
     'use strict';
+
+    var textTypes = freezeObject({
+        LTR : 0,
+        RTL : 1,
+        WEAK : 2,
+        BRACKETS : 3
+    });
 
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
@@ -110,7 +119,8 @@ define([
             distanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition);
         }
 
-        this._text = defaultValue(options.text, '');
+        this._renderedText = undefined;
+        this._text = undefined;
         this._show = defaultValue(options.show, true);
         this._font = defaultValue(options.font, '30px sans-serif');
         this._fillColor = Color.clone(defaultValue(options.fillColor, Color.WHITE));
@@ -146,6 +156,8 @@ define([
         this._mode = undefined;
 
         this._clusterShow = true;
+
+        this.text = defaultValue(options.text, '');
 
         this._updateClamping();
     }
@@ -281,6 +293,7 @@ define([
 
                 if (this._text !== value) {
                     this._text = value;
+                    this._renderedText = Label.enableRightToLeftDetection ? reverseRtl(value) : value;
                     rebindAllGlyphs(this);
                 }
             }
@@ -499,8 +512,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The label's origin is indicated by the yellow point.
          * </div>
@@ -709,8 +722,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>l.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -753,7 +766,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
+         * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {HorizontalOrigin}
@@ -786,7 +799,7 @@ define([
          * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+         * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {VerticalOrigin}
@@ -837,7 +850,7 @@ define([
          * use a larger font size when calling {@link Label#font} instead.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Label.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -1167,7 +1180,7 @@ define([
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
                this._heightReference === other._heightReference &&
-               this._text === other._text &&
+               this._renderedText === other._renderedText &&
                this._font === other._font &&
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._fillColor, other._fillColor) &&
@@ -1195,6 +1208,207 @@ define([
     Label.prototype.isDestroyed = function() {
         return false;
     };
+
+    /**
+     * Determines whether or not run the algorithm, that match the text of the label to right-to-left languages
+     * @memberof Label
+     * @type {Boolean}
+     * @default false
+     *
+     * @example
+     * // Example 1.
+     * // Set a label's rightToLeft before init
+     * Cesium.Label.enableRightToLeftDetection = true;
+     * var myLabelEntity = viewer.entities.add({
+         *   label: {
+         *     id: 'my label',
+         *     text: 'זה טקסט בעברית \n ועכשיו יורדים שורה',
+         *   }
+         * });
+     *
+     * @example
+     * // Example 2.
+     * var myLabelEntity = viewer.entities.add({
+         *   label: {
+         *     id: 'my label',
+         *     text: 'English text'
+         *   }
+         * });
+     * // Set a label's rightToLeft after init
+     * Cesium.Label.enableRightToLeftDetection = true;
+     * myLabelEntity.text = 'טקסט חדש';
+     */
+    Label.enableRightToLeftDetection = false;
+
+    function convertTextToTypes(text, rtlChars) {
+        var ltrChars = /[a-zA-Z0-9]/;
+        var bracketsChars = /[()[\]{}<>]/;
+        var parsedText = [];
+        var word = '';
+        var lastType = textTypes.LTR;
+        var currentType = '';
+        var textLength = text.length;
+        for (var textIndex = 0; textIndex < textLength; ++textIndex) {
+            var character = text.charAt(textIndex);
+            if (rtlChars.test(character)) {
+                currentType = textTypes.RTL;
+            }
+            else if (ltrChars.test(character)) {
+                currentType = textTypes.LTR;
+            }
+            else if (bracketsChars.test(character)) {
+                currentType = textTypes.BRACKETS;
+            }
+            else {
+                currentType = textTypes.WEAK;
+            }
+
+            if (textIndex === 0) {
+                lastType = currentType;
+            }
+
+            if (lastType === currentType && currentType !== textTypes.BRACKETS) {
+                word += character;
+            }
+            else {
+                if (word !== '') {
+                    parsedText.push({Type : lastType, Word : word});
+                }
+                lastType = currentType;
+                word = character;
+            }
+        }
+        parsedText.push({Type : currentType, Word : word});
+        return parsedText;
+    }
+
+    function reverseWord(word) {
+        return word.split('').reverse().join('');
+    }
+
+    function spliceWord(result, pointer, word) {
+        return result.slice(0, pointer) + word + result.slice(pointer);
+    }
+
+    function reverseBrackets(bracket) {
+        switch(bracket) {
+            case '(':
+                return ')';
+            case ')':
+                return '(';
+            case '[':
+                return ']';
+            case ']':
+                return '[';
+            case '{':
+                return '}';
+            case '}':
+                return '{';
+            case '<':
+                return '>';
+            case '>':
+                return '<';
+        }
+    }
+
+    //To add another language, simply add it's Unicode block range(s) to the below regex.
+    var hebrew = '\u05D0-\u05EA';
+    var arabic = '\u0600-\u06FF\u0750–\u077F\u08A0–\u08FF';
+    var rtlChars = new RegExp('[' + hebrew + arabic + ']');
+
+    /**
+     *
+     * @param {String} value the text to parse and reorder
+     * @returns {String} the text as rightToLeft direction
+     * @private
+     */
+    function reverseRtl(value) {
+        var texts = value.split('\n');
+        var result = '';
+        for (var i = 0; i < texts.length; i++) {
+            var text = texts[i];
+            var rtlDir = rtlChars.test(text.charAt(0));
+            var parsedText = convertTextToTypes(text, rtlChars);
+
+            var splicePointer = 0;
+            var line = '';
+            for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
+                var subText = parsedText[wordIndex];
+                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+                if (rtlDir) {
+                    if (subText.Type === textTypes.RTL) {
+                        line = reverseWord(subText.Word) + line;
+                        splicePointer = 0;
+                    }
+                    else if (subText.Type === textTypes.LTR) {
+                        line = spliceWord(line, splicePointer, subText.Word);
+                        splicePointer += subText.Word.length;
+                    }
+                    else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                        if (subText.Type === textTypes.WEAK && parsedText[wordIndex - 1].Type === textTypes.BRACKETS) {
+                            line = reverseWord(subText.Word) + line;
+                        }
+                        else if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
+                            line = reverse + line;
+                            splicePointer = 0;
+                        }
+                        else if (parsedText.length > wordIndex + 1) {
+                            if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
+                                line = reverse + line;
+                                splicePointer = 0;
+                            }
+                            else {
+                                line = spliceWord(line, splicePointer, subText.Word);
+                                splicePointer += subText.Word.length;
+                            }
+                        }
+                        else {
+                            line = spliceWord(line, 0, reverse);
+                        }
+                    }
+                }
+                else if (subText.Type === textTypes.RTL) {
+                    line = spliceWord(line, splicePointer, reverseWord(subText.Word));
+                }
+                else if (subText.Type === textTypes.LTR) {
+                    line += subText.Word;
+                    splicePointer = line.length;
+                }
+                else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                    if (wordIndex > 0) {
+                        if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
+                            if (parsedText.length > wordIndex + 1) {
+                                if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
+                                    line = spliceWord(line, splicePointer, reverse);
+                                }
+                                else {
+                                    line += subText.Word;
+                                    splicePointer = line.length;
+                                }
+                            }
+                            else {
+                                line += subText.Word;
+                            }
+                        }
+                        else {
+                            line += subText.Word;
+                            splicePointer = line.length;
+                        }
+                    }
+                    else {
+                        line += subText.Word;
+                        splicePointer = line.length;
+                    }
+                }
+            }
+
+            result += line;
+            if (i < texts.length - 1) {
+                result += '\n';
+            }
+        }
+        return result;
+    }
 
     return Label;
 });

@@ -36,7 +36,6 @@ defineSuite([
         'Scene/TweenCollection',
         'Specs/createCanvas',
         'Specs/createScene',
-        'Specs/equals',
         'Specs/pollToPromise',
         'Specs/render'
     ], 'Scene/Scene', function(
@@ -77,7 +76,6 @@ defineSuite([
         TweenCollection,
         createCanvas,
         createScene,
-        equals,
         pollToPromise,
         render) {
     'use strict';

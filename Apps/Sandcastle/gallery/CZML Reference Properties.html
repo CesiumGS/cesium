@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -38,7 +40,7 @@ var czml = [{
         "cartographicDegrees" : [-110.0, 50.0, 0]
     }
 }, {
-    "id" : "outlineColor-reference",
+    "id" : "fillColor-reference",
     "name" : "Referencing Position",
     "description" : "<p>For more examples of reference properties, see CZML Polygon - Interpolating References.</p>",
     "billboard" : {
@@ -62,11 +64,11 @@ var czml = [{
         "text" : "referencing position"
     },
     "position" : {
-          "reference" : "position-reference#position"
+        "reference" : "position-reference#position"
     }
 }, {
     "id" : "polygon",
-    "name" : "Referencing Outline Color",
+    "name" : "Referencing Fill Color",
     "description" : "<p>For more examples of reference properties, see CZML Polygon - Interpolating References.</p>",
     "label" : {
         "fillColor" : {
@@ -78,7 +80,7 @@ var czml = [{
             "cartesian2" : [20, 0]
         },
         "style" : "FILL_AND_OUTLINE",
-        "text" : "referencing outlineColor"
+        "text" : "referencing fillColor"
     },
     "position" : {
         "cartographicDegrees" : [-105, 35, 0]
@@ -94,17 +96,18 @@ var czml = [{
             ]
         },
         "height" : 0,
-        "outline" : true,
-        "outlineColor" : {
-            "reference" : "outlineColor-reference#label.outlineColor"
-        },
-        "outlineWidth" : 5
+        "material" : {
+            "solidColor" : {
+               "color" : {
+                   "reference" : "fillColor-reference#label.outlineColor"
+                }
+            }
+        }
     }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
-
   //Sandcastle_End
     Sandcastle.finishedLoading();
 }

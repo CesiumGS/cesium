@@ -1,10 +1,8 @@
 defineSuite([
         'Scene/Model',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
-        'Core/clone',
         'Core/Color',
         'Core/combine',
         'Core/defaultValue',
@@ -37,11 +35,9 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Model,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
-        clone,
         Color,
         combine,
         defaultValue,
