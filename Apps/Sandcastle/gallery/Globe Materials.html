@@ -217,19 +217,6 @@ Cesium.knockout.getObservable(viewModel, 'selectedShading').subscribe(function(v
 });
 
 Sandcastle.addToolbarMenu([{
-    text : 'Mount Everest',
-    onselect : function() {
-        viewer.camera.setView({
-            destination: new Cesium.Cartesian3(282157.6960889096, 5638892.465594703, 2978736.186473513),
-            orientation: {
-                heading: 4.747266966349747,
-                pitch: -0.2206998858596192,
-                roll: 6.280340554587955
-            }
-        });
-        viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T04:00:00Z');
-    }
-}, {
     text : 'Himalayas',
     onselect : function() {
         viewer.camera.setView({
@@ -267,6 +254,19 @@ Sandcastle.addToolbarMenu([{
             }
         });
         viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T18:00:00Z');
+    }
+}, {
+    text : 'Mount Everest',
+    onselect : function() {
+        viewer.camera.setView({
+            destination: new Cesium.Cartesian3(282157.6960889096, 5638892.465594703, 2978736.186473513),
+            orientation: {
+                heading: 4.747266966349747,
+                pitch: -0.2206998858596192,
+                roll: 6.280340554587955
+            }
+        });
+        viewer.clockViewModel.currentTime = Cesium.JulianDate.fromIso8601('2017-09-22T04:00:00Z');
     }
 }], 'zoomButtons');
 
