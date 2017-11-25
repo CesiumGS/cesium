@@ -301,8 +301,6 @@ define([
         if (defined(globe._material)) {
             fragmentSources.push(globe._material.shaderSource);
             defines.push('APPLY_MATERIAL');
-
-            // Set the material uniform map to the materials
             globe._surface._tileProvider.uniformMap = globe._material._uniforms;
         } else {
             globe._surface._tileProvider.uniformMap = undefined;
