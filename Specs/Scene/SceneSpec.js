@@ -1229,4 +1229,19 @@ defineSuite([
         expect(scene.terrainProviderChanged).toBeUndefined();
     });
 
+
+    it('Sets material', function() {
+        var scene = createScene();
+        var globe = scene.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        var material = Material.fromType('ElevationContour');
+        globe.material = material;
+        expect(globe.material).toBe(material);
+
+        globe.material = undefined;
+        expect(globe.material).toBeUndefined();
+    });
+
+
+
+
 }, 'WebGL');
