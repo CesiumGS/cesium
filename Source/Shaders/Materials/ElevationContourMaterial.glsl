@@ -4,7 +4,7 @@
 
 uniform vec4 color;
 uniform float spacing;
-uniform float lineThickness;
+uniform float width;
 
 czm_material czm_getMaterial(czm_materialInput materialInput)
 {
@@ -15,10 +15,10 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 #ifdef GL_OES_standard_derivatives
     float dxc = abs(dFdx(materialInput.height));
     float dyc = abs(dFdy(materialInput.height));
-    float dF = max(dxc, dyc) * lineThickness;
+    float dF = max(dxc, dyc) * width;
     material.alpha = (distanceToContour < dF) ? 1.0 : 0.0;
 #else
-    material.alpha = (distanceToContour < (czm_resolutionScale * lineThickness)) ? 1.0 : 0.0;
+    material.alpha = (distanceToContour < (czm_resolutionScale * width)) ? 1.0 : 0.0;
 #endif
 
     material.diffuse = color.rgb;

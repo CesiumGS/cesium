@@ -236,7 +236,7 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and alpha for the contour line.</li>
      *      <li><code>spacing</code>: spacing for contour lines in meters.</li>
-     *      <li><code>lineThickness</code>: Number specifying the thickness of the grid lines in pixels.</li>
+     *      <li><code>width</code>: Number specifying the width of the grid lines in pixels.</li>
      *  </ul>
      *  <li>ElevationRamp</li>
      *  <ul>
@@ -1505,7 +1505,7 @@ define([
             uniforms : {
                 spacing: 100.0,
                 color: new Color(1.0, 0.0, 0.0, 1.0),
-                lineThickness: 1.0
+                width: 1.0
             },
             source : ElevationContourMaterial
         },
