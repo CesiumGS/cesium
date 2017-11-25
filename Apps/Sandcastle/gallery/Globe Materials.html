@@ -148,7 +148,7 @@ var viewModel = {
     enableContour: false,
     contourSpacing: 150.0,
     contourWidth: 2.0,
-    selectedShading: 'none',
+    selectedShading: 'elevation',
     changeColor: function() {
         contourUniforms.color = Cesium.Color.fromRandom({alpha: 1.0}, contourColor);
     }
@@ -199,6 +199,8 @@ function updateMaterial() {
 
     globe.material = material;
 }
+
+updateMaterial();
 
 Cesium.knockout.getObservable(viewModel, 'enableContour').subscribe(function(newValue) {
     updateMaterial();
