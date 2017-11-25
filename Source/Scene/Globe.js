@@ -309,12 +309,12 @@ define([
 
         globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
             sources : [GroundAtmosphere, GlobeVS],
-            defines: defines
+            defines : defines
         });
 
         globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
             sources : fragmentSources,
-            defines: defines
+            defines : defines
         });
         globe._surfaceShaderSet.material = globe._material;
     }
