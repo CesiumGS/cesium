@@ -3,7 +3,7 @@ Change Log
 
 ### 1.40 - 2017-12-01
 
-* Adds Material support to Globe. [#5919](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases)
+* Added `Globe.material` to apply materials to the globe/terrain for shading such as height- or slope-based color ramps.  See the new [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases). [#5919](https://github.com/AnalyticalGraphicsInc/cesium/pull/5919/files)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 
 ### 1.39 - 2017-11-01
