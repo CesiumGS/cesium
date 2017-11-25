@@ -174,7 +174,7 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    vec3 finalNormal = normalize(v_normalMC);
+    vec3 finalNormal = v_normalMC;
     vec3 worldNormal = normalize(v_positionMC.xyz);
     v_slope = abs(dot(worldNormal, finalNormal));
     v_height = height;
