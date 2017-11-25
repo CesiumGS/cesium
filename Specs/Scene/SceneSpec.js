@@ -1241,7 +1241,4 @@ defineSuite([
         expect(globe.material).toBeUndefined();
     });
 
-
-
-
 }, 'WebGL');
