@@ -94,7 +94,7 @@ define([
         this._terrainProvider = terrainProvider;
         this._terrainProviderChanged = new Event();
 
-        this.dirtyShaders();
+        makeShadersDirty(this);
 
         /**
          * Determines if the globe will be shown.
@@ -288,11 +288,38 @@ define([
             set: function(material) {
                 if (this._material !== material) {
                     this._material = material;
-                    this.dirtyShaders();
+                    makeShadersDirty(this);
                 }
             }
         }
     });
+
+    function makeShadersDirty(globe) {
+        var defines = [];
+
+        var fragmentSources = [];
+        if (defined(globe._material)) {
+            fragmentSources.push(globe._material.shaderSource);
+            defines.push('APPLY_MATERIAL');
+
+            // Set the material uniform map to the materials
+            globe._surface._tileProvider.uniformMap = globe._material._uniforms;
+        } else {
+            globe._surface._tileProvider.uniformMap = undefined;
+        }
+        fragmentSources.push(GlobeFS);
+
+        globe._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
+            sources : [GroundAtmosphere, GlobeVS],
+            defines: defines
+        });
+
+        globe._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
+            sources : fragmentSources,
+            defines: defines
+        });
+        globe._surfaceShaderSet.material = globe._material;
+    }
 
     function createComparePickTileFunction(rayOrigin) {
         return function(a, b) {
@@ -567,36 +594,6 @@ define([
         if (frameState.passes.render) {
             this._surface.endFrame(frameState);
         }
-    };
-
-    /**
-     * @private
-     */
-    Globe.prototype.dirtyShaders = function() {
-        var defines = [];
-
-        var fragmentSources = [];
-        if (defined(this._material)) {
-            fragmentSources.push(this._material.shaderSource);
-            defines.push('APPLY_MATERIAL');
-
-            // Set the material uniform map to the materials
-            this._surface._tileProvider.uniformMap = this._material._uniforms;
-        } else {
-            this._surface._tileProvider.uniformMap = undefined;
-        }
-        fragmentSources.push(GlobeFS);
-
-        this._surfaceShaderSet.baseVertexShaderSource = new ShaderSource({
-            sources : [GroundAtmosphere, GlobeVS],
-            defines: defines
-        });
-
-        this._surfaceShaderSet.baseFragmentShaderSource = new ShaderSource({
-            sources : fragmentSources,
-            defines: defines
-        });
-        this._surfaceShaderSet.material = this._material;
     };
 
     /**
