@@ -159,7 +159,8 @@ void main()
 #if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
-    v_normalMC = czm_octDecode(encodedNormal);
+    vec3 normalMC = czm_octDecode(encodedNormal);
+    v_normalMC = normalMC;
     v_normalEC = czm_normal3D * v_normalMC;
 #elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
@@ -174,9 +175,9 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    vec3 finalNormal = v_normalMC;
-    vec3 worldNormal = normalize(v_positionMC.xyz);
-    v_slope = abs(dot(worldNormal, finalNormal));
+    vec3 finalNormal = normalMC;
+    vec3 ellipsoidNormal = normalize(position3DWC.xyz);
+    v_slope = abs(dot(ellipsoidNormal, finalNormal));
     v_height = height;
 #endif
 }
