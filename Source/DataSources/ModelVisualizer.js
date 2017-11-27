@@ -33,6 +33,7 @@ define([
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
+    var defaultClampAnimations = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
     var defaultSilhouetteColor = Color.RED;
@@ -121,7 +122,8 @@ define([
                 model = Model.fromGltf({
                     url : uri,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
-                    scene : this._scene
+                    scene : this._scene,
+                    clampAnimations : Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations)
                 });
 
                 model.readyPromise.otherwise(onModelError);

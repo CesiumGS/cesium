@@ -326,6 +326,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -528,6 +529,7 @@ define([
          * @type {ModelAnimationCollection}
          */
         this.activeAnimations = new ModelAnimationCollection(this);
+        this._clampAnimations = defaultValue(options.clampAnimations, true);
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
@@ -2481,6 +2483,14 @@ define([
     }
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
+        if (model._clampAnimations) {
+            return function(localAnimationTime) {
+                if (defined(spline)) {
+                    runtimeNode[targetPath] = spline.evaluate(spline.clampTime(localAnimationTime), runtimeNode[targetPath]);
+                    runtimeNode.dirtyNumber = model._maxDirtyNumber;
+                }
+            };
+        }
         return function(localAnimationTime) {
             //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
 
@@ -2488,7 +2498,7 @@ define([
             //    return;
             //}
             if (defined(spline)) {
-                runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
+                runtimeNode[targetPath] = spline.evaluate(spline.wrapTime(localAnimationTime), runtimeNode[targetPath]);
                 runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
         };

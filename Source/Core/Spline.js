@@ -1,11 +1,13 @@
 define([
         './defaultValue',
         './defined',
-        './DeveloperError'
-    ], function(
+        './DeveloperError',
+        './Math'
+], function(
         defaultValue,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -115,6 +117,56 @@ define([
         }
 
         return i;
+    };
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} the time, wrapped around the animation period.
+     */
+    Spline.prototype.wrapTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        //>>includeEnd('debug');
+
+        // wrap
+        var times = this.times;
+        var timeEnd = times[times.length - 1];
+        var timeStart = times[0];
+        var timeStretch = timeEnd - timeStart;
+        var divs;
+        if (time < timeStart) {
+            divs = Math.floor((timeStart - time) / timeStretch) + 1;
+            time += divs * timeStretch;
+        }
+        if (time > timeEnd) {
+            divs = Math.floor((time - timeEnd) / timeStretch) + 1;
+            time -= divs * timeStretch;
+        }
+        return time;
+    };
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} the time, clamped to the animation period.
+     */
+    Spline.prototype.clampTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        //>>includeEnd('debug');
+
+        // clamp
+        var times = this.times;
+        return CesiumMath.clamp(time, times[0], times[times.length - 1]);
     };
 
     return Spline;
