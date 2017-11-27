@@ -1834,7 +1834,7 @@ define([
             tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
             heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
 
-            var hpr = new HeadingPitchRange(heading, tilt - Cesium.Math.PI / 2, range);
+            var hpr = new HeadingPitchRange(heading, tilt - Math.PI / 2, range);
             var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude);
 
             entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
