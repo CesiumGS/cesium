@@ -23,29 +23,16 @@ define([
     'use strict';
 
     /**
-     * A description of the outline of a cube centered at the origin.
+     * Describes geometry representing the outline of a plane centered at the origin, with a unit width and length.
      *
      * @alias PlaneOutlineGeometry
      * @constructor
      *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
-     *
-     * @see PlaneOutlineGeometry.fromDimensions
-     * @see PlaneOutlineGeometry.createGeometry
-     * @see Packable
-     *
-     * @example
-     * var box = new Cesium.PlaneOutlineGeometry({
-     *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
-     * });
-     * var geometry = Cesium.PlaneOutlineGeometry.createGeometry(box);
      */
-    function PlaneOutlineGeometry(options) {
+    function PlaneOutlineGeometry() {
         this._workerName = 'createPlaneOutlineGeometry';
     }
+
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
@@ -61,7 +48,7 @@ define([
      *
      * @returns {Number[]} The array that was packed into
      */
-    PlaneOutlineGeometry.pack = function(value, array, startingIndex) {
+    PlaneOutlineGeometry.pack = function(value, array) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('array', array);
         //>>includeEnd('debug');
@@ -90,12 +77,12 @@ define([
     };
 
     /**
-     * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
+     * Computes the geometric representation of an outline of a plane, including its vertices, indices, and a bounding sphere.
      *
-     * @param {PlaneOutlineGeometry} boxGeometry A description of the box outline.
+     * @param {PlaneOutlineGeometry} planeGeometry A description of the plane outline.
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
-    PlaneOutlineGeometry.createGeometry = function(boxGeometry) {
+    PlaneOutlineGeometry.createGeometry = function() {
         var min = new Cartesian3(-0.5, -0.5, 0.0);
         var max = new Cartesian3( 0.5,  0.5, 0.0);
 
@@ -135,7 +122,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, 0.5)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0))
         });
     };
 

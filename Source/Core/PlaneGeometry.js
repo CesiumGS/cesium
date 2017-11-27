@@ -25,23 +25,18 @@ define([
     'use strict';
 
     /**
-     * Describes a plane by a normal and distance from the origin in world coordinates.
+     * Describes geometry representing a plane centered at the origin, with a unit width and length.
      *
-     * @alias Plane
+     * @alias PlaneGeometry
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @see Plane
-     * @see PlaneGeometry.createGeometry
-     * @see Packable
-     *
      * @example
      * var planeGeometry = new Cesium.PlaneGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY
      * });
-     * var geometry = Cesium.PlaneGeometry.createGeometry(plane);
      */
     function PlaneGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -110,6 +105,7 @@ define([
 
         return result;
     };
+
     /**
      * Computes the geometric representation of a plane, including its vertices, indices, and a bounding sphere.
      *
@@ -376,7 +372,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, 0.5)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0))
         });
     };
 

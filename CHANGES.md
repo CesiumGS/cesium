@@ -3,11 +3,11 @@ Change Log
 
 ## TODO release
 
-* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to clip the object. [TODO]()
-* Added `terrainClippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to clip the terrain.
-* Added `Plane.transformPlane` function to apply a transformation to a plane. [TODO]()
-* Added `PlaneGeometry` and `PlaneOutlineGeometry` primitives
-* Added `PlaneGraphics` and `plane` property to `Entity`.
+* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to clip the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
+* Added `terrainClippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to clip the terrain. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
+* Added `PlaneGeometry`, `PlaneOutlineGeometry`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
 
 ### 1.38 - 2017-10-02
 

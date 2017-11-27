@@ -368,8 +368,6 @@ define([
             };
         }
 
-        var options = this._options;
-
         var modelMatrix = entity.computeModelMatrix(Iso8601.MINIMUM_VALUE);
 
         return new GeometryInstance({
