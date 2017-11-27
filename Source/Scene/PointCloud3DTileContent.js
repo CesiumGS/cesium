@@ -117,6 +117,9 @@ define([
         this._hasNormals = false;
         this._hasBatchIds = false;
 
+        // Used to regenerate shader when clipping on this tile changes
+        this._isClipped = true;
+
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
         this._backFaceCulling = false;
@@ -518,6 +521,7 @@ define([
         }
 
         var clippingPlanes = content._tileset.clippingPlanes;
+        var contentClipped = defined(clippingPlanes) && clippingPlanes.enabled;// && content._tile._isClipped;
         var scratchCartesian = new Cartesian4();
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
@@ -537,7 +541,7 @@ define([
             u_clippingPlanes : function() {
                 var packedPlanes = content._packedClippingPlanes;
 
-                if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                if (contentClipped) {
                     clippingPlanes.transformAndPackPlanes(content._modelViewMatrix, packedPlanes);
                 }
 
@@ -1249,6 +1253,12 @@ define([
 
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
+        }
+
+        var isClipped = this._tile._isClipped;
+        if (this._isClipped !== isClipped) {
+            this._isClipped = isClipped;
+            createShaders(this, frameState, tileset.style);
         }
 
         if (updateModelMatrix) {
