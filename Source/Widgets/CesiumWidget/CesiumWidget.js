@@ -272,7 +272,7 @@ define([
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
             var creditDisplay = scene.frameState.creditDisplay;
 
-            var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
+            var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/', false);
             creditDisplay.addDefaultCredit(cesiumCredit);
 
             var globe = options.globe;

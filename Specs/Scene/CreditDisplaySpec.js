@@ -7,7 +7,7 @@ defineSuite([
     'use strict';
 
     var container;
-
+    var viewport = document.body;
     var imageContainer = 'cesium-credit-imageContainer';
     var textContainer = 'cesium-credit-textContainer';
     var text = 'cesium-credit-text';
@@ -22,27 +22,33 @@ defineSuite([
 
     it('credit display throws with no container', function() {
         expect(function() {
-            return new CreditDisplay();
+            return new CreditDisplay(undefined, viewport);
+        }).toThrowDeveloperError();
+    });
+
+    it('credit display throws with no viewport', function() {
+        expect(function() {
+            return new CreditDisplay(container, undefined);
         }).toThrowDeveloperError();
     });
 
     it('credit display addCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            var creditDisplay = new CreditDisplay(container, viewport);
             creditDisplay.addCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display addDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            var creditDisplay = new CreditDisplay(container, viewport);
             creditDisplay.addDefaultCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display removeDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay(container);
+            var creditDisplay = new CreditDisplay(container, viewport);
             creditDisplay.removeDefaultCredit();
         }).toThrowDeveloperError();
     });
@@ -57,12 +63,12 @@ defineSuite([
     });
 
     it('credit display displays text credit', function() {
-        var creditDisplay = new CreditDisplay(container);
-        var credit = new Credit('credit1');
+        var creditDisplay = new CreditDisplay(container, viewport);
+        var credit = new Credit('credit1', undefined, undefined, false);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(2);
+        expect(container.childNodes.length).toEqual(3);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -74,13 +80,12 @@ defineSuite([
     });
 
     it('credit display displays image credit', function() {
-        var creditDisplay = new CreditDisplay(container);
-        var credit = new Credit(undefined, imgSrc);
+        var creditDisplay = new CreditDisplay(container, viewport);
+        var credit = new Credit(undefined, imgSrc, undefined, false);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
 
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -94,14 +99,13 @@ defineSuite([
     });
 
     it('credit display displays hyperlink credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, viewport);
         var link = 'http://cesiumjs.org/';
-        var credit = new Credit(undefined, undefined, link);
+        var credit = new Credit(undefined, undefined, link, false);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
 
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -116,15 +120,14 @@ defineSuite([
     });
 
     it('credit display updates html when credits change', function() {
-        var credit1 = new Credit('credit1');
-        var credit2 = new Credit(undefined, imgSrc);
+        var credit1 = new Credit('credit1', undefined, undefined, false);
+        var credit2 = new Credit(undefined, imgSrc, undefined, false);
 
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, viewport);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
         var innerHTML = container.innerHTML;
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.childNodes.length).toEqual(0);
@@ -136,7 +139,6 @@ defineSuite([
         creditDisplay.endFrame();
         expect(container.innerHTML).not.toEqual(innerHTML);
         innerHTML = container.innerHTML;
-        expect(container.childNodes.length).toEqual(2);
         child0 = container.childNodes[0];
         child1 = container.childNodes[1];
         expect(child0.childNodes.length).toEqual(1);
@@ -145,33 +147,31 @@ defineSuite([
         expect(child00.childNodes.length).toEqual(1);
         expect(child00.childNodes[0].src).toContain(imgSrc);
 
+        creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
         expect(container.innerHTML).not.toEqual(innerHTML);
         innerHTML = container.innerHTML;
-        expect(container.childNodes.length).toEqual(2);
         expect(container.childNodes[0].childNodes.length).toEqual(1);
         expect(container.childNodes[1].childNodes.length).toEqual(1);
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
         expect(container.innerHTML).not.toEqual(innerHTML);
-        expect(container.childNodes.length).toEqual(2);
         expect(container.childNodes[0].childNodes.length).toEqual(0);
         expect(container.childNodes[1].childNodes.length).toEqual(0);
     });
 
     it('credit display uses delimeter for text credits', function() {
-        var credit1 = new Credit('credit1');
-        var credit2 = new Credit('credit2');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var credit1 = new Credit('credit1', undefined, undefined, false);
+        var credit2 = new Credit('credit2', undefined, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
 
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -187,17 +187,16 @@ defineSuite([
     });
 
     it('credit display manages delimeters correctly for text credits', function() {
-        var credit1 = new Credit('credit1');
-        var credit2 = new Credit('credit2');
-        var credit3 = new Credit('credit3');
+        var credit1 = new Credit('credit1', undefined, undefined, false);
+        var credit2 = new Credit('credit2', undefined, undefined, false);
+        var credit3 = new Credit('credit3', undefined, undefined, false);
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -242,8 +241,8 @@ defineSuite([
     });
 
     it('credit display uses text as title for image credit', function() {
-        var credit1 = new Credit('credit text', imgSrc);
-        var creditDisplay = new CreditDisplay(container);
+        var credit1 = new Credit('credit text', imgSrc, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -260,8 +259,8 @@ defineSuite([
     });
 
     it('credit display creates image credit with hyperlink', function() {
-        var credit1 = new Credit(undefined, imgSrc, 'link.com');
-        var creditDisplay = new CreditDisplay(container);
+        var credit1 = new Credit(undefined, imgSrc, 'link.com', false);
+        var creditDisplay = new CreditDisplay(container, viewport);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -279,15 +278,14 @@ defineSuite([
     });
 
     it('credit display displays default credit', function() {
-        var defaultCredit = new Credit('defaultCredit');
-        var credit1 = new Credit('credit1');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var defaultCredit = new Credit('defaultCredit', undefined, undefined, false);
+        var credit1 = new Credit('credit1', undefined, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
 
-        expect(container.childNodes.length).toEqual(2);
         var child1 = container.childNodes[1];
         expect(child1.className).toEqual(textContainer);
         expect(child1.childNodes.length).toEqual(3);
@@ -308,15 +306,14 @@ defineSuite([
     });
 
     it('credit display displays credits when default is removed', function() {
-        var defaultCredit = new Credit('defaultCredit');
-        var credit1 = new Credit('credit1');
+        var defaultCredit = new Credit('defaultCredit', undefined, undefined, false);
+        var credit1 = new Credit('credit1', undefined, undefined, false);
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(2);
         var child1 = container.childNodes[1];
         expect(child1.className).toEqual(textContainer);
         expect(child1.childNodes.length).toEqual(3);
@@ -339,9 +336,9 @@ defineSuite([
     });
 
     it('credit display displays default image credit', function() {
-        var defaultCredit = new Credit(undefined, imgSrc);
-        var credit1 = new Credit('credit1');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var defaultCredit = new Credit(undefined, imgSrc, undefined, false);
+        var credit1 = new Credit('credit1', undefined, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -364,10 +361,10 @@ defineSuite([
     });
 
     it('credit display displays credits when default image is removed', function() {
-        var defaultCredit = new Credit(undefined, imgSrc);
-        var credit1 = new Credit('credit1');
+        var defaultCredit = new Credit(undefined, imgSrc, undefined, false);
+        var credit1 = new Credit('credit1', undefined, undefined, false);
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, viewport, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -392,14 +389,13 @@ defineSuite([
     });
 
     it('credit display only displays one if two image credits are equal', function() {
-        var credit1 = new Credit(undefined, imgSrc);
-        var credit2 = new Credit(undefined, imgSrc);
-        var creditDisplay = new CreditDisplay(container);
+        var credit1 = new Credit(undefined, imgSrc, undefined, false);
+        var credit2 = new Credit(undefined, imgSrc, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -414,14 +410,13 @@ defineSuite([
     });
 
     it('credit display only displays one if two text credits are equal', function() {
-        var credit1 = new Credit('text');
-        var credit2 = new Credit('text');
-        var creditDisplay = new CreditDisplay(container);
+        var credit1 = new Credit('text', undefined, undefined, false);
+        var credit2 = new Credit('text', undefined, undefined, false);
+        var creditDisplay = new CreditDisplay(container, viewport);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(2);
         var child0 = container.childNodes[0];
         var child1 = container.childNodes[1];
         expect(child0.className).toEqual(imageContainer);
@@ -430,5 +425,70 @@ defineSuite([
         expect(child1.childNodes.length).toEqual(1);
         expect(child1.childNodes[0].className).toEqual(text);
         expect(child1.childNodes[0].innerHTML).toEqual('text');
+    });
+
+    it('displays credits in a lightbox', function() {
+        var credit1 = new Credit('credit1');
+        var credit2 = new Credit(undefined, imgSrc);
+
+        var creditDisplay = new CreditDisplay(container, viewport);
+        var creditList = creditDisplay._creditList;
+
+        creditDisplay.showLightbox();
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit1);
+        creditDisplay.endFrame();
+
+        var innerHTML = creditList.innerHTML;
+        expect(creditList.childNodes.length).toEqual(1);
+        expect(creditList.childNodes[0].innerHTML).toEqual('credit1');
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit2);
+        creditDisplay.endFrame();
+        expect(creditList.innerHTML).not.toEqual(innerHTML);
+        innerHTML = creditList.innerHTML;
+        expect(creditList.childNodes.length).toEqual(1);
+        expect(creditList.childNodes[0].childNodes[0].src).toContain(imgSrc);
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit1);
+        creditDisplay.addCredit(credit2);
+        creditDisplay.endFrame();
+        expect(creditList.innerHTML).not.toEqual(innerHTML);
+        innerHTML = creditList.innerHTML;
+        expect(creditList.childNodes.length).toEqual(2);
+
+        creditDisplay.beginFrame();
+        creditDisplay.endFrame();
+        expect(creditList.innerHTML).not.toEqual(innerHTML);
+        expect(creditList.childNodes.length).toEqual(0);
+
+        creditDisplay.hideLightbox();
+    });
+
+    it('only renders lightbox credits when lightbox is visible', function() {
+        var credit1 = new Credit('credit1');
+        var credit2 = new Credit(undefined, imgSrc);
+
+        var creditDisplay = new CreditDisplay(container, viewport);
+        var creditList = creditDisplay._creditList;
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit1);
+        creditDisplay.addCredit(credit2);
+        creditDisplay.endFrame();
+        expect(creditList.childNodes.length).toEqual(0);
+
+        creditDisplay.showLightbox();
+
+        creditDisplay.beginFrame();
+        creditDisplay.addCredit(credit1);
+        creditDisplay.addCredit(credit2);
+        creditDisplay.endFrame();
+        expect(creditList.childNodes.length).toEqual(2);
+
+        creditDisplay.hideLightbox();
     });
 });

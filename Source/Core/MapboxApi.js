@@ -49,7 +49,7 @@ define([
         }
 
         if (!defined(errorCredit)) {
-            errorCredit = new Credit(errorString);
+            errorCredit = new Credit(errorString, undefined, undefined, false);
         }
 
         return errorCredit;
