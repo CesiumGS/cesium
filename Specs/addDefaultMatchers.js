@@ -412,7 +412,9 @@ define([
 
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
-            toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError')
+            toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError'),
+
+            toThrowSyntaxError : makeThrowFunction(true, SyntaxError, 'SyntaxError')
         };
     }
 
