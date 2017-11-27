@@ -1,5 +1,4 @@
 define([
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Color',
@@ -33,7 +32,6 @@ define([
         './SceneMode',
         './ShadowMode'
     ], function(
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
@@ -121,7 +119,13 @@ define([
         this._translucentRenderState = undefined;
 
         this._highlightColor = Color.clone(Color.WHITE);
+
+        this.pointAttenuation = true;
+        this._pointAttenuation = true;
+
         this._pointSize = 1.0;
+        this._pointAttenuationMaxSize = 10.0;
+        this._pointAttenuationStartDistance = 100.0;
         this._quantizedVolumeScale = undefined;
         this._quantizedVolumeOffset = undefined;
 
@@ -371,7 +375,7 @@ define([
             content._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], content._constantColor);
         } else {
             // Use a default constant color
-            content._constantColor = Color.clone(Color.DARKGRAY, content._constantColor);
+            content._constantColor = Color.clone(Color.WHITE, content._constantColor);
         }
 
         content._isTranslucent = isTranslucent;
@@ -439,7 +443,7 @@ define([
         content._hasBatchIds = defined(batchIds);
     }
 
-    var scratchPointSizeAndTilesetTime = new Cartesian2();
+    var scratchPointSizeAndTilesetTimeAndAttenuation = new Cartesian3();
 
     var positionLocation = 0;
     var colorLocation = 1;
@@ -511,10 +515,14 @@ define([
         }
 
         var uniformMap = {
-            u_pointSizeAndTilesetTime : function() {
-                scratchPointSizeAndTilesetTime.x = content._pointSize;
-                scratchPointSizeAndTilesetTime.y = content._tileset.timeSinceLoad;
-                return scratchPointSizeAndTilesetTime;
+            u_pointAttenuationMaxSize : function() {
+                return content._pointAttenuationMaxSize;
+            },
+            u_pointSizeAndTilesetTimeAndAttenuation : function() {
+                scratchPointSizeAndTilesetTimeAndAttenuation.x = content._pointSize;
+                scratchPointSizeAndTilesetTimeAndAttenuation.y = content._tileset.timeSinceLoad;
+                scratchPointSizeAndTilesetTimeAndAttenuation.z = content._pointAttenuationStartDistance;
+                return scratchPointSizeAndTilesetTimeAndAttenuation;
             },
             u_highlightColor : function() {
                 return content._highlightColor;
@@ -786,6 +794,7 @@ define([
         var hasNormals = content._hasNormals;
         var hasBatchIds = content._hasBatchIds;
         var backFaceCulling = content._backFaceCulling;
+        var pointAttenuation = content._pointAttenuation;
         var vertexArray = content._drawCommand.vertexArray;
 
         var colorStyleFunction;
@@ -898,11 +907,13 @@ define([
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
-                 'uniform vec2 u_pointSizeAndTilesetTime; \n' +
+                 'uniform float u_pointAttenuationMaxSize; \n' +
+                 'uniform vec3 u_pointSizeAndTilesetTimeAndAttenuation; \n' +
                  'uniform vec4 u_constantColor; \n' +
                  'uniform vec4 u_highlightColor; \n' +
                  'float u_pointSize; \n' +
-                 'float u_tilesetTime; \n';
+                 'float u_tilesetTime; \n' +
+                 'float u_pointAttenuationStartDistance; \n';
 
         vs += attributeDeclarations;
 
@@ -951,8 +962,9 @@ define([
 
         vs += 'void main() \n' +
               '{ \n' +
-              '    u_pointSize = u_pointSizeAndTilesetTime.x; \n' +
-              '    u_tilesetTime = u_pointSizeAndTilesetTime.y; \n';
+              '    u_pointSize = u_pointSizeAndTilesetTimeAndAttenuation.x; \n' +
+              '    u_tilesetTime = u_pointSizeAndTilesetTimeAndAttenuation.y; \n' +
+              '    u_pointAttenuationStartDistance = u_pointSizeAndTilesetTimeAndAttenuation.z; \n';
 
         if (usesColors) {
             if (isTranslucent) {
@@ -978,7 +990,7 @@ define([
         } else {
             vs += '    vec3 position = a_position; \n';
         }
-        vs += '    vec3 position_absolute = vec3(czm_model * vec4(position, 1.0)); \n';
+        vs += '    vec3 positionWC = vec3(czm_model * vec4(position, 1.0)); \n';
 
         if (hasNormals) {
             if (isOctEncoded16P) {
@@ -991,20 +1003,26 @@ define([
         }
 
         if (hasColorStyle) {
-            vs += '    color = getColorFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    color = getColorFromStyle(position, positionWC, color, normal); \n';
         }
 
         if (hasShowStyle) {
-            vs += '    float show = float(getShowFromStyle(position, position_absolute, color, normal)); \n';
+            vs += '    float show = float(getShowFromStyle(position, positionWC, color, normal)); \n';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, positionWC, color, normal); \n';
         } else {
             vs += '    gl_PointSize = u_pointSize; \n';
         }
 
-        vs += '    color = color * u_highlightColor; \n';
+        if (pointAttenuation) {
+            vs += '    vec4 positionEC = czm_view * vec4(positionWC, 1.0); \n' +
+                  '    float depth = -positionEC.z; \n' +
+                  '    float attenuationFactor = min(depth, u_pointAttenuationStartDistance) / u_pointAttenuationStartDistance; \n' +
+                  '    gl_PointSize *= mix(u_pointAttenuationMaxSize, 1.0, attenuationFactor); \n';
+        }
+
 
         if (hasNormals) {
             vs += '    normal = czm_normal * normal; \n' +
@@ -1013,7 +1031,8 @@ define([
                   '    color *= diffuseStrength; \n';
         }
 
-        vs += '    v_color = color; \n' +
+        vs += '    color *= u_highlightColor; \n' +
+              '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (hasNormals && backFaceCulling) {
@@ -1218,6 +1237,15 @@ define([
             this._backFaceCulling = this.backFaceCulling;
             createShaders(this, frameState, tileset.style);
         }
+
+        this.pointAttenuation = tileset.pointAttenuation;
+        if (this.pointAttenuation !== this._pointAttenuation) {
+            this._pointAttenuation = this.pointAttenuation;
+            createShaders(this, frameState, tileset.style);
+        }
+        this._pointSize = tileset.pointSize;
+        this._pointAttenuationMaxSize = tileset.pointAttenuationMaxSize;
+        this._pointAttenuationStartDistance = tileset.pointAttenuationStartDistance;
 
         // Update the render state
         var isTranslucent = (this._highlightColor.alpha < 1.0) || (this._constantColor.alpha < 1.0) || this._styleTranslucent;
