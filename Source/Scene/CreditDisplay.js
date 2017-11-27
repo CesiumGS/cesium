@@ -213,7 +213,7 @@ define([
         var that = this;
 
         var lightbox = document.createElement('div');
-        lightbox.className = 'cesium-credit-lightbox';
+        lightbox.className = 'cesium-credit-lightbox-overlay';
         lightbox.style.display = 'none';
         lightbox.style.zIndex = '5';
         lightbox.style.position = 'absolute';
@@ -236,6 +236,7 @@ define([
         lightboxCredits.style.marginTop = Math.floor((viewportHeight - lightboxHeight) * 0.5) + 'px';
         lightboxCredits.style.width = '370px';
         lightboxCredits.style.minHeight = lightboxHeight + 'px';
+        lightboxCredits.className = 'cesium-credit-lightbox';
         lightbox.appendChild(lightboxCredits);
         lightbox.onclick = function(event) {
             if (event.target === lightboxCredits) {
@@ -346,9 +347,6 @@ define([
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('credit', credit);
-        if (credit.showInPopup) {
-            throw new DeveloperError('showInPopup must be false for default credits');
-        }
         //>>includeEnd('debug');
 
         if (credit.hasImage()) {
