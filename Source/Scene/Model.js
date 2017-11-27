@@ -4750,7 +4750,7 @@ define([
 
             var clippingPlanes = this.clippingPlanes;
             if (defined(clippingPlanes) && clippingPlanes.enabled && modelViewChanged) {
-                Matrix4.multiply(context.uniformState.view3D, this._computedModelMatrix, this._modelViewMatrix);
+                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed

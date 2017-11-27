@@ -17,6 +17,7 @@ float czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clip
         vec3 clipNormal = vec3(0.0);
         vec3 clipPosition = vec3(0.0);
         float clipAmount = 0.0;
+        float pixelWidth = czm_metersPerPixel(position);
 
         for (int i = 0; i < czm_maxClippingPlanes; ++i)
         {
@@ -28,7 +29,7 @@ float czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clip
             clipNormal = clippingPlanes[i].xyz;
             clipPosition = -clippingPlanes[i].w * clipNormal;
 
-            float amount = dot(clipNormal, (position.xyz - clipPosition));
+            float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
             if (amount > clipAmount) {
                 clipAmount = amount;
             }

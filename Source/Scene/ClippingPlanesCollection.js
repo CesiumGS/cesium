@@ -36,7 +36,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
      * @param {Boolean} [options.combineClippingRegions=true] If true, the region to be clipped must be included in all planes in this collection. Otherwise, a region will be clipped if included in any plane in the collection.
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
-     * @param {Number} [options.edgeWidth=0.0] The width of the highlight applied to the edge along which an object is clipped.
+     * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      */
     function ClippingPlanesCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -74,7 +74,7 @@ define([
         this.edgeColor = defaultValue(options.edgeColor, Color.clone(Color.WHITE));
 
         /**
-         * The width of the highlight applied to the edge along which an object is clipped.
+         * The width, in pixels, of the highlight applied to the edge along which an object is clipped.
          *
          * @type {Number}
          * @default 0.0

@@ -50,10 +50,6 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
-var defaultClippingPlanes = [
-    new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0,-1.0), -100.0)
-];
-
 var clipObjects = ['BIM', 'Point Cloud', 'Model'];
 var viewModel = {
     debugBoundingVolumesEnabled : false,
@@ -113,10 +109,14 @@ function createPlaneUpdateFunction(plane, transform) {
 
 var tileset;
 function loadTileset(url) {
+    var clippingPlanes = [
+        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+    ];
+
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
         clippingPlanes : new Cesium.ClippingPlanesCollection({
-            planes : defaultClippingPlanes,
+            planes : clippingPlanes,
             edgeWidth : 1.0
         })
     }));
@@ -128,9 +128,8 @@ function loadTileset(url) {
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
-        for (var i = 0; i < defaultClippingPlanes.length; ++i) {
-            var clippingPlanes = tileset.clippingPlanes;
-            var plane = clippingPlanes.planes[i];
+        for (var i = 0; i < clippingPlanes.length; ++i) {
+            var plane = clippingPlanes[i];
             var planeEntity = viewer.entities.add({
                 position : boundingSphere.center,
                 plane : {
@@ -154,6 +153,10 @@ function loadTileset(url) {
 
 var modelEntity;
 function loadModel(url) {
+    var clippingPlanes = [
+        new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
+    ];
+
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
     var heading = Cesium.Math.toRadians(135.0);
     var pitch = 0.0;
@@ -169,9 +172,8 @@ function loadModel(url) {
             scale : 8,
             minimumPixelSize : 100.0,
             clippingPlanes : new Cesium.ClippingPlanesCollection({
-                planes : defaultClippingPlanes,
-                edgeWidth : 1.0,
-                modelMatrix : Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO))
+                planes : clippingPlanes,
+                edgeWidth : 1.0
             })
         }
     });
@@ -179,11 +181,8 @@ function loadModel(url) {
     viewer.trackedEntity = entity;
     modelEntity = entity.model;
 
-    console.log(modelEntity);
-
-    for (var i = 0; i < defaultClippingPlanes.length; ++i) {
-        var clippingPlanes = tileset.clippingPlanes;
-        var plane = clippingPlanes.planes[i];
+    for (var i = 0; i < clippingPlanes.length; ++i) {
+        var plane = clippingPlanes[i];
         var planeEntity = viewer.entities.add({
             position : position,
             plane : {
@@ -236,6 +235,7 @@ function reset() {
     viewer.entities.removeAll();
     viewer.scene.primitives.removeAll();
     planeEntities = [];
+    targetY = 0.0;
 }
 
 //Sandcastle_End
