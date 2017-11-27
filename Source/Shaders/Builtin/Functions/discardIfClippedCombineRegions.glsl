@@ -1,6 +1,6 @@
 /**
- * Clip a fragment by an array of clipping planes. Clipping plane regions are not combined, therefore if a fragment is
- * clipped by any of the planes, it is discarded.
+ * Clip a fragment by an array of clipping planes. Clipping plane regions are combined, so a fragment must be clipped
+ * by all of the planes to be discarded.
  *
  * @name czm_discardIfClipped
  * @glslFunction
@@ -9,10 +9,11 @@
  * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  * @returns {float} The distance away from a clipped fragment, in eyespace
  */
-float czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
+float czm_discardIfClippedCombineRegions (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
 {
     if (clippingPlanesLength > 0)
     {
+        bool clipped = true;
         vec4 position = czm_windowToEyeCoordinates(gl_FragCoord);
         vec3 clipNormal = vec3(0.0);
         vec3 clipPosition = vec3(0.0);
@@ -33,10 +34,12 @@ float czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clip
                 clipAmount = amount;
             }
 
-            if (amount <= 0.0) {
-                discard;
-                return amount;
-            }
+            clipped = clipped && (amount <= 0.0);
+        }
+
+        if (clipped)
+        {
+            discard;
         }
 
         return clipAmount;

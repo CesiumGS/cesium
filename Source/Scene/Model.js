@@ -2112,7 +2112,7 @@ define([
 
         var clippingPlanes = model.clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            finalFS = modifyShaderForClippingPlanes(finalFS);
+            finalFS = modifyShaderForClippingPlanes(finalFS, model.clippingPlanes.combineClippingRegions);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
@@ -3330,16 +3330,6 @@ define([
         };
     }
 
-    function createClippingPlanesInclusiveFunction(model) {
-        return function() {
-            if (!defined(model.clippingPlanes)) {
-                return true;
-            }
-
-            return model.clippingPlanes.inclusive;
-        };
-    }
-
     function createClippingPlanesEdgeWidthFunction(model) {
         return function() {
             if (!defined(model.clippingPlanes)) {
@@ -3458,7 +3448,6 @@ define([
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context),
-                gltf_clippingPlanesInclusive: createClippingPlanesInclusiveFunction(model),
                 gltf_clippingPlanesEdgeColor: createClippingPlanesEdgeColorFunction(model),
                 gltf_clippingPlanesEdgeWidth: createClippingPlanesEdgeWidthFunction(model)
             });
@@ -4254,18 +4243,19 @@ define([
         }
     }
 
-    function modifyShaderForClippingPlanes(shader) {
+    function modifyShaderForClippingPlanes(shader, combineClippingRegions) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
+
+        var clippingFunction = combineClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
         shader +=
             'uniform int gltf_clippingPlanesLength; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
-            'uniform bool gltf_clippingPlanesInclusive; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeColor; \n' +
             'uniform float gltf_clippingPlanesEdgeWidth; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    float clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength, gltf_clippingPlanesInclusive); \n' +
+            '    float clipDistance = ' + clippingFunction + '(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '    if (clipDistance < gltf_clippingPlanesEdgeWidth) { \n' +
             '        gl_FragColor = gltf_clippingPlanesEdgeColor; \n' +
             '    } \n' +

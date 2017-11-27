@@ -1,7 +1,6 @@
 define([
         './Cartesian3',
         './Check',
-        './defaultValue',
         './defined',
         './DeveloperError',
         './freezeObject',
@@ -10,7 +9,6 @@ define([
     ], function(
         Cartesian3,
         Check,
-        defaultValue,
         defined,
         DeveloperError,
         freezeObject,

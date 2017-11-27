@@ -543,13 +543,6 @@ define([
 
                 return packedPlanes;
             },
-            u_clippingPlanesInclusive : function() {
-                if (!defined(clippingPlanes)) {
-                    return true;
-                }
-
-                return clippingPlanes.inclusive;
-            },
             u_clippingPlanesEdgeWidth : function() {
                 if (!defined(clippingPlanes)) {
                     return 0.0;
@@ -1078,7 +1071,6 @@ define([
         if (hasClippingPlanes) {
             fs += 'uniform int u_clippingPlanesLength;' +
                   'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
-                  'uniform bool u_clippingPlanesInclusive; \n' +
                   'uniform vec4 u_clippingPlanesEdgeColor; \n' +
                   'uniform float u_clippingPlanesEdgeWidth; \n';
         }
@@ -1088,7 +1080,8 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippingPlanes) {
-            fs += '    float clipDistance = czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesInclusive); \n' +
+            var clippingFunction = clippingPlanes.combineClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
+            fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
                   '    if (clipDistance < u_clippingPlanesEdgeWidth) { \n' +
                   '        gl_FragColor = u_clippingPlanesEdgeColor; \n' +
                   '    } \n';

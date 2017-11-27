@@ -239,7 +239,7 @@ define([
          *
          * @type {ClippingPlaneCollection}
          */
-        terrainClippingPlanes : {
+        clippingPlanes : {
             get : function() {
                 return this._surface.tileProvider.clippingPlanes;
             },

@@ -873,9 +873,6 @@ define([
             u_clippingPlanes : function() {
                 return this.properties.clippingPlanes;
             },
-            u_clippingPlanesInclusive : function() {
-                return this.properties.clippingPlanesInclusive;
-            },
             u_clippingPlanesEdgeColor : function() {
                 return this.properties.clippingPlanesEdgeColor;
             },
@@ -918,7 +915,6 @@ define([
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
                 clippingPlanes : [],
-                clippingPlanesInclusive : true,
                 clippingPlanesEdgeColor : new Cartesian4(1.0, 1.0, 1.0, 1.0),
                 clippingPlanesEdgeWidth : 0.0
             }
@@ -1043,8 +1039,6 @@ define([
     })();
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    var scratchMatrix = new Matrix4();
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
@@ -1299,32 +1293,32 @@ define([
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             // update clipping planes
-            if (tile.isClipped) {
-                var length = 0;
-                var clippingPlanes = tileProvider.clippingPlanes;
+            var clippingPlanes = tileProvider.clippingPlanes;
+            var length = 0;
 
-                if (defined(clippingPlanes)) {
-                    length = clippingPlanes.planes.length;
-                }
-                if (length !== uniformMapProperties.clippingPlanes.length) {
-                    uniformMapProperties.clippingPlanes = new Array(length);
+            if (defined(clippingPlanes) && tile.isClipped) {
+                length = clippingPlanes.planes.length;
+            }
 
-                    for (var i = 0; i < length; ++i) {
-                        uniformMapProperties.clippingPlanes[i] = new Cartesian4();
-                    }
+            var clippingPlanesProperty = uniformMapProperties.clippingPlanes;
+            if (length !== clippingPlanesProperty.length) {
+                clippingPlanesProperty = uniformMapProperties.clippingPlanes = new Array(length);
+
+                for (var i = 0; i < length; ++i) {
+                    clippingPlanesProperty[i] = new Cartesian4();
                 }
             }
 
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                clippingPlanes.transformAndPackPlanes(context.uniformState.view, uniformMapProperties.clippingPlanes);
-                uniformMapProperties.clippingPlanesInclusive = clippingPlanes.inclusive;
+            if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
+                clippingPlanes.transformAndPackPlanes(context.uniformState.view, clippingPlanesProperty);
                 uniformMapProperties.clippingPlanesEdgeColor = Cartesian4.fromColor(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 
             var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
+            var combineClippingRegions = clippingPlanesEnabled ? clippingPlanes.combineClippingRegions : true;
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, combineClippingRegions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

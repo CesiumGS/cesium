@@ -55,7 +55,6 @@ uniform vec2 u_lightingFadeDistance;
 #ifdef ENABLE_CLIPPING_PLANES
 uniform int u_clippingPlanesLength;
 uniform vec4 u_clippingPlanes[czm_maxClippingPlanes];
-uniform bool u_clippingPlanesInclusive;
 uniform vec4 u_clippingPlanesEdgeColor;
 uniform float u_clippingPlanesEdgeWidth;
 #endif
@@ -150,7 +149,11 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
-    float clipDistance = czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength, u_clippingPlanesInclusive);
+    #ifdef COMBINE_CLIPPING_REGIONS
+    float clipDistance = czm_discardIfClippedCombineRegions(u_clippingPlanes, u_clippingPlanesLength);
+    #else
+    float clipDistance = czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength);
+    #endif
 #endif
 
     // The clamp below works around an apparent bug in Chrome Canary v23.0.1241.0

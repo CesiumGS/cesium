@@ -740,28 +740,6 @@ define([
         return frameState.mode !== SceneMode.SCENE3D ? tile._contentBoundingVolume2D : tile._contentBoundingVolume;
     }
 
-
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
-    function checkTileClipped(tile, boundingVolume) {
-        var clippingPlanes = tile._tileset.clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            var planes = clippingPlanes.planes;
-            var length = planes.length;
-            var rootTransform = tile._tileset._root.computedTransform; // TODO, factor in inclusive/exclusive, transform
-            for (var i = 0; i < length; ++i) {
-                var plane = planes[i];
-                Plane.transform(plane, rootTransform, scratchPlane);
-                var value = boundingVolume.intersectPlane(scratchPlane);
-                if (value !== Intersect.INSIDE) {
-                    return value;
-                }
-            }
-        }
-
-        return Intersect.INSIDE;
-    }
-
-
     /**
      * Determines whether the tile's bounding volume intersects the culling volume.
      *

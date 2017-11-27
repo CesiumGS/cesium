@@ -37,7 +37,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
     <select data-bind="options: exampleTypes, value: currentExampleType"></select>
-    <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show debug <code>boundingVolume</code>
+    <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show bounding volume
 </div>
 
 <script id="cesium_sandcastle_script">
@@ -83,8 +83,8 @@ downHandler.setInputAction(function(movement) {
 var upHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 upHandler.setInputAction(function() {
     if (Cesium.defined(selectedPlane)) {
-        selectedPlane.material = Cesium.Color.CYAN.withAlpha(0.1);
-        selectedPlane.outlineColor = Cesium.Color.CYAN;
+        selectedPlane.material = Cesium.Color.WHITE.withAlpha(0.1);
+        selectedPlane.outlineColor = Cesium.Color.WHITE;
         selectedPlane = undefined;
     }
 
@@ -96,8 +96,7 @@ var moveHandler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
 moveHandler.setInputAction(function(movement) {
     if (Cesium.defined(selectedPlane)) {
         var deltaY = movement.endPosition.y - movement.startPosition.y;
-        //var screenScale = scene.camera.getPixelSize(tileset.boundingSphere, scene.drawingBufferWidth, scene.drawingBufferHeight);
-        targetY += deltaY;// * screenScale;
+        targetY += deltaY;
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
@@ -118,8 +117,7 @@ function loadTileset(url) {
         url : url,
         clippingPlanes : new Cesium.ClippingPlanesCollection({
             planes : defaultClippingPlanes,
-            edgeWidth: 1.0,
-            edgeColor: Cesium.Color.CYAN
+            edgeWidth : 1.0
         })
     }));
 
@@ -137,10 +135,10 @@ function loadTileset(url) {
                 position : boundingSphere.center,
                 plane : {
                     dimensions : new Cesium.Cartesian2(radius * 2.5, radius * 2.5),
-                    material : Cesium.Color.CYAN.withAlpha(0.1),
-                    plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, tileset.modelMatrix), false),
-                    outline: true,
-                    outlineColor: Cesium.Color.CYAN
+                    material : Cesium.Color.WHITE.withAlpha(0.1),
+                    plane : new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, tileset.modelMatrix), false),
+                    outline : true,
+                    outlineColor : Cesium.Color.WHITE
                 }
             });
 
@@ -168,13 +166,12 @@ function loadModel(url) {
         orientation : orientation,
         model : {
             uri : url,
-            scale: 8,
-            minimumPixelSize: 100.0,
+            scale : 8,
+            minimumPixelSize : 100.0,
             clippingPlanes : new Cesium.ClippingPlanesCollection({
                 planes : defaultClippingPlanes,
-                edgeWidth: 1.0,
-                edgeColor: Cesium.Color.CYAN,
-                transformationMatrix: Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO))
+                edgeWidth : 1.0,
+                modelMatrix : Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO))
             })
         }
     });
@@ -191,10 +188,10 @@ function loadModel(url) {
             position : position,
             plane : {
                 dimensions : new Cesium.Cartesian2(300.0, 300.0),
-                material : Cesium.Color.CYAN.withAlpha(0.1),
-                plane: new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, Cesium.Matrix4.IDENTITY), false),
-                outline: true,
-                outlineColor: Cesium.Color.CYAN
+                material : Cesium.Color.WHITE.withAlpha(0.1),
+                plane : new Cesium.CallbackProperty(createPlaneUpdateFunction(plane, Cesium.Matrix4.IDENTITY), false),
+                outline : true,
+                outlineColor : Cesium.Color.WHITE
             }
         });
 
@@ -222,7 +219,7 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     } else if (newValue === clipObjects[1]) {
         loadTileset(pointCloudUrl);
         tileset.readyPromise.then(function () {
-            tileset.clippingPlanes.transformationMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
+            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
         });
     } else {
         loadModel(modelUrl);
