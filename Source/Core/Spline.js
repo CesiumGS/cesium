@@ -126,7 +126,7 @@ define([
      * @function
      *
      * @param {Number} time The time.
-     * @return {Number} the time, wrapped around the animation period.
+     * @return {Number} The time, wrapped around the animation period.
      */
     Spline.prototype.wrapTime = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -154,7 +154,7 @@ define([
      * @function
      *
      * @param {Number} time The time.
-     * @return {Number} the time, clamped to the animation period.
+     * @return {Number} The time, clamped to the animation period.
      */
     Spline.prototype.clampTime = function(time) {
         //>>includeStart('debug', pragmas.debug);
