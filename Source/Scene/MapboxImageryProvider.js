@@ -17,8 +17,14 @@ define([
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
-    var defaultCredit2 = [new Credit('Improve this map', undefined, 'https://www.mapbox.com/map-feedback/')];
+    var defaultCredit1 = new Credit({
+        text:'© Mapbox © OpenStreetMap',
+        link: 'https://www.mapbox.com/about/maps/'
+    });
+    var defaultCredit2 = [new Credit({
+        text: 'Improve this map',
+        link: 'https://www.mapbox.com/map-feedback/'
+    })];
 
     /**
      * Provides tiled imagery hosted by Mapbox.
@@ -83,7 +89,7 @@ define([
         if (defined(options.credit)) {
             var credit = options.credit;
             if (typeof credit === 'string') {
-                credit = new Credit(credit);
+                credit = new Credit({text: credit});
             }
             defaultCredit1 = credit;
             defaultCredit2.length = 0;

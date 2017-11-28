@@ -14,6 +14,7 @@ define([
     DeveloperError) {
     'use strict';
 
+    var mobileWidth = 576;
     var lightboxHeight = 100;
 
     function makeTextCredit(credit, element) {
@@ -37,13 +38,13 @@ define([
         return credit.element;
     }
 
-    function makeImageCredit(credit, element) {
+    function makeImageCredit(credit, element, alignMiddle) {
         if (!defined(credit.element)) {
             var text = credit.text;
             var link = credit.link;
             var content = document.createElement('img');
             content.src = credit.imageUrl;
-            content.style['vertical-align'] = 'bottom';
+            content.style['vertical-align'] = alignMiddle ? 'middle' : 'bottom';
             if (defined(text)) {
                 content.alt = text;
                 content.title = text;
@@ -114,7 +115,7 @@ define([
             if (defined(credit)) {
                 index = displayedImageCredits.indexOf(credit);
                 if (index === -1) {
-                    var element = makeImageCredit(credit, document.createElement('span'));
+                    var element = makeImageCredit(credit, document.createElement('span'), false);
                     container.appendChild(element);
                 } else {
                     displayedImageCredits.splice(index, 1);
@@ -136,7 +137,7 @@ define([
                 if (index === -1) {
                     var element;
                     if (credit.hasImage()) {
-                        element = makeImageCredit(credit, document.createElement('li'));
+                        element = makeImageCredit(credit, document.createElement('li'), true);
                     } else {
                         element = makeTextCredit(credit, document.createElement('li'));
                     }
@@ -153,7 +154,7 @@ define([
         var element = credit.element;
         if (defined(element)) {
             var container = element.parentNode;
-            if (!credit.hasImage() && !credit.showInPopup) {
+            if (!credit.hasImage() && credit.showOnScreen) {
                 var delimiter = element.previousSibling;
                 if (delimiter === null) {
                     delimiter = element.nextSibling;
@@ -192,12 +193,41 @@ define([
         }
     }
 
+    function styleLightboxContainer(that) {
+        var lightboxCredits = that._lightboxCredits;
+        var width = that.viewport.clientWidth;
+        var height = that.viewport.clientHeight;
+        if (width !== that._lastViewportWidth) {
+            if (width < mobileWidth) {
+                lightboxCredits.style.border = 'none';
+                lightboxCredits.style.borderRadius = '0';
+                lightboxCredits.style.maxWidth = 'initial';
+                lightboxCredits.style.marginTop = '0';
+                lightboxCredits.style.height = '100%';
+                lightboxCredits.style.width = '100%';
+            } else {
+                lightboxCredits.style.border = '1px solid #444';
+                lightboxCredits.style.borderRadius = '5px';
+                lightboxCredits.style.maxWidth = '370px';
+                lightboxCredits.style.height = 'initial';
+                lightboxCredits.style.width = 'initial';
+                lightboxCredits.style.marginTop = Math.floor((height - lightboxCredits.clientHeight) * 0.5) + 'px';
+            }
+            that._lastViewportWidth = width;
+        }
+
+        if (width >= mobileWidth && height !== that._lastViewportHeight) {
+            lightboxCredits.style.marginTop = Math.floor((height - lightboxCredits.clientHeight) * 0.5) + 'px';
+            that._lastViewportHeight = height;
+        }
+    }
+
     /**
      * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
-     * @param {HTMLElement} viewport The HTML element that will contain the credits popup
      * @param {String} [delimiter= ' • '] The string to separate text credits
+     * @param {HTMLElement} [viewport=document.body] The HTML element that will contain the credits popup
      *
      * @alias CreditDisplay
      * @constructor
@@ -205,12 +235,13 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-    function CreditDisplay(container, viewport, delimiter) {
+    function CreditDisplay(container, delimiter, viewport) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('container', container);
-        Check.defined('viewport', viewport);
         //>>includeEnd('debug');
         var that = this;
+
+        viewport = defaultValue(viewport, document.body);
 
         var lightbox = document.createElement('div');
         lightbox.className = 'cesium-credit-lightbox-overlay';
@@ -224,18 +255,12 @@ define([
         lightbox.style.backgroundColor = 'rgba(80, 80, 80, 0.8)';
         viewport.appendChild(lightbox);
 
-        var viewportHeight = viewport.clientHeight;
         var lightboxCredits = document.createElement('div');
         lightboxCredits.style.backgroundColor = '#303336';
         lightboxCredits.style.color = '#edffff';
-        lightboxCredits.style.border = '1px solid #444';
-        lightboxCredits.style.borderRadius = '5px';
-        lightboxCredits.style.padding = '12px 20px';
         lightboxCredits.style.position = 'relative';
-        lightboxCredits.style.margin = 'auto';
-        lightboxCredits.style.marginTop = Math.floor((viewportHeight - lightboxHeight) * 0.5) + 'px';
-        lightboxCredits.style.width = '370px';
         lightboxCredits.style.minHeight = lightboxHeight + 'px';
+        lightboxCredits.style.margin = 'auto';
         lightboxCredits.className = 'cesium-credit-lightbox';
         lightbox.appendChild(lightboxCredits);
         lightbox.onclick = function(event) {
@@ -245,9 +270,14 @@ define([
             that.hideLightbox();
         };
 
+        var title = document.createElement('div');
+        title.textContent = 'Data provided by:';
+        title.style.padding = '20px 20px 0 20px';
+        lightboxCredits.appendChild(title);
+
         var closeButton = document.createElement('a');
         closeButton.onclick = this.hideLightbox.bind(this);
-        closeButton.textContent = '×';
+        closeButton.innerHTML = '&times;';
         closeButton.style.fontSize = '18pt';
         closeButton.style.cursor = 'pointer';
         closeButton.style.position = 'absolute';
@@ -262,9 +292,9 @@ define([
         lightboxCredits.appendChild(closeButton);
 
         var creditList = document.createElement('ul');
-        creditList.style['list-style-type'] = 'none';
-        creditList.style.padding = 0;
         creditList.style.margin = 0;
+        creditList.style.padding = '12px 20px 12px 40px';
+        creditList.style.fontSize = '13px';
         lightboxCredits.appendChild(creditList);
 
         var imageContainer = document.createElement('span');
@@ -292,10 +322,12 @@ define([
         this._delimiter = defaultValue(delimiter, ' • ');
         this._textContainer = textContainer;
         this._imageContainer = imageContainer;
-        this._lastViewportHeight = viewportHeight;
+        this._lastViewportHeight = undefined;
+        this._lastViewportWidth = undefined;
         this._lightboxCredits = lightboxCredits;
         this._creditList = creditList;
         this._lightbox = lightbox;
+        this._expandLink = expandLink;
         this._expanded = false;
         this._defaultImageCredits = [];
         this._defaultTextCredits = [];
@@ -303,12 +335,12 @@ define([
         this._displayedCredits = {
             imageCredits : [],
             textCredits : [],
-            lightboxCredits: []
+            lightboxCredits : []
         };
         this._currentFrameCredits = {
             imageCredits : [],
             textCredits : [],
-            lightboxCredits: []
+            lightboxCredits : []
         };
 
         this.viewport = viewport;
@@ -330,7 +362,7 @@ define([
         Check.defined('credit', credit);
         //>>includeEnd('debug');
 
-        if (credit.showInPopup) {
+        if (!credit.showOnScreen) {
             this._currentFrameCredits.lightboxCredits[credit.id] = credit;
         } else if (credit.hasImage()) {
             this._currentFrameCredits.imageCredits[credit.id] = credit;
@@ -419,13 +451,10 @@ define([
         var displayedImageCredits = this._defaultImageCredits.concat(this._currentFrameCredits.imageCredits);
         var displayedLightboxCredits = [];
 
+        var showLightboxLink = this._currentFrameCredits.lightboxCredits.length > 0;
+        this._expandLink.style.display = showLightboxLink ? 'inline' : 'none';
         if (this._expanded) {
-            var height = this.viewport.clientHeight;
-            if (height !== this._lastViewportHeight) {
-                this._lightboxCredits.style.marginTop = Math.floor((height - this._lightboxCredits.clientHeight) * 0.5) + 'px';
-                this._lastViewportHeight = height;
-            }
-
+            styleLightboxContainer(this);
             displayLightboxCredits(this, this._currentFrameCredits.lightboxCredits);
 
             displayedLightboxCredits = this._currentFrameCredits.lightboxCredits.slice();
