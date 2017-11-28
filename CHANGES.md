@@ -3,6 +3,7 @@ Change Log
 
 ### 1.40 - 2017-12-01
 
+* Added a reverse geocoder to the Custom Geocoder in Sandcastle, as well as a Reverse Geocoder based on the Bing Maps API as a separate demo. [#5976](https://github.com/AnalyticalGraphicsInc/cesium/pull/5976)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 * Fixed `Invalid asm.js: Invalid member of stdlib` console error by recompiling crunch.js with latest emscripten toolchain. [#5847](https://github.com/AnalyticalGraphicsInc/cesium/issues/5847)
 

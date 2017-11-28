@@ -93,12 +93,13 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
  });
 
  /**
- * Find the camera position after search, and put a point there.
+ * Find the camera position after search, and put a point there. Clicking on the point, will display a square
+   and the latitude and longitude of the address in the search.
  */
   function setPointForSearchLocation() {
 
-    var camera = this.viewer.camera;
-    var ellipsoid = this.viewer.scene.globe.ellipsoid;
+    var camera = viewer.camera;
+    var ellipsoid = viewer.scene.globe.ellipsoid;
     var coordinate = ellipsoid.cartesianToCartographic(camera.position);
     var lat =  Cesium.Math.toDegrees(coordinate.latitude);
     var long = Cesium.Math.toDegrees(coordinate.longitude);
