@@ -244,9 +244,17 @@ defineSuite([
         });
     });
 
-    it('load inserts missing namespace declaration', function() {
+    it('load inserts missing namespace declaration into kml', function() {
         var dataSource = new KmlDataSource(options);
         return dataSource.load('Data/KML/undeclaredNamespaces.kml').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load inserts missing namespace declaration into kmz', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kmz').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });
