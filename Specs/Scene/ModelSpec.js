@@ -2000,6 +2000,15 @@ defineSuite([
         });
     });
 
+    it('loads a glTF 2.0 with node animations set to unclamped', function() {
+        return loadModel(boxAnimatedPbrUrl, {
+            clampAnimations : false
+        }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('loads a glTF 2.0 with skinning', function() {
         return loadModel(riggedSimplePbrUrl).then(function(m) {
             verifyRender(m);
