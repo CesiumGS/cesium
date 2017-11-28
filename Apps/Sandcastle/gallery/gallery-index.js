@@ -361,10 +361,6 @@ var gallery_demos = [{
   "date": 1510365165000,
   "img": "Rectangle.jpg"
 }, {
-  "name": "Reverse Geocoder",
-  "date": 1510365165000,
-  "img": "Reverse Geocoder.jpg"
-}, {
   "name": "Rotatable 2D Map",
   "date": 1510365165000,
   "img": "Rotatable 2D Map.jpg"
