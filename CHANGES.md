@@ -10,6 +10,8 @@ Change Log
 * Fixed `Invalid asm.js: Invalid member of stdlib` console error by recompiling crunch.js with latest emscripten toolchain. [#5847](https://github.com/AnalyticalGraphicsInc/cesium/issues/5847)
 * Added CZML support for `polyline.depthFailMaterial`, `label.scaleByDistance`, `distanceDisplayCondition`, and `disableDepthTestDistance`. [#5986](https://github.com/AnalyticalGraphicsInc/cesium/pull/5986)
 * Moved terrain and imagery credits to a lightbox that pops up when you click a link in the onscreen credits [#3013](https://github.com/AnalyticalGraphicsInc/cesium/issues/3013)
+* Fixed a bug where models with animations of different lengths would cause an error. [#5694](https://github.com/AnalyticalGraphicsInc/cesium/issues/5694)
+* Added a `clampAnimations` parameter to `Model` and `Entity.model`. Setting this to `false` allows different length animations to loop asynchronously over the duration of the longest animation.
 
 ### 1.39 - 2017-11-01
 

@@ -326,6 +326,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -528,6 +529,13 @@ define([
          * @type {ModelAnimationCollection}
          */
         this.activeAnimations = new ModelAnimationCollection(this);
+
+        /**
+         * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+         *
+         * @type {Boolean}
+         */
+        this.clampAnimations = defaultValue(options.clampAnimations, true);
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
@@ -1110,6 +1118,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -2488,6 +2497,7 @@ define([
             //    return;
             //}
             if (defined(spline)) {
+                localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
                 runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
                 runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
