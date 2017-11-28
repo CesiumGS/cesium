@@ -1,19 +1,19 @@
 define([
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    './createMaterialPropertyDescriptor',
-    './createPropertyDescriptor'
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createMaterialPropertyDescriptor',
+        './createPropertyDescriptor'
 ], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    createMaterialPropertyDescriptor,
-    createPropertyDescriptor) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createMaterialPropertyDescriptor,
+        createPropertyDescriptor) {
     'use strict';
 
     /**

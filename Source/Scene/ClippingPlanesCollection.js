@@ -1,27 +1,27 @@
 define([
-    '../Core/BoundingSphere',
-    '../Core/buildModuleUrl',
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/Color',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/Intersect',
-    '../Core/Matrix4',
-    '../Core/Plane'
-], function(
-    BoundingSphere,
-    buildModuleUrl,
-    Cartesian3,
-    Cartographic,
-    Color,
-    defaultValue,
-    defined,
-    defineProperties,
-    Intersect,
-    Matrix4,
-    Plane) {
+        '../Core/BoundingSphere',
+        '../Core/buildModuleUrl',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Intersect',
+        '../Core/Matrix4',
+        '../Core/Plane'
+    ], function(
+        BoundingSphere,
+        buildModuleUrl,
+        Cartesian3,
+        Cartographic,
+        Color,
+        defaultValue,
+        defined,
+        defineProperties,
+        Intersect,
+        Matrix4,
+        Plane) {
     'use strict';
 
     /**

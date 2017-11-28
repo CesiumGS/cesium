@@ -1,9 +1,9 @@
 define([
-    '../Core/PlaneOutlineGeometry',
-    '../Core/defined'
-], function(
-    PlaneOutlineGeometry,
-    defined) {
+        '../Core/PlaneOutlineGeometry',
+        '../Core/defined'
+    ], function(
+        PlaneOutlineGeometry,
+        defined) {
     'use strict';
 
     return function(planeGeometry, offset) {

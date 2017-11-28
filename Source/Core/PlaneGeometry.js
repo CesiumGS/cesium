@@ -1,27 +1,27 @@
 define([
-    './BoundingSphere',
-    './Cartesian3',
-    './Check',
-    './ComponentDatatype',
-    './defaultValue',
-    './defined',
-    './Geometry',
-    './GeometryAttribute',
-    './GeometryAttributes',
-    './PrimitiveType',
-    './VertexFormat'
-], function(
-    BoundingSphere,
-    Cartesian3,
-    Check,
-    ComponentDatatype,
-    defaultValue,
-    defined,
-    Geometry,
-    GeometryAttribute,
-    GeometryAttributes,
-    PrimitiveType,
-    VertexFormat) {
+        './BoundingSphere',
+        './Cartesian3',
+        './Check',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
+        './PrimitiveType',
+        './VertexFormat'
+    ], function(
+        BoundingSphere,
+        Cartesian3,
+        Check,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
+        PrimitiveType,
+        VertexFormat) {
     'use strict';
 
     /**
