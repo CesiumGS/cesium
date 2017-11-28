@@ -4268,7 +4268,14 @@ defineSuite([
                 </coordinates>\
               </LineString>\
               <Camera></Camera>\
-              <LookAt></LookAt>\
+              <LookAt>\
+                  <longitude>-120</longitude>\
+                  <latitude>40</latitude>\
+                  <altitude>100</altitude>\
+                  <heading>90</heading>\
+                  <tilt>30</tilt>\
+                  <range>1250</range>\
+              </LookAt>\
             </Placemark>';
 
         spyOn(console, 'warn').and.callThrough();
@@ -4278,6 +4285,8 @@ defineSuite([
             var placemark = dataSource.entities.values[0];
             expect(placemark.kml.camera).toBeInstanceOf(KmlCamera);
             expect(placemark.kml.lookAt).toBeInstanceOf(KmlLookAt);
+            expect(placemark.kml.lookAt.position).toEqual(Cartesian3.fromDegrees(-120, 40, 100));
+            expect(placemark.kml.lookAt.headingPitchRange).toEqualEpsilon(new HeadingPitchRange(CesiumMath.toRadians(90), CesiumMath.toRadians(30 - 90), 1250), CesiumMath.EPSILON10);
         });
     });
 
