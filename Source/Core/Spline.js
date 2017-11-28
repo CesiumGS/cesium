@@ -1,9 +1,11 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Math'
 ], function(
+        Check,
         defaultValue,
         defined,
         DeveloperError,
@@ -128,12 +130,9 @@ define([
      */
     Spline.prototype.wrapTime = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.typeOf.number('time', time);
         //>>includeEnd('debug');
 
-        // wrap
         var times = this.times;
         var timeEnd = times[times.length - 1];
         var timeStart = times[0];
@@ -159,12 +158,9 @@ define([
      */
     Spline.prototype.clampTime = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.typeOf.number('time', time);
         //>>includeEnd('debug');
 
-        // clamp
         var times = this.times;
         return CesiumMath.clamp(time, times[0], times[times.length - 1]);
     };

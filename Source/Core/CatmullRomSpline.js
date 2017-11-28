@@ -272,7 +272,7 @@ define([
      * @function
      *
      * @param {Number} time The time.
-     * @return {Number} the time, wrapped around to the updated animation.
+     * @return {Number} The time, wrapped around to the updated animation.
      */
     CatmullRomSpline.prototype.wrapTime = Spline.prototype.wrapTime;
 
@@ -281,7 +281,7 @@ define([
      * @function
      *
      * @param {Number} time The time.
-     * @return {Number} the time, clamped to the animation period.
+     * @return {Number} The time, clamped to the animation period.
      */
     CatmullRomSpline.prototype.clampTime = Spline.prototype.clampTime;
 

@@ -529,7 +529,13 @@ define([
          * @type {ModelAnimationCollection}
          */
         this.activeAnimations = new ModelAnimationCollection(this);
-        this._clampAnimations = defaultValue(options.clampAnimations, true);
+
+        /**
+         * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+         *
+         * @type {Boolean}
+         */
+        this.clampAnimations = defaultValue(options.clampAnimations, true);
 
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
@@ -1115,6 +1121,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      *
      * @returns {Model} The newly created model.
      *
@@ -2483,14 +2490,6 @@ define([
     }
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
-        if (model._clampAnimations) {
-            return function(localAnimationTime) {
-                if (defined(spline)) {
-                    runtimeNode[targetPath] = spline.evaluate(spline.clampTime(localAnimationTime), runtimeNode[targetPath]);
-                    runtimeNode.dirtyNumber = model._maxDirtyNumber;
-                }
-            };
-        }
         return function(localAnimationTime) {
             //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
 
@@ -2498,7 +2497,8 @@ define([
             //    return;
             //}
             if (defined(spline)) {
-                runtimeNode[targetPath] = spline.evaluate(spline.wrapTime(localAnimationTime), runtimeNode[targetPath]);
+                localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
+                runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
                 runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
         };

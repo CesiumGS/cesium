@@ -122,8 +122,7 @@ define([
                 model = Model.fromGltf({
                     url : uri,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
-                    scene : this._scene,
-                    clampAnimations : Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations)
+                    scene : this._scene
                 });
 
                 model.readyPromise.otherwise(onModelError);
@@ -154,6 +153,7 @@ define([
             model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, model._color);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
+            model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

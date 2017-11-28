@@ -45,7 +45,7 @@ define([
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
-     * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations specified in the model should hold a pose when no keyframes are available.
+     * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
@@ -182,7 +182,7 @@ define([
         runAnimations : createPropertyDescriptor('runAnimations'),
 
         /**
-         * Gets or sets the boolean Property specifying if glTF animations should hold the last pose when no frames are specified.
+         * Gets or sets the boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
          * @memberof ModelGraphics.prototype
          * @type {Property}
          * @default true
