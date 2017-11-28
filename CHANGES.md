@@ -5,6 +5,7 @@ Change Log
 
 * Added `Globe.material` to apply materials to the globe/terrain for shading such as height- or slope-based color ramps.  See the new [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases). [#5919](https://github.com/AnalyticalGraphicsInc/cesium/pull/5919/files)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
+* Added `file:` scheme compatibility to `joinUrls`.  [#5989](https://github.com/AnalyticalGraphicsInc/cesium/pull/5989)
 * Fixed `Invalid asm.js: Invalid member of stdlib` console error by recompiling crunch.js with latest emscripten toolchain. [#5847](https://github.com/AnalyticalGraphicsInc/cesium/issues/5847)
 * Added CZML support for `polyline.depthFailMaterial`, `label.scaleByDistance`, `distanceDisplayCondition`, and `disableDepthTestDistance`. [#5986](https://github.com/AnalyticalGraphicsInc/cesium/pull/5986)
 * Fixed bug in KMLDataSource.js (`processLookAt` function). Degrees and radians were mixing in a subtraction. [#5992](https://github.com/AnalyticalGraphicsInc/cesium/issues/5992)
