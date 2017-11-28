@@ -3,19 +3,19 @@ define([
     '../Core/Credit',
     '../Core/defaultValue',
     '../Core/defined',
-    '../Core/destroyObject',
-    '../Core/DeveloperError'
+    '../Core/destroyObject'
 ], function(
     Check,
     Credit,
     defaultValue,
     defined,
-    destroyObject,
-    DeveloperError) {
+    destroyObject) {
     'use strict';
 
     var mobileWidth = 576;
     var lightboxHeight = 100;
+    var textColor = '#ffffff';
+    var highlightColor = '#48b';
 
     function makeTextCredit(credit, element) {
         if (!defined(credit.element)) {
@@ -26,7 +26,6 @@ define([
                 a.textContent = text;
                 a.href = link;
                 a.target = '_blank';
-                a.style.color = 'white';
                 element.appendChild(a);
             } else {
                 element.textContent = text;
@@ -141,7 +140,6 @@ define([
                     } else {
                         element = makeTextCredit(credit, document.createElement('li'));
                     }
-                    element.style.paddingBottom = '6px';
                     container.appendChild(element);
                 } else {
                     displayedCredits.splice(index, 1);
@@ -199,18 +197,10 @@ define([
         var height = that.viewport.clientHeight;
         if (width !== that._lastViewportWidth) {
             if (width < mobileWidth) {
-                lightboxCredits.style.border = 'none';
-                lightboxCredits.style.borderRadius = '0';
-                lightboxCredits.style.maxWidth = 'initial';
+                lightboxCredits.className = 'cesium-credit-lightbox cesium-credit-lightbox-mobile';
                 lightboxCredits.style.marginTop = '0';
-                lightboxCredits.style.height = '100%';
-                lightboxCredits.style.width = '100%';
             } else {
-                lightboxCredits.style.border = '1px solid #444';
-                lightboxCredits.style.borderRadius = '5px';
-                lightboxCredits.style.maxWidth = '370px';
-                lightboxCredits.style.height = 'initial';
-                lightboxCredits.style.width = 'initial';
+                lightboxCredits.className = 'cesium-credit-lightbox cesium-credit-lightbox-expanded';
                 lightboxCredits.style.marginTop = Math.floor((height - lightboxCredits.clientHeight) * 0.5) + 'px';
             }
             that._lastViewportWidth = width;
@@ -220,6 +210,97 @@ define([
             lightboxCredits.style.marginTop = Math.floor((height - lightboxCredits.clientHeight) * 0.5) + 'px';
             that._lastViewportHeight = height;
         }
+    }
+
+    function addStyle(selector, styles) {
+        var style = selector + ' {';
+        for (var attribute in styles) {
+            if (styles.hasOwnProperty(attribute)) {
+                style += attribute + ': ' + styles[attribute] + '; ';
+            }
+        }
+        style += ' }\n';
+        return style;
+    }
+
+    function appendCss() {
+        var head = document.head;
+        var css = document.createElement('style');
+        var style = '';
+        style += addStyle('.cesium-credit-lightbox-overlay', {
+            display : 'none',
+            'z-index' : '1', //must be at least 1 to draw over top other Cesium widgets
+            position : 'absolute',
+            top : '0',
+            left : '0',
+            width : '100%',
+            height : '100%',
+            'background-color' : 'rgba(80, 80, 80, 0.8)'
+        });
+
+        style += addStyle('.cesium-credit-lightbox', {
+            'background-color' : '#303336',
+            color : textColor,
+            position : 'relative',
+            'min-height' : lightboxHeight + 'px',
+            margin : 'auto'
+        });
+
+        style += addStyle('.cesium-credit-lightbox.cesium-credit-lightbox-expanded', {
+            border : '1px solid #444',
+            'border-radius' : '5px',
+            'max-width' : '370px'
+        });
+
+        style += addStyle('.cesium-credit-lightbox.cesium-credit-lightbox-mobile', {
+            height : '100%',
+            width : '100%'
+        });
+
+        style += addStyle('.cesium-credit-lightbox-title', {
+            padding : '20px 20px 0 20px'
+        });
+
+        style += addStyle('.cesium-credit-lightbox-close', {
+            'font-size' : '18pt',
+            cursor : 'pointer',
+            position : 'absolute',
+            top : '0',
+            right : '6px',
+            color : textColor
+        });
+
+        style += addStyle('.cesium-credit-lightbox-close:hover', {
+            color : highlightColor
+        });
+
+        style += addStyle('.cesium-credit-lightbox > ul', {
+            margin : '0',
+            padding : '12px 20px 12px 40px',
+            'font-size' : '13px'
+        });
+
+        style += addStyle('.cesium-credit-lightbox > ul > li', {
+            'padding-bottom' : '6px'
+        });
+
+        style += addStyle('.cesium-credit-expand-link', {
+            'padding-left' : '5px',
+            cursor : 'pointer',
+            'text-decoration' : 'underline',
+            color: textColor
+        });
+        style += addStyle('.cesium-credit-expand-link:hover', {
+            'color' : highlightColor
+        });
+
+        style += addStyle('.cesium-credit-text', {
+            color: textColor
+        });
+
+        css.innerHTML = style;
+
+        head.appendChild(css);
     }
 
     /**
@@ -245,22 +326,9 @@ define([
 
         var lightbox = document.createElement('div');
         lightbox.className = 'cesium-credit-lightbox-overlay';
-        lightbox.style.display = 'none';
-        lightbox.style.zIndex = '5';
-        lightbox.style.position = 'absolute';
-        lightbox.style.top = 0;
-        lightbox.style.left = 0;
-        lightbox.style.width = '100%';
-        lightbox.style.height = '100%';
-        lightbox.style.backgroundColor = 'rgba(80, 80, 80, 0.8)';
         viewport.appendChild(lightbox);
 
         var lightboxCredits = document.createElement('div');
-        lightboxCredits.style.backgroundColor = '#303336';
-        lightboxCredits.style.color = '#edffff';
-        lightboxCredits.style.position = 'relative';
-        lightboxCredits.style.minHeight = lightboxHeight + 'px';
-        lightboxCredits.style.margin = 'auto';
         lightboxCredits.className = 'cesium-credit-lightbox';
         lightbox.appendChild(lightboxCredits);
         lightbox.onclick = function(event) {
@@ -271,30 +339,17 @@ define([
         };
 
         var title = document.createElement('div');
+        title.className = 'cesium-credit-lightbox-title';
         title.textContent = 'Data provided by:';
-        title.style.padding = '20px 20px 0 20px';
         lightboxCredits.appendChild(title);
 
         var closeButton = document.createElement('a');
         closeButton.onclick = this.hideLightbox.bind(this);
         closeButton.innerHTML = '&times;';
-        closeButton.style.fontSize = '18pt';
-        closeButton.style.cursor = 'pointer';
-        closeButton.style.position = 'absolute';
-        closeButton.style.top = '0';
-        closeButton.style.right = '6px';
-        closeButton.onmouseover = function() {
-            this.style.color = '#48b';
-        };
-        closeButton.onmouseout = function() {
-            this.style.color = '#edffff';
-        };
+        closeButton.className = 'cesium-credit-lightbox-close';
         lightboxCredits.appendChild(closeButton);
 
         var creditList = document.createElement('ul');
-        creditList.style.margin = 0;
-        creditList.style.padding = '12px 20px 12px 40px';
-        creditList.style.fontSize = '13px';
         lightboxCredits.appendChild(creditList);
 
         var imageContainer = document.createElement('span');
@@ -306,18 +361,12 @@ define([
         container.appendChild(textContainer);
 
         var expandLink = document.createElement('a');
+        expandLink.className = 'cesium-credit-expand-link';
         expandLink.onclick = this.showLightbox.bind(this);
-        expandLink.textContent = 'Terrain and imagery data from multiple sources';
-        expandLink.style.paddingLeft = '5px';
-        expandLink.style.cursor = 'pointer';
-        expandLink.style.textDecoration = 'underline';
-        expandLink.onmouseover = function() {
-            this.style.color = '#48b';
-        };
-        expandLink.onmouseout = function() {
-            this.style.color = '#fff';
-        };
+        expandLink.textContent = 'Data attribution';
         container.appendChild(expandLink);
+
+        appendCss();
 
         this._delimiter = defaultValue(delimiter, ' • ');
         this._textContainer = textContainer;
