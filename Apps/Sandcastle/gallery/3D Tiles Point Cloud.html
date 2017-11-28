@@ -10,44 +10,293 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        require.config({
+            baseUrl : '../../../Source',
+            waitSeconds : 60
+        });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
+    function startup(Cesium) {
+        'use strict';
 //Sandcastle_Begin
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
-var viewer = new Cesium.Viewer('cesiumContainer');
+        var viewer = new Cesium.Viewer('cesiumContainer');
+        var scene = viewer.scene;
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM'
-}));
+        var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : 'https://beta.cesium.com/api/assets/1460?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIyMzk2YzJiOS1jZGFmLTRlZmYtYmQ4MS00NTA3NjEwMzViZTkiLCJpZCI6NDQsImFzc2V0cyI6WzE0NjBdLCJpYXQiOjE0OTkyNjQ3NTV9.oWjvN52CRQ-dk3xtvD4e8ZnOHZhoWSpJLlw115mbQJM'
+        }));
 
-tileset.readyPromise.then(function() {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-}).otherwise(function(error) {
-    throw(error);
-});
+        var showAttribute = (new Cesium.ShowGeometryInstanceAttribute(true)).value;
+        var hideAttribute = (new Cesium.ShowGeometryInstanceAttribute(false)).value;
+
+        function Highlighter(options) {
+            this.id = options.id;
+            this.geometry = options.geometry;
+            this.modelMatrix = options.modelMatrix;
+
+            // styling
+            this.attributes = options.attributes;
+            this.hoverAttributes = {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE.withAlpha(0.5)),
+                show : new Cesium.ShowGeometryInstanceAttribute(true)
+            };
+
+            this.geometryInstances = new Cesium.GeometryInstance({
+                geometry : this.geometry,
+                modelMatrix : this.modelMatrix,
+                attributes : this.attributes,
+                id : this
+            });
+
+            this.classificationPrimitive = new Cesium.ClassificationPrimitive({
+                geometryInstances : this.geometryInstances,
+                classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
+            });
+
+            this.state = 'default';
+
+            this.setState = function(state) {
+                var attributes = this.classificationPrimitive.getGeometryInstanceAttributes(this);
+
+                var newAttributes = this.attributes;
+                if (state === 'hover') {
+                    newAttributes = this.hoverAttributes;
+                }
+
+                attributes.show = newAttributes.show.value;
+                attributes.color = newAttributes.color.value;
+                this.state = state;
+            };
+
+            this.setShow = function(value) {
+                var attributes = this.classificationPrimitive.getGeometryInstanceAttributes(this);
+                attributes.show = value ? showAttribute : hideAttribute;
+            };
+        }
+
+        tileset.readyPromise.then(function() {
+            var boundingSphere = tileset.boundingSphere;
+            var radius =  boundingSphere.radius;
+            viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, radius));
+            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+
+            var scale = Cesium.Matrix4.fromUniformScale(radius);
+            var transform = Cesium.Transforms.eastNorthUpToFixedFrame(boundingSphere.center);
+            Cesium.Matrix4.multiply(transform, scale, transform);
+            var highlights = [];
+
+            highlights.push(new Highlighter({
+                id : 'roof1',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(0.07, 0.4, 0.072),
+                    maximum : new Cesium.Cartesian3(0.25, 0.6, 2.0)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#004FFF').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+            /*
+            highlights.push(new Highlighter({
+                id : 'towerTop1',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(0.07, 0.4, -0.037),
+                    maximum : new Cesium.Cartesian3(0.22, 0.6, 0.072)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#0099AA').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+            highlights.push(new Highlighter({
+                id : 'towerBottom1',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(0.085, 0.4, -0.1),
+                    maximum : new Cesium.Cartesian3(0.22, 0.6, -0.038)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#33bb66').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+
+            highlights.push(new Highlighter({
+                id : 'roof2',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(-0.28, 0.29, -0.188),
+                    maximum : new Cesium.Cartesian3(-0.13, 0.354, -0.120)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#004FFF').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+            highlights.push(new Highlighter({
+                id : 'window1',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(0.015, 0.21, -0.195),
+                    maximum : new Cesium.Cartesian3(0.042, 0.45, -0.142)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#9933cc').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+            highlights.push(new Highlighter({
+                id : 'window2',
+                geometry : new Cesium.BoxGeometry({
+                    minimum : new Cesium.Cartesian3(-0.10, 0.21, -0.195),
+                    maximum : new Cesium.Cartesian3(-0.072, 0.45, -0.142)
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#9933cc').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : transform
+            }));
+
+            var towerTransform = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.24, 0.54, 0.039));
+            Cesium.Matrix4.multiply(transform, towerTransform, towerTransform);
+
+            highlights.push(new Highlighter({
+                id : 'roof2',
+                geometry : new Cesium.CylinderGeometry({
+                    length: 0.1,
+                    topRadius: 0.045,
+                    bottomRadius: 0.057
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#004FFF').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : towerTransform
+            }));
+
+            var towerTransform2 = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.2, 0.375, -0.21));
+            Cesium.Matrix4.multiply(transform, towerTransform2, towerTransform2);
+
+            highlights.push(new Highlighter({
+                id : 'tower3',
+                geometry : new Cesium.CylinderGeometry({
+                    length: 0.105,
+                    topRadius: 0.043,
+                    bottomRadius: 0.044
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#FF8833').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : towerTransform2
+            }));
+
+            var towerTransform3 = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.238, 0.461, -0.21));
+            Cesium.Matrix4.multiply(transform, towerTransform3, towerTransform3);
+
+            highlights.push(new Highlighter({
+                id : 'tower4',
+                geometry : new Cesium.CylinderGeometry({
+                    length: 0.145,
+                    topRadius: 0.064,
+                    bottomRadius: 0.064
+                }),
+                attributes: {
+                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('#FFaa22').withAlpha(0.5)),
+                    show : new Cesium.ShowGeometryInstanceAttribute(true)
+                },
+                modelMatrix : towerTransform3
+            }));
+            */
+
+            for (var i = 0; i < highlights.length; ++i) {
+                scene.primitives.add(highlights[i].classificationPrimitive);
+            }
+
+            function setVisibility(tag, value) {
+                for (var i = 0; i < highlights.length; ++i) {
+                    var highlight = highlights[i];
+
+                    if (highlight.id.indexOf(tag) > -1) {
+                        highlight.setShow(value);
+                    }
+                }
+            }
+
+            Sandcastle.addToggleButton('Show windows', viewer, function(checked) {
+                setVisibility('window', checked);
+            });
+
+            Sandcastle.addToggleButton('Show towers', viewer, function(checked) {
+                setVisibility('tower', checked);
+            });
+
+            Sandcastle.addToggleButton('Show roofs', viewer, function(checked) {
+                setVisibility('roof', checked);
+            });
+        }).otherwise(function(error) {
+            throw(error);
+        });
+
+        var currentHighlighter;
+        var hoverHandler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        hoverHandler.setInputAction(function (movement) {
+            var pickedObject = scene.pick(movement.endPosition);
+            if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id)) {
+                if (pickedObject.id === currentHighlighter) {
+                    return;
+                }
+
+                if (Cesium.defined(currentHighlighter)) {
+                    currentHighlighter.setState('default');
+                }
+
+                currentHighlighter = pickedObject.id;
+                currentHighlighter.setState('hover');
+            } else {
+                if (Cesium.defined(currentHighlighter)) {
+                    currentHighlighter.setState('default');
+                    currentHighlighter = undefined;
+
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
 //Sandcastle_End
-Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== "undefined") {
-    startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
-}
+        Sandcastle.finishedLoading();
+    }
+    if (typeof Cesium !== "undefined") {
+        startup(Cesium);
+    } else if (typeof require === "function") {
+        require(["Cesium"], startup);
+    }
 </script>
 </body>
 </html>
