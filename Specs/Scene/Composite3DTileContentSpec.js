@@ -1,12 +1,10 @@
 defineSuite([
-        'Scene/Composite3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Composite3DTileContent,
         Cartesian3,
         Color,
         HeadingPitchRange,

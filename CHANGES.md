@@ -3,8 +3,15 @@ Change Log
 
 ### 1.40 - 2017-12-01
 
+* Added `Globe.material` to apply materials to the globe/terrain for shading such as height- or slope-based color ramps.  See the new [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases). [#5919](https://github.com/AnalyticalGraphicsInc/cesium/pull/5919/files)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
+* Added `file:` scheme compatibility to `joinUrls`.  [#5989](https://github.com/AnalyticalGraphicsInc/cesium/pull/5989)
 * Fixed `Invalid asm.js: Invalid member of stdlib` console error by recompiling crunch.js with latest emscripten toolchain. [#5847](https://github.com/AnalyticalGraphicsInc/cesium/issues/5847)
+* Added CZML support for `polyline.depthFailMaterial`, `label.scaleByDistance`, `distanceDisplayCondition`, and `disableDepthTestDistance`. [#5986](https://github.com/AnalyticalGraphicsInc/cesium/pull/5986)
+* Fixed bug in KMLDataSource.js (`processLookAt` function). Degrees and radians were mixing in a subtraction. [#5992](https://github.com/AnalyticalGraphicsInc/cesium/issues/5992)
+* Fixed handling of KMZ files with missing `xsi` namespace declarations. [#6003](https://github.com/AnalyticalGraphicsInc/cesium/pull/6003)
+* Fixed a bug where models with animations of different lengths would cause an error. [#5694](https://github.com/AnalyticalGraphicsInc/cesium/issues/5694)
+* Added a `clampAnimations` parameter to `Model` and `Entity.model`. Setting this to `false` allows different length animations to loop asynchronously over the duration of the longest animation.
 
 ### 1.39 - 2017-11-01
 

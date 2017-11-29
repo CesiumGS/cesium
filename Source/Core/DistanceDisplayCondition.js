@@ -1,11 +1,13 @@
 define([
         './defaultValue',
         './defined',
-        './defineProperties'
+        './defineProperties',
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     /**
@@ -36,11 +38,11 @@ define([
          * @type {Number}
          * @default 0.0
          */
-        near : {
-            get : function() {
+        near: {
+            get: function() {
                 return this._near;
             },
-            set : function(value) {
+            set: function(value) {
                 this._near = value;
             }
         },
@@ -50,15 +52,73 @@ define([
          * @type {Number}
          * @default Number.MAX_VALUE
          */
-        far : {
-            get : function() {
+        far: {
+            get: function() {
                 return this._far;
             },
-            set : function(value) {
+            set: function(value) {
                 this._far = value;
             }
         }
     });
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    DistanceDisplayCondition.packedLength = 2;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {DistanceDisplayCondition} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
+     */
+    DistanceDisplayCondition.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.near;
+        array[startingIndex] = value.far;
+
+        return array;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {DistanceDisplayCondition} [result] The object into which to store the result.
+     * @returns {DistanceDisplayCondition} The modified result parameter or a new DistanceDisplayCondition instance if one was not provided.
+     */
+    DistanceDisplayCondition.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new DistanceDisplayCondition();
+        }
+        result.near = array[startingIndex++];
+        result.far = array[startingIndex];
+        return result;
+    };
 
     /**
      * Determines if two distance display conditions are equal.
