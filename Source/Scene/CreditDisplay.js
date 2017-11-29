@@ -246,6 +246,14 @@ define([
             margin : 'auto'
         });
 
+        style += addStyle('.cesium-credit-lightbox > ul > li > a, .cesium-credit-lightbox > ul > li > a:visited', {
+            color: textColor
+        });
+
+        style += addStyle('.cesium-credit-lightbox > ul > li > a:hover', {
+            color: highlightColor
+        });
+
         style += addStyle('.cesium-credit-lightbox.cesium-credit-lightbox-expanded', {
             border : '1px solid #444',
             'border-radius' : '5px',
@@ -300,7 +308,7 @@ define([
 
         css.innerHTML = style;
 
-        head.appendChild(css);
+        head.insertBefore(css, head.firstChild);
     }
 
     /**
