@@ -36,30 +36,14 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+    
 /**
- * This class is an example of a custom geocoder, and reverse geocoder. It provides both through the OpenStreetMap Nominatim service.
+ * This class is an example of a custom geocoder. It provides geocoding through the OpenStreetMap Nominatim service.
  * @alias OpenStreetMapNominatimGeocoder
  * @constructor
  */
 function OpenStreetMapNominatimGeocoder() {
 }
-
-/* *
- * Object for both input and result. Could be in external file to avoid code redundancy 
- */
-var geoLocation = {
-         latitude: 0.00,
-         longitude: 0.00,
-         address: 'default address'
-}; 
-    
-/* search: looking for location of address, reverse: looking for address of a location */
-var action = {
-         search: 'search?',
-         reverse: 'reverse?'
-     };
-        
-var endpoint = 'https://nominatim.openstreetmap.org/';
 
 /**
  * The function called to geocode using this geocoder service.
@@ -68,6 +52,7 @@ var endpoint = 'https://nominatim.openstreetmap.org/';
  * @returns {Promise<GeocoderResult[]>}
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
+    var endpoint = 'https://nominatim.openstreetmap.org/search?';
     var query = 'format=json&q=' + input;
     var requestString = endpoint + query;
     return Cesium.loadJson(requestString)
@@ -87,120 +72,10 @@ OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
             });
         });
 };
-    
-/**
- * The function called to geocode using this geocoder service.
- *
- * @param {String} input The query to be sent to the geocoder service
- * @returns {Promise<GeocoderResult[]>}
- */
-function getAddressFromLocation(geoLocation, callback) { 
-     var query = 'format=json&lat=' + geoLocation.latitude + '&lon=' + geoLocation.longitude + '&zoom=18&addressdetails=1';
-      var requestString = endpoint + action.reverse + query;
-      var promise = Cesium.loadJson(requestString);
-      promise.then(function(result) {
-         console.log(result);
-         geoLocation.address = result.display_name;
-         setLocationPoint();
-      });  
-      callback();
-}
-  
-/*********************************************************************
- * Functions below, could be in an external file. 
- * geoLocation object as well. This works locally but not in Sandcastle
- ********************************************************************/
-/**
- * Callback to fly the camera to the location chosen for reverse geocoding.
- */
-  function onReverseGeocodeCompletion() {
-     viewer.camera.flyTo({
-             destination: Cesium.Cartesian3.fromDegrees(geoLocation.longitude, geoLocation.latitude, 25000.0)
-          });
-  }
-        
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     geocoder: new OpenStreetMapNominatimGeocoder()
 });
-    
-/**
- * Listen for the geocode search to be complete, to mark it with a point.
- */
- viewer.geocoder.viewModel.complete.addEventListener(function () {
-     if (!viewer.geocoder.viewModel.searchText.empty){        
-         setPointForSearchLocation();       
-     }
- });
-
- /**
- * Find the camera position after search, and put a point there.
- */
-  function setPointForSearchLocation() {
-      
-    var camera = this.viewer.camera;
-    var ellipsoid = this.viewer.scene.globe.ellipsoid;
-    var coordinate = ellipsoid.cartesianToCartographic(camera.position);
-    var lat =  Cesium.Math.toDegrees(coordinate.latitude);
-    var long = Cesium.Math.toDegrees(coordinate.longitude);
-    var announce = 'Latitude: ' + parseFloat(Math.round(lat * 100) / 100).toFixed(4) + '  ,Longitude: ' + parseFloat(Math.round(long * 100) / 100).toFixed(4);     
-       var home = viewer.entities.add({
-          name : announce,
-          // For Cesium fromDegrees, longitude before latitude.
-          position : Cesium.Cartesian3.fromDegrees(long, lat),
-          point : {
-             pixelSize : 15,
-             color : Cesium.Color.AQUAMARINE,
-             outlineColor : Cesium.Color.BLACK,
-             outlineWidth : 2
-          }
-      });
-  }
-    
- /**
- * Handler for left click of the mouse on the map, get latitude and longitude, and start reverse geocoding
- */   
-  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-  // Catch the mouse click, and convert the location into degrees  
-  handler.setInputAction(
-
-  // Translate mouse click into Geographic coordinates
-  function (click) {
-     var position = viewer.camera.pickEllipsoid(click.position);
-     var location = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
-     geoLocation.latitude = Cesium.Math.toDegrees(location.latitude);
-     geoLocation.longitude = Cesium.Math.toDegrees(location.longitude);
-     // Reverse geocode to get the address
-     getAddressFromLocation(geoLocation, onReverseGeocodeCompletion);
-   },
-      Cesium.ScreenSpaceEventType.LEFT_CLICK
-   );
-
- /**
- * Set a point and mark the address at reverse geocoded location.
- */   
-  function setLocationPoint() {     
-       viewer.entities.add({
-        name : 'address location',
-        // Reverse the latitude and longitude when calling "fromDegrees"
-        position : Cesium.Cartesian3.fromDegrees(geoLocation.longitude, geoLocation.latitude),
-        point : {
-            pixelSize : 5,
-            color : Cesium.Color.RED,
-            outlineColor : Cesium.Color.WHITE,
-            outlineWidth : 2
-        },
-        label : {
-            text : geoLocation.address,
-            font : '14pt monospace',
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-            outlineWidth : 2,
-            verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset : new Cesium.Cartesian2(0, -9)
-        }
-      });
-    } 
-    
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
