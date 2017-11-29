@@ -41,10 +41,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
-     * @param {Number} [options.azimuthMin=0.0] The minimum azimuth in degrees (0 is north, +CW).
-     * @param {Number} [options.azimuthMax=360.0] The maximum azimuth in degrees (0 is north, +CW).
-     * @param {Number} [options.elevationMin=-90.0] The minimum elevation in degrees (0 is tangential to earth surface, +UP).
-     * @param {Number} [options.elevationMax=90.0] The maximum elevation in degrees (0 is tangential to earth surface, +UP).
+     * @param {Number} [options.minimumAzimuth=0.0] The minimum azimuth in radians (0 is north, +CW).
+     * @param {Number} [options.maximumAzimuth=2*PI] The maximum azimuth in radians (0 is north, +CW).
+     * @param {Number} [options.minimumElevation=-PI/2] The minimum elevation in radians (0 is tangential to earth surface, +UP).
+     * @param {Number} [options.maximumElevation=PI/2] The maximum elevation in radians (0 is tangential to earth surface, +UP).
      * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
      * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
@@ -66,10 +66,10 @@ define([
 
         var radii = defaultValue(options.radii, defaultRadii);
         var innerRadii = defaultValue(options.innerRadii, radii);
-        var azimuthMin = defaultValue(options.azimuthMin, 0);
-        var azimuthMax = defaultValue(options.azimuthMax, 360);
-        var elevationMin = defaultValue(options.elevationMin, -90);
-        var elevationMax = defaultValue(options.elevationMax, 90);
+        var minimumAzimuth = defaultValue(options.minimumAzimuth, 0);
+        var maximumAzimuth = defaultValue(options.maximumAzimuth, CesiumMath.TWO_PI);
+        var minimumElevation = defaultValue(options.minimumElevation, -CesiumMath.PI_OVER_TWO);
+        var maximumElevation = defaultValue(options.maximumElevation, CesiumMath.PI_OVER_TWO);
         var stackPartitions = defaultValue(options.stackPartitions, 10);
         var slicePartitions = defaultValue(options.slicePartitions, 8);
         var subdivisions = defaultValue(options.subdivisions, 128);
@@ -88,10 +88,10 @@ define([
 
         this._radii = Cartesian3.clone(radii);
         this._innerRadii = Cartesian3.clone(innerRadii);
-        this._azimuthMin = azimuthMin;
-        this._azimuthMax = azimuthMax;
-        this._elevationMin = elevationMin;
-        this._elevationMax = elevationMax;
+        this._minimumAzimuth = minimumAzimuth;
+        this._maximumAzimuth = maximumAzimuth;
+        this._minimumElevation = minimumElevation;
+        this._maximumElevation = maximumElevation;
         this._stackPartitions = stackPartitions;
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
@@ -131,10 +131,10 @@ define([
         Cartesian3.pack(value._innerRadii, array, startingIndex);
         startingIndex += Cartesian3.packedLength;
 
-        array[startingIndex++] = value._azimuthMin;
-        array[startingIndex++] = value._azimuthMax;
-        array[startingIndex++] = value._elevationMin;
-        array[startingIndex++] = value._elevationMax;
+        array[startingIndex++] = value._minimumAzimuth;
+        array[startingIndex++] = value._maximumAzimuth;
+        array[startingIndex++] = value._minimumElevation;
+        array[startingIndex++] = value._maximumElevation;
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
         array[startingIndex++] = value._subdivisions;
@@ -147,10 +147,10 @@ define([
     var scratchOptions = {
         radii : scratchRadii,
         innerRadii : scratchInnerRadii,
-        azimuthMin : undefined,
-        azimuthMax : undefined,
-        elevationMin : undefined,
-        elevationMax : undefined,
+        minimumAzimuth : undefined,
+        maximumAzimuth : undefined,
+        minimumElevation : undefined,
+        maximumElevation : undefined,
         stackPartitions : undefined,
         slicePartitions : undefined,
         subdivisions : undefined
@@ -179,19 +179,19 @@ define([
         var innerRadii = Cartesian3.unpack(array, startingIndex, scratchInnerRadii);
         startingIndex += Cartesian3.packedLength;
 
-        var azimuthMin = array[startingIndex++];
-        var azimuthMax = array[startingIndex++];
-        var elevationMin = array[startingIndex++];
-        var elevationMax = array[startingIndex++];
+        var minimumAzimuth = array[startingIndex++];
+        var maximumAzimuth = array[startingIndex++];
+        var minimumElevation = array[startingIndex++];
+        var maximumElevation = array[startingIndex++];
         var stackPartitions = array[startingIndex++];
         var slicePartitions = array[startingIndex++];
         var subdivisions = array[startingIndex++];
 
         if (!defined(result)) {
-            scratchOptions.azimuthMin = azimuthMin;
-            scratchOptions.azimuthMax = azimuthMax;
-            scratchOptions.elevationMin = elevationMin;
-            scratchOptions.elevationMax = elevationMax;
+            scratchOptions.minimumAzimuth = minimumAzimuth;
+            scratchOptions.maximumAzimuth = maximumAzimuth;
+            scratchOptions.minimumElevation = minimumElevation;
+            scratchOptions.maximumElevation = maximumElevation;
             scratchOptions.stackPartitions = stackPartitions;
             scratchOptions.slicePartitions = slicePartitions;
             scratchOptions.subdivisions = subdivisions;
@@ -200,10 +200,10 @@ define([
 
         result._radii = Cartesian3.clone(radii, result._radii);
         result._innerRadii = Cartesian3.clone(innerRadii, result._innerRadii);
-        result._azimuthMin = azimuthMin;
-        result._azimuthMax = azimuthMax;
-        result._elevationMin = elevationMin;
-        result._elevationMax = elevationMax;
+        result._minimumAzimuth = minimumAzimuth;
+        result._maximumAzimuth = maximumAzimuth;
+        result._minimumElevation = minimumElevation;
+        result._maximumElevation = maximumElevation;
         result._stackPartitions = stackPartitions;
         result._slicePartitions = slicePartitions;
         result._subdivisions = subdivisions;
@@ -231,21 +231,21 @@ define([
         // The azimuth input assumes 0 is north with CW+. The geometry uses an
         // ENU frame where 0 is east with CCW+. We have to convert the azimuth
         // to ENU here.
-        var azMin = 450.0 - ellipsoidGeometry._azimuthMax;
-        var azMax = 450.0 - ellipsoidGeometry._azimuthMin;
+        var azMin = (Math.PI * 2.5) - ellipsoidGeometry._maximumAzimuth;
+        var azMax = (Math.PI * 2.5) - ellipsoidGeometry._minimumAzimuth;
 
-        var azimuthMin = azMin * Math.PI / 180.0;
-        var azimuthMax = azMax * Math.PI / 180.0;
-        var elevationMin = ellipsoidGeometry._elevationMin * Math.PI / 180.0;
-        var elevationMax = ellipsoidGeometry._elevationMax * Math.PI / 180.0;
-        var inclination1 = (Math.PI / 2.0 - elevationMax);
-        var inclination2 = (Math.PI / 2.0 - elevationMin);
+        var minimumAzimuth = azMin;
+        var maximumAzimuth = azMax;
+        var minimumElevation = ellipsoidGeometry._minimumElevation;
+        var maximumElevation = ellipsoidGeometry._maximumElevation;
+        var inclination1 = (CesiumMath.PI_OVER_TWO - maximumElevation);
+        var inclination2 = (CesiumMath.PI_OVER_TWO - minimumElevation);
 
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var subdivisions = ellipsoidGeometry._subdivisions;
 
-        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(azimuthMax - azimuthMin) / CesiumMath.TWO_PI);
-        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(elevationMax - elevationMin) / CesiumMath.TWO_PI);
+        var slicePartitions = Math.round(ellipsoidGeometry._slicePartitions * Math.abs(maximumAzimuth - minimumAzimuth) / CesiumMath.TWO_PI);
+        var stackPartitions = Math.round(ellipsoidGeometry._stackPartitions * Math.abs(maximumElevation - minimumElevation) / CesiumMath.TWO_PI);
         if (slicePartitions < 2) {
             slicePartitions = 2;
         }
@@ -262,11 +262,11 @@ define([
             vertexMultiplier = 2.0;
             // Add 2x slicePartitions to connect the top/bottom of the outer to
             // the top/bottom of the inner
-            if (ellipsoidGeometry._elevationMax < 90.0) {
+            if (maximumElevation < CesiumMath.PI_OVER_TWO) {
                 isTopOpen = true;
                 extraIndices += slicePartitions;
             }
-            if (ellipsoidGeometry._elevationMin > -90.0) {
+            if (minimumElevation > -CesiumMath.PI_OVER_TWO) {
                 isBotOpen = true;
                 extraIndices += slicePartitions;
             }
@@ -298,7 +298,7 @@ define([
         var sinTheta = new Array(subdivisions);
         var cosTheta = new Array(subdivisions);
         for (i = 0; i < subdivisions; i++) {
-            theta = azimuthMin + i * (azimuthMax - azimuthMin) / (subdivisions - 1);
+            theta = minimumAzimuth + i * (maximumAzimuth - minimumAzimuth) / (subdivisions - 1);
             sinTheta[i] = sin(theta);
             cosTheta[i] = cos(theta);
         }
@@ -336,7 +336,7 @@ define([
         sinTheta.length = slicePartitions;
         cosTheta.length = slicePartitions;
         for (i = 0; i < slicePartitions; i++) {
-            theta = azimuthMin + i * (azimuthMax - azimuthMin) / (slicePartitions - 1);
+            theta = minimumAzimuth + i * (maximumAzimuth - minimumAzimuth) / (slicePartitions - 1);
             sinTheta[i] = sin(theta);
             cosTheta[i] = cos(theta);
         }
