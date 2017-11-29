@@ -249,8 +249,8 @@ define([
         var maximumAzimuth = azMax;
         var minimumElevation = ellipsoidGeometry._minimumElevation;
         var maximumElevation = ellipsoidGeometry._maximumElevation;
-        var inclination1 = (Math.PI / 2.0 - maximumElevation);
-        var inclination2 = (Math.PI / 2.0 - minimumElevation);
+        var inclination1 = (CesiumMath.PI_OVER_TWO - maximumElevation);
+        var inclination2 = (CesiumMath.PI_OVER_TWO - minimumElevation);
 
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
@@ -274,11 +274,11 @@ define([
         var isAzimuthOpen = false;
         if (hasInnerSurface) {
             vertexMultiplier = 2.0;
-            if (ellipsoidGeometry._maximumElevation < 90.0) {
+            if (maximumElevation < CesiumMath.PI_OVER_TWO) {
                 isTopOpen = true;
                 extraIndices += (slicePartitions - 1);
             }
-            if (ellipsoidGeometry._minimumElevation > -90.0) {
+            if (minimumElevation > -CesiumMath.PI_OVER_TWO) {
                 isBotOpen = true;
                 extraIndices += (slicePartitions - 1);
             }
