@@ -1556,7 +1556,7 @@ define([
 
             vertDefines = [];
             if (defined(this._batchTable)) {
-                vertDefines.push('VECTOR_TILE')
+                vertDefines.push('VECTOR_TILE');
                 vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
                 fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
             }
@@ -1669,12 +1669,12 @@ define([
 
             vertDefines = [];
             if (defined(this._batchTable)) {
-                vertDefines.push('VECTOR_TILE')
+                vertDefines.push('VECTOR_TILE');
                 vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
                 fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
             }
 
-            var renderForPick = vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
+            vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
 
             vs = new ShaderSource({
                 defines : vertDefines,
