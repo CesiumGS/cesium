@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -36,116 +38,16 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-/**
- * This class is an example of reverse geocoder using the default geocoder service (Bing Maps)
- * It also includes click handling and setting points at found or clicked locations.
- * To reverse geocode, click on any location on the globe to show the address.
- */
-
-/**
-* Object for both input and result. Should be in external file, to avoid code redundancy.
-*/
-var geoLocation = {
-         latitude: 0.00,
-         longitude: 0.00,
-         address: 'default address'
-};
-
 var viewer = new Cesium.Viewer('cesiumContainer');
+var camera = viewer.camera;
+var ellipsoid = viewer.scene.globe.ellipsoid;
 
 var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
 
-/**
- * The function called to reverse geocode using this geocoder service.
- *
- * @param {String} input The query to be sent to the geocoder service
- * Calling loadJsonp to bypass CORS on BingMaps
- */
-    function getAddressFromLocation(geoLocation) {
-       var url = baseUrl + geoLocation.latitude + "," + geoLocation.longitude;
-
-       var promise = Cesium.loadJsonp(url, {
-          parameters : {
-             key : Cesium.BingMapsApi.getKey()
-         },
-         callbackParameterName : 'jsonp'
-       });
-
-       promise.then(function(result) {
-          geoLocation.address = result.resourceSets[0].resources[0].name;
-          setAddressPoint();
-       }).otherwise(function(error) {
-           alert("ERROR getting address: " + error);
-       });
-       // We are not zooming in on the location.
-  }
-/*********************************************************************
- * Functions below, could be in an external file for this and Custom Geocoder.
- * geoLocation object as well.
- ********************************************************************/
-/**
- * Listen for the geocode search to be complete, to mark it with a point.
- */
- viewer.geocoder.viewModel.complete.addEventListener(function () {
-     if (!viewer.geocoder.viewModel.searchText.empty){
-         setPointForSearchLocation();
-     }
- });
-
- /**
- * Find the camera position after search, and put a point there. Clicking on the point, will display a square
-   and the latitude and longitude of the address in the search.
- */
-  function setPointForSearchLocation() {
-
-    var camera = viewer.camera;
-    var ellipsoid = viewer.scene.globe.ellipsoid;
-    var coordinate = ellipsoid.cartesianToCartographic(camera.position);
-    var lat =  Cesium.Math.toDegrees(coordinate.latitude);
-    var long = Cesium.Math.toDegrees(coordinate.longitude);
-    var announce = 'Latitude: ' + parseFloat(Math.round(lat * 100)/100).toFixed(4)+
-        ',Longitude: ' + parseFloat(Math.round(long * 100)/100).toFixed(4);
-       var home = viewer.entities.add({
-          name : announce,
-          // For Cesium fromDegrees, longitude before latitude.
-          position : Cesium.Cartesian3.fromDegrees(long, lat),
-          point : {
-             pixelSize : 15,
-             color : Cesium.Color.AQUAMARINE,
-             outlineColor : Cesium.Color.BLACK,
-             outlineWidth : 2
-          }
-      });
-  }
-
- /**
- * Handler for left click of the mouse on the map, get latitude and longitude, and start reverse geocoding
- */
-  var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-
-  // Catch the mouse click, and convert the location into degrees
-  handler.setInputAction(
-
-  // Translate mouse click into Geographic coordinates
-  function (click) {
-     var position = viewer.camera.pickEllipsoid(click.position);
-     var location = Cesium.Ellipsoid.WGS84.cartesianToCartographic(position);
-     geoLocation.latitude = Cesium.Math.toDegrees(location.latitude);
-     geoLocation.longitude = Cesium.Math.toDegrees(location.longitude);
-     // Reverse geocode to get the address
-     getAddressFromLocation(geoLocation);
-   },
-      Cesium.ScreenSpaceEventType.LEFT_CLICK
-   );
-
- /**
- * Set a point and mark the address at reverse geocoded location.
- */
-  function setAddressPoint() {
-       viewer.entities.add({
-        name : 'Latitude: ' + geoLocation.latitude + ', Longitude:' + geoLocation.longitude,
-        // Reverse the latitude and longitude when calling "fromDegrees"
-        position : Cesium.Cartesian3.fromDegrees(geoLocation.longitude, geoLocation.latitude),
+function setAddressPoint(position, locationAddress, longitudeDegrees, latitudeDegrees ) {
+    viewer.entities.add({
+        name : 'Longitude:' + longitudeDegrees.toFixed(4) + ', Latitude: ' + latitudeDegrees.toFixed(4),
+        position : position,
         point : {
             pixelSize : 5,
             color : Cesium.Color.RED,
@@ -153,16 +55,46 @@ var baseUrl = 'https://dev.virtualearth.net/REST/v1/Locations/';
             outlineWidth : 2
         },
         label : {
-            text : geoLocation.address,
+            text : locationAddress,
             font : '14pt monospace',
             style: Cesium.LabelStyle.FILL_AND_OUTLINE,
             outlineWidth : 2,
             verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-            pixelOffset : new Cesium.Cartesian2(0, -9)
+            pixelOffset : new Cesium.Cartesian2(0, -5)
         }
-      });
-    }
+    });
+}
 
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+handler.setInputAction(function (click) {
+    var position = camera.pickEllipsoid(click.position);
+    if (Cesium.defined(position)) {
+        var cartographic = ellipsoid.cartesianToCartographic(position);
+        var longitudeDegrees = Cesium.Math.toDegrees(cartographic.longitude);
+        var latitudeDegrees = Cesium.Math.toDegrees(cartographic.latitude);
+        var url = baseUrl + latitudeDegrees + "," +longitudeDegrees;
+        var promise = Cesium.loadJsonp(url, {
+            parameters : {
+                key : Cesium.BingMapsApi.getKey()
+            },
+            callbackParameterName : 'jsonp'
+        });
+
+        promise.then(function(result) {
+            var resources = result.resourceSets[0].resources;
+            if (resources.length === 0) {
+                return;
+            }
+            var locationAddress = resources[0].name;
+            if (locationAddress.length > 15) {
+                locationAddress = locationAddress.replace(/, /g, '\n');
+            }
+            setAddressPoint(position, locationAddress, longitudeDegrees, latitudeDegrees);
+        }).otherwise(function(error) {
+            console.error("ERROR getting address: " + error);
+        });
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
