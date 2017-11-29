@@ -29,7 +29,6 @@ define([
         './BlendingState',
         './Cesium3DTileColorBlendMode',
         './CullFace',
-        './DepthFunction',
         './getBinaryAccessor',
         './StencilFunction',
         './StencilOperation'
@@ -64,7 +63,6 @@ define([
         BlendingState,
         Cesium3DTileColorBlendMode,
         CullFace,
-        DepthFunction,
         getBinaryAccessor,
         StencilFunction,
         StencilOperation) {
