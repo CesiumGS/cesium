@@ -39,8 +39,12 @@ geocoder.searchText = 'Vienna';
 geocoder.flightDuration = 0.0;
 geocoder.search();
 
+
+// Vector 3D Tiles are experimental and the format is subject to change in the future.
+// For more details, see:
+//    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData
 var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : 'http://localhost:8002/tilesets/Vienna2',
+    url: 'https://beta.cesium.com/api/assets/3395?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
     skipLevelOfDetail : false,
     classificationType : Cesium.ClassificationType.TERRAIN
 }));
