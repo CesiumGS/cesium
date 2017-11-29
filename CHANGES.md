@@ -25,6 +25,7 @@ Change Log
    * Only one node is supported.
    * Only one mesh per node is supported.
    * Only one primitive per mesh is supported.
+* Added `Camera.enableTerrainAdjustmentWhenLoading` to enable/disable suspension of camera position adjustment when terrain is loading [#5999](https://github.com/AnalyticalGraphicsInc/cesium/issues/5999).
 
 ### 1.41 - 2018-01-02
 

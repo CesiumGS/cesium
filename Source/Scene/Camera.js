@@ -199,6 +199,14 @@ define([
          */
         this.maximumZoomFactor = 1.5;
 
+        /**
+         * Allows or disallows camera position adjustment while terrain is loading.
+         * When <code>false</code> the camera position will only be adjusted when all terrain has been loaded.
+         * @type {Boolean}
+         * @default false
+         */
+        this.enableTerrainAdjustmentWhenLoading = false;
+
         this._moveStart = new Event();
         this._moveEnd = new Event();
 
@@ -367,7 +375,7 @@ define([
         var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
         var minimumZoomDistance = screenSpaceCameraController.minimumZoomDistance;
 
-        if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
+        if ((!this.enableTerrainAdjustmentWhenLoading && this._suspendTerrainAdjustment) || !enableCollisionDetection) {
             return;
         }
 
