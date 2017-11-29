@@ -1,5 +1,4 @@
 define([
-        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
-        clone,
         defaultValue,
         defined,
         defineProperties,

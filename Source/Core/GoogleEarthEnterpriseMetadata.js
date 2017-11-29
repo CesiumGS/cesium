@@ -13,7 +13,6 @@ define([
         './loadArrayBuffer',
         './Math',
         './Request',
-        './RequestType',
         './RuntimeError',
         './TaskProcessor'
     ], function(
@@ -31,7 +30,6 @@ define([
         loadArrayBuffer,
         CesiumMath,
         Request,
-        RequestType,
         RuntimeError,
         TaskProcessor) {
     'use strict';
