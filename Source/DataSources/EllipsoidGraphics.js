@@ -25,10 +25,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
-     * @param {Property} [options.azimuthMin=0] A Property specifying the minimum azimuth angle of the ellipsoid (0 is north, +CW).
-     * @param {Property} [options.azimuthMax=0] A Property specifying the maximum azimuth angle of the ellipsoid (0 is north, +CW).
-     * @param {Property} [options.elevationMin=0] A Property specifying the minimum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
-     * @param {Property} [options.elevationMax=0] A Property specifying the maximum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
+     * @param {Property} [options.minimumAzimuth=0] A Property specifying the minimum azimuth angle of the ellipsoid (0 is north, +CW).
+     * @param {Property} [options.maximumAzimuth=0] A Property specifying the maximum azimuth angle of the ellipsoid (0 is north, +CW).
+     * @param {Property} [options.minimumElevation=0] A Property specifying the minimum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
+     * @param {Property} [options.maximumElevation=0] A Property specifying the maximum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
@@ -49,10 +49,10 @@ define([
         this._radii = undefined;
         this._radiiSubscription = undefined;
         this._innerRadii = undefined;
-        this._azimuthMin = undefined;
-        this._azimuthMax = undefined;
-        this._elevationMin = undefined;
-        this._elevationMax = undefined;
+        this._minimumAzimuth = undefined;
+        this._maximumAzimuth = undefined;
+        this._minimumElevation = undefined;
+        this._maximumElevation = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
         this._stackPartitions = undefined;
@@ -116,36 +116,36 @@ define([
         innerRadii : createPropertyDescriptor('innerRadii'),
 
         /**
-         * Gets or sets the Property specifying the minimum azimuth angle in degrees.
+         * Gets or sets the Property specifying the minimum azimuth angle in radians.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
          * @default 0.0
          */
-        azimuthMin : createPropertyDescriptor('azimuthMin'),
+        minimumAzimuth : createPropertyDescriptor('minimumAzimuth'),
 
         /**
-         * Gets or sets the Property specifying the maximum azimuth angle in degrees.
+         * Gets or sets the Property specifying the maximum azimuth angle in radians.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default 360.0
+         * @default 2*PI
          */
-        azimuthMax : createPropertyDescriptor('azimuthMax'),
+        maximumAzimuth : createPropertyDescriptor('maximumAzimuth'),
 
         /**
-         * Gets or sets the Property specifying the minimum elevation angle in degrees.
+         * Gets or sets the Property specifying the minimum elevation angle in radians.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default 90.0
+         * @default PI/2
          */
-        elevationMin : createPropertyDescriptor('elevationMin'),
+        minimumElevation : createPropertyDescriptor('minimumElevation'),
 
         /**
-         * Gets or sets the Property specifying the maximum elevation angle in degrees.
+         * Gets or sets the Property specifying the maximum elevation angle in radians.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default -90.0
+         * @default -PI/2
          */
-        elevationMax : createPropertyDescriptor('elevationMax'),
+        maximumElevation : createPropertyDescriptor('maximumElevation'),
 
         /**
          * Gets or sets the Property specifying the material used to fill the ellipsoid.
@@ -241,10 +241,10 @@ define([
         result.show = this.show;
         result.radii = this.radii;
         result.innerRadii = this.innerRadii;
-        result.azimuthMin = this.azimuthMin;
-        result.azimuthMax = this.azimuthMax;
-        result.elevationMin = this.elevationMin;
-        result.elevationMax = this.elevationMax;
+        result.minimumAzimuth = this.minimumAzimuth;
+        result.maximumAzimuth = this.maximumAzimuth;
+        result.minimumElevation = this.minimumElevation;
+        result.maximumElevation = this.maximumElevation;
         result.material = this.material;
         result.fill = this.fill;
         result.outline = this.outline;
@@ -275,10 +275,10 @@ define([
         this.show = defaultValue(this.show, source.show);
         this.radii = defaultValue(this.radii, source.radii);
         this.innerRadii = defaultValue(this.innerRadii, source.innerRadii);
-        this.azimuthMin = defaultValue(this.azimuthMin, source.azimuthMin);
-        this.azimuthMax = defaultValue(this.azimuthMax, source.azimuthMax);
-        this.elevationMin = defaultValue(this.elevationMin, source.elevationMin);
-        this.elevationMax = defaultValue(this.elevationMax, source.elevationMax);
+        this.minimumAzimuth = defaultValue(this.minimumAzimuth, source.minimumAzimuth);
+        this.maximumAzimuth = defaultValue(this.maximumAzimuth, source.maximumAzimuth);
+        this.minimumElevation = defaultValue(this.minimumElevation, source.minimumElevation);
+        this.maximumElevation = defaultValue(this.maximumElevation, source.maximumElevation);
         this.material = defaultValue(this.material, source.material);
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
