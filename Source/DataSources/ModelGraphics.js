@@ -252,7 +252,7 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {Property}
          */
-        clippingPlanes: createPropertyDescriptor('clippingPlanes')
+        clippingPlanes : createPropertyDescriptor('clippingPlanes')
     });
 
     /**

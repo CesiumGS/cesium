@@ -378,7 +378,7 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : tileset.clippingPlanes
+            clippingPlanes : tileset.clippingPlanes.clone()
         });
     }
 
@@ -452,7 +452,7 @@ define([
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
-            var modelClippingPlanes = this._model.clippingPlanes.planes;
+            var modelClippingPlanes = this._model.clippingPlanes;
             tilesetClippingPlanes.clone(modelClippingPlanes);
             modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
         }

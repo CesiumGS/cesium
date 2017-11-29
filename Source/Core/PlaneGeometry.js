@@ -86,7 +86,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PlaneGeometry} [result] The object into which to store the result.
-     * @returns {PlaneGeometry} The modified result parameter or a new BoxGeometry instance if one was not provided.
+     * @returns {PlaneGeometry} The modified result parameter or a new PlaneGeometry instance if one was not provided.
      */
     PlaneGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -372,7 +372,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0))
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0)/2.0)
         });
     };
 

@@ -1,27 +1,25 @@
 define([
-        '../Core/BoundingSphere',
-        '../Core/buildModuleUrl',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Intersect',
-        '../Core/Matrix4',
-        '../Core/Plane'
-    ], function(
-        BoundingSphere,
-        buildModuleUrl,
-        Cartesian3,
-        Cartographic,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Intersect,
-        Matrix4,
-        Plane) {
+    '../Core/Cartesian3',
+    '../Core/Cartesian4',
+    '../Core/Check',
+    '../Core/Color',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/Intersect',
+    '../Core/Matrix4',
+    '../Core/Plane'
+], function(
+    Cartesian3,
+    Cartesian4,
+    Check,
+    Color,
+    defaultValue,
+    defined,
+    defineProperties,
+    Intersect,
+    Matrix4,
+    Plane) {
     'use strict';
 
     /**
@@ -123,22 +121,32 @@ define([
     var scratchMatrix = new Matrix4();
     /**
      * Applies the transformations to each plane and packs it into an array.
+     * @private
      *
-     * @param viewMatrix
-     * @param [array]
+     * @param viewMatrix The 4x4 matrix to transform the plane into eyespace.
+     * @param [array] The array into which the planes will be packed.
      * @returns {Cartesian4[]} The array of packed planes.
      */
     ClippingPlanesCollection.prototype.transformAndPackPlanes = function(viewMatrix, array) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('viewMatrix', viewMatrix);
+        //>>includeEnd('debug');
+
         var planes = this.planes;
         var length = planes.length;
 
+        var i;
         if (!defined(array)) {
             array = new Array(length);
+
+            for (i = 0; i < length; ++i) {
+                array[i] = new Cartesian4();
+            }
         }
 
         var transform = Matrix4.multiply(viewMatrix, this.modelMatrix, scratchMatrix);
 
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             var plane = planes[i];
             var packedPlane = array[i];
 
@@ -155,14 +163,20 @@ define([
      * Duplicates this ClippingPlanesCollection instance.
      *
      * @param {ClippingPlanesCollection} [result] The object onto which to store the result.
-     * @returns he modified result parameter or a new ClippingPlanesCollection instance if one was not provided.
+     * @returns {ClippingPlanesCollection} The modified result parameter or a new ClippingPlanesCollection instance if one was not provided.
      */
     ClippingPlanesCollection.prototype.clone = function(result) {
         if (!defined(result)) {
             result = new ClippingPlanesCollection();
         }
 
-        result.planes = Array.from(this.planes);
+        var length = this.planes.length;
+        result.planes = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            var plane = this.planes[i];
+            result.planes[i] = new Plane(plane.normal, plane.distance);
+        }
+
         result.enabled = this.enabled;
         Matrix4.clone(this.modelMatrix, result.modelMatrix);
         result.combineClippingRegions = this.combineClippingRegions;
@@ -173,22 +187,23 @@ define([
     };
 
     /**
-     * Determines the type intersection with the planes of this bounding collection and the specified {@link BoundingVolume}.
+     * Determines the type intersection with the planes of this ClippingPlanesCollection instance and the specified {@link BoundingVolume}.
+     * @private
      *
-     * @param {BoundingVolume} boundingVolume The volume to determine the intersection with the planes.
-     * @param {Matrix4} [parentTransform] An optional, additional matrix to transform the plane to world coordinates.
+     * @param {Object} boundingVolume The volume to determine the intersection with the planes.
+     * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
      * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
      *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
      *                      if the entire volume is on the opposite side and should be clipped, and
      *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
      */
-    ClippingPlanesCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, parentTransform) {
+    ClippingPlanesCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, transform) {
         var planes = this.planes;
         var length = planes.length;
 
-        var transform = this.modelMatrix;
-        if (defined(parentTransform)) {
-            transform = Matrix4.multiply(transform, parentTransform, scratchMatrix);
+        var modelMatrix = this.modelMatrix;
+        if (defined(transform)) {
+            modelMatrix = Matrix4.multiply(modelMatrix, transform, scratchMatrix);
         }
 
         // If the clipping planes are using combineClippingRegions, the volume must be outside of all planes to be considered
@@ -202,7 +217,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var plane = planes[i];
 
-            Plane.transform(plane, transform, scratchPlane);
+            Plane.transform(plane, modelMatrix, scratchPlane);
 
             var value = boundingVolume.intersectPlane(scratchPlane);
             if (value === Intersect.INTERSECTING) {

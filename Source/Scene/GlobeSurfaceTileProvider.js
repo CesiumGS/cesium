@@ -873,11 +873,10 @@ define([
             u_clippingPlanes : function() {
                 return this.properties.clippingPlanes;
             },
-            u_clippingPlanesEdgeColor : function() {
-                return this.properties.clippingPlanesEdgeColor;
-            },
-            u_clippingPlanesEdgeWidth : function() {
-                return this.properties.clippingPlanesEdgeWidth;
+            u_clippingPlanesEdgeStyle : function() {
+                var style = this.properties.clippingPlanesEdgeColor;
+                style.alpha = this.properties.clippingPlanesEdgeWidth;
+                return style;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -915,7 +914,7 @@ define([
                 minMaxHeight : new Cartesian2(),
                 scaleAndBias : new Matrix4(),
                 clippingPlanes : [],
-                clippingPlanesEdgeColor : new Cartesian4(1.0, 1.0, 1.0, 1.0),
+                clippingPlanesEdgeColor : Color.clone(Color.WHITE),
                 clippingPlanesEdgeWidth : 0.0
             }
         };
@@ -1311,7 +1310,7 @@ define([
 
             if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
                 clippingPlanes.transformAndPackPlanes(context.uniformState.view, clippingPlanesProperty);
-                uniformMapProperties.clippingPlanesEdgeColor = Cartesian4.fromColor(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
+                uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
             }
 

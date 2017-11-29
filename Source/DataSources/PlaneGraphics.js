@@ -25,20 +25,21 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.plane] A {@link Plane} Property specifying the normal and distance for the plane.
      * @param {Property} [options.dimensions] A {@link Cartesian2} Property specifying the width and height of the plane.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
-     * @param {Property} [options.fill=true] A boolean Property specifying whether the box is filled with the provided material.
-     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the box.
-     * @param {Property} [options.outline=false] A boolean Property specifying whether the box is outlined.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the plane.
+     * @param {Property} [options.fill=true] A boolean Property specifying whether the plane is filled with the provided material.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the plane.
+     * @param {Property} [options.outline=false] A boolean Property specifying whether the plane is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from each light source.
-     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the plane casts or receives shadows from each light source.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this plane will be displayed.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Plane.html|Cesium Sandcastle Plane Demo}
      */
     function PlaneGraphics(options) {
         this._plane = undefined;
         this._planeSubscription = undefined;
+        this._dimensions = undefined;
         this._dimensionsSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
@@ -75,7 +76,7 @@ define([
         },
 
         /**
-         * Gets or sets the boolean Property specifying the visibility of the box.
+         * Gets or sets the boolean Property specifying the visibility of the plane.
          * @memberof PlaneGraphics.prototype
          * @type {Property}
          * @default true
@@ -99,7 +100,7 @@ define([
         dimensions : createPropertyDescriptor('dimensions'),
 
         /**
-         * Gets or sets the material used to fill the box.
+         * Gets or sets the material used to fill the plane.
          * @memberof PlaneGraphics.prototype
          * @type {MaterialProperty}
          * @default Color.WHITE
@@ -107,7 +108,7 @@ define([
         material : createMaterialPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the boolean Property specifying whether the box is filled with the provided material.
+         * Gets or sets the boolean Property specifying whether the plane is filled with the provided material.
          * @memberof PlaneGraphics.prototype
          * @type {Property}
          * @default true
@@ -115,7 +116,7 @@ define([
         fill : createPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Property specifying whether the box is outlined.
+         * Gets or sets the Property specifying whether the plane is outlined.
          * @memberof PlaneGraphics.prototype
          * @type {Property}
          * @default false
@@ -139,7 +140,7 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Get or sets the enum Property specifying whether the box
+         * Get or sets the enum Property specifying whether the plane
          * casts or receives shadows from each light source.
          * @memberof PlaneGraphics.prototype
          * @type {Property}
@@ -148,7 +149,7 @@ define([
         shadows : createPropertyDescriptor('shadows'),
 
         /**
-         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this box will be displayed.
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this plane will be displayed.
          * @memberof PlaneGraphics.prototype
          * @type {Property}
          */

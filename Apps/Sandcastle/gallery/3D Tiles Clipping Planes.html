@@ -38,12 +38,17 @@
 <div id="toolbar">
     <select data-bind="options: exampleTypes, value: currentExampleType"></select>
     <input type="checkbox" value="false" data-bind="checked: debugBoundingVolumesEnabled, valueUpdate: 'input'"> Show bounding volume
+    <input type="checkbox" value="true" data-bind="checked: edgeStylingEnabled, valueUpdate: 'input'"> Enable edge styling
 </div>
 
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+
+// Add a clipping plane, a plane geometry to show the representation of the
+// plane, and control the magnitude of the plane distance with the mouse.
+
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
     selectionIndicator: false
@@ -53,6 +58,7 @@ var scene = viewer.scene;
 var clipObjects = ['BIM', 'Point Cloud', 'Model'];
 var viewModel = {
     debugBoundingVolumesEnabled : false,
+    edgeStylingEnabled : true,
     exampleTypes : clipObjects,
     currentExampleType : clipObjects[0]
 };
@@ -117,7 +123,7 @@ function loadTileset(url) {
         url : url,
         clippingPlanes : new Cesium.ClippingPlanesCollection({
             planes : clippingPlanes,
-            edgeWidth : 1.0
+            edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
         })
     }));
 
@@ -150,11 +156,20 @@ function loadTileset(url) {
     tileset.debugShowBoundingVolume = viewModel.debugBoundingVolumesEnabled;
 }
 
-var modelEntity;
+var modelEntityClippingPlanes;
 function loadModel(url) {
     var clippingPlanes = [
         new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
+
+    modelEntityClippingPlanes = new Cesium.ClippingPlanesCollection({
+        planes : clippingPlanes,
+        edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
+    });
+
+    function updateClippingPlanes() {
+        return modelEntityClippingPlanes;
+    }
 
     var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
     var heading = Cesium.Math.toRadians(135.0);
@@ -170,15 +185,11 @@ function loadModel(url) {
             uri : url,
             scale : 8,
             minimumPixelSize : 100.0,
-            clippingPlanes : new Cesium.ClippingPlanesCollection({
-                planes : clippingPlanes,
-                edgeWidth : 1.0
-            })
+            clippingPlanes : new Cesium.CallbackProperty(updateClippingPlanes, false)
         }
     });
 
     viewer.trackedEntity = entity;
-    modelEntity = entity.model;
 
     for (var i = 0; i < clippingPlanes.length; ++i) {
         var plane = clippingPlanes[i];
@@ -224,9 +235,21 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     }
 });
 
-Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(newValue) {
+Cesium.knockout.getObservable(viewModel, 'debugBoundingVolumesEnabled').subscribe(function(value) {
     if (Cesium.defined(tileset)) {
-        tileset.debugShowBoundingVolume = newValue;
+        tileset.debugShowBoundingVolume = value;
+    }
+});
+
+Cesium.knockout.getObservable(viewModel, 'edgeStylingEnabled').subscribe(function(value) {
+    var edgeWidth = value ? 1.0 : 0.0;
+
+    if (Cesium.defined(tileset)) {
+        tileset.clippingPlanes.edgeWidth = edgeWidth;
+    }
+
+    if (Cesium.defined(modelEntityClippingPlanes)) {
+        modelEntityClippingPlanes.edgeWidth = edgeWidth;
     }
 });
 

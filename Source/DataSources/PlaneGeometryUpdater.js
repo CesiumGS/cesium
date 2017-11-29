@@ -368,7 +368,19 @@ define([
             };
         }
 
-        var modelMatrix = entity.computeModelMatrix(Iso8601.MINIMUM_VALUE);
+        var planeGraphics = entity.plane;
+        var options = this._options;
+        var modelMatrix = entity.computeModelMatrix(time);
+        var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
+        var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
+        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
+            return;
+        }
+
+        options.plane = plane;
+        options.dimensions = dimensions;
+
+        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -402,7 +414,19 @@ define([
         var outlineColor = Property.getValueOrDefault(this._outlineColorProperty, time, Color.BLACK);
         var distanceDisplayCondition = this._distanceDisplayConditionProperty.getValue(time);
 
-        var modelMatrix = entity.computeModelMatrix(Iso8601.MINIMUM_VALUE);
+        var planeGraphics = entity.plane;
+        var options = this._options;
+        var modelMatrix = entity.computeModelMatrix(time);
+        var plane = Property.getValueOrDefault(planeGraphics.plane, time, options.plane);
+        var dimensions = Property.getValueOrUndefined(planeGraphics.dimensions, time, options.dimensions);
+        if (!defined(modelMatrix) || !defined(plane) || !defined(dimensions)) {
+            return;
+        }
+
+        options.plane = plane;
+        options.dimensions = dimensions;
+
+        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -439,7 +463,6 @@ define([
         if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'orientation' || propertyName === 'plane')) {
             return;
         }
-
         var planeGraphics = this._entity.plane;
 
         if (!defined(planeGraphics)) {
@@ -581,7 +604,7 @@ define([
         options.plane = plane;
         options.dimensions = dimensions;
 
-        modelMatrix = createPrimitiveMatrix(plane.normal, plane.distance, dimensions, modelMatrix, modelMatrix);
+        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, modelMatrix);
 
         var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
 
@@ -648,16 +671,19 @@ define([
     var scratchTranslation = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScale = new Cartesian3();
-    var defaultDimensions = new Cartesian2(1.0, 1.0);
-    function createPrimitiveMatrix (normal, distance, dimensions, modelMatrix, result) {
-        if (!defined(normal)) {
-            normal = Cartesian3.UNIT_X;
-        }
-        if (!defined(distance)) {
+    function createPrimitiveMatrix (plane, dimensions, modelMatrix, result) {
+        var normal;
+        var distance;
+        if (defined(plane)) {
+            normal = plane.normal;
+            distance = plane.distance;
+        } else {
+            normal = Cartesian3.clone(Cartesian3.UNIT_X, scratchNormal);
             distance = 0.0;
         }
+
         if (!defined(dimensions)) {
-            dimensions = defaultDimensions;
+            dimensions = new Cartesian2(1.0, 1.0);
         }
 
         var translation = Cartesian3.multiplyByScalar(normal, distance, scratchTranslation);
@@ -674,14 +700,16 @@ define([
     }
 
     // get a rotation according to a normal
+    var scratchAxis = new Cartesian3();
+    var scratchQuaternion = new Quaternion();
     function getRotationMatrix(direction, up) {
         var angle = Cartesian3.angleBetween(direction, up);
         if (angle === 0.0) {
-            return Quaternion.IDENTITY;
+            return Quaternion.clone(Quaternion.IDENTITY, scratchQuaternion);
         }
 
-        var axis = Cartesian3.cross(up, direction, new Cartesian3());
-        return Quaternion.fromAxisAngle(axis, angle);
+        var axis = Cartesian3.cross(up, direction, scratchAxis);
+        return Quaternion.fromAxisAngle(axis, angle, scratchQuaternion);
     }
 
     DynamicGeometryUpdater.prototype.getBoundingSphere = function(entity, result) {

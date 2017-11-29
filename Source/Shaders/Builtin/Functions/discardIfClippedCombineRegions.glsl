@@ -31,9 +31,7 @@ float czm_discardIfClippedCombineRegions (vec4[czm_maxClippingPlanes] clippingPl
             clipPosition = -clippingPlanes[i].w * clipNormal;
 
             float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
-            if (amount > clipAmount) {
-                clipAmount = amount;
-            }
+            clipAmount = max(amount, clipAmount);
 
             clipped = clipped && (amount <= 0.0);
         }

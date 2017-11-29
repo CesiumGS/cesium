@@ -30,13 +30,11 @@ float czm_discardIfClipped (vec4[czm_maxClippingPlanes] clippingPlanes, int clip
             clipPosition = -clippingPlanes[i].w * clipNormal;
 
             float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;
-            if (amount > clipAmount) {
-                clipAmount = amount;
-            }
+            clipAmount = max(amount, clipAmount);
 
-            if (amount <= 0.0) {
+            if (amount <= 0.0)
+            {
                 discard;
-                return amount;
             }
         }
 

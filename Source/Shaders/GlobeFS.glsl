@@ -55,8 +55,7 @@ uniform vec2 u_lightingFadeDistance;
 #ifdef ENABLE_CLIPPING_PLANES
 uniform int u_clippingPlanesLength;
 uniform vec4 u_clippingPlanes[czm_maxClippingPlanes];
-uniform vec4 u_clippingPlanesEdgeColor;
-uniform float u_clippingPlanesEdgeWidth;
+uniform vec4 u_clippingPlanesEdgeStyle;
 #endif
 
 varying vec3 v_positionMC;
@@ -211,8 +210,12 @@ void main()
 #endif
 
 #ifdef ENABLE_CLIPPING_PLANES
-    if (clipDistance < u_clippingPlanesEdgeWidth) {
-        finalColor = u_clippingPlanesEdgeColor;
+    vec4 clippingPlanesEdgeColor = vec4(1.0);
+    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb;
+    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a;
+
+    if (clipDistance < clippingPlanesEdgeWidth) {
+        finalColor = clippingPlanesEdgeColor;
     }
 #endif
 

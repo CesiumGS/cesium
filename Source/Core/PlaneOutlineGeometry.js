@@ -78,7 +78,6 @@ define([
     /**
      * Computes the geometric representation of an outline of a plane, including its vertices, indices, and a bounding sphere.
      *
-     * @param {PlaneOutlineGeometry} planeGeometry A description of the plane outline.
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     PlaneOutlineGeometry.createGeometry = function() {

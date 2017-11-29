@@ -521,8 +521,7 @@ define([
         }
 
         var clippingPlanes = content._tileset.clippingPlanes;
-        var contentClipped = defined(clippingPlanes) && clippingPlanes.enabled;// && content._tile._isClipped;
-        var scratchCartesian = new Cartesian4();
+        var hasClippedContent = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped;
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -541,25 +540,20 @@ define([
             u_clippingPlanes : function() {
                 var packedPlanes = content._packedClippingPlanes;
 
-                if (contentClipped) {
+                if (hasClippedContent) {
                     clippingPlanes.transformAndPackPlanes(content._modelViewMatrix, packedPlanes);
                 }
 
                 return packedPlanes;
             },
-            u_clippingPlanesEdgeWidth : function() {
+            u_clippingPlanesEdgeStyle : function() {
                 if (!defined(clippingPlanes)) {
-                    return 0.0;
+                    return Color.WHITE.withAlpha(0.0);
                 }
 
-                return clippingPlanes.edgeWidth;
-            },
-            u_clippingPlanesEdgeColor : function() {
-                if (!defined(clippingPlanes)) {
-                    return scratchCartesian;
-                }
-
-                return Cartesian4.fromColor(clippingPlanes.edgeColor, scratchCartesian);
+                var style = Color.clone(clippingPlanes.edgeColor);
+                style.alpha = clippingPlanes.edgeWidth;
+                return style;
             }
         };
 
@@ -855,7 +849,7 @@ define([
         var hasColorStyle = defined(colorStyleFunction);
         var hasShowStyle = defined(showStyleFunction);
         var hasPointSizeStyle = defined(pointSizeStyleFunction);
-        var hasClippingPlanes = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped;
+        var hasClippedContent = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped;
 
         // Get the properties in use by the style
         var styleableProperties = [];
@@ -1072,22 +1066,25 @@ define([
 
         var fs = 'varying vec4 v_color; \n';
 
-        if (hasClippingPlanes) {
+        if (hasClippedContent) {
             fs += 'uniform int u_clippingPlanesLength;' +
                   'uniform vec4 u_clippingPlanes[czm_maxClippingPlanes]; \n' +
-                  'uniform vec4 u_clippingPlanesEdgeColor; \n' +
-                  'uniform float u_clippingPlanesEdgeWidth; \n';
+                  'uniform vec4 u_clippingPlanesEdgeStyle; \n';
         }
 
         fs +=  'void main() \n' +
                '{ \n' +
                '    gl_FragColor = v_color; \n';
 
-        if (hasClippingPlanes) {
+        if (hasClippedContent) {
             var clippingFunction = clippingPlanes.combineClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
             fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
-                  '    if (clipDistance < u_clippingPlanesEdgeWidth) { \n' +
-                  '        gl_FragColor = u_clippingPlanesEdgeColor; \n' +
+                  '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+                  '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
+                  '    float clippingPlanesEdgeWidth = u_clippingPlanesEdgeStyle.a; \n' +
+                  '    if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+                  '    { \n' +
+                  '        gl_FragColor = clippingPlanesEdgeColor; \n' +
                   '    } \n';
         }
 
@@ -1228,8 +1225,7 @@ define([
 
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
-        var modelViewChanged = context.uniformState._modelViewDirty || modelMatrixChanged;
-        if (defined(clippingPlanes) && clippingPlanes.enabled && modelViewChanged) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
             Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
         }
 
