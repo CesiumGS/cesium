@@ -31,7 +31,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
+     * Creates a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
      *
      * @alias Vector3DTileGeometry
      * @constructor

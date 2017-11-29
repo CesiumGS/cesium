@@ -59,7 +59,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of classification meshes.
+     * Creates a batch of classification meshes.
      *
      * @alias Vector3DTilePrimitive
      * @constructor

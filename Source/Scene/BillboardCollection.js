@@ -1540,6 +1540,7 @@ define([
         var fsSource;
         var vs;
         var fs;
+        var vertDefines;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
@@ -1553,12 +1554,15 @@ define([
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
 
+            vertDefines = [];
             if (defined(this._batchTable)) {
+                vertDefines.push('VECTOR_TILE')
                 vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
                 fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
             }
 
             vs = new ShaderSource({
+                defines : vertDefines,
                 sources : [vsSource]
             });
             if (this._instanced) {
@@ -1586,11 +1590,11 @@ define([
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
-            var vectorDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
+            var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
-                    defines : ['OPAQUE', vectorDefine],
+                    defines : ['OPAQUE', vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1602,7 +1606,7 @@ define([
                 });
 
                 fs = new ShaderSource({
-                    defines : ['TRANSLUCENT', vectorDefine],
+                    defines : ['TRANSLUCENT', vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
@@ -1616,7 +1620,7 @@ define([
 
             if (this._blendOption === BlendOption.OPAQUE) {
                 fs = new ShaderSource({
-                    defines : [vectorDefine],
+                    defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1630,7 +1634,7 @@ define([
 
             if (this._blendOption === BlendOption.TRANSLUCENT) {
                 fs = new ShaderSource({
-                    defines : vectorDefine,
+                    defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
@@ -1663,15 +1667,17 @@ define([
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
 
+            vertDefines = [];
             if (defined(this._batchTable)) {
+                vertDefines.push('VECTOR_TILE')
                 vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
                 fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
             }
 
-            var renderForPick = defined(this._batchTable) ? '' : 'RENDER_FOR_PICK';
+            var renderForPick = vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
 
             vs = new ShaderSource({
-                defines : [renderForPick],
+                defines : vertDefines,
                 sources : [vsSource]
             });
 
@@ -1701,7 +1707,7 @@ define([
             }
 
             fs = new ShaderSource({
-                defines : [renderForPick],
+                defines : vertDefines,
                 sources : [fsSource]
             });
 

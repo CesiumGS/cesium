@@ -35,7 +35,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
+     * Creates a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
      *
      * @alias Vector3DTilePolygons
      * @constructor

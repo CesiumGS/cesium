@@ -15,7 +15,7 @@ void main()
     czm_material material = czm_getMaterial(materialInput);
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 
-    #ifdef VECTOR_TILE
+#ifdef VECTOR_TILE
     gl_FragColor *= u_highlightColor;
-    #endif
+#endif
 }

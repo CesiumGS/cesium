@@ -41,7 +41,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of points or billboards and labels.
+     * Creates a batch of points or billboards and labels.
      *
      * @alias Vector3DTilePoints
      * @constructor

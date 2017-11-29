@@ -53,7 +53,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of polylines that have been subdivided to be draped on terrain.
+     * Creates a batch of polylines that have been subdivided to be draped on terrain.
      *
      * @alias Vector3DTilePolylines
      * @constructor
