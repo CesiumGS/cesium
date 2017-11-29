@@ -810,6 +810,11 @@ function combineCesium(debug, optimizer, combineOutput) {
         useStrict : true,
         optimize : optimizer,
         optimizeCss : 'standard',
+        uglify2 : {
+            output : {
+                ascii_only : true
+            }
+        },
         pragmas : {
             debug : debug
         },
@@ -834,7 +839,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     optimize : optimizer,
                     optimizeCss : 'standard',
                     uglify2 : {
-                        ascii_only : true
+                        output : {
+                            ascii_only : true
+                        }
                     },
                     pragmas : {
                         debug : debug
@@ -861,7 +868,9 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     optimize : optimizer,
                     optimizeCss : 'standard',
                     uglify2 : {
-                        ascii_only : true
+                        output : {
+                            ascii_only : true
+                        }
                     },
                     pragmas : {
                         debug : debug
@@ -882,7 +891,9 @@ function minifyCSS(outputDirectory) {
                 useStrict : true,
                 optimizeCss : 'standard',
                 uglify2 : {
-                    ascii_only : true
+                    output : {
+                        ascii_only : true
+                    }
                 },
                 pragmas : {
                     debug : true
@@ -1206,7 +1217,9 @@ function buildCesiumViewer() {
             useStrict : true,
             optimizeCss : 'standard',
             uglify2 : {
-                ascii_only : true
+                output : {
+                    ascii_only : true
+                }
             },
             pragmas : {
                 debug : false
@@ -1221,7 +1234,9 @@ function buildCesiumViewer() {
             useStrict : true,
             optimizeCss : 'standard',
             uglify2 : {
-                ascii_only : true
+                output : {
+                    ascii_only : true
+                }
             },
             pragmas : {
                 debug : false
