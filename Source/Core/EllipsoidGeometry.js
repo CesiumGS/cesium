@@ -77,9 +77,9 @@ define([
         var radii = defaultValue(options.radii, defaultRadii);
         var innerRadii = defaultValue(options.innerRadii, radii);
         var minimumAzimuth = defaultValue(options.minimumAzimuth, 0);
-        var maximumAzimuth = defaultValue(options.maximumAzimuth, 2.0 * Math.PI);
-        var minimumElevation = defaultValue(options.minimumElevation, -Math.PI / 2.0);
-        var maximumElevation = defaultValue(options.maximumElevation, Math.PI / 2.0);
+        var maximumAzimuth = defaultValue(options.maximumAzimuth, CesiumMath.TWO_PI);
+        var minimumElevation = defaultValue(options.minimumElevation, -CesiumMath.PI_OVER_TWO);
+        var maximumElevation = defaultValue(options.maximumElevation, CesiumMath.PI_OVER_TWO);
         var stackPartitions = defaultValue(options.stackPartitions, 64);
         var slicePartitions = defaultValue(options.slicePartitions, 64);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
