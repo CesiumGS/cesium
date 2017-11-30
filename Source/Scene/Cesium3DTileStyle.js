@@ -363,6 +363,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override pointColor expression with a string
@@ -470,6 +472,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override pointOutlineColor expression with a string
@@ -512,6 +516,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -556,6 +562,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelColor expression with a string
@@ -598,6 +606,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -642,6 +652,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override labelOutlineWidth expression with a string
@@ -684,6 +696,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -728,6 +742,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium3DTileStyle({
          *     labelStyle : '(${Temperature} > 90) ? ' + LabelStyle.FILL_AND_OUTLINE + ' : ' + LabelStyle.FILL
@@ -770,6 +786,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -814,6 +832,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override backgroundColor expression with a string
@@ -857,6 +877,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override backgroundPadding expression with a string
@@ -890,6 +912,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -934,6 +958,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override scaleByDistance expression with a string
@@ -967,6 +993,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -1002,6 +1030,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override distanceDisplayCondition expression with a string
@@ -1035,6 +1065,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -1079,6 +1111,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override anchorLineEnabled expression with a string
@@ -1121,6 +1155,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
@@ -1165,6 +1201,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium3DTileStyle({
          *     image : '(${Temperature} > 90) ? "/url/to/image1" : "/url/to/image2"'
@@ -1208,6 +1246,8 @@ define([
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
          *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         *
          * @example
          * var style = new Cesium.Cesium3DTileStyle();
          * // Override disableDepthTestDistance expression with a string
@@ -1241,6 +1281,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium3DTileStyle({
@@ -1284,6 +1326,8 @@ define([
          * @type {StyleExpression}
          *
          * @exception {DeveloperError} The style is not loaded.  Use {@link Cesium3DTileStyle#readyPromise} or wait for {@link Cesium3DTileStyle#ready} to be true.
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          *
          * @example
          * var style = new Cesium3DTileStyle({

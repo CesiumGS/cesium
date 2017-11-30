@@ -38,6 +38,8 @@ define([
      * @alias Cesium3DTilePointFeature
      * @constructor
      *
+     * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+     *
      * @example
      * // On mouse over, display all the properties for a feature in the console log.
      * handler.setInputAction(function(movement) {
