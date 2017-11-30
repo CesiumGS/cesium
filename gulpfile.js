@@ -810,6 +810,11 @@ function combineCesium(debug, optimizer, combineOutput) {
         useStrict : true,
         optimize : optimizer,
         optimizeCss : 'standard',
+        uglify2 : {
+            output : {
+                ascii_only : true
+            }
+        },
         pragmas : {
             debug : debug
         },
@@ -833,6 +838,11 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     useStrict : true,
                     optimize : optimizer,
                     optimizeCss : 'standard',
+                    uglify2 : {
+                        output : {
+                            ascii_only : true
+                        }
+                    },
                     pragmas : {
                         debug : debug
                     },
@@ -857,6 +867,11 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     useStrict : true,
                     optimize : optimizer,
                     optimizeCss : 'standard',
+                    uglify2 : {
+                        output : {
+                            ascii_only : true
+                        }
+                    },
                     pragmas : {
                         debug : debug
                     },
@@ -875,6 +890,11 @@ function minifyCSS(outputDirectory) {
                 wrap : true,
                 useStrict : true,
                 optimizeCss : 'standard',
+                uglify2 : {
+                    output : {
+                        ascii_only : true
+                    }
+                },
                 pragmas : {
                     debug : true
                 },
@@ -1196,6 +1216,11 @@ function buildCesiumViewer() {
             wrap : true,
             useStrict : true,
             optimizeCss : 'standard',
+            uglify2 : {
+                output : {
+                    ascii_only : true
+                }
+            },
             pragmas : {
                 debug : false
             },
@@ -1208,6 +1233,11 @@ function buildCesiumViewer() {
             wrap : true,
             useStrict : true,
             optimizeCss : 'standard',
+            uglify2 : {
+                output : {
+                    ascii_only : true
+                }
+            },
             pragmas : {
                 debug : false
             },
