@@ -12,7 +12,6 @@ define([
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
-        '../Core/Heap',
         '../Core/isDataUri',
         '../Core/joinUrls',
         '../Core/JulianDate',
@@ -28,7 +27,6 @@ define([
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileOptimizations',
-        './Cesium3DTileRefine',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
@@ -52,7 +50,6 @@ define([
         Event,
         getBaseUri,
         getExtensionFromUri,
-        Heap,
         isDataUri,
         joinUrls,
         JulianDate,
@@ -68,7 +65,6 @@ define([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileOptimizations,
-        Cesium3DTileRefine,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
@@ -1495,7 +1491,7 @@ define([
             var addedCommandsLength = (lengthAfterUpdate - lengthBeforeUpdate);
             var backfaceCommandsLength = backfaceCommands.length;
 
-            commandList.length += backfaceCommands.length;
+            commandList.length += backfaceCommandsLength;
 
             // copy commands to the back of the commandList
             for (i = addedCommandsLength - 1; i >= 0; --i) {

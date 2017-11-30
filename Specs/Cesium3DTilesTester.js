@@ -4,7 +4,6 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Scene/Cesium3DTileContentFactory',
-        'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
         'Specs/pollToPromise'
@@ -14,7 +13,6 @@ define([
         defaultValue,
         defined,
         Cesium3DTileContentFactory,
-        Cesium3DTileContentState,
         Cesium3DTileset,
         TileBoundingSphere,
         pollToPromise) {

@@ -12,6 +12,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
@@ -101,6 +102,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Ellipsoid,
         Event,
         ExtrapolationType,
@@ -522,6 +524,8 @@ define([
             return Number;
         } else if (czmlInterval.hasOwnProperty('nearFarScalar')) {
             return NearFarScalar;
+        } else if (czmlInterval.hasOwnProperty('distanceDisplayCondition')) {
+            return DistanceDisplayCondition;
         } else if (czmlInterval.hasOwnProperty('object') ||
                    czmlInterval.hasOwnProperty('value')) {
             return Object;
@@ -581,6 +585,8 @@ define([
                 return defaultValue(czmlInterval.number, czmlInterval);
             case NearFarScalar:
                 return czmlInterval.nearFarScalar;
+            case DistanceDisplayCondition:
+                return czmlInterval.distanceDisplayCondition;
             case Object:
                 return defaultValue(defaultValue(czmlInterval.object, czmlInterval.value), czmlInterval);
             case Quaternion:
@@ -1327,6 +1333,8 @@ define([
         processPacketData(NearFarScalar, billboard, 'translucencyByDistance', billboardData.translucencyByDistance, interval, sourceUri, entityCollection, query);
         processPacketData(NearFarScalar, billboard, 'pixelOffsetScaleByDistance', billboardData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection, query);
         processPacketData(BoundingRectangle, billboard, 'imageSubRegion', billboardData.imageSubRegion, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, billboard, 'distanceDisplayCondition', billboardData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, billboard, 'disableDepthTestDistance', billboardData.disableDepthTestDistance, interval, sourceUri, entityCollection, query);
     }
 
     function processBox(entity, packet, entityCollection, sourceUri, query) {
@@ -1355,6 +1363,7 @@ define([
         processPacketData(Color, box, 'outlineColor', boxData.outlineColor, interval, sourceUri, entityCollection, query);
         processPacketData(Number, box, 'outlineWidth', boxData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, box, 'shadows', boxData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, box, 'distanceDisplayCondition', boxData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processCorridor(entity, packet, entityCollection, sourceUri, query) {
@@ -1388,6 +1397,7 @@ define([
         processPacketData(Color, corridor, 'outlineColor', corridorData.outlineColor, interval, sourceUri, entityCollection, query);
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, corridor, 'distanceDisplayCondition', corridorData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processCylinder(entity, packet, entityCollection, sourceUri, query) {
@@ -1420,6 +1430,7 @@ define([
         processPacketData(Number, cylinder, 'numberOfVerticalLines', cylinderData.numberOfVerticalLines, interval, sourceUri, entityCollection, query);
         processPacketData(Number, cylinder, 'slices', cylinderData.slices, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, cylinder, 'shadows', cylinderData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, cylinder, 'distanceDisplayCondition', cylinderData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processDocument(packet, dataSource) {
@@ -1500,6 +1511,7 @@ define([
         processPacketData(Number, ellipse, 'outlineWidth', ellipseData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, ellipse, 'distanceDisplayCondition', ellipseData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processEllipsoid(entity, packet, entityCollection, sourceUri, query) {
@@ -1531,6 +1543,7 @@ define([
         processPacketData(Number, ellipsoid, 'slicePartitions', ellipsoidData.slicePartitions, interval, sourceUri, entityCollection, query);
         processPacketData(Number, ellipsoid, 'subdivisions', ellipsoidData.subdivisions, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, ellipsoid, 'shadows', ellipsoidData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, ellipsoid, 'distanceDisplayCondition', ellipsoidData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processLabel(entity, packet, entityCollection, sourceUri, query) {
@@ -1569,6 +1582,9 @@ define([
         processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(NearFarScalar, label, 'translucencyByDistance', labelData.translucencyByDistance, interval, sourceUri, entityCollection, query);
         processPacketData(NearFarScalar, label, 'pixelOffsetScaleByDistance', labelData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection, query);
+        processPacketData(NearFarScalar, label, 'scaleByDistance', labelData.scaleByDistance, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, label, 'distanceDisplayCondition', labelData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, label, 'disableDepthTestDistance', labelData.disableDepthTestDistance, interval, sourceUri, entityCollection, query);
     }
 
     function processModel(entity, packet, entityCollection, sourceUri, query) {
@@ -1596,6 +1612,7 @@ define([
         processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection, query);
+        processPacketData(Boolean, model, 'clampAnimations', modelData.clampAnimations, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, model, 'shadows', modelData.shadows, interval, sourceUri, entityCollection, query);
         processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection, query);
         processPacketData(Color, model, 'silhouetteColor', modelData.silhouetteColor, interval, sourceUri, entityCollection, query);
@@ -1603,6 +1620,7 @@ define([
         processPacketData(Color, model, 'color', modelData.color, interval, sourceUri, entityCollection, query);
         processPacketData(ColorBlendMode, model, 'colorBlendMode', modelData.colorBlendMode, interval, sourceUri, entityCollection, query);
         processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, model, 'distanceDisplayCondition', modelData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
@@ -1687,6 +1705,7 @@ define([
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri, entityCollection, query);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri, entityCollection, query);
         processMaterialPacketData(path, 'material', pathData.material, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, path, 'distanceDisplayCondition', pathData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processPoint(entity, packet, entityCollection, sourceUri, query) {
@@ -1715,6 +1734,8 @@ define([
         processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(NearFarScalar, point, 'scaleByDistance', pointData.scaleByDistance, interval, sourceUri, entityCollection, query);
         processPacketData(NearFarScalar, point, 'translucencyByDistance', pointData.translucencyByDistance, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, point, 'distanceDisplayCondition', pointData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
+        processPacketData(Number, point, 'disableDepthTestDistance', pointData.disableDepthTestDistance, interval, sourceUri, entityCollection, query);
     }
 
     function processPolygon(entity, packet, entityCollection, sourceUri, query) {
@@ -1750,6 +1771,7 @@ define([
         processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri, query) {
@@ -1775,8 +1797,10 @@ define([
         processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri, entityCollection, query);
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection, query);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection, query);
+        processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri, query) {
@@ -1812,6 +1836,7 @@ define([
         processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection, query);
         processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri, query) {
@@ -1843,6 +1868,7 @@ define([
         processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri, entityCollection, query);
         processPacketData(Number, wall, 'outlineWidth', wallData.outlineWidth, interval, sourceUri, entityCollection, query);
         processPacketData(ShadowMode, wall, 'shadows', wallData.shadows, interval, sourceUri, entityCollection, query);
+        processPacketData(DistanceDisplayCondition, wall, 'distanceDisplayCondition', wallData.distanceDisplayCondition, interval, sourceUri, entityCollection, query);
     }
 
     function processCzmlPacket(packet, entityCollection, updaterFunctions, sourceUri, dataSource, query) {

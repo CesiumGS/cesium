@@ -18,7 +18,7 @@ define([
      * Describes a two dimensional label located at the position of the containing {@link Entity}.
      * <p>
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * </p>
@@ -47,6 +47,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
+     * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -183,8 +184,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>l.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -211,8 +212,8 @@ define([
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The label's origin is indicated by the yellow point.
          * </div>
@@ -228,7 +229,7 @@ define([
          * A scale greater than <code>1.0</code> enlarges the label while a scale less than <code>1.0</code> shrinks it.
          * <p>
          * <div align='center'>
-         * <img src='images/Label.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>

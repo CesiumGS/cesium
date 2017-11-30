@@ -92,6 +92,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Jannes Bolling](https://github.com/jbo023)
 * [Logilab](https://www.logilab.fr/)
    * [Florent Cayré](https://github.com/fcayre/)
+* [webiks](https://www.webiks.com)
+  * [Hod Bauer](https://github.com/hodbauer)
+  * [Yonatan Kra](https://github.com/yonatankra)
+* [Novetta](http://www.novetta.com/)
+   * [Joshua Bernstein](https://github.com/jbernstein/)
+   * [Natanael Rivera](https://github.com/nrivera-Novetta/)
+   * [Justin Burr](https://github.com/jburr-nc/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -107,6 +114,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [M.Eng. René Schwarz](https://github.com/DigNative)
 * [Gilles Cébélieu (IGN France)](https://github.com/gcebelieu)
 * [Guillaume Beraudo](https://github.com/gberaudo)
+* [Martine Habib](https://github.com/marhab21)
 * [Thomas Hirsch](https://github.com/relet)
 * [Ayush Khandelwal](https://github.com/ayk115)
 * [Aditya Raisinghani](https://github.com/adi2412)
@@ -160,3 +168,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cody Guldner](https://github.com/burn123)
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [LIU Liang](https://github.com/polluxll)
+* [Y.Selim Abidin](https://github.com/SelimAbidin)
+
