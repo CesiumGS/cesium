@@ -181,7 +181,6 @@ defineSuite([
         var updater = new PlaneGeometryUpdater(entity, scene);
 
         var instance;
-        var geometry;
         var attributes;
         if (options.fill) {
             instance = updater.createFillGeometryInstance(time);

@@ -645,7 +645,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._modelViewMatrix = new Matrix4(); // Derived from modelMatrix, scale, and the current view matrix
+        this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
