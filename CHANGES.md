@@ -19,6 +19,7 @@ Change Log
 * Added ability to support touch event in Imagery Layers Split Sandcastle example. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 * Added a new `@experimental` tag to the documentation. A small subset of the Cesium API tagged as such are subject to breaking changes without deprecation. See the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/CodingGuide#deprecation-and-breaking-changes) for further explanation. [#6010](https://github.com/AnalyticalGraphicsInc/cesium/pull/6010)
 * Moved terrain and imagery credits to a lightbox that pops up when you click a link in the onscreen credits [#3013](https://github.com/AnalyticalGraphicsInc/cesium/issues/3013)
+* Fixed a bug where drill picking a polygon clamped to ground would cause the browser to hang. [#5971](https://github.com/AnalyticalGraphicsInc/cesium/issues/5971)
 
 ### 1.39 - 2017-11-01
 
