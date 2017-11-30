@@ -27,4 +27,14 @@ exports.defineTags = function(dictionary) {
             doclet.demo.push(tag.value);
         }
     });
+
+    dictionary.defineTag('experimental', {
+        mustHaveValue : true,
+        onTagged : function(doclet, tag) {
+            if (!doclet.experimental) {
+                doclet.experimental = [];
+            }
+            doclet.experimental.push(tag.value);
+        }
+    });
 };
