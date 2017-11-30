@@ -5,6 +5,7 @@ Change Log
 
 * Deprecated
   * The `text`, `imageUrl` and `link` parameters for `Credit` have been deprecated and will be removed in Cesium 1.41.  Use `options.text`, `options.imageUrl` and `options.link` instead.
+* Added a Reverse Geocoder [Sandcastle demo](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Reverse%20Geocoder.html&label=Showcases). [#5976](https://github.com/AnalyticalGraphicsInc/cesium/pull/5976)
 * Added `Globe.material` to apply materials to the globe/terrain for shading such as height- or slope-based color ramps.  See the new [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Globe%20Materials.html&label=Showcases). [#5919](https://github.com/AnalyticalGraphicsInc/cesium/pull/5919/files)
 * Added ability to support touch event in Imagery Layers Split demo application. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 * Added `file:` scheme compatibility to `joinUrls`.  [#5989](https://github.com/AnalyticalGraphicsInc/cesium/pull/5989)
