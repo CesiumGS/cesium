@@ -7,11 +7,13 @@ defineSuite([
         'Core/defined',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
+        'Core/Intersect',
         'Core/JulianDate',
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Renderer/ClearCommand',
@@ -22,6 +24,7 @@ defineSuite([
         'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlanesCollection',
         'Scene/CullFace',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -36,11 +39,13 @@ defineSuite([
         defined,
         getStringFromTypedArray,
         HeadingPitchRange,
+        Intersect,
         JulianDate,
         loadWithXhr,
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
+        Plane,
         PrimitiveType,
         RequestScheduler,
         ClearCommand,
@@ -51,6 +56,7 @@ defineSuite([
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
+        ClippingPlanesCollection,
         CullFace,
         Cesium3DTilesTester,
         createScene,
@@ -2807,4 +2813,55 @@ defineSuite([
         });
     });
 
+    it('clipping planes cull hidden tiles', function() {
+        // Root tile has a content box that is half the extents of its box
+        // Expect to cull root tile and three child tiles
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).toBe(CullingVolume.MASK_OUTSIDE);
+
+            plane.distance = 0.0;
+            visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
+        });
+    });
+
+    it('clipping planes cull hidden content', function() {
+        // Root tile has a content box that is half the extents of its box
+        // Expect to cull root tile and three child tiles
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).not.toBe(Intersect.OUTSIDE);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).toBe(Intersect.OUTSIDE);
+
+            plane.distance = 0.0;
+            visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).not.toBe(Intersect.OUTSIDE);
+        });
+    });
 }, 'WebGL');

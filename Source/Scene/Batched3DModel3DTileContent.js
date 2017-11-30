@@ -14,6 +14,7 @@ define([
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
+        '../Scene/ClippingPlanesCollection',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
@@ -35,6 +36,7 @@ define([
         RequestType,
         RuntimeError,
         Pass,
+        ClippingPlanesCollections,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
@@ -377,7 +379,10 @@ define([
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-            pickObject : pickObject
+            pickObject : pickObject,
+            clippingPlanes : new ClippingPlanesCollections({
+                enabled : false
+            })
         });
 
         if (defined(tileset.clippingPlanes)) {

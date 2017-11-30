@@ -1225,13 +1225,11 @@ define([
 
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
-        }
-
+        var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
         var length = 0;
-        if (defined(clippingPlanes)) {
+        if (clippingEnabled) {
             length = clippingPlanes.planes.length;
+            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
         }
 
         if (this._packedClippingPlanes.length !== length) {

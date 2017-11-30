@@ -80,6 +80,7 @@ define([
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
         this._testIntersection = undefined;
+        this._combineClippingRegions = undefined;
         this.combineClippingRegions = defaultValue(options.combineClippingRegions, true);
     }
 

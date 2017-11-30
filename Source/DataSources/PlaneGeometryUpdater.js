@@ -497,7 +497,7 @@ define([
         var position = entity.position;
 
         var show = planeGraphics.show;
-        if (!defined(plane) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
+        if (!defined(plane) || !defined(dimensions) || !defined(position) || (defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;

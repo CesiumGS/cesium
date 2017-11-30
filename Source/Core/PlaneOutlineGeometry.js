@@ -49,6 +49,7 @@ define([
      */
     PlaneOutlineGeometry.pack = function(value, array) {
         //>>includeStart('debug', pragmas.debug);
+        Check.defined('value', value);
         Check.defined('array', array);
         //>>includeEnd('debug');
 
