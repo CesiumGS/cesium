@@ -11,7 +11,7 @@ define([
     /**
      * @private
      */
-    function loadImageFromTypedArray(uint8Array, format, request) {
+    function loadImageFromTypedArray(uint8Array, format, request, requestOptions) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('uint8Array', uint8Array);
         Check.typeOf.string('format', format);
@@ -22,7 +22,7 @@ define([
         });
 
         var blobUrl = window.URL.createObjectURL(blob);
-        return loadImage(blobUrl, false, request).then(function(image) {
+        return loadImage(blobUrl, false, request, requestOptions).then(function(image) {
             window.URL.revokeObjectURL(blobUrl);
             return image;
         }, function(error) {

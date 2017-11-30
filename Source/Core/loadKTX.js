@@ -69,7 +69,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadKTX(urlOrBuffer, headers, request) {
+    function loadKTX(urlOrBuffer, headers, request, requestOptions) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('urlOrBuffer', urlOrBuffer);
         //>>includeEnd('debug');
@@ -78,7 +78,7 @@ define([
         if (urlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(urlOrBuffer)) {
             loadPromise = when.resolve(urlOrBuffer);
         } else {
-            loadPromise = loadArrayBuffer(urlOrBuffer, headers, request);
+            loadPromise = loadArrayBuffer(urlOrBuffer, headers, request, requestOptions);
         }
 
         if (!defined(loadPromise)) {

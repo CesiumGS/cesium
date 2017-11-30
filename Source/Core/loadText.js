@@ -32,11 +32,12 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadText(url, headers, request) {
+    function loadText(url, headers, request, requestOptions) {
         return loadWithXhr({
             url : url,
             headers : headers,
-            request : request
+            request : request,
+            requestOptions: requestOptions
         });
     }
 

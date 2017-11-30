@@ -28,12 +28,13 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadBlob(url, headers, request) {
+    function loadBlob(url, headers, request, requestOptions) {
         return loadWithXhr({
             url : url,
             responseType : 'blob',
             headers : headers,
-            request : request
+            request : request,
+            requestOptions: requestOptions
         });
     }
 

@@ -79,6 +79,7 @@ define([
     function Cesium3DTile(tileset, basePath, header, parent) {
         this._tileset = tileset;
         this._header = header;
+        this._requestOptions = tileset.requestOptions;
         var contentHeader = header.content;
 
         /**
@@ -619,7 +620,7 @@ define([
             serverKey : this._serverKey
         });
 
-        var promise = loadArrayBuffer(url, undefined, request);
+        var promise = loadArrayBuffer(url, undefined, request, this._requestOptions);
 
         if (!defined(promise)) {
             return false;

@@ -233,6 +233,7 @@ define([
         this._rectangle = undefined;
         this._tileDiscardPolicy = undefined;
         this._credit = undefined;
+        this._requestOptions = undefined;
         this._hasAlphaChannel = undefined;
         this._readyPromise = undefined;
 
@@ -538,6 +539,24 @@ define([
         },
 
         /**
+         * Gets the request options.  This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Object}
+         * @readonly
+         * @default undefined
+         */
+        requestOptions : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('credit must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+                return this._requestOptions;
+            }
+        },
+
+        /**
          * Gets a value indicating whether or not the images provided by this imagery provider
          * include an alpha channel.  If this property is false, an alpha channel, if present, will
          * be ignored.  If this property is true, any images without an alpha channel will be treated
@@ -585,6 +604,7 @@ define([
             that._proxy = properties.proxy;
             that._tileDiscardPolicy = properties.tileDiscardPolicy;
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
+            that._requestOptions = properties.requestOptions;
 
             that._subdomains = properties.subdomains;
             if (isArray(that._subdomains)) {

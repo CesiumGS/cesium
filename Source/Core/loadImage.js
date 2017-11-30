@@ -50,7 +50,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImage(url, allowCrossOrigin, request) {
+    function loadImage(url, allowCrossOrigin, request, requestOptions) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('url', url);
         //>>includeEnd('debug');
@@ -71,7 +71,8 @@ define([
 
             var deferred = when.defer();
 
-            loadImage.createImage(url, crossOrigin, deferred);
+            requestOptions = defaultValue(requestOptions, defaultValue.EMPTY_OBJECT);
+            loadImage.createImage(url, crossOrigin, deferred, requestOptions, requestOptions.retryAttempts);
 
             return deferred.promise;
         };
@@ -80,15 +81,37 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadImage.createImage = function(url, crossOrigin, deferred) {
+    loadImage.createImage = function(url, crossOrigin, deferred, requestOptions, retryAttempts) {
         var image = new Image();
+
+        var retryOnError = requestOptions.retryOnError;
+        var beforeRequest = requestOptions.beforeRequest;
+        var baseUrl = url;
+        if (typeof beforeRequest === 'function') {
+            url = beforeRequest(url);
+        }
 
         image.onload = function() {
             deferred.resolve(image);
         };
 
         image.onerror = function(e) {
-            deferred.reject(e);
+            if (typeof retryOnError === 'function' && retryAttempts > 0) {
+                when.resolve(requestOptions.retryOnError())
+                    .then(function(retry) {
+                        if (retry) {
+                            retryAttempts--;
+                            loadImage.createImage(baseUrl, crossOrigin, deferred, requestOptions, retryAttempts);
+                        } else {
+                            deferred.reject(e);
+                        }
+                    })
+                    .otherwise(function() {
+                        deferred.reject(e);
+                    });
+            } else {
+                deferred.reject(e);
+            }
         };
 
         if (crossOrigin) {
