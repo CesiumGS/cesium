@@ -241,6 +241,7 @@ define([
         this._canvas = canvas;
         this._canvasWidth = 0;
         this._canvasHeight = 0;
+        this._creditContainerContainer = creditContainerContainer;
         this._creditContainer = creditContainer;
         this._canRender = false;
         this._renderLoopRunning = false;
@@ -654,6 +655,7 @@ define([
     CesiumWidget.prototype.destroy = function() {
         this._scene = this._scene && this._scene.destroy();
         this._container.removeChild(this._element);
+        this._creditContainerContainer.removeChild(this._creditContainer);
         destroyObject(this);
     };
 
