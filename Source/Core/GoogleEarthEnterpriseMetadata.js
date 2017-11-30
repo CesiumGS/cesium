@@ -520,7 +520,7 @@ define([
                     var provider = providerInfo[i];
                     var copyrightString = provider.copyrightString;
                     if (defined(copyrightString)) {
-                        providers[provider.providerId] = new Credit(copyrightString.value);
+                        providers[provider.providerId] = new Credit({text: copyrightString.value});
                     }
                 }
             })
