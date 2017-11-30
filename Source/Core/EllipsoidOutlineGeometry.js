@@ -41,10 +41,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Cartesian3} [options.innerRadii=options.radii] The inner radii of the ellipsoid in the x, y, and z directions.
-     * @param {Number} [options.minimumAzimuth=0.0] The minimum azimuth in radians (0 is north, +CW).
-     * @param {Number} [options.maximumAzimuth=2*PI] The maximum azimuth in radians (0 is north, +CW).
-     * @param {Number} [options.minimumElevation=-PI/2] The minimum elevation in radians (0 is tangential to earth surface, +UP).
-     * @param {Number} [options.maximumElevation=PI/2] The maximum elevation in radians (0 is tangential to earth surface, +UP).
+     * @param {Number} [options.minimumAzimuth=0.0] The minimum azimuth in radians.
+     * @param {Number} [options.maximumAzimuth=2*PI] The maximum azimuth in radians.
+     * @param {Number} [options.minimumElevation=-PI/2] The minimum elevation in radians.
+     * @param {Number} [options.maximumElevation=PI/2] The maximum elevation in radians.
      * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
      * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
      * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature.
@@ -228,14 +228,8 @@ define([
             return;
         }
 
-        // The azimuth input assumes 0 is north with CW+. The geometry uses an
-        // ENU frame where 0 is east with CCW+. We have to convert the azimuth
-        // to ENU here.
-        var azMin = (Math.PI * 2.5) - ellipsoidGeometry._maximumAzimuth;
-        var azMax = (Math.PI * 2.5) - ellipsoidGeometry._minimumAzimuth;
-
-        var minimumAzimuth = azMin;
-        var maximumAzimuth = azMax;
+        var minimumAzimuth = ellipsoidGeometry._minimumAzimuth;
+        var maximumAzimuth = ellipsoidGeometry._maximumAzimuth;
         var minimumElevation = ellipsoidGeometry._minimumElevation;
         var maximumElevation = ellipsoidGeometry._maximumElevation;
         var inclination1 = (CesiumMath.PI_OVER_TWO - maximumElevation);
