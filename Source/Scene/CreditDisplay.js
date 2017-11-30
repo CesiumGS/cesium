@@ -539,6 +539,7 @@ define([
     CreditDisplay.prototype.destroy = function() {
         this.container.removeChild(this._textContainer);
         this.container.removeChild(this._imageContainer);
+        this.container.removeChild(this._expandLink);
         this.viewport.removeChild(this._lightbox);
 
         return destroyObject(this);
