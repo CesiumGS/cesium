@@ -377,9 +377,12 @@ define([
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-            pickObject : pickObject,
-            clippingPlanes : tileset.clippingPlanes.clone()
+            pickObject : pickObject
         });
+
+        if (defined(tileset.clippingPlanes)) {
+            content._model.clippingPlanes = tileset.clippingPlanes.clone();
+        }
     }
 
     function createFeatures(content) {
