@@ -143,7 +143,7 @@ define([
 
         var credit = options.credit;
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
         this._credit = credit;
 
@@ -316,7 +316,7 @@ define([
                     }
 
                     if (!defined(that._credit) && attribution.length > 0) {
-                        that._credit = new Credit(attribution);
+                        that._credit = new Credit({text: attribution});
                     }
 
                     that._ready = true;

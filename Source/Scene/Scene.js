@@ -229,6 +229,7 @@ define([
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
+        var creditViewport = options.creditViewport;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -247,10 +248,13 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
+        if (!defined(creditViewport)) {
+            creditViewport = canvas.parentNode;
+        }
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);

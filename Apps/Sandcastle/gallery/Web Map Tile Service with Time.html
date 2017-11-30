@@ -60,7 +60,7 @@ var provider = new Cesium.WebMapTileServiceImageryProvider({
     format : 'image/png',
     clock: viewer.clock,
     times: times,
-    credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
+    credit : new Cesium.Credit({text: 'NASA Global Imagery Browse Services for EOSDIS'})
 });
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(provider);

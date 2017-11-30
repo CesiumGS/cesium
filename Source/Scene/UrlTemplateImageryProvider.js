@@ -606,7 +606,7 @@ define([
 
             var credit = properties.credit;
             if (typeof credit === 'string') {
-                credit = new Credit(credit);
+                credit = new Credit({text: credit});
             }
             that._credit = credit;
 

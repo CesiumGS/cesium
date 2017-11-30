@@ -797,6 +797,8 @@ From release to release, we strive to keep the public Cesium API stable but also
 
 A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
 
+An `@experimental` API is subject to breaking changes in future Cesium releases without deprecation. It allows for new experimental features, for instance implementing draft formats.
+
 A public identifier (class, function, property) should be deprecated before being removed.  To do so:
 
 * Decide on which future version the deprecated API should be removed.  This is on a case-by-case basis depending on how badly it impacts users and Cesium development.  Most deprecated APIs will removed in 1-3 releases.  This can be discussed in the pull request if needed.
