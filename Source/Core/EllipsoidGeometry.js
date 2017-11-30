@@ -276,7 +276,7 @@ define([
         }
         phis.push(inclination2);
         for (j = 0; j < slicePartitions; j++) {
-            thetas.push((minimumAzimuth + j * (maximumAzimuth - minimumAzimuth) / (slicePartitions - 1));
+            thetas.push(minimumAzimuth + j * (maximumAzimuth - minimumAzimuth) / (slicePartitions - 1));
         }
         thetas.push(maximumAzimuth);
         var numPhis = phis.length;
@@ -451,7 +451,6 @@ define([
                 indices[index++] = innerOffset;
                 indices[index++] = innerOffset + numThetas;
                 indices[index++] = outerOffset + numThetas;
-                innerOffset += slicePartitions;
             }
 
             for (i = 1; i < numPhis - 2; i++) {
