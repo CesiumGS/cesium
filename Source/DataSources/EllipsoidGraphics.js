@@ -25,10 +25,10 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
-     * @param {Property} [options.minimumAzimuth=0] A Property specifying the minimum azimuth angle of the ellipsoid (0 is north, +CW).
-     * @param {Property} [options.maximumAzimuth=2*PI] A Property specifying the maximum azimuth angle of the ellipsoid (0 is north, +CW).
-     * @param {Property} [options.minimumElevation=-PI/2] A Property specifying the minimum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
-     * @param {Property} [options.maximumElevation=PI/2] A Property specifying the maximum elevation angle of the ellipsoid (0 is tangential to earth surface, +UP).
+     * @param {Property} [options.minimumAzimuth=0] A Property specifying the minimum azimuth angle of the ellipsoid.
+     * @param {Property} [options.maximumAzimuth=2*PI] A Property specifying the maximum azimuth angle of the ellipsoid.
+     * @param {Property} [options.minimumElevation=-PI/2] A Property specifying the minimum elevation angle of the ellipsoid.
+     * @param {Property} [options.maximumElevation=PI/2] A Property specifying the maximum elevation angle of the ellipsoid.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
