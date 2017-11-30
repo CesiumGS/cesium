@@ -252,7 +252,15 @@ defineSuite([
         });
     });
 
-    it('load deletes duplicate namespace declaration', function() {
+    it('load inserts missing namespace declaration into kmz', function() {
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load('Data/KML/undeclaredNamespaces.kmz').then(function(source) {
+            expect(source).toBe(dataSource);
+            expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load deletes duplicate namespace declaration in kml', function() {
         var datasource = new KmlDataSource(options);
         return datasource.load('Data/KML/duplicateNamespace.kml').then(function(source) {
             expect(source).toBe(datasource);
@@ -260,9 +268,9 @@ defineSuite([
         });
     });
 
-    it('load inserts missing namespace declaration into kmz', function() {
+    it('load deletes duplicate namespace declaration in kmz', function() {
         var dataSource = new KmlDataSource(options);
-        return dataSource.load('Data/KML/undeclaredNamespaces.kmz').then(function(source) {
+        return dataSource.load('Data/KML/duplicateNamespace.kmz').then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
         });

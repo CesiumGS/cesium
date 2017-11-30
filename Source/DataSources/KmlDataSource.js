@@ -295,8 +295,7 @@ define([
                 endIndex = text.indexOf('\"', (text.indexOf('\"', index) + 1));
                 text = text.slice(0, index -1) + text.slice(endIndex + 1, text.length);
                 index = text.indexOf('xmlns:', startIndex - 1);
-            }
-            else {
+            } else {
                 index = text.indexOf('xmlns:', startIndex + 1);
             }
         }
@@ -307,6 +306,7 @@ define([
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
             text = insertNamespaces(text);
+            text = removeDuplicateNamespaces(text);
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
         });
