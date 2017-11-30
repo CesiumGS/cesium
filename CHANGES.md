@@ -15,6 +15,7 @@ Change Log
 * Fixed bug in KMLDataSource.js (`processLookAt` function). Degrees and radians were mixing in a subtraction. [#5992](https://github.com/AnalyticalGraphicsInc/cesium/issues/5992)
 * Fixed handling of KMZ files with missing `xsi` namespace declarations. [#6003](https://github.com/AnalyticalGraphicsInc/cesium/pull/6003)
 * Fixed a bug where models with animations of different lengths would cause an error. [#5694](https://github.com/AnalyticalGraphicsInc/cesium/issues/5694)
+* Added a new `@experimental` tag to the documentation. A small subset of the API tagged as such are subject to breaking changes without deprecation. See the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/CodingGuide#deprecation-and-breaking-changes) for further explanation. [#6010](https://github.com/AnalyticalGraphicsInc/cesium/pull/6010)
 * Added a `clampAnimations` parameter to `Model` and `Entity.model`. Setting this to `false` allows different length animations to loop asynchronously over the duration of the longest animation.
 
 ### 1.39 - 2017-11-01
