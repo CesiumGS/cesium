@@ -512,8 +512,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The label's origin is indicated by the yellow point.
          * </div>
@@ -722,8 +722,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>l.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -766,7 +766,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
+         * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {HorizontalOrigin}
@@ -799,7 +799,7 @@ define([
          * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+         * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Label.prototype
          * @type {VerticalOrigin}
@@ -850,7 +850,7 @@ define([
          * use a larger font size when calling {@link Label#font} instead.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Label.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -1311,9 +1311,9 @@ define([
         }
     }
 
-    //To add another language, simply add it's Unicode block range(s) to the below regex.
+    //To add another language, simply add its Unicode block range(s) to the below regex.
     var hebrew = '\u05D0-\u05EA';
-    var arabic = '\u0600-\u06FF\u0750–\u077F\u08A0–\u08FF';
+    var arabic = '\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF';
     var rtlChars = new RegExp('[' + hebrew + arabic + ']');
 
     /**

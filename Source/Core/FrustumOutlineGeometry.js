@@ -1,7 +1,6 @@
 define([
         './BoundingSphere',
         './Cartesian3',
-        './Cartesian4',
         './Check',
         './ComponentDatatype',
         './defaultValue',
@@ -10,8 +9,6 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Matrix3',
-        './Matrix4',
         './OrthographicFrustum',
         './PerspectiveFrustum',
         './PrimitiveType',
@@ -19,7 +16,6 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
-        Cartesian4,
         Check,
         ComponentDatatype,
         defaultValue,
@@ -28,8 +24,6 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Matrix3,
-        Matrix4,
         OrthographicFrustum,
         PerspectiveFrustum,
         PrimitiveType,

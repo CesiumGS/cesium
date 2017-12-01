@@ -1,9 +1,9 @@
 define([
-        './Credit',
-        './defined'
-    ], function(
-        Credit,
-        defined) {
+    './Credit',
+    './defined'
+], function(
+    Credit,
+    defined) {
     'use strict';
 
     /**
@@ -11,8 +11,7 @@ define([
      *
      * @exports BingMapsApi
      */
-    var BingMapsApi = {
-    };
+    var BingMapsApi = {};
 
     /**
      * The default Bing Maps API key to use if one is not provided to the
@@ -53,7 +52,10 @@ define([
         }
 
         if (!defined(errorCredit)) {
-            errorCredit = new Credit(errorString);
+            errorCredit = new Credit({
+                text : errorString,
+                showOnScreen : true
+            });
         }
 
         return errorCredit;
