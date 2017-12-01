@@ -2861,7 +2861,7 @@ defineSuite([
         });
     });
 
-    it('clipping planes cull tiles completely inside', function() {
+    it('clipping planes cull tiles completely inside clipping region', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var statistics = tileset._statistics;
             var root = tileset._root;
@@ -2903,11 +2903,8 @@ defineSuite([
         });
     });
 
-    it('clipping planes cull tiles completely inside for i3dm', function() {
+    it('clipping planes cull tiles completely inside clipping region for i3dm', function() {
         return Cesium3DTilesTester.loadTileset(scene, instancedUrl).then(function(tileset) {
-
-            console.log(tileset);
-
             var statistics = tileset._statistics;
             var root = tileset._root;
 
