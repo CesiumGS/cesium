@@ -521,7 +521,7 @@ define([
 
                 if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
-                    if (i < numThetas*2 || i > vertexCount - numThetas*2 - 1) {
+                    if ((!isTopOpen && i < numThetas*2) || (!isBotOpen && i > vertexCount - numThetas*2 - 1)) {
                         Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
                         Cartesian3.normalize(tangent, tangent);
                     } else {
