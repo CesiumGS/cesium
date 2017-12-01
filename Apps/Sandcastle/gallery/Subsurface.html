@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Test subsurface rendering">
+    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="zoomButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+// set lighting to true
+viewer.scene.globe.enableLighting = true;
+
+// Disable fog, it causes problems with culling when the eye point is below 0
+viewer.scene.fog.enabled = false;
+// Connect to the SRTM15 Plus dataset on ReadyMap
+var terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'http://readymap.org/readymap/tiles/1.0.0/128'
+});
+viewer.terrainProvider = terrainProvider;
+
+var horizonCullingEnabled = false;
+
+function addModel() {
+    viewer.entities.removeAll();
+
+    var position = Cesium.Cartesian3.fromRadians(-2.714134211286325, 0.33236701052929585, -848.6742055252448);
+
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+
+    var entity = viewer.entities.add({
+        name : 'Model',
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+            minimumPixelSize : 128,
+            maximumScale : 20000,
+
+            // Color the model slightly blue when the eyepoint is underwater.
+            color : new Cesium.Color(0.0, 0.0, 1.0, 1.0),
+            colorBlendMode : Cesium.ColorBlendMode.MIX,
+            colorBlendAmount : new Cesium.CallbackProperty(function(time, result) {
+                var underwater = viewer.camera.positionCartographic.height < 0;
+                return underwater ? 0.2 : 0.0;
+            }, false)
+        }
+    });
+    viewer.trackedEntity = entity;
+}
+    
+
+Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisibleOld = Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible;
+Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
+    if (!horizonCullingEnabled) {
+        return true;
+    }
+    return this.isScaledSpacePointVisibleOld(occludeeScaledSpacePosition);
+};
+
+
+function horizonCullingClick() {
+    horizonCullingEnabled = document.getElementById('horizonculling-enabled').checked;
+}
+
+
+addModel();
+
+Sandcastle.addDefaultToolbarMenu([{
+    text : 'Mount Everest',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(300770.50872389384, 5634912.131394585, 2978152.2865545116);
+        var offset = new Cesium.Cartesian3(6344.974098678562, -793.3419798081741, 2499.9508860763162);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'Half Dome',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2489625.0836225147, -4393941.44443024, 3882535.9454173897);
+        var offset = new Cesium.Cartesian3(-6857.40902037546, 412.3284835694358, 2147.5545426812023);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+}, {
+    text : 'San Francisco Bay',
+    onselect : function() {
+        var target = new Cesium.Cartesian3(-2708814.85583248, -4254159.450845907, 3891403.9457429945);
+        var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
+        viewer.camera.lookAt(target, offset);
+        viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+},
+ {
+    text : 'Under the sea',
+    onselect : function() {
+        viewer.camera.flyTo({
+            destination : Cesium.Cartesian3.fromRadians(-2.714134211286325, 0.33236701052929585, -848.6742055252448),
+            orientation: {
+                pitch: -0.23273894173188325,
+                heading: 0.3754522005172083,
+                roll: 0.0
+            }
+        });
+    }
+}], 'zoomButtons');
+
+
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
