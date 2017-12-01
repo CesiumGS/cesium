@@ -26,6 +26,7 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
+        './ClippingPlanesCollection',
         './ModelInstanceCollection'
     ], function(
         AttributeCompression,
@@ -55,6 +56,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
+        ClippingPlanesCollection,
         ModelInstanceCollection) {
     'use strict';
 
@@ -443,7 +445,6 @@ define([
             var modelMatrix = instanceTransform.clone();
             instances[i] = {
                 modelMatrix : modelMatrix,
-                batchId : batchId
             };
         }
 
@@ -513,6 +514,18 @@ define([
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
+
+        // Update clipping planes
+        var tilesetClippingPlanes = this._tileset.clippingPlanes;
+        if (defined(tilesetClippingPlanes)) {
+            var model = this._modelInstanceCollection._model;
+            if (!defined(model.clippingPlanes)) {
+                model.clippingPlanes = new ClippingPlanesCollection();
+            }
+
+            tilesetClippingPlanes.clone(model.clippingPlanes);
+            model.clippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        }
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;

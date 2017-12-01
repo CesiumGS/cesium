@@ -172,12 +172,20 @@ define([
         }
 
         var length = this.planes.length;
+        var i;
         if (result.planes.length !== length) {
             result.planes = new Array(length);
+
+            for (i = 0; i < length; ++i) {
+                result.planes[i] = new Plane(Cartesian3.UNIT_X, 0.0);
+            }
         }
-        for (var i = 0; i < length; ++i) {
+
+        for (i = 0; i < length; ++i) {
             var plane = this.planes[i];
-            result.planes[i] = new Plane(plane.normal, plane.distance);
+            var resultPlane = result.planes[i];
+            resultPlane.normal = plane.normal;
+            resultPlane.distance = plane.distance;
         }
 
         result.enabled = this.enabled;

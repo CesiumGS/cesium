@@ -14,10 +14,10 @@ define([
         '../Core/RequestType',
         '../Core/RuntimeError',
         '../Renderer/Pass',
-        '../Scene/ClippingPlanesCollection',
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
+        './ClippingPlanesCollection',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
@@ -36,10 +36,10 @@ define([
         RequestType,
         RuntimeError,
         Pass,
-        ClippingPlanesCollections,
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
+        ClippingPlanesCollection,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
@@ -380,7 +380,7 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : new ClippingPlanesCollections({
+            clippingPlanes : new ClippingPlanesCollection({
                 enabled : false
             })
         });
