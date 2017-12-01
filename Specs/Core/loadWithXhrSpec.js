@@ -313,6 +313,32 @@ defineSuite([
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError instanceof RequestErrorEvent).toBe(true);
             });
+
+            it('resolves undefined for status code 204', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolved = false;
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolved = true;
+                    resolvedValue = value;
+                }).otherwise(function (error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateHttpError(204);
+                expect(resolved).toBe(true);
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+            });
         });
 
         describe('returns a promise that resolves when the request loads', function() {
