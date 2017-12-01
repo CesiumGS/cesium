@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Draw spheres and ellipsoids.">
+    <meta name="description" content="Draw spheres, ellipsoids, and sensor volumes.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -31,7 +31,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var blueEllipsoid = viewer.entities.add({
     name : 'Blue ellipsoid',
-    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 45.0, 300000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
         material : Cesium.Color.BLUE
@@ -40,7 +40,7 @@ var blueEllipsoid = viewer.entities.add({
 
 var redSphere = viewer.entities.add({
     name : 'Red sphere with black outline',
-    position: Cesium.Cartesian3.fromDegrees(-107.0, 40.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 45.0, 300000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
         material : Cesium.Color.RED.withAlpha(0.5),
@@ -51,7 +51,7 @@ var redSphere = viewer.entities.add({
 
 var outlineOnly = viewer.entities.add({
     name : 'Yellow ellipsoid outline',
-    position: Cesium.Cartesian3.fromDegrees(-100.0, 40.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 300000.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
         fill : false,
@@ -59,6 +59,178 @@ var outlineOnly = viewer.entities.add({
         outlineColor : Cesium.Color.YELLOW,
         slicePartitions : 24,
         stackPartitions : 36
+    }
+});
+
+viewer.entities.add({
+    name : 'Dome',
+    position: Cesium.Cartesian3.fromDegrees(-120.0, 40.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
+        minimumElevation : 0.0,
+        material : Cesium.Color.BLUE.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Dome with inner radius',
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 40.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(250000.0, 200000.0, 150000.0),
+        innerRadii : new Cesium.Cartesian3(100000.0, 80000.0, 60000.0),
+        minimumElevation : 0.0,
+        material : Cesium.Color.RED.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Dome with top cut out',
+    position: Cesium.Cartesian3.fromDegrees(-108.0, 40.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
+        minimumElevation : 0.0,
+        maximumElevation : Cesium.Math.toRadians(70.0),
+        material : Cesium.Color.YELLOW.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Top and bottom cut out',
+    position: Cesium.Cartesian3.fromDegrees(-102.0, 40.0, 140000.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
+        minimumElevation : Cesium.Math.toRadians(-40.0),
+        maximumElevation : Cesium.Math.toRadians(40.0),
+        material : Cesium.Color.DARKCYAN.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Partial azimuth',
+    position: Cesium.Cartesian3.fromDegrees(-96.0, 39.5),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        innerRadii : new Cesium.Cartesian3(150000.0, 150000.0, 150000.0),
+        minimumAzimuth : Cesium.Math.toRadians(-90.0),
+        maximumAzimuth : Cesium.Math.toRadians(180.0),
+        minimumElevation : Cesium.Math.toRadians(20.0),
+        maximumElevation : Cesium.Math.toRadians(80.0),
+        material : Cesium.Color.GREEN.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Upside down',
+    position: Cesium.Cartesian3.fromDegrees(-90.0, 39.0, 200000.0),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        innerRadii : new Cesium.Cartesian3(150000.0, 150000.0, 150000.0),
+        minimumAzimuth : Cesium.Math.toRadians(-90.0),
+        maximumAzimuth : Cesium.Math.toRadians(180.0),
+        minimumElevation : Cesium.Math.toRadians(-90.0),
+        maximumElevation : Cesium.Math.toRadians(20.0),
+        material : Cesium.Color.BLUE.withAlpha(0.3),
+        outline : true
+    }
+});
+
+viewer.entities.add({
+    name : 'Partial dome',
+    position: Cesium.Cartesian3.fromDegrees(-84.0, 38.5),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        minimumAzimuth : Cesium.Math.toRadians(-90.0),
+        maximumAzimuth : Cesium.Math.toRadians(180.0),
+        minimumElevation : 0.0,
+        material : Cesium.Color.RED.withAlpha(0.3),
+        outline : true
+    }
+});
+
+var airplanePosition = Cesium.Cartesian3.fromDegrees(-110.0, 35.0, 250000.0);
+viewer.entities.add({
+    id : 'airplane',
+    name : 'Airplane with sensor',
+    position : airplanePosition,
+    model : {
+        "../../SampleData/models/CesiumAir/Cesium_Air.gltf",
+        scale : 6000
+    }
+});
+viewer.entities.add({
+    name : 'Airplane sensor view',
+    position : new Cesium.ReferenceProperty(viewer.entities, 'airplane', ['position']),
+    orientation : Cesium.Transforms.headingPitchRollQuaternion(
+        airplanePosition,
+        new Cesium.HeadingPitchRoll(Cesium.Math.PI_OVER_TWO, -Cesium.Math.PI_OVER_FOUR, 0.0)
+    ),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(300000.0, 300000.0, 30000.0),
+        innerRadii : new Cesium.Cartesian3(1.0, 1.0, 1.0),
+        minimumAzimuth : Cesium.Math.toRadians(-10.0),
+        maximumAzimuth : Cesium.Math.toRadians(10.0),
+        minimumElevation : Cesium.Math.toRadians(-10.0),
+        maximumElevation : Cesium.Math.toRadians(10.0),
+        material : Cesium.Color.DARKCYAN.withAlpha(0.3),
+        outline : true
+    }
+});
+
+var truckPosition = Cesium.Cartesian3.fromDegrees(-102.0, 35.0);
+viewer.entities.add({
+    id : 'truck',
+    name : 'Truck with sensor',
+    position : truckPosition,
+    model : {
+        "../../SampleData/models/CesiumAir/Cesium_Ground.gltf",
+        scale : 8000
+    }
+});
+viewer.entities.add({
+    name : 'Truck sensor view',
+    position : new Cesium.ReferenceProperty(viewer.entities, 'truck', ['position']),
+    orientation : Cesium.Transforms.headingPitchRollQuaternion(
+        truckPosition,
+        new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, Cesium.Math.PI_OVER_FOUR, 0.0)
+    ),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(500000.0, 500000.0, 50000.0),
+        innerRadii : new Cesium.Cartesian3(10000.0, 10000.0, 10000.0),
+        minimumAzimuth : Cesium.Math.toRadians(-15.0),
+        maximumAzimuth : Cesium.Math.toRadians(15.0),
+        minimumElevation : Cesium.Math.toRadians(-15.0),
+        maximumElevation : Cesium.Math.toRadians(15.0),
+        material : Cesium.Color.DARKCYAN.withAlpha(0.3),
+        outline : true
+    }
+});
+
+truckPosition = Cesium.Cartesian3.fromDegrees(-95.0, 34.0);
+viewer.entities.add({
+    id : 'truck2',
+    name : 'Truck with sensor',
+    position : truckPosition,
+    model : {
+        "../../SampleData/models/CesiumAir/Cesium_Ground.gltf",
+        scale : 8000
+    }
+});
+viewer.entities.add({
+    name : 'Truck sensor view',
+    position : new Cesium.ReferenceProperty(viewer.entities, 'truck2', ['position']),
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(400000.0, 400000.0, 40000.0),
+        innerRadii : new Cesium.Cartesian3(30000.0, 30000.0, 30000.0),
+        minimumAzimuth : Cesium.Math.toRadians(40.0),
+        material : Cesium.Color.DARKCYAN.withAlpha(0.3),
+        outline : true
     }
 });
 
