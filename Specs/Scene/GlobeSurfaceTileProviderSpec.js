@@ -598,13 +598,13 @@ defineSuite([
     });
 
     it('adds terrain and imagery credits to the CreditDisplay', function() {
-        var imageryCredit = new Credit('imagery credit');
+        var imageryCredit = new Credit({text: 'imagery credit'});
         scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png',
             credit : imageryCredit
         }));
 
-        var terrainCredit = new Credit('terrain credit');
+        var terrainCredit = new Credit({text: 'terrain credit'});
         scene.terrainProvider = new CesiumTerrainProvider({
             url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             credit : terrainCredit
@@ -612,8 +612,10 @@ defineSuite([
 
         return updateUntilDone(scene.globe).then(function() {
             var creditDisplay = scene.frameState.creditDisplay;
-            expect(creditDisplay._currentFrameCredits.textCredits).toContain(imageryCredit);
-            expect(creditDisplay._currentFrameCredits.textCredits).toContain(terrainCredit);
+            creditDisplay.showLightbox();
+            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(imageryCredit);
+            expect(creditDisplay._currentFrameCredits.lightboxCredits).toContain(terrainCredit);
+            creditDisplay.hideLightbox();
         });
     });
 
