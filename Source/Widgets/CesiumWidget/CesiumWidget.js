@@ -283,7 +283,12 @@ define([
             });
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var agiCredit = new Credit('AGI', agiLogoData, 'http://www.agi.com/');
+            var agiCredit = new Credit({
+                text: 'AGI',
+                imageUrl: agiLogoData,
+                link: 'http://www.agi.com/',
+                showOnScreen: true
+            });
             creditDisplay.addDefaultCredit(agiCredit);
 
             var globe = options.globe;
