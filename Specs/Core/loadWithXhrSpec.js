@@ -242,7 +242,7 @@ defineSuite([
                     fakeXHR.onerror();
                 }
             };
-            fakeXHR.simulateHttpError = function(statusCode, response) {
+            fakeXHR.simulateHttpResponse = function(statusCode, response) {
                 fakeXHR.status = statusCode;
                 fakeXHR.response = response;
                 if (typeof fakeXHR.onload === 'function') {
@@ -257,11 +257,7 @@ defineSuite([
                 }
             };
             fakeXHR.simulateResponseTextLoad = function(responseText) {
-                fakeXHR.status = 200;
-                fakeXHR.responseText = responseText;
-                if (typeof fakeXHR.onload === 'function') {
-                    fakeXHR.onload();
-                }
+                fakeXHR.simulateHttpResponse(200, responseText);
             };
 
             spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
@@ -309,7 +305,7 @@ defineSuite([
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError).toBeUndefined();
 
-                fakeXHR.simulateHttpError(199);
+                fakeXHR.simulateHttpResponse(199);
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError instanceof RequestErrorEvent).toBe(true);
             });
@@ -334,7 +330,7 @@ defineSuite([
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError).toBeUndefined();
 
-                fakeXHR.simulateHttpError(204);
+                fakeXHR.simulateHttpResponse(204);
                 expect(resolved).toBe(true);
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError).toBeUndefined();

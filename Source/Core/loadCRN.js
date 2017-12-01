@@ -67,6 +67,9 @@ define([
         }
 
         return loadPromise.then(function(data) {
+            if (!defined(data)) {
+                return;
+            }
             var transferrableObjects = [];
             if (data instanceof ArrayBuffer) {
                 transferrableObjects.push(data);
