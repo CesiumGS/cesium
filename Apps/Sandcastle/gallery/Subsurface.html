@@ -60,7 +60,7 @@ function addModel() {
         position : position,
         orientation : orientation,
         model : {
-            uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+            uri : '../../SampleData/models/Submarine/submarine.gltf',
             minimumPixelSize : 128,
             maximumScale : 20000,
 
@@ -75,7 +75,7 @@ function addModel() {
     });
     viewer.trackedEntity = entity;
 }
-    
+
 
 Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisibleOld = Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible;
 Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {

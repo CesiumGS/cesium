@@ -39,6 +39,7 @@ define([
         '../Scene/Primitive',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './ImagerySplitDirection',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode'
@@ -83,6 +84,7 @@ define([
         Primitive,
         GlobeSurfaceTile,
         ImageryLayer,
+        ImagerySplitDirection,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode) {
@@ -846,6 +848,9 @@ define([
             u_scaleAndBias : function() {
                 return this.properties.scaleAndBias;
             },
+            u_splitDirection: function () {
+                return this.properties.splitDirection;
+            },
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
@@ -877,6 +882,7 @@ define([
                 dayTextureSaturation : [],
                 dayTextureOneOverGamma : [],
                 dayTextureSplit : [],
+                splitDireciton: ImagerySplitDirection.NONE,
                 dayIntensity : 0.0,
 
                 southAndNorthLatitude : new Cartesian2(),
@@ -1251,6 +1257,9 @@ define([
 
                 ++numberOfDayTextures;
             }
+
+            uniformMapProperties.splitDirection = tileProvider.splitDirection;
+            applySplit = applySplit || tileProvider.splitDirection !== 0.0;
 
             // trim texture array to the used length so we don't end up using old textures
             // which might get destroyed eventually
