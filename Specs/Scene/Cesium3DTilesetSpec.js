@@ -2904,13 +2904,13 @@ defineSuite([
     });
 
     it('clipping planes cull tiles completely inside clipping region for i3dm', function() {
-        return Cesium3DTilesTester.loadTileset(scene, instancedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl).then(function(tileset) {
             var statistics = tileset._statistics;
             var root = tileset._root;
 
             scene.renderForSpecs();
 
-            expect(statistics.numberOfCommands).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(6);
 
             tileset.update(scene.frameState);
 
@@ -2924,18 +2924,18 @@ defineSuite([
             tileset.update(scene.frameState);
             scene.renderForSpecs();
 
-            expect(statistics.numberOfCommands).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(false);
 
-            plane.distance = 4081611.654572015; // center
+            plane.distance = 4081608.4377916814; // center
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
 
-            expect(statistics.numberOfCommands).toEqual(1);
+            expect(statistics.numberOfCommands).toEqual(6);
             expect(root._isClipped).toBe(true);
 
-            plane.distance = 4081611.654572015 + 142.6291406685467; // center + radius
+            plane.distance = 4081608.4377916814 + 142.19001637409772; // center + radius
 
             tileset.update(scene.frameState);
             scene.renderForSpecs();
