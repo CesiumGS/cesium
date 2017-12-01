@@ -1,25 +1,25 @@
 define([
-    '../Core/Cartesian3',
-    '../Core/Cartesian4',
-    '../Core/Check',
-    '../Core/Color',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/Intersect',
-    '../Core/Matrix4',
-    '../Core/Plane'
-], function(
-    Cartesian3,
-    Cartesian4,
-    Check,
-    Color,
-    defaultValue,
-    defined,
-    defineProperties,
-    Intersect,
-    Matrix4,
-    Plane) {
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Check',
+        '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Intersect',
+        '../Core/Matrix4',
+        '../Core/Plane'
+    ], function(
+        Cartesian3,
+        Cartesian4,
+        Check,
+        Color,
+        defaultValue,
+        defined,
+        defineProperties,
+        Intersect,
+        Matrix4,
+        Plane) {
     'use strict';
 
     /**
@@ -172,7 +172,9 @@ define([
         }
 
         var length = this.planes.length;
-        result.planes = new Array(length);
+        if (result.planes.length !== length) {
+            result.planes = new Array(length);
+        }
         for (var i = 0; i < length; ++i) {
             var plane = this.planes[i];
             result.planes[i] = new Plane(plane.normal, plane.distance);

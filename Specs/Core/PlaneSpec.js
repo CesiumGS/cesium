@@ -136,6 +136,7 @@ defineSuite([
 
         var transform = Matrix4.fromUniformScale(2.0);
         transform = Matrix4.multiplyByMatrix3(transform, Matrix3.fromRotationY(Math.PI), transform);
+
         var transformedPlane = Plane.transform(plane, transform);
         expect(transformedPlane.distance).toEqual(-plane.distance * 2.0);
         expect(transformedPlane.normal.x).toEqualEpsilon(-plane.normal.x, CesiumMath.EPSILON10);
@@ -144,13 +145,13 @@ defineSuite([
     });
 
     it('transform throws without a plane', function() {
-        var point = Cartesian3.ZERO;
+        var transform = Matrix4.IDENTITY;
         expect(function() {
-            return Plane.transform(undefined, point);
+            return Plane.transform(undefined, transform);
         }).toThrowDeveloperError();
     });
 
-    it('transform throws without a point', function() {
+    it('transform throws without a transform', function() {
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
             return Plane.transform(plane, undefined);

@@ -521,7 +521,6 @@ define([
         }
 
         var clippingPlanes = content._tileset.clippingPlanes;
-        var hasClippedContent = defined(clippingPlanes) && clippingPlanes.enabled && content._tile._isClipped;
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -538,13 +537,7 @@ define([
                 return content._packedClippingPlanes.length;
             },
             u_clippingPlanes : function() {
-                var packedPlanes = content._packedClippingPlanes;
-
-                if (hasClippedContent) {
-                    clippingPlanes.transformAndPackPlanes(content._modelViewMatrix, packedPlanes);
-                }
-
-                return packedPlanes;
+                return content._packedClippingPlanes;
             },
             u_clippingPlanesEdgeStyle : function() {
                 if (!defined(clippingPlanes)) {
@@ -1247,6 +1240,10 @@ define([
 
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
+        }
+
+        if (clippingEnabled) {
+            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, this._packedClippingPlanes);
         }
 
         var isClipped = this._tile._isClipped;

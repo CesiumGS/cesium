@@ -1,21 +1,21 @@
 defineSuite([
-    'Scene/ClippingPlanesCollection',
-    'Core/BoundingSphere',
-    'Core/Cartesian3',
-    'Core/Cartesian4',
-    'Core/Color',
-    'Core/Intersect',
-    'Core/Matrix4',
-    'Core/Plane'
-], function(
-    ClippingPlanesCollection,
-    BoundingSphere,
-    Cartesian3,
-    Cartesian4,
-    Color,
-    Intersect,
-    Matrix4,
-    Plane) {
+        'Scene/ClippingPlanesCollection',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Color',
+        'Core/Intersect',
+        'Core/Matrix4',
+        'Core/Plane'
+    ], function(
+        ClippingPlanesCollection,
+        BoundingSphere,
+        Cartesian3,
+        Cartesian4,
+        Color,
+        Intersect,
+        Matrix4,
+        Plane) {
     'use strict';
 
     var clippingPlanes;
@@ -56,8 +56,8 @@ defineSuite([
 
         var result = clippingPlanes.transformAndPackPlanes(transform);
         expect(result.length).toEqual(2);
-        expect(result[0] instanceof Cartesian4).toBe(true);
-        expect(result[1] instanceof Cartesian4).toBe(true);
+        expect(result[0]).toBeInstanceOf(Cartesian4);
+        expect(result[1]).toBeInstanceOf(Cartesian4);
     });
 
     it('clone without a result parameter returns new identical copy', function() {
@@ -90,6 +90,7 @@ defineSuite([
         var result = new ClippingPlanesCollection();
         var copy = clippingPlanes.clone(result);
         expect(copy).toBe(result);
+        expect(result.planes).not.toBe(planes);
         expect(result.planes[0]).toEqual(planes[0]);
         expect(result.planes[1]).toEqual(planes[1]);
         expect(result.enabled).toEqual(false);
@@ -98,7 +99,13 @@ defineSuite([
         expect(result.edgeWidth).toEqual(0.0);
         expect(result.combineClippingRegions).toEqual(true);
         expect(result._testIntersection).not.toBeUndefined();
+
+        // Only allocate a new array if needed
+        var previousPlanes = result.planes;
+        clippingPlanes.clone(result);
+        expect(result.planes).toBe(previousPlanes);
     });
+
 
     it('setting combineClippingRegions updates testIntersection function', function() {
         clippingPlanes = new ClippingPlanesCollection();

@@ -238,7 +238,7 @@ define([
          * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
          *
          * @memberof Globe.prototype
-         * @type {ClippingPlaneCollection}
+         * @type {ClippingPlanesCollection}
          */
         clippingPlanes : {
             get : function() {

@@ -9,7 +9,7 @@
  * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  * @returns {float} The distance away from a clipped fragment, in eyespace
  */
-float czm_discardIfClippedCombineRegions (vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
+float czm_discardIfClippedCombineRegions(vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
 {
     if (clippingPlanesLength > 0)
     {

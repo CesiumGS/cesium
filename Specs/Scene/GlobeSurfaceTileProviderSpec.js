@@ -794,22 +794,44 @@ defineSuite([
         });
     });
 
-    it('computes tile visibility culls tiles when clipped', function() {
-        scene.globe.clippingPlanes = new ClippingPlanesCollection ({
+    it('computesTileVisibility culls tiles when they are entirely inside the clipped region', function() {
+        var globe = scene.globe;
+        var plane = new Plane(Cartesian3.UNIT_Z, 10000000.0);
+        globe.clippingPlanes = new ClippingPlanesCollection ({
             planes : [
-                new Plane(Cartesian3.UNIT_X, 10000000.0)
+                plane
             ]
         });
 
-        var surface = scene.globe._surface;
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
-        scene.renderForSpecs();
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
 
-        var tile = surface._levelZeroTiles[0];
-        expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState)).toBe(Intersect.OUTSIDE);
-        expect(tile.isClipped).toBe(true);
+            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState)).toBe(Intersect.OUTSIDE);
+            expect(tile.isClipped).toBe(true);
 
-        scene.globe.clippingPlanes = undefined;
+            plane.distance = 0.0;
+            scene.renderForSpecs();
+
+            surface = scene.globe._surface;
+            tile = surface._levelZeroTiles[0];
+
+            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState, scene.globe._surface._occluders)).toBe(Intersect.INTERSECTING);
+            expect(tile.isClipped).toBe(true);
+
+            plane.distance = -10000000.0;
+            scene.renderForSpecs();
+
+            surface = scene.globe._surface;
+            tile = surface._levelZeroTiles[0];
+
+            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState, scene.globe._surface._occluders)).toBe(Intersect.INTERSECTING);
+            expect(tile.isClipped).toBe(false);
+
+            scene.globe.clippingPlanes = undefined;
+        });
     });
 
 }, 'WebGL');
