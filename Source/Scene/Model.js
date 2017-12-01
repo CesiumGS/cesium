@@ -63,7 +63,9 @@ define([
         './AttributeType',
         './Axis',
         './BlendingState',
+        './ClassificationType',
         './ColorBlendMode',
+        './DepthFunction',
         './getAttributeOrUniformBySemantic',
         './HeightReference',
         './JobType',
@@ -73,7 +75,9 @@ define([
         './ModelMesh',
         './ModelNode',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -139,7 +143,9 @@ define([
         AttributeType,
         Axis,
         BlendingState,
+        ClassificationType,
         ColorBlendMode,
+        DepthFunction,
         getAttributeOrUniformBySemantic,
         HeightReference,
         JobType,
@@ -149,7 +155,9 @@ define([
         ModelMesh,
         ModelNode,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -426,6 +434,9 @@ define([
          * @default 0.0
          */
         this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.NONE);
+        this._classificationType = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -3512,7 +3523,14 @@ define([
                 silhouetteColorCommand2D : undefined,
                 // Generated on demand when color alpha is less than 1.0
                 translucentCommand : undefined,
-                translucentCommand2D : undefined
+                translucentCommand2D : undefined,
+                // Generated on demand when the model is set as a classifier
+                classificationPreloadCommand : undefined,
+                classificationStencilCommand : undefined,
+                classificationColorCommand : undefined,
+                classificationPreloadCommand2D : undefined,
+                classificationStencilCommand2D : undefined,
+                classificationColorCommand2D : undefined
             };
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
@@ -4040,6 +4058,10 @@ define([
         return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0) && defined(model._normalAttributeName);
     }
 
+    function isClassification(model, frameState) {
+        return frameState.context.stencilBuffer && model.classificationType !== ClassificationType.NONE;
+    }
+
     function hasTranslucentCommands(model) {
         var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
@@ -4208,6 +4230,181 @@ define([
 
         if (dirty) {
             createSilhouetteCommands(model, frameState);
+        }
+    }
+
+    var stencilMask = 0x0F;
+    var stencilReference = 0;
+
+    var classificationPreloadRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.DECREMENT_WRAP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.INCREMENT_WRAP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false
+    };
+
+    var classificationStencilRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : true,
+            func : DepthFunction.LESS_OR_EQUAL
+        },
+        depthMask : false
+    };
+
+    var classificationColorRS = {
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.NOT_EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.NOT_EQUAL,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false,
+        blending : BlendingState.ALPHA_BLEND
+    };
+
+    function createClassificationCommands(model, frameState) {
+        var scene3DOnly = frameState.scene3DOnly;
+        var nodeCommands = model._nodeCommands;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+            var command = nodeCommand.command;
+
+            var preloadCommand = DrawCommand.shallowClone(command);
+            preloadCommand.renderState = RenderState.fromCache(classificationPreloadRS);
+            nodeCommand.classificationPreloadCommand = preloadCommand;
+
+            var stencilCommand = DrawCommand.shallowClone(command);
+            stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
+            nodeCommand.classificationStencilCommand = stencilCommand;
+
+            var colorCommand = DrawCommand.shallowClone(command);
+            colorCommand.renderState = RenderState.fromCache(classificationColorRS);
+            nodeCommand.classificationColorCommand = colorCommand;
+
+            if (!scene3DOnly) {
+                var command2D = nodeCommand.command2D;
+                var preloadCommand2D = DrawCommand.shallowClone(preloadCommand);
+                preloadCommand2D.boundingVolume = command2D.boundingVolume;
+                preloadCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationPreloadCommand2D = preloadCommand2D;
+
+                var stencilCommand2D = DrawCommand.shallowClone(stencilCommand);
+                stencilCommand2D.boundingVolume = command2D.boundingVolume;
+                stencilCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationStencilCommand2D = stencilCommand2D;
+
+                var colorCommand2D = DrawCommand.shallowClone(colorCommand);
+                colorCommand2D.boundingVolume = command2D.boundingVolume;
+                colorCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationColorCommand2D = colorCommand2D;
+            }
+        }
+    }
+
+    function updateClassification(model, frameState) {
+        var dirty = model._classificationType !== model.classificationType || model._dirty;
+        model._classificationType = model.classificationType;
+
+        if (!isClassification(model, frameState)) {
+            return;
+        }
+
+        var nodeCommands = model._nodeCommands;
+        if (!defined(nodeCommands[0].classificationPreloadCommand)) {
+            createClassificationCommands(model, frameState);
+        }
+
+        if (!dirty) {
+            return;
+        }
+
+        var pass;
+        switch (model._classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
+
+        var scene3DOnly = frameState.scene3DOnly;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+
+            nodeCommand.classificationPreloadCommand.pass = pass;
+            nodeCommand.classificationStencilCommand.pass = pass;
+            nodeCommand.classificationColorCommand.pass = pass;
+
+            if (!scene3DOnly) {
+                nodeCommand.classificationPreloadCommand2D.pass = pass;
+                nodeCommand.classificationStencilCommand2D.pass = pass;
+                nodeCommand.classificationColorCommand2D.pass = pass;
+            }
         }
     }
 
@@ -4609,8 +4806,9 @@ define([
         var silhouette = hasSilhouette(this, frameState);
         var translucent = isTranslucent(this);
         var invisible = isInvisible(this);
+        var classification = isClassification(this, frameState);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette || classification);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
@@ -4675,6 +4873,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
+            updateClassification(this, frameState);
         }
 
         if (justLoaded) {
@@ -4703,32 +4902,52 @@ define([
             var boundingVolume;
 
             if (passes.render) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var command = translucent ? nc.translucentCommand : nc.command;
-                        command = silhouette ? nc.silhouetteModelCommand : command;
-                        commandList.push(command);
-                        boundingVolume = nc.command.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
-                            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
-                            commandList.push(command2D);
-                        }
-                    }
-                }
-
-                if (silhouette) {
-                    // Render second silhouette pass
+                if (!classification) {
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
                         if (nc.show) {
-                            commandList.push(nc.silhouetteColorCommand);
+                            var command = translucent ? nc.translucentCommand : nc.command;
+                            command = silhouette ? nc.silhouetteModelCommand : command;
+                            commandList.push(command);
                             boundingVolume = nc.command.boundingVolume;
                             if (frameState.mode === SceneMode.SCENE2D &&
                                 (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                commandList.push(nc.silhouetteColorCommand2D);
+                                var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
+                                command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
+                                commandList.push(command2D);
+                            }
+                        }
+                    }
+
+                    if (silhouette) {
+                        // Render second silhouette pass
+                        for (i = 0; i < length; ++i) {
+                            nc = nodeCommands[i];
+                            if (nc.show) {
+                                commandList.push(nc.silhouetteColorCommand);
+                                boundingVolume = nc.command.boundingVolume;
+                                if (frameState.mode === SceneMode.SCENE2D &&
+                                    (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                    commandList.push(nc.silhouetteColorCommand2D);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    for (i = 0; i < length; ++i) {
+                        nc = nodeCommands[i];
+                        if (nc.show) {
+                            var originalCommand = nc.command;
+                            boundingVolume = originalCommand.boundingVolume;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.classificationPreloadCommand2D);
+                                commandList.push(nc.classificationStencilCommand2D);
+                                commandList.push(nc.classificationColorCommand2D);
+                            } else {
+                                commandList.push(nc.classificationPreloadCommand);
+                                commandList.push(nc.classificationStencilCommand);
+                                commandList.push(nc.classificationColorCommand);
                             }
                         }
                     }

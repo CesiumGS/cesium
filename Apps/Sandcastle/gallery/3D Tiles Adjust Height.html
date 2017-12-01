@@ -68,6 +68,21 @@ tileset.readyPromise.then(function() {
     throw(error);
 });
 
+var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset',
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE,
+    modelMatrix : Cesium.Matrix4.fromUniformScale(1.2),
+    skipLevelOfDetail : false
+}));
+
+classification.readyPromise.then(function() {
+    classification.style = new Cesium.Cesium3DTileStyle({
+        color : 'rgba(255, 255, 0, 0.5)'
+    });
+}).otherwise(function(error) {
+    throw(error);
+});
+
 Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
     height = Number(height);
     if (isNaN(height)) {
@@ -79,6 +94,8 @@ Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
     var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
     var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
     tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
+
+    classification.modelMatrix = Cesium.Matrix4.multiply(Cesium.Matrix4.fromTranslation(translation), Cesium.Matrix4.fromUniformScale(1.1), new Cesium.Matrix4());
 });
 //Sandcastle_End
 Sandcastle.finishedLoading();

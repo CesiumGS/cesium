@@ -528,7 +528,7 @@ define([
          *
          * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.CESIUM_3D_TILE);
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.NONE);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
