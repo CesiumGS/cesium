@@ -524,11 +524,11 @@ define([
         /**
          * Determines whether terrain, 3D Tiles or both will be classified by vector tiles.
          * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
+         * @default undefined
          *
          * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
          */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.NONE);
+        this.classificationType = options.classificationType;
 
         /**
          * This property is for debugging only; it is not optimized for production use.

@@ -435,7 +435,7 @@ define([
          */
         this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
 
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.NONE);
+        this.classificationType = options.classificationType;
         this._classificationType = undefined;
 
         /**
@@ -627,6 +627,7 @@ define([
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+        this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
         this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
@@ -683,6 +684,7 @@ define([
             programs : {},
             pickPrograms : {},
             silhouettePrograms : {},
+            classificationPrograms : {},
             textures : {},
             samplers : {},
             renderStates : {}
@@ -3674,6 +3676,7 @@ define([
             resources.programs = cachedResources.programs;
             resources.pickPrograms = cachedResources.pickPrograms;
             resources.silhouettePrograms = cachedResources.silhouettePrograms;
+            resources.classificationPrograms = cachedResources.classificationPrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
             resources.renderStates = cachedResources.renderStates;
@@ -4059,7 +4062,7 @@ define([
     }
 
     function isClassification(model, frameState) {
-        return frameState.context.stencilBuffer && model.classificationType !== ClassificationType.NONE;
+        return frameState.context.stencilBuffer && defined(model.classificationType);
     }
 
     function hasTranslucentCommands(model) {
@@ -4322,24 +4325,61 @@ define([
         blending : BlendingState.ALPHA_BLEND
     };
 
+    function createClassificationProgram(model, id, program, frameState) {
+        var vs = program.vertexShaderSource;
+        var attributeLocations = program._attributeLocations;
+        var fs =
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragColor = vec4(1.0); \n' +
+            '}';
+
+        fs = modifyShader(fs, id, model._classificationShaderLoaded);
+
+        return ShaderProgram.fromCache({
+            context : frameState.context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+    }
+
     function createClassificationCommands(model, frameState) {
         var scene3DOnly = frameState.scene3DOnly;
+        var classificationPrograms = model._rendererResources.classificationPrograms;
         var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
         for (var i = 0; i < length; ++i) {
             var nodeCommand = nodeCommands[i];
             var command = nodeCommand.command;
 
+            var program = command.shaderProgram;
+            var id = getProgramId(model, program);
+            var classificationProgram = classificationPrograms[id];
+            if (!defined(classificationProgram)) {
+                classificationProgram = createClassificationProgram(model, id, program, frameState);
+                classificationPrograms[id] = classificationProgram;
+            }
+
             var preloadCommand = DrawCommand.shallowClone(command);
             preloadCommand.renderState = RenderState.fromCache(classificationPreloadRS);
+            preloadCommand.shaderProgram = classificationProgram;
+            preloadCommand.castShadows = false;
+            preloadCommand.receiveShadows = false;
             nodeCommand.classificationPreloadCommand = preloadCommand;
 
             var stencilCommand = DrawCommand.shallowClone(command);
             stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
+            stencilCommand.shaderProgram = classificationProgram;
+            stencilCommand.castShadows = false;
+            stencilCommand.receiveShadows = false;
             nodeCommand.classificationStencilCommand = stencilCommand;
 
             var colorCommand = DrawCommand.shallowClone(command);
             colorCommand.renderState = RenderState.fromCache(classificationColorRS);
+            colorCommand.shaderProgram = classificationProgram;
+            colorCommand.castShadows = false;
+            colorCommand.receiveShadows = false;
             nodeCommand.classificationColorCommand = colorCommand;
 
             if (!scene3DOnly) {
@@ -4503,6 +4543,7 @@ define([
         this.programs = undefined;
         this.pickPrograms = undefined;
         this.silhouettePrograms = undefined;
+        this.classificationPrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
         this.renderStates = undefined;
@@ -4527,6 +4568,7 @@ define([
         destroy(resources.programs);
         destroy(resources.pickPrograms);
         destroy(resources.silhouettePrograms);
+        destroy(resources.classificationPrograms);
         destroy(resources.textures);
     }
 
@@ -4784,6 +4826,7 @@ define([
                 cachedResources.programs = resources.programs;
                 cachedResources.pickPrograms = resources.pickPrograms;
                 cachedResources.silhouettePrograms = resources.silhouettePrograms;
+                cachedResources.classificationPrograms = resources.classificationPrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
                 cachedResources.renderStates = resources.renderStates;

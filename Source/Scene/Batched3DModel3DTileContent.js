@@ -231,6 +231,14 @@ define([
         };
     }
 
+    function getClassificationFragmentShaderCallback(content) {
+        return function(fs) {
+            var batchTable = content._batchTable;
+            var callback = batchTable.getClassificationFragmentShaderCallback();
+            return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
     function initialize(content, arrayBuffer, byteOffset) {
         var tileset = content._tileset;
         var tile = content._tile;
@@ -370,6 +378,7 @@ define([
             incrementallyLoadTextures : false,
             vertexShaderLoaded : getVertexShaderCallback(content),
             fragmentShaderLoaded : getFragmentShaderCallback(content),
+            classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
             uniformMapLoaded : batchTable.getUniformMapCallback(),
             pickVertexShaderLoaded : getPickVertexShaderCallback(content),
             pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),

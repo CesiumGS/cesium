@@ -10,7 +10,6 @@ define([
      * @exports ClassificationOption
      */
     var ClassificationType = {
-        NONE : -1,
         /**
          * Only terrain will be classified.
          *

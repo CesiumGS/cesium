@@ -154,7 +154,6 @@ define([
          * @default ClassificationType.CESIUM_3D_TILE
          */
         this.classificationType = ClassificationType.CESIUM_3D_TILE;
-        this._classificationType = this.classificationType;
 
         this._batchIdLookUp = {};
 
@@ -716,7 +715,7 @@ define([
     }
 
     function createColorCommandsIgnoreShow(primitive, frameState) {
-        if (primitive._classificationType === ClassificationType.TERRAIN ||
+        if (primitive.classificationType === ClassificationType.TERRAIN ||
             !frameState.invertClassification ||
             (defined(primitive._commandsIgnoreShow) && !primitive._commandsDirty)) {
             return;
