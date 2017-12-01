@@ -384,7 +384,7 @@ define([
 
         return new GeometryInstance({
             id : entity,
-            geometry : new PlaneGeometry(),
+            geometry : new PlaneGeometry(this._options),
             modelMatrix : modelMatrix,
             attributes : attributes
         });
