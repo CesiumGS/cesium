@@ -729,7 +729,7 @@ defineSuite([
         });
     });
 
-    it('clipping planes apply edge styling to globe surface', function() {
+    it('renders with clipping planes edge styling on globe surface', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
@@ -762,7 +762,7 @@ defineSuite([
         });
     });
 
-    it('clipping planes combine regions', function() {
+    it('renders with multiple clipping planes and combined regions', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
@@ -794,12 +794,20 @@ defineSuite([
         });
     });
 
-    it('computesTileVisibility culls tiles when they are entirely inside the clipped region', function() {
+    it('No extra tiles culled with no clipping planes', function() {
         var globe = scene.globe;
-        var plane = new Plane(Cartesian3.UNIT_Z, 10000000.0);
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        return updateUntilDone(globe).then(function() {
+            expect(scene.frameState.commandList.length).toBe(4);
+        });
+    });
+
+    it('Culls tiles when completely inside clipping region', function() {
+        var globe = scene.globe;
         globe.clippingPlanes = new ClippingPlanesCollection ({
             planes : [
-                plane
+                new Plane(Cartesian3.UNIT_Z, 1000000.0)
             ]
         });
 
@@ -808,29 +816,44 @@ defineSuite([
         return updateUntilDone(globe).then(function() {
             var surface = globe._surface;
             var tile = surface._levelZeroTiles[0];
-
-            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState)).toBe(Intersect.OUTSIDE);
             expect(tile.isClipped).toBe(true);
+            expect(scene.frameState.commandList.length).toBe(2);
+        });
+    });
 
-            plane.distance = 0.0;
-            scene.renderForSpecs();
+    it('Doesn\'t cull, but clips tiles when intersecting clipping plane', function() {
+        var globe = scene.globe;
+        globe.clippingPlanes = new ClippingPlanesCollection ({
+            planes : [
+                new Plane(Cartesian3.UNIT_Z, 0.0)
+            ]
+        });
 
-            surface = scene.globe._surface;
-            tile = surface._levelZeroTiles[0];
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
-            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState, scene.globe._surface._occluders)).toBe(Intersect.INTERSECTING);
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
             expect(tile.isClipped).toBe(true);
+            expect(scene.frameState.commandList.length).toBe(4);
+        });
+    });
 
-            plane.distance = -10000000.0;
-            scene.renderForSpecs();
+    it('Doesn\'t cull or clip tiles when completely outside clipping region', function() {
+        var globe = scene.globe;
+        globe.clippingPlanes = new ClippingPlanesCollection ({
+            planes : [
+                new Plane(Cartesian3.UNIT_Z, -10000000.0)
+            ]
+        });
 
-            surface = scene.globe._surface;
-            tile = surface._levelZeroTiles[0];
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
-            expect(surface.tileProvider.computeTileVisibility(tile, scene.frameState, scene.globe._surface._occluders)).toBe(Intersect.INTERSECTING);
+        return updateUntilDone(globe).then(function() {
+            var surface = globe._surface;
+            var tile = surface._levelZeroTiles[0];
             expect(tile.isClipped).toBe(false);
-
-            scene.globe.clippingPlanes = undefined;
+            expect(scene.frameState.commandList.length).toBe(4);
         });
     });
 

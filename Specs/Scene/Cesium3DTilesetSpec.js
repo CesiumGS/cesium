@@ -2814,8 +2814,6 @@ defineSuite([
     });
 
     it('clipping planes cull hidden tiles', function() {
-        // Root tile has a content box that is half the extents of its box
-        // Expect to cull root tile and three child tiles
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
 
@@ -2840,8 +2838,6 @@ defineSuite([
     });
 
     it('clipping planes cull hidden content', function() {
-        // Root tile has a content box that is half the extents of its box
-        // Expect to cull root tile and three child tiles
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var visibility = tileset._root.contentVisibility(scene.frameState);
 
@@ -2862,6 +2858,93 @@ defineSuite([
             visibility = tileset._root.contentVisibility(scene.frameState);
 
             expect(visibility).not.toBe(Intersect.OUTSIDE);
+        });
+    });
+
+    it('clipping planes cull tiles completely inside', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            var root = tileset._root;
+
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(5);
+
+            tileset.update(scene.frameState);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(root._isClipped).toBe(false);
+
+            plane.distance = 4081630.311150717; // center
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(3);
+            expect(root._isClipped).toBe(true);
+
+            plane.distance = 4081630.31115071 + 287.0736139905632; // center + radius
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(0);
+            expect(root._isClipped).toBe(true);
+        });
+    });
+
+    it('clipping planes cull tiles completely inside for i3dm', function() {
+        return Cesium3DTilesTester.loadTileset(scene, instancedUrl).then(function(tileset) {
+
+            console.log(tileset);
+
+            var statistics = tileset._statistics;
+            var root = tileset._root;
+
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(1);
+
+            tileset.update(scene.frameState);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(1);
+            expect(root._isClipped).toBe(false);
+
+            plane.distance = 4081611.654572015; // center
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(1);
+            expect(root._isClipped).toBe(true);
+
+            plane.distance = 4081611.654572015 + 142.6291406685467; // center + radius
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(0);
+            expect(root._isClipped).toBe(true);
         });
     });
 }, 'WebGL');
