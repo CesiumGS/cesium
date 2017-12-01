@@ -31,18 +31,18 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var blueEllipsoid = viewer.entities.add({
     name : 'Blue ellipsoid',
-    position: Cesium.Cartesian3.fromDegrees(-114.0, 45.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-114.0, 45.0, 200000.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
+        radii : new Cesium.Cartesian3(150000.0, 150000.0, 200000.0),
         material : Cesium.Color.BLUE
     }
 });
 
 var redSphere = viewer.entities.add({
     name : 'Red sphere with black outline',
-    position: Cesium.Cartesian3.fromDegrees(-107.0, 45.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-107.0, 45.0, 200000.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         material : Cesium.Color.RED.withAlpha(0.5),
         outline : true,
         outlineColor : Cesium.Color.BLACK
@@ -51,9 +51,9 @@ var redSphere = viewer.entities.add({
 
 var outlineOnly = viewer.entities.add({
     name : 'Yellow ellipsoid outline',
-    position: Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 300000.0),
+    position: Cesium.Cartesian3.fromDegrees(-100.0, 45.0, 200000.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 300000.0),
+        radii : new Cesium.Cartesian3(150000.0, 150000.0, 200000.0),
         fill : false,
         outline : true,
         outlineColor : Cesium.Color.YELLOW,
@@ -89,7 +89,7 @@ viewer.entities.add({
     name : 'Dome with top cut out',
     position: Cesium.Cartesian3.fromDegrees(-108.0, 40.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
         minimumElevation : 0.0,
         maximumElevation : Cesium.Math.toRadians(70.0),
@@ -102,7 +102,7 @@ viewer.entities.add({
     name : 'Top and bottom cut out',
     position: Cesium.Cartesian3.fromDegrees(-102.0, 40.0, 140000.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(100000.0, 100000.0, 100000.0),
         minimumElevation : Cesium.Math.toRadians(-40.0),
         maximumElevation : Cesium.Math.toRadians(40.0),
@@ -115,7 +115,7 @@ viewer.entities.add({
     name : 'Partial azimuth',
     position: Cesium.Cartesian3.fromDegrees(-96.0, 39.5),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(150000.0, 150000.0, 150000.0),
         minimumAzimuth : Cesium.Math.toRadians(-90.0),
         maximumAzimuth : Cesium.Math.toRadians(180.0),
@@ -130,7 +130,7 @@ viewer.entities.add({
     name : 'Upside down',
     position: Cesium.Cartesian3.fromDegrees(-90.0, 39.0, 200000.0),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         innerRadii : new Cesium.Cartesian3(150000.0, 150000.0, 150000.0),
         minimumAzimuth : Cesium.Math.toRadians(-90.0),
         maximumAzimuth : Cesium.Math.toRadians(180.0),
@@ -145,7 +145,7 @@ viewer.entities.add({
     name : 'Partial dome',
     position: Cesium.Cartesian3.fromDegrees(-84.0, 38.5),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(200000.0, 200000.0, 20000.0),
+        radii : new Cesium.Cartesian3(200000.0, 200000.0, 200000.0),
         minimumAzimuth : Cesium.Math.toRadians(-90.0),
         maximumAzimuth : Cesium.Math.toRadians(180.0),
         minimumElevation : 0.0,
@@ -172,7 +172,7 @@ viewer.entities.add({
         new Cesium.HeadingPitchRoll(Cesium.Math.PI_OVER_TWO, -Cesium.Math.PI_OVER_FOUR, 0.0)
     ),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(300000.0, 300000.0, 30000.0),
+        radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
         innerRadii : new Cesium.Cartesian3(1.0, 1.0, 1.0),
         minimumAzimuth : Cesium.Math.toRadians(-10.0),
         maximumAzimuth : Cesium.Math.toRadians(10.0),
@@ -201,7 +201,7 @@ viewer.entities.add({
         new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, Cesium.Math.PI_OVER_FOUR, 0.0)
     ),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(500000.0, 500000.0, 50000.0),
+        radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
         innerRadii : new Cesium.Cartesian3(10000.0, 10000.0, 10000.0),
         minimumAzimuth : Cesium.Math.toRadians(-15.0),
         maximumAzimuth : Cesium.Math.toRadians(15.0),
@@ -226,9 +226,9 @@ viewer.entities.add({
     name : 'Truck sensor view',
     position : new Cesium.ReferenceProperty(viewer.entities, 'truck2', ['position']),
     ellipsoid : {
-        radii : new Cesium.Cartesian3(400000.0, 400000.0, 40000.0),
+        radii : new Cesium.Cartesian3(400000.0, 400000.0, 400000.0),
         innerRadii : new Cesium.Cartesian3(30000.0, 30000.0, 30000.0),
-        minimumAzimuth : Cesium.Math.toRadians(40.0),
+        minimumElevation : Cesium.Math.toRadians(40.0),
         material : Cesium.Color.DARKCYAN.withAlpha(0.3),
         outline : true
     }
