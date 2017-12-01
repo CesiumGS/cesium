@@ -643,17 +643,14 @@ define([
         var commands = primitive._commands;
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
-        var commandsLength = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
+        var commandsLength = length * 3;
 
         if (defined(commands) &&
             !needsRebatch &&
-            commands.length === commandsLength &&
-            primitive.classificationType === primitive._classificationType) {
+            commands.length === commandsLength) {
             return;
         }
 
-        primitive._pickCommandsDirty = primitive._pickCommandsDirty || primitive._classificationType !== primitive.classificationType;
-        primitive._classificationType = primitive.classificationType;
         commands.length = commandsLength;
 
         var vertexArray = primitive._va;
@@ -661,7 +658,6 @@ define([
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
         var bv = primitive._boundingVolume;
-        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
         for (var j = 0; j < length; ++j) {
             var offset = batchedIndices[j].offset;
@@ -682,7 +678,6 @@ define([
             stencilPreloadCommand.shaderProgram = sp;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = pass;
 
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -699,7 +694,6 @@ define([
             stencilDepthCommand.shaderProgram = sp;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = pass;
 
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -716,20 +710,6 @@ define([
             colorCommand.shaderProgram = sp;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = pass;
-        }
-
-        if (primitive._classificationType === ClassificationType.BOTH) {
-            length = length * 3;
-            for (var i = 0; i < length; ++i) {
-                var command = commands[i + length];
-                if (!defined(command)) {
-                    command = commands[i + length] = new DrawCommand();
-                }
-
-                DrawCommand.shallowClone(commands[i], command);
-                command.pass = Pass.TERRAIN_CLASSIFICATION;
-            }
         }
 
         primitive._commandsDirty = true;
@@ -772,14 +752,13 @@ define([
 
         var length = primitive._indexOffsets.length;
         var pickCommands = primitive._pickCommands;
-        pickCommands.length = length * 3 * (primitive._classificationType === ClassificationType.BOTH ? 2 : 1);
+        pickCommands.length = length * 3;
 
         var vertexArray = primitive._va;
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = Matrix4.IDENTITY;
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
-        var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
@@ -801,7 +780,6 @@ define([
             stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
-            stencilPreloadCommand.pass = pass;
 
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -818,7 +796,6 @@ define([
             stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
-            stencilDepthCommand.pass = pass;
 
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -835,20 +812,6 @@ define([
             colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
-            colorCommand.pass = pass;
-        }
-
-        if (primitive._classificationType === ClassificationType.BOTH) {
-            length = length * 3;
-            for (var i = 0; i < length; ++i) {
-                var command = pickCommands[i + length];
-                if (!defined(command)) {
-                    command = pickCommands[i + length] = new DrawCommand();
-                }
-
-                DrawCommand.shallowClone(pickCommands[i], command);
-                command.pass = Pass.TERRAIN_CLASSIFICATION;
-            }
         }
 
         primitive._pickCommandsDirty = false;
@@ -1037,12 +1000,15 @@ define([
         this._batchDirty = true;
     };
 
-    function queueCommands(frameState, commands, commandsIgnoreShow) {
+    function queueCommands(frameState, pass, commands, commandsIgnoreShow) {
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         var i;
+        var command;
         for (i = 0; i < commandLength; ++i) {
-            commandList.push(commands[i]);
+            command = commands[i];
+            command.pass = pass;
+            commandList.push(command);
         }
 
         if (!frameState.invertClassification || !defined(commandsIgnoreShow)) {
@@ -1051,7 +1017,9 @@ define([
 
         commandLength = commandsIgnoreShow.length;
         for (i = 0; i < commandLength; ++i) {
-            commandList.push(commandsIgnoreShow[i]);
+            command = commandsIgnoreShow[i];
+            command.pass = pass;
+            commandList.push(command);
         }
     }
 
@@ -1059,7 +1027,9 @@ define([
         var commandList = frameState.commandList;
         var commandLength = commands.length;
         for (var i = 0; i < commandLength; i += 3) {
-            commandList.push(commands[i + 2]);
+            var command = commands[i + 2];
+            command.pass = Pass.OPAQUE;
+            commandList.push(command);
         }
     }
 
@@ -1107,6 +1077,18 @@ define([
         createRenderStates(this);
         createUniformMap(this, context);
 
+        var pass;
+        switch (this.classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
+
         var passes = frameState.passes;
         if (passes.render) {
             createColorCommands(this, context);
@@ -1116,13 +1098,13 @@ define([
             if (this._debugWireframe) {
                 queueWireframeCommands(frameState, this._commands);
             } else {
-                queueCommands(frameState, this._commands, this._commandsIgnoreShow);
+                queueCommands(frameState, pass, this._commands, this._commandsIgnoreShow);
             }
         }
 
         if (passes.pick) {
             createPickCommands(this);
-            queueCommands(frameState, this._pickCommands);
+            queueCommands(frameState, pass, this._pickCommands);
         }
     };
 
