@@ -137,7 +137,7 @@ define([
         var length = planes.length;
 
         var i;
-        if (!defined(array)) {
+        if (!defined(array) || array.length !== length) {
             array = new Array(length);
 
             for (i = 0; i < length; ++i) {
