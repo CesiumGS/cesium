@@ -188,17 +188,7 @@ define([
         this.shaders = {};
         this.pendingShaderLoads = 0;
 
-        this.texturesToCreate = new Queue();
-        this.pendingTextureLoads = 0;
-
-        this.texturesToCreateFromBufferView = new Queue();
-        this.pendingBufferViewToImage = 0;
-
-        this.createSamplers = true;
-        this.createSkins = true;
-        this.createRuntimeAnimations = true;
         this.createVertexArrays = true;
-        this.createRenderStates = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
 
@@ -223,15 +213,6 @@ define([
         return ((this.pendingShaderLoads === 0) && (this.programsToCreate.length === 0));
     };
 
-    LoadResources.prototype.finishedTextureCreation = function() {
-        var finishedPendingLoads = (this.pendingTextureLoads === 0);
-        var finishedResourceCreation =
-            (this.texturesToCreate.length === 0) &&
-            (this.texturesToCreateFromBufferView.length === 0);
-
-        return finishedPendingLoads && finishedResourceCreation;
-    };
-
     LoadResources.prototype.finishedEverythingButTextureCreation = function() {
         var finishedPendingLoads =
             (this.pendingBufferLoads === 0) &&
@@ -239,14 +220,13 @@ define([
         var finishedResourceCreation =
             (this.vertexBuffersToCreate.length === 0) &&
             (this.indexBuffersToCreate.length === 0) &&
-            (this.programsToCreate.length === 0) &&
-            (this.pendingBufferViewToImage === 0);
+            (this.programsToCreate.length === 0);
 
         return finishedPendingLoads && finishedResourceCreation;
     };
 
     LoadResources.prototype.finished = function() {
-        return this.finishedTextureCreation() && this.finishedEverythingButTextureCreation();
+        return this.finishedEverythingButTextureCreation();
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -332,10 +312,8 @@ define([
      * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
@@ -344,8 +322,6 @@ define([
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
      * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
-     * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
-     * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -360,7 +336,6 @@ define([
         var cacheKey = options.cacheKey;
         this._cacheKey = cacheKey;
         this._cachedGltf = undefined;
-        this._releaseGltfJson = defaultValue(options.releaseGltfJson, false);
 
         var cachedGltf;
         if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
@@ -669,29 +644,6 @@ define([
         gltf : {
             get : function() {
                 return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
-            }
-        },
-
-        /**
-         * When <code>true</code>, the glTF JSON is not stored with the model once the model is
-         * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
-         * geometry, textures, and animations are embedded in the .gltf file, which is the
-         * default for the {@link http://cesiumjs.org/convertmodel.html|Cesium model converter}.
-         * This is especially useful for cases like 3D buildings, where each .gltf model is unique
-         * and caching the glTF JSON is not effective.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default false
-         *
-         * @private
-         */
-        releaseGltfJson : {
-            get : function() {
-                return this._releaseGltfJson;
             }
         },
 
@@ -3596,10 +3548,7 @@ define([
 
                 // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
                 this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-
-                if (this.releaseGltfJson) {
-                    releaseCachedGltf(this);
-                }
+                releaseCachedGltf(this);
             }
         }
 
