@@ -55,7 +55,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
-var clipObjects = ['BIM', 'Point Cloud', 'Instanced', 'Model',];
+var clipObjects = ['BIM', 'Point Cloud', 'Instanced', 'Model'];
 var viewModel = {
     debugBoundingVolumesEnabled : false,
     edgeStylingEnabled : true,
@@ -105,7 +105,7 @@ moveHandler.setInputAction(function(movement) {
 var scratchPlane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
 function createPlaneUpdateFunction(plane, transform) {
     return function () {
-        plane.distance = Cesium.Math.lerp(plane.distance, targetY, 0.1);
+        plane.distance = targetY;
 
         var transformedPlane = Cesium.Plane.transform(plane, transform, scratchPlane);
         transformedPlane.distance = -transformedPlane.distance;
