@@ -341,8 +341,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
-     * @param {Plane[]} [options.clippingPlanes=[]] An array of {@link Plane} used to clip the model.
-     * @param {Boolean} [options.clippingPlanesEnabled=true] Optimization option. If set to false, the model will not perform clipping operations.
+     * @param {ClippingPlanesCollection} [options.clippingPlanes] The {@link ClippingPlanesCollection} used to selectively disable rendering the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -581,22 +580,15 @@ define([
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
-         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
+         * The {@link ClippingPlanesCollection} used to selectively disable rendering the model.
          *
-         * @type {Plane[]}
+         * @type {ClippingPlanesCollection}
          */
         this.clippingPlanes = options.clippingPlanes;
 
-        /**
-         * Optimization option. If set to false, the model will not perform clipping operations.
-         *
-         * @see Model.clippingPlanes
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
+        // Used to determine if the shader needs to be recompiled
+        this._clippingPlanesEnabled = false;
+        this._clippingPlanesCombined = true;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -653,7 +645,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._modelViewMatrix = new Matrix4(); // Derived from modelMatrix, scale, and the current view matrix
+        this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -2120,11 +2112,11 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
-        var clippingFS = modifyShaderForClippingPlanes(blendFS);
+        var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
+        finalFS = modifyShaderForClippingPlanes(finalFS);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(clippingFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -3319,34 +3311,46 @@ define([
         };
     }
 
-    function createClippingPlanesEnabledFunction(model) {
-        return function() {
-            return model.clippingPlanesEnabled;
-        };
-    }
-
     function createClippingPlanesLengthFunction(model) {
         return function() {
             return model._packedClippingPlanes.length;
         };
     }
 
-    var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
+    function createClippingPlanesCombineRegionsFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return true;
+            }
+
+            return clippingPlanes.combineClippingRegions;
+        };
+    }
+
     function createClippingPlanesFunction(model) {
         return function() {
-            var planes = model.clippingPlanes;
+            var clippingPlanes = model.clippingPlanes;
             var packedPlanes = model._packedClippingPlanes;
-            var length = packedPlanes.length;
-            for (var i = 0; i < length; ++i) {
-                var plane = planes[i];
-                var packedPlane = packedPlanes[i];
 
-                Plane.transform(plane, model._modelViewMatrix, scratchPlane);
-
-                Cartesian3.clone(scratchPlane.normal, packedPlane);
-                packedPlane.w = scratchPlane.distance;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                clippingPlanes.transformAndPackPlanes(model._modelViewMatrix, packedPlanes);
             }
+
             return packedPlanes;
+        };
+    }
+
+    function createClippingPlanesEdgeStyleFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return Color.WHITE.withAlpha(0.0);
+            }
+
+            var style = Color.clone(clippingPlanes.edgeColor);
+            style.alpha = clippingPlanes.edgeWidth;
+            return style;
         };
     }
 
@@ -3445,9 +3449,10 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanesEnabled: createClippingPlanesEnabledFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model, context)
+                gltf_clippingPlanesCombineRegions: createClippingPlanesCombineRegionsFunction(model),
+                gltf_clippingPlanes: createClippingPlanesFunction(model, context),
+                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4244,14 +4249,32 @@ define([
     function modifyShaderForClippingPlanes(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
-            'uniform bool gltf_clippingPlanesEnabled; \n' +
             'uniform int gltf_clippingPlanesLength; \n' +
+            'uniform bool gltf_clippingPlanesCombineRegions; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_clip_main(); \n' +
-            '    if (gltf_clippingPlanesEnabled) { \n' +
-            '        czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '    if (gltf_clippingPlanesLength > 0) \n' +
+            '    { \n' +
+            '        float clipDistance; \n' +
+            '        if (gltf_clippingPlanesCombineRegions) \n' +
+            '        { \n' +
+            '            clipDistance = czm_discardIfClippedCombineRegions(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        } \n' +
+            '        else \n' +
+            '        { \n' +
+            '            clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        } \n' +
+            '        \n' +
+            '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+            '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+            '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+            '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+            '        { \n' +
+            '            gl_FragColor = clippingPlanesEdgeColor; \n' +
+            '        } \n' +
             '    } \n' +
             '} \n';
 
@@ -4281,10 +4304,10 @@ define([
     }
 
     function updateClippingPlanes(model) {
-        var length = 0;
         var clippingPlanes = model.clippingPlanes;
-        if (defined(clippingPlanes)) {
-            length = clippingPlanes.length;
+        var length = 0;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            length = clippingPlanes.planes.length;
         }
 
         if (model._packedClippingPlanes.length !== length) {
@@ -4702,7 +4725,6 @@ define([
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
             var modelMatrix = this.modelMatrix;
-            var modelViewChanged = context.uniformState._modelViewDirty;
 
             var modeChanged = frameState.mode !== this._mode;
             this._mode = frameState.mode;
@@ -4716,8 +4738,6 @@ define([
                 modeChanged;
 
             if (modelTransformChanged || justLoaded) {
-                modelViewChanged = true;
-
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
                 updateClamping(this);
@@ -4742,8 +4762,9 @@ define([
                 }
             }
 
-            if (this.clippingPlanesEnabled && modelViewChanged) {
-                Matrix4.multiply(context.uniformState.view3D, this._computedModelMatrix, this._modelViewMatrix);
+            var clippingPlanes = this.clippingPlanes;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -4767,7 +4788,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
-            updateClippingPlanes(this);
+            updateClippingPlanes(this, frameState);
         }
 
         if (justLoaded) {

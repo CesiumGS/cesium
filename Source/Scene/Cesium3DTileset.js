@@ -105,8 +105,7 @@ define([
      * @param {Number} [options.skipLevels=1] When <code>skipLevelOfDetail</code> is <code>true</code>, a constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped. Used in conjunction with <code>skipScreenSpaceErrorFactor</code> to determine which tiles to load.
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
-     * @param {Plane[]} [options.clippingPlanes] A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
-     * @param [Boolean} [options.clippingPlanesEnabled=true] Optimization option. If set to false, the tileset will not perform clipping operations.
+     * @param {ClippingPlanesCollection} [options.clippingPlanes] The {@link ClippingPlanesCollection} used to selectively disable rendering the tileset.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -525,20 +524,11 @@ define([
         this.loadSiblings = defaultValue(options.loadSiblings, false);
 
         /**
-         * A property specifying an array of up to 6 {@link Plane} used to selectively disable rendering on the outside of each plane.
+         * The {@link ClippingPlanesCollection} used to selectively disable rendering the tileset.
          *
-         * @type {Plane[]}
+         * @type {ClippingPlanesCollection}
          */
         this.clippingPlanes = options.clippingPlanes;
-
-        /**
-         * Optimization option. If set to false, the tileset will not perform clipping operations.
-         *
-         * @type {Boolean}
-         * @default {true}
-         * @see Cesium3DTileset.clippingPlanes
-         */
-        this.clippingPlanesEnabled = defaultValue(options.clippingPlanesEnabled, true);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
