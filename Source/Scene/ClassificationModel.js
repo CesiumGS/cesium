@@ -1670,7 +1670,7 @@ define([
         return undefined;
     }
 
-    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
+    function modifyShaderForQuantizedAttributes(shader, programName, model) {
         var quantizedUniforms = {};
         model._quantizedUniforms[programName] = quantizedUniforms;
 
@@ -1755,13 +1755,13 @@ define([
     }
 
     function createProgram(id, model, context) {
-        var programs = model.gltf.programs;
-        var program = programs[id];
-
-        var attributeLocations = createAttributeLocations(model, program.attributes);
-
         var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
         var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
+
+        var attributeLocations = {};
+        attributeLocations[positionName] = 0;
+        attributeLocations[batchIdName] = 1;
+
         var modelViewProjectionName = getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
 
         var uniformDecl;
@@ -1797,7 +1797,7 @@ define([
             '}';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
+            vs = modifyShaderForQuantizedAttributes(vs, id, model);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
@@ -1845,49 +1845,13 @@ define([
         }
     }
 
-    function getAttributeLocations(model, primitive) {
-        var gltf = model.gltf;
-        var techniques = gltf.techniques;
-        var materials = gltf.materials;
+    function getAttributeLocations(model) {
+        var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
+        var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
 
-        // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
-
-        var location;
-        var index;
-        var technique = techniques[materials[primitive.material].technique];
-        var parameters = technique.parameters;
-        var attributes = technique.attributes;
-        var program = model._rendererResources.programs[technique.program];
-        var programVertexAttributes = program.vertexAttributes;
-        var programAttributeLocations = program._attributeLocations;
-
-        // Note: WebGL shader compiler may have optimized and removed some attributes from programVertexAttributes
-        for (location in programVertexAttributes) {
-            if (programVertexAttributes.hasOwnProperty(location)) {
-                var attribute = attributes[location];
-                index = programVertexAttributes[location].index;
-                if (defined(attribute)) {
-                    var parameter = parameters[attribute];
-                    attributeLocations[parameter.semantic] = index;
-                }
-            }
-        }
-
-        // Always add pre-created attributes.
-        // Some pre-created attributes, like per-instance pickIds, may be compiled out of the draw program
-        // but should be included in the list of attribute locations for the pick program.
-        // This is safe to do since programVertexAttributes and programAttributeLocations are equivalent except
-        // that programVertexAttributes optimizes out unused attributes.
-        var precreatedAttributes = model._precreatedAttributes;
-        if (defined(precreatedAttributes)) {
-            for (location in precreatedAttributes) {
-                if (precreatedAttributes.hasOwnProperty(location)) {
-                    index = programAttributeLocations[location];
-                    attributeLocations[location] = index;
-                }
-            }
-        }
+        attributeLocations[positionName] = 0;
+        attributeLocations[batchIdName] = 1;
 
         return attributeLocations;
     }
@@ -1924,7 +1888,7 @@ define([
                     //
                     // https://github.com/KhronosGroup/glTF/issues/258
 
-                    var attributeLocations = getAttributeLocations(model, primitive);
+                    var attributeLocations = getAttributeLocations(model);
                     var attributeName;
                     var attributeLocation;
                     var attribute;
