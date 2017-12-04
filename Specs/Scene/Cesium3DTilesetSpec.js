@@ -3,8 +3,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/CullingVolume',
-        'Core/defaultValue',
-        'Core/defined',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
         'Core/Intersect',
@@ -21,7 +19,6 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlanesCollection',
@@ -35,8 +32,6 @@ defineSuite([
         Cartesian3,
         Color,
         CullingVolume,
-        defaultValue,
-        defined,
         getStringFromTypedArray,
         HeadingPitchRange,
         Intersect,
@@ -53,7 +48,6 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
-        Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlanesCollection,
@@ -2498,8 +2492,9 @@ defineSuite([
 
             scene.renderForSpecs();
 
-            // 2 for root tile, 2 for child, 1 for stencil clear
-            expect(statistics.numberOfCommands).toEqual(5);
+            // 2 for root tile, 1 for child, 1 for stencil clear
+            // Tiles that are marked as finalResolution, including leaves, do not create back face commands
+            expect(statistics.numberOfCommands).toEqual(4);
             expect(root.selected).toBe(true);
             expect(root._finalResolution).toBe(false);
             expect(root.children[0].children[0].children[3].selected).toBe(true);
@@ -2510,6 +2505,7 @@ defineSuite([
             var rs = commandList[1].renderState;
             expect(rs.cull.enabled).toBe(true);
             expect(rs.cull.face).toBe(CullFace.FRONT);
+            expect(rs.polygonOffset.enabled).toBe(true);
         });
     });
 

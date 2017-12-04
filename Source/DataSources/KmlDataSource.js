@@ -255,8 +255,58 @@ define([
         return deferred.promise;
     }
 
+    function insertNamespaces(text) {
+        var namespaceMap = {
+            xsi : 'http://www.w3.org/2001/XMLSchema-instance'
+        };
+        var firstPart, lastPart, reg, declaration;
+
+        for (var key in namespaceMap) {
+            if (namespaceMap.hasOwnProperty(key)) {
+                reg = RegExp('[< ]' + key + ':');
+                declaration = 'xmlns:' + key + '=';
+                if (reg.test(text) && text.indexOf(declaration) === -1) {
+                    if (!defined(firstPart)) {
+                        firstPart = text.substr(0, text.indexOf('<kml') + 4);
+                        lastPart = text.substr(firstPart.length);
+                    }
+                    firstPart += ' ' + declaration + '"' + namespaceMap[key] + '"';
+                }
+            }
+        }
+
+        if (defined(firstPart)) {
+            text = firstPart + lastPart;
+        }
+
+        return text;
+    }
+
+    function removeDuplicateNamespaces(text) {
+        var index = text.indexOf('xmlns:');
+        var endDeclaration = text.indexOf('>', index);
+        var namespace, startIndex, endIndex;
+
+        while ((index !== -1) && (index < endDeclaration)) {
+            namespace = text.slice(index, text.indexOf('\"', index));
+            startIndex = index;
+            index = text.indexOf(namespace, index + 1);
+            if (index !== -1) {
+                endIndex = text.indexOf('\"', (text.indexOf('\"', index) + 1));
+                text = text.slice(0, index -1) + text.slice(endIndex + 1, text.length);
+                index = text.indexOf('xmlns:', startIndex - 1);
+            } else {
+                index = text.indexOf('xmlns:', startIndex + 1);
+            }
+        }
+
+        return text;
+    }
+
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
+            text = insertNamespaces(text);
+            text = removeDuplicateNamespaces(text);
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
         });
@@ -702,6 +752,12 @@ define([
 
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false, query);
+
+        // If icon tags are present but blank, we do not want to show an icon
+        if (defined(iconNode) && !defined(icon)) {
+            icon = false;
+        }
+
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -1113,6 +1169,12 @@ define([
 
         if (!defined(billboard.image)) {
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
+
+        // If there were empty <Icon> tags in the KML, then billboard.image was set to false above
+        // However, in this case, the false value would have been converted to a property afterwards
+        // Thus, we check if billboard.image is defined with value of false
+        } else if (!billboard.image.getValue()) {
+            billboard.image = undefined;
         }
 
         var scale = 1.0;
@@ -1795,7 +1857,7 @@ define([
             tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
             heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
 
-            var hpr = new HeadingPitchRange(heading, tilt - 90.0, range);
+            var hpr = new HeadingPitchRange(heading, tilt - CesiumMath.PI_OVER_TWO, range);
             var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude);
 
             entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);
@@ -1842,7 +1904,9 @@ define([
 
                 var rotation = queryNumericValue(latLonBox, 'rotation', namespaces.kml);
                 if (defined(rotation)) {
-                    geometry.rotation = CesiumMath.toRadians(rotation);
+                    var rotationRadians = CesiumMath.toRadians(rotation);
+                    geometry.rotation = rotationRadians;
+                    geometry.stRotation = rotationRadians;
                 }
             }
         }
@@ -2188,6 +2252,8 @@ define([
                     } else if (viewRefreshMode === 'onRegion') {
                         oneTimeWarning('kml-refrehMode-onRegion', 'KML - Unsupported viewRefreshMode: onRegion');
                     }
+                }).otherwise(function(error) {
+                    oneTimeWarning('An error occured during loading ' + linkUrl);
                 });
 
                 promises.push(promise);
@@ -2322,6 +2388,12 @@ define([
                             //There's no official way to validate if a parse was successful.
                             //The following check detects the error on various browsers.
 
+                            //Insert missing namespaces
+                            text = insertNamespaces(text);
+
+                            //Remove Duplicate Namespaces
+                            text = removeDuplicateNamespaces(text);
+
                             //IE raises an exception
                             var kml;
                             var error;
@@ -2376,6 +2448,7 @@ define([
      * @alias KmlDataSource
      * @constructor
      *
+     * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
@@ -2437,7 +2510,7 @@ define([
      * Creates a Promise to a new instance loaded with the provided KML data.
      *
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
-     * @param {Object} [options] An object with the following properties:
+     * @param {Object} options An object with the following properties:
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.

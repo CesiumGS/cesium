@@ -1,5 +1,4 @@
 defineSuite([
-        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -18,7 +17,6 @@ defineSuite([
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
-        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,

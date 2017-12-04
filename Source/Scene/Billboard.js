@@ -46,7 +46,7 @@ define([
      * properties are set by calling {@link BillboardCollection#add}.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Billboard.png' width='400' height='300' /><br />
+     * <img src='Images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      *
@@ -303,8 +303,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The billboard's origin is indicated by the yellow point.
          * </div>
@@ -468,8 +468,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>b.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -500,7 +500,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
+         * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {HorizontalOrigin}
@@ -532,7 +532,7 @@ define([
          * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+         * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {VerticalOrigin}
@@ -566,7 +566,7 @@ define([
          * the billboard.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Billboard.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -599,8 +599,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
-         * <td align='center'><code>alpha : 0.5</code><br/><img src='images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          * <br />

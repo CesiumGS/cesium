@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -51,6 +52,7 @@ define([
         Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -522,7 +524,7 @@ define([
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
-        if (frameState.mode === SceneMode.SCENE3D && !ortho3D) {
+        if (frameState.mode === SceneMode.SCENE3D && !ortho3D && defined(occluders)) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return intersection;
@@ -877,6 +879,9 @@ define([
                 var style = this.properties.clippingPlanesEdgeColor;
                 style.alpha = this.properties.clippingPlanesEdgeWidth;
                 return style;
+            },
+            u_minimumBrightness : function() {
+                return frameState.fog.minimumBrightness;
             },
 
             // make a separate object so that changes to the properties are seen on
@@ -1316,6 +1321,10 @@ define([
 
             var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
             var combineClippingRegions = clippingPlanesEnabled ? clippingPlanes.combineClippingRegions : true;
+
+            if (defined(tileProvider.uniformMap)) {
+                uniformMap = combine(uniformMap, tileProvider.uniformMap);
+            }
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, combineClippingRegions);
             command.castShadows = castShadows;

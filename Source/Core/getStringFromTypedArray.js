@@ -77,53 +77,53 @@ define([
         var codePoints = [];
         var length = utfBytes.length;
         for (var i = 0; i < length; ++i) {
-            var byte = utfBytes[i];
+            var currentByte = utfBytes[i];
 
             // If bytesNeeded = 0, then we are starting a new character
             if (bytesNeeded === 0) {
                 // 1 Byte Ascii character
-                if (inRange(byte, 0x00, 0x7F)) {
+                if (inRange(currentByte, 0x00, 0x7F)) {
                     // Return a code point whose value is byte.
-                    codePoints.push(byte);
+                    codePoints.push(currentByte);
                     continue;
                 }
 
                 // 2 Byte character
-                if (inRange(byte, 0xC2, 0xDF)) {
+                if (inRange(currentByte, 0xC2, 0xDF)) {
                     bytesNeeded = 1;
-                    codePoint = byte & 0x1F;
+                    codePoint = currentByte & 0x1F;
                     continue;
                 }
 
                 // 3 Byte character
-                if (inRange(byte, 0xE0, 0xEF)) {
+                if (inRange(currentByte, 0xE0, 0xEF)) {
                     // If byte is 0xE0, set utf-8 lower boundary to 0xA0.
-                    if (byte === 0xE0) {
+                    if (currentByte === 0xE0) {
                         lowerBoundary = 0xA0;
                     }
                     // If byte is 0xED, set utf-8 upper boundary to 0x9F.
-                    if (byte === 0xED) {
+                    if (currentByte === 0xED) {
                         upperBoundary = 0x9F;
                     }
 
                     bytesNeeded = 2;
-                    codePoint = byte & 0xF;
+                    codePoint = currentByte & 0xF;
                     continue;
                 }
 
                 // 4 Byte character
-                if (inRange(byte, 0xF0, 0xF4)) {
+                if (inRange(currentByte, 0xF0, 0xF4)) {
                     // If byte is 0xF0, set utf-8 lower boundary to 0x90.
-                    if (byte === 0xF0) {
+                    if (currentByte === 0xF0) {
                         lowerBoundary = 0x90;
                     }
                     // If byte is 0xF4, set utf-8 upper boundary to 0x8F.
-                    if (byte === 0xF4) {
+                    if (currentByte === 0xF4) {
                         upperBoundary = 0x8F;
                     }
 
                     bytesNeeded = 3;
-                    codePoint = byte & 0x7;
+                    codePoint = currentByte & 0x7;
                     continue;
                 }
 
@@ -131,7 +131,7 @@ define([
             }
 
             // Out of range, so ignore the first part(s) of the character and continue with this byte on its own
-            if (!inRange(byte, lowerBoundary, upperBoundary)) {
+            if (!inRange(currentByte, lowerBoundary, upperBoundary)) {
                 codePoint = bytesNeeded = bytesSeen = 0;
                 lowerBoundary = 0x80;
                 upperBoundary = 0xBF;
@@ -144,7 +144,7 @@ define([
             upperBoundary = 0xBF;
 
             // Add byte to code point
-            codePoint = (codePoint << 6) | (byte & 0x3F);
+            codePoint = (codePoint << 6) | (currentByte & 0x3F);
 
             // We have the correct number of bytes, so push and reset for next character
             ++bytesSeen;

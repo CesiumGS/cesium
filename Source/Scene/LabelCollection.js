@@ -116,13 +116,13 @@ define([
     }
 
     function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index, id) {
+        textureAtlas.addImage(id, canvas).then(function(index) {
             glyphTextureInfo.index = index;
         });
     }
 
     function rebindAllGlyphs(labelCollection, label) {
-        var text = label._text;
+        var text = label._renderedText;
         var textLength = text.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
@@ -290,7 +290,7 @@ define([
 
     function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
-        var text = label._text;
+        var text = label._renderedText;
         var glyph;
         var dimensions;
         var lastLineWidth = 0;
@@ -431,7 +431,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
