@@ -531,8 +531,7 @@ define([
                         offset1 = vertexCountHalf;
                         offset2 = vertexCount;
                     }
-                    if ((!isTopOpen && (i >= offset1 && i < (offset1 + numThetas*2))) ||
-                        (!isBotOpen && i > offset2 - numThetas*2 - 1)) {
+                    if ((!isTopOpen && (i >= offset1 && i < (offset1 + numThetas*2))) || (!isBotOpen && i > offset2 - numThetas*2 - 1)) {
                         unit = Cartesian3.UNIT_X;
                     } else {
                         unit = Cartesian3.UNIT_Z;
