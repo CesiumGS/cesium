@@ -16,6 +16,7 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
+        './ClassificationModel',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
@@ -36,6 +37,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
+        ClassificationModel,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
@@ -362,30 +364,55 @@ define([
             primitive : tileset
         };
 
-        // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-        // The pick shader still needs to be patched.
-        content._model = new Model({
-            gltf : gltfView,
-            cull : false,           // The model is already culled by 3D Tiles
-            releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
-            opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
-            basePath : basePath,
-            requestType : RequestType.TILES3D,
-            modelMatrix : tile.computedTransform,
-            upAxis : tileset._gltfUpAxis,
-            shadows: tileset.shadows,
-            debugWireframe: tileset.debugWireframe,
-            incrementallyLoadTextures : false,
-            vertexShaderLoaded : getVertexShaderCallback(content),
-            fragmentShaderLoaded : getFragmentShaderCallback(content),
-            classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
-            uniformMapLoaded : batchTable.getUniformMapCallback(),
-            pickVertexShaderLoaded : getPickVertexShaderCallback(content),
-            pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-            addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-            pickObject : pickObject
-        });
+        if (!defined(tileset.classificationType)) {
+            // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
+            // The pick shader still needs to be patched.
+            content._model = new Model({
+                gltf : gltfView,
+                cull : false,           // The model is already culled by 3D Tiles
+                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+                opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
+                basePath : basePath,
+                requestType : RequestType.TILES3D,
+                modelMatrix : tile.computedTransform,
+                upAxis : tileset._gltfUpAxis,
+                shadows: tileset.shadows,
+                debugWireframe: tileset.debugWireframe,
+                incrementallyLoadTextures : false,
+                vertexShaderLoaded : getVertexShaderCallback(content),
+                fragmentShaderLoaded : getFragmentShaderCallback(content),
+                classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
+                uniformMapLoaded : batchTable.getUniformMapCallback(),
+                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
+                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
+                pickObject : pickObject
+            });
+        } else {
+            content._model = new ClassificationModel({
+                gltf : gltfView,
+                cull : false,           // The model is already culled by 3D Tiles
+                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+                opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
+                basePath : basePath,
+                requestType : RequestType.TILES3D,
+                modelMatrix : tile.computedTransform,
+                upAxis : tileset._gltfUpAxis,
+                shadows : tileset.shadows,
+                debugWireframe : tileset.debugWireframe,
+                incrementallyLoadTextures : false,
+                vertexShaderLoaded : getVertexShaderCallback(content),
+                fragmentShaderLoaded : getFragmentShaderCallback(content),
+                classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
+                uniformMapLoaded : batchTable.getUniformMapCallback(),
+                pickVertexShaderLoaded : getPickVertexShaderCallback(content),
+                pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+                pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
+                addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
+                pickObject : pickObject
+            });
+        }
     }
 
     function createFeatures(content) {

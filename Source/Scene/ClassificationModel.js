@@ -1,155 +1,163 @@
 define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
-        '../Core/getBaseUri',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
-        '../Core/IndexDatatype',
-        '../Core/joinUrls',
-        '../Core/loadArrayBuffer',
-        '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageFromTypedArray',
-        '../Core/loadKTX',
-        '../Core/loadText',
-        '../Core/Math',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Core/Quaternion',
-        '../Core/Queue',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../ThirdParty/GltfPipeline/addDefaults',
-        '../ThirdParty/GltfPipeline/addPipelineExtras',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseBinaryGltf',
-        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
-        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-        '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './AttributeType',
-        './Axis',
-        './BlendingState',
-        './ColorBlendMode',
-        './getAttributeOrUniformBySemantic',
-        './HeightReference',
-        './JobType',
-        './ModelAnimationCache',
-        './ModelAnimationCollection',
-        './ModelMaterial',
-        './ModelMesh',
-        './ModelNode',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        clone,
-        Color,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        FeatureDetection,
-        getAbsoluteUri,
-        getBaseUri,
-        getMagic,
-        getStringFromTypedArray,
-        IndexDatatype,
-        joinUrls,
-        loadArrayBuffer,
-        loadCRN,
-        loadImage,
-        loadImageFromTypedArray,
-        loadKTX,
-        loadText,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        Quaternion,
-        Queue,
-        RuntimeError,
-        Transforms,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        Sampler,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        addDefaults,
-        addPipelineExtras,
-        ForEach,
-        getAccessorByteStride,
-        numberOfComponentsForType,
-        parseBinaryGltf,
-        processModelMaterialsCommon,
-        processPbrMetallicRoughness,
-        updateVersion,
-        Uri,
-        when,
-        AttributeType,
-        Axis,
-        BlendingState,
-        ColorBlendMode,
-        getAttributeOrUniformBySemantic,
-        HeightReference,
-        JobType,
-        ModelAnimationCache,
-        ModelAnimationCollection,
-        ModelMaterial,
-        ModelMesh,
-        ModelNode,
-        SceneMode,
-        ShadowMode) {
+    '../Core/BoundingSphere',
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartesian4',
+    '../Core/Cartographic',
+    '../Core/clone',
+    '../Core/Color',
+    '../Core/combine',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/DistanceDisplayCondition',
+    '../Core/FeatureDetection',
+    '../Core/getAbsoluteUri',
+    '../Core/getBaseUri',
+    '../Core/getMagic',
+    '../Core/getStringFromTypedArray',
+    '../Core/IndexDatatype',
+    '../Core/joinUrls',
+    '../Core/loadArrayBuffer',
+    '../Core/loadCRN',
+    '../Core/loadImage',
+    '../Core/loadImageFromTypedArray',
+    '../Core/loadKTX',
+    '../Core/loadText',
+    '../Core/Math',
+    '../Core/Matrix2',
+    '../Core/Matrix3',
+    '../Core/Matrix4',
+    '../Core/PixelFormat',
+    '../Core/PrimitiveType',
+    '../Core/Quaternion',
+    '../Core/Queue',
+    '../Core/RuntimeError',
+    '../Core/Transforms',
+    '../Core/WebGLConstants',
+    '../Renderer/Buffer',
+    '../Renderer/BufferUsage',
+    '../Renderer/DrawCommand',
+    '../Renderer/Pass',
+    '../Renderer/RenderState',
+    '../Renderer/Sampler',
+    '../Renderer/ShaderProgram',
+    '../Renderer/ShaderSource',
+    '../Renderer/Texture',
+    '../Renderer/TextureMinificationFilter',
+    '../Renderer/TextureWrap',
+    '../Renderer/VertexArray',
+    '../ThirdParty/GltfPipeline/addDefaults',
+    '../ThirdParty/GltfPipeline/addPipelineExtras',
+    '../ThirdParty/GltfPipeline/ForEach',
+    '../ThirdParty/GltfPipeline/getAccessorByteStride',
+    '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+    '../ThirdParty/GltfPipeline/parseBinaryGltf',
+    '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+    '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
+    '../ThirdParty/GltfPipeline/updateVersion',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    './AttributeType',
+    './Axis',
+    './BlendingState',
+    './ClassificationType',
+    './ColorBlendMode',
+    './DepthFunction',
+    './getAttributeOrUniformBySemantic',
+    './HeightReference',
+    './JobType',
+    './ModelAnimationCache',
+    './ModelAnimationCollection',
+    './ModelMaterial',
+    './ModelMesh',
+    './ModelNode',
+    './SceneMode',
+    './ShadowMode',
+    './StencilFunction',
+    './StencilOperation'
+], function(
+    BoundingSphere,
+    Cartesian2,
+    Cartesian3,
+    Cartesian4,
+    Cartographic,
+    clone,
+    Color,
+    combine,
+    defaultValue,
+    defined,
+    defineProperties,
+    destroyObject,
+    DeveloperError,
+    DistanceDisplayCondition,
+    FeatureDetection,
+    getAbsoluteUri,
+    getBaseUri,
+    getMagic,
+    getStringFromTypedArray,
+    IndexDatatype,
+    joinUrls,
+    loadArrayBuffer,
+    loadCRN,
+    loadImage,
+    loadImageFromTypedArray,
+    loadKTX,
+    loadText,
+    CesiumMath,
+    Matrix2,
+    Matrix3,
+    Matrix4,
+    PixelFormat,
+    PrimitiveType,
+    Quaternion,
+    Queue,
+    RuntimeError,
+    Transforms,
+    WebGLConstants,
+    Buffer,
+    BufferUsage,
+    DrawCommand,
+    Pass,
+    RenderState,
+    Sampler,
+    ShaderProgram,
+    ShaderSource,
+    Texture,
+    TextureMinificationFilter,
+    TextureWrap,
+    VertexArray,
+    addDefaults,
+    addPipelineExtras,
+    ForEach,
+    getAccessorByteStride,
+    numberOfComponentsForType,
+    parseBinaryGltf,
+    processModelMaterialsCommon,
+    processPbrMetallicRoughness,
+    updateVersion,
+    Uri,
+    when,
+    AttributeType,
+    Axis,
+    BlendingState,
+    ClassificationType,
+    ColorBlendMode,
+    DepthFunction,
+    getAttributeOrUniformBySemantic,
+    HeightReference,
+    JobType,
+    ModelAnimationCache,
+    ModelAnimationCollection,
+    ModelMaterial,
+    ModelMesh,
+    ModelNode,
+    SceneMode,
+    ShadowMode,
+    StencilFunction,
+    StencilOperation) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -406,26 +414,8 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        /**
-         * The silhouette color.
-         *
-         * @type {Color}
-         *
-         * @default Color.RED
-         */
-        this.silhouetteColor = defaultValue(options.silhouetteColor, Color.RED);
-        this._silhouetteColor = new Color();
-        this._silhouetteColorPreviousAlpha = 1.0;
-        this._normalAttributeName = undefined;
-
-        /**
-         * The size of the silhouette in pixels.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.silhouetteSize = defaultValue(options.silhouetteSize, 0.0);
+        this.classificationType = options.classificationType;
+        this._classificationType = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -523,33 +513,9 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        /**
-         * The currently playing glTF animations.
-         *
-         * @type {ModelAnimationCollection}
-         */
-        this.activeAnimations = new ModelAnimationCollection(this);
-
-        /**
-         * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-         *
-         * @type {Boolean}
-         */
-        this.clampAnimations = defaultValue(options.clampAnimations, true);
-
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
-
-        /**
-         * Determines whether the model casts or receives shadows from each light source.
-         *
-         * @type {ShadowMode}
-         *
-         * @default ShadowMode.ENABLED
-         */
-        this.shadows = defaultValue(options.shadows, ShadowMode.ENABLED);
-        this._shadows = this.shadows;
 
         /**
          * A color that blends with the model's rendered color.
@@ -616,6 +582,7 @@ define([
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
+        this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
         this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
@@ -646,16 +613,13 @@ define([
         this._mode = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
-        this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
         this._dirty = false;                       // true when the model was transformed this frame
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
         this._runtime = {
-            animations : undefined,
             rootNodes : undefined,
             nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
             nodesByName : undefined,      // Indexed with name property in the node
-            skinnedNodes : undefined,
             meshesByName : undefined,     // Indexed with the name property in the mesh
             materialsByName : undefined,  // Indexed with the name property in the material
             materialsById : undefined     // Indexed with the material's property name
@@ -671,19 +635,13 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            silhouettePrograms : {},
-            textures : {},
-            samplers : {},
-            renderStates : {}
+            classificationPrograms : {}
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
 
-        this._cachedGeometryByteLength = 0;
-        this._cachedTexturesByteLength = 0;
         this._geometryByteLength = 0;
-        this._texturesByteLength = 0;
         this._trianglesLength = 0;
 
         this._nodeCommands = [];
@@ -1062,20 +1020,6 @@ define([
             }
         }
     });
-
-    function silhouetteSupported(context) {
-        return context.stencilBuffer;
-    }
-
-    /**
-     * Determines if silhouettes are supported.
-     *
-     * @param {Scene} scene The scene.
-     * @returns {Boolean} <code>true</code> if silhouettes are supported; otherwise, returns <code>false</code>
-     */
-    Model.silhouetteSupported = function(scene) {
-        return silhouetteSupported(scene.context);
-    };
 
     /**
      * This function differs from the normal subarray function
@@ -1494,103 +1438,6 @@ define([
         });
     }
 
-    function imageLoad(model, textureId, imageId) {
-        return function(image) {
-            var gltf = model.gltf;
-            var loadResources = model._loadResources;
-            --loadResources.pendingTextureLoads;
-            loadResources.texturesToCreate.enqueue({
-                id : textureId,
-                image : image,
-                bufferView : image.bufferView,
-                width : image.width,
-                height : image.height,
-                internalFormat : image.internalFormat
-            });
-            gltf.images[imageId].extras._pipeline.source = image;
-        };
-    }
-
-    var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
-    var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
-
-    function parseTextures(model, context) {
-        var gltf = model.gltf;
-        var images = gltf.images;
-        var uri;
-        ForEach.texture(gltf, function(texture, id) {
-            var imageId = texture.source;
-            var gltfImage = images[imageId];
-            var extras = gltfImage.extras;
-
-            var bufferViewId = gltfImage.bufferView;
-            var mimeType = gltfImage.mimeType;
-            uri = gltfImage.uri;
-
-            // First check for a compressed texture
-            if (defined(extras) && defined(extras.compressedImage3DTiles)) {
-                var crunch = extras.compressedImage3DTiles.crunch;
-                var s3tc = extras.compressedImage3DTiles.s3tc;
-                var pvrtc = extras.compressedImage3DTiles.pvrtc1;
-                var etc1 = extras.compressedImage3DTiles.etc1;
-
-                if (context.s3tc && defined(crunch)) {
-                    mimeType = crunch.mimeType;
-                    if (defined(crunch.bufferView)) {
-                        bufferViewId = crunch.bufferView;
-                    } else {
-                        uri = crunch.uri;
-                    }
-                } else if (context.s3tc && defined(s3tc)) {
-                    mimeType = s3tc.mimeType;
-                    if (defined(s3tc.bufferView)) {
-                        bufferViewId = s3tc.bufferView;
-                    } else {
-                        uri = s3tc.uri;
-                    }
-                } else if (context.pvrtc && defined(pvrtc)) {
-                    mimeType = pvrtc.mimeType;
-                    if (defined(pvrtc.bufferView)) {
-                        bufferViewId = pvrtc.bufferView;
-                    } else {
-                        uri = pvrtc.uri;
-                    }
-                } else if (context.etc1 && defined(etc1)) {
-                    mimeType = etc1.mimeType;
-                    if (defined(etc1.bufferView)) {
-                        bufferViewId = etc1.bufferView;
-                    } else {
-                        uri = etc1.uri;
-                    }
-                }
-            }
-
-            // Image references either uri (external or base64-encoded) or bufferView
-            if (defined(bufferViewId)) {
-                model._loadResources.texturesToCreateFromBufferView.enqueue({
-                    id : id,
-                    image : undefined,
-                    bufferView : bufferViewId,
-                    mimeType : mimeType
-                });
-            } else {
-                ++model._loadResources.pendingTextureLoads;
-                uri = new Uri(uri);
-                var imagePath = joinUrls(model._baseUri, uri);
-
-                var promise;
-                if (ktxRegex.test(imagePath)) {
-                    promise = loadKTX(imagePath);
-                } else if (crnRegex.test(imagePath)) {
-                    promise = loadCRN(imagePath);
-                } else {
-                    promise = loadImage(imagePath);
-                }
-                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
-            }
-        });
-    }
-
     var nodeTranslationScratch = new Cartesian3();
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
@@ -1744,26 +1591,6 @@ define([
         return cachedExtensionsRequired;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    var CreateVertexBufferJob = function() {
-        this.id = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
-
-    CreateVertexBufferJob.prototype.set = function(id, model, context) {
-        this.id = id;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateVertexBufferJob.prototype.execute = function() {
-        createVertexBuffer(this.id, this.model, this.context);
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     function createVertexBuffer(bufferViewId, model, context) {
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
@@ -1778,28 +1605,6 @@ define([
         model._rendererResources.buffers[bufferViewId] = vertexBuffer;
         model._geometryByteLength += vertexBuffer.sizeInBytes;
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    var CreateIndexBufferJob = function() {
-        this.id = undefined;
-        this.componentType = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
-
-    CreateIndexBufferJob.prototype.set = function(id, componentType, model, context) {
-        this.id = id;
-        this.componentType = componentType;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateIndexBufferJob.prototype.execute = function() {
-        createIndexBuffer(this.id, this.componentType, this.model, this.context);
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
 
     function createIndexBuffer(bufferViewId, componentType, model, context) {
         var loadResources = model._loadResources;
@@ -1817,9 +1622,6 @@ define([
         model._geometryByteLength += indexBuffer.sizeInBytes;
     }
 
-    var scratchVertexBufferJob = new CreateVertexBufferJob();
-    var scratchIndexBufferJob = new CreateIndexBufferJob();
-
     function createBuffers(model, frameState) {
         var loadResources = model._loadResources;
 
@@ -1830,34 +1632,14 @@ define([
         var context = frameState.context;
         var vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
         var indexBuffersToCreate = loadResources.indexBuffersToCreate;
-        var i;
 
-        if (model.asynchronous) {
-            while (vertexBuffersToCreate.length > 0) {
-                scratchVertexBufferJob.set(vertexBuffersToCreate.peek(), model, context);
-                if (!frameState.jobScheduler.execute(scratchVertexBufferJob, JobType.BUFFER)) {
-                    break;
-                }
-                vertexBuffersToCreate.dequeue();
-            }
+        while (vertexBuffersToCreate.length > 0) {
+            createVertexBuffer(vertexBuffersToCreate.dequeue(), model, context);
+        }
 
-            while (indexBuffersToCreate.length > 0) {
-                i = indexBuffersToCreate.peek();
-                scratchIndexBufferJob.set(i.id, i.componentType, model, context);
-                if (!frameState.jobScheduler.execute(scratchIndexBufferJob, JobType.BUFFER)) {
-                    break;
-                }
-                indexBuffersToCreate.dequeue();
-            }
-        } else {
-            while (vertexBuffersToCreate.length > 0) {
-                createVertexBuffer(vertexBuffersToCreate.dequeue(), model, context);
-            }
-
-            while (indexBuffersToCreate.length > 0) {
-                i = indexBuffersToCreate.dequeue();
-                createIndexBuffer(i.id, i.componentType, model, context);
-            }
+        while (indexBuffersToCreate.length > 0) {
+            var i = indexBuffersToCreate.dequeue();
+            createIndexBuffer(i.id, i.componentType, model, context);
         }
     }
 
@@ -2014,11 +1796,6 @@ define([
         return shader;
     }
 
-    function hasPremultipliedAlpha(model) {
-        var gltf = model.gltf;
-        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
-    }
-
     function modifyShaderForColor(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
@@ -2059,24 +1836,6 @@ define([
         return shader;
     }
 
-    var CreateProgramJob = function() {
-        this.id = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
-
-    CreateProgramJob.prototype.set = function(id, model, context) {
-        this.id = id;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateProgramJob.prototype.execute = function() {
-        createProgram(this.id, this.model, this.context);
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model.gltf.shaders;
@@ -2101,8 +1860,7 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
-        var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+        var blendFS = modifyShaderForColor(fs, false);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
@@ -2132,8 +1890,6 @@ define([
         }
     }
 
-    var scratchCreateProgramJob = new CreateProgramJob();
-
     function createPrograms(model, frameState) {
         var loadResources = model._loadResources;
         var programsToCreate = loadResources.programsToCreate;
@@ -2149,201 +1905,9 @@ define([
         }
 
         var context = frameState.context;
-
-        if (model.asynchronous) {
-            while (programsToCreate.length > 0) {
-                scratchCreateProgramJob.set(programsToCreate.peek(), model, context);
-                if (!frameState.jobScheduler.execute(scratchCreateProgramJob, JobType.PROGRAM)) {
-                    break;
-                }
-                programsToCreate.dequeue();
-            }
-        } else {
-            // Create all loaded programs this frame
-            while (programsToCreate.length > 0) {
-                createProgram(programsToCreate.dequeue(), model, context);
-            }
-        }
-    }
-
-    function getOnImageCreatedFromTypedArray(loadResources, gltfTexture) {
-        return function(image) {
-            loadResources.texturesToCreate.enqueue({
-                id : gltfTexture.id,
-                image : image,
-                bufferView : undefined
-            });
-
-            --loadResources.pendingBufferViewToImage;
-        };
-    }
-
-    function loadTexturesFromBufferViews(model) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        while (loadResources.texturesToCreateFromBufferView.length > 0) {
-            var gltfTexture = loadResources.texturesToCreateFromBufferView.dequeue();
-
-            var gltf = model.gltf;
-            var bufferView = gltf.bufferViews[gltfTexture.bufferView];
-            var imageId = gltf.textures[gltfTexture.id].source;
-
-            var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
-
-            if (gltfTexture.mimeType === 'image/ktx') {
-                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
-                ++model._loadResources.pendingTextureLoads;
-            } else if (gltfTexture.mimeType === 'image/crn') {
-                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
-                ++model._loadResources.pendingTextureLoads;
-            } else {
-                var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
-                    .then(onload).otherwise(onerror);
-                ++loadResources.pendingBufferViewToImage;
-            }
-        }
-    }
-
-    function createSamplers(model, context) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.createSamplers) {
-            loadResources.createSamplers = false;
-
-            var rendererSamplers = model._rendererResources.samplers;
-            var samplers = model.gltf.samplers;
-            for (var id in samplers) {
-                if (samplers.hasOwnProperty(id)) {
-                    var sampler = samplers[id];
-
-                    rendererSamplers[id] = new Sampler({
-                        wrapS : sampler.wrapS,
-                        wrapT : sampler.wrapT,
-                        minificationFilter : sampler.minFilter,
-                        magnificationFilter : sampler.magFilter
-                    });
-                }
-            }
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    var CreateTextureJob = function() {
-        this.gltfTexture = undefined;
-        this.model = undefined;
-        this.context = undefined;
-    };
-
-    CreateTextureJob.prototype.set = function(gltfTexture, model, context) {
-        this.gltfTexture = gltfTexture;
-        this.model = model;
-        this.context = context;
-    };
-
-    CreateTextureJob.prototype.execute = function() {
-        createTexture(this.gltfTexture, this.model, this.context);
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function createTexture(gltfTexture, model, context) {
-        var textures = model.gltf.textures;
-        var texture = textures[gltfTexture.id];
-
-        var rendererSamplers = model._rendererResources.samplers;
-        var sampler = rendererSamplers[texture.sampler];
-        sampler = defaultValue(sampler, new Sampler({
-            wrapS : TextureWrap.REPEAT,
-            wrapT : TextureWrap.REPEAT
-        }));
-
-        var internalFormat = gltfTexture.internalFormat;
-
-        var mipmap =
-            (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
-            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
-        var requiresNpot = mipmap ||
-           (sampler.wrapS === TextureWrap.REPEAT) ||
-           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-           (sampler.wrapT === TextureWrap.REPEAT) ||
-           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
-
-        var tx;
-        var source = gltfTexture.image;
-
-        if (defined(internalFormat) && texture.target === WebGLConstants.TEXTURE_2D) {
-            tx = new Texture({
-                context : context,
-                source : {
-                    arrayBufferView : gltfTexture.bufferView
-                },
-                width : gltfTexture.width,
-                height : gltfTexture.height,
-                pixelFormat : internalFormat,
-                sampler : sampler
-            });
-        } else if (defined(source)) {
-            var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
-
-            if (requiresNpot && npot) {
-                // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
-                var canvas = document.createElement('canvas');
-                canvas.width = CesiumMath.nextPowerOfTwo(source.width);
-                canvas.height = CesiumMath.nextPowerOfTwo(source.height);
-                var canvasContext = canvas.getContext('2d');
-                canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
-                source = canvas;
-            }
-
-            if (texture.target === WebGLConstants.TEXTURE_2D) {
-                tx = new Texture({
-                    context : context,
-                    source : source,
-                    pixelFormat : texture.internalFormat,
-                    pixelDatatype : texture.type,
-                    sampler : sampler,
-                    flipY : false
-                });
-                // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-                if (mipmap) {
-                    tx.generateMipmap();
-                }
-            }
-        }
-        if (defined(tx)) {
-            model._rendererResources.textures[gltfTexture.id] = tx;
-            model._texturesByteLength += tx.sizeInBytes;
-        }
-    }
-
-    var scratchCreateTextureJob = new CreateTextureJob();
-
-    function createTextures(model, frameState) {
-        var context = frameState.context;
-        var texturesToCreate = model._loadResources.texturesToCreate;
-
-        if (model.asynchronous) {
-            while (texturesToCreate.length > 0) {
-                scratchCreateTextureJob.set(texturesToCreate.peek(), model, context);
-                if (!frameState.jobScheduler.execute(scratchCreateTextureJob, JobType.TEXTURE)) {
-                    break;
-                }
-                texturesToCreate.dequeue();
-            }
-        } else {
-            // Create all loaded textures this frame
-            while (texturesToCreate.length > 0) {
-                createTexture(texturesToCreate.dequeue(), model, context);
-            }
+        // Create all loaded programs this frame
+        while (programsToCreate.length > 0) {
+            createProgram(programsToCreate.dequeue(), model, context);
         }
     }
 
@@ -2392,173 +1956,6 @@ define([
         }
 
         return attributeLocations;
-    }
-
-    function mapJointNames(forest, nodes) {
-        var length = forest.length;
-        var jointNodes = {};
-        for (var i = 0; i < length; ++i) {
-            var stack = [forest[i]]; // Push root node of tree
-
-            while (stack.length > 0) {
-                var id = stack.pop();
-                var n = nodes[id];
-
-                if (defined(n)) {
-                    jointNodes[id] = id;
-                }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    stack.push(children[k]);
-                }
-            }
-        }
-        return jointNodes;
-    }
-
-    function createJoints(model, runtimeSkins) {
-        var gltf = model.gltf;
-        var skins = gltf.skins;
-        var nodes = gltf.nodes;
-        var runtimeNodes = model._runtime.nodes;
-
-        var skinnedNodesIds = model._loadResources.skinnedNodesIds;
-        var length = skinnedNodesIds.length;
-        for (var j = 0; j < length; ++j) {
-            var id = skinnedNodesIds[j];
-            var skinnedNode = runtimeNodes[id];
-            var node = nodes[id];
-
-            var runtimeSkin = runtimeSkins[node.skin];
-            skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
-            skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
-
-            // 1. Find nodes with the names in node.skeletons (the node's skeletons)
-            // 2. These nodes form the root nodes of the forest to search for each joint in skin.jointNames.  This search uses jointName, not the node's name.
-            // 3. Search for the joint name among the gltf node hierarchy instead of the runtime node hierarchy. Child links aren't set up yet for runtime nodes.
-            var forest = [];
-            var skin = skins[node.skin];
-            if (defined(skin.skeleton)) {
-                forest.push(skin.skeleton);
-            }
-
-            var mappedJointNames = mapJointNames(forest, nodes);
-            var gltfJointNames = skins[node.skin].joints;
-            var jointNamesLength = gltfJointNames.length;
-            for (var i = 0; i < jointNamesLength; ++i) {
-                var jointName = gltfJointNames[i];
-                var nodeId = mappedJointNames[jointName];
-                var jointNode = runtimeNodes[nodeId];
-                skinnedNode.joints.push(jointNode);
-            }
-        }
-    }
-
-    function createSkins(model) {
-        var loadResources = model._loadResources;
-
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        if (!loadResources.createSkins) {
-            return;
-        }
-        loadResources.createSkins = false;
-
-        var gltf = model.gltf;
-        var accessors = gltf.accessors;
-        var runtimeSkins = {};
-
-        ForEach.skin(gltf, function(skin, id) {
-            var accessor = accessors[skin.inverseBindMatrices];
-
-            var bindShapeMatrix;
-            if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
-                bindShapeMatrix = Matrix4.clone(skin.bindShapeMatrix);
-            }
-
-            runtimeSkins[id] = {
-                inverseBindMatrices : ModelAnimationCache.getSkinInverseBindMatrices(model, accessor),
-                bindShapeMatrix : bindShapeMatrix // not used when undefined
-            };
-        });
-
-        createJoints(model, runtimeSkins);
-    }
-
-    function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
-        return function(localAnimationTime) {
-            //  Workaround for https://github.com/KhronosGroup/glTF/issues/219
-
-            //if (targetPath === 'translation') {
-            //    return;
-            //}
-            if (defined(spline)) {
-                localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
-                runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
-                runtimeNode.dirtyNumber = model._maxDirtyNumber;
-            }
-        };
-    }
-
-    function createRuntimeAnimations(model) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.finishedPendingBufferLoads()) {
-            return;
-        }
-
-        if (!loadResources.createRuntimeAnimations) {
-            return;
-        }
-        loadResources.createRuntimeAnimations = false;
-
-        model._runtime.animations = [];
-
-        var runtimeNodes = model._runtime.nodes;
-        var animations = model.gltf.animations;
-        var accessors = model.gltf.accessors;
-
-        var length = animations.length;
-        for (var i = 0; i < length; ++i) {
-            var animation = animations[i];
-            var channels = animation.channels;
-            var samplers = animation.samplers;
-
-            // Find start and stop time for the entire animation
-            var startTime = Number.MAX_VALUE;
-            var stopTime = -Number.MAX_VALUE;
-
-            var channelsLength = channels.length;
-            var channelEvaluators = new Array(channelsLength);
-
-            for (var j = 0; j < channelsLength; ++j) {
-                var channel = channels[j];
-                var target = channel.target;
-                var path = target.path;
-                var sampler = samplers[channel.sampler];
-                var input = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.input]);
-                var output = ModelAnimationCache.getAnimationParameterValues(model, accessors[sampler.output]);
-
-                startTime = Math.min(startTime, input[0]);
-                stopTime = Math.max(stopTime, input[input.length - 1]);
-
-                var spline = ModelAnimationCache.getAnimationSpline(model, i, animation, channel.sampler, sampler, input, path, output);
-
-                // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                channelEvaluators[j] = getChannelEvaluator(model, runtimeNodes[target.node], target.path, spline);
-            }
-
-            model._runtime.animations[i] = {
-                name : animation.name,
-                startTime : startTime,
-                stopTime : stopTime,
-                channelEvaluators : channelEvaluators
-            };
-        }
     }
 
     function createVertexArrays(model, context) {
@@ -2654,114 +2051,6 @@ define([
         }
     }
 
-    function getBooleanStates(states) {
-        // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
-        var booleanStates = {};
-        booleanStates[WebGLConstants.BLEND] = false;
-        booleanStates[WebGLConstants.CULL_FACE] = false;
-        booleanStates[WebGLConstants.DEPTH_TEST] = false;
-        booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-
-        var enable = states.enable;
-        var length = enable.length;
-        var i;
-        for (i = 0; i < length; ++i) {
-            booleanStates[enable[i]] = true;
-        }
-
-        return booleanStates;
-    }
-
-    function createRenderStates(model, context) {
-        var loadResources = model._loadResources;
-        var techniques = model.gltf.techniques;
-
-        if (loadResources.createRenderStates) {
-            loadResources.createRenderStates = false;
-            for (var id in techniques) {
-                if (techniques.hasOwnProperty(id)) {
-                    createRenderStateForTechnique(model, id, context);
-                }
-            }
-        }
-    }
-
-    function createRenderStateForTechnique(model, id, context) {
-        var rendererRenderStates = model._rendererResources.renderStates;
-        var techniques = model.gltf.techniques;
-        var technique = techniques[id];
-        var states = technique.states;
-
-        var booleanStates = getBooleanStates(states);
-        var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
-        var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
-        var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-            WebGLConstants.FUNC_ADD,
-            WebGLConstants.FUNC_ADD]);
-        var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-            WebGLConstants.ONE,
-            WebGLConstants.ZERO,
-            WebGLConstants.ONE,
-            WebGLConstants.ZERO]);
-        var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
-        var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
-        var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-
-        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
-        if (booleanStates[WebGLConstants.BLEND] && hasPremultipliedAlpha(model)) {
-            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
-                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-            }
-        }
-
-        rendererRenderStates[id] = RenderState.fromCache({
-            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
-            cull : {
-                enabled : booleanStates[WebGLConstants.CULL_FACE],
-                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-            },
-            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-            polygonOffset : {
-                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                factor : polygonOffset[0],
-                units : polygonOffset[1]
-            },
-            depthRange : {
-                near : depthRange[0],
-                far : depthRange[1]
-            },
-            depthTest : {
-                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
-            },
-            colorMask : {
-                red : colorMask[0],
-                green : colorMask[1],
-                blue : colorMask[2],
-                alpha : colorMask[3]
-            },
-            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
-            blending : {
-                enabled : booleanStates[WebGLConstants.BLEND],
-                color : {
-                    red : blendColor[0],
-                    green : blendColor[1],
-                    blue : blendColor[2],
-                    alpha : blendColor[3]
-                },
-                equationRgb : blendEquationSeparate[0],
-                equationAlpha : blendEquationSeparate[1],
-                functionSourceRgb : blendFuncSeparate[0],
-                functionDestinationRgb : blendFuncSeparate[1],
-                functionSourceAlpha : blendFuncSeparate[2],
-                functionDestinationAlpha : blendFuncSeparate[3]
-            }
-        });
-    }
-
     // This doesn't support LOCAL, which we could add if it is ever used.
     var scratchTranslationRtc = new Cartesian3();
     var gltfSemanticUniforms = {
@@ -2843,7 +2132,6 @@ define([
                 return uniformState.viewportCartesian4;
             };
         }
-        // JOINTMATRIX created in createCommand()
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2927,53 +2215,6 @@ define([
         return that;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    function DelayLoadedTextureUniform(value, model) {
-        this._value = undefined;
-        this._textureId = value.index;
-        this._model = model;
-    }
-
-    defineProperties(DelayLoadedTextureUniform.prototype, {
-        value : {
-            get : function() {
-                // Use the default texture (1x1 white) until the model's texture is loaded
-                if (!defined(this._value)) {
-                    var texture = this._model._rendererResources.textures[this._textureId];
-                    if (defined(texture)) {
-                        this._value = texture;
-                    } else {
-                        return this._model._defaultTexture;
-                    }
-                }
-
-                return this._value;
-            },
-            set : function(value) {
-                this._value = value;
-            }
-        }
-    });
-
-    DelayLoadedTextureUniform.prototype.clone = function(source, result) {
-        return source;
-    };
-
-    DelayLoadedTextureUniform.prototype.func = undefined;
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function getTextureUniformFunction(value, model) {
-        var uniform = new DelayLoadedTextureUniform(value, model);
-        // Define function here to access closure since 'this' can't be
-        // used when the Renderer sets uniforms.
-        uniform.func = function() {
-            return uniform.value;
-        };
-        return uniform;
-    }
-
     var gltfUniformFunctions = {};
     gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
     gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
@@ -2990,7 +2231,6 @@ define([
     gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
     gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
     gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
-    gltfUniformFunctions[WebGLConstants.SAMPLER_2D] = getTextureUniformFunction;
     // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
 
     var gltfUniformsFromNode = {
@@ -3123,8 +2363,6 @@ define([
 
                 var uniformMap = {};
                 var uniformValues = {};
-                var jointMatrixUniformName;
-                var morphWeightsUniformName;
 
                 // Uniform parameters
                 for (var name in uniforms) {
@@ -3150,15 +2388,8 @@ define([
                             uniformValues[parameterName] = uv;
                         } else if (defined(parameter.node)) {
                             uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic)) {
-                            if (parameter.semantic === 'JOINTMATRIX') {
-                                jointMatrixUniformName = name;
-                            } else if (parameter.semantic === 'MORPHWEIGHTS') {
-                                morphWeightsUniformName = name;
-                            } else {
-                                // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                            }
+                        } else if (defined(parameter.semantic) && parameter.semantic !== 'JOINTMATRIX' && parameter.semantic !== 'MORPHWEIGHTS') {
+                            uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
                         } else if (defined(parameter.value)) {
                             // Technique value that isn't overridden by a material
                             var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
@@ -3171,8 +2402,6 @@ define([
                 var u = uniformMaps[materialId];
                 u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
                 u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
-                u.jointMatrixUniformName = jointMatrixUniformName;
-                u.morphWeightsUniformName = morphWeightsUniformName;
             }
         }
     }
@@ -3271,30 +2500,6 @@ define([
         };
     }
 
-    function createJointMatricesFunction(runtimeNode) {
-        return function() {
-            return runtimeNode.computedJointMatrices;
-        };
-    }
-
-    function createMorphWeightsFunction(runtimeNode) {
-        return function() {
-            return runtimeNode.weights;
-        };
-    }
-
-    function createSilhouetteColorFunction(model) {
-        return function() {
-            return model.silhouetteColor;
-        };
-    }
-
-    function createSilhouetteSizeFunction(model) {
-        return function() {
-            return model.silhouetteSize;
-        };
-    }
-
     function createColorFunction(model) {
         return function() {
             return model.color;
@@ -3329,7 +2534,6 @@ define([
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
-        var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
@@ -3379,21 +2583,7 @@ define([
             model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
             var um = uniformMaps[primitive.material];
-            var uniformMap = um.uniformMap;
-            if (defined(um.jointMatrixUniformName)) {
-                var jointUniformMap = {};
-                jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
-
-                uniformMap = combine(uniformMap, jointUniformMap);
-            }
-            if (defined(um.morphWeightsUniformName)) {
-                var morphWeightsUniformMap = {};
-                morphWeightsUniformMap[um.morphWeightsUniformName] = createMorphWeightsFunction(runtimeNode);
-
-                uniformMap = combine(uniformMap, morphWeightsUniformMap);
-            }
-
-            uniformMap = combine(uniformMap, {
+            var uniformMap = combine(um.uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model)
             });
@@ -3409,11 +2599,6 @@ define([
                 uniformMap = combine(uniformMap, quantizedUniformMap);
             }
 
-            var rs = rendererRenderStates[material.technique];
-
-            // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
-            var isTranslucent = rs.blending.enabled;
-
             var owner = model._pickObject;
             if (!defined(owner)) {
                 owner = {
@@ -3424,9 +2609,6 @@ define([
                 };
             }
 
-            var castShadows = ShadowMode.castShadows(model._shadows);
-            var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -3436,12 +2618,14 @@ define([
                 count : count,
                 offset : offset,
                 shaderProgram : rendererPrograms[technique.program],
-                castShadows : castShadows,
-                receiveShadows : receiveShadows,
                 uniformMap : uniformMap,
-                renderState : rs,
+                renderState : RenderState.fromCache({
+                    depthTest : {
+                        enabled : true
+                    }
+                }),
                 owner : owner,
-                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
+                pass : model.opaquePass
             });
 
             var pickCommand;
@@ -3478,9 +2662,9 @@ define([
                     offset : offset,
                     shaderProgram : rendererPickPrograms[technique.program],
                     uniformMap : pickUniformMap,
-                    renderState : rs,
+                    renderState : RenderState.fromCache(),
                     owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
+                    pass : model.opaquePass
                 });
             }
 
@@ -3505,14 +2689,13 @@ define([
                 pickCommand : pickCommand,
                 command2D : command2D,
                 pickCommand2D : pickCommand2D,
-                // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
-                silhouetteModelCommand : undefined,
-                silhouetteModelCommand2D : undefined,
-                silhouetteColorCommand : undefined,
-                silhouetteColorCommand2D : undefined,
-                // Generated on demand when color alpha is less than 1.0
-                translucentCommand : undefined,
-                translucentCommand2D : undefined
+                // Generated on demand when the model is set as a classifier
+                classificationPreloadCommand : undefined,
+                classificationStencilCommand : undefined,
+                classificationColorCommand : undefined,
+                classificationPreloadCommand2D : undefined,
+                classificationStencilCommand2D : undefined,
+                classificationColorCommand2D : undefined
             };
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
@@ -3622,65 +2805,16 @@ define([
         model._runtime.nodes = runtimeNodes;
     }
 
-    function getGeometryByteLength(buffers) {
-        var memory = 0;
-        for (var id in buffers) {
-            if (buffers.hasOwnProperty(id)) {
-                memory += buffers[id].sizeInBytes;
-            }
-        }
-        return memory;
-    }
-
-    function getTexturesByteLength(textures) {
-        var memory = 0;
-        for (var id in textures) {
-            if (textures.hasOwnProperty(id)) {
-                memory += textures[id].sizeInBytes;
-            }
-        }
-        return memory;
-    }
-
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
 
         checkSupportedGlExtensions(model, context);
-        if (model._loadRendererResourcesFromCache) {
-            var resources = model._rendererResources;
-            var cachedResources = model._cachedRendererResources;
-
-            resources.buffers = cachedResources.buffers;
-            resources.vertexArrays = cachedResources.vertexArrays;
-            resources.programs = cachedResources.programs;
-            resources.pickPrograms = cachedResources.pickPrograms;
-            resources.silhouettePrograms = cachedResources.silhouettePrograms;
-            resources.textures = cachedResources.textures;
-            resources.samplers = cachedResources.samplers;
-            resources.renderStates = cachedResources.renderStates;
-
-            // Vertex arrays are unique to this model, create instead of using the cache.
-            if (defined(model._precreatedAttributes)) {
-                createVertexArrays(model, context);
-            }
-
-            model._cachedGeometryByteLength += getGeometryByteLength(cachedResources.buffers);
-            model._cachedTexturesByteLength += getTexturesByteLength(cachedResources.textures);
-        } else {
-            createBuffers(model, frameState); // using glTF bufferViews
-            createPrograms(model, frameState);
-            createSamplers(model, context);
-            loadTexturesFromBufferViews(model);
-            createTextures(model, frameState);
-        }
-
-        createSkins(model);
-        createRuntimeAnimations(model);
+        createBuffers(model, frameState); // using glTF bufferViews
+        createPrograms(model, frameState);
 
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
-            createRenderStates(model, context); // using glTF materials/techniques/states
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
@@ -3823,38 +2957,6 @@ define([
         ++model._maxDirtyNumber;
     }
 
-    var scratchObjectSpace = new Matrix4();
-
-    function applySkins(model) {
-        var skinnedNodes = model._runtime.skinnedNodes;
-        var length = skinnedNodes.length;
-
-        for (var i = 0; i < length; ++i) {
-            var node = skinnedNodes[i];
-
-            scratchObjectSpace = Matrix4.inverseTransformation(node.transformToRoot, scratchObjectSpace);
-
-            var computedJointMatrices = node.computedJointMatrices;
-            var joints = node.joints;
-            var bindShapeMatrix = node.bindShapeMatrix;
-            var inverseBindMatrices = node.inverseBindMatrices;
-            var inverseBindMatricesLength = inverseBindMatrices.length;
-
-            for (var m = 0; m < inverseBindMatricesLength; ++m) {
-                // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
-                if (!defined(computedJointMatrices[m])) {
-                    computedJointMatrices[m] = new Matrix4();
-                }
-                computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
-                computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
-                if (defined(bindShapeMatrix)) {
-                    // Optimization for when bind shape matrix is the identity.
-                    computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], bindShapeMatrix, computedJointMatrices[m]);
-                }
-            }
-        }
-    }
-
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:
         // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
@@ -3935,61 +3037,6 @@ define([
         }
     }
 
-    function updateShadows(model) {
-        if (model.shadows !== model._shadows) {
-            model._shadows = model.shadows;
-
-            var castShadows = ShadowMode.castShadows(model.shadows);
-            var receiveShadows = ShadowMode.receiveShadows(model.shadows);
-            var nodeCommands = model._nodeCommands;
-            var length = nodeCommands.length;
-
-            for (var i = 0; i < length; i++) {
-                var nodeCommand = nodeCommands[i];
-                nodeCommand.command.castShadows = castShadows;
-                nodeCommand.command.receiveShadows = receiveShadows;
-            }
-        }
-    }
-
-    function getTranslucentRenderState(renderState) {
-        var rs = clone(renderState, true);
-        rs.cull.enabled = false;
-        rs.depthTest.enabled = true;
-        rs.depthMask = false;
-        rs.blending = BlendingState.ALPHA_BLEND;
-
-        return RenderState.fromCache(rs);
-    }
-
-    function deriveTranslucentCommand(command) {
-        var translucentCommand = DrawCommand.shallowClone(command);
-        translucentCommand.pass = Pass.TRANSLUCENT;
-        translucentCommand.renderState = getTranslucentRenderState(command.renderState);
-        return translucentCommand;
-    }
-
-    function updateColor(model, frameState) {
-        // Generate translucent commands when the blend color has an alpha in the range (0.0, 1.0) exclusive
-        var scene3DOnly = frameState.scene3DOnly;
-        var alpha = model.color.alpha;
-        if ((alpha > 0.0) && (alpha < 1.0)) {
-            var nodeCommands = model._nodeCommands;
-            var length = nodeCommands.length;
-            if (!defined(nodeCommands[0].translucentCommand)) {
-                for (var i = 0; i < length; ++i) {
-                    var nodeCommand = nodeCommands[i];
-                    var command = nodeCommand.command;
-                    nodeCommand.translucentCommand = deriveTranslucentCommand(command);
-                    if (!scene3DOnly) {
-                        var command2D = nodeCommand.command2D;
-                        nodeCommand.translucentCommand2D = deriveTranslucentCommand(command2D);
-                    }
-                }
-            }
-        }
-    }
-
     function getProgramId(model, program) {
         var programs = model._rendererResources.programs;
         for (var id in programs) {
@@ -4001,32 +3048,109 @@ define([
         }
     }
 
-    function createSilhouetteProgram(model, program, frameState) {
-        var vs = program.vertexShaderSource.sources[0];
+    function isClassification(model, frameState) {
+        return frameState.context.stencilBuffer && defined(model.classificationType);
+    }
+
+    var stencilMask = 0x0F;
+    var stencilReference = 0;
+
+    var classificationPreloadRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.DECREMENT_WRAP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.INCREMENT_WRAP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false
+    };
+
+    var classificationStencilRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : true,
+            func : DepthFunction.LESS_OR_EQUAL
+        },
+        depthMask : false
+    };
+
+    var classificationColorRS = {
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.NOT_EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.NOT_EQUAL,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false,
+        blending : BlendingState.ALPHA_BLEND
+    };
+
+    function createClassificationProgram(model, id, program, frameState) {
+        var vs = program.vertexShaderSource;
         var attributeLocations = program._attributeLocations;
-        var normalAttributeName = model._normalAttributeName;
-
-        // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
-        vs = ShaderSource.replaceMain(vs, 'gltf_silhouette_main');
-        vs +=
-            'uniform float gltf_silhouetteSize; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    gltf_silhouette_main(); \n' +
-            '    vec3 n = normalize(czm_normal3D * ' + normalAttributeName + '); \n' +
-            '    n.x *= czm_projection[0][0]; \n' +
-            '    n.y *= czm_projection[1][1]; \n' +
-            '    vec4 clip = gl_Position; \n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
-            '    gl_Position = clip; \n' +
-            '}';
-
         var fs =
-            'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '    gl_FragColor = vec4(1.0); \n' +
             '}';
+
+        fs = modifyShader(fs, id, model._classificationShaderLoaded);
 
         return ShaderProgram.fromCache({
             context : frameState.context,
@@ -4036,178 +3160,107 @@ define([
         });
     }
 
-    function hasSilhouette(model, frameState) {
-        return silhouetteSupported(frameState.context) && (model.silhouetteSize > 0.0) && (model.silhouetteColor.alpha > 0.0) && defined(model._normalAttributeName);
-    }
-
-    function hasTranslucentCommands(model) {
-        var nodeCommands = model._nodeCommands;
-        var length = nodeCommands.length;
-        for (var i = 0; i < length; ++i) {
-            var nodeCommand = nodeCommands[i];
-            var command = nodeCommand.command;
-            if (command.pass === Pass.TRANSLUCENT) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function isTranslucent(model) {
-        return (model.color.alpha > 0.0) && (model.color.alpha < 1.0);
-    }
-
-    function isInvisible(model) {
-        return (model.color.alpha === 0.0);
-    }
-
-    function alphaDirty(currAlpha, prevAlpha) {
-        // Returns whether the alpha state has changed between invisible, translucent, or opaque
-        return (Math.floor(currAlpha) !== Math.floor(prevAlpha)) || (Math.ceil(currAlpha) !== Math.ceil(prevAlpha));
-    }
-
-    var silhouettesLength = 0;
-
-    function createSilhouetteCommands(model, frameState) {
-        // Wrap around after exceeding the 8-bit stencil limit.
-        // The reference is unique to each model until this point.
-        var stencilReference = (++silhouettesLength) % 255;
-
-        // If the model is translucent the silhouette needs to be in the translucent pass.
-        // Otherwise the silhouette would be rendered before the model.
-        var silhouetteTranslucent = hasTranslucentCommands(model) || isTranslucent(model) || (model.silhouetteColor.alpha < 1.0);
-        var silhouettePrograms = model._rendererResources.silhouettePrograms;
+    function createClassificationCommands(model, frameState) {
         var scene3DOnly = frameState.scene3DOnly;
+        var classificationPrograms = model._rendererResources.classificationPrograms;
         var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
         for (var i = 0; i < length; ++i) {
             var nodeCommand = nodeCommands[i];
             var command = nodeCommand.command;
 
-            // Create model command
-            var modelCommand = isTranslucent(model) ? nodeCommand.translucentCommand : command;
-            var silhouetteModelCommand = DrawCommand.shallowClone(modelCommand);
-            var renderState = clone(modelCommand.renderState);
-
-            // Write the reference value into the stencil buffer.
-            renderState.stencilTest = {
-                enabled : true,
-                frontFunction : WebGLConstants.ALWAYS,
-                backFunction : WebGLConstants.ALWAYS,
-                reference : stencilReference,
-                mask : ~0,
-                frontOperation : {
-                    fail : WebGLConstants.KEEP,
-                    zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.REPLACE
-                },
-                backOperation : {
-                    fail : WebGLConstants.KEEP,
-                    zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.REPLACE
-                }
-            };
-
-            if (isInvisible(model)) {
-                // When the model is invisible disable color and depth writes but still write into the stencil buffer
-                renderState.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-                renderState.depthMask = false;
-            }
-            renderState = RenderState.fromCache(renderState);
-            silhouetteModelCommand.renderState = renderState;
-            nodeCommand.silhouetteModelCommand = silhouetteModelCommand;
-
-            // Create color command
-            var silhouetteColorCommand = DrawCommand.shallowClone(command);
-            renderState = clone(command.renderState, true);
-            renderState.depthTest.enabled = true;
-            renderState.cull.enabled = false;
-            if (silhouetteTranslucent) {
-                silhouetteColorCommand.pass = Pass.TRANSLUCENT;
-                renderState.depthMask = false;
-                renderState.blending = BlendingState.ALPHA_BLEND;
-            }
-
-            // Only render silhouette if the value in the stencil buffer equals the reference
-            renderState.stencilTest = {
-                enabled : true,
-                frontFunction : WebGLConstants.NOTEQUAL,
-                backFunction : WebGLConstants.NOTEQUAL,
-                reference : stencilReference,
-                mask : ~0,
-                frontOperation : {
-                    fail : WebGLConstants.KEEP,
-                    zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.KEEP
-                },
-                backOperation : {
-                    fail : WebGLConstants.KEEP,
-                    zFail : WebGLConstants.KEEP,
-                    zPass : WebGLConstants.KEEP
-                }
-            };
-            renderState = RenderState.fromCache(renderState);
-
-            // If the silhouette program has already been cached use it
             var program = command.shaderProgram;
             var id = getProgramId(model, program);
-            var silhouetteProgram = silhouettePrograms[id];
-            if (!defined(silhouetteProgram)) {
-                silhouetteProgram = createSilhouetteProgram(model, program, frameState);
-                silhouettePrograms[id] = silhouetteProgram;
+            var classificationProgram = classificationPrograms[id];
+            if (!defined(classificationProgram)) {
+                classificationProgram = createClassificationProgram(model, id, program, frameState);
+                classificationPrograms[id] = classificationProgram;
             }
 
-            var silhouetteUniformMap = combine(command.uniformMap, {
-                gltf_silhouetteColor : createSilhouetteColorFunction(model),
-                gltf_silhouetteSize : createSilhouetteSizeFunction(model)
-            });
+            var preloadCommand = DrawCommand.shallowClone(command);
+            preloadCommand.renderState = RenderState.fromCache(classificationPreloadRS);
+            preloadCommand.shaderProgram = classificationProgram;
+            preloadCommand.castShadows = false;
+            preloadCommand.receiveShadows = false;
+            nodeCommand.classificationPreloadCommand = preloadCommand;
 
-            silhouetteColorCommand.renderState = renderState;
-            silhouetteColorCommand.shaderProgram = silhouetteProgram;
-            silhouetteColorCommand.uniformMap = silhouetteUniformMap;
-            silhouetteColorCommand.castShadows = false;
-            silhouetteColorCommand.receiveShadows = false;
-            nodeCommand.silhouetteColorCommand = silhouetteColorCommand;
+            var stencilCommand = DrawCommand.shallowClone(command);
+            stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
+            stencilCommand.shaderProgram = classificationProgram;
+            stencilCommand.castShadows = false;
+            stencilCommand.receiveShadows = false;
+            nodeCommand.classificationStencilCommand = stencilCommand;
+
+            var colorCommand = DrawCommand.shallowClone(command);
+            colorCommand.renderState = RenderState.fromCache(classificationColorRS);
+            colorCommand.shaderProgram = classificationProgram;
+            colorCommand.castShadows = false;
+            colorCommand.receiveShadows = false;
+            nodeCommand.classificationColorCommand = colorCommand;
 
             if (!scene3DOnly) {
                 var command2D = nodeCommand.command2D;
-                var silhouetteModelCommand2D = DrawCommand.shallowClone(silhouetteModelCommand);
-                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
-                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
-                nodeCommand.silhouetteModelCommand2D = silhouetteModelCommand2D;
+                var preloadCommand2D = DrawCommand.shallowClone(preloadCommand);
+                preloadCommand2D.boundingVolume = command2D.boundingVolume;
+                preloadCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationPreloadCommand2D = preloadCommand2D;
 
-                var silhouetteColorCommand2D = DrawCommand.shallowClone(silhouetteColorCommand);
-                silhouetteModelCommand2D.boundingVolume = command2D.boundingVolume;
-                silhouetteModelCommand2D.modelMatrix = command2D.modelMatrix;
-                nodeCommand.silhouetteColorCommand2D = silhouetteColorCommand2D;
+                var stencilCommand2D = DrawCommand.shallowClone(stencilCommand);
+                stencilCommand2D.boundingVolume = command2D.boundingVolume;
+                stencilCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationStencilCommand2D = stencilCommand2D;
+
+                var colorCommand2D = DrawCommand.shallowClone(colorCommand);
+                colorCommand2D.boundingVolume = command2D.boundingVolume;
+                colorCommand2D.modelMatrix = command2D.modelMatrix;
+                nodeCommand.classificationColorCommand2D = colorCommand2D;
             }
         }
     }
 
-    function updateSilhouette(model, frameState) {
-        // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
-        // There are two silhouette commands:
-        //     1. silhouetteModelCommand : render model normally while enabling stencil mask
-        //     2. silhouetteColorCommand : render enlarged model with a solid color while enabling stencil tests
-        if (!hasSilhouette(model, frameState)) {
+    function updateClassification(model, frameState) {
+        var dirty = model._classificationType !== model.classificationType || model._dirty;
+        model._classificationType = model.classificationType;
+
+        if (!isClassification(model, frameState)) {
             return;
         }
 
         var nodeCommands = model._nodeCommands;
-        var dirty = alphaDirty(model.color.alpha, model._colorPreviousAlpha) ||
-                    alphaDirty(model.silhouetteColor.alpha, model._silhouetteColorPreviousAlpha) ||
-                    !defined(nodeCommands[0].silhouetteModelCommand);
+        if (!defined(nodeCommands[0].classificationPreloadCommand)) {
+            createClassificationCommands(model, frameState);
+        }
 
-        model._colorPreviousAlpha = model.color.alpha;
-        model._silhouetteColorPreviousAlpha = model.silhouetteColor.alpha;
+        if (!dirty) {
+            return;
+        }
 
-        if (dirty) {
-            createSilhouetteCommands(model, frameState);
+        var pass;
+        switch (model._classificationType) {
+            case ClassificationType.TERRAIN:
+                pass = Pass.TERRAIN_CLASSIFICATION;
+                break;
+            case ClassificationType.CESIUM_3D_TILE:
+                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                break;
+            default:
+                pass = Pass.CLASSIFICATION;
+        }
+
+        var scene3DOnly = frameState.scene3DOnly;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            var nodeCommand = nodeCommands[i];
+
+            nodeCommand.classificationPreloadCommand.pass = pass;
+            nodeCommand.classificationStencilCommand.pass = pass;
+            nodeCommand.classificationColorCommand.pass = pass;
+
+            if (!scene3DOnly) {
+                nodeCommand.classificationPreloadCommand2D.pass = pass;
+                nodeCommand.classificationStencilCommand2D.pass = pass;
+                nodeCommand.classificationColorCommand2D.pass = pass;
+            }
         }
     }
 
@@ -4305,9 +3358,7 @@ define([
         this.vertexArrays = undefined;
         this.programs = undefined;
         this.pickPrograms = undefined;
-        this.silhouettePrograms = undefined;
-        this.textures = undefined;
-        this.samplers = undefined;
+        this.classificationPrograms = undefined;
         this.renderStates = undefined;
         this.ready = false;
 
@@ -4329,8 +3380,7 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
-        destroy(resources.silhouettePrograms);
-        destroy(resources.textures);
+        destroy(resources.classificationPrograms);
     }
 
     CachedRendererResources.prototype.release = function() {
@@ -4462,38 +3512,8 @@ define([
         }
 
         var context = frameState.context;
-        this._defaultTexture = context.defaultTexture;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
-            // Use renderer resources from cache instead of loading/creating them?
-            var cachedRendererResources;
-            var cacheKey = this.cacheKey;
-            if (defined(cacheKey)) {
-                context.cache.modelRendererResourceCache = defaultValue(context.cache.modelRendererResourceCache, {});
-                var modelCaches = context.cache.modelRendererResourceCache;
-
-                cachedRendererResources = modelCaches[this.cacheKey];
-                if (defined(cachedRendererResources)) {
-                    if (!cachedRendererResources.ready) {
-                        // Cached resources for the model are not loaded yet.  We'll
-                        // try again every frame until they are.
-                        return;
-                    }
-
-                    ++cachedRendererResources.count;
-                    this._loadRendererResourcesFromCache = true;
-                } else {
-                    cachedRendererResources = new CachedRendererResources(context, cacheKey);
-                    cachedRendererResources.count = 1;
-                    modelCaches[this.cacheKey] = cachedRendererResources;
-                }
-                this._cachedRendererResources = cachedRendererResources;
-            } else {
-                cachedRendererResources = new CachedRendererResources(context);
-                cachedRendererResources.count = 1;
-                this._cachedRendererResources = cachedRendererResources;
-            }
-
             this._state = ModelState.LOADING;
             if (this._state !== ModelState.FAILED) {
                 var extensions = this.gltf.extensions;
@@ -4523,7 +3543,6 @@ define([
         }
 
         var loadResources = this._loadResources;
-        var incrementallyLoadTextures = this._incrementallyLoadTextures;
         var justLoaded = false;
 
         if (this._state === ModelState.LOADING) {
@@ -4545,12 +3564,9 @@ define([
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
 
-                    if (!this._loadRendererResourcesFromCache) {
-                        parseBufferViews(this);
-                        parseShaders(this);
-                        parsePrograms(this);
-                        parseTextures(this, context);
-                    }
+                    parseBufferViews(this);
+                    parseShaders(this);
+                    parsePrograms(this);
                     parseMaterials(this);
                     parseMeshes(this);
                     parseNodes(this);
@@ -4563,8 +3579,7 @@ define([
                     createResources(this, frameState);
                 }
             }
-            if (loadResources.finished() ||
-                (incrementallyLoadTextures && loadResources.finishedEverythingButTextureCreation())) {
+            if (loadResources.finished()) {
                 this._state = ModelState.LOADED;
                 justLoaded = true;
             }
@@ -4572,33 +3587,15 @@ define([
 
         // Incrementally stream textures.
         if (defined(loadResources) && (this._state === ModelState.LOADED)) {
-            if (incrementallyLoadTextures && !justLoaded) {
+            if (!justLoaded) {
                 createResources(this, frameState);
             }
 
             if (loadResources.finished()) {
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
-                var resources = this._rendererResources;
-                var cachedResources = this._cachedRendererResources;
-
-                cachedResources.buffers = resources.buffers;
-                cachedResources.vertexArrays = resources.vertexArrays;
-                cachedResources.programs = resources.programs;
-                cachedResources.pickPrograms = resources.pickPrograms;
-                cachedResources.silhouettePrograms = resources.silhouettePrograms;
-                cachedResources.textures = resources.textures;
-                cachedResources.samplers = resources.samplers;
-                cachedResources.renderStates = resources.renderStates;
-                cachedResources.ready = true;
-
                 // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
                 this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-
-                // Vertex arrays are unique to this model, do not store in cache.
-                if (defined(this._precreatedAttributes)) {
-                    cachedResources.vertexArrays = {};
-                }
 
                 if (this.releaseGltfJson) {
                     releaseCachedGltf(this);
@@ -4606,15 +3603,11 @@ define([
             }
         }
 
-        var silhouette = hasSilhouette(this, frameState);
-        var translucent = isTranslucent(this);
-        var invisible = isInvisible(this);
+        var classification = isClassification(this, frameState);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0) && (!invisible || silhouette);
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
-            var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
-            this._cesiumAnimationsDirty = false;
             this._dirty = false;
             var modelMatrix = this.modelMatrix;
 
@@ -4623,11 +3616,11 @@ define([
 
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                (this._scale !== this.scale) ||
-                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale) ||
-                (this._heightReference !== this.heightReference) || this._heightChanged ||
-                modeChanged;
+                                        (this._scale !== this.scale) ||
+                                        (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
+                                        (this._maximumScale !== this.maximumScale) ||
+                                        (this._heightReference !== this.heightReference) || this._heightChanged ||
+                                        modeChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
@@ -4655,14 +3648,9 @@ define([
             }
 
             // Update modelMatrix throughout the graph as needed
-            if (animated || modelTransformChanged || justLoaded) {
+            if (modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
-
-                if (animated || justLoaded) {
-                    // Apply skins if animation changed any node transforms
-                    applySkins(this);
-                }
             }
 
             if (this._perNodeShowDirty) {
@@ -4672,9 +3660,7 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
-            updateShadows(this);
-            updateColor(this, frameState);
-            updateSilhouette(this, frameState);
+            updateClassification(this, frameState);
         }
 
         if (justLoaded) {
@@ -4703,32 +3689,35 @@ define([
             var boundingVolume;
 
             if (passes.render) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var command = translucent ? nc.translucentCommand : nc.command;
-                        command = silhouette ? nc.silhouetteModelCommand : command;
-                        commandList.push(command);
-                        boundingVolume = nc.command.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            var command2D = translucent ? nc.translucentCommand2D : nc.command2D;
-                            command2D = silhouette ? nc.silhouetteModelCommand2D : command2D;
-                            commandList.push(command2D);
-                        }
-                    }
-                }
-
-                if (silhouette) {
-                    // Render second silhouette pass
+                if (!classification) {
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
                         if (nc.show) {
-                            commandList.push(nc.silhouetteColorCommand);
+                            var command = nc.command;
+                            commandList.push(command);
                             boundingVolume = nc.command.boundingVolume;
                             if (frameState.mode === SceneMode.SCENE2D &&
                                 (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                commandList.push(nc.silhouetteColorCommand2D);
+                                var command2D = nc.command2D;
+                                commandList.push(command2D);
+                            }
+                        }
+                    }
+                } else {
+                    for (i = 0; i < length; ++i) {
+                        nc = nodeCommands[i];
+                        if (nc.show) {
+                            var originalCommand = nc.command;
+                            boundingVolume = originalCommand.boundingVolume;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.classificationPreloadCommand2D);
+                                commandList.push(nc.classificationStencilCommand2D);
+                                commandList.push(nc.classificationColorCommand2D);
+                            } else {
+                                commandList.push(nc.classificationPreloadCommand);
+                                commandList.push(nc.classificationStencilCommand);
+                                commandList.push(nc.classificationColorCommand);
                             }
                         }
                     }
