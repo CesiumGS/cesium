@@ -185,7 +185,6 @@ define([
         this.pendingBufferLoads = 0;
 
         this.programsToCreate = new Queue();
-        this.shaders = {};
         this.pendingShaderLoads = 0;
 
         this.createVertexArrays = true;
@@ -553,7 +552,6 @@ define([
         this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         // Undocumented options
-        this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
@@ -1339,49 +1337,6 @@ define([
         });
     }
 
-    function shaderLoad(model, type, id) {
-        return function(source) {
-            var loadResources = model._loadResources;
-            loadResources.shaders[id] = {
-                source : source,
-                type : type,
-                bufferView : undefined
-            };
-            --loadResources.pendingShaderLoads;
-            model.gltf.shaders[id].extras._pipeline.source = source;
-        };
-    }
-
-    function parseShaders(model) {
-        var gltf = model.gltf;
-        var buffers = gltf.buffers;
-        var bufferViews = gltf.bufferViews;
-        ForEach.shader(gltf, function(shader, id) {
-            // Shader references either uri (external or base64-encoded) or bufferView
-            if (defined(shader.bufferView)) {
-                var bufferViewId = shader.bufferView;
-                var bufferView = bufferViews[bufferViewId];
-                var bufferId = bufferView.buffer;
-                var buffer = buffers[bufferId];
-                var source = getStringFromTypedArray(buffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteLength);
-                model._loadResources.shaders[id] = {
-                    source : source,
-                    bufferView : undefined
-                };
-                shader.extras._pipeline.source = source;
-            } else if (defined(shader.extras._pipeline.source)) {
-                model._loadResources.shaders[id] = {
-                    source : shader.extras._pipeline.source,
-                    bufferView : undefined
-                };
-            } else {
-                ++model._loadResources.pendingShaderLoads;
-                var shaderPath = joinUrls(model._baseUri, shader.uri);
-                loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
-            }
-        });
-    }
-
     function parsePrograms(model) {
         ForEach.program(model.gltf, function(program, id) {
             model._loadResources.programsToCreate.enqueue(id);
@@ -1819,15 +1774,11 @@ define([
         }
     }
 
-    function getAttributeLocations(model) {
-        var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
-        var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
-
-        var attributeLocations = {};
-        attributeLocations[positionName] = 0;
-        attributeLocations[batchIdName] = 1;
-
-        return attributeLocations;
+    function getAttributeLocations() {
+        return {
+            POSITION : 0,
+            _BATCHID : 1
+        };
     }
 
     function createVertexArrays(model, context) {
@@ -1862,7 +1813,7 @@ define([
                     //
                     // https://github.com/KhronosGroup/glTF/issues/258
 
-                    var attributeLocations = getAttributeLocations(model);
+                    var attributeLocations = getAttributeLocations();
                     var attributeName;
                     var attributeLocation;
                     var attributes = [];
@@ -3312,22 +3263,11 @@ define([
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
                 if (!this._updatedGltfVersion) {
-                    var options = {
-                        optimizeForCesium: true,
-                        addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
-                    };
-                    frameState.brdfLutGenerator.update(frameState);
-                    updateVersion(this.gltf);
                     checkSupportedExtensions(this);
-                    addPipelineExtras(this.gltf);
-                    addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf, options);
-                    processPbrMetallicRoughness(this.gltf, options);
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
 
                     parseBufferViews(this);
-                    parseShaders(this);
                     parsePrograms(this);
                     parseMaterials(this);
                     parseMeshes(this);
