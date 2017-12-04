@@ -556,7 +556,6 @@ define([
         this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
         this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
-        this._fragmentShaderLoaded = options.fragmentShaderLoaded;
         this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
         this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
@@ -1748,39 +1747,6 @@ define([
         return shader;
     }
 
-    function modifyShaderForColor(shader, premultipliedAlpha) {
-        shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
-        shader +=
-            'uniform vec4 gltf_color; \n' +
-            'uniform float gltf_colorBlend; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    gltf_blend_main(); \n';
-
-        // Un-premultiply the alpha so that blending is correct.
-
-        // Avoid divide-by-zero. The code below is equivalent to:
-        // if (gl_FragColor.a > 0.0)
-        // {
-        //     gl_FragColor.rgb /= gl_FragColor.a;
-        // }
-
-        if (premultipliedAlpha) {
-            shader +=
-                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
-                '    gl_FragColor.rgb /= alpha; \n';
-        }
-
-        shader +=
-            '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
-            '    float highlight = ceil(gltf_colorBlend); \n' +
-            '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
-            '    gl_FragColor.a *= gltf_color.a; \n' +
-            '} \n';
-
-        return shader;
-    }
-
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1790,32 +1756,52 @@ define([
 
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
-        var shaders = model.gltf.shaders;
         var program = programs[id];
 
         var attributeLocations = createAttributeLocations(model, program.attributes);
-        var vs = shaders[program.vertexShader].extras._pipeline.source;
-        var fs = shaders[program.fragmentShader].extras._pipeline.source;
 
-        // Add pre-created attributes to attributeLocations
-        var attributesLength = program.attributes.length;
-        var precreatedAttributes = model._precreatedAttributes;
-        if (defined(precreatedAttributes)) {
-            for (var attrName in precreatedAttributes) {
-                if (precreatedAttributes.hasOwnProperty(attrName)) {
-                    attributeLocations[attrName] = attributesLength++;
-                }
+        var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
+        var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
+        var modelViewProjectionName = getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
+
+        var uniformDecl;
+        var computePosition;
+
+        if (!defined(modelViewProjectionName)) {
+            var projectionName = getAttributeOrUniformBySemantic(model.gltf, 'PROJECTION');
+            var modelViewName = getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEW');
+            if (!defined(modelViewName)) {
+                modelViewName = getAttributeOrUniformBySemantic(model.gltf, 'CESIUM_RTC_MODELVIEW');
             }
+
+            uniformDecl =
+                'uniform mat4 ' + modelViewName + ';\n' +
+                'uniform mat4 ' + projectionName + ';\n';
+            computePosition = '    gl_Position = ' + projectionName + ' * ' + modelViewName + ' * ' + positionName + ';\n';
+        } else {
+            uniformDecl = 'uniform mat4 ' + modelViewProjectionName + ';\n';
+            computePosition = '    gl_Position = ' + modelViewProjectionName + ' * ' + positionName + ';\n';
         }
+
+        var vs =
+            'attribute vec4 ' + positionName + ';\n' +
+            'attribute float ' + batchIdName + ';\n' +
+            uniformDecl +
+            'void main() {\n' +
+            computePosition +
+            '}\n';
+        var fs =
+            'void main() \n' +
+            '{ \n' +
+            '    gl_FragColor = vec4(1.0); \n' +
+            '}';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
-        var blendFS = modifyShaderForColor(fs, false);
-
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._classificationShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1828,10 +1814,6 @@ define([
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
             var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
@@ -2452,18 +2434,6 @@ define([
         };
     }
 
-    function createColorFunction(model) {
-        return function() {
-            return model.color;
-        };
-    }
-
-    function createColorBlendFunction(model) {
-        return function() {
-            return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
-        };
-    }
-
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -2475,6 +2445,119 @@ define([
                 return 0;
         }
     }
+
+    var stencilMask = 0x0F;
+    var stencilReference = 0;
+
+    var classificationPreloadRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.DECREMENT_WRAP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.INCREMENT_WRAP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false
+    };
+
+    var classificationStencilRS = {
+        colorMask : {
+            red : false,
+            green : false,
+            blue : false,
+            alpha : false
+        },
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.ALWAYS,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.INCREMENT_WRAP
+            },
+            backFunction : StencilFunction.ALWAYS,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : true,
+            func : DepthFunction.LESS_OR_EQUAL
+        },
+        depthMask : false
+    };
+
+    var classificationColorRS = {
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.NOT_EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.NOT_EQUAL,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false,
+        blending : BlendingState.ALPHA_BLEND
+    };
+
+    var pickRenderState = {
+        stencilTest : {
+            enabled : true,
+            frontFunction : StencilFunction.NOT_EQUAL,
+            frontOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            backFunction : StencilFunction.NOT_EQUAL,
+            backOperation : {
+                fail : StencilOperation.KEEP,
+                zFail : StencilOperation.KEEP,
+                zPass : StencilOperation.DECREMENT_WRAP
+            },
+            reference : stencilReference,
+            mask : stencilMask
+        },
+        depthTest : {
+            enabled : false
+        },
+        depthMask : false
+    };
 
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
@@ -2534,11 +2617,7 @@ define([
             // Update model triangle count using number of indices
             model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
-            var um = uniformMaps[primitive.material];
-            var uniformMap = combine(um.uniformMap, {
-                gltf_color : createColorFunction(model),
-                gltf_colorBlend : createColorBlendFunction(model)
-            });
+            var uniformMap = uniformMaps[primitive.material].uniformMap;
 
             // Allow callback to modify the uniformMap
             if (defined(model._uniformMapLoaded)) {
@@ -2561,7 +2640,7 @@ define([
                 };
             }
 
-            var command = new DrawCommand({
+            var preloadCommand = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
                 modelMatrix : new Matrix4(),           // computed in update()
@@ -2571,14 +2650,16 @@ define([
                 offset : offset,
                 shaderProgram : rendererPrograms[technique.program],
                 uniformMap : uniformMap,
-                renderState : RenderState.fromCache({
-                    depthTest : {
-                        enabled : true
-                    }
-                }),
+                renderState : RenderState.fromCache(classificationPreloadRS),
                 owner : owner,
                 pass : model.opaquePass
             });
+
+            var stencilCommand = DrawCommand.shallowClone(preloadCommand);
+            stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
+
+            var colorCommand = DrawCommand.shallowClone(preloadCommand);
+            colorCommand.renderState = RenderState.fromCache(classificationColorRS);
 
             var pickCommand;
 
@@ -2614,40 +2695,47 @@ define([
                     offset : offset,
                     shaderProgram : rendererPickPrograms[technique.program],
                     uniformMap : pickUniformMap,
-                    renderState : RenderState.fromCache(),
+                    renderState : RenderState.fromCache(pickRenderState),
                     owner : owner,
                     pass : model.opaquePass
                 });
             }
 
-            var command2D;
+            var preloadCommand2D;
+            var stencilCommand2D;
+            var colorCommand2D;
             var pickCommand2D;
             if (!scene3DOnly) {
-                command2D = DrawCommand.shallowClone(command);
-                command2D.boundingVolume = new BoundingSphere(); // updated in update()
-                command2D.modelMatrix = new Matrix4();           // updated in update()
+                preloadCommand2D = DrawCommand.shallowClone(preloadCommand);
+                preloadCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
+                preloadCommand2D.modelMatrix = new Matrix4();           // updated in update()
+
+                stencilCommand2D = DrawCommand.shallowClone(stencilCommand);
+                stencilCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
+                stencilCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
+
+                colorCommand2D = DrawCommand.shallowClone(colorCommand);
+                colorCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
+                colorCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
 
                 if (allowPicking) {
                     pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                    pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
+                    pickCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
+                    pickCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
                 }
             }
 
             var nodeCommand = {
                 show : true,
                 boundingSphere : boundingSphere,
-                command : command,
+                preloadCommand : preloadCommand,
+                stencilCommand : stencilCommand,
+                colorCommand : colorCommand,
                 pickCommand : pickCommand,
-                command2D : command2D,
-                pickCommand2D : pickCommand2D,
-                // Generated on demand when the model is set as a classifier
-                classificationPreloadCommand : undefined,
-                classificationStencilCommand : undefined,
-                classificationColorCommand : undefined,
-                classificationPreloadCommand2D : undefined,
-                classificationStencilCommand2D : undefined,
-                classificationColorCommand2D : undefined
+                preloadCommand2D : preloadCommand2D,
+                stencilCommand2D : stencilCommand2D,
+                colorCommand2D : colorCommand2D,
+                pickCommand2D : pickCommand2D
             };
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
@@ -2672,7 +2760,6 @@ define([
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        var skins = gltf.skins;
 
         var scene = gltf.scenes[gltf.scene];
         var sceneNodes = scene.nodes;
@@ -2688,7 +2775,6 @@ define([
                 id : sceneNodes[i]
             });
 
-            var skeletonIds = [];
             while (stack.length > 0) {
                 var n = stack.pop();
                 seen[n.id] = true;
@@ -2730,24 +2816,6 @@ define([
                             gltfNode : nodes[childId],
                             id : children[j]
                         });
-                    }
-                }
-
-                var skin = gltfNode.skin;
-                if (defined(skin)) {
-                    skeletonIds.push(skins[skin].skeleton);
-                }
-
-                if (stack.length === 0) {
-                    for (var k = 0; k < skeletonIds.length; k++) {
-                        var skeleton = skeletonIds[k];
-                        if (!seen[skeleton]) {
-                            stack.push({
-                                parentRuntimeNode : undefined,
-                                gltfNode : nodes[skeleton],
-                                id : skeleton
-                            });
-                        }
                     }
                 }
             }
@@ -2843,7 +2911,7 @@ define([
                         // Node has meshes, which has primitives.  Update their commands.
                         for (var j = 0; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
-                            var command = primitiveCommand.command;
+                            var command = primitiveCommand.preloadCommand;
                             Matrix4.clone(nodeMatrix, command.modelMatrix);
 
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
@@ -2863,7 +2931,7 @@ define([
                             // will be clipped by the viewport. We create a second command that translates the model
                             // model matrix to the opposite side of the map so the part that was clipped in one viewport
                             // is drawn in the other.
-                            command = primitiveCommand.command2D;
+                            command = primitiveCommand.preloadCommand2D;
                             if (defined(command) && model._mode === SceneMode.SCENE2D) {
                                 Matrix4.clone(nodeMatrix, command.modelMatrix);
                                 command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
@@ -2989,199 +3057,9 @@ define([
         }
     }
 
-    function getProgramId(model, program) {
-        var programs = model._rendererResources.programs;
-        for (var id in programs) {
-            if (programs.hasOwnProperty(id)) {
-                if (programs[id] === program) {
-                    return id;
-                }
-            }
-        }
-    }
-
-    function isClassification(model, frameState) {
-        return frameState.context.stencilBuffer && defined(model.classificationType);
-    }
-
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
-    var classificationPreloadRS = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.DECREMENT_WRAP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.INCREMENT_WRAP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    var classificationStencilRS = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS_OR_EQUAL
-        },
-        depthMask : false
-    };
-
-    var classificationColorRS = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false,
-        blending : BlendingState.ALPHA_BLEND
-    };
-
-    function createClassificationProgram(model, id, program, frameState) {
-        var vs = program.vertexShaderSource;
-        var attributeLocations = program._attributeLocations;
-        var fs =
-            'void main() \n' +
-            '{ \n' +
-            '    gl_FragColor = vec4(1.0); \n' +
-            '}';
-
-        fs = modifyShader(fs, id, model._classificationShaderLoaded);
-
-        return ShaderProgram.fromCache({
-            context : frameState.context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-    }
-
-    function createClassificationCommands(model, frameState) {
-        var scene3DOnly = frameState.scene3DOnly;
-        var classificationPrograms = model._rendererResources.classificationPrograms;
-        var nodeCommands = model._nodeCommands;
-        var length = nodeCommands.length;
-        for (var i = 0; i < length; ++i) {
-            var nodeCommand = nodeCommands[i];
-            var command = nodeCommand.command;
-
-            var program = command.shaderProgram;
-            var id = getProgramId(model, program);
-            var classificationProgram = classificationPrograms[id];
-            if (!defined(classificationProgram)) {
-                classificationProgram = createClassificationProgram(model, id, program, frameState);
-                classificationPrograms[id] = classificationProgram;
-            }
-
-            var preloadCommand = DrawCommand.shallowClone(command);
-            preloadCommand.renderState = RenderState.fromCache(classificationPreloadRS);
-            preloadCommand.shaderProgram = classificationProgram;
-            preloadCommand.castShadows = false;
-            preloadCommand.receiveShadows = false;
-            nodeCommand.classificationPreloadCommand = preloadCommand;
-
-            var stencilCommand = DrawCommand.shallowClone(command);
-            stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
-            stencilCommand.shaderProgram = classificationProgram;
-            stencilCommand.castShadows = false;
-            stencilCommand.receiveShadows = false;
-            nodeCommand.classificationStencilCommand = stencilCommand;
-
-            var colorCommand = DrawCommand.shallowClone(command);
-            colorCommand.renderState = RenderState.fromCache(classificationColorRS);
-            colorCommand.shaderProgram = classificationProgram;
-            colorCommand.castShadows = false;
-            colorCommand.receiveShadows = false;
-            nodeCommand.classificationColorCommand = colorCommand;
-
-            if (!scene3DOnly) {
-                var command2D = nodeCommand.command2D;
-                var preloadCommand2D = DrawCommand.shallowClone(preloadCommand);
-                preloadCommand2D.boundingVolume = command2D.boundingVolume;
-                preloadCommand2D.modelMatrix = command2D.modelMatrix;
-                nodeCommand.classificationPreloadCommand2D = preloadCommand2D;
-
-                var stencilCommand2D = DrawCommand.shallowClone(stencilCommand);
-                stencilCommand2D.boundingVolume = command2D.boundingVolume;
-                stencilCommand2D.modelMatrix = command2D.modelMatrix;
-                nodeCommand.classificationStencilCommand2D = stencilCommand2D;
-
-                var colorCommand2D = DrawCommand.shallowClone(colorCommand);
-                colorCommand2D.boundingVolume = command2D.boundingVolume;
-                colorCommand2D.modelMatrix = command2D.modelMatrix;
-                nodeCommand.classificationColorCommand2D = colorCommand2D;
-            }
-        }
-    }
-
     function updateClassification(model, frameState) {
         var dirty = model._classificationType !== model.classificationType || model._dirty;
         model._classificationType = model.classificationType;
-
-        if (!isClassification(model, frameState)) {
-            return;
-        }
-
-        var nodeCommands = model._nodeCommands;
-        if (!defined(nodeCommands[0].classificationPreloadCommand)) {
-            createClassificationCommands(model, frameState);
-        }
 
         if (!dirty) {
             return;
@@ -3200,18 +3078,28 @@ define([
         }
 
         var scene3DOnly = frameState.scene3DOnly;
+        var allowPicking = model.allowPicking;
+        var nodeCommands = model._nodeCommands;
         var length = nodeCommands.length;
         for (var i = 0; i < length; ++i) {
             var nodeCommand = nodeCommands[i];
 
-            nodeCommand.classificationPreloadCommand.pass = pass;
-            nodeCommand.classificationStencilCommand.pass = pass;
-            nodeCommand.classificationColorCommand.pass = pass;
+            nodeCommand.preloadCommand.pass = pass;
+            nodeCommand.stencilCommand.pass = pass;
+            nodeCommand.colorCommand.pass = pass;
+
+            if (allowPicking) {
+                nodeCommand.pickCommand.pass = pass;
+            }
 
             if (!scene3DOnly) {
-                nodeCommand.classificationPreloadCommand2D.pass = pass;
-                nodeCommand.classificationStencilCommand2D.pass = pass;
-                nodeCommand.classificationColorCommand2D.pass = pass;
+                nodeCommand.preloadCommand2D.pass = pass;
+                nodeCommand.stencilCommand2D.pass = pass;
+                nodeCommand.colorCommand2D.pass = pass;
+
+                if (allowPicking) {
+                    nodeCommand.pickCommand2D.pass = pass;
+                }
             }
         }
     }
@@ -3552,7 +3440,6 @@ define([
             }
         }
 
-        var classification = isClassification(this, frameState);
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
         var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
@@ -3638,36 +3525,19 @@ define([
             var boundingVolume;
 
             if (passes.render) {
-                if (!classification) {
-                    for (i = 0; i < length; ++i) {
-                        nc = nodeCommands[i];
-                        if (nc.show) {
-                            var command = nc.command;
-                            commandList.push(command);
-                            boundingVolume = nc.command.boundingVolume;
-                            if (frameState.mode === SceneMode.SCENE2D &&
-                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                var command2D = nc.command2D;
-                                commandList.push(command2D);
-                            }
-                        }
-                    }
-                } else {
-                    for (i = 0; i < length; ++i) {
-                        nc = nodeCommands[i];
-                        if (nc.show) {
-                            var originalCommand = nc.command;
-                            boundingVolume = originalCommand.boundingVolume;
-                            if (frameState.mode === SceneMode.SCENE2D &&
-                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                                commandList.push(nc.classificationPreloadCommand2D);
-                                commandList.push(nc.classificationStencilCommand2D);
-                                commandList.push(nc.classificationColorCommand2D);
-                            } else {
-                                commandList.push(nc.classificationPreloadCommand);
-                                commandList.push(nc.classificationStencilCommand);
-                                commandList.push(nc.classificationColorCommand);
-                            }
+                for (i = 0; i < length; ++i) {
+                    nc = nodeCommands[i];
+                    if (nc.show) {
+                        boundingVolume = nc.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.preloadCommand2D);
+                            commandList.push(nc.stencilCommand2D);
+                            commandList.push(nc.colorCommand2D);
+                        } else {
+                            commandList.push(nc.preloadCommand);
+                            commandList.push(nc.stencilCommand);
+                            commandList.push(nc.colorCommand);
                         }
                     }
                 }
@@ -3677,13 +3547,16 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        var pickCommand = nc.pickCommand;
-                        commandList.push(pickCommand);
-
-                        boundingVolume = pickCommand.boundingVolume;
+                        boundingVolume = nc.boundingVolume;
                         if (frameState.mode === SceneMode.SCENE2D &&
                             (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.preloadCommand2D);
+                            commandList.push(nc.stencilCommand2D);
                             commandList.push(nc.pickCommand2D);
+                        } else {
+                            commandList.push(nc.preloadCommand);
+                            commandList.push(nc.stencilCommand);
+                            commandList.push(nc.pickCommand);
                         }
                     }
                 }

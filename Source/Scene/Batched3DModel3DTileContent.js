@@ -393,23 +393,18 @@ define([
             content._model = new ClassificationModel({
                 gltf : gltfView,
                 cull : false,           // The model is already culled by 3D Tiles
-                releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
                 opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
                 basePath : basePath,
                 requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
-                shadows : tileset.shadows,
                 debugWireframe : tileset.debugWireframe,
-                incrementallyLoadTextures : false,
                 vertexShaderLoaded : getVertexShaderCallback(content),
-                fragmentShaderLoaded : getFragmentShaderCallback(content),
                 classificationShaderLoaded : getClassificationFragmentShaderCallback(content),
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
                 pickVertexShaderLoaded : getPickVertexShaderCallback(content),
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-                addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject
             });
         }
