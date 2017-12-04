@@ -1676,9 +1676,9 @@ define([
         return shader;
     }
 
-    function modifyShader(shader, programName, callback) {
+    function modifyShader(shader, callback) {
         if (defined(callback)) {
-            shader = callback(shader, programName);
+            shader = callback(shader);
         }
         return shader;
     }
@@ -1729,8 +1729,8 @@ define([
             vs = modifyShaderForQuantizedAttributes(vs, id, model);
         }
 
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._classificationShaderLoaded);
+        var drawVS = modifyShader(vs, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1741,8 +1741,8 @@ define([
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            var pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
+            var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
+            var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
 
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
@@ -1861,16 +1861,6 @@ define([
     // This doesn't support LOCAL, which we could add if it is ever used.
     var scratchTranslationRtc = new Cartesian3();
     var gltfSemanticUniforms = {
-        MODEL : function(uniformState, model) {
-            return function() {
-                return uniformState.model;
-            };
-        },
-        VIEW : function(uniformState, model) {
-            return function() {
-                return uniformState.view;
-            };
-        },
         PROJECTION : function(uniformState, model) {
             return function() {
                 return uniformState.projection;
@@ -1898,85 +1888,9 @@ define([
             return function() {
                 return uniformState.modelViewProjection;
             };
-        },
-        MODELINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseModel;
-            };
-        },
-        VIEWINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseView;
-            };
-        },
-        PROJECTIONINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseProjection;
-            };
-        },
-        MODELVIEWINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseModelView;
-            };
-        },
-        MODELVIEWPROJECTIONINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseModelViewProjection;
-            };
-        },
-        MODELINVERSETRANSPOSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseTransposeModel;
-            };
-        },
-        MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
-            return function() {
-                return uniformState.normal;
-            };
-        },
-        VIEWPORT : function(uniformState, model) {
-            return function() {
-                return uniformState.viewportCartesian4;
-            };
         }
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    function getScalarUniformFunction(value, model) {
-        var that = {
-            value : value,
-            clone : function(source, result) {
-                return source;
-            },
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function getVec2UniformFunction(value, model) {
-        var that = {
-            value : Cartesian2.fromArray(value),
-            clone : Cartesian2.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function getVec3UniformFunction(value, model) {
-        var that = {
-            value : Cartesian3.fromArray(value),
-            clone : Cartesian3.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
 
     function getVec4UniformFunction(value, model) {
         var that = {
@@ -2022,35 +1936,7 @@ define([
         return that;
     }
 
-    var gltfUniformFunctions = {};
-    gltfUniformFunctions[WebGLConstants.FLOAT] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLConstants.INT] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLConstants.INT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLConstants.INT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLConstants.INT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLConstants.BOOL] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLConstants.BOOL_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLConstants.BOOL_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLConstants.BOOL_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_MAT2] = getMat2UniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_MAT3] = getMat3UniformFunction;
-    gltfUniformFunctions[WebGLConstants.FLOAT_MAT4] = getMat4UniformFunction;
-    // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
-
     var gltfUniformsFromNode = {
-        MODEL : function(uniformState, model, runtimeNode) {
-            return function() {
-                return runtimeNode.computedMatrix;
-            };
-        },
-        VIEW : function(uniformState, model, runtimeNode) {
-            return function() {
-                return uniformState.view;
-            };
-        },
         PROJECTION : function(uniformState, model, runtimeNode) {
             return function() {
                 return uniformState.projection;
@@ -2075,64 +1961,6 @@ define([
             return function() {
                 Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
                 return Matrix4.multiply(uniformState._projection, mvp, mvp);
-            };
-        },
-        MODELINVERSE : function(uniformState, model, runtimeNode) {
-            var mInverse = new Matrix4();
-            return function() {
-                return Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
-            };
-        },
-        VIEWINVERSE : function(uniformState, model) {
-            return function() {
-                return uniformState.inverseView;
-            };
-        },
-        PROJECTIONINVERSE : function(uniformState, model, runtimeNode) {
-            return function() {
-                return uniformState.inverseProjection;
-            };
-        },
-        MODELVIEWINVERSE : function(uniformState, model, runtimeNode) {
-            var mv = new Matrix4();
-            var mvInverse = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
-                return Matrix4.inverse(mv, mvInverse);
-            };
-        },
-        MODELVIEWPROJECTIONINVERSE : function(uniformState, model, runtimeNode) {
-            var mvp = new Matrix4();
-            var mvpInverse = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
-                Matrix4.multiply(uniformState._projection, mvp, mvp);
-                return Matrix4.inverse(mvp, mvpInverse);
-            };
-        },
-        MODELINVERSETRANSPOSE : function(uniformState, model, runtimeNode) {
-            var mInverse = new Matrix4();
-            var mInverseTranspose = new Matrix3();
-            return function() {
-                Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
-                Matrix4.getRotation(mInverse, mInverseTranspose);
-                return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
-            };
-        },
-        MODELVIEWINVERSETRANSPOSE : function(uniformState, model, runtimeNode) {
-            var mv = new Matrix4();
-            var mvInverse = new Matrix4();
-            var mvInverseTranspose = new Matrix3();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
-                Matrix4.inverse(mv, mvInverse);
-                Matrix4.getRotation(mvInverse, mvInverseTranspose);
-                return Matrix3.transpose(mvInverseTranspose, mvInverseTranspose);
-            };
-        },
-        VIEWPORT : function(uniformState, model, runtimeNode) {
-            return function() {
-                return uniformState.viewportCartesian4;
             };
         }
     };
@@ -2162,8 +1990,6 @@ define([
         for (var materialId in materials) {
             if (materials.hasOwnProperty(materialId)) {
                 var material = materials[materialId];
-                var instanceParameters;
-                instanceParameters = material.values;
                 var technique = techniques[material.technique];
                 var parameters = technique.parameters;
                 var uniforms = technique.uniforms;
@@ -2177,31 +2003,14 @@ define([
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
 
-                        // GLTF_SPEC: This does not take into account uniform arrays,
-                        // indicated by parameters with a count property.
-                        //
-                        // https://github.com/KhronosGroup/glTF/issues/258
+                        if (!defined(parameter.semantic) || !defined(gltfUniformsFromNode[parameter.semantic])) {
+                            continue;
+                        }
 
-                        // GLTF_SPEC: In this implementation, material parameters with a
-                        // semantic or targeted via a source (for animation) are not
-                        // targetable for material animations.  Is this too strict?
-                        //
-                        // https://github.com/KhronosGroup/glTF/issues/142
-
-                        if (defined(instanceParameters[parameterName])) {
-                            // Parameter overrides by the instance technique
-                            var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
-                            uniformMap[name] = uv.func;
-                            uniformValues[parameterName] = uv;
-                        } else if (defined(parameter.node)) {
+                        if (defined(parameter.node)) {
                             uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic) && parameter.semantic !== 'JOINTMATRIX' && parameter.semantic !== 'MORPHWEIGHTS') {
+                        } else if (defined(parameter.semantic)) {
                             uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                        } else if (defined(parameter.value)) {
-                            // Technique value that isn't overridden by a material
-                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
-                            uniformMap[name] = uv2.func;
-                            uniformValues[parameterName] = uv2;
                         }
                     }
                 }
