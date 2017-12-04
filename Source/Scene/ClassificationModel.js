@@ -554,7 +554,6 @@ define([
 
         // Undocumented options
         this._addBatchIdToGeneratedShaders = options.addBatchIdToGeneratedShaders;
-        this._precreatedAttributes = options.precreatedAttributes;
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._classificationShaderLoaded = options.classificationShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
@@ -1594,31 +1593,6 @@ define([
         }
     }
 
-    function createAttributeLocations(model, attributes) {
-        var attributeLocations = {};
-        var length = attributes.length;
-        var i;
-
-        // Set the position attribute to the 0th index. In some WebGL implementations the shader
-        // will not work correctly if the 0th attribute is not active. For example, some glTF models
-        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
-        // the normal attribute.
-        for (i = 1; i < length; ++i) {
-            var attribute = attributes[i];
-            if (/pos/i.test(attribute)) {
-                attributes[i] = attributes[0];
-                attributes[0] = attribute;
-                break;
-            }
-        }
-
-        for (i = 0; i < length; ++i) {
-            attributeLocations[attributes[i]] = i;
-        }
-
-        return attributeLocations;
-    }
-
     function replaceAllButFirstInString(string, find, replace) {
         var index = string.indexOf(find);
         return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
@@ -1891,7 +1865,6 @@ define([
                     var attributeLocations = getAttributeLocations(model);
                     var attributeName;
                     var attributeLocation;
-                    var attribute;
                     var attributes = [];
                     var primitiveAttributes = primitive.attributes;
                     for (attributeName in primitiveAttributes) {
@@ -1915,21 +1888,6 @@ define([
                                     offsetInBytes : a.byteOffset,
                                     strideInBytes : getAccessorByteStride(gltf, a)
                                 });
-                            }
-                        }
-                    }
-
-                    // Add pre-created attributes
-                    var precreatedAttributes = model._precreatedAttributes;
-                    if (defined(precreatedAttributes)) {
-                        for (attributeName in precreatedAttributes) {
-                            if (precreatedAttributes.hasOwnProperty(attributeName)) {
-                                attributeLocation = attributeLocations[attributeName];
-                                if (defined(attributeLocation)) {
-                                    attribute = precreatedAttributes[attributeName];
-                                    attribute.index = attributeLocation;
-                                    attributes.push(attribute);
-                                }
                             }
                         }
                     }
@@ -3561,11 +3519,6 @@ define([
      * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
-        // Vertex arrays are unique to this model, destroy here.
-        if (defined(this._precreatedAttributes)) {
-            destroy(this._rendererResources.vertexArrays);
-        }
-
         if (defined(this._removeUpdateHeightCallback)) {
             this._removeUpdateHeightCallback();
             this._removeUpdateHeightCallback = undefined;
