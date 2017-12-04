@@ -480,6 +480,7 @@ define([
         var normalIndex = 0;
         var tangentIndex = 0;
         var bitangentIndex = 0;
+        var vertexCountHalf = vertexCount / 2.0;
 
         var ellipsoid;
         var ellipsoidOuter = Ellipsoid.fromCartesian3(radii);
@@ -521,13 +522,23 @@ define([
 
                 if (vertexFormat.tangent || vertexFormat.bitangent) {
                     var tangent = scratchTangent;
-                    if ((!isTopOpen && i < numThetas*2) || (!isBotOpen && i > vertexCount - numThetas*2 - 1)) {
-                        Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
-                        Cartesian3.normalize(tangent, tangent);
-                    } else {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                        Cartesian3.normalize(tangent, tangent);
+
+                    // Use UNIT_X for the poles
+                    var offset1 = 0;
+                    var offset2 = vertexCountHalf;
+                    var unit;
+                    if (isInner[i]) {
+                        offset1 = vertexCountHalf;
+                        offset2 = vertexCount;
                     }
+                    if ((!isTopOpen && (i >= offset1 && i < (offset1 + numThetas*2)) ||
+                        (!isBotOpen && i > offset2 - numThetas*2 - 1)) {
+                        unit = Cartesian3.UNIT_X;
+                    } else {
+                        unit = Cartesian3.UNIT_Z;
+                    }
+                    Cartesian3.cross(unit, normal, tangent);
+                    Cartesian3.normalize(tangent, tangent);
 
                     if (vertexFormat.tangent) {
                         tangents[tangentIndex++] = tangent.x;
