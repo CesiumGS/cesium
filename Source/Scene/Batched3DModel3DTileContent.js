@@ -207,8 +207,9 @@ define([
         return function(vs) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
+            var handleTranslucent = !defined(content._tileset.classificationType);
             var batchIdAttributeName = getBatchIdAttributeName(gltf);
-            var callback = batchTable.getVertexShaderCallback(true, batchIdAttributeName);
+            var callback = batchTable.getVertexShaderCallback(handleTranslucent, batchIdAttributeName);
             return defined(callback) ? callback(vs) : vs;
         };
     }
@@ -227,8 +228,9 @@ define([
         return function(fs) {
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
+            var handleTranslucent = !defined(content._tileset.classificationType);
             var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
-            var callback = batchTable.getFragmentShaderCallback(true, diffuseUniformName);
+            var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };
     }
@@ -238,6 +240,12 @@ define([
             var batchTable = content._batchTable;
             var callback = batchTable.getClassificationFragmentShaderCallback();
             return defined(callback) ? callback(fs) : fs;
+        };
+    }
+
+    function createColorChangedCallback(content) {
+        return function(batchId, color) {
+            content._model.updateCommands(batchId, color);
         };
     }
 
@@ -342,7 +350,12 @@ define([
             }
         }
 
-        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary);
+        var colorChangeCallback;
+        if (defined(tileset.classificationType)) {
+            colorChangeCallback = createColorChangedCallback(content);
+        }
+
+        var batchTable = new Cesium3DTileBatchTable(content, batchLength, batchTableJson, batchTableBinary, colorChangeCallback);
         content._batchTable = batchTable;
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
@@ -480,7 +493,7 @@ define([
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;
-        if ((commandStart < commandEnd) && frameState.passes.render) {
+        if ((commandStart < commandEnd) && frameState.passes.render && !(this._model instanceof ClassificationModel)) {
             var finalResolution = this._tile._finalResolution;
             this._batchTable.addDerivedCommands(frameState, commandStart, finalResolution);
         }

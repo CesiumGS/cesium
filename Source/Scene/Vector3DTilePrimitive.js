@@ -624,7 +624,6 @@ define([
     // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
     // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
     function rebatchCommands(primitive, context) {
-        return false; // TODO
         if (!primitive._batchDirty) {
             return false;
         }

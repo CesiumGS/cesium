@@ -1738,7 +1738,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    gl_FragColor = vec4(1.0); \n' +
-            '}';
+            '}\n';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             vs = modifyShaderForQuantizedAttributes(vs, id, model);
@@ -2491,12 +2491,15 @@ define([
             batchIds.push(currentId);
             indexOffsets.push(0);
 
+            var batchId;
+            var indexOffset;
+            var indexCount;
             var indicesLength = indices.length;
             for (var j = 1; j < indicesLength; ++j) {
-                var batchId = vertexBatchIds[indices[j]];
+                batchId = vertexBatchIds[indices[j]];
                 if (batchId !== currentId) {
-                    var indexOffset = indexOffsets[indexOffsets.length - 1];
-                    var indexCount = j - indexOffset;
+                    indexOffset = indexOffsets[indexOffsets.length - 1];
+                    indexCount = j - indexOffset;
 
                     batchIds.push(batchId);
                     indexCounts.push(indexCount);
@@ -2512,6 +2515,18 @@ define([
                     currentId = batchId;
                 }
             }
+
+            batchId = vertexBatchIds[indices[indicesLength - 1]];
+            indexOffset = indexOffsets[indexOffsets.length - 1];
+            indexCount = indicesLength - indexOffset;
+
+            indexCounts.push(indexCount);
+            batchedIndices.push(new Vector3DTileBatch({
+                offset : indexOffset,
+                count : indexCount,
+                batchIds : [currentId],
+                color : Color.WHITE
+            }));
 
             var shader = rendererPrograms[technique.program];
             var vertexShaderSource = shader.vertexShaderSource;
@@ -3170,6 +3185,14 @@ define([
 
         return (distance2 >= nearSquared) && (distance2 <= farSquared);
     }
+
+    Model.prototype.updateCommands = function(batchId, color) {
+        var nodeCommands = this._nodeCommands;
+        var length = nodeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            nodeCommands[i].updateCommands(batchId, color);
+        }
+    };
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
