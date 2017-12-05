@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 1.41 - 2017-01-02
+
+* Added support for clipping planes
+    * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
+    * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
+    * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+
 ### 1.40 - 2017-12-01
 
 * Deprecated
