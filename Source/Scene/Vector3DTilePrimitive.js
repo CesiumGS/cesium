@@ -155,6 +155,17 @@ define([
          */
         this.classificationType = ClassificationType.CESIUM_3D_TILE;
 
+        // Hidden options
+        this._vertexShaderSource = options._vertexShaderSource;
+        this._fragmentShaderSource = options._fragmentShaderSource;
+        this._attributeLocations = options._attributeLocations;
+        this._pickVertexShaderSource = options._pickVertexShaderSource;
+        this._pickFragmentShaderSource = options._pickFragmentShaderSource;
+        this._uniformMap = options._uniformMap;
+        this._pickUniformMap = options._pickUniformMap;
+        this._modelMatrix = options._modelMatrix;
+        this._boundingSphere = options._boundingSphere;
+
         this._batchIdLookUp = {};
 
         var length = this._batchIds.length;
@@ -194,7 +205,7 @@ define([
         }
     });
 
-    var attributeLocations = {
+    var defaultAttributeLocations = {
         position : 0,
         a_batchId : 1
     };
@@ -222,12 +233,12 @@ define([
         });
 
         var vertexAttributes = [{
-            index : attributeLocations.position,
+            index : 0,
             vertexBuffer : positionBuffer,
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3
         }, {
-            index : attributeLocations.a_batchId,
+            index : 1,
             vertexBuffer : idBuffer,
             componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
             componentsPerAttribute : 1
@@ -264,6 +275,25 @@ define([
         }
 
         var batchTable = primitive._batchTable;
+        var attributeLocations = defaultValue(primitive._attributeLocations, defaultAttributeLocations);
+
+        var vertexShaderSource = primitive._vertexShaderSource;
+        if (defined(vertexShaderSource)) {
+            primitive._sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vertexShaderSource,
+                fragmentShaderSource : primitive._fragmentShaderSource,
+                attributeLocations : attributeLocations
+            });
+            primitive._spStencil = primitive._sp;
+            primitive._spPick = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : primitive._pickVertexShaderSource,
+                fragmentShaderSource : primitive._pickFragmentShaderSource,
+                attributeLocations : attributeLocations
+            });
+            return;
+        }
 
         var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(ShadowVolumeVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
@@ -451,7 +481,7 @@ define([
             return;
         }
 
-        primitive._uniformMap = {
+        var uniformMap = {
             u_modifiedModelViewProjection : function() {
                 var viewMatrix = context.uniformState.view;
                 var projectionMatrix = context.uniformState.projection;
@@ -465,6 +495,9 @@ define([
                 return primitive._highlightColor;
             }
         };
+
+        primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(uniformMap);
+        primitive._pickUniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
     }
 
     function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, batchIdLookUp) {
@@ -591,6 +624,7 @@ define([
     // PERFORMANCE_IDEA: For WebGL 2, we can use copyBufferSubData for buffer-to-buffer copies.
     // PERFORMANCE_IDEA: Not supported, but we could use glMultiDrawElements here.
     function rebatchCommands(primitive, context) {
+        return false; // TODO
         if (!primitive._batchDirty) {
             return false;
         }
@@ -655,7 +689,7 @@ define([
         var vertexArray = primitive._va;
         var sp = primitive._sp;
         var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
+        var uniformMap = primitive._uniformMap;
         var bv = primitive._boundingVolume;
 
         for (var j = 0; j < length; ++j) {
@@ -756,8 +790,8 @@ define([
         var vertexArray = primitive._va;
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
-        var modelMatrix = Matrix4.IDENTITY;
-        var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
+        var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
+        var uniformMap = primitive._pickUniformMap;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];

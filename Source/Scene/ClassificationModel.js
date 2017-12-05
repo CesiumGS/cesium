@@ -1,163 +1,169 @@
 define([
-    '../Core/BoundingSphere',
-    '../Core/Cartesian2',
-    '../Core/Cartesian3',
-    '../Core/Cartesian4',
-    '../Core/Cartographic',
-    '../Core/clone',
-    '../Core/Color',
-    '../Core/combine',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/destroyObject',
-    '../Core/DeveloperError',
-    '../Core/DistanceDisplayCondition',
-    '../Core/FeatureDetection',
-    '../Core/getAbsoluteUri',
-    '../Core/getBaseUri',
-    '../Core/getMagic',
-    '../Core/getStringFromTypedArray',
-    '../Core/IndexDatatype',
-    '../Core/joinUrls',
-    '../Core/loadArrayBuffer',
-    '../Core/loadCRN',
-    '../Core/loadImage',
-    '../Core/loadImageFromTypedArray',
-    '../Core/loadKTX',
-    '../Core/loadText',
-    '../Core/Math',
-    '../Core/Matrix2',
-    '../Core/Matrix3',
-    '../Core/Matrix4',
-    '../Core/PixelFormat',
-    '../Core/PrimitiveType',
-    '../Core/Quaternion',
-    '../Core/Queue',
-    '../Core/RuntimeError',
-    '../Core/Transforms',
-    '../Core/WebGLConstants',
-    '../Renderer/Buffer',
-    '../Renderer/BufferUsage',
-    '../Renderer/DrawCommand',
-    '../Renderer/Pass',
-    '../Renderer/RenderState',
-    '../Renderer/Sampler',
-    '../Renderer/ShaderProgram',
-    '../Renderer/ShaderSource',
-    '../Renderer/Texture',
-    '../Renderer/TextureMinificationFilter',
-    '../Renderer/TextureWrap',
-    '../Renderer/VertexArray',
-    '../ThirdParty/GltfPipeline/addDefaults',
-    '../ThirdParty/GltfPipeline/addPipelineExtras',
-    '../ThirdParty/GltfPipeline/ForEach',
-    '../ThirdParty/GltfPipeline/getAccessorByteStride',
-    '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-    '../ThirdParty/GltfPipeline/parseBinaryGltf',
-    '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
-    '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-    '../ThirdParty/GltfPipeline/updateVersion',
-    '../ThirdParty/Uri',
-    '../ThirdParty/when',
-    './AttributeType',
-    './Axis',
-    './BlendingState',
-    './ClassificationType',
-    './ColorBlendMode',
-    './DepthFunction',
-    './getAttributeOrUniformBySemantic',
-    './HeightReference',
-    './JobType',
-    './ModelAnimationCache',
-    './ModelAnimationCollection',
-    './ModelMaterial',
-    './ModelMesh',
-    './ModelNode',
-    './SceneMode',
-    './ShadowMode',
-    './StencilFunction',
-    './StencilOperation'
-], function(
-    BoundingSphere,
-    Cartesian2,
-    Cartesian3,
-    Cartesian4,
-    Cartographic,
-    clone,
-    Color,
-    combine,
-    defaultValue,
-    defined,
-    defineProperties,
-    destroyObject,
-    DeveloperError,
-    DistanceDisplayCondition,
-    FeatureDetection,
-    getAbsoluteUri,
-    getBaseUri,
-    getMagic,
-    getStringFromTypedArray,
-    IndexDatatype,
-    joinUrls,
-    loadArrayBuffer,
-    loadCRN,
-    loadImage,
-    loadImageFromTypedArray,
-    loadKTX,
-    loadText,
-    CesiumMath,
-    Matrix2,
-    Matrix3,
-    Matrix4,
-    PixelFormat,
-    PrimitiveType,
-    Quaternion,
-    Queue,
-    RuntimeError,
-    Transforms,
-    WebGLConstants,
-    Buffer,
-    BufferUsage,
-    DrawCommand,
-    Pass,
-    RenderState,
-    Sampler,
-    ShaderProgram,
-    ShaderSource,
-    Texture,
-    TextureMinificationFilter,
-    TextureWrap,
-    VertexArray,
-    addDefaults,
-    addPipelineExtras,
-    ForEach,
-    getAccessorByteStride,
-    numberOfComponentsForType,
-    parseBinaryGltf,
-    processModelMaterialsCommon,
-    processPbrMetallicRoughness,
-    updateVersion,
-    Uri,
-    when,
-    AttributeType,
-    Axis,
-    BlendingState,
-    ClassificationType,
-    ColorBlendMode,
-    DepthFunction,
-    getAttributeOrUniformBySemantic,
-    HeightReference,
-    JobType,
-    ModelAnimationCache,
-    ModelAnimationCollection,
-    ModelMaterial,
-    ModelMesh,
-    ModelNode,
-    SceneMode,
-    ShadowMode,
-    StencilFunction,
-    StencilOperation) {
+        '../Core/arraySlice',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Cartographic',
+        '../Core/clone',
+        '../Core/Color',
+        '../Core/combine',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
+        '../Core/FeatureDetection',
+        '../Core/getAbsoluteUri',
+        '../Core/getBaseUri',
+        '../Core/getMagic',
+        '../Core/getStringFromTypedArray',
+        '../Core/IndexDatatype',
+        '../Core/joinUrls',
+        '../Core/loadArrayBuffer',
+        '../Core/loadCRN',
+        '../Core/loadImage',
+        '../Core/loadImageFromTypedArray',
+        '../Core/loadKTX',
+        '../Core/loadText',
+        '../Core/Math',
+        '../Core/Matrix2',
+        '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../Core/PixelFormat',
+        '../Core/PrimitiveType',
+        '../Core/Quaternion',
+        '../Core/Queue',
+        '../Core/RuntimeError',
+        '../Core/Transforms',
+        '../Core/WebGLConstants',
+        '../Renderer/Buffer',
+        '../Renderer/BufferUsage',
+        '../Renderer/DrawCommand',
+        '../Renderer/Pass',
+        '../Renderer/RenderState',
+        '../Renderer/Sampler',
+        '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
+        '../Renderer/Texture',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
+        '../ThirdParty/GltfPipeline/addDefaults',
+        '../ThirdParty/GltfPipeline/addPipelineExtras',
+        '../ThirdParty/GltfPipeline/ForEach',
+        '../ThirdParty/GltfPipeline/getAccessorByteStride',
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        '../ThirdParty/GltfPipeline/parseBinaryGltf',
+        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
+        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
+        '../ThirdParty/GltfPipeline/updateVersion',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
+        './AttributeType',
+        './Axis',
+        './BlendingState',
+        './ClassificationType',
+        './ColorBlendMode',
+        './DepthFunction',
+        './getAttributeOrUniformBySemantic',
+        './HeightReference',
+        './JobType',
+        './ModelAnimationCache',
+        './ModelAnimationCollection',
+        './ModelMaterial',
+        './ModelMesh',
+        './ModelNode',
+        './SceneMode',
+        './ShadowMode',
+        './StencilFunction',
+        './StencilOperation',
+        './Vector3DTileBatch',
+        './Vector3DTilePrimitive'
+    ], function(
+        arraySlice,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        clone,
+        Color,
+        combine,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        DistanceDisplayCondition,
+        FeatureDetection,
+        getAbsoluteUri,
+        getBaseUri,
+        getMagic,
+        getStringFromTypedArray,
+        IndexDatatype,
+        joinUrls,
+        loadArrayBuffer,
+        loadCRN,
+        loadImage,
+        loadImageFromTypedArray,
+        loadKTX,
+        loadText,
+        CesiumMath,
+        Matrix2,
+        Matrix3,
+        Matrix4,
+        PixelFormat,
+        PrimitiveType,
+        Quaternion,
+        Queue,
+        RuntimeError,
+        Transforms,
+        WebGLConstants,
+        Buffer,
+        BufferUsage,
+        DrawCommand,
+        Pass,
+        RenderState,
+        Sampler,
+        ShaderProgram,
+        ShaderSource,
+        Texture,
+        TextureMinificationFilter,
+        TextureWrap,
+        VertexArray,
+        addDefaults,
+        addPipelineExtras,
+        ForEach,
+        getAccessorByteStride,
+        numberOfComponentsForType,
+        parseBinaryGltf,
+        processModelMaterialsCommon,
+        processPbrMetallicRoughness,
+        updateVersion,
+        Uri,
+        when,
+        AttributeType,
+        Axis,
+        BlendingState,
+        ClassificationType,
+        ColorBlendMode,
+        DepthFunction,
+        getAttributeOrUniformBySemantic,
+        HeightReference,
+        JobType,
+        ModelAnimationCache,
+        ModelAnimationCollection,
+        ModelMaterial,
+        ModelMesh,
+        ModelNode,
+        SceneMode,
+        ShadowMode,
+        StencilFunction,
+        StencilOperation,
+        Vector3DTileBatch,
+        Vector3DTilePrimitive) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -1501,14 +1507,17 @@ define([
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
 
+        /*
         var vertexBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : loadResources.getBuffer(bufferView),
             usage : BufferUsage.STATIC_DRAW
         });
         vertexBuffer.vertexArrayDestroyable = false;
+        */
+        var vertexBuffer = loadResources.getBuffer(bufferView);
         model._rendererResources.buffers[bufferViewId] = vertexBuffer;
-        model._geometryByteLength += vertexBuffer.sizeInBytes;
+        model._geometryByteLength += vertexBuffer.byteLength;
     }
 
     function createIndexBuffer(bufferViewId, componentType, model, context) {
@@ -1516,6 +1525,7 @@ define([
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
 
+        /*
         var indexBuffer = Buffer.createIndexBuffer({
             context : context,
             typedArray : loadResources.getBuffer(bufferView),
@@ -1523,8 +1533,13 @@ define([
             indexDatatype : componentType
         });
         indexBuffer.vertexArrayDestroyable = false;
+        */
+        var indexBuffer = {
+            typedArray : loadResources.getBuffer(bufferView),
+            indexDatatype : componentType
+        };
         model._rendererResources.buffers[bufferViewId] = indexBuffer;
-        model._geometryByteLength += indexBuffer.sizeInBytes;
+        model._geometryByteLength += indexBuffer.typedArray.byteLength;
     }
 
     function createBuffers(model, frameState) {
@@ -1732,24 +1747,38 @@ define([
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
+        /*
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
+        */
+        model._rendererResources.programs[id] = {
+            vertexShaderSource : drawVS,
+            fragmentShaderSource : drawFS,
+            attributeLocations : attributeLocations
+        };
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
             var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
 
+            /*
             model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : pickVS,
                 fragmentShaderSource : pickFS,
                 attributeLocations : attributeLocations
             });
+            */
+            model._rendererResources.pickPrograms[id] = {
+                vertexShaderSource : pickVS,
+                fragmentShaderSource : pickFS,
+                attributeLocations : attributeLocations
+            };
         }
     }
 
@@ -1816,7 +1845,8 @@ define([
                     var attributeLocations = getAttributeLocations();
                     var attributeName;
                     var attributeLocation;
-                    var attributes = [];
+                    //var attributes = [];
+                    var attributes = {};
                     var primitiveAttributes = primitive.attributes;
                     for (attributeName in primitiveAttributes) {
                         if (primitiveAttributes.hasOwnProperty(attributeName)) {
@@ -1825,20 +1855,24 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
-                                var normalize = false;
-                                if (defined(a.normalized) && a.normalized) {
-                                    normalize = true;
-                                }
-
+                                /*
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : numberOfComponentsForType(a.type),
                                     componentDatatype : a.componentType,
-                                    normalize : normalize,
                                     offsetInBytes : a.byteOffset,
                                     strideInBytes : getAccessorByteStride(gltf, a)
                                 });
+                                */
+                                attributes[attributeName] = {
+                                    index : attributeLocation,
+                                    vertexBuffer : rendererBuffers[a.bufferView],
+                                    componentsPerAttribute : numberOfComponentsForType(a.type),
+                                    componentDatatype : a.componentType,
+                                    offsetInBytes : a.byteOffset,
+                                    strideInBytes : getAccessorByteStride(gltf, a)
+                                };
                             }
                         }
                     }
@@ -1848,11 +1882,17 @@ define([
                         var accessor = accessors[primitive.indices];
                         indexBuffer = rendererBuffers[accessor.bufferView];
                     }
+                    /*
                     rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
                         context : context,
                         attributes : attributes,
                         indexBuffer : indexBuffer
                     });
+                    */
+                    rendererVertexArrays[meshId + '.primitive.' + i] = {
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    };
                 }
             }
         }
@@ -2242,6 +2282,8 @@ define([
     };
 
     function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
+        var batchTable = model._batchTable;
+
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2322,6 +2364,7 @@ define([
                 };
             }
 
+            /*
             var preloadCommand = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -2419,6 +2462,111 @@ define([
                 colorCommand2D : colorCommand2D,
                 pickCommand2D : pickCommand2D
             };
+            */
+
+            var buffer = vertexArray.attributes.POSITION.vertexBuffer;
+            var positionsBuffer = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Float32Array.BYTES_PER_ELEMENT);
+
+            buffer = vertexArray.attributes._BATCHID.vertexBuffer;
+            var vertexBatchIds = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+
+            buffer = vertexArray.indexBuffer.typedArray;
+            var indices;
+            if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+                indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+            } else {
+                indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+            }
+
+            positionsBuffer = arraySlice(positionsBuffer);
+            vertexBatchIds = arraySlice(vertexBatchIds);
+            indices = arraySlice(indices, offset, offset + count);
+
+            var batchIds = [];
+            var indexCounts = [];
+            var indexOffsets = [];
+            var batchedIndices = [];
+
+            var currentId = vertexBatchIds[indices[0]];
+            batchIds.push(currentId);
+            indexOffsets.push(0);
+
+            var indicesLength = indices.length;
+            for (var j = 1; j < indicesLength; ++j) {
+                var batchId = vertexBatchIds[indices[j]];
+                if (batchId !== currentId) {
+                    var indexOffset = indexOffsets[indexOffsets.length - 1];
+                    var indexCount = j - indexOffset;
+
+                    batchIds.push(batchId);
+                    indexCounts.push(indexCount);
+                    indexOffsets.push(j);
+
+                    batchedIndices.push(new Vector3DTileBatch({
+                        offset : indexOffset,
+                        count : indexCount,
+                        batchIds : [currentId],
+                        color : Color.WHITE
+                    }));
+
+                    currentId = batchId;
+                }
+            }
+
+            var shader = rendererPrograms[technique.program];
+            var vertexShaderSource = shader.vertexShaderSource;
+            var fragmentShaderSource = shader.fragmentShaderSource;
+            var attributeLocations = shader.attributeLocations;
+
+            var pickVertexShaderSource;
+            var pickFragmentShaderSource;
+            var pickUniformMap;
+            if (allowPicking) {
+                var pickShader = rendererPickPrograms[technique.program];
+                pickVertexShaderSource = pickShader.vertexShaderSource;
+                pickFragmentShaderSource = pickShader.fragmentShaderSource;
+
+                // Callback to override default model picking
+                if (defined(model._pickFragmentShaderLoaded)) {
+                    if (defined(model._pickUniformMapLoaded)) {
+                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
+                    } else {
+                        // This is unlikely, but could happen if the override shader does not
+                        // need new uniforms since, for example, its pick ids are coming from
+                        // a vertex attribute or are baked into the shader source.
+                        pickUniformMap = combine(uniformMap);
+                    }
+                } else {
+                    var pickId = context.createPickId(owner);
+                    pickIds.push(pickId);
+                    var pickUniforms = {
+                        czm_pickColor : createPickColorFunction(pickId.color)
+                    };
+                    pickUniformMap = combine(uniformMap, pickUniforms);
+                }
+            }
+
+            var nodeCommand = new Vector3DTilePrimitive({
+                positions : positionsBuffer,
+                indices : indices,
+                indexOffsets : indexOffsets,
+                indexCounts : indexCounts,
+                batchIds : batchIds,
+                vertexBatchIds : vertexBatchIds,
+                batchedIndices : batchedIndices,
+                batchTable : batchTable,
+                boundingVolume : new BoundingSphere(), // updated in update()
+                boundingVolumes : [], // TODO
+                _vertexShaderSource : vertexShaderSource,
+                _fragmentShaderSource : fragmentShaderSource,
+                _attributeLocations : attributeLocations,
+                _pickVertexShaderSource : pickVertexShaderSource,
+                _pickFragmentShaderSource : pickFragmentShaderSource,
+                _uniformMap : uniformMap,
+                _pickUniformMap : pickUniformMap,
+                _modelMatrix : new Matrix4(), // updated in update()
+                _boundingSphere : boundingSphere // used to update boundingVolume
+            });
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
         }
@@ -2593,16 +2741,20 @@ define([
                         // Node has meshes, which has primitives.  Update their commands.
                         for (var j = 0; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
-                            var command = primitiveCommand.preloadCommand;
-                            Matrix4.clone(nodeMatrix, command.modelMatrix);
+                            //var command = primitiveCommand.preloadCommand;
+                            //Matrix4.clone(nodeMatrix, command.modelMatrix);
+                            Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
 
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
-                            BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                            //BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                            BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
 
                             if (defined(model._rtcCenter)) {
-                                Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
+                                //Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
+                                Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
                             }
 
+                            /*
                             if (allowPicking) {
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
@@ -2625,6 +2777,7 @@ define([
                                     BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
                                 }
                             }
+                            */
                         }
                     }
                 }
@@ -3033,7 +3186,7 @@ define([
             return;
         }
 
-        var context = frameState.context;
+        //var context = frameState.context;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
@@ -3160,6 +3313,7 @@ define([
                 this._dirty = true;
             }
 
+            /*
             if (this._perNodeShowDirty) {
                 this._perNodeShowDirty = false;
                 updatePerNodeShow(this);
@@ -3168,6 +3322,7 @@ define([
             updateWireframe(this);
             updateShowBoundingVolume(this);
             updateClassification(this, frameState);
+            */
         }
 
         if (justLoaded) {
@@ -3185,13 +3340,14 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
             // PERFORMANCE_IDEA: This is terrible
-            var commandList = frameState.commandList;
-            var passes = frameState.passes;
+            //var commandList = frameState.commandList;
+            //var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
             var i;
             var nc;
 
+            /*
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
@@ -3231,6 +3387,14 @@ define([
                         }
                     }
                 }
+            }
+            */
+
+            for (i = 0; i < length; ++i) {
+                nc = nodeCommands[i];
+                //if (nc.show) {
+                    nc.update(frameState);
+                //}
             }
         }
     };
