@@ -160,6 +160,8 @@ define([
         this._baseColor = undefined;
         this._firstPassInitialColor = undefined;
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
+
+        this._cullingEnabled = true;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -367,7 +369,7 @@ define([
         if (!defined(this._renderState)) {
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
-                    enabled : true
+                    enabled : this._cullingEnabled
                 },
                 depthTest : {
                     enabled : true,
