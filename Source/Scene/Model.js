@@ -2012,12 +2012,11 @@
         return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
     }
 
-    function modifyShaderForColorAndDepth(shader, premultipliedAlpha) {
+    function modifyShaderForColor(shader, premultipliedAlpha) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
             'uniform vec4 gltf_color; \n' +
             'uniform float gltf_colorBlend; \n' +
-            'varying vec4 v_position; \n' +
             'void main() \n' +
             '{ \n' +
             '    gltf_blend_main(); \n';
@@ -2041,6 +2040,18 @@
             '    float highlight = ceil(gltf_colorBlend); \n' +
             '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
             '    gl_FragColor.a *= gltf_color.a; \n' +
+            '} \n';
+
+        return shader;
+    }
+
+    function modifyFsShaderForDepth(shader) {
+        shader = ShaderSource.replaceMain(shader, 'czm_main');
+        shader +=
+            'varying vec4 v_position; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_main(); \n' +
             '    czm_logDepth(v_position.w); \n' +
             '} \n';
 
@@ -2110,7 +2121,8 @@
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColorAndDepth(fs, premultipliedAlpha);
+        fs = modifyFsShaderForDepth(fs);
+        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
         vs = modifyVertexShaderForDepth(vs);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
