@@ -688,7 +688,7 @@ define([
 
         var vertexArray = primitive._va;
         var sp = primitive._sp;
-        var modelMatrix = Matrix4.IDENTITY;
+        var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
         var uniformMap = primitive._uniformMap;
         var bv = primitive._boundingVolume;
 
