@@ -592,10 +592,6 @@ define([
          */
         this.clippingPlanes = options.clippingPlanes;
 
-        // Used to determine if the shader needs to be recompiled
-        this._clippingPlanesEnabled = false;
-        this._clippingPlanesCombined = true;
-
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>

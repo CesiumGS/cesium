@@ -445,6 +445,7 @@ define([
             var modelMatrix = instanceTransform.clone();
             instances[i] = {
                 modelMatrix : modelMatrix,
+                batchId : batchId
             };
         }
 

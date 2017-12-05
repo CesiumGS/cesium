@@ -164,9 +164,9 @@ define([
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
 
         /**
-         * Gets or sets the array of clipping planes, defined in world space;
-         * Each clipping plane selectively disables rendering contents on the outside of the plane.
+         * A property specifying a {@link ClippingPlanesCollection} used to selectively disable rendering on the outside of each plane.
          * @type {ClippingPlanesCollection}
+         * @private
          */
         this.clippingPlanes = undefined;
     }

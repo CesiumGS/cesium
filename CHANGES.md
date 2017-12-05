@@ -3,11 +3,12 @@ Change Log
 
 ### 1.41 - 2017-01-02
 
-* Added `clippingPlanes` property to `ModelGraphics` and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to clip the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
-* Added `terrainClippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to clip the terrain. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
-* Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
-* Added `PlaneGeometry`, `PlaneOutlineGeometry`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
-* Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Added support for clipping planes
+    * Added `clippingPlanes` property to `ModelGraphics`, `Model`, and `Cesium3DTileset`, which specifies a `ClippingPlanesCollection` to selectively disable rendering on the object. [#5913](https://github.com/AnalyticalGraphicsInc/cesium/pull/5913)
+    * Added `clippingPlanes` property to `Globe` which specifies a `ClippingPlanesCollection` to selectively disable rendering of the globe surface. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
+    * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+    * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
 
 ### 1.40 - 2017-12-01
 
@@ -47,7 +48,6 @@ Change Log
 * Added `customTags` property to the UrlTemplateImageryProvider to allow custom keywords in the template URL. [#5696](https://github.com/AnalyticalGraphicsInc/cesium/pull/5696)
 * Added `eyeSeparation` and `focalLength` properties to `Scene` to configure VR settings. [#5917](https://github.com/AnalyticalGraphicsInc/cesium/pull/5917)
 * Improved CZML Reference Properties example [#5754](https://github.com/AnalyticalGraphicsInc/cesium/pull/5754)
->>>>>>> cesium/master
 
 ### 1.38 - 2017-10-02
 
