@@ -143,6 +143,8 @@ define([
          */
         this._requestWaterMask = defaultValue(options.requestWaterMask, false);
 
+        this._skirtRatio = defaultValue(options.skirtRatio, 5.0);
+
         this._errorEvent = new Event();
 
         var credit = options.credit;
@@ -526,7 +528,7 @@ define([
             pos += extensionLength;
         }
 
-        var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
+        var skirtHeight = provider.getLevelMaximumGeometricError(level) * provider.skirtRatio;
 
         var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
         var orientedBoundingBox;
@@ -804,6 +806,12 @@ define([
                 }
                 //>>includeEnd('debug');
                 return this._availability;
+            }
+        },
+
+        skirtRatio : {
+            get : function() {
+                return this._skirtRatio;
             }
         }
     });
