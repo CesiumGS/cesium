@@ -1,6 +1,7 @@
 define([
         './Batched3DModel3DTileContent',
         './Composite3DTileContent',
+        './Geometry3DTileContent',
         './Instanced3DModel3DTileContent',
         './PointCloud3DTileContent',
         './Tileset3DTileContent',
@@ -8,6 +9,7 @@ define([
     ], function(
         Batched3DModel3DTileContent,
         Composite3DTileContent,
+        Geometry3DTileContent,
         Instanced3DModel3DTileContent,
         PointCloud3DTileContent,
         Tileset3DTileContent,
@@ -35,6 +37,9 @@ define([
         },
         json : function(tileset, tile, url, arrayBuffer, byteOffset) {
             return new Tileset3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
+        },
+        geom : function(tileset, tile, url, arrayBuffer, byteOffset) {
+            return new Geometry3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
         },
         vctr : function(tileset, tile, url, arrayBuffer, byteOffset) {
             return new Vector3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
