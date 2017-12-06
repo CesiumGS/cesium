@@ -1038,26 +1038,38 @@ defineSuite([
     it('renders with different classification types', function() {
         scene.primitives.add(depthPrimitive);
         tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren
+            url : vectorPolygonsBatchedChildren,
+            classificationType : ClassificationType.CESIUM_3D_TILE
         }));
         return loadTileset(tileset).then(function(tileset) {
-            tileset.classificationType = ClassificationType.CESIUM_3D_TILE;
             verifyRender(tileset, scene);
             verifyPick(scene);
 
-            tileset.classificationType = ClassificationType.TERRAIN;
-            expect(scene).toRender([255, 0, 0, 255]);
+            scene.primitives.remove(tileset);
 
-            depthPrimitive.pass = Pass.GLOBE;
-            verifyRender(tileset, scene);
-            verifyPick(scene);
+            tileset = scene.primitives.add(new Cesium3DTileset({
+                url : vectorPolygonsBatchedChildren,
+                classificationType : ClassificationType.TERRAIN
+            }));
+            return loadTileset(tileset).then(function(tileset) {
+                depthPrimitive.pass = Pass.GLOBE;
+                verifyRender(tileset, scene);
+                verifyPick(scene);
 
-            tileset.classificationType = ClassificationType.BOTH;
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-            depthPrimitive.pass = Pass.CESIUM_3D_TILE;
-            verifyRender(tileset, scene);
-            verifyPick(scene);
+                scene.primitives.remove(tileset);
+
+                tileset = scene.primitives.add(new Cesium3DTileset({
+                    url : vectorPolygonsBatchedChildren,
+                    classificationType : ClassificationType.BOTH
+                }));
+                return loadTileset(tileset).then(function(tileset) {
+                    verifyRender(tileset, scene);
+                    verifyPick(scene);
+                    depthPrimitive.pass = Pass.CESIUM_3D_TILE;
+                    verifyRender(tileset, scene);
+                    verifyPick(scene);
+                });
+            });
         });
     });
 });
