@@ -117,8 +117,6 @@ define([
         this.createVertexArrays = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
-
-        this.skinnedNodesIds = [];
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
@@ -157,54 +155,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function setCachedGltf(model, cachedGltf) {
-        model._cachedGltf = cachedGltf;
-    }
-
-    // glTF JSON can be big given embedded geometry, textures, and animations, so we
-    // cache it across all models using the same url/cache-key.  This also reduces the
-    // slight overhead in assigning defaults to missing values.
-    //
-    // Note that this is a global cache, compared to renderer resources, which
-    // are cached per context.
-    function CachedGltf(options) {
-        this._gltf = options.gltf;
-        this.ready = options.ready;
-        this.modelsToLoad = [];
-        this.count = 0;
-    }
-
-    defineProperties(CachedGltf.prototype, {
-        gltf : {
-            set : function(value) {
-                this._gltf = value;
-            },
-
-            get : function() {
-                return this._gltf;
-            }
-        }
-    });
-
-    CachedGltf.prototype.makeReady = function(gltfJson) {
-        this.gltf = gltfJson;
-
-        var models = this.modelsToLoad;
-        var length = models.length;
-        for (var i = 0; i < length; ++i) {
-            var m = models[i];
-            if (!m.isDestroyed()) {
-                setCachedGltf(m, this);
-            }
-        }
-        this.modelsToLoad = undefined;
-        this.ready = true;
-    };
-
-    var gltfCache = {};
-
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      *
@@ -236,48 +186,17 @@ define([
     function ClassificationModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var cacheKey = options.cacheKey;
-        this._cacheKey = cacheKey;
-        this._cachedGltf = undefined;
-
-        var cachedGltf;
-        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
-            // glTF JSON is in cache and ready
-            cachedGltf = gltfCache[cacheKey];
-            ++cachedGltf.count;
-        } else {
-            // glTF was explicitly provided, e.g., when a user uses the ClassificationModel constructor directly
-            var gltf = options.gltf;
-
-            if (defined(gltf)) {
-                if (gltf instanceof ArrayBuffer) {
-                    gltf = new Uint8Array(gltf);
-                }
-
-                if (gltf instanceof Uint8Array) {
-                    // Binary glTF
-                    var parsedGltf = parseBinaryGltf(gltf);
-
-                    cachedGltf = new CachedGltf({
-                        gltf : parsedGltf,
-                        ready : true
-                    });
-                } else {
-                    // Normal glTF (JSON)
-                    cachedGltf = new CachedGltf({
-                        gltf : options.gltf,
-                        ready : true
-                    });
-                }
-
-                cachedGltf.count = 1;
-
-                if (defined(cacheKey)) {
-                    gltfCache[cacheKey] = cachedGltf;
-                }
-            }
+        var gltf = options.gltf;
+        if (gltf instanceof ArrayBuffer) {
+            gltf = new Uint8Array(gltf);
         }
-        setCachedGltf(this, cachedGltf);
+
+        if (gltf instanceof Uint8Array) {
+            // Binary glTF
+             gltf = parseBinaryGltf(gltf);
+        } // else Normal glTF (JSON)
+
+        this._gltf = gltf;
 
         this._basePath = defaultValue(options.basePath, '');
         var baseUri = getBaseUri(document.location.href);
@@ -462,7 +381,7 @@ define([
          */
         gltf : {
             get : function() {
-                return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
+                return this._gltf;
             }
         },
 
@@ -707,28 +626,6 @@ define([
         },
 
         /**
-         * Gets the model's cached geometry memory in bytes. This includes all vertex and index buffers.
-         *
-         * @private
-         */
-        cachedGeometryByteLength : {
-            get : function() {
-                return this._cachedGeometryByteLength;
-            }
-        },
-
-        /**
-         * Gets the model's cached texture memory in bytes.
-         *
-         * @private
-         */
-        cachedTexturesByteLength : {
-            get : function() {
-                return this._cachedTexturesByteLength;
-            }
-        },
-
-        /**
          * Gets the model's classification type.
          * @memberof ClassificationModel.prototype
          * @type {ClassificationType}
@@ -747,8 +644,6 @@ define([
     function getSubarray(array, offset, length) {
         return array.subarray(offset, offset + length);
     }
-
-    ClassificationModel._gltfCache = gltfCache;
 
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
@@ -1904,7 +1799,11 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getNodeMatrix(node, result) {
-        Matrix4.clone(node.matrix, result);
+        if (defined(node.matrix)) {
+            Matrix4.clone(node.matrix, result);
+        } else {
+            Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+        }
     }
 
     var scratchNodeStack = [];
@@ -2047,13 +1946,6 @@ define([
         return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
     }
 
-    function releaseCachedGltf(model) {
-        if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
-            delete gltfCache[model._cacheKey];
-        }
-        model._cachedGltf = undefined;
-    }
-
     function checkSupportedExtensions(model) {
         var extensionsRequired = model.extensionsRequired;
         for (var extension in extensionsRequired) {
@@ -2194,10 +2086,6 @@ define([
 
             if (loadResources.finished()) {
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
-
-                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
-                this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-                releaseCachedGltf(this);
             }
         }
 
@@ -2273,8 +2161,6 @@ define([
         for (var i = 0; i < length; ++i) {
             pickIds[i].destroy();
         }
-
-        releaseCachedGltf(this);
 
         return destroyObject(this);
     };
