@@ -419,11 +419,7 @@ define([
 
         this._runtime = {
             rootNodes : undefined,
-            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
-            nodesByName : undefined,      // Indexed with name property in the node
-            meshesByName : undefined,     // Indexed with the name property in the mesh
-            materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's property name
+            nodes : undefined            // Indexed with the node property's name, i.e., glTF id
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -940,11 +936,6 @@ define([
 
     function parseNodes(model) {
         var runtimeNodes = {};
-        var runtimeNodesByName = {};
-        var skinnedNodes = [];
-
-        var skinnedNodesIds = model._loadResources.skinnedNodesIds;
-
         ForEach.node(model.gltf, function(node, id) {
             var runtimeNode = {
                 // Animation targets
@@ -964,85 +955,46 @@ define([
                 // Rendering
                 commands : [],                      // empty for transform, light, and camera nodes
 
-                // Skinned node
-                inverseBindMatrices : undefined,    // undefined when node is not skinned
-                bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
-                joints : [],                        // empty when node is not skinned
-                computedJointMatrices : [],         // empty when node is not skinned
-
-                // Joint node
-                jointName : node.jointName,         // undefined when node is not a joint
-
-                weights : [],
-
                 // Graph pointers
                 children : [],                      // empty for leaf nodes
-                parents : [],                       // empty for root nodes
-
-                // Publicly-accessible ModelNode instance to modify animation targets
-                publicNode : undefined
+                parents : []                        // empty for root nodes
             };
-            runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, id, getTransform(node));
 
             runtimeNodes[id] = runtimeNode;
-            runtimeNodesByName[node.name] = runtimeNode;
-
-            if (defined(node.skin)) {
-                skinnedNodesIds.push(id);
-                skinnedNodes.push(runtimeNode);
-            }
         });
-
         model._runtime.nodes = runtimeNodes;
-        model._runtime.nodesByName = runtimeNodesByName;
-        model._runtime.skinnedNodes = skinnedNodes;
     }
 
     function parseMaterials(model) {
-        var runtimeMaterialsByName = {};
-        var runtimeMaterialsById = {};
         var uniformMaps = model._uniformMaps;
-
         ForEach.material(model.gltf, function(material, id) {
             // Allocated now so ModelMaterial can keep a reference to it.
             uniformMaps[id] = {
                 uniformMap : undefined,
                 values : undefined
             };
-
-            var modelMaterial = new ModelMaterial(model, material, id);
-            runtimeMaterialsByName[material.name] = modelMaterial;
-            runtimeMaterialsById[id] = modelMaterial;
         });
-
-        model._runtime.materialsByName = runtimeMaterialsByName;
-        model._runtime.materialsById = runtimeMaterialsById;
     }
 
     function parseMeshes(model) {
-        var runtimeMeshesByName = {};
-        var runtimeMaterialsById = model._runtime.materialsById;
-
+        if (!defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+            return;
+        }
         ForEach.mesh(model.gltf, function(mesh, id) {
-            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
-                // Cache primitives according to their program
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    var primitive = primitives[i];
-                    var programId = getProgramForPrimitive(model, primitive);
-                    var programPrimitives = model._programPrimitives[programId];
-                    if (!defined(programPrimitives)) {
-                        programPrimitives = [];
-                        model._programPrimitives[programId] = programPrimitives;
-                    }
-                    programPrimitives.push(primitive);
+            // Cache primitives according to their program
+            var primitives = mesh.primitives;
+            var primitivesLength = primitives.length;
+            for (var i = 0; i < primitivesLength; i++) {
+                var primitive = primitives[i];
+                var programId = getProgramForPrimitive(model, primitive);
+                var programPrimitives = model._programPrimitives[programId];
+                if (!defined(programPrimitives)) {
+                    programPrimitives = [];
+                    model._programPrimitives[programId] = programPrimitives;
                 }
+                programPrimitives.push(primitive);
             }
         });
-
-        model._runtime.meshesByName = runtimeMeshesByName;
     }
 
     function getUsedExtensions(model) {
@@ -1665,12 +1617,6 @@ define([
         return uniformMap;
     }
 
-    function createPickColorFunction(color) {
-        return function() {
-            return color;
-        };
-    }
-
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -1687,8 +1633,6 @@ define([
         var batchTable = model._batchTable;
 
         var nodeCommands = model._nodeCommands;
-        var pickIds = model._pickIds;
-        var runtimeMeshesByName = model._runtime.meshesByName;
 
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
@@ -1753,16 +1697,6 @@ define([
             if (model.extensionsUsed.WEB3D_quantized_attributes) {
                 var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
                 uniformMap = combine(uniformMap, quantizedUniformMap);
-            }
-
-            var owner = model._pickObject;
-            if (!defined(owner)) {
-                owner = {
-                    primitive : model,
-                    id : model.id,
-                    node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesByName[mesh.name]
-                };
             }
 
             var buffer = vertexArray.attributes.POSITION.vertexBuffer;
@@ -1839,23 +1773,13 @@ define([
             var pickVertexShaderSource = pickShader.vertexShaderSource;
             var pickFragmentShaderSource = pickShader.fragmentShaderSource;
 
-            // Callback to override default model picking
-            if (defined(model._pickFragmentShaderLoaded)) {
-                if (defined(model._pickUniformMapLoaded)) {
-                    pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                } else {
-                    // This is unlikely, but could happen if the override shader does not
-                    // need new uniforms since, for example, its pick ids are coming from
-                    // a vertex attribute or are baked into the shader source.
-                    pickUniformMap = combine(uniformMap);
-                }
+            if (defined(model._pickUniformMapLoaded)) {
+                pickUniformMap = model._pickUniformMapLoaded(uniformMap);
             } else {
-                var pickId = context.createPickId(owner);
-                pickIds.push(pickId);
-                var pickUniforms = {
-                    czm_pickColor : createPickColorFunction(pickId.color)
-                };
-                pickUniformMap = combine(uniformMap, pickUniforms);
+                // This is unlikely, but could happen if the override shader does not
+                // need new uniforms since, for example, its pick ids are coming from
+                // a vertex attribute or are baked into the shader source.
+                pickUniformMap = combine(uniformMap);
             }
 
             var nodeCommand = new Vector3DTilePrimitive({
@@ -1882,7 +1806,6 @@ define([
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
         }
-
     }
 
     function createRuntimeNodes(model, context) {
@@ -1981,19 +1904,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getNodeMatrix(node, result) {
-        var publicNode = node.publicNode;
-        var publicMatrix = publicNode.matrix;
-
-        if (publicNode.useMatrix && defined(publicMatrix)) {
-            // Public matrix overrides orginial glTF matrix and glTF animations
-            Matrix4.clone(publicMatrix, result);
-        } else if (defined(node.matrix)) {
-            Matrix4.clone(node.matrix, result);
-        } else {
-            Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
-            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
-            publicNode.setMatrix(result);
-        }
+        Matrix4.clone(node.matrix, result);
     }
 
     var scratchNodeStack = [];
