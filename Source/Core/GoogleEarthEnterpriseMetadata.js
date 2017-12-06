@@ -13,6 +13,7 @@ define([
         './loadArrayBuffer',
         './Math',
         './Request',
+        './Resource',
         './RuntimeError',
         './TaskProcessor'
     ], function(
@@ -30,6 +31,7 @@ define([
         loadArrayBuffer,
         CesiumMath,
         Request,
+        Resource,
         RuntimeError,
         TaskProcessor) {
     'use strict';
@@ -55,20 +57,39 @@ define([
      * @alias GoogleEarthEnterpriseMetadata
      * @constructor
      *
-     * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String} resourceOrUrl The url of the Google Earth Enterprise server hosting the imagery
+     * @param {Object} options Object with the following properties: //TODO deprecate
+     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery. //TODO deprecate
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseTerrainProvider
      *
      */
-    function GoogleEarthEnterpriseMetadata(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    function GoogleEarthEnterpriseMetadata(resourceOrUrl) {
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string('options.url', options.url);
+        Check.typeOf.string('resourceOrUrl', resourceOrUrl);
         //>>includeEnd('debug');
+
+        if (typeof resourceOrUrl === 'string') {
+            resourceOrUrl = new Resource({
+                url: resourceOrUrl
+            });
+        } else if (!(resourceOrUrl instanceof Resource)) {
+            var options = resourceOrUrl;
+            //>>includeStart('debug', pragmas.debug);
+            Check.typeOf.string('options.url', options.url);
+            //>>includeEnd('debug');
+
+            resourceOrUrl = new Resource({
+                url: options.url
+            });
+
+            if (defined(options.proxy)) {
+                //TODO derpecation warning
+                resourceOrUrl.proxy = options.proxy;
+            }
+        }
 
         /**
          * True if imagery is available.
@@ -120,8 +141,7 @@ define([
 
         this._quadPacketVersion = 1;
 
-        this._url = appendForwardSlash(options.url);
-        this._proxy = options.proxy;
+        this._resource = resourceOrUrl;
 
         this._tileInfo = {};
         this._subtreePromises = {};
@@ -135,7 +155,7 @@ define([
                 return true;
             })
             .otherwise(function(e) {
-                var message = 'An error occurred while accessing ' + getMetadataUrl(that, '', 1) + '.';
+                var message = 'An error occurred while accessing ' + getMetadataResource(that, '', 1).url + '.';
                 return when.reject(new RuntimeError(message));
             });
     }
@@ -149,7 +169,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.url;
             }
         },
 
@@ -161,7 +181,14 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                //TODO deprectaion warning
+                return this._resource.proxy;
+            }
+        },
+
+        resource: {
+            get: function() {
+                return this._resource;
             }
         },
 
@@ -296,13 +323,9 @@ define([
     GoogleEarthEnterpriseMetadata.prototype.getQuadTreePacket = function(quadKey, version, request) {
         version = defaultValue(version, 1);
         quadKey = defaultValue(quadKey, '');
-        var url = getMetadataUrl(this, quadKey, version);
-        var proxy = this._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
+        var resource = getMetadataResource(this, quadKey, version, request);
 
-        var promise = loadArrayBuffer(url, undefined, request);
+        var promise = loadArrayBuffer(resource);
 
         if (!defined(promise)) {
             return undefined; // Throttled
@@ -470,18 +493,22 @@ define([
         return this._tileInfo[quadkey];
     };
 
-    function getMetadataUrl(that, quadKey, version) {
-        return joinUrls(that._url, 'flatfile?q2-0' + quadKey + '-q.' + version.toString());
+    function getMetadataResource(that, quadKey, version, request) {
+        return that._resource.getDerivedResource({
+            url: 'flatfile?q2-0' + quadKey + '-q.' + version.toString(),
+            request: request
+        });
     }
 
     function requestDbRoot(that) {
-        var url = joinUrls(that._url, 'dbRoot.v5?output=proto');
-        var proxy = that._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
+        var resource = that._resource.getDerivedResource({
+            url: 'dbRoot.v5',
+            queryParameters: {
+                output: 'proto'
+            }
+        });
 
-        var promise = loadArrayBuffer(url)
+        return loadArrayBuffer(resource)
             .then(function(buf) {
                 var encryptedDbRootProto = dbrootParser.EncryptedDbRootProto.decode(new Uint8Array(buf));
 
@@ -526,12 +553,9 @@ define([
             })
             .otherwise(function() {
                 // Just eat the error and use the default values.
-                console.log('Failed to retrieve ' + url + '. Using defaults.');
+                console.log('Failed to retrieve ' + resource.url + '. Using defaults.');
                 that.key = defaultKey;
             });
-
-
-        return promise;
     }
 
     return GoogleEarthEnterpriseMetadata;

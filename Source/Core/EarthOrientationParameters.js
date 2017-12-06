@@ -8,6 +8,7 @@ define([
         './JulianDate',
         './LeapSecond',
         './loadJson',
+        './Resource',
         './RuntimeError',
         './TimeConstants',
         './TimeStandard'
@@ -21,6 +22,7 @@ define([
         JulianDate,
         LeapSecond,
         loadJson,
+        Resource,
         RuntimeError,
         TimeConstants,
         TimeStandard) {
@@ -95,7 +97,7 @@ define([
         } else if (defined(options.url)) {
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(loadJson(options.url), function(eopData) {
+            this._downloadPromise = when(loadJson(new Resource({url: options.url})), function(eopData) {
                 onDataReady(that, eopData);
             }, function() {
                 that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + options.url + '.';

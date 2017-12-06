@@ -4,6 +4,7 @@ define([
         './defined',
         './DeveloperError',
         './loadImage',
+        './Resource',
         './writeTextToCanvas'
     ], function(
         buildModuleUrl,
@@ -11,6 +12,7 @@ define([
         defined,
         DeveloperError,
         loadImage,
+        Resource,
         writeTextToCanvas) {
     'use strict';
 
@@ -214,7 +216,7 @@ define([
 
         if (defined(url)) {
             //If we have an image url, load it and then stamp the pin.
-            var promise = loadImage(url).then(function(image) {
+            var promise = loadImage(new Resource({url: url})).then(function(image) {
                 drawIcon(context2D, image, size);
                 cache[id] = canvas;
                 return canvas;

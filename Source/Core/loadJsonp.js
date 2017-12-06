@@ -29,11 +29,12 @@ define([
      *
      * @exports loadJsonp
      *
-     * @param {String} url The URL to request.
-     * @param {Object} [options] Object with the following properties:
+     * @param {Resource|String} urlOrResource The URL to request.
+     * @param {Object} [options] Object with the following properties: //TODO deprecated
      * @param {Object} [options.parameters] Any extra query parameters to append to the URL.
      * @param {String} [options.callbackParameterName='callback'] The callback parameter name that the server expects.
-     * @param {Proxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {DefaultProxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String} [callbackParameterName='callback'] The callback parameter name that the server expects.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
@@ -48,14 +49,12 @@ define([
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJsonp(urlOrResource, options, request) {
+    function loadJsonp(urlOrResource, callbackParameterName, request) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(urlOrResource)) {
             throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //generate a unique function name
         var functionName;
@@ -71,13 +70,16 @@ define([
                 request: request
             });
         }
-        if (defined(options.parameters)) {
-            //TODO deprecate
-            urlOrResource.addQueryParameters(options.parameters);
-        }
-        if (defined(options.proxy)) {
-            //TODO deprecate
-            urlOrResource.proxy = options.proxy;
+        if (typeof callbackParameterName === 'object') {
+            //TODO deprecation warning
+            var options = callbackParameterName;
+            if (defined(options.parameters)) {
+                urlOrResource.addQueryParameters(options.parameters);
+            }
+            if (defined(options.proxy)) {
+                urlOrResource.proxy = options.proxy;
+            }
+            callbackParameterName = options.callbackParameterName;
         }
         if (defined(request)) {
             //TODO deprecate
@@ -85,7 +87,7 @@ define([
         }
 
         var callbackQuery = {};
-        var callbackParameterName = defaultValue(options.callbackParameterName, 'callback');
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
         callbackQuery[callbackParameterName] = functionName;
         urlOrResource.addQueryParameters(callbackQuery);
 
