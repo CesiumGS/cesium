@@ -66,7 +66,10 @@ define([
         this._batchTable = options.batchTable;
         this._boundingVolume = options.boundingVolume;
 
-        this._center = defaultValue(options.center, this._boundingVolume.center);
+        this._center = options.center;
+        if (!defined(this._center)) {
+            this._center = Cartesian3.clone(this._boundingVolume.center);
+        }
 
         this._boundingVolumes = undefined;
         this._batchedIndices = undefined;
