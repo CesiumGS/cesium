@@ -418,7 +418,7 @@ define([
                 pickVertexShaderLoaded : getPickVertexShaderCallback(content),
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-                pickObject : pickObject
+                classificationType : tileset._classificationType
             });
         }
     }
@@ -488,7 +488,6 @@ define([
         this._model.modelMatrix = this._tile.computedTransform;
         this._model.shadows = this._tileset.shadows;
         this._model.debugWireframe = this._tileset.debugWireframe;
-        this._model.classificationType = this._tileset.classificationType;
         this._model.update(frameState);
 
         // If any commands were pushed, add derived commands

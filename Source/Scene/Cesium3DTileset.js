@@ -222,6 +222,8 @@ define([
 
         this._readyPromise = when.defer();
 
+        this._classificationType = options.classificationType;
+
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
          * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
@@ -520,15 +522,6 @@ define([
          * @default false
          */
         this.loadSiblings = defaultValue(options.loadSiblings, false);
-
-        /**
-         * Determines whether terrain, 3D Tiles or both will be classified by vector tiles.
-         * @type {ClassificationType}
-         * @default undefined
-         *
-         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-         */
-        this.classificationType = options.classificationType;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1052,6 +1045,19 @@ define([
         statistics : {
             get : function() {
                 return this._statistics;
+            }
+        },
+
+        /**
+         * Determines whether terrain, 3D Tiles or both will be classified by this tileset.
+         * @type {ClassificationType}
+         * @default undefined
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         */
+        classificationType : {
+            get : function() {
+                return this._classificationType;
             }
         }
     });

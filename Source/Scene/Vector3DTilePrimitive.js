@@ -153,7 +153,7 @@ define([
          * @type {ClassificationType}
          * @default ClassificationType.CESIUM_3D_TILE
          */
-        this.classificationType = ClassificationType.CESIUM_3D_TILE;
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.CESIUM_3D_TILE);
 
         // Hidden options
         this._vertexShaderSource = options._vertexShaderSource;
@@ -795,7 +795,7 @@ define([
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
             var count = primitive._indexCounts[j];
-            var bv = primitive._boundingVolumes[j];
+            var bv = defined(primitive._boundingVolumes) ? primitive._boundingVolumes[j] : primitive.boundingVolume;
 
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {

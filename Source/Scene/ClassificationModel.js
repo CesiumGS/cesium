@@ -1,11 +1,9 @@
 define([
         '../Core/arraySlice',
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/clone',
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
@@ -15,80 +13,42 @@ define([
         '../Core/DeveloperError',
         '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
         '../Core/joinUrls',
         '../Core/loadArrayBuffer',
-        '../Core/loadCRN',
-        '../Core/loadImage',
-        '../Core/loadImageFromTypedArray',
-        '../Core/loadKTX',
-        '../Core/loadText',
-        '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../ThirdParty/GltfPipeline/addDefaults',
-        '../ThirdParty/GltfPipeline/addPipelineExtras',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
-        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
-        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-        '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './AttributeType',
         './Axis',
-        './BlendingState',
         './ClassificationType',
-        './ColorBlendMode',
-        './DepthFunction',
         './getAttributeOrUniformBySemantic',
         './HeightReference',
-        './JobType',
-        './ModelAnimationCache',
-        './ModelAnimationCollection',
         './ModelMaterial',
         './ModelMesh',
         './ModelNode',
         './SceneMode',
-        './ShadowMode',
-        './StencilFunction',
-        './StencilOperation',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
     ], function(
         arraySlice,
         BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
-        clone,
         Color,
         combine,
         defaultValue,
@@ -98,70 +58,34 @@ define([
         DeveloperError,
         DistanceDisplayCondition,
         FeatureDetection,
-        getAbsoluteUri,
         getBaseUri,
-        getMagic,
-        getStringFromTypedArray,
         IndexDatatype,
         joinUrls,
         loadArrayBuffer,
-        loadCRN,
-        loadImage,
-        loadImageFromTypedArray,
-        loadKTX,
-        loadText,
-        CesiumMath,
         Matrix2,
         Matrix3,
         Matrix4,
-        PixelFormat,
         PrimitiveType,
         Quaternion,
         Queue,
         RuntimeError,
         Transforms,
         WebGLConstants,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        Sampler,
-        ShaderProgram,
         ShaderSource,
-        Texture,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        addDefaults,
-        addPipelineExtras,
         ForEach,
         getAccessorByteStride,
         numberOfComponentsForType,
         parseBinaryGltf,
-        processModelMaterialsCommon,
-        processPbrMetallicRoughness,
-        updateVersion,
-        Uri,
         when,
         AttributeType,
         Axis,
-        BlendingState,
         ClassificationType,
-        ColorBlendMode,
-        DepthFunction,
         getAttributeOrUniformBySemantic,
         HeightReference,
-        JobType,
-        ModelAnimationCache,
-        ModelAnimationCollection,
         ModelMaterial,
         ModelMesh,
         ModelNode,
         SceneMode,
-        ShadowMode,
-        StencilFunction,
-        StencilOperation,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
     'use strict';
@@ -180,9 +104,6 @@ define([
         LOADED : 2,  // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
         FAILED : 3
     };
-
-    // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
-    var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
     function LoadResources() {
         this.vertexBuffersToCreate = new Queue();
@@ -285,27 +206,12 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
-     * <p>
-     * Cesium includes support for geometry and materials, glTF animations, and glTF skinning.
-     * In addition, individual glTF nodes are pickable with {@link Scene#pick} and animatable
-     * with {@link Model#getNode}.  glTF cameras and lights are not currently supported.
-     * </p>
-     * <p>
-     * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
-     * created at runtime and passed to this constructor function.  In either case, the
-     * {@link Model#readyPromise} is resolved when the model is ready to render, i.e.,
-     * when the external binary, image, and shader files are downloaded and the WebGL
-     * resources are created.
-     * </p>
-     * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
-     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
-     * relative to a local origin.
-     * </p>
+     * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      *
-     * @alias Model
+     * @alias ClassificationModel
      * @constructor
+     *
+     * @private
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
@@ -316,26 +222,18 @@ define([
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
-     * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
-     * @param {ColorBlendMode} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] Defines how the color blends with the model.
-     * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      *
-     * @see Model.fromGltf
-     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
-    function Model(options) {
+    function ClassificationModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var cacheKey = options.cacheKey;
@@ -348,7 +246,7 @@ define([
             cachedGltf = gltfCache[cacheKey];
             ++cachedGltf.count;
         } else {
-            // glTF was explicitly provided, e.g., when a user uses the Model constructor directly
+            // glTF was explicitly provided, e.g., when a user uses the ClassificationModel constructor directly
             var gltf = options.gltf;
 
             if (defined(gltf)) {
@@ -394,9 +292,6 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this.classificationType = options.classificationType;
-        this._classificationType = undefined;
-
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
          * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -416,7 +311,7 @@ define([
         this._clampedModelMatrix = undefined;
 
         /**
-         * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+         * A uniform scale applied to this model before the {@link ClassificationModel#modelMatrix}.
          * Values greater than <code>1.0</code> increase the size of the model; values
          * less than <code>1.0</code> decrease.
          *
@@ -441,7 +336,7 @@ define([
 
         /**
          * The maximum scale size for a model. This can be used to give
-         * an upper limit to the {@link Model#minimumPixelSize}, ensuring that the model
+         * an upper limit to the {@link ClassificationModel#minimumPixelSize}, ensuring that the model
          * is never an unreasonable scale.
          *
          * @type {Number}
@@ -464,8 +359,6 @@ define([
         /**
          * Returns the height reference of the model
          *
-         * @memberof Model.prototype
-         *
          * @type {HeightReference}
          *
          * @default HeightReference.NONE
@@ -482,51 +375,8 @@ define([
             }, this);
         }
 
-        /**
-         * Used for picking primitives that wrap a model.
-         *
-         * @private
-         */
-        this._pickObject = options.pickObject;
-        this._allowPicking = defaultValue(options.allowPicking, true);
-
         this._ready = false;
         this._readyPromise = when.defer();
-
-        this._defaultTexture = undefined;
-        this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
-        this._asynchronous = defaultValue(options.asynchronous, true);
-
-        /**
-         * A color that blends with the model's rendered color.
-         *
-         * @type {Color}
-         *
-         * @default Color.WHITE
-         */
-        this.color = defaultValue(options.color, Color.WHITE);
-        this._color = new Color();
-        this._colorPreviousAlpha = 1.0;
-
-        /**
-         * Defines how the color blends with the model.
-         *
-         * @type {ColorBlendMode}
-         *
-         * @default ColorBlendMode.HIGHLIGHT
-         */
-        this.colorBlendMode = defaultValue(options.colorBlendMode, ColorBlendMode.HIGHLIGHT);
-
-        /**
-         * Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>.
-         * A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with
-         * any value in-between resulting in a mix of the two.
-         *
-         * @type {Number}
-         *
-         * @default 0.5
-         */
-        this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -556,6 +406,7 @@ define([
         this._debugWireframe = false;
 
         this._distanceDisplayCondition = options.distanceDisplayCondition;
+        this._classificationType = options.classificationType;
 
         // Undocumented options
         this._vertexShaderLoaded = options.vertexShaderLoaded;
@@ -565,7 +416,6 @@ define([
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
-        this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
 
         /**
@@ -573,12 +423,6 @@ define([
          * @readonly
          */
         this.cull = defaultValue(options.cull, true);
-
-        /**
-         * @private
-         * @readonly
-         */
-        this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
@@ -611,11 +455,8 @@ define([
             buffers : {},
             vertexArrays : {},
             programs : {},
-            pickPrograms : {},
-            classificationPrograms : {}
+            pickPrograms : {}
         };
-        this._cachedRendererResources = undefined;
-        this._loadRendererResourcesFromCache = false;
         this._updatedGltfVersion = false;
 
         this._geometryByteLength = 0;
@@ -631,12 +472,12 @@ define([
         this._rtcCenter2D = undefined;  // in projected world coordinates
     }
 
-    defineProperties(Model.prototype, {
+    defineProperties(ClassificationModel.prototype, {
         /**
          * The object for the glTF JSON, including properties with default values omitted
          * from the JSON provided to this model.
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {Object}
          * @readonly
@@ -653,12 +494,12 @@ define([
          * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
          * Caching saves memory and improves loading speed when several models with the same url are created.
          * <p>
-         * This key is automatically generated when the model is created with {@link Model.fromGltf}.  If the model
-         * is created directly from glTF JSON using the {@link Model} constructor, this key can be manually
+         * This key is automatically generated when the model is created with {@link ClassificationModel.fromGltf}.  If the model
+         * is created directly from glTF JSON using the {@link ClassificationModel} constructor, this key can be manually
          * provided; otherwise, the model will not be changed.
          * </p>
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {String}
          * @readonly
@@ -678,7 +519,7 @@ define([
          * in the same directory as the .gltf.  When this is <code>''</code>,
          * the app's base path is used.
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {String}
          * @readonly
@@ -693,16 +534,16 @@ define([
 
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animations and skins nor does it take into account {@link Model#minimumPixelSize}.
+         * account glTF animations and skins nor does it take into account {@link ClassificationModel#minimumPixelSize}.
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {BoundingSphere}
          * @readonly
          *
          * @default undefined
          *
-         * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+         * @exception {DeveloperError} The model is not loaded.  Use ClassificationModel.readyPromise or wait for ClassificationModel.ready to be true.
          *
          * @example
          * // Center in WGS84 coordinates
@@ -712,7 +553,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (this._state !== ModelState.LOADED) {
-                    throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
+                    throw new DeveloperError('The model is not loaded.  Use ClassificationModel.readyPromise or wait for ClassificationModel.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -740,9 +581,9 @@ define([
         /**
          * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
          * and shader files were downloaded and the WebGL resources were created.  This is set to
-         * <code>true</code> right before {@link Model#readyPromise} is resolved.
+         * <code>true</code> right before {@link ClassificationModel#readyPromise} is resolved.
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -762,8 +603,8 @@ define([
          * This promise is resolved at the end of the frame before the first frame the model is rendered in.
          * </p>
          *
-         * @memberof Model.prototype
-         * @type {Promise.<Model>}
+         * @memberof ClassificationModel.prototype
+         * @type {Promise.<ClassificationModel>}
          * @readonly
          *
          * @example
@@ -776,7 +617,7 @@ define([
          *   window.alert(error);
          * });
          *
-         * @see Model#ready
+         * @see ClassificationModel#ready
          */
         readyPromise : {
             get : function() {
@@ -785,72 +626,9 @@ define([
         },
 
         /**
-         * Determines if model WebGL resource creation will be spread out over several frames or
-         * block until completion once all glTF files are loaded.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default true
-         */
-        asynchronous : {
-            get : function() {
-                return this._asynchronous;
-            }
-        },
-
-        /**
-         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default true
-         */
-        allowPicking : {
-            get : function() {
-                return this._allowPicking;
-            }
-        },
-
-        /**
-         * Determine if textures may continue to stream in after the model is loaded.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default true
-         */
-        incrementallyLoadTextures : {
-            get : function() {
-                return this._incrementallyLoadTextures;
-            }
-        },
-
-        /**
-         * Return the number of pending texture loads.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Number}
-         * @readonly
-         */
-        pendingTextureLoads : {
-            get : function() {
-                return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
-            }
-        },
-
-        /**
          * Returns true if the model was transformed this frame
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -865,7 +643,7 @@ define([
 
         /**
          * Gets or sets the condition specifying at what distance from the camera that this model will be displayed.
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          * @type {DistanceDisplayCondition}
          * @default undefined
          */
@@ -905,7 +683,7 @@ define([
          * Gets the model's up-axis.
          * By default models are y-up according to the glTF spec, however geo-referenced models will typically be z-up.
          *
-         * @memberof Model.prototype
+         * @memberof ClassificationModel.prototype
          *
          * @type {Number}
          * @default Axis.Y
@@ -972,6 +750,17 @@ define([
             get : function() {
                 return this._cachedTexturesByteLength;
             }
+        },
+
+        /**
+         * Gets the model's classification type.
+         * @memberof ClassificationModel.prototype
+         * @type {ClassificationType}
+         */
+        classificationType : {
+            get : function() {
+                return this._classificationType;
+            }
         }
     });
 
@@ -983,202 +772,7 @@ define([
         return array.subarray(offset, offset + length);
     }
 
-    function containsGltfMagic(uint8Array) {
-        var magic = getMagic(uint8Array);
-        return magic === 'glTF';
-    }
-
-    /**
-     * <p>
-     * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
-     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
-     * </p>
-     * <p>
-     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
-     * KHR_binary_glTF extension with a .glb extension.
-     * </p>
-     * <p>
-     * For high-precision rendering, Cesium supports the CESIUM_RTC extension, which introduces the
-     * CESIUM_RTC_MODELVIEW parameter semantic that says the node is in WGS84 coordinates translated
-     * relative to a local origin.
-     * </p>
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url to the .gltf file.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
-     * @param {String} [options.basePath] The base path that paths in the glTF JSON are relative to.
-     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maximumScale] The maximum scale for the model.
-     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
-     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
-     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     *
-     * @returns {Model} The newly created model.
-     *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
-     *
-     * @example
-     * // Example 1. Create a model from a glTF asset
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.gltf'
-     * }));
-     *
-     * @example
-     * // Example 2. Create model and provide all properties and events
-     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
-     * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-     *
-     * var model = scene.primitives.add(Cesium.Model.fromGltf({
-     *   url : './duck/duck.gltf',
-     *   show : true,                     // default
-     *   modelMatrix : modelMatrix,
-     *   scale : 2.0,                     // double size
-     *   minimumPixelSize : 128,          // never smaller than 128 pixels
-     *   maximumScale: 20000,             // never larger than 20000 * model size (overrides minimumPixelSize)
-     *   allowPicking : false,            // not pickable
-     *   debugShowBoundingVolume : false, // default
-     *   debugWireframe : false
-     * }));
-     *
-     * model.readyPromise.then(function(model) {
-     *   // Play all animations when the model is ready to render
-     *   model.activeAnimations.addAll();
-     * });
-     */
-    Model.fromGltf = function(options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(options) || !defined(options.url)) {
-            throw new DeveloperError('options.url is required');
-        }
-        //>>includeEnd('debug');
-
-        var url = options.url;
-        // If no cache key is provided, use the absolute URL, since two URLs with
-        // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
-        var basePath = defaultValue(options.basePath, getBaseUri(url, true));
-
-        options = clone(options);
-        if (defined(options.basePath) && !defined(options.cacheKey)) {
-            cacheKey += basePath;
-        }
-
-        options.cacheKey = cacheKey;
-        options.basePath = basePath;
-        var model = new Model(options);
-
-        options.headers = defined(options.headers) ? clone(options.headers) : {};
-        if (!defined(options.headers.Accept)) {
-            options.headers.Accept = defaultModelAccept;
-        }
-
-        var cachedGltf = gltfCache[cacheKey];
-        if (!defined(cachedGltf)) {
-            cachedGltf = new CachedGltf({
-                ready : false
-            });
-            cachedGltf.count = 1;
-            cachedGltf.modelsToLoad.push(model);
-            setCachedGltf(model, cachedGltf);
-            gltfCache[cacheKey] = cachedGltf;
-
-            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
-                var array = new Uint8Array(arrayBuffer);
-                if (containsGltfMagic(array)) {
-                    // Load binary glTF
-                    var parsedGltf = parseBinaryGltf(array);
-                    // KHR_binary_glTF is from the beginning of the binary section
-                    cachedGltf.makeReady(parsedGltf, array);
-                } else {
-                    // Load text (JSON) glTF
-                    var json = getStringFromTypedArray(array);
-                    cachedGltf.makeReady(JSON.parse(json));
-                }
-            }).otherwise(getFailedLoadFunction(model, 'model', url));
-        } else if (!cachedGltf.ready) {
-            // Cache hit but the loadArrayBuffer() or loadText() request is still pending
-            ++cachedGltf.count;
-            cachedGltf.modelsToLoad.push(model);
-        }
-        // else if the cached glTF is defined and ready, the
-        // model constructor will pick it up using the cache key.
-
-        return model;
-    };
-
-    /**
-     * For the unit tests to verify model caching.
-     *
-     * @private
-     */
-    Model._gltfCache = gltfCache;
-
-    function getRuntime(model, runtimeName, name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (model._state !== ModelState.LOADED) {
-            throw new DeveloperError('The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        return (model._runtime[runtimeName])[name];
-    }
-
-    /**
-     * Returns the glTF node with the given <code>name</code> property.  This is used to
-     * modify a node's transform for animation outside of glTF animations.
-     *
-     * @param {String} name The glTF name of the node.
-     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     *
-     * @example
-     * // Apply non-uniform scale to node LOD3sp
-     * var node = model.getNode('LOD3sp');
-     * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
-     */
-    Model.prototype.getNode = function(name) {
-        var node = getRuntime(this, 'nodesByName', name);
-        return defined(node) ? node.publicNode : undefined;
-    };
-
-    /**
-     * Returns the glTF mesh with the given <code>name</code> property.
-     *
-     * @param {String} name The glTF name of the mesh.
-     *
-     * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     */
-    Model.prototype.getMesh = function(name) {
-        return getRuntime(this, 'meshesByName', name);
-    };
-
-    /**
-     * Returns the glTF material with the given <code>name</code> property.
-     *
-     * @param {String} name The glTF name of the material.
-     * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
-     *
-     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
-     */
-    Model.prototype.getMaterial = function(name) {
-        return getRuntime(this, 'materialsByName', name);
-    };
+    ClassificationModel._gltfCache = gltfCache;
 
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
@@ -1502,38 +1096,19 @@ define([
         return cachedExtensionsRequired;
     }
 
-    function createVertexBuffer(bufferViewId, model, context) {
+    function createVertexBuffer(bufferViewId, model) {
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
-
-        /*
-        var vertexBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : loadResources.getBuffer(bufferView),
-            usage : BufferUsage.STATIC_DRAW
-        });
-        vertexBuffer.vertexArrayDestroyable = false;
-        */
         var vertexBuffer = loadResources.getBuffer(bufferView);
         model._rendererResources.buffers[bufferViewId] = vertexBuffer;
         model._geometryByteLength += vertexBuffer.byteLength;
     }
 
-    function createIndexBuffer(bufferViewId, componentType, model, context) {
+    function createIndexBuffer(bufferViewId, componentType, model) {
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
-
-        /*
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : loadResources.getBuffer(bufferView),
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : componentType
-        });
-        indexBuffer.vertexArrayDestroyable = false;
-        */
         var indexBuffer = {
             typedArray : loadResources.getBuffer(bufferView),
             indexDatatype : componentType
@@ -1542,24 +1117,23 @@ define([
         model._geometryByteLength += indexBuffer.typedArray.byteLength;
     }
 
-    function createBuffers(model, frameState) {
+    function createBuffers(model) {
         var loadResources = model._loadResources;
 
         if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
-        var context = frameState.context;
         var vertexBuffersToCreate = loadResources.vertexBuffersToCreate;
         var indexBuffersToCreate = loadResources.indexBuffersToCreate;
 
         while (vertexBuffersToCreate.length > 0) {
-            createVertexBuffer(vertexBuffersToCreate.dequeue(), model, context);
+            createVertexBuffer(vertexBuffersToCreate.dequeue(), model);
         }
 
         while (indexBuffersToCreate.length > 0) {
             var i = indexBuffersToCreate.dequeue();
-            createIndexBuffer(i.id, i.componentType, model, context);
+            createIndexBuffer(i.id, i.componentType, model);
         }
     }
 
@@ -1698,7 +1272,7 @@ define([
         return shader;
     }
 
-    function createProgram(id, model, context) {
+    function createProgram(id, model) {
         var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
         var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
 
@@ -1747,42 +1321,24 @@ define([
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
-        /*
-        model._rendererResources.programs[id] = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : drawVS,
-            fragmentShaderSource : drawFS,
-            attributeLocations : attributeLocations
-        });
-        */
         model._rendererResources.programs[id] = {
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         };
 
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
-            var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
+        // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+        var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
+        var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
 
-            /*
-            model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
-                attributeLocations : attributeLocations
-            });
-            */
-            model._rendererResources.pickPrograms[id] = {
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
-                attributeLocations : attributeLocations
-            };
-        }
+        model._rendererResources.pickPrograms[id] = {
+            vertexShaderSource : pickVS,
+            fragmentShaderSource : pickFS,
+            attributeLocations : attributeLocations
+        };
     }
 
-    function createPrograms(model, frameState) {
+    function createPrograms(model) {
         var loadResources = model._loadResources;
         var programsToCreate = loadResources.programsToCreate;
 
@@ -1796,10 +1352,9 @@ define([
             return;
         }
 
-        var context = frameState.context;
         // Create all loaded programs this frame
         while (programsToCreate.length > 0) {
-            createProgram(programsToCreate.dequeue(), model, context);
+            createProgram(programsToCreate.dequeue(), model);
         }
     }
 
@@ -1810,7 +1365,7 @@ define([
         };
     }
 
-    function createVertexArrays(model, context) {
+    function createVertexArrays(model) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
@@ -1845,7 +1400,6 @@ define([
                     var attributeLocations = getAttributeLocations();
                     var attributeName;
                     var attributeLocation;
-                    //var attributes = [];
                     var attributes = {};
                     var primitiveAttributes = primitive.attributes;
                     for (attributeName in primitiveAttributes) {
@@ -1855,16 +1409,6 @@ define([
                             // with an attribute that wasn't used and the asset wasn't optimized.
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
-                                /*
-                                attributes.push({
-                                    index : attributeLocation,
-                                    vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : numberOfComponentsForType(a.type),
-                                    componentDatatype : a.componentType,
-                                    offsetInBytes : a.byteOffset,
-                                    strideInBytes : getAccessorByteStride(gltf, a)
-                                });
-                                */
                                 attributes[attributeName] = {
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
@@ -1882,13 +1426,6 @@ define([
                         var accessor = accessors[primitive.indices];
                         indexBuffer = rendererBuffers[accessor.bufferView];
                     }
-                    /*
-                    rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
-                        context : context,
-                        attributes : attributes,
-                        indexBuffer : indexBuffer
-                    });
-                    */
                     rendererVertexArrays[meshId + '.primitive.' + i] = {
                         attributes : attributes,
                         indexBuffer : indexBuffer
@@ -2168,125 +1705,11 @@ define([
         }
     }
 
-    var stencilMask = 0x0F;
-    var stencilReference = 0;
-
-    var classificationPreloadRS = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.DECREMENT_WRAP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.INCREMENT_WRAP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    var classificationStencilRS = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
-            },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS_OR_EQUAL
-        },
-        depthMask : false
-    };
-
-    var classificationColorRS = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false,
-        blending : BlendingState.ALPHA_BLEND
-    };
-
-    var pickRenderState = {
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.NOT_EQUAL,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            backFunction : StencilFunction.NOT_EQUAL,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
+    function createCommand(model, gltfNode, runtimeNode, context) {
         var batchTable = model._batchTable;
 
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
-        var allowPicking = model.allowPicking;
         var runtimeMeshesByName = model._runtime.meshesByName;
 
         var resources = model._rendererResources;
@@ -2364,106 +1787,6 @@ define([
                 };
             }
 
-            /*
-            var preloadCommand = new DrawCommand({
-                boundingVolume : new BoundingSphere(), // updated in update()
-                cull : model.cull,
-                modelMatrix : new Matrix4(),           // computed in update()
-                primitiveType : primitive.mode,
-                vertexArray : vertexArray,
-                count : count,
-                offset : offset,
-                shaderProgram : rendererPrograms[technique.program],
-                uniformMap : uniformMap,
-                renderState : RenderState.fromCache(classificationPreloadRS),
-                owner : owner,
-                pass : model.opaquePass
-            });
-
-            var stencilCommand = DrawCommand.shallowClone(preloadCommand);
-            stencilCommand.renderState = RenderState.fromCache(classificationStencilRS);
-
-            var colorCommand = DrawCommand.shallowClone(preloadCommand);
-            colorCommand.renderState = RenderState.fromCache(classificationColorRS);
-
-            var pickCommand;
-
-            if (allowPicking) {
-                var pickUniformMap;
-
-                // Callback to override default model picking
-                if (defined(model._pickFragmentShaderLoaded)) {
-                    if (defined(model._pickUniformMapLoaded)) {
-                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                    } else {
-                        // This is unlikely, but could happen if the override shader does not
-                        // need new uniforms since, for example, its pick ids are coming from
-                        // a vertex attribute or are baked into the shader source.
-                        pickUniformMap = combine(uniformMap);
-                    }
-                } else {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-                    var pickUniforms = {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    };
-                    pickUniformMap = combine(uniformMap, pickUniforms);
-                }
-
-                pickCommand = new DrawCommand({
-                    boundingVolume : new BoundingSphere(), // updated in update()
-                    cull : model.cull,
-                    modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.mode,
-                    vertexArray : vertexArray,
-                    count : count,
-                    offset : offset,
-                    shaderProgram : rendererPickPrograms[technique.program],
-                    uniformMap : pickUniformMap,
-                    renderState : RenderState.fromCache(pickRenderState),
-                    owner : owner,
-                    pass : model.opaquePass
-                });
-            }
-
-            var preloadCommand2D;
-            var stencilCommand2D;
-            var colorCommand2D;
-            var pickCommand2D;
-            if (!scene3DOnly) {
-                preloadCommand2D = DrawCommand.shallowClone(preloadCommand);
-                preloadCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                preloadCommand2D.modelMatrix = new Matrix4();           // updated in update()
-
-                stencilCommand2D = DrawCommand.shallowClone(stencilCommand);
-                stencilCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
-                stencilCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
-
-                colorCommand2D = DrawCommand.shallowClone(colorCommand);
-                colorCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
-                colorCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
-
-                if (allowPicking) {
-                    pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                    pickCommand2D.boundingVolume = preloadCommand2D.boundingVolume;
-                    pickCommand2D.modelMatrix = preloadCommand2D.modelMatrix;
-                }
-            }
-
-            var nodeCommand = {
-                show : true,
-                boundingSphere : boundingSphere,
-                preloadCommand : preloadCommand,
-                stencilCommand : stencilCommand,
-                colorCommand : colorCommand,
-                pickCommand : pickCommand,
-                preloadCommand2D : preloadCommand2D,
-                stencilCommand2D : stencilCommand2D,
-                colorCommand2D : colorCommand2D,
-                pickCommand2D : pickCommand2D
-            };
-            */
-
             var buffer = vertexArray.attributes.POSITION.vertexBuffer;
             var positionsBuffer = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Float32Array.BYTES_PER_ELEMENT);
 
@@ -2533,35 +1856,32 @@ define([
             var fragmentShaderSource = shader.fragmentShaderSource;
             var attributeLocations = shader.attributeLocations;
 
-            var pickVertexShaderSource;
-            var pickFragmentShaderSource;
             var pickUniformMap;
-            if (allowPicking) {
-                var pickShader = rendererPickPrograms[technique.program];
-                pickVertexShaderSource = pickShader.vertexShaderSource;
-                pickFragmentShaderSource = pickShader.fragmentShaderSource;
+            var pickShader = rendererPickPrograms[technique.program];
+            var pickVertexShaderSource = pickShader.vertexShaderSource;
+            var pickFragmentShaderSource = pickShader.fragmentShaderSource;
 
-                // Callback to override default model picking
-                if (defined(model._pickFragmentShaderLoaded)) {
-                    if (defined(model._pickUniformMapLoaded)) {
-                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                    } else {
-                        // This is unlikely, but could happen if the override shader does not
-                        // need new uniforms since, for example, its pick ids are coming from
-                        // a vertex attribute or are baked into the shader source.
-                        pickUniformMap = combine(uniformMap);
-                    }
+            // Callback to override default model picking
+            if (defined(model._pickFragmentShaderLoaded)) {
+                if (defined(model._pickUniformMapLoaded)) {
+                    pickUniformMap = model._pickUniformMapLoaded(uniformMap);
                 } else {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-                    var pickUniforms = {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    };
-                    pickUniformMap = combine(uniformMap, pickUniforms);
+                    // This is unlikely, but could happen if the override shader does not
+                    // need new uniforms since, for example, its pick ids are coming from
+                    // a vertex attribute or are baked into the shader source.
+                    pickUniformMap = combine(uniformMap);
                 }
+            } else {
+                var pickId = context.createPickId(owner);
+                pickIds.push(pickId);
+                var pickUniforms = {
+                    czm_pickColor : createPickColorFunction(pickId.color)
+                };
+                pickUniformMap = combine(uniformMap, pickUniforms);
             }
 
             var nodeCommand = new Vector3DTilePrimitive({
+                classificationType : model._classificationType,
                 positions : positionsBuffer,
                 indices : indices,
                 indexOffsets : indexOffsets,
@@ -2571,7 +1891,6 @@ define([
                 batchedIndices : batchedIndices,
                 batchTable : batchTable,
                 boundingVolume : new BoundingSphere(), // updated in update()
-                boundingVolumes : [], // TODO
                 _vertexShaderSource : vertexShaderSource,
                 _fragmentShaderSource : fragmentShaderSource,
                 _attributeLocations : attributeLocations,
@@ -2588,7 +1907,7 @@ define([
 
     }
 
-    function createRuntimeNodes(model, context, scene3DOnly) {
+    function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2648,7 +1967,7 @@ define([
                 }
 
                 if (defined(gltfNode.mesh)) {
-                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
+                    createCommand(model, gltfNode, runtimeNode, context);
                 }
 
                 var children = gltfNode.children;
@@ -2672,21 +1991,13 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
-        var scene3DOnly = frameState.scene3DOnly;
 
         checkSupportedGlExtensions(model, context);
-        createBuffers(model, frameState); // using glTF bufferViews
-        createPrograms(model, frameState);
-
-        if (!model._loadRendererResourcesFromCache) {
-            createVertexArrays(model, context); // using glTF meshes
-            // Long-term, we might not cache render states if they could change
-            // due to an animation, e.g., a uniform going from opaque to transparent.
-            // Could use copy-on-write if it is worth it.  Probably overkill.
-        }
-
-        createUniformMaps(model, context);               // using glTF materials/techniques
-        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
+        createBuffers(model); // using glTF bufferViews
+        createPrograms(model);
+        createVertexArrays(model); // using glTF meshes
+        createUniformMaps(model, context);  // using glTF materials/techniques
+        createRuntimeNodes(model, context); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2713,7 +2024,6 @@ define([
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
-        var allowPicking = model.allowPicking;
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -2756,43 +2066,14 @@ define([
                         // Node has meshes, which has primitives.  Update their commands.
                         for (var j = 0; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
-                            //var command = primitiveCommand.preloadCommand;
-                            //Matrix4.clone(nodeMatrix, command.modelMatrix);
                             Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
 
                             // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
-                            //BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
                             BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
 
                             if (defined(model._rtcCenter)) {
-                                //Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
                                 Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
                             }
-
-                            /*
-                            if (allowPicking) {
-                                var pickCommand = primitiveCommand.pickCommand;
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                            }
-
-                            // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
-                            // will be clipped by the viewport. We create a second command that translates the model
-                            // model matrix to the opposite side of the map so the part that was clipped in one viewport
-                            // is drawn in the other.
-                            command = primitiveCommand.preloadCommand2D;
-                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
-                                Matrix4.clone(nodeMatrix, command.modelMatrix);
-                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
-                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                                if (allowPicking) {
-                                    var pickCommand2D = primitiveCommand.pickCommand2D;
-                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
-                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
-                                }
-                            }
-                            */
                         }
                     }
                 }
@@ -2825,133 +2106,6 @@ define([
         }
 
         ++model._maxDirtyNumber;
-    }
-
-    function updatePerNodeShow(model) {
-        // Totally not worth it, but we could optimize this:
-        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
-
-        var rootNodes = model._runtime.rootNodes;
-        var length = rootNodes.length;
-
-        var nodeStack = scratchNodeStack;
-
-        for (var i = 0; i < length; ++i) {
-            var n = rootNodes[i];
-            n.computedShow = n.publicNode.show;
-            nodeStack.push(n);
-
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var show = n.computedShow;
-
-                var nodeCommands = n.commands;
-                var nodeCommandsLength = nodeCommands.length;
-                for (var j = 0; j < nodeCommandsLength; ++j) {
-                    nodeCommands[j].show = show;
-                }
-                // if commandsLength is zero, the node has a light or camera
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
-                    // Parent needs to be shown for child to be shown.
-                    child.computedShow = show && child.publicNode.show;
-                    nodeStack.push(child);
-                }
-            }
-        }
-    }
-
-    function updatePickIds(model, context) {
-        var id = model.id;
-        if (model._id !== id) {
-            model._id = id;
-
-            var pickIds = model._pickIds;
-            var length = pickIds.length;
-            for (var i = 0; i < length; ++i) {
-                pickIds[i].object.id = id;
-            }
-        }
-    }
-
-    function updateWireframe(model) {
-        if (model._debugWireframe !== model.debugWireframe) {
-            model._debugWireframe = model.debugWireframe;
-
-            // This assumes the original primitive was TRIANGLES and that the triangles
-            // are connected for the wireframe to look perfect.
-            var primitiveType = model.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-            var nodeCommands = model._nodeCommands;
-            var length = nodeCommands.length;
-
-            for (var i = 0; i < length; ++i) {
-                nodeCommands[i].command.primitiveType = primitiveType;
-            }
-        }
-    }
-
-    function updateShowBoundingVolume(model) {
-        if (model.debugShowBoundingVolume !== model._debugShowBoundingVolume) {
-            model._debugShowBoundingVolume = model.debugShowBoundingVolume;
-
-            var debugShowBoundingVolume = model.debugShowBoundingVolume;
-            var nodeCommands = model._nodeCommands;
-            var length = nodeCommands.length;
-
-            for (var i = 0; i < length; ++i) {
-                nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
-            }
-        }
-    }
-
-    function updateClassification(model, frameState) {
-        var dirty = model._classificationType !== model.classificationType || model._dirty;
-        model._classificationType = model.classificationType;
-
-        if (!dirty) {
-            return;
-        }
-
-        var pass;
-        switch (model._classificationType) {
-            case ClassificationType.TERRAIN:
-                pass = Pass.TERRAIN_CLASSIFICATION;
-                break;
-            case ClassificationType.CESIUM_3D_TILE:
-                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-                break;
-            default:
-                pass = Pass.CLASSIFICATION;
-        }
-
-        var scene3DOnly = frameState.scene3DOnly;
-        var allowPicking = model.allowPicking;
-        var nodeCommands = model._nodeCommands;
-        var length = nodeCommands.length;
-        for (var i = 0; i < length; ++i) {
-            var nodeCommand = nodeCommands[i];
-
-            nodeCommand.preloadCommand.pass = pass;
-            nodeCommand.stencilCommand.pass = pass;
-            nodeCommand.colorCommand.pass = pass;
-
-            if (allowPicking) {
-                nodeCommand.pickCommand.pass = pass;
-            }
-
-            if (!scene3DOnly) {
-                nodeCommand.preloadCommand2D.pass = pass;
-                nodeCommand.stencilCommand2D.pass = pass;
-                nodeCommand.colorCommand2D.pass = pass;
-
-                if (allowPicking) {
-                    nodeCommand.pickCommand2D.pass = pass;
-                }
-            }
-        }
     }
 
     var scratchBoundingSphere = new BoundingSphere();
@@ -3040,51 +2194,6 @@ define([
             }
         }
     }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function CachedRendererResources(context, cacheKey) {
-        this.buffers = undefined;
-        this.vertexArrays = undefined;
-        this.programs = undefined;
-        this.pickPrograms = undefined;
-        this.classificationPrograms = undefined;
-        this.renderStates = undefined;
-        this.ready = false;
-
-        this.context = context;
-        this.cacheKey = cacheKey;
-        this.count = 0;
-    }
-
-    function destroy(property) {
-        for (var name in property) {
-            if (property.hasOwnProperty(name)) {
-                property[name].destroy();
-            }
-        }
-    }
-
-    function destroyCachedRendererResources(resources) {
-        destroy(resources.buffers);
-        destroy(resources.vertexArrays);
-        destroy(resources.programs);
-        destroy(resources.pickPrograms);
-        destroy(resources.classificationPrograms);
-    }
-
-    CachedRendererResources.prototype.release = function() {
-        if (--this.count === 0) {
-            if (defined(this.cacheKey)) {
-                // Remove if this was cached
-                delete this.context.cache.modelRendererResourceCache[this.cacheKey];
-            }
-            destroyCachedRendererResources(this);
-            return destroyObject(this);
-        }
-
-        return undefined;
-    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -3186,7 +2295,7 @@ define([
         return (distance2 >= nearSquared) && (distance2 <= farSquared);
     }
 
-    Model.prototype.updateCommands = function(batchId, color) {
+    ClassificationModel.prototype.updateCommands = function(batchId, color) {
         var nodeCommands = this._nodeCommands;
         var length = nodeCommands.length;
         for (var i = 0; i < length; ++i) {
@@ -3194,22 +2303,10 @@ define([
         }
     };
 
-    /**
-     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
-     * get the draw commands needed to render this primitive.
-     * <p>
-     * Do not call this function directly.  This is documented just to
-     * list the exceptions that may be propagated when the scene is rendered:
-     * </p>
-     *
-     * @exception {RuntimeError} Failed to load external reference.
-     */
-    Model.prototype.update = function(frameState) {
+    ClassificationModel.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
-
-        //var context = frameState.context;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
@@ -3233,10 +2330,7 @@ define([
                 }
 
                 this._loadResources = new LoadResources();
-                if (!this._loadRendererResourcesFromCache) {
-                    // Buffers are required to updateVersion
-                    parseBuffers(this);
-                }
+                parseBuffers(this);
             }
         }
 
@@ -3297,7 +2391,7 @@ define([
             var modeChanged = frameState.mode !== this._mode;
             this._mode = frameState.mode;
 
-            // Model's model matrix needs to be updated
+            // ClassificationModel's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                                         (this._scale !== this.scale) ||
                                         (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
@@ -3335,17 +2429,6 @@ define([
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
             }
-
-            /*
-            if (this._perNodeShowDirty) {
-                this._perNodeShowDirty = false;
-                updatePerNodeShow(this);
-            }
-            updatePickIds(this, context);
-            updateWireframe(this);
-            updateShowBoundingVolume(this);
-            updateClassification(this, frameState);
-            */
         }
 
         if (justLoaded) {
@@ -3358,103 +2441,20 @@ define([
             return;
         }
 
-        // We don't check show at the top of the function since we
-        // want to be able to progressively load models when they are not shown,
-        // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
-            // PERFORMANCE_IDEA: This is terrible
-            //var commandList = frameState.commandList;
-            //var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
-            var i;
-            var nc;
-
-            /*
-            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
-            var boundingVolume;
-
-            if (passes.render) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        boundingVolume = nc.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.preloadCommand2D);
-                            commandList.push(nc.stencilCommand2D);
-                            commandList.push(nc.colorCommand2D);
-                        } else {
-                            commandList.push(nc.preloadCommand);
-                            commandList.push(nc.stencilCommand);
-                            commandList.push(nc.colorCommand);
-                        }
-                    }
-                }
-            }
-
-            if (passes.pick && this.allowPicking) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        boundingVolume = nc.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.preloadCommand2D);
-                            commandList.push(nc.stencilCommand2D);
-                            commandList.push(nc.pickCommand2D);
-                        } else {
-                            commandList.push(nc.preloadCommand);
-                            commandList.push(nc.stencilCommand);
-                            commandList.push(nc.pickCommand);
-                        }
-                    }
-                }
-            }
-            */
-
-            for (i = 0; i < length; ++i) {
-                nc = nodeCommands[i];
-                //if (nc.show) {
-                    nc.update(frameState);
-                //}
+            for (var i = 0; i < length; ++i) {
+                nodeCommands[i].update(frameState);
             }
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Model#destroy
-     */
-    Model.prototype.isDestroyed = function() {
+    ClassificationModel.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * model = model && model.destroy();
-     *
-     * @see Model#isDestroyed
-     */
-    Model.prototype.destroy = function() {
+    ClassificationModel.prototype.destroy = function() {
         if (defined(this._removeUpdateHeightCallback)) {
             this._removeUpdateHeightCallback();
             this._removeUpdateHeightCallback = undefined;
@@ -3466,7 +2466,6 @@ define([
         }
 
         this._rendererResources = undefined;
-        this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
@@ -3479,5 +2478,5 @@ define([
         return destroyObject(this);
     };
 
-    return Model;
+    return ClassificationModel;
 });
