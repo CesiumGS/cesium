@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/PixelFormat',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
         '../Renderer/Texture',
@@ -24,6 +25,7 @@ define([
         DeveloperError,
         loadImage,
         PixelFormat,
+        Resource,
         RuntimeError,
         Framebuffer,
         Texture,
@@ -359,7 +361,7 @@ define([
             //>>includeEnd('debug');
         } else if (typeof image === 'string') {
             // if image is a string, load it as an image
-            image = loadImage(image);
+            image = loadImage(new Resource({url: image}));
         }
 
         var that = this;

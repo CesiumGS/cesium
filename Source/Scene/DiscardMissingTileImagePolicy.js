@@ -4,6 +4,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getImagePixels',
         '../Core/loadImageViaBlob',
+        '../Core/Resource',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         getImagePixels,
         loadImageViaBlob,
+        Resource,
         when) {
     'use strict';
 
@@ -87,7 +89,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImageViaBlob(options.missingImageUrl), success, failure);
+        when(loadImageViaBlob(new Resource({url: options.missingImageUrl})), success, failure);
     }
 
     /**

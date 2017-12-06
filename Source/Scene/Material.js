@@ -16,6 +16,7 @@ define([
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
         '../Shaders/Materials/BumpMapMaterial',
@@ -53,6 +54,7 @@ define([
         Matrix2,
         Matrix3,
         Matrix4,
+        Resource,
         CubeMap,
         Texture,
         BumpMapMaterial,
@@ -792,13 +794,16 @@ define([
 
             if (uniformValue !== material._texturePaths[uniformId]) {
                 if (typeof uniformValue === 'string') {
+                    var resource = new Resource({
+                        url: uniformValue
+                    });
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(uniformValue);
+                        promise = loadKTX(resource);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(uniformValue);
+                        promise = loadCRN(resource);
                     } else {
-                        promise = loadImage(uniformValue);
+                        promise = loadImage(resource);
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -848,12 +853,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
+                    loadImage(new Resource({url: uniformValue.positiveX})),
+                    loadImage(new Resource({url: uniformValue.negativeX})),
+                    loadImage(new Resource({url: uniformValue.positiveY})),
+                    loadImage(new Resource({url: uniformValue.negativeY})),
+                    loadImage(new Resource({url: uniformValue.positiveZ})),
+                    loadImage(new Resource({url: uniformValue.negativeZ}))
                 ];
 
                 when.all(promises).then(function(images) {

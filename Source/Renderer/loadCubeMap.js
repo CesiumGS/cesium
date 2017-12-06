@@ -3,6 +3,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/loadImage',
+        '../Core/Resource',
         '../ThirdParty/when',
         './CubeMap'
     ], function(
@@ -10,6 +11,7 @@ define([
         defined,
         DeveloperError,
         loadImage,
+        Resource,
         when,
         CubeMap) {
     'use strict';
@@ -71,12 +73,30 @@ define([
         // ideally, we would do it in the primitive's update function.
 
         var facePromises = [
-            loadImage(urls.positiveX, allowCrossOrigin),
-            loadImage(urls.negativeX, allowCrossOrigin),
-            loadImage(urls.positiveY, allowCrossOrigin),
-            loadImage(urls.negativeY, allowCrossOrigin),
-            loadImage(urls.positiveZ, allowCrossOrigin),
-            loadImage(urls.negativeZ, allowCrossOrigin)
+            loadImage(new Resource({
+                url: urls.positiveX,
+                allowCrossOrigin: allowCrossOrigin
+            })),
+            loadImage(new Resource({
+                url: urls.negativeX,
+                allowCrossOrigin: allowCrossOrigin
+            })),
+            loadImage(new Resource({
+                url: urls.positiveY,
+                allowCrossOrigin: allowCrossOrigin
+            })),
+            loadImage(new Resource({
+                url: urls.negativeY,
+                allowCrossOrigin: allowCrossOrigin
+            })),
+            loadImage(new Resource({
+                url: urls.positiveZ,
+                allowCrossOrigin: allowCrossOrigin
+            })),
+            loadImage(new Resource({
+                url: urls.negativeZ,
+                allowCrossOrigin: allowCrossOrigin
+            }))
         ];
 
         return when.all(facePromises, function(images) {

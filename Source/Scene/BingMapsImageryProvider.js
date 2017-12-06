@@ -10,6 +10,7 @@ define([
         '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
@@ -29,6 +30,7 @@ define([
         loadJsonp,
         CesiumMath,
         Rectangle,
+        Resource,
         RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
@@ -45,7 +47,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url of the Bing Maps server hosting the imagery.
+     * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -55,8 +57,7 @@ define([
      *        Bing Maps imagery without creating a separate key for your application.
      * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
      *        By default, tiles are loaded using the same protocol as the page.
-     * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
-     *        imagery to load.
+     * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
      *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
      *        for information on the supported cultures.
@@ -71,8 +72,7 @@ define([
      *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed. //TODO deprecate
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -106,7 +106,22 @@ define([
         this._key = BingMapsApi.getKey(options.key);
         this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
 
-        this._url = options.url;
+        var urlResource = options.url;
+        if (typeof urlResource === 'string') {
+            urlResource = new Resource({
+                url: urlResource,
+                queryParameters: {
+                    key: this._key
+                }
+            });
+        }
+        if (defined(options.proxy)) {
+            //TODO deprectaion warning
+            urlResource.proxy = options.proxy;
+        }
+
+        this._resource = urlResource;
+
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
@@ -145,7 +160,12 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
+        var metadataResource = urlResource.getDerivedResource({
+            url:'/REST/v1/Imagery/Metadata/' + this._mapStyle,
+            queryParameters: {
+                incl: 'ImageryProviders'
+            }
+        });
         var that = this;
         var metadataError;
 
@@ -207,16 +227,13 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
             that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
-            var metadata = loadJsonp(metadataUrl, {
-                callbackParameterName : 'jsonp',
-                proxy : that._proxy
-            });
+            var metadata = loadJsonp(metadataResource, 'jsonp');
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -232,7 +249,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.url;
             }
         },
 
@@ -244,6 +261,7 @@ define([
          */
         proxy : {
             get : function() {
+                //TODO deprecation
                 return this._proxy;
             }
         },
@@ -543,7 +561,11 @@ define([
         //>>includeEnd('debug');
 
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url, request);
+        var resource = this._resource.getDerivedResource({
+            url: url,
+            request: request
+        });
+        return ImageryProvider.loadImage(this, resource);
     };
 
     /**
@@ -637,11 +659,6 @@ define([
         var subdomains = imageryProvider._imageUrlSubdomains;
         var subdomainIndex = (x + y + level) % subdomains.length;
         imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            imageUrl = proxy.getURL(imageUrl);
-        }
 
         return imageUrl;
     }

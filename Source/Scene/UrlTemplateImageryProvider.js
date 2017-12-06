@@ -17,6 +17,7 @@ define([
         '../Core/loadXML',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './ImageryProvider'
@@ -39,6 +40,7 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        Resource,
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
@@ -83,7 +85,7 @@ define([
      * @constructor
      *
      * @param {Promise.<Object>|Object} [options] Object with the following properties:
-     * @param {String} options.url  The URL template to use to request tiles.  It has the following keywords:
+     * @param {Resource|String} options.url  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
      *     <li><code>{x}</code>: The tile X coordinate in the tiling scheme, where 0 is the Westernmost tile.</li>
@@ -103,7 +105,7 @@ define([
      *     <li><code>{width}</code>: The width of each tile in pixels.</li>
      *     <li><code>{height}</code>: The height of each tile in pixels.</li>
      * </ul>
-     * @param {String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
+     * @param {Resource|String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
      *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
      *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
      *                 parameter, plus the following:
@@ -134,7 +136,7 @@ define([
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL. //TODO deprecate
      * @param {Credit|String} [options.credit=''] A credit for the data source, which is displayed on the canvas.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -221,9 +223,9 @@ define([
 
         this._errorEvent = new Event();
 
-        this._url = undefined;
+        this._resource = undefined;
         this._urlSchemeZeroPadding = undefined;
-        this._pickFeaturesUrl = undefined;
+        this._pickFeaturesResource = undefined;
         this._proxy = undefined;
         this._tileWidth = undefined;
         this._tileHeight = undefined;
@@ -278,7 +280,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.url;
             }
         },
 
@@ -328,7 +330,7 @@ define([
          */
         pickFeaturesUrl : {
             get : function() {
-                return this._pickFeaturesUrl;
+                return this._pickFeaturesResource.url;
             }
         },
 
@@ -341,7 +343,8 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                //TODO deprecation warning
+                return this._resource.proxy;
             }
         },
 
@@ -578,11 +581,30 @@ define([
                 throw new DeveloperError('options.url is required.');
             }
             //>>includeEnd('debug');
+
+            var resource = properties.url;
+            if (typeof resource === 'string') {
+                resource = new Resource({
+                    url: resource
+                });
+            }
+            var pickFeaturesResource = properties.pickFeaturesUrl;
+            if (typeof pickFeaturesResource === 'string') {
+                pickFeaturesResource = new Resource({
+                    url: pickFeaturesResource
+                });
+            }
+
+            if (defined(properties.proxy)) {
+                //TODO deprecation warning
+                resource.proxy = properties.proxy;
+                pickFeaturesResource.proxy = properties.proxy;
+            }
+
+            that._resource = resource;
+            that._pickFeaturesResoruce = pickFeaturesResource;
             that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
-            that._url = properties.url;
             that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
-            that._pickFeaturesUrl = properties.pickFeaturesUrl;
-            that._proxy = properties.proxy;
             that._tileDiscardPolicy = properties.tileDiscardPolicy;
             that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
 
@@ -635,8 +657,11 @@ define([
                 }
             }
 
-            that._urlParts = urlTemplateToParts(that._url, allTags);
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, allPickFeaturesTags);
+            that._urlParts = urlTemplateToParts(resource.url, allTags);
+            if (defined(pickFeaturesResource)) {
+                that._pickFeaturesUrlParts = urlTemplateToParts(pickFeaturesResource.url, allPickFeaturesTags);
+            }
+
             return true;
         });
     };
@@ -679,8 +704,7 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url, request);
+        return ImageryProvider.loadImage(this, buildImageUrl(this, x, y, level, request));
     };
 
     /**
@@ -704,7 +728,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this.enablePickFeatures || !defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
+        if (!this.enablePickFeatures || !defined(this._pickFeaturesResource) || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 
@@ -723,21 +747,19 @@ define([
             }
 
             var format = that._getFeatureInfoFormats[formatIndex];
-            var url = buildPickFeaturesUrl(that, x, y, level, longitude, latitude, format.format);
+            var resource = buildPickFeaturesUrl(that, x, y, level, longitude, latitude, format.format);
 
             ++formatIndex;
 
             if (format.type === 'json') {
-                return loadJson(url).then(format.callback).otherwise(doRequest);
+                return loadJson(resource).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'xml') {
-                return loadXML(url).then(format.callback).otherwise(doRequest);
+                return loadXML(resource).then(format.callback).otherwise(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(url).then(format.callback).otherwise(doRequest);
+                return loadText(resource).then(format.callback).otherwise(doRequest);
             }
-            return loadWithXhr({
-                url : url,
-                responseType : format.format
-            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            resource.responseTye = format.format;
+            return loadWithXhr(resource).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
         }
 
         return doRequest();
@@ -748,12 +770,17 @@ define([
     var projectedScratchComputed = false;
     var projectedScratch = new Rectangle();
 
-    function buildImageUrl(imageryProvider, x, y, level) {
+    function buildImageUrl(imageryProvider, x, y, level, request) {
         degreesScratchComputed = false;
         projectedScratchComputed = false;
 
-        return buildUrl(imageryProvider, imageryProvider._urlParts, function(partFunction) {
+        var url = buildUrl(imageryProvider, imageryProvider._urlParts, function(partFunction) {
             return partFunction(imageryProvider, x, y, level);
+        });
+
+        return imageryProvider._resource.getDerivedResource({
+            url: url,
+            request: request
         });
     }
 
@@ -767,8 +794,11 @@ define([
         ijScratchComputed = false;
         longitudeLatitudeProjectedScratchComputed = false;
 
-        return buildUrl(imageryProvider, imageryProvider._pickFeaturesUrlParts, function(partFunction) {
+        var url = buildUrl(imageryProvider, imageryProvider._pickFeaturesUrlParts, function(partFunction) {
             return partFunction(imageryProvider, x, y, level, longitude, latitude, format);
+        });
+        return imageryProvider._pickFeaturesResoruce.getDerivedResource({
+            url: url
         });
     }
 
@@ -782,11 +812,6 @@ define([
             } else {
                 url += encodeURIComponent(partFunctionInvoker(part));
             }
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
         }
 
         return url;

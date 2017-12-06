@@ -5,7 +5,8 @@ define([
         '../Core/loadCRN',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/loadKTX'
+        '../Core/loadKTX',
+        '../Core/Resource'
     ], function(
         defined,
         defineProperties,
@@ -13,7 +14,8 @@ define([
         loadCRN,
         loadImage,
         loadImageViaBlob,
-        loadKTX) {
+        loadKTX,
+        Resource) {
     'use strict';
 
     /**
@@ -326,23 +328,32 @@ define([
      * that the request should be retried later.
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {String} url The URL of the image.
-     * @param {Request} [request] The request object. Intended for internal use only.
+     * @param {Resource|String} url The URL of the image.
+     * @param {Request} [request] The request object. Intended for internal use only. //TODO deprecate
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url, request) {
+        if (typeof url === 'string') {
+            url = new Resource({
+                url: url
+            });
+        }
+        if (defined(request)) {
+            //TODO deprecation warning
+            url.request = request;
+        }
         if (ktxRegex.test(url)) {
-            return loadKTX(url, undefined, request);
+            return loadKTX(url);
         } else if (crnRegex.test(url)) {
-            return loadCRN(url, undefined, request);
+            return loadCRN(url);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return loadImageViaBlob(url, request);
+            return loadImageViaBlob(url);
         }
 
-        return loadImage(url, undefined, request);
+        return loadImage(url);
     };
 
     return ImageryProvider;

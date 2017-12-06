@@ -16,6 +16,7 @@ define([
         '../Core/Math',
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../ThirdParty/when',
         './ClassificationPrimitive',
         './ClassificationType',
@@ -38,6 +39,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         Rectangle,
+        Resource,
         when,
         ClassificationPrimitive,
         ClassificationType,
@@ -49,6 +51,10 @@ define([
             return 55000.0;
         }
     };
+
+    var terrainHeightsResource = new Resource({
+        url: buildModuleUrl('Assets/approximateTerrainHeights.json')
+    });
 
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
@@ -685,7 +691,7 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+        GroundPrimitive._initPromise = loadJson(terrainHeightsResource).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
