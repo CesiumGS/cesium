@@ -410,11 +410,20 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
+        result.x = cartesian.x;
+        result.y = cartesian.y;
+        result.z = cartesian.z;
+
         var magnitude = Cartesian3.magnitude(cartesian);
 
-        result.x = cartesian.x / magnitude;
-        result.y = cartesian.y / magnitude;
-        result.z = cartesian.z / magnitude;
+        if (magnitude > 0.0) {
+            result.x /= magnitude;
+            result.y /= magnitude;
+            result.z /= magnitude;
+        }
+        else {
+            debugger;
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (isNaN(result.x) || isNaN(result.y) || isNaN(result.z)) {
