@@ -1,11 +1,13 @@
 define([
         '../ThirdParty/when',
         './Check',
-        './loadImage'
+        './loadImage',
+        './Resource'
     ], function(
         when,
         Check,
-        loadImage) {
+        loadImage,
+        Resource) {
     'use strict';
 
     /**
@@ -22,7 +24,11 @@ define([
         });
 
         var blobUrl = window.URL.createObjectURL(blob);
-        return loadImage(blobUrl, false, request).then(function(image) {
+        return loadImage(new Resource({
+            url: blobUrl,
+            allowCrossOrigin: false,
+            request: request
+        })).then(function(image) {
             window.URL.revokeObjectURL(blobUrl);
             return image;
         }, function(error) {

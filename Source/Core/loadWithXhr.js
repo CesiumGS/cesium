@@ -7,6 +7,7 @@ define([
         './Request',
         './RequestErrorEvent',
         './RequestScheduler',
+        './Resource',
         './RuntimeError',
         './TrustedServers'
     ], function(
@@ -18,6 +19,7 @@ define([
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        Resource,
         RuntimeError,
         TrustedServers) {
     'use strict';
@@ -30,14 +32,14 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the data.
-     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
-     * @param {String} [options.method='GET'] The HTTP method to use.
-     * @param {String} [options.data] The data to send with the request, if any.
-     * @param {Object} [options.headers] HTTP headers to send with the request, if any.
-     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
-     * @param {Request} [options.request] The request object.
+     * @param {Resource|Object} optionsOrResource Object with the following properties:
+     * @param {String} optionsOrResource.url The URL of the data.
+     * @param {String} [optionsOrResource.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [optionsOrResource.method='GET'] The HTTP method to use.
+     * @param {String} [optionsOrResource.data] The data to send with the request, if any.
+     * @param {Object} [optionsOrResource.headers] HTTP headers to send with the request, if any.
+     * @param {String} [optionsOrResource.overrideMimeType] Overrides the MIME type returned by the server.
+     * @param {Request} [optionsOrResource.request] The request object.
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -59,23 +61,19 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadWithXhr(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+    function loadWithXhr(optionsOrResource) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.url', options.url);
+        Check.defined('optionsOrResource', optionsOrResource);
         //>>includeEnd('debug');
 
-        var url = options.url;
-
-        var responseType = options.responseType;
-        var method = defaultValue(options.method, 'GET');
-        var data = options.data;
-        var headers = options.headers;
-        var overrideMimeType = options.overrideMimeType;
-        url = defaultValue(url, options.url);
-
-        var request = defined(options.request) ? options.request : new Request();
+        var url = optionsOrResource.url;
+        var responseType = optionsOrResource.responseType;
+        var method = optionsOrResource.method;
+        var data = optionsOrResource.data;
+        var headers = optionsOrResource.headers;
+        var overrideMimeType = optionsOrResource.overrideMimeType;
+        var request = optionsOrResource.request;
+        request = defined(request) ? request : new Request();
         request.url = url;
         request.requestFunction = function() {
             var deferred = when.defer();

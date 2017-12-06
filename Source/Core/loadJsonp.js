@@ -8,7 +8,8 @@ define([
         './objectToQuery',
         './queryToObject',
         './Request',
-        './RequestScheduler'
+        './RequestScheduler',
+        './Resource'
     ], function(
         Uri,
         when,
@@ -19,7 +20,8 @@ define([
         objectToQuery,
         queryToObject,
         Request,
-        RequestScheduler) {
+        RequestScheduler,
+        Resource) {
     'use strict';
 
     /**
@@ -46,10 +48,10 @@ define([
      *
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJsonp(url, options, request) {
+    function loadJsonp(urlOrResource, options, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(urlOrResource)) {
+            throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
 
@@ -61,27 +63,34 @@ define([
             functionName = 'loadJsonp' + Math.random().toString().substring(2, 8);
         } while (defined(window[functionName]));
 
-        var uri = new Uri(url);
 
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
 
+        if (typeof urlOrResource === 'string') {
+            urlOrResource = new Resource({
+                url: urlOrResource,
+                request: request
+            });
+        }
         if (defined(options.parameters)) {
-            queryOptions = combine(options.parameters, queryOptions);
+            //TODO deprecate
+            urlOrResource.addQueryParameters(options.parameters);
+        }
+        if (defined(options.proxy)) {
+            //TODO deprecate
+            urlOrResource.proxy = options.proxy;
+        }
+        if (defined(request)) {
+            //TODO deprecate
+            urlOrResource.request = request;
         }
 
+        var callbackQuery = {};
         var callbackParameterName = defaultValue(options.callbackParameterName, 'callback');
-        queryOptions[callbackParameterName] = functionName;
+        callbackQuery[callbackParameterName] = functionName;
+        urlOrResource.addQueryParameters(callbackQuery);
 
-        uri.query = objectToQuery(queryOptions);
-
-        url = uri.toString();
-
-        var proxy = options.proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        request = defined(request) ? request : new Request();
+        request = defined(urlOrResource.request) ? urlOrResource.request : new Request();
+        var url = urlOrResource.url;
         request.url = url;
         request.requestFunction = function() {
             var deferred = when.defer();

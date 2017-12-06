@@ -7,6 +7,7 @@ define([
         './isDataUri',
         './Request',
         './RequestScheduler',
+        './Resource',
         './TrustedServers'
     ], function(
         when,
@@ -17,6 +18,7 @@ define([
         isDataUri,
         Request,
         RequestScheduler,
+        Resource,
         TrustedServers) {
     'use strict';
 
@@ -26,7 +28,7 @@ define([
      *
      * @exports loadImage
      *
-     * @param {String} url The source URL of the image.
+     * @param {String} urlOrResource The source URL of the image.
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
@@ -50,20 +52,27 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImage(url, allowCrossOrigin, request) {
+    function loadImage(urlOrResource, allowCrossOrigin, request) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('url', url);
+        Check.defined('urlOrResource', urlOrResource);
         //>>includeEnd('debug');
+        if (typeof urlOrResource === 'string') {
+            urlOrResource = new Resource({
+                url: urlOrResource,
+                allowCrossOrigin: allowCrossOrigin,
+                request: request
+            });
+        }
 
-        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
-
+        request = urlOrResource.request;
+        var url = urlOrResource.url;
         request = defined(request) ? request : new Request();
         request.url = url;
         request.requestFunction = function() {
             var crossOrigin;
 
             // data URIs can't have allowCrossOrigin set.
-            if (isDataUri(url) || !allowCrossOrigin) {
+            if (isDataUri(url) || !urlOrResource.allowCrossOrigin) {
                 crossOrigin = false;
             } else {
                 crossOrigin = isCrossOriginUrl(url);

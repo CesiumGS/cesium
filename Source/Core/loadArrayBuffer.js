@@ -1,7 +1,9 @@
 define([
-        './loadWithXhr'
+        './loadWithXhr',
+        './Resource'
     ], function(
-        loadWithXhr) {
+        loadWithXhr,
+        Resource) {
     'use strict';
 
     /**
@@ -12,7 +14,7 @@ define([
      *
      * @exports loadArrayBuffer
      *
-     * @param {String} url The URL of the binary data.
+     * @param {Resource|String} urlOrResource The URL of the binary data.
      * @param {Object} [headers] HTTP headers to send with the requests.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<ArrayBuffer>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
@@ -28,13 +30,16 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadArrayBuffer(url, headers, request) {
-        return loadWithXhr({
-            url : url,
-            responseType : 'arraybuffer',
-            headers : headers,
-            request : request
-        });
+    function loadArrayBuffer(urlOrResource, headers, request) {
+        if (typeof urlOrResource === 'string') {
+            urlOrResource = new Resource({
+                url: urlOrResource,
+                headers: headers,
+                request: request
+            });
+        }
+        urlOrResource.responseType = 'arraybuffer';
+        return loadWithXhr(urlOrResource);
     }
 
     return loadArrayBuffer;

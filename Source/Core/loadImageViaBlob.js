@@ -3,13 +3,15 @@ define([
         './defined',
         './isDataUri',
         './loadBlob',
-        './loadImage'
+        './loadImage',
+        './Resource'
     ], function(
         when,
         defined,
         isDataUri,
         loadBlob,
-        loadImage) {
+        loadImage,
+        Resource) {
     'use strict';
 
     var xhrBlobSupported = (function() {
@@ -37,7 +39,7 @@ define([
      *
      * @exports loadImageViaBlob
      *
-     * @param {String} url The source URL of the image.
+     * @param {Resource|String} urlOrResource The source URL of the image.
      * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
@@ -59,12 +61,19 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImageViaBlob(url, request) {
+    function loadImageViaBlob(urlOrResource, request) {
+        if (typeof urlOrResource === 'string') {
+            urlOrResource = new Resource({
+                url: urlOrResource,
+                request: request
+            });
+        }
+        var url = urlOrResource.getUrl();
         if (!xhrBlobSupported || isDataUri(url)) {
-            return loadImage(url, undefined, request);
+            return loadImage(urlOrResource);
         }
 
-        var blobPromise = loadBlob(url, undefined, request);
+        var blobPromise = loadBlob(urlOrResource);
         if (!defined(blobPromise)) {
             return undefined;
         }
@@ -74,8 +83,10 @@ define([
                 return;
             }
             var blobUrl = window.URL.createObjectURL(blob);
-
-            return loadImage(blobUrl, false).then(function(image) {
+            var resource = urlOrResource.clone();
+            resource.url = blobUrl;
+            resource.allowCrossOrigin = false;
+            return loadImage(resource).then(function(image) {
                 image.blob = blob;
                 window.URL.revokeObjectURL(blobUrl);
                 return image;

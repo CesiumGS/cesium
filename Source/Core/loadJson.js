@@ -2,12 +2,14 @@ define([
         './clone',
         './defined',
         './DeveloperError',
-        './loadText'
+        './loadText',
+        './Resource'
     ], function(
         clone,
         defined,
         DeveloperError,
-        loadText) {
+        loadText,
+        Resource) {
     'use strict';
 
     var defaultHeaders = {
@@ -25,7 +27,7 @@ define([
      *
      * @exports loadJson
      *
-     * @param {String} url The URL to request.
+     * @param {Resource|String} urlOrResource The URL to request.
      * @param {Object} [headers] HTTP headers to send with the request.
      * 'Accept: application/json,&#42;&#47;&#42;;q=0.01' is added to the request headers automatically
      * if not specified.
@@ -44,13 +46,22 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadJson(url, headers, request) {
+    function loadJson(urlOrResource, headers, request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(urlOrResource)) {
+            throw new DeveloperError('urlOrResource is required.');
         }
         //>>includeEnd('debug');
 
+        if (typeof urlOrResource === 'string') {
+            urlOrResource = new Resource({
+                url: urlOrResource,
+                headers: headers,
+                request: request
+            });
+        }
+
+        headers = urlOrResource.headers;
         if (!defined(headers)) {
             headers = defaultHeaders;
         } else if (!defined(headers.Accept)) {
@@ -58,8 +69,9 @@ define([
             headers = clone(headers);
             headers.Accept = defaultHeaders.Accept;
         }
+        urlOrResource.headers = headers;
 
-        var textPromise = loadText(url, headers, request);
+        var textPromise = loadText(urlOrResource);
         if (!defined(textPromise)) {
             return undefined;
         }
