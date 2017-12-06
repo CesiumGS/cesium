@@ -127,6 +127,12 @@ define([
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
         // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+        //console.log(this._distanceToLimbInScaledSpaceSquared);
+        // todo:  What is the real issue here?
+        if (this._distanceToLimbInScaledSpaceSquared <= 0.05) {
+            return true;
+        }
+
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
