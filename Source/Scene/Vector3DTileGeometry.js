@@ -62,10 +62,11 @@ define([
         this._ellipsoidBatchIds = options.ellipsoidBatchIds;
         this._spheres = options.spheres;
         this._sphereBatchIds = options.sphereBatchIds;
-        this._center = options.center;
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
         this._boundingVolume = options.boundingVolume;
+
+        this._center = defaultValue(options.center, this._boundingVolume.center);
 
         this._boundingVolumes = undefined;
         this._batchedIndices = undefined;
