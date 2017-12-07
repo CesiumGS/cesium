@@ -1051,11 +1051,16 @@ define([
             uniformDecl +
             'void main() {\n' +
             computePosition +
+            '    gl_Position = czm_depthClampFarPlane(gl_Position);\n' +
             '}\n';
         var fs =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
             'void main() \n' +
             '{ \n' +
             '    gl_FragColor = vec4(1.0); \n' +
+            '    czm_writeDepthClampedToFarPlane();\n' +
             '}\n';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
