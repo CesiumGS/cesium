@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -8,7 +8,7 @@ defineSuite([
         'Core/Matrix4',
         'Core/Plane'
     ], function(
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
@@ -28,7 +28,7 @@ defineSuite([
     var boundingVolume  = new BoundingSphere(Cartesian3.ZERO, 1.0);
 
     it('default constructor', function() {
-        clippingPlanes = new ClippingPlanesCollection();
+        clippingPlanes = new ClippingPlaneCollection();
         expect(clippingPlanes.planes).toEqual([]);
         expect(clippingPlanes.enabled).toEqual(true);
         expect(clippingPlanes.modelMatrix).toEqual(Matrix4.IDENTITY);
@@ -39,7 +39,7 @@ defineSuite([
     });
 
     it('transforms and packs planes into result paramter', function() {
-        clippingPlanes = new ClippingPlanesCollection({
+        clippingPlanes = new ClippingPlaneCollection({
             planes : planes
         });
 
@@ -50,7 +50,7 @@ defineSuite([
     });
 
     it('transforms and packs planes with no result parameter creates new array', function() {
-        clippingPlanes = new ClippingPlanesCollection({
+        clippingPlanes = new ClippingPlaneCollection({
             planes : planes
         });
 
@@ -61,7 +61,7 @@ defineSuite([
     });
 
     it('clone without a result parameter returns new identical copy', function() {
-        clippingPlanes = new ClippingPlanesCollection({
+        clippingPlanes = new ClippingPlaneCollection({
             planes : planes,
             enabled : false,
             edgeColor : Color.RED,
@@ -81,13 +81,13 @@ defineSuite([
     });
 
     it('clone stores copy in result parameter', function() {
-        clippingPlanes = new ClippingPlanesCollection({
+        clippingPlanes = new ClippingPlaneCollection({
             planes : planes,
             enabled : false,
             edgeColor : Color.RED,
             modelMatrix : transform
         });
-        var result = new ClippingPlanesCollection();
+        var result = new ClippingPlaneCollection();
         var copy = clippingPlanes.clone(result);
         expect(copy).toBe(result);
         expect(result.planes).not.toBe(planes);
@@ -108,7 +108,7 @@ defineSuite([
 
 
     it('setting combineClippingRegions updates testIntersection function', function() {
-        clippingPlanes = new ClippingPlanesCollection();
+        clippingPlanes = new ClippingPlaneCollection();
         var originalIntersectFunction = clippingPlanes._testIntersection;
 
         expect(clippingPlanes._testIntersection).not.toBeUndefined();
@@ -119,7 +119,7 @@ defineSuite([
     });
 
     it('computes intersections with bounding volumes when combining clipping regions', function() {
-        clippingPlanes = new ClippingPlanesCollection();
+        clippingPlanes = new ClippingPlaneCollection();
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
@@ -142,7 +142,7 @@ defineSuite([
     });
 
     it('computes intersections with bounding volumes when not combining clipping regions', function() {
-        clippingPlanes = new ClippingPlanesCollection({
+        clippingPlanes = new ClippingPlaneCollection({
             combineClippingRegions : false
         });
 
@@ -170,7 +170,7 @@ defineSuite([
     });
 
     it('computes intersections applies optional transform to planes', function() {
-        clippingPlanes = new ClippingPlanesCollection();
+        clippingPlanes = new ClippingPlaneCollection();
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, transform);
         expect(intersect).toEqual(Intersect.INSIDE);

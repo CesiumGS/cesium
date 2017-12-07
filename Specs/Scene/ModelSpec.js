@@ -28,7 +28,7 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Scene/Axis',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
@@ -65,7 +65,7 @@ defineSuite([
         RenderState,
         ShaderSource,
         Axis,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
@@ -2549,7 +2549,7 @@ defineSuite([
             expect(model._packedClippingPlanes.length).toBe(0);
             expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
-            model.clippingPlanes = new ClippingPlanesCollection({
+            model.clippingPlanes = new ClippingPlaneCollection({
                planes : [
                    new Plane(Cartesian3.UNIT_X, 0.0)
                ]
@@ -2577,7 +2577,7 @@ defineSuite([
             });
 
             var plane = new Plane(Cartesian3.UNIT_X, 0.0);
-            model.clippingPlanes = new ClippingPlanesCollection({
+            model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ]
@@ -2610,7 +2610,7 @@ defineSuite([
             });
 
             var plane = new Plane(Cartesian3.UNIT_X, 0.0);
-            model.clippingPlanes = new ClippingPlanesCollection({
+            model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ],
@@ -2644,7 +2644,7 @@ defineSuite([
                 modelColor = rgba;
             });
 
-            model.clippingPlanes = new ClippingPlanesCollection({
+            model.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_Z, -5.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)

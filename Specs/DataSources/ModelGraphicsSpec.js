@@ -9,7 +9,7 @@ defineSuite([
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
         'Scene/ColorBlendMode',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
@@ -23,7 +23,7 @@ defineSuite([
         NodeTransformationProperty,
         PropertyBag,
         ColorBlendMode,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         HeightReference,
         ShadowMode) {
     'use strict';
@@ -46,7 +46,7 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 0.2),
             colorBlendMode : ColorBlendMode.HIGHLIGHT,
             colorBlendAmount : 0.5,
-            clippingPlanes : new ClippingPlanesCollection(),
+            clippingPlanes : new ClippingPlaneCollection(),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -120,7 +120,7 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
-        source.clippingPlanes = new ConstantProperty(new ClippingPlanesCollection());
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -173,7 +173,7 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
-        source.clippingPlanes = new ConstantProperty(new ClippingPlanesCollection());
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -194,7 +194,7 @@ defineSuite([
         var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         var colorBlendAmount = new ConstantProperty(0.5);
-        var clippingPlanes = new ConstantProperty(new ClippingPlanesCollection());
+        var clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         var runAnimations = new ConstantProperty(true);
         var clampAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
@@ -259,7 +259,7 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
-        source.clippingPlanes = new ConstantProperty(new ClippingPlanesCollection());
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
