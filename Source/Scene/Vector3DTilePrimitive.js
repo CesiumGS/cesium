@@ -59,7 +59,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of classification meshes.
+     * Creates a batch of classification meshes.
      *
      * @alias Vector3DTilePrimitive
      * @constructor
@@ -77,7 +77,6 @@ define([
      * @param {Uint16Array} options.vertexBatchIds The batch id for each vertex.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
      * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
-     * @param {Object} options.pickObject The object to assign as each draw commands owner.
      *
      * @private
      */
@@ -102,8 +101,6 @@ define([
         this._boundingVolumes = options.boundingVolumes;
 
         this._center = defaultValue(options.center, Cartesian3.ZERO);
-
-        this._pickObject = options.pickObject;
 
         this._va = undefined;
         this._sp = undefined;
@@ -270,7 +267,7 @@ define([
         var batchTable = primitive._batchTable;
 
         var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(ShadowVolumeVS);
-        var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS);
+        var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -666,11 +663,6 @@ define([
         var bv = primitive._boundingVolume;
         var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
-        var owner = primitive._pickObject;
-        if (!defined(owner)) {
-            owner = primitive;
-        }
-
         for (var j = 0; j < length; ++j) {
             var offset = batchedIndices[j].offset;
             var count = batchedIndices[j].count;
@@ -678,7 +670,7 @@ define([
             var stencilPreloadCommand = commands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = commands[j * 3] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 
@@ -695,7 +687,7 @@ define([
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = commands[j * 3 + 1] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 
@@ -712,7 +704,7 @@ define([
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = commands[j * 3 + 2] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 
@@ -789,11 +781,6 @@ define([
         var uniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
         var pass = primitive._classificationType !== ClassificationType.TERRAIN ? Pass.CESIUM_3D_TILE_CLASSIFICATION : Pass.TERRAIN_CLASSIFICATION;
 
-        var owner = primitive._pickObject;
-        if (!defined(owner)) {
-            owner = primitive;
-        }
-
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
             var count = primitive._indexCounts[j];
@@ -802,7 +789,7 @@ define([
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 
@@ -819,7 +806,7 @@ define([
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 
@@ -836,7 +823,7 @@ define([
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : owner
+                    owner : primitive
                 });
             }
 

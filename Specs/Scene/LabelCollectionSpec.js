@@ -1826,7 +1826,7 @@ defineSuite([
 
         it('should increase label height and decrease width when adding newlines', function() {
             var label = labels.add({
-                text : 'apl apl apl',
+                text : 'apl apl apl'
             });
             scene.renderForSpecs();
 

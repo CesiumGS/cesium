@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/FeatureDetection',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/Math',
@@ -27,6 +28,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        FeatureDetection,
         getMagic,
         getStringFromTypedArray,
         CesiumMath,
@@ -42,7 +44,20 @@ define([
         Vector3DTilePolylines) {
     'use strict';
 
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
+
     /**
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/VectorData/README.md|Vector}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Implements the {@link Cesium3DTileContent} interface.
+     * </p>
+     *
      * @alias Vector3DTileContent
      * @constructor
      *
@@ -75,7 +90,7 @@ define([
 
     defineProperties(Vector3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#featuresLength
          */
         featuresLength : {
             get : function() {
@@ -84,7 +99,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#pointsLength
          */
         pointsLength : {
             get : function() {
@@ -96,7 +111,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#trianglesLength
          */
         trianglesLength : {
             get : function() {
@@ -118,7 +133,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#geometryByteLength
          */
         geometryByteLength : {
             get : function() {
@@ -140,7 +155,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#texturesByteLength
          */
         texturesByteLength : {
             get : function() {
@@ -152,7 +167,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTableByteLength
          */
         batchTableByteLength : {
             get : function() {
@@ -161,7 +176,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#innerContents
          */
         innerContents : {
             get : function() {
@@ -170,7 +185,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#readyPromise
          */
         readyPromise : {
             get : function() {
@@ -179,7 +194,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tileset
          */
         tileset : {
             get : function() {
@@ -188,7 +203,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#tile
          */
         tile : {
             get : function() {
@@ -197,7 +212,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#url
          */
         url : {
             get : function() {
@@ -206,7 +221,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * @inheritdoc Cesium3DTileContent#batchTable
          */
         batchTable : {
             get : function() {
@@ -469,13 +484,11 @@ define([
         if (defined(featureTableJson.RECTANGLE)) {
             rectangle = Rectangle.unpack(featureTableJson.RECTANGLE);
         } else {
-            rectangle = content._tile.contentBoundingVolume.rectangle;
+            throw new RuntimeError('Rectangle is required in the feature table.');
         }
 
         var minHeight = featureTableJson.MINIMUM_HEIGHT;
         var maxHeight = featureTableJson.MAXIMUM_HEIGHT;
-        var format = defaultValue(featureTableJson.FORMAT, 0);
-        var isCartographic = format === 0;
         var modelMatrix = content._tile.computedTransform;
 
         var center;
@@ -484,22 +497,11 @@ define([
             Matrix4.multiplyByPoint(modelMatrix, center, center);
         } else {
             center = Rectangle.center(rectangle);
-            if (isCartographic) {
-                center.height = CesiumMath.lerp(minHeight, maxHeight, 0.5);
-                center = Ellipsoid.WGS84.cartographicToCartesian(center);
-            } else {
-                center = Cartesian3.fromElements(center.longitude, center.latitude, 0.0);
-                center.z = CesiumMath.lerp(minHeight, maxHeight, 0.5);
-                Matrix4.multiplyByPoint(modelMatrix, center, center);
-            }
+            center.height = CesiumMath.lerp(minHeight, maxHeight, 0.5);
+            center = Ellipsoid.WGS84.cartographicToCartesian(center);
         }
 
         var batchIds = getBatchIds(featureTableJson, featureTableBinary);
-
-        var pickObject = {
-            content : content,
-            primitive : content._tileset
-        };
 
         byteOffset += byteOffset % 4;
 
@@ -540,8 +542,6 @@ define([
                 boundingVolume : content._tile._boundingVolume.boundingVolume,
                 batchTable : batchTable,
                 batchIds : batchIds.polygons,
-                pickObject : pickObject,
-                isCartographic : isCartographic,
                 modelMatrix : modelMatrix
             });
         }
@@ -684,14 +684,14 @@ define([
     }
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#hasProperty
      */
     Vector3DTileContent.prototype.hasProperty = function(batchId, name) {
         return this._batchTable.hasProperty(batchId, name);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#getFeature
      */
     Vector3DTileContent.prototype.getFeature = function(batchId) {
         //>>includeStart('debug', pragmas.debug);
@@ -706,7 +706,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
      */
     Vector3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         if (defined(this._polygons)) {
@@ -727,7 +727,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#applyStyle
      */
     Vector3DTileContent.prototype.applyStyle = function(frameState, style) {
         createFeatures(this);
@@ -749,7 +749,7 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#update
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         if (defined(this._batchTable)) {
@@ -791,14 +791,14 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#isDestroyed
      */
     Vector3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContent} interface.
+     * @inheritdoc Cesium3DTileContent#destroy
      */
     Vector3DTileContent.prototype.destroy = function() {
         this._polygons = this._polygons && this._polygons.destroy();

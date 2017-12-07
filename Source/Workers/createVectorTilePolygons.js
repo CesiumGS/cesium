@@ -35,12 +35,10 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchRectangle = new Rectangle();
-    var scratchMatrix4 = new Matrix4();
     var scratchScalars = {
         min : undefined,
         max : undefined,
-        indexBytesPerElement : undefined,
-        isCartographic : undefined
+        indexBytesPerElement : undefined
     };
 
     function unpackBuffer(buffer) {
@@ -59,11 +57,6 @@ define([
         offset += Ellipsoid.packedLength;
 
         Rectangle.unpack(packedBuffer, offset, scratchRectangle);
-        offset += Rectangle.packedLength;
-
-        scratchScalars.isCartographic = packedBuffer[offset++] === 1.0;
-
-        Matrix4.unpack(packedBuffer, offset, scratchMatrix4);
     }
 
     function packedBatchedIndicesLength(batchedIndices) {
@@ -148,8 +141,6 @@ define([
         var rectangle = scratchRectangle;
         var minHeight = scratchScalars.min;
         var maxHeight = scratchScalars.max;
-        var modelMatrix = scratchMatrix4;
-        var isCartographic = scratchScalars.isCartographic;
 
         var minimumHeights = parameters.minimumHeights;
         var maximumHeights = parameters.maximumHeights;
@@ -175,13 +166,8 @@ define([
             var x = CesiumMath.lerp(rectangle.west, rectangle.east, u / maxShort);
             var y = CesiumMath.lerp(rectangle.south, rectangle.north, v / maxShort);
 
-            var decodedPosition;
-            if (isCartographic) {
-                var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
-                decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
-            } else {
-                decodedPosition = Cartesian3.fromElements(x, y, 0.0, scratchEncodedPosition);
-            }
+            var cart = Cartographic.fromRadians(x, y, 0.0, scratchBVCartographic);
+            var decodedPosition = ellipsoid.cartographicToCartesian(cart, scratchEncodedPosition);
             Cartesian3.pack(decodedPosition, decodedPositions, i * 3);
         }
 
@@ -281,15 +267,9 @@ define([
             var minLon = Number.POSITIVE_INFINITY;
             var maxLon = Number.NEGATIVE_INFINITY;
 
-            // TODO: potentially using an releasing a lot of memory here
-            var polygonPositions = [];
-            var bvPositions = [];
-
-            var position;
-
             for (j = 0; j < polygonCount; ++j) {
-                position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
-                Matrix4.multiplyByPoint(modelMatrix, position, position);
+                var position = Cartesian3.unpack(decodedPositions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
+                ellipsoid.scaleToGeodeticSurface(position, position);
 
                 var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
                 var lat = carto.latitude;
@@ -300,29 +280,12 @@ define([
                 minLon = Math.min(lon, minLon);
                 maxLon = Math.max(lon, maxLon);
 
-                var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
-                polygonPositions.push(Cartesian3.clone(scaledPosition));
-            }
-
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(polygonPositions, ellipsoid);
-            var positions2D = tangentPlane.projectPointsOntoPlane(polygonPositions);
-
-            var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (windingOrder === WindingOrder.CLOCKWISE) {
-                polygonPositions.reverse();
-            }
-
-            for (j = 0; j < polygonCount; ++j) {
-                position = polygonPositions[j];
-
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMinimumHeight, scratchScaledNormal);
                 var minHeightPosition = Cartesian3.add(position, scaledNormal, scratchMinHeightPosition);
 
                 scaledNormal = Cartesian3.multiplyByScalar(normal, polygonMaximumHeight, scaledNormal);
                 var maxHeightPosition = Cartesian3.add(position, scaledNormal, scratchMaxHeightPosition);
-
-                bvPositions.push(Cartesian3.clone(minHeightPosition), Cartesian3.clone(maxHeightPosition));
 
                 Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
                 Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
@@ -337,17 +300,13 @@ define([
                 batchIdIndex += 2;
             }
 
-            if (isCartographic) {
-                rectangle = scratchBVRectangle;
-                rectangle.west = minLon;
-                rectangle.east = maxLon;
-                rectangle.south = minLat;
-                rectangle.north = maxLat;
+            rectangle = scratchBVRectangle;
+            rectangle.west = minLon;
+            rectangle.east = maxLon;
+            rectangle.south = minLat;
+            rectangle.north = maxLat;
 
-                boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
-            } else {
-                boundingVolumes[i] = OrientedBoundingBox.fromPoints(bvPositions);
-            }
+            boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
 
             var indicesIndex = buffer.indexOffset;
 

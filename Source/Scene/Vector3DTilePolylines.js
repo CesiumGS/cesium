@@ -53,7 +53,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of polylines that have been subdivided to be draped on terrain.
+     * Creates a batch of polylines that have been subdivided to be draped on terrain.
      *
      * @alias Vector3DTilePolylines
      * @constructor
@@ -417,7 +417,7 @@ define([
         var batchTable = primitive._batchTable;
 
         var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId')(Vector3DTilePolylinesVS);
-        var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS);
+        var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false, undefined);
 
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -436,7 +436,7 @@ define([
         });
 
         vsSource = batchTable.getPickVertexShaderCallback('a_batchId')(Vector3DTilePolylinesVS);
-        fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS);
+        fsSource = batchTable.getPickFragmentShaderCallback()(PolylineFS, false, undefined);
 
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],

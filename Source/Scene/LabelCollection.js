@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -18,6 +19,7 @@ define([
     ], function(
         BoundingRectangle,
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -116,7 +118,7 @@ define([
     }
 
     function addGlyphToTextureAtlas(textureAtlas, id, canvas, glyphTextureInfo) {
-        textureAtlas.addImage(id, canvas).then(function(index, id) {
+        textureAtlas.addImage(id, canvas).then(function(index) {
             glyphTextureInfo.index = index;
         });
     }
@@ -432,7 +434,7 @@ define([
      * Each label can have a different font, color, scale, etc.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Label.png' width='400' height='300' /><br />
+     * <img src='Images/Label.png' width='400' height='300' /><br />
      * Example labels
      * </div>
      * <br /><br />
@@ -501,6 +503,8 @@ define([
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
         this._resolutionScale = undefined;
+
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -812,6 +816,9 @@ define([
         var blendOption = backgroundBillboardCollection.length > 0 ? BlendOption.TRANSLUCENT : this.blendOption;
         billboardCollection.blendOption = blendOption;
         backgroundBillboardCollection.blendOption = blendOption;
+
+        billboardCollection._highlightColor = this._highlightColor;
+        backgroundBillboardCollection._highlightColor = this._highlightColor;
 
         this._labelsToUpdate.length = 0;
         backgroundBillboardCollection.update(frameState);
