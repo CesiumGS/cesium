@@ -35,7 +35,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
+     * Creates a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
      *
      * @alias Vector3DTilePolygons
      * @constructor
@@ -88,20 +88,13 @@ define([
         this._polygonMaximumHeights = options.polygonMaximumHeights;
         this._center = defaultValue(options.center, Cartesian3.ZERO);
         this._rectangle = options.rectangle;
-        this._isCartographic = options.isCartographic;
-        this._modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY);
 
-        if (this._isCartographic) {
-            this._modelMatrix = Matrix4.IDENTITY;
-            this._center = this._ellipsoid.cartographicToCartesian(Rectangle.center(this._rectangle));
-        }
+        this._center = undefined;
 
         this._boundingVolume = options.boundingVolume;
         this._boundingVolumes = undefined;
 
         this._batchedIndices = undefined;
-
-        this._pickObject = options.pickObject;
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -181,7 +174,7 @@ define([
     });
 
     function packBuffer(polygons) {
-        var packedBuffer = new Float64Array(4 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength + Matrix4.packedLength);
+        var packedBuffer = new Float64Array(3 + Cartesian3.packedLength + Ellipsoid.packedLength + Rectangle.packedLength);
 
         var offset = 0;
         packedBuffer[offset++] = polygons._indices.BYTES_PER_ELEMENT;
@@ -196,11 +189,6 @@ define([
         offset += Ellipsoid.packedLength;
 
         Rectangle.pack(polygons._rectangle, packedBuffer, offset);
-        offset += Rectangle.packedLength;
-
-        packedBuffer[offset++] = polygons._isCartographic ? 1.0 : 0.0;
-
-        Matrix4.pack(polygons._modelMatrix, packedBuffer, offset);
 
         return packedBuffer;
     }
@@ -267,6 +255,8 @@ define([
                 counts = polygons._counts = polygons._counts.slice();
                 indexCounts = polygons._indexCounts= polygons._indexCounts.slice();
                 indices = polygons._indices = polygons._indices.slice();
+
+                polygons._center = polygons._ellipsoid.cartographicToCartesian(Rectangle.center(polygons._rectangle));
 
                 batchIds = polygons._transferrableBatchIds = new Uint32Array(polygons._batchIds);
                 batchTableColors = polygons._batchTableColors = new Uint32Array(batchIds.length);
@@ -340,8 +330,7 @@ define([
                 batchedIndices : polygons._batchedIndices,
                 boundingVolume : polygons._boundingVolume,
                 boundingVolumes : polygons._boundingVolumes,
-                center : polygons._center,
-                pickObject : defaultValue(polygons._pickObject, polygons)
+                center : polygons._center
             });
 
             polygons._batchTable = undefined;
@@ -363,12 +352,9 @@ define([
             polygons._polygonMaximumHeights = undefined;
             polygons._center = undefined;
             polygons._rectangle = undefined;
-            polygons._isCartographic = undefined;
-            polygons._modelMatrix = undefined;
             polygons._boundingVolume = undefined;
             polygons._boundingVolumes = undefined;
             polygons._batchedIndices = undefined;
-            polygons._pickObject = undefined;
             polygons._verticesPromise = undefined;
 
             polygons._readyPromise.resolve();

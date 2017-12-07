@@ -5,7 +5,8 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Ellipsoid'
+        '../Core/Ellipsoid',
+        './createBillboardPointCallback'
     ], function(
         Cartesian3,
         Cartographic,
@@ -13,7 +14,8 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        Ellipsoid) {
+        Ellipsoid,
+        createBillboardPointCallback) {
     'use strict';
 
     /**
@@ -36,11 +38,13 @@ define([
      * @alias Cesium3DTilePointFeature
      * @constructor
      *
+     * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+     *
      * @example
      * // On mouse over, display all the properties for a feature in the console log.
      * handler.setInputAction(function(movement) {
      *     var feature = scene.pick(movement.endPosition);
-     *     if (feature instanceof Cesium.Cesium3DTileFeature) {
+     *     if (feature instanceof Cesium.Cesium3DTilePointFeature) {
      *         var propertyNames = feature.getPropertyNames();
      *         var length = propertyNames.length;
      *         for (var i = 0; i < length; ++i) {
@@ -481,7 +485,7 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the distance where depth testing will be disabled.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
@@ -498,7 +502,8 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the horizontal origin of this point, which determines if the point is
+         * to the left, center, or right of its anchor position.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
@@ -514,7 +519,8 @@ define([
         },
 
         /**
-         * Gets or sets the distance where the depth testing will be enabled.
+         * Gets or sets the horizontal origin of this point's text, which determines if the point's text is
+         * to the left, center, or right of its anchor position.
          *
          * @memberof Cesium3DTilePointFeature.prototype
          *
@@ -618,46 +624,7 @@ define([
         var cssOutlineColor = newOutlineColor.toCssColorString();
         var textureId = JSON.stringify([cssColor, newPointSize, cssOutlineColor, newOutlineWidth]);
 
-        b.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPointSize));
-    }
-
-    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
-        return function() {
-            var canvas = document.createElement('canvas');
-
-            var length = newPixelSize + (2 * cssOutlineWidth);
-            canvas.height = canvas.width = length;
-
-            var context2D = canvas.getContext('2d');
-            context2D.clearRect(0, 0, length, length);
-
-            if (cssOutlineWidth !== 0) {
-                context2D.beginPath();
-                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
-                context2D.closePath();
-                context2D.fillStyle = cssOutlineColor;
-                context2D.fill();
-                // Punch a hole in the center if needed.
-                if (centerAlpha < 1.0) {
-                    context2D.save();
-                    context2D.globalCompositeOperation = 'destination-out';
-                    context2D.beginPath();
-                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-                    context2D.closePath();
-                    context2D.fillStyle = 'black';
-                    context2D.fill();
-                    context2D.restore();
-                }
-            }
-
-            context2D.beginPath();
-            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
-            context2D.closePath();
-            context2D.fillStyle = cssColor;
-            context2D.fill();
-
-            return canvas;
-        };
+        b.setImage(textureId, createBillboardPointCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPointSize));
     }
 
     /**

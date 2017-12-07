@@ -35,6 +35,7 @@ defineSuite([
             maximumScale : 200,
             incrementallyLoadTextures : false,
             runAnimations : false,
+            clampAnimations : false,
             shadows : ShadowMode.DISABLED,
             heightReference : HeightReference.CLAMP_TO_GROUND,
             distanceDisplayCondition : new DistanceDisplayCondition(),
@@ -68,6 +69,7 @@ defineSuite([
         expect(model.colorBlendMode).toBeInstanceOf(ConstantProperty);
         expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
+        expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
@@ -86,6 +88,7 @@ defineSuite([
         expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
         expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
+        expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
@@ -113,6 +116,7 @@ defineSuite([
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
                 translation : Cartesian3.UNIT_Y,
@@ -142,6 +146,7 @@ defineSuite([
         expect(target.colorBlendMode).toBe(source.colorBlendMode);
         expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(target.runAnimations).toBe(source.runAnimations);
+        expect(target.clampAnimations).toBe(source.clampAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
 
@@ -162,6 +167,7 @@ defineSuite([
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
         };
@@ -181,6 +187,7 @@ defineSuite([
         var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         var colorBlendAmount = new ConstantProperty(0.5);
         var runAnimations = new ConstantProperty(true);
+        var clampAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
         });
@@ -201,6 +208,7 @@ defineSuite([
         target.colorBlendMode = colorBlendMode;
         target.colorBlendAmount = colorBlendAmount;
         target.runAnimations = runAnimations;
+        target.clampAnimations = clampAnimations;
         target.nodeTransformations = nodeTransformations;
 
         target.merge(source);
@@ -220,6 +228,7 @@ defineSuite([
         expect(target.colorBlendMode).toBe(colorBlendMode);
         expect(target.colorBlendAmount).toBe(colorBlendAmount);
         expect(target.runAnimations).toBe(runAnimations);
+        expect(target.clampAnimations).toBe(clampAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
 
@@ -240,6 +249,7 @@ defineSuite([
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
         source.runAnimations = new ConstantProperty(true);
+        source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
@@ -261,6 +271,7 @@ defineSuite([
         expect(result.colorBlendMode).toBe(source.colorBlendMode);
         expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
         expect(result.runAnimations).toBe(source.runAnimations);
+        expect(result.clampAnimations).toBe(source.clampAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });
 

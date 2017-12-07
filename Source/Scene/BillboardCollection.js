@@ -122,7 +122,7 @@ define([
      * images positioned in the 3D scene.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Billboard.png' width='400' height='300' /><br />
+     * <img src='Images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      * <br /><br />
@@ -314,12 +314,16 @@ define([
             BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
         ];
 
+        this._highlightColor = Color.clone(Color.WHITE); // Only used by Vector3DTilePoints
+
         var that = this;
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.texture;
             },
-            tile_translucentCommand : function() { return false; }
+            u_highlightColor : function() {
+                return that._highlightColor;
+            }
         };
 
         var scene = this._scene;
@@ -1536,6 +1540,7 @@ define([
         var fsSource;
         var vs;
         var fs;
+        var vertDefines;
 
         if (blendOptionChanged ||
             (this._shaderRotation !== this._compiledShaderRotation) ||
@@ -1549,12 +1554,15 @@ define([
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
 
+            vertDefines = [];
             if (defined(this._batchTable)) {
+                vertDefines.push('VECTOR_TILE');
                 vsSource = this._batchTable.getVertexShaderCallback(false, 'a_batchId')(vsSource);
                 fsSource = this._batchTable.getFragmentShaderCallback()(fsSource);
             }
 
             vs = new ShaderSource({
+                defines : vertDefines,
                 sources : [vsSource]
             });
             if (this._instanced) {
@@ -1582,9 +1590,11 @@ define([
                 vs.defines.push('DISABLE_DEPTH_DISTANCE');
             }
 
+            var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
+
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
                 fs = new ShaderSource({
-                    defines : ['OPAQUE'],
+                    defines : ['OPAQUE', vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1596,7 +1606,7 @@ define([
                 });
 
                 fs = new ShaderSource({
-                    defines : ['TRANSLUCENT'],
+                    defines : ['TRANSLUCENT', vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
@@ -1610,6 +1620,7 @@ define([
 
             if (this._blendOption === BlendOption.OPAQUE) {
                 fs = new ShaderSource({
+                    defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._sp = ShaderProgram.replaceCache({
@@ -1623,6 +1634,7 @@ define([
 
             if (this._blendOption === BlendOption.TRANSLUCENT) {
                 fs = new ShaderSource({
+                    defines : [vectorFragDefine],
                     sources : [fsSource]
                 });
                 this._spTranslucent = ShaderProgram.replaceCache({
@@ -1655,15 +1667,17 @@ define([
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
 
+            vertDefines = [];
             if (defined(this._batchTable)) {
+                vertDefines.push('VECTOR_TILE');
                 vsSource = this._batchTable.getPickVertexShaderCallback('a_batchId')(vsSource);
                 fsSource = this._batchTable.getPickFragmentShaderCallback()(fsSource);
             }
 
-            var renderForPick = defined(this._batchTable) ? '' : 'RENDER_FOR_PICK';
+            vertDefines.push(defined(this._batchTable) ? '' : 'RENDER_FOR_PICK');
 
             vs = new ShaderSource({
-                defines : [renderForPick],
+                defines : vertDefines,
                 sources : [vsSource]
             });
 
@@ -1693,7 +1707,7 @@ define([
             }
 
             fs = new ShaderSource({
-                defines : [renderForPick],
+                defines : vertDefines,
                 sources : [fsSource]
             });
 

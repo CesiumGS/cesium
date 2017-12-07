@@ -41,10 +41,10 @@ define([
         var k = (relativeStart < 0) ? Math.max(length + relativeStart, 0) : Math.min(relativeStart, length);
         var relativeEnd = defaultValue(end, length);
         // If negative, find wrap around position
-        var final = (relativeEnd < 0) ? Math.max(length + relativeEnd, 0) : Math.min(relativeEnd, length);
+        var last = (relativeEnd < 0) ? Math.max(length + relativeEnd, 0) : Math.min(relativeEnd, length);
 
         // Fill array accordingly
-        while (k < final) {
+        while (k < last) {
             array[k] = value;
             k++;
         }

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="A sample Vector dataset on terrain rendered with 3D Tiles.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        require.config({
+            baseUrl : '../../../Source',
+            waitSeconds : 60
+        });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var geocoder = viewer.geocoder.viewModel;
+geocoder.searchText = 'Vienna';
+geocoder.flightDuration = 0.0;
+geocoder.search();
+
+
+// Vector 3D Tiles are experimental and the format is subject to change in the future.
+// For more details, see:
+//    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData
+var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url: 'https://beta.cesium.com/api/assets/3395?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
+    skipLevelOfDetail : false,
+    classificationType : Cesium.ClassificationType.TERRAIN
+}));
+
+tileset.readyPromise.then(function() {
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : 'rgba(255, 255, 255, 0.5)'
+    });
+}).otherwise(function(error) {
+    throw(error);
+});
+
+// Information about the currently selected feature
+var selected = {
+    feature: undefined,
+    originalColor: new Cesium.Color()
+};
+
+// Information about the currently highlighted feature
+var highlighted = {
+    feature: undefined,
+    originalColor: new Cesium.Color()
+};
+
+// Color a feature yellow on hover.
+viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
+    // If a feature was previously highlighted, undo the highlight
+    if (Cesium.defined(highlighted.feature)) {
+        highlighted.feature.color = highlighted.originalColor;
+        highlighted.feature = undefined;
+    }
+
+    // Pick a new feature
+    var pickedFeature = viewer.scene.pick(movement.endPosition);
+    if (!Cesium.defined(pickedFeature)) {
+        return;
+    }
+
+    // Highlight the feature if it's not already selected.
+    if (pickedFeature !== selected.feature) {
+        highlighted.feature = pickedFeature;
+        Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
+        pickedFeature.color = Cesium.Color.YELLOW;
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+// Color a feature on selection and show metadata in the InfoBox.
+var clickHandler = viewer.screenSpaceEventHandler.getInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+    // If a feature was previously selected, undo the highlight
+    if (Cesium.defined(selected.feature)) {
+        selected.feature.color = selected.originalColor;
+        selected.feature = undefined;
+    }
+
+    // Pick a new feature
+    var pickedFeature = viewer.scene.pick(movement.position);
+    if (!Cesium.defined(pickedFeature)) {
+        clickHandler(movement);
+        return;
+    }
+
+    // Select the feature if it's not already selected
+    if (selected.feature === pickedFeature) {
+        return;
+    }
+    selected.feature = pickedFeature;
+
+    // Save the selected feature's original color
+    if (pickedFeature === highlighted.feature) {
+        Cesium.Color.clone(highlighted.originalColor, selected.originalColor);
+        highlighted.feature = undefined;
+    } else {
+        Cesium.Color.clone(pickedFeature.color, selected.originalColor);
+    }
+
+    // Highlight newly selected feature
+    pickedFeature.color = Cesium.Color.LIME;
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

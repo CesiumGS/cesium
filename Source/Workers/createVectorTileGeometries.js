@@ -28,13 +28,8 @@ define([
 
     var scratchCartesian = new Cartesian3();
 
-    var boxGeometry;
     var packedBoxLength = Matrix4.packedLength + Cartesian3.packedLength;
-
-    var cylinderGeometry;
     var packedCylinderLength = Matrix4.packedLength + 2;
-
-    var ellipsoidGeometry;
     var packedEllipsoidLength = Matrix4.packedLength + Cartesian3.packedLength;
     var packedSphereLength = Matrix4.packedLength + 1;
 
@@ -257,22 +252,9 @@ define([
         var numberOfEllipsoids = defined(ellipsoids) ? ellipsoidBatchIds.length : 0;
         var numberOfSpheres = defined(spheres) ? sphereBatchIds.length : 0;
 
-        if (!defined(boxGeometry)) {
-            boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
-                dimensions : new Cartesian3(1.0, 1.0, 1.0),
-                vertexFormat : VertexFormat.POSITION_ONLY
-            }));
-            cylinderGeometry = CylinderGeometry.createGeometry(new CylinderGeometry({
-                topRadius : 1.0,
-                bottomRadius : 1.0,
-                length : 1.0,
-                vertexFormat : VertexFormat.POSITION_ONLY
-            }));
-            ellipsoidGeometry = EllipsoidGeometry.createGeometry((new EllipsoidGeometry({
-                radii : new Cartesian3(1.0, 1.0, 1.0),
-                vertexFormat : VertexFormat.POSITION_ONLY
-            })));
-        }
+        var boxGeometry = BoxGeometry.getUnitBox();
+        var cylinderGeometry = CylinderGeometry.getUnitCylinder();
+        var ellipsoidGeometry = EllipsoidGeometry.getUnitEllipsoid();
 
         var boxPositions = boxGeometry.attributes.position.values;
         var cylinderPositions = cylinderGeometry.attributes.position.values;

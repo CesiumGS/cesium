@@ -1,11 +1,9 @@
 define([
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties'
     ], function(
         Color,
-        defaultValue,
         defined,
         defineProperties) {
     'use strict';

@@ -284,6 +284,7 @@ define([
 
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(text) {
+            text = insertNamespaces(text);
             uriResolver.kml = parser.parseFromString(text, 'application/xml');
             deferred.resolve();
         });
@@ -1834,7 +1835,7 @@ define([
             tilt = CesiumMath.toRadians(defaultValue(tilt, 0.0));
             heading = CesiumMath.toRadians(defaultValue(heading, 0.0));
 
-            var hpr = new HeadingPitchRange(heading, tilt - 90.0, range);
+            var hpr = new HeadingPitchRange(heading, tilt - CesiumMath.PI_OVER_TWO, range);
             var viewPoint = Cartesian3.fromDegrees(lon, lat, altitude);
 
             entity.kml.lookAt = new KmlLookAt(viewPoint, hpr);

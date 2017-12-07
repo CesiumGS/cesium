@@ -15,7 +15,7 @@ define([
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
+    var defaultCredit = new Credit({text: 'MapQuest, Open Street Map and contributors, CC-BY-SA'});
 
     /**
      * Creates a {@link UrlTemplateImageryProvider} instance that provides tiled imagery hosted by OpenStreetMap
@@ -91,7 +91,7 @@ define([
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            credit = new Credit({text: credit});
         }
 
         var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;

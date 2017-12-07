@@ -31,7 +31,7 @@ define([
     'use strict';
 
     /**
-     * Renders a batch of meshes intersecting 3D Tiles and/or terrain.
+     * Creates a batch of meshes intersecting 3D Tiles and/or terrain.
      *
      * @alias Vector3DTileMeshes
      * @constructor

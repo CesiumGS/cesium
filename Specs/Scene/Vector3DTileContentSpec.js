@@ -20,8 +20,8 @@ defineSuite([
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
-        'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/Cesium3DTilesTester',
+        'Specs/createScene'
     ], function(
         Vector3DTileContent,
         BoundingSphere,
@@ -44,8 +44,8 @@ defineSuite([
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
-        createScene,
-        pollToPromise) {
+        Cesium3DTilesTester,
+        createScene) {
     'use strict';
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
@@ -182,12 +182,7 @@ defineSuite([
 
     function loadTileset(tileset) {
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)), new Cartesian3(0.0, 0.0, 0.01));
-        return pollToPromise(function() {
-            scene.renderForSpecs();
-            return tileset.tilesLoaded;
-        }).then(function() {
-            return tileset;
-        });
+        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
     }
 
     function expectPick(scene) {
