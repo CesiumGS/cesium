@@ -192,6 +192,8 @@ define([
             //or do not support the xhr.response property.
             if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
                 deferred.resolve(response);
+            } else if (xhr.status === 204) { // accept no content
+                deferred.resolve();
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {
                     deferred.resolve(JSON.parse(response));
