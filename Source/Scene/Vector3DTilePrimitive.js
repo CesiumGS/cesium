@@ -77,6 +77,7 @@ define([
      * @param {Uint16Array} options.vertexBatchIds The batch id for each vertex.
      * @param {BoundingSphere} options.boundingVolume The bounding volume for the entire batch of meshes.
      * @param {BoundingSphere[]} options.boundingVolumes The bounding volume for each mesh.
+     * @param {ClassificationType} [options.classificationType] What this tile will classify.
      *
      * @private
      */
@@ -151,9 +152,9 @@ define([
         /**
          * What this tile will classify.
          * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
+         * @default ClassificationType.BOTH
          */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.CESIUM_3D_TILE);
+        this.classificationType = defaultValue(options.classificationType, ClassificationType.BOTH);
 
         // Hidden options
         this._vertexShaderSource = options._vertexShaderSource;

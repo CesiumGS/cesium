@@ -403,6 +403,8 @@ define([
                 pickObject : pickObject
             });
         } else {
+            // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector a geometry data.
+            // For a list of limitations on the input glTF, see the documentation for classificationType of Cesium3DTileset.
             content._model = new ClassificationModel({
                 gltf : gltfView,
                 cull : false,           // The model is already culled by 3D Tiles
