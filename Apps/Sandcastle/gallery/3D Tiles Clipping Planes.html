@@ -121,7 +121,7 @@ function loadTileset(url) {
 
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
-        clippingPlanes : new Cesium.ClippingPlanesCollection({
+        clippingPlanes : new Cesium.ClippingPlaneCollection({
             planes : clippingPlanes,
             edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
         })
@@ -162,7 +162,7 @@ function loadModel(url) {
         new Cesium.Plane(new Cesium.Cartesian3(0.0, 0.0, -1.0), -100.0)
     ];
 
-    modelEntityClippingPlanes = new Cesium.ClippingPlanesCollection({
+    modelEntityClippingPlanes = new Cesium.ClippingPlaneCollection({
         planes : clippingPlanes,
         edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
     });

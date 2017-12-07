@@ -15,7 +15,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -36,7 +36,7 @@ defineSuite([
         EntityCollection,
         ModelGraphics,
         NodeTransformationProperty,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         Globe,
         createScene,
         pollToPromise) {
@@ -140,7 +140,7 @@ defineSuite([
         };
         model.nodeTransformations = nodeTransforms;
 
-        var clippingPlanes = new ClippingPlanesCollection({
+        var clippingPlanes = new ClippingPlaneCollection({
             planes: [
                 new Plane(Cartesian3.UNIT_X, 0.0)
             ]

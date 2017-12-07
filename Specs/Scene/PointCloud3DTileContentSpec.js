@@ -11,7 +11,7 @@ defineSuite([
         'Core/Plane',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -29,7 +29,7 @@ defineSuite([
         Plane,
         Transforms,
         Cesium3DTileStyle,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
         createScene,
@@ -697,7 +697,7 @@ defineSuite([
             expect(content._packedClippingPlanes.length).toBe(0);
             expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ]
@@ -720,7 +720,7 @@ defineSuite([
             expect(content._packedClippingPlanes.length).toBe(0);
             expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
 
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ]
@@ -741,7 +741,7 @@ defineSuite([
             });
 
             var clipPlane = new Plane(Cartesian3.UNIT_Z, 10.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     clipPlane
                 ],
@@ -764,7 +764,7 @@ defineSuite([
             });
 
             var clipPlane = new Plane(Cartesian3.UNIT_Z, 10.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection ({
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
                 ],
@@ -784,7 +784,7 @@ defineSuite([
                 color = rgba;
             });
 
-            tileset.clippingPlanes = new ClippingPlanesCollection ({
+            tileset.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     new Plane(Cartesian3.UNIT_Z, 10.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)

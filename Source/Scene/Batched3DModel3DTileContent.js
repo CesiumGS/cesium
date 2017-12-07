@@ -16,7 +16,7 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './ClippingPlanesCollection',
+        './ClippingPlaneCollection',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
@@ -37,7 +37,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
@@ -378,7 +378,7 @@ define([
             pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
             addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
             pickObject : pickObject,
-            clippingPlanes : new ClippingPlanesCollection({
+            clippingPlanes : new ClippingPlaneCollection({
                 enabled : false
             })
         });

@@ -6,7 +6,7 @@ defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Plane',
         'Core/Transforms',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -17,7 +17,7 @@ defineSuite([
         HeadingPitchRoll,
         Plane,
         Transforms,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -300,7 +300,7 @@ defineSuite([
             expect(model.clippingPlanes.planes.length).toBe(0);
             expect(model.clippingPlanes.enabled).toBe(false);
 
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ]
