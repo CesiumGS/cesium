@@ -203,6 +203,7 @@ define([
      * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
+     * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
@@ -236,9 +237,9 @@ define([
             throw new DeveloperError('options and options.canvas are required.');
         }
         //>>includeEnd('debug');
-
+        var hasCreditContainer = defined(creditContainer);
         var context = new Context(canvas, contextOptions);
-        if (!defined(creditContainer)) {
+        if (!hasCreditContainer) {
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
@@ -256,6 +257,8 @@ define([
         this._jobScheduler = new JobScheduler();
         this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
+        this._removeCreditContainer = !hasCreditContainer;
+        this._creditContainer = creditContainer;
 
         var ps = new PassState(context);
         ps.viewport = new BoundingRectangle();
@@ -3518,6 +3521,9 @@ define([
 
         if (defined(this._globeDepth)) {
             this._globeDepth.destroy();
+        }
+        if (this._removeCreditContainer) {
+            this._canvas.parentNode.removeChild(this._creditContainer);
         }
 
         if (defined(this._oit)) {
