@@ -26,7 +26,7 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './ClippingPlanesCollection',
+        './ClippingPlaneCollection',
         './ModelInstanceCollection'
     ], function(
         AttributeCompression,
@@ -56,7 +56,7 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         ModelInstanceCollection) {
     'use strict';
 
@@ -521,7 +521,7 @@ define([
         if (defined(tilesetClippingPlanes)) {
             var model = this._modelInstanceCollection._model;
             if (!defined(model.clippingPlanes)) {
-                model.clippingPlanes = new ClippingPlanesCollection();
+                model.clippingPlanes = new ClippingPlaneCollection();
             }
 
             tilesetClippingPlanes.clone(model.clippingPlanes);

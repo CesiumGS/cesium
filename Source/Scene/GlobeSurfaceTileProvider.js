@@ -164,8 +164,8 @@ define([
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
 
         /**
-         * A property specifying a {@link ClippingPlanesCollection} used to selectively disable rendering on the outside of each plane.
-         * @type {ClippingPlanesCollection}
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+         * @type {ClippingPlaneCollection}
          * @private
          */
         this.clippingPlanes = undefined;

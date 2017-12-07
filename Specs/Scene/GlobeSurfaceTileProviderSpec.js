@@ -15,7 +15,7 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/RenderState',
         'Scene/BlendingState',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -45,7 +45,7 @@ defineSuite([
         ContextLimits,
         RenderState,
         BlendingState,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
@@ -715,7 +715,7 @@ defineSuite([
             });
 
             var clipPlane = new Plane(Cartesian3.UNIT_Z, 10000.0);
-            scene.globe.clippingPlanes = new ClippingPlanesCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
                 ]
@@ -746,7 +746,7 @@ defineSuite([
             });
 
             var clipPlane = new Plane(Cartesian3.UNIT_Z, 1000.0);
-            scene.globe.clippingPlanes = new ClippingPlanesCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     clipPlane
                 ],
@@ -778,7 +778,7 @@ defineSuite([
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
             });
 
-            scene.globe.clippingPlanes = new ClippingPlanesCollection ({
+            scene.globe.clippingPlanes = new ClippingPlaneCollection ({
                 planes : [
                     new Plane(Cartesian3.UNIT_Z, 10000.0),
                     new Plane(Cartesian3.UNIT_X, 1000.0)
@@ -807,7 +807,7 @@ defineSuite([
 
     it('Culls tiles when completely inside clipping region', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlanesCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
                 new Plane(Cartesian3.UNIT_Z, 1000000.0)
             ]
@@ -825,7 +825,7 @@ defineSuite([
 
     it('Doesn\'t cull, but clips tiles when intersecting clipping plane', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlanesCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
                 new Plane(Cartesian3.UNIT_Z, 0.0)
             ]
@@ -843,7 +843,7 @@ defineSuite([
 
     it('Doesn\'t cull or clip tiles when completely outside clipping region', function() {
         var globe = scene.globe;
-        globe.clippingPlanes = new ClippingPlanesCollection ({
+        globe.clippingPlanes = new ClippingPlaneCollection ({
             planes : [
                 new Plane(Cartesian3.UNIT_Z, -10000000.0)
             ]

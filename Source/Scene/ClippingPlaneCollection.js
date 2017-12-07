@@ -25,7 +25,7 @@ define([
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the outside of the specified list of {@link Plane} objects.
      *
-     * @alias ClippingPlanesCollection
+     * @alias ClippingPlaneCollection
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
@@ -36,13 +36,13 @@ define([
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      */
-    function ClippingPlanesCollection(options) {
+    function ClippingPlaneCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * An array of up to 6 {@link Plane} objects used to selectively disable rendering on the outside of each plane.
          *
-         * @type {Plane}
+         * @type {Plane[]}
          * @default []
          */
         this.planes = defaultValue(options.planes, []);
@@ -84,12 +84,12 @@ define([
         this.combineClippingRegions = defaultValue(options.combineClippingRegions, true);
     }
 
-    defineProperties(ClippingPlanesCollection.prototype, {
+    defineProperties(ClippingPlaneCollection.prototype, {
         /**
          * If true, the region to be clipped must be included in all planes in this collection.
          * Otherwise, a region will be clipped if included in any plane in the collection.
          *
-         * @memberof ClippingPlanesCollection.prototype
+         * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
          * @default true
          */
@@ -128,7 +128,7 @@ define([
      * @param [array] The array into which the planes will be packed.
      * @returns {Cartesian4[]} The array of packed planes.
      */
-    ClippingPlanesCollection.prototype.transformAndPackPlanes = function(viewMatrix, array) {
+    ClippingPlaneCollection.prototype.transformAndPackPlanes = function(viewMatrix, array) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('viewMatrix', viewMatrix);
         //>>includeEnd('debug');
@@ -161,14 +161,14 @@ define([
     };
 
     /**
-     * Duplicates this ClippingPlanesCollection instance.
+     * Duplicates this ClippingPlaneCollection instance.
      *
-     * @param {ClippingPlanesCollection} [result] The object onto which to store the result.
-     * @returns {ClippingPlanesCollection} The modified result parameter or a new ClippingPlanesCollection instance if one was not provided.
+     * @param {ClippingPlaneCollection} [result] The object onto which to store the result.
+     * @returns {ClippingPlaneCollection} The modified result parameter or a new ClippingPlaneCollection instance if one was not provided.
      */
-    ClippingPlanesCollection.prototype.clone = function(result) {
+    ClippingPlaneCollection.prototype.clone = function(result) {
         if (!defined(result)) {
-            result = new ClippingPlanesCollection();
+            result = new ClippingPlaneCollection();
         }
 
         var length = this.planes.length;
@@ -198,7 +198,7 @@ define([
     };
 
     /**
-     * Determines the type intersection with the planes of this ClippingPlanesCollection instance and the specified {@link BoundingVolume}.
+     * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link BoundingVolume}.
      * @private
      *
      * @param {Object} boundingVolume The volume to determine the intersection with the planes.
@@ -208,7 +208,7 @@ define([
      *                      if the entire volume is on the opposite side and should be clipped, and
      *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
      */
-    ClippingPlanesCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, transform) {
+    ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, transform) {
         var planes = this.planes;
         var length = planes.length;
 
@@ -241,5 +241,5 @@ define([
         return intersection;
     };
 
-    return ClippingPlanesCollection;
+    return ClippingPlaneCollection;
 });

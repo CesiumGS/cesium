@@ -72,7 +72,7 @@ viewer.entities.add({
 
 var globe = viewer.scene.globe;
 globe.depthTestAgainstTerrain = true;
-globe.clippingPlanes = new Cesium.ClippingPlanesCollection({
+globe.clippingPlanes = new Cesium.ClippingPlaneCollection({
     modelMatrix : entity.computeModelMatrix(Cesium.JulianDate.now()),
     planes : [
         new Cesium.Plane(new Cesium.Cartesian3( 1.0,  0.0, 0.0), 700.0),

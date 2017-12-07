@@ -21,7 +21,7 @@ defineSuite([
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlanesCollection',
+        'Scene/ClippingPlaneCollection',
         'Scene/CullFace',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -50,7 +50,7 @@ defineSuite([
         Cesium3DTileContentState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
-        ClippingPlanesCollection,
+        ClippingPlaneCollection,
         CullFace,
         Cesium3DTilesTester,
         createScene,
@@ -2816,7 +2816,7 @@ defineSuite([
             expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
 
             var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ]
@@ -2840,7 +2840,7 @@ defineSuite([
             expect(visibility).not.toBe(Intersect.OUTSIDE);
 
             var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ]
@@ -2869,7 +2869,7 @@ defineSuite([
             tileset.update(scene.frameState);
 
             var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ]
@@ -2911,7 +2911,7 @@ defineSuite([
             tileset.update(scene.frameState);
 
             var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
-            tileset.clippingPlanes = new ClippingPlanesCollection({
+            tileset.clippingPlanes = new ClippingPlaneCollection({
                 planes : [
                     plane
                 ]
