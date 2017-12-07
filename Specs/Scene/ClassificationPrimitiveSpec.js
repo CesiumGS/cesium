@@ -644,6 +644,25 @@ defineSuite([
         });
     });
 
+    it('drill picking', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[1].primitive).toEqual(depthPrimitive._primitive);
+        });
+    });
+
     it('does not pick when allowPicking is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;

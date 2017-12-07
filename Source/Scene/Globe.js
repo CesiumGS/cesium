@@ -232,6 +232,20 @@ define([
             }
         },
         /**
+         * A property specifying a {@link ClippingPlaneCollection} used to selectively disable rendering on the outside of each plane.
+         *
+         * @memberof Globe.prototype
+         * @type {ClippingPlaneCollection}
+         */
+        clippingPlanes : {
+            get : function() {
+                return this._surface.tileProvider.clippingPlanes;
+            },
+            set : function(value) {
+                this._surface.tileProvider.clippingPlanes = value;
+            }
+        },
+        /**
          * The terrain provider providing surface geometry for this globe.
          * @type {TerrainProvider}
          *
