@@ -68,7 +68,11 @@ define([
 
         this._center = options.center;
         if (!defined(this._center)) {
-            this._center = Cartesian3.clone(this._boundingVolume.center);
+            if (defined(this._boundingVolume)) {
+                this._center = Cartesian3.clone(this._boundingVolume.center);
+            } else {
+                this._center = Cartesian3.clone(Cartesian3.ZERO);
+            }
         }
 
         this._boundingVolumes = undefined;
