@@ -164,18 +164,12 @@ define([
      * @private
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} options.gltf The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
-     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
-     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -228,52 +222,6 @@ define([
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
 
-        /**
-         * A uniform scale applied to this model before the {@link ClassificationModel#modelMatrix}.
-         * Values greater than <code>1.0</code> increase the size of the model; values
-         * less than <code>1.0</code> decrease.
-         *
-         * @type {Number}
-         *
-         * @default 1.0
-         */
-        this.scale = defaultValue(options.scale, 1.0);
-        this._scale = this.scale;
-
-        /**
-         * The approximate minimum pixel size of the model regardless of zoom.
-         * This can be used to ensure that a model is visible even when the viewer
-         * zooms out.  When <code>0.0</code>, no minimum size is enforced.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
-        this._minimumPixelSize = this.minimumPixelSize;
-
-        /**
-         * The maximum scale size for a model. This can be used to give
-         * an upper limit to the {@link ClassificationModel#minimumPixelSize}, ensuring that the model
-         * is never an unreasonable scale.
-         *
-         * @type {Number}
-         */
-        this.maximumScale = options.maximumScale;
-        this._maximumScale = this.maximumScale;
-
-        /**
-         * User-defined object returned when the model is picked.
-         *
-         * @type Object
-         *
-         * @default undefined
-         *
-         * @see Scene#pick
-         */
-        this.id = options.id;
-        this._id = options.id;
-
         this._ready = false;
         this._readyPromise = when.defer();
 
@@ -323,7 +271,7 @@ define([
          */
         this.cull = defaultValue(options.cull, true);
 
-        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and axis
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -358,7 +306,6 @@ define([
         this._trianglesLength = 0;
 
         this._nodeCommands = [];
-        this._pickIds = [];
 
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // reference to either 3D or 2D
@@ -382,28 +329,6 @@ define([
         gltf : {
             get : function() {
                 return this._gltf;
-            }
-        },
-
-        /**
-         * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
-         * Caching saves memory and improves loading speed when several models with the same url are created.
-         * <p>
-         * This key is automatically generated when the model is created with {@link ClassificationModel.fromGltf}.  If the model
-         * is created directly from glTF JSON using the {@link ClassificationModel} constructor, this key can be manually
-         * provided; otherwise, the model will not be changed.
-         * </p>
-         *
-         * @memberof ClassificationModel.prototype
-         *
-         * @type {String}
-         * @readonly
-         *
-         * @private
-         */
-        cacheKey : {
-            get : function() {
-                return this._cacheKey;
             }
         },
 
@@ -453,13 +378,7 @@ define([
                 //>>includeEnd('debug');
 
                 var modelMatrix = this.modelMatrix;
-                if ((this.heightReference !== HeightReference.NONE) && this._clampedModelMatrix) {
-                    modelMatrix = this._clampedModelMatrix;
-                }
-
                 var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
-                var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
-                Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
                 var scaledBoundingSphere = this._scaledBoundingSphere;
                 scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
@@ -1896,56 +1815,6 @@ define([
         ++model._maxDirtyNumber;
     }
 
-    var scratchBoundingSphere = new BoundingSphere();
-
-    function scaleInPixels(positionWC, radius, frameState) {
-        scratchBoundingSphere.center = positionWC;
-        scratchBoundingSphere.radius = radius;
-        return frameState.camera.getPixelSize(scratchBoundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
-    }
-
-    var scratchPosition = new Cartesian3();
-    var scratchCartographic = new Cartographic();
-
-    function getScale(model, frameState) {
-        var scale = model.scale;
-
-        if (model.minimumPixelSize !== 0.0) {
-            // Compute size of bounding sphere in pixels
-            var context = frameState.context;
-            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var m = model.modelMatrix;
-            scratchPosition.x = m[12];
-            scratchPosition.y = m[13];
-            scratchPosition.z = m[14];
-
-            if (defined(model._rtcCenter)) {
-                Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
-            }
-
-            if (model._mode !== SceneMode.SCENE3D) {
-                var projection = frameState.mapProjection;
-                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
-                projection.project(cartographic, scratchPosition);
-                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-            }
-
-            var radius = model.boundingSphere.radius;
-            var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
-            // metersPerPixel is always > 0.0
-            var pixelsPerMeter = 1.0 / metersPerPixel;
-            var diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
-
-            // Maintain model's minimum pixel size
-            if (diameterInPixels < model.minimumPixelSize) {
-                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
-            }
-        }
-
-        return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
-    }
-
     function checkSupportedExtensions(model) {
         var extensionsRequired = model.extensionsRequired;
         for (var extension in extensionsRequired) {
@@ -2078,7 +1947,6 @@ define([
             }
         }
 
-        // Incrementally stream textures.
         if (defined(loadResources) && (this._state === ModelState.LOADED)) {
             if (!justLoaded) {
                 createResources(this, frameState);
@@ -2090,7 +1958,7 @@ define([
         }
 
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
+        var show = this.show && displayConditionPassed;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             this._dirty = false;
@@ -2100,22 +1968,13 @@ define([
             this._mode = frameState.mode;
 
             // ClassificationModel's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                                        (this._scale !== this.scale) ||
-                                        (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                                        (this._maximumScale !== this.maximumScale) ||
-                                        modeChanged;
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) || modeChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
-                this._scale = this.scale;
-                this._minimumPixelSize = this.minimumPixelSize;
-                this._maximumScale = this.maximumScale;
-
-                var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
+                Matrix4.clone(modelMatrix, computedModelMatrix);
                 if (this._upAxis === Axis.Y) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this._upAxis === Axis.X) {
@@ -2155,13 +2014,6 @@ define([
 
     ClassificationModel.prototype.destroy = function() {
         this._rendererResources = undefined;
-
-        var pickIds = this._pickIds;
-        var length = pickIds.length;
-        for (var i = 0; i < length; ++i) {
-            pickIds[i].destroy();
-        }
-
         return destroyObject(this);
     };
 
