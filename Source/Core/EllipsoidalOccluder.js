@@ -1,5 +1,6 @@
 define([
         './BoundingSphere',
+        './Cartographic',
         './Cartesian3',
         './Check',
         './defaultValue',
@@ -8,6 +9,7 @@ define([
         './Rectangle'
     ], function(
         BoundingSphere,
+        Cartographic,
         Cartesian3,
         Check,
         defaultValue,
@@ -46,6 +48,7 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._cameraPosition = new Cartesian3();
+        this._cameraPositionCartographic = new Cartographic();
         this._cameraPositionInScaledSpace = new Cartesian3();
         this._distanceToLimbInScaledSpaceSquared = 0.0;
 
@@ -82,6 +85,7 @@ define([
                 var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
 
                 Cartesian3.clone(cameraPosition, this._cameraPosition);
+                this._cameraPositionCartographic = Cartographic.fromCartesian(this._cameraPosition, ellipsoid, this._cameraPositionCartographic);
                 this._cameraPositionInScaledSpace = cv;
                 this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
             }
@@ -129,9 +133,15 @@ define([
         // See http://cesiumjs.org/2013/04/25/Horizon-culling/
         //console.log(this._distanceToLimbInScaledSpaceSquared);
         // todo:  What is the real issue here?
+        /*
         if (this._distanceToLimbInScaledSpaceSquared <= 0.05) {
             return true;
         }
+        */
+        if (this._cameraPositionCartographic.height <= 0.0) {
+            return true;
+        }
+
 
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;

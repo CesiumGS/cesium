@@ -270,7 +270,7 @@ define([
         this._canvas = canvas;
         this._context = context;
         this._computeEngine = new ComputeEngine(context);
-        this._globe = undefined;        
+        this._globe = undefined;
         this._globes = [];
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
@@ -2826,7 +2826,7 @@ define([
         var i = 0;
         for (i = 0; i < scene._globes.length; i++) {
             scene._globes[i].beginFrame(frameState);
-        }        
+        }
 
         updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);

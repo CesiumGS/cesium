@@ -31,65 +31,50 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+//viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
+
 // set lighting to true
 viewer.scene.globe.enableLighting = true;
 
-// Disable fog, it causes problems with culling when the eye point is below 0
-viewer.scene.fog.enabled = false;
 
 // Connect to the SRTM15 Plus dataset on ReadyMap
 var bathyProvider = new Cesium.CesiumTerrainProvider({
-    url : 'http://readymap.org/readymap/tiles/1.0.0/128'
-    //url:  'http://readymap.org/readymap/tiles/1.0.0/130'
+    url:  'http://readymap.org/readymap/tiles/1.0.0/130'
 });
+
+var fullBathyProvider = new Cesium.CesiumTerrainProvider({
+    url : 'http://readymap.org/readymap/tiles/1.0.0/128'
+});
+
 
 var terrainProvider = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true
+    requestWaterMask : true,
+    skirtRatio: 0.0
 });
 
-viewer.scene.globe.terrainProvider = bathyProvider;
-
+viewer.scene.globe.terrainProvider = fullBathyProvider;
 var sandLayer = viewer.scene.globe.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-    url: '../../SampleData/sand.jpg',
-    rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-    hasAlphaChannel: false,
-    alpha: 0.0
-}));
-
-
-/*
-viewer.scene.globe.imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-        url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-    }));
-*/
-
-
-// Add another globe to the list
-/*
-var secondaryGlobe = new Cesium.Globe();
-secondaryGlobe.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
                 url: '../../SampleData/sand.jpg',
                 rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-                hasAlphaChannel: false
+                hasAlphaChannel: false,
+                alpha: 0.0
 }));
-secondaryGlobe.terrainProvider = bathyProvider;
-viewer.scene._globes.push(secondaryGlobe);
-*/
+viewer.scene.globe._surface._tileProvider._cullingEnabled = false;
 
-//viewer.scene.screenSpaceCameraController.enableCollisionDetection = false;
-
+// Create a secondary globe to render the ocean only.
 var secondaryGlobe = new Cesium.Globe();
+secondaryGlobe.terrainProvider = terrainProvider;
 secondaryGlobe._surface._tileProvider._cullingEnabled = false;
+secondaryGlobe.baseColor = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
+//secondaryGlobe.depthTestAgainstTerrain = false;
 viewer.scene._globes.push(secondaryGlobe);
 
 
 var horizonCullingEnabled = false;
 var model = undefined;
 
-function addModel() {
-    viewer.entities.removeAll();
-
+function addSub() {
     var position = Cesium.Cartesian3.fromRadians(-2.714134211286325, 0.33236701052929585, -848.6742055252448);
 
     var heading = Cesium.Math.toRadians(135);
@@ -119,6 +104,28 @@ function addModel() {
     //viewer.trackedEntity = model;
 }
 
+function addPlane() {
+    var position = Cesium.Cartesian3.fromRadians(-2.714134211286325, 0.33236701052929585, 848.6742055252448);
+
+    var heading = Cesium.Math.toRadians(135);
+    var pitch = 0;
+    var roll = 0;
+    var hpr = new Cesium.HeadingPitchRoll(heading, pitch, roll);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, hpr);
+
+    viewer.entities.add({
+        name : 'Model',
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+            minimumPixelSize : 128,
+            maximumScale : 20000
+        }
+    });
+}
+
+
 
 Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisibleOld = Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible;
 Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
@@ -137,13 +144,14 @@ function horizonCullingClick() {
 viewer.scene._postRender.addEventListener(function(scene, time) {
     var underwater = viewer.camera.positionCartographic.height < 0;
     //viewer.scene.globe.show = !underwater;
-    secondaryGlobe.show = underwater;
+    //secondaryGlobe.show = underwater;
     //model.show = underwater;
     sandLayer.alpha = underwater ? 1.0 : 0.0;
 });
 
 
-addModel();
+addSub();
+addPlane();
 
 Sandcastle.addDefaultToolbarMenu([{
     text : 'Mount Everest',
@@ -183,6 +191,8 @@ Sandcastle.addDefaultToolbarMenu([{
         });
     }
 }], 'zoomButtons');
+
+
 
 
 //Sandcastle_End

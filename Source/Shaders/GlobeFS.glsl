@@ -186,6 +186,9 @@ void main()
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
     }
+    else {
+        discard;
+    }
 #endif
 
 #ifdef ENABLE_VERTEX_LIGHTING
@@ -224,6 +227,9 @@ void main()
     float darken = clamp(dot(normalize(czm_viewerPositionWC), normalize(czm_sunPositionWC)), u_minimumBrightness, 1.0);
     fogColor *= darken;
 #endif
+
+    // Just make it blue to see how it looks underwater.
+    fogColor = vec3(0.0, 0.0, 1.0);
 
     gl_FragColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
 #else

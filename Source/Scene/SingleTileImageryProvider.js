@@ -204,7 +204,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return 0;
+                return 20;
             }
         },
 

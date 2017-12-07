@@ -374,12 +374,13 @@ define([
                 depthTest : {
                     enabled : true,
                     func : DepthFunction.LESS
-                }
+                },
+                blending : BlendingState.ALPHA_BLEND
             });
 
             this._blendRenderState = RenderState.fromCache({ // Write color and depth
                 cull : {
-                    enabled : true
+                    enabled : this._cullingEnabled
                 },
                 depthTest : {
                     enabled : true,
