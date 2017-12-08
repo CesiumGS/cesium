@@ -171,6 +171,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {ClassificationType} [options.classificationType] What this model will classify.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -264,6 +265,7 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._batchTable = options.batchTable;
 
         /**
          * @private

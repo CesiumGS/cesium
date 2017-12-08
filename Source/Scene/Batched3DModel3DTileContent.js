@@ -416,9 +416,7 @@ define([
             content._model = new ClassificationModel({
                 gltf : gltfView,
                 cull : false,           // The model is already culled by 3D Tiles
-                opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions of the model during the 3D Tiles pass
                 basePath : basePath,
-                requestType : RequestType.TILES3D,
                 modelMatrix : tile.computedTransform,
                 upAxis : tileset._gltfUpAxis,
                 debugWireframe : tileset.debugWireframe,
@@ -428,7 +426,8 @@ define([
                 pickVertexShaderLoaded : getPickVertexShaderCallback(content),
                 pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
                 pickUniformMapLoaded : batchTable.getPickUniformMapCallback(),
-                classificationType : tileset._classificationType
+                classificationType : tileset._classificationType,
+                batchTable : batchTable
             });
         }
     }
