@@ -1,14 +1,10 @@
 define([
         '../ThirdParty/when',
         './Check',
-        './defined',
-        './DeveloperError',
         './loadImage'
     ], function(
         when,
         Check,
-        defined,
-        DeveloperError,
         loadImage) {
     'use strict';
 

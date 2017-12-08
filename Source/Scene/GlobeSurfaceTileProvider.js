@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -20,6 +21,7 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
@@ -51,6 +53,7 @@ define([
         Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
+        combine,
         defaultValue,
         defined,
         defineProperties,
@@ -65,6 +68,7 @@ define([
         Matrix4,
         OrientedBoundingBox,
         OrthographicFrustum,
+        Plane,
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
@@ -162,6 +166,12 @@ define([
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
 
         this._cullingEnabled = true;
+        /**
+         * A property specifying a {@link ClippingPlanesCollection} used to selectively disable rendering on the outside of each plane.
+         * @type {ClippingPlanesCollection}
+         * @private
+         */
+        this.clippingPlanes = undefined;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -500,6 +510,15 @@ define([
 
             if (frameState.mode === SceneMode.MORPHING) {
                 boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
+            }
+        }
+
+        var clippingPlanes = this.clippingPlanes;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
+            tile.isClipped = (planeIntersection !== Intersect.INSIDE);
+            if (planeIntersection === Intersect.OUTSIDE) {
+                return Intersect.OUTSIDE;
             }
         }
 
@@ -857,6 +876,17 @@ define([
             u_dayTextureSplit : function() {
                 return this.properties.dayTextureSplit;
             },
+            u_clippingPlanesLength : function() {
+                return this.properties.clippingPlanes.length;
+            },
+            u_clippingPlanes : function() {
+                return this.properties.clippingPlanes;
+            },
+            u_clippingPlanesEdgeStyle : function() {
+                var style = this.properties.clippingPlanesEdgeColor;
+                style.alpha = this.properties.clippingPlanesEdgeWidth;
+                return style;
+            },
             u_minimumBrightness : function() {
                 return frameState.fog.minimumBrightness;
             },
@@ -895,7 +925,10 @@ define([
                 waterMaskTranslationAndScale : new Cartesian4(),
 
                 minMaxHeight : new Cartesian2(),
-                scaleAndBias : new Matrix4()
+                scaleAndBias : new Matrix4(),
+                clippingPlanes : [],
+                clippingPlanesEdgeColor : Color.clone(Color.WHITE),
+                clippingPlanesEdgeWidth : 0.0
             }
         };
 
@@ -1274,7 +1307,37 @@ define([
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            // update clipping planes
+            var clippingPlanes = tileProvider.clippingPlanes;
+            var length = 0;
+
+            if (defined(clippingPlanes) && tile.isClipped) {
+                length = clippingPlanes.planes.length;
+            }
+
+            var clippingPlanesProperty = uniformMapProperties.clippingPlanes;
+            if (length !== clippingPlanesProperty.length) {
+                clippingPlanesProperty = uniformMapProperties.clippingPlanes = new Array(length);
+
+                for (var i = 0; i < length; ++i) {
+                    clippingPlanesProperty[i] = new Cartesian4();
+                }
+            }
+
+            if (defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped) {
+                clippingPlanes.transformAndPackPlanes(context.uniformState.view, clippingPlanesProperty);
+                uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
+                uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
+            }
+
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
+            var combineClippingRegions = clippingPlanesEnabled ? clippingPlanes.combineClippingRegions : true;
+
+            if (defined(tileProvider.uniformMap)) {
+                uniformMap = combine(uniformMap, tileProvider.uniformMap);
+            }
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, clippingPlanesEnabled, combineClippingRegions);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

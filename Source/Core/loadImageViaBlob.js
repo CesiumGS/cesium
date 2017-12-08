@@ -70,6 +70,9 @@ define([
         }
 
         return blobPromise.then(function(blob) {
+            if (!defined(blob)) {
+                return;
+            }
             var blobUrl = window.URL.createObjectURL(blob);
 
             return loadImage(blobUrl, false).then(function(image) {

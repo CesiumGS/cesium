@@ -66,9 +66,21 @@ viewer.scene.globe._surface._tileProvider._cullingEnabled = false;
 var secondaryGlobe = new Cesium.Globe();
 secondaryGlobe.terrainProvider = terrainProvider;
 secondaryGlobe._surface._tileProvider._cullingEnabled = false;
-secondaryGlobe.baseColor = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
+secondaryGlobe.baseColor = new Cesium.Color(0.0, 119.0/255.0, 190.0/255.0, 0.5);
 //secondaryGlobe.depthTestAgainstTerrain = false;
 viewer.scene._globes.push(secondaryGlobe);
+
+var material = new Cesium.Material({
+    fabric: {
+        source : 'czm_material czm_getMaterial(czm_materialInput materialInput) { czm_material mat = czm_getDefaultMaterial(materialInput);' +
+                 '  mat.alpha = 0.0;' +
+                 '  if (materialInput.height >= 30.0) discard;' +
+                 '  return mat;' +
+                 '}'
+    }
+});
+
+secondaryGlobe.material = material;
 
 
 var horizonCullingEnabled = false;
@@ -147,6 +159,7 @@ viewer.scene._postRender.addEventListener(function(scene, time) {
     //secondaryGlobe.show = underwater;
     //model.show = underwater;
     sandLayer.alpha = underwater ? 1.0 : 0.0;
+    viewer.scene.fog.enabled = underwater;
 });
 
 

@@ -3,15 +3,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/CullingVolume',
-        'Core/defaultValue',
-        'Core/defined',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
+        'Core/Intersect',
         'Core/JulianDate',
         'Core/loadWithXhr',
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/Plane',
         'Core/PrimitiveType',
         'Core/RequestScheduler',
         'Renderer/ClearCommand',
@@ -19,9 +19,9 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTileOptimizations',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
+        'Scene/ClippingPlanesCollection',
         'Scene/CullFace',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -32,15 +32,15 @@ defineSuite([
         Cartesian3,
         Color,
         CullingVolume,
-        defaultValue,
-        defined,
         getStringFromTypedArray,
         HeadingPitchRange,
+        Intersect,
         JulianDate,
         loadWithXhr,
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
+        Plane,
         PrimitiveType,
         RequestScheduler,
         ClearCommand,
@@ -48,9 +48,9 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
-        Cesium3DTileOptimizations,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
+        ClippingPlanesCollection,
         CullFace,
         Cesium3DTilesTester,
         createScene,
@@ -2809,4 +2809,135 @@ defineSuite([
         });
     });
 
+    it('clipping planes cull hidden tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).toBe(CullingVolume.MASK_OUTSIDE);
+
+            plane.distance = 0.0;
+            visibility = tileset._root.visibility(scene.frameState, CullingVolume.MASK_INSIDE);
+
+            expect(visibility).not.toBe(CullingVolume.MASK_OUTSIDE);
+        });
+    });
+
+    it('clipping planes cull hidden content', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).not.toBe(Intersect.OUTSIDE);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 100000000.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).toBe(Intersect.OUTSIDE);
+
+            plane.distance = 0.0;
+            visibility = tileset._root.contentVisibility(scene.frameState);
+
+            expect(visibility).not.toBe(Intersect.OUTSIDE);
+        });
+    });
+
+    it('clipping planes cull tiles completely inside clipping region', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            var root = tileset._root;
+
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(5);
+
+            tileset.update(scene.frameState);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(5);
+            expect(root._isClipped).toBe(false);
+
+            plane.distance = 4081630.311150717; // center
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(3);
+            expect(root._isClipped).toBe(true);
+
+            plane.distance = 4081630.31115071 + 287.0736139905632; // center + radius
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(0);
+            expect(root._isClipped).toBe(true);
+        });
+    });
+
+    it('clipping planes cull tiles completely inside clipping region for i3dm', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithExternalResourcesUrl).then(function(tileset) {
+            var statistics = tileset._statistics;
+            var root = tileset._root;
+
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(6);
+
+            tileset.update(scene.frameState);
+
+            var plane = new Plane(Cartesian3.UNIT_Z, 0.0);
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(6);
+            expect(root._isClipped).toBe(false);
+
+            plane.distance = 4081608.4377916814; // center
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(6);
+            expect(root._isClipped).toBe(true);
+
+            plane.distance = 4081608.4377916814 + 142.19001637409772; // center + radius
+
+            tileset.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(statistics.numberOfCommands).toEqual(0);
+            expect(root._isClipped).toBe(true);
+        });
+    });
 }, 'WebGL');

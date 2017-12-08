@@ -2,20 +2,22 @@ defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/deprecationWarning',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Plane',
         'Core/Transforms',
+        'Scene/ClippingPlanesCollection',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
         Color,
-        deprecationWarning,
         HeadingPitchRange,
         HeadingPitchRoll,
+        Plane,
         Transforms,
+        ClippingPlanesCollection,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -285,6 +287,34 @@ defineSuite([
             expect(content.geometryByteLength).toEqual(geometryByteLength);
             expect(content.texturesByteLength).toEqual(texturesByteLength);
             expect(content.batchTableByteLength).toEqual(batchTexturesByteLength + pickTexturesByteLength);
+        });
+    });
+
+    it('Updates model\'s clipping planes', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var tile = tileset._root;
+            var content = tile.content;
+            var model = content._model;
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes.planes.length).toBe(0);
+            expect(model.clippingPlanes.enabled).toBe(false);
+
+            tileset.clippingPlanes = new ClippingPlanesCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+            content.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes).toBeDefined();
+            expect(model.clippingPlanes.planes.length).toBe(1);
+            expect(model.clippingPlanes.enabled).toBe(true);
+
+            tile._isClipped = false;
+            content.update(tileset, scene.frameState);
+
+            expect(model.clippingPlanes.enabled).toBe(false);
         });
     });
 

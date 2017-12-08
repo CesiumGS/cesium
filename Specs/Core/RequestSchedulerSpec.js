@@ -2,13 +2,11 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/Request',
         'Core/RequestState',
-        'Core/RequestType',
         'ThirdParty/when'
     ], function(
         RequestScheduler,
         Request,
         RequestState,
-        RequestType,
         when) {
     'use strict';
 
