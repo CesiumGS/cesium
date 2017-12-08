@@ -1065,8 +1065,6 @@ define([
          * <p>
          * When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:
          * <ul>
-         *     <li>There must be a POSITION semantic and the buffer data type must be 32-bit floating point.</li>
-         *     <li>There must be a _BATCHID smantic and the buffer data type must be 16-bit unsigned integer.</li>
          *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
          *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
          *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>

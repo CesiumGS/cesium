@@ -6,6 +6,7 @@ define([
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/combine',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -51,6 +52,7 @@ define([
         Cartographic,
         Color,
         combine,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -121,10 +123,6 @@ define([
 
     LoadResources.prototype.getBuffer = function(bufferView) {
         return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    };
-
-    LoadResources.prototype.finishedPendingBufferLoads = function() {
-        return (this.pendingBufferLoads === 0);
     };
 
     LoadResources.prototype.finishedBuffersCreation = function() {
@@ -605,53 +603,32 @@ define([
         var gltf = model.gltf;
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
-        var rootNodes = gltf.scenes[gltf.scene].nodes;
-        var rootNodesLength = rootNodes.length;
-
-        var nodeStack = [];
 
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-        for (var i = 0; i < rootNodesLength; ++i) {
-            var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = getTransform(n);
-            nodeStack.push(n);
+        var n = gltfNodes[0];
+        var meshId = n.mesh;
+        if (gltfNodes.length > 1 || !defined(meshId)) {
+            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+        }
 
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var transformToRoot = n._transformToRoot;
-
-                var meshId = n.mesh;
-                if (defined(meshId)) {
-                    var mesh = gltfMeshes[meshId];
-                    var primitives = mesh.primitives;
-                    var primitivesLength = primitives.length;
-                    for (var m = 0; m < primitivesLength; ++m) {
-                        var positionAccessor = primitives[m].attributes.POSITION;
-                        if (defined(positionAccessor)) {
-                            var minMax = getAccessorMinMax(gltf, positionAccessor);
-                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-                            if (defined(min) && defined(max)) {
-                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                Cartesian3.minimumByComponent(min, aMin, min);
-                                Cartesian3.maximumByComponent(max, aMax, max);
-                            }
-                        }
-                    }
+        var transformToRoot = getTransform(n);
+        var mesh = gltfMeshes[meshId];
+        var primitives = mesh.primitives;
+        var primitivesLength = primitives.length;
+        for (var m = 0; m < primitivesLength; ++m) {
+            var positionAccessor = primitives[m].attributes.POSITION;
+            if (defined(positionAccessor)) {
+                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+                if (defined(min) && defined(max)) {
+                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                    Cartesian3.minimumByComponent(min, aMin, min);
+                    Cartesian3.maximumByComponent(max, aMax, max);
                 }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = gltfNodes[children[k]];
-                    child._transformToRoot = getTransform(child);
-                    Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
-                    nodeStack.push(child);
-                }
-                delete n._transformToRoot;
             }
         }
 
@@ -1023,19 +1000,19 @@ define([
             uniformDecl =
                 'uniform mat4 ' + modelViewName + ';\n' +
                 'uniform mat4 ' + projectionName + ';\n';
-            computePosition = '    gl_Position = ' + projectionName + ' * ' + modelViewName + ' * ' + positionName + ';\n';
+            computePosition = '    vec4 positionInClipCoords = ' + projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0);\n';
         } else {
             uniformDecl = 'uniform mat4 ' + modelViewProjectionName + ';\n';
-            computePosition = '    gl_Position = ' + modelViewProjectionName + ' * ' + positionName + ';\n';
+            computePosition = '    vec4 positionInClipCoords = ' + modelViewProjectionName + ' * vec4(' + positionName + ', 1.0);\n';
         }
 
         var vs =
-            'attribute vec4 ' + positionName + ';\n' +
+            'attribute vec3 ' + positionName + ';\n' +
             'attribute float ' + batchIdName + ';\n' +
             uniformDecl +
             'void main() {\n' +
             computePosition +
-            '    gl_Position = czm_depthClampFarPlane(gl_Position);\n' +
+            '    gl_Position = czm_depthClampFarPlane(positionInClipCoords);\n' +
             '}\n';
         var fs =
             '#ifdef GL_EXT_frag_depth\n' +
@@ -1463,13 +1440,21 @@ define([
                 uniformMap = combine(uniformMap, quantizedUniformMap);
             }
 
-            var buffer = vertexArray.attributes.POSITION.vertexBuffer;
-            var positionsBuffer = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Float32Array.BYTES_PER_ELEMENT);
+            var attribute = vertexArray.attributes.POSITION;
+            var componentDatatype = attribute.componentDatatype;
+            var typedArray = attribute.vertexBuffer;
+            var byteOffset = typedArray.byteOffset;
+            var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
 
-            buffer = vertexArray.attributes._BATCHID.vertexBuffer;
-            var vertexBatchIds = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+            attribute = vertexArray.attributes._BATCHID;
+            componentDatatype = attribute.componentDatatype;
+            typedArray = attribute.vertexBuffer;
+            byteOffset = typedArray.byteOffset;
+            bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
 
-            buffer = vertexArray.indexBuffer.typedArray;
+            var buffer = vertexArray.indexBuffer.typedArray;
             var indices;
             if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
                 indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);

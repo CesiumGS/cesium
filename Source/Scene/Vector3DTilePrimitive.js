@@ -236,12 +236,12 @@ define([
         var vertexAttributes = [{
             index : 0,
             vertexBuffer : positionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
+            componentDatatype : ComponentDatatype.fromTypedArray(primitive._positions),
             componentsPerAttribute : 3
         }, {
             index : 1,
             vertexBuffer : idBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+            componentDatatype : ComponentDatatype.fromTypedArray(primitive._vertexBatchIds),
             componentsPerAttribute : 1
         }];
 
