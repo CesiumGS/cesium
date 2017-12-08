@@ -286,9 +286,22 @@ define([
         this._dirty = false;                       // true when the model was transformed this frame
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
-        this._runtime = {
-            rootNodes : undefined,
-            nodes : undefined            // Indexed with the node property's name, i.e., glTF id
+        this._runtimeNode = {
+            matrix : undefined,
+            translation : undefined,
+            rotation : undefined,
+            scale : undefined,
+
+            // Per-node show inherited from parent
+            computedShow : true,
+
+            // Computed transforms
+            transformToRoot : new Matrix4(),
+            computedMatrix : new Matrix4(),
+            dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
+
+            // Rendering
+            commands : []                      // empty for transform, light, and camera nodes
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -748,37 +761,6 @@ define([
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
             Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
             Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
-    }
-
-    function parseNodes(model) {
-        var runtimeNodes = {};
-        ForEach.node(model.gltf, function(node, id) {
-            var runtimeNode = {
-                // Animation targets
-                matrix : undefined,
-                translation : undefined,
-                rotation : undefined,
-                scale : undefined,
-
-                // Per-node show inherited from parent
-                computedShow : true,
-
-                // Computed transforms
-                transformToRoot : new Matrix4(),
-                computedMatrix : new Matrix4(),
-                dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
-
-                // Rendering
-                commands : [],                      // empty for transform, light, and camera nodes
-
-                // Graph pointers
-                children : [],                      // empty for leaf nodes
-                parents : []                        // empty for root nodes
-            };
-
-            runtimeNodes[id] = runtimeNode;
-        });
-        model._runtime.nodes = runtimeNodes;
     }
 
     function parseMaterials(model) {
@@ -1264,40 +1246,6 @@ define([
         return that;
     }
 
-    var gltfUniformsFromNode = {
-        PROJECTION : function(uniformState, model, runtimeNode) {
-            return function() {
-                return uniformState.projection;
-            };
-        },
-        MODELVIEW : function(uniformState, model, runtimeNode) {
-            var mv = new Matrix4();
-            return function() {
-                return Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
-            };
-        },
-        CESIUM_RTC_MODELVIEW : function(uniformState, model, runtimeNode) {
-            // CESIUM_RTC extension
-            var mvRtc = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvRtc);
-                return Matrix4.setTranslation(mvRtc, model._rtcCenterEye, mvRtc);
-            };
-        },
-        MODELVIEWPROJECTION : function(uniformState, model, runtimeNode) {
-            var mvp = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
-                return Matrix4.multiply(uniformState._projection, mvp, mvp);
-            };
-        }
-    };
-
-    function getUniformFunctionFromSource(source, model, semantic, uniformState) {
-        var runtimeNode = model._runtime.nodes[source];
-        return gltfUniformsFromNode[semantic](uniformState, model, runtimeNode);
-    }
-
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
@@ -1331,15 +1279,10 @@ define([
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
 
-                        if (!defined(parameter.semantic) || !defined(gltfUniformsFromNode[parameter.semantic])) {
+                        if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
                             continue;
                         }
-
-                        if (defined(parameter.node)) {
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic)) {
-                            uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                        }
+                        uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
                     }
                 }
 
@@ -1641,74 +1584,29 @@ define([
         }
         loadResources.createRuntimeNodes = false;
 
-        var rootNodes = [];
-        var runtimeNodes = model._runtime.nodes;
-
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-
-        var scene = gltf.scenes[gltf.scene];
-        var sceneNodes = scene.nodes;
-        var length = sceneNodes.length;
-
-        var stack = [];
-        var seen = {};
-
-        for (var i = 0; i < length; ++i) {
-            stack.push({
-                parentRuntimeNode : undefined,
-                gltfNode : nodes[sceneNodes[i]],
-                id : sceneNodes[i]
-            });
-
-            while (stack.length > 0) {
-                var n = stack.pop();
-                seen[n.id] = true;
-                var parentRuntimeNode = n.parentRuntimeNode;
-                var gltfNode = n.gltfNode;
-
-                // Node hierarchy is a DAG so a node can have more than one parent so it may already exist
-                var runtimeNode = runtimeNodes[n.id];
-                if (runtimeNode.parents.length === 0) {
-                    if (defined(gltfNode.matrix)) {
-                        runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
-                    } else {
-                        // TRS converted to Cesium types
-                        var rotation = gltfNode.rotation;
-                        runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        runtimeNode.rotation = Quaternion.unpack(rotation);
-                        runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
-                    }
-                }
-
-                if (defined(parentRuntimeNode)) {
-                    parentRuntimeNode.children.push(runtimeNode);
-                    runtimeNode.parents.push(parentRuntimeNode);
-                } else {
-                    rootNodes.push(runtimeNode);
-                }
-
-                if (defined(gltfNode.mesh)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
-                }
-
-                var children = gltfNode.children;
-                var childrenLength = children.length;
-                for (var j = 0; j < childrenLength; j++) {
-                    var childId = children[j];
-                    if (!seen[childId]) {
-                        stack.push({
-                            parentRuntimeNode : runtimeNode,
-                            gltfNode : nodes[childId],
-                            id : children[j]
-                        });
-                    }
-                }
-            }
+        if (nodes.length > 1) {
+            throw new RuntimeError('Only one node is supported when using a batched 3D tileset for classification.');
         }
 
-        model._runtime.rootNodes = rootNodes;
-        model._runtime.nodes = runtimeNodes;
+        var gltfNode = nodes[0];
+        var runtimeNode = model._runtimeNode;
+        if (defined(gltfNode.matrix)) {
+            runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
+        } else {
+            // TRS converted to Cesium types
+            var rotation = gltfNode.rotation;
+            runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
+            runtimeNode.rotation = Quaternion.unpack(rotation);
+            runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
+        }
+
+        if (!defined(gltfNode.mesh)) {
+            throw new RuntimeError('The only node in the glTF does not have a mesh.');
+        }
+
+        createCommand(model, gltfNode, runtimeNode, context);
     }
 
     function createResources(model, frameState) {
@@ -1724,25 +1622,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getNodeMatrix(node, result) {
-        if (defined(node.matrix)) {
-            Matrix4.clone(node.matrix, result);
-        } else {
-            Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
-        }
-    }
-
-    var scratchNodeStack = [];
     var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
 
-        var rootNodes = model._runtime.rootNodes;
-        var length = rootNodes.length;
-
-        var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
         if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
@@ -1762,59 +1647,31 @@ define([
             }
         }
 
-        for (var i = 0; i < length; ++i) {
-            var n = rootNodes[i];
+        var n = model._runtimeNode;
+        var transformToRoot = n.transformToRoot;
+        var commands = n.commands;
 
-            getNodeMatrix(n, n.transformToRoot);
-            nodeStack.push(n);
+        if (defined(n.matrix)) {
+            Matrix4.clone(n.matrix, transformToRoot);
+        } else {
+            Matrix4.fromTranslationQuaternionRotationScale(n.translation, n.rotation, n.scale, transformToRoot);
+        }
 
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var transformToRoot = n.transformToRoot;
-                var commands = n.commands;
+        if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
+            var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
+            var commandsLength = commands.length;
+            if (commandsLength > 0) {
+                // Node has meshes, which has primitives.  Update their commands.
+                for (var j = 0; j < commandsLength; ++j) {
+                    var primitiveCommand = commands[j];
+                    Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
 
-                if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
-                    var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
-                    var commandsLength = commands.length;
-                    if (commandsLength > 0) {
-                        // Node has meshes, which has primitives.  Update their commands.
-                        for (var j = 0; j < commandsLength; ++j) {
-                            var primitiveCommand = commands[j];
-                            Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
+                    // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
+                    BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
 
-                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
-                            BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
-
-                            if (defined(model._rtcCenter)) {
-                                Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
-                            }
-                        }
+                    if (defined(model._rtcCenter)) {
+                        Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
                     }
-                }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
-
-                    // A node's transform needs to be updated if
-                    // - It was targeted for animation this frame, or
-                    // - Any of its ancestors were targeted for animation this frame
-
-                    // PERFORMANCE_IDEA: if a child has multiple parents and only one of the parents
-                    // is dirty, all the subtrees for each child instance will be dirty; we probably
-                    // won't see this in the wild often.
-                    child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
-
-                    if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
-                        // Don't check for modelTransformChanged since if only the model's model matrix changed,
-                        // we do not need to rebuild the local transform-to-root, only the final
-                        // [model's-model-matrix][transform-to-root] above.
-                        getNodeMatrix(child, child.transformToRoot);
-                        Matrix4.multiplyTransformation(transformToRoot, child.transformToRoot, child.transformToRoot);
-                    }
-
-                    nodeStack.push(child);
                 }
             }
         }
@@ -1938,7 +1795,6 @@ define([
                     parsePrograms(this);
                     parseMaterials(this);
                     parseMeshes(this);
-                    parseNodes(this);
 
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
