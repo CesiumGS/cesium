@@ -274,7 +274,10 @@ define([
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var resource = this._resource.getDerivedResource({
-            url: level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true',
+            url: level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
+            queryParameters: {
+                cesium: true
+            },
             request: request
         });
         var promise = loadImage(resource, undefined, request);

@@ -12,7 +12,6 @@ define([
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
-        './joinUrls',
         './loadArrayBuffer',
         './loadJson',
         './Math',
@@ -37,7 +36,6 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
-        joinUrls,
         loadArrayBuffer,
         loadJson,
         CesiumMath,
@@ -219,15 +217,6 @@ define([
             }
 
             var tileUrlTemplates = data.tiles;
-            for (var i = 0; i < tileUrlTemplates.length; ++i) {
-                var template = new Uri(tileUrlTemplates[i]);
-                var baseUri = new Uri(lastResource.url);
-                if (template.authority && !baseUri.authority) {
-                    baseUri.authority = template.authority;
-                    baseUri.scheme = template.scheme;
-                }
-                tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
-            }
 
             var availableTiles = data.available;
             var availability;
@@ -277,6 +266,7 @@ define([
             }
 
             layers.push(new LayerInformation({
+                version: data.version,
                 isHeightmap: isHeightmap,
                 tileUrlTemplates: tileUrlTemplates,
                 availability: availability,
@@ -636,7 +626,13 @@ define([
         }
 
         var resource = this._resource.getDerivedResource({
-            url: urlTemplates[(x + tmsY + level) % urlTemplates.length].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY),
+            url: urlTemplates[(x + tmsY + level) % urlTemplates.length],
+            urlTemplateValues: {
+                version: layerToUse.version,
+                z: level,
+                x: x,
+                y: tmsY
+            },
             headers: getRequestHeader(extensionList),
             request: request
         });

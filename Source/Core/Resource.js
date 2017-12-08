@@ -41,8 +41,9 @@ define([
         //>>includeEnd('debug');
 
         this._url = '';
+        this._urlTemplateValues = defaultValue(options.urlTemplateValues, {});
         this._queryParameters = defaultValue(options.queryParameters, {});
-        this._hash = defaultValue(options.hash, '');
+        this._fragment = defaultValue(options.fragment, '');
 
         this.url = options.url;
 
@@ -65,8 +66,17 @@ define([
             get: function() {
                 var uri = new Uri(this._url);
                 uri.query = objectToQuery(this._queryParameters);
-                uri.fragment = this._hash;
+                uri.fragment = this._fragment;
                 var url = uri.toString();
+                var template = this._urlTemplateValues;
+                var keys = Object.keys(template);
+                if (keys.length > 0) {
+                    for (var i = 0; i < keys.length; i++) {
+                        var key = keys[i];
+                        var value = template[key];
+                        url = url.replace(new RegExp('{' + key + '}', 'g'), value);
+                    }
+                }
                 if (defined(this.proxy)) {
                     url = this.proxy.getURL(url);
                 }
@@ -82,9 +92,9 @@ define([
                 }
 
                 if (defined(uri.fragment)) {
-                    var hash = uri.fragment;
+                    var fragment = uri.fragment;
                     uri.fragment = undefined;
-                    this._hash = hash;
+                    this._fragment = fragment;
                 }
 
                 this._url = uri.toString();
@@ -92,8 +102,12 @@ define([
         }
     });
 
-    Resource.prototype.addQueryParameters = function(params) {
+    Resource.prototype.setQueryParameters = function(params) {
         this._queryParameters = combine(params, this._queryParameters);
+    };
+
+    Resource.prototype.setTemplateValues = function(template) {
+        this._urlTemplateValues = combine(template, this._urlTemplateValues);
     };
 
     Resource.prototype.getDerivedResource = function(options) {
@@ -103,9 +117,9 @@ define([
             var uri = new Uri(options.url);
 
             if (defined(uri.fragment)) {
-                var hash = uri.fragment;
+                var fragment = uri.fragment;
                 uri.fragment = undefined;
-                resource._hash = hash;
+                resource._fragment = fragment;
             }
 
             if (defined(uri.query)) {
@@ -118,6 +132,9 @@ define([
         }
         if (defined(options.queryParameters)) {
             resource._queryParameters = combine(options.queryParameters, resource._queryParameters);
+        }
+        if (defined(options.urlTemplateValues)) {
+            resource.urlTemplateValues = combine(options.urlTemplateValues, resource.urlTemplateValues);
         }
         if (defined(options.headers)) {
             resource.headers = combine(options.headers, resource.headers);
@@ -166,7 +183,8 @@ define([
 
         result._url = this._url;
         result._queryParameters = this._queryParameters;
-        result._hash = this._hash;
+        result._urlTemplateValues = this._urlTemplateValues;
+        result._fragment = this._fragment;
         result.headers = this.headers;
         result.request = this.request;
         result.responseType = this.responseType;

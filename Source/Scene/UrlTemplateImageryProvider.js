@@ -2,6 +2,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/clone',
         '../Core/combine',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -25,6 +26,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
+        clone,
         combine,
         Credit,
         defaultValue,
@@ -46,36 +48,38 @@ define([
         ImageryProvider) {
     'use strict';
 
+    var templateRegex = /{[^}]+}/g;
+
     var tags = {
-        '{x}': xTag,
-        '{y}': yTag,
-        '{z}': zTag,
-        '{s}': sTag,
-        '{reverseX}': reverseXTag,
-        '{reverseY}': reverseYTag,
-        '{reverseZ}': reverseZTag,
-        '{westDegrees}': westDegreesTag,
-        '{southDegrees}': southDegreesTag,
-        '{eastDegrees}': eastDegreesTag,
-        '{northDegrees}': northDegreesTag,
-        '{westProjected}': westProjectedTag,
-        '{southProjected}': southProjectedTag,
-        '{eastProjected}': eastProjectedTag,
-        '{northProjected}': northProjectedTag,
-        '{width}': widthTag,
-        '{height}': heightTag
+        'x': xTag,
+        'y': yTag,
+        'z': zTag,
+        's': sTag,
+        'reverseX': reverseXTag,
+        'reverseY': reverseYTag,
+        'reverseZ': reverseZTag,
+        'westDegrees': westDegreesTag,
+        'southDegrees': southDegreesTag,
+        'eastDegrees': eastDegreesTag,
+        'northDegrees': northDegreesTag,
+        'westProjected': westProjectedTag,
+        'southProjected': southProjectedTag,
+        'eastProjected': eastProjectedTag,
+        'northProjected': northProjectedTag,
+        'width': widthTag,
+        'height': heightTag
     };
 
     var pickFeaturesTags = combine(tags, {
-        '{i}' : iTag,
-        '{j}' : jTag,
-        '{reverseI}' : reverseITag,
-        '{reverseJ}' : reverseJTag,
-        '{longitudeDegrees}' : longitudeDegreesTag,
-        '{latitudeDegrees}' : latitudeDegreesTag,
-        '{longitudeProjected}' : longitudeProjectedTag,
-        '{latitudeProjected}' : latitudeProjectedTag,
-        '{format}' : formatTag
+        'i' : iTag,
+        'j' : jTag,
+        'reverseI' : reverseITag,
+        'reverseJ' : reverseJTag,
+        'longitudeDegrees' : longitudeDegreesTag,
+        'latitudeDegrees' : latitudeDegreesTag,
+        'longitudeProjected' : longitudeProjectedTag,
+        'latitudeProjected' : latitudeProjectedTag,
+        'format' : formatTag
     });
 
     /**
@@ -196,7 +200,7 @@ define([
      * var custom = new Cesium.UrlTemplateImageryProvider({
      *    url : 'https://yoururl/{Time}/{z}/{y}/{x}.png',
      *    customTags : {
-     *        Time: function(imageryProvider, x, y , level) {
+     *        Time: function(imageryProvider, x, y, level) {
      *            return '20171231'
      *        }
      *    }
@@ -237,6 +241,8 @@ define([
         this._credit = undefined;
         this._hasAlphaChannel = undefined;
         this._readyPromise = undefined;
+        this._tags = undefined;
+        this._pickFeaturesTags = undefined;
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
@@ -505,7 +511,7 @@ define([
          */
         ready : {
             get : function() {
-                return defined(this._urlParts);
+                return defined(this._resource);
             }
         },
 
@@ -582,6 +588,10 @@ define([
             }
             //>>includeEnd('debug');
 
+            var customTags = properties.customTags;
+            var allTags = combine(tags, customTags);
+            var allPickFeaturesTags = combine(pickFeaturesTags, customTags);
+
             var resource = properties.url;
             if (typeof resource === 'string') {
                 resource = new Resource({
@@ -601,8 +611,6 @@ define([
                 pickFeaturesResource.proxy = properties.proxy;
             }
 
-            that._resource = resource;
-            that._pickFeaturesResoruce = pickFeaturesResource;
             that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
             that._urlSchemeZeroPadding = defaultValue(properties.urlSchemeZeroPadding, that.urlSchemeZeroPadding);
             that._tileDiscardPolicy = properties.tileDiscardPolicy;
@@ -632,35 +640,10 @@ define([
             }
             that._credit = credit;
 
-            var tag;
-            var allTags = {};
-            var allPickFeaturesTags = {};
-            for (tag in tags) {
-                if (tags.hasOwnProperty(tag)) {
-                    allTags[tag] = tags[tag];
-                }
-            }
-            for (tag in pickFeaturesTags) {
-                if (pickFeaturesTags.hasOwnProperty(tag)) {
-                    allPickFeaturesTags[tag] = pickFeaturesTags[tag];
-                }
-            }
-
-            var customTags = properties.customTags;
-            if (defined(customTags)) {
-                for (tag in customTags) {
-                    if (customTags.hasOwnProperty(tag)) {
-                        var targetTag = '{' + tag + '}';
-                        allTags[targetTag] = customTags[tag];
-                        allPickFeaturesTags[targetTag] = customTags[tag];
-                    }
-                }
-            }
-
-            that._urlParts = urlTemplateToParts(resource.url, allTags);
-            if (defined(pickFeaturesResource)) {
-                that._pickFeaturesUrlParts = urlTemplateToParts(pickFeaturesResource.url, allPickFeaturesTags);
-            }
+            that._resource = resource;
+            that._tags = allTags;
+            that._pickFeaturesResoruce = pickFeaturesResource;
+            that._pickFeaturesTags = allPickFeaturesTags;
 
             return true;
         });
@@ -704,7 +687,7 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         //>>includeEnd('debug');
-        return ImageryProvider.loadImage(this, buildImageUrl(this, x, y, level, request));
+        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
     };
 
     /**
@@ -747,7 +730,7 @@ define([
             }
 
             var format = that._getFeatureInfoFormats[formatIndex];
-            var resource = buildPickFeaturesUrl(that, x, y, level, longitude, latitude, format.format);
+            var resource = buildPickFeaturesResource(that, x, y, level, longitude, latitude, format.format);
 
             ++formatIndex;
 
@@ -770,17 +753,22 @@ define([
     var projectedScratchComputed = false;
     var projectedScratch = new Rectangle();
 
-    function buildImageUrl(imageryProvider, x, y, level, request) {
+    function buildImageResource(imageryProvider, x, y, level, request) {
         degreesScratchComputed = false;
         projectedScratchComputed = false;
 
-        var url = buildUrl(imageryProvider, imageryProvider._urlParts, function(partFunction) {
-            return partFunction(imageryProvider, x, y, level);
+        var resource = imageryProvider._resource;
+        var url = resource.url;
+        var allTags = this._tags;
+        var urlTemplateValues = {};
+        url.match(templateRegex).forEach(function(tag) {
+            var key = tag.substring(1, tag.length - 1); //strip {}
+            urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level);
         });
 
-        return imageryProvider._resource.getDerivedResource({
-            url: url,
-            request: request
+        return resource.getDerivedResource({
+            request: request,
+            urlTemplateValues: urlTemplateValues
         });
     }
 
@@ -788,71 +776,24 @@ define([
     var ijScratch = new Cartesian2();
     var longitudeLatitudeProjectedScratchComputed = false;
 
-    function buildPickFeaturesUrl(imageryProvider, x, y, level, longitude, latitude, format) {
+    function buildPickFeaturesResource(imageryProvider, x, y, level, longitude, latitude, format) {
         degreesScratchComputed = false;
         projectedScratchComputed = false;
         ijScratchComputed = false;
         longitudeLatitudeProjectedScratchComputed = false;
 
-        var url = buildUrl(imageryProvider, imageryProvider._pickFeaturesUrlParts, function(partFunction) {
-            return partFunction(imageryProvider, x, y, level, longitude, latitude, format);
+        var resource = imageryProvider._pickFeaturesResoruce;
+        var url = resource.url;
+        var allTags = this._pickFeaturesTags;
+        var urlTemplateValues = {};
+        url.match(templateRegex).forEach(function(tag) {
+            var key = tag.substring(1, tag.length - 1); //strip {}
+            urlTemplateValues[key] = allTags[key](imageryProvider, x, y, level, longitude, latitude, format);
         });
-        return imageryProvider._pickFeaturesResoruce.getDerivedResource({
-            url: url
+
+        return resource.getDerivedResource({
+            urlTemplateValues: urlTemplateValues
         });
-    }
-
-    function buildUrl(imageryProvider, parts, partFunctionInvoker) {
-        var url = '';
-
-        for (var i = 0; i < parts.length; ++i) {
-            var part = parts[i];
-            if (typeof part === 'string') {
-                url += part;
-            } else {
-                url += encodeURIComponent(partFunctionInvoker(part));
-            }
-        }
-
-        return url;
-    }
-
-    function urlTemplateToParts(url, tags) {
-        if (!defined(url)) {
-            return undefined;
-        }
-
-        var parts = [];
-        var nextIndex = 0;
-        var minIndex;
-        var minTag;
-        var tagList = Object.keys(tags);
-
-        while (nextIndex < url.length) {
-            minIndex = Number.MAX_VALUE;
-            minTag = undefined;
-
-            for (var i = 0; i < tagList.length; ++i) {
-                var thisIndex = url.indexOf(tagList[i], nextIndex);
-                if (thisIndex >= 0 && thisIndex < minIndex) {
-                    minIndex = thisIndex;
-                    minTag = tagList[i];
-                }
-            }
-
-            if (!defined(minTag)) {
-                parts.push(url.substring(nextIndex));
-                nextIndex = url.length;
-            } else {
-                if (nextIndex < minIndex) {
-                    parts.push(url.substring(nextIndex, minIndex));
-                }
-                parts.push(tags[minTag]);
-                nextIndex = minIndex + minTag.length;
-            }
-        }
-
-        return parts;
     }
 
     function padWithZerosIfNecessary(imageryProvider, key, value) {

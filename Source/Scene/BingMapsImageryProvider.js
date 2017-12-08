@@ -176,7 +176,7 @@ define([
             that._tileHeight = resource.imageHeight;
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', that._culture);
+            that._imageUrlTemplate = resource.imageUrl;
 
             var tileProtocol = that._tileProtocol;
             if (!defined(tileProtocol)) {
@@ -190,7 +190,7 @@ define([
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
+                    missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
@@ -560,12 +560,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = buildImageUrl(this, x, y, level);
-        var resource = this._resource.getDerivedResource({
-            url: url,
-            request: request
-        });
-        return ImageryProvider.loadImage(this, resource);
+        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
     };
 
     /**
@@ -650,17 +645,21 @@ define([
         };
     };
 
-    function buildImageUrl(imageryProvider, x, y, level) {
+    function buildImageResource(imageryProvider, x, y, level, request) {
         var imageUrl = imageryProvider._imageUrlTemplate;
-
-        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
-        imageUrl = imageUrl.replace('{quadkey}', quadkey);
 
         var subdomains = imageryProvider._imageUrlSubdomains;
         var subdomainIndex = (x + y + level) % subdomains.length;
-        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
 
-        return imageUrl;
+        imageryProvider._resource.getDerivedResource({
+            url: imageUrl,
+            request: request,
+            urlTemplateValues: {
+                quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
+                subdomain: subdomains[subdomainIndex],
+                culture: imageryProvider._culture
+            }
+        });
     }
 
     var intersectionScratch = new Rectangle();
