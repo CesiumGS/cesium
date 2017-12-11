@@ -20,6 +20,7 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/Plane',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Core/WebGLConstants',
@@ -27,6 +28,7 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Scene/Axis',
+        'Scene/ClippingPlaneCollection',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
@@ -55,6 +57,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         PerspectiveFrustum,
+        Plane,
         PrimitiveType,
         Transforms,
         WebGLConstants,
@@ -62,6 +65,7 @@ defineSuite([
         RenderState,
         ShaderSource,
         Axis,
+        ClippingPlaneCollection,
         ColorBlendMode,
         HeightReference,
         ModelAnimationLoop,
@@ -2402,6 +2406,8 @@ defineSuite([
             scene.renderForSpecs();
             var commands = scene.frameState.commandList;
             expect(commands.length).toBe(0);
+
+            primitives.remove(model);
         });
     });
 
@@ -2508,9 +2514,9 @@ defineSuite([
             model.silhouetteColor = Color.GREEN;
 
             // Load a second model
-            return loadModel(boxUrl).then(function(model) {
-                model.show = true;
-                model.silhouetteSize = 1.0;
+            return loadModel(boxUrl).then(function(model2) {
+                model2.show = true;
+                model2.silhouetteSize = 1.0;
                 scene.renderForSpecs();
                 expect(commands.length).toBe(4);
                 expect(commands[0].renderState.stencilTest.enabled).toBe(true);
@@ -2525,7 +2531,139 @@ defineSuite([
                 var reference1 = commands[0].renderState.stencilTest.reference;
                 var reference2 = commands[2].renderState.stencilTest.reference;
                 expect(reference2).toEqual(reference1 + 1);
+
+                primitives.remove(model);
+                primitives.remove(model2);
             });
+        });
+    });
+
+    it('Updates clipping planes when clipping planes are enabled', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            scene.renderForSpecs();
+
+            expect(model._packedClippingPlanes).toBeDefined();
+            expect(model._packedClippingPlanes.length).toBe(0);
+            expect(model._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+               planes : [
+                   new Plane(Cartesian3.UNIT_X, 0.0)
+               ]
+            });
+
+            model.update(scene.frameState);
+            scene.renderForSpecs();
+
+            expect(model._packedClippingPlanes.length).toBe(1);
+            expect(model._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes selectively disable rendering', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ]
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = -10.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes apply edge styling', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    plane
+                ],
+                edgeWidth : 5.0,
+                edgeColor : Color.BLUE
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            plane.distance = -5.0;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual([0, 0, 255, 255]);
+            });
+
+            primitives.remove(model);
+        });
+    });
+
+    it('Clipping planes combien regions', function () {
+        return loadModel(boxUrl).then(function(model) {
+            model.show = true;
+            model.zoomTo();
+
+            var modelColor;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                modelColor = rgba;
+            });
+
+            model.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_Z, -5.0),
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ],
+                combineClippingRegions: false
+            });
+
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(modelColor);
+            });
+
+            model.clippingPlanes._combineClippingRegions = true;
+            model.update(scene.frameState);
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqual(modelColor);
+            });
+
+            primitives.remove(model);
         });
     });
 

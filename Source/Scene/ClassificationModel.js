@@ -6,6 +6,7 @@ define([
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/combine',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -51,6 +52,7 @@ define([
         Cartographic,
         Color,
         combine,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
@@ -117,16 +119,10 @@ define([
         this.createVertexArrays = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
-
-        this.skinnedNodesIds = [];
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
         return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    };
-
-    LoadResources.prototype.finishedPendingBufferLoads = function() {
-        return (this.pendingBufferLoads === 0);
     };
 
     LoadResources.prototype.finishedBuffersCreation = function() {
@@ -157,54 +153,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function setCachedGltf(model, cachedGltf) {
-        model._cachedGltf = cachedGltf;
-    }
-
-    // glTF JSON can be big given embedded geometry, textures, and animations, so we
-    // cache it across all models using the same url/cache-key.  This also reduces the
-    // slight overhead in assigning defaults to missing values.
-    //
-    // Note that this is a global cache, compared to renderer resources, which
-    // are cached per context.
-    function CachedGltf(options) {
-        this._gltf = options.gltf;
-        this.ready = options.ready;
-        this.modelsToLoad = [];
-        this.count = 0;
-    }
-
-    defineProperties(CachedGltf.prototype, {
-        gltf : {
-            set : function(value) {
-                this._gltf = value;
-            },
-
-            get : function() {
-                return this._gltf;
-            }
-        }
-    });
-
-    CachedGltf.prototype.makeReady = function(gltfJson) {
-        this.gltf = gltfJson;
-
-        var models = this.modelsToLoad;
-        var length = models.length;
-        for (var i = 0; i < length; ++i) {
-            var m = models[i];
-            if (!m.isDestroyed()) {
-                setCachedGltf(m, this);
-            }
-        }
-        this.modelsToLoad = undefined;
-        this.ready = true;
-    };
-
-    var gltfCache = {};
-
-    ///////////////////////////////////////////////////////////////////////////
-
     /**
      * A 3D model for classifying other 3D assets based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      *
@@ -214,19 +162,14 @@ define([
      * @private
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} options.gltf The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
-     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
-     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
-     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
+     * @param {ClassificationType} [options.classificationType] What this model will classify.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -236,48 +179,17 @@ define([
     function ClassificationModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var cacheKey = options.cacheKey;
-        this._cacheKey = cacheKey;
-        this._cachedGltf = undefined;
-
-        var cachedGltf;
-        if (defined(cacheKey) && defined(gltfCache[cacheKey]) && gltfCache[cacheKey].ready) {
-            // glTF JSON is in cache and ready
-            cachedGltf = gltfCache[cacheKey];
-            ++cachedGltf.count;
-        } else {
-            // glTF was explicitly provided, e.g., when a user uses the ClassificationModel constructor directly
-            var gltf = options.gltf;
-
-            if (defined(gltf)) {
-                if (gltf instanceof ArrayBuffer) {
-                    gltf = new Uint8Array(gltf);
-                }
-
-                if (gltf instanceof Uint8Array) {
-                    // Binary glTF
-                    var parsedGltf = parseBinaryGltf(gltf);
-
-                    cachedGltf = new CachedGltf({
-                        gltf : parsedGltf,
-                        ready : true
-                    });
-                } else {
-                    // Normal glTF (JSON)
-                    cachedGltf = new CachedGltf({
-                        gltf : options.gltf,
-                        ready : true
-                    });
-                }
-
-                cachedGltf.count = 1;
-
-                if (defined(cacheKey)) {
-                    gltfCache[cacheKey] = cachedGltf;
-                }
-            }
+        var gltf = options.gltf;
+        if (gltf instanceof ArrayBuffer) {
+            gltf = new Uint8Array(gltf);
         }
-        setCachedGltf(this, cachedGltf);
+
+        if (gltf instanceof Uint8Array) {
+            // Binary glTF
+             gltf = parseBinaryGltf(gltf);
+        } // else Normal glTF (JSON)
+
+        this._gltf = gltf;
 
         this._basePath = defaultValue(options.basePath, '');
         var baseUri = getBaseUri(document.location.href);
@@ -308,72 +220,6 @@ define([
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
-        this._clampedModelMatrix = undefined;
-
-        /**
-         * A uniform scale applied to this model before the {@link ClassificationModel#modelMatrix}.
-         * Values greater than <code>1.0</code> increase the size of the model; values
-         * less than <code>1.0</code> decrease.
-         *
-         * @type {Number}
-         *
-         * @default 1.0
-         */
-        this.scale = defaultValue(options.scale, 1.0);
-        this._scale = this.scale;
-
-        /**
-         * The approximate minimum pixel size of the model regardless of zoom.
-         * This can be used to ensure that a model is visible even when the viewer
-         * zooms out.  When <code>0.0</code>, no minimum size is enforced.
-         *
-         * @type {Number}
-         *
-         * @default 0.0
-         */
-        this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
-        this._minimumPixelSize = this.minimumPixelSize;
-
-        /**
-         * The maximum scale size for a model. This can be used to give
-         * an upper limit to the {@link ClassificationModel#minimumPixelSize}, ensuring that the model
-         * is never an unreasonable scale.
-         *
-         * @type {Number}
-         */
-        this.maximumScale = options.maximumScale;
-        this._maximumScale = this.maximumScale;
-
-        /**
-         * User-defined object returned when the model is picked.
-         *
-         * @type Object
-         *
-         * @default undefined
-         *
-         * @see Scene#pick
-         */
-        this.id = options.id;
-        this._id = options.id;
-
-        /**
-         * Returns the height reference of the model
-         *
-         * @type {HeightReference}
-         *
-         * @default HeightReference.NONE
-         */
-        this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._heightReference = this.heightReference;
-        this._heightChanged = false;
-        this._removeUpdateHeightCallback = undefined;
-        var scene = options.scene;
-        this._scene = scene;
-        if (defined(scene) && defined(scene.terrainProviderChanged)) {
-            this._terrainProviderChangedCallback = scene.terrainProviderChanged.addEventListener(function() {
-                this._heightChanged = true;
-            }, this);
-        }
 
         this._ready = false;
         this._readyPromise = when.defer();
@@ -417,6 +263,7 @@ define([
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._batchTable = options.batchTable;
 
         /**
          * @private
@@ -424,7 +271,7 @@ define([
          */
         this.cull = defaultValue(options.cull, true);
 
-        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and axis
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -437,13 +284,22 @@ define([
         this._dirty = false;                       // true when the model was transformed this frame
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
-        this._runtime = {
-            rootNodes : undefined,
-            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
-            nodesByName : undefined,      // Indexed with name property in the node
-            meshesByName : undefined,     // Indexed with the name property in the mesh
-            materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's property name
+        this._runtimeNode = {
+            matrix : undefined,
+            translation : undefined,
+            rotation : undefined,
+            scale : undefined,
+
+            // Per-node show inherited from parent
+            computedShow : true,
+
+            // Computed transforms
+            transformToRoot : new Matrix4(),
+            computedMatrix : new Matrix4(),
+            dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
+
+            // Rendering
+            commands : []                      // empty for transform, light, and camera nodes
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -463,7 +319,6 @@ define([
         this._trianglesLength = 0;
 
         this._nodeCommands = [];
-        this._pickIds = [];
 
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // reference to either 3D or 2D
@@ -486,29 +341,7 @@ define([
          */
         gltf : {
             get : function() {
-                return defined(this._cachedGltf) ? this._cachedGltf.gltf : undefined;
-            }
-        },
-
-        /**
-         * The key identifying this model in the model cache for glTF JSON, renderer resources, and animations.
-         * Caching saves memory and improves loading speed when several models with the same url are created.
-         * <p>
-         * This key is automatically generated when the model is created with {@link ClassificationModel.fromGltf}.  If the model
-         * is created directly from glTF JSON using the {@link ClassificationModel} constructor, this key can be manually
-         * provided; otherwise, the model will not be changed.
-         * </p>
-         *
-         * @memberof ClassificationModel.prototype
-         *
-         * @type {String}
-         * @readonly
-         *
-         * @private
-         */
-        cacheKey : {
-            get : function() {
-                return this._cacheKey;
+                return this._gltf;
             }
         },
 
@@ -558,13 +391,7 @@ define([
                 //>>includeEnd('debug');
 
                 var modelMatrix = this.modelMatrix;
-                if ((this.heightReference !== HeightReference.NONE) && this._clampedModelMatrix) {
-                    modelMatrix = this._clampedModelMatrix;
-                }
-
                 var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
-                var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
-                Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
                 var scaledBoundingSphere = this._scaledBoundingSphere;
                 scaledBoundingSphere.center = Cartesian3.multiplyComponents(this._boundingSphere.center, nonUniformScale, scaledBoundingSphere.center);
@@ -731,28 +558,6 @@ define([
         },
 
         /**
-         * Gets the model's cached geometry memory in bytes. This includes all vertex and index buffers.
-         *
-         * @private
-         */
-        cachedGeometryByteLength : {
-            get : function() {
-                return this._cachedGeometryByteLength;
-            }
-        },
-
-        /**
-         * Gets the model's cached texture memory in bytes.
-         *
-         * @private
-         */
-        cachedTexturesByteLength : {
-            get : function() {
-                return this._cachedTexturesByteLength;
-            }
-        },
-
-        /**
          * Gets the model's classification type.
          * @memberof ClassificationModel.prototype
          * @type {ClassificationType}
@@ -771,8 +576,6 @@ define([
     function getSubarray(array, offset, length) {
         return array.subarray(offset, offset + length);
     }
-
-    ClassificationModel._gltfCache = gltfCache;
 
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
@@ -800,53 +603,32 @@ define([
         var gltf = model.gltf;
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
-        var rootNodes = gltf.scenes[gltf.scene].nodes;
-        var rootNodesLength = rootNodes.length;
-
-        var nodeStack = [];
 
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
-        for (var i = 0; i < rootNodesLength; ++i) {
-            var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = getTransform(n);
-            nodeStack.push(n);
+        var n = gltfNodes[0];
+        var meshId = n.mesh;
+        if (gltfNodes.length > 1 || !defined(meshId)) {
+            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+        }
 
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var transformToRoot = n._transformToRoot;
-
-                var meshId = n.mesh;
-                if (defined(meshId)) {
-                    var mesh = gltfMeshes[meshId];
-                    var primitives = mesh.primitives;
-                    var primitivesLength = primitives.length;
-                    for (var m = 0; m < primitivesLength; ++m) {
-                        var positionAccessor = primitives[m].attributes.POSITION;
-                        if (defined(positionAccessor)) {
-                            var minMax = getAccessorMinMax(gltf, positionAccessor);
-                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-                            if (defined(min) && defined(max)) {
-                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                Cartesian3.minimumByComponent(min, aMin, min);
-                                Cartesian3.maximumByComponent(max, aMax, max);
-                            }
-                        }
-                    }
+        var transformToRoot = getTransform(n);
+        var mesh = gltfMeshes[meshId];
+        var primitives = mesh.primitives;
+        var primitivesLength = primitives.length;
+        for (var m = 0; m < primitivesLength; ++m) {
+            var positionAccessor = primitives[m].attributes.POSITION;
+            if (defined(positionAccessor)) {
+                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+                if (defined(min) && defined(max)) {
+                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                    Cartesian3.minimumByComponent(min, aMin, min);
+                    Cartesian3.maximumByComponent(max, aMax, max);
                 }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = gltfNodes[children[k]];
-                    child._transformToRoot = getTransform(child);
-                    Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
-                    nodeStack.push(child);
-                }
-                delete n._transformToRoot;
             }
         }
 
@@ -958,113 +740,36 @@ define([
             Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
     }
 
-    function parseNodes(model) {
-        var runtimeNodes = {};
-        var runtimeNodesByName = {};
-        var skinnedNodes = [];
-
-        var skinnedNodesIds = model._loadResources.skinnedNodesIds;
-
-        ForEach.node(model.gltf, function(node, id) {
-            var runtimeNode = {
-                // Animation targets
-                matrix : undefined,
-                translation : undefined,
-                rotation : undefined,
-                scale : undefined,
-
-                // Per-node show inherited from parent
-                computedShow : true,
-
-                // Computed transforms
-                transformToRoot : new Matrix4(),
-                computedMatrix : new Matrix4(),
-                dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
-
-                // Rendering
-                commands : [],                      // empty for transform, light, and camera nodes
-
-                // Skinned node
-                inverseBindMatrices : undefined,    // undefined when node is not skinned
-                bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
-                joints : [],                        // empty when node is not skinned
-                computedJointMatrices : [],         // empty when node is not skinned
-
-                // Joint node
-                jointName : node.jointName,         // undefined when node is not a joint
-
-                weights : [],
-
-                // Graph pointers
-                children : [],                      // empty for leaf nodes
-                parents : [],                       // empty for root nodes
-
-                // Publicly-accessible ModelNode instance to modify animation targets
-                publicNode : undefined
-            };
-            runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, id, getTransform(node));
-
-            runtimeNodes[id] = runtimeNode;
-            runtimeNodesByName[node.name] = runtimeNode;
-
-            if (defined(node.skin)) {
-                skinnedNodesIds.push(id);
-                skinnedNodes.push(runtimeNode);
-            }
-        });
-
-        model._runtime.nodes = runtimeNodes;
-        model._runtime.nodesByName = runtimeNodesByName;
-        model._runtime.skinnedNodes = skinnedNodes;
-    }
-
     function parseMaterials(model) {
-        var runtimeMaterialsByName = {};
-        var runtimeMaterialsById = {};
         var uniformMaps = model._uniformMaps;
-
         ForEach.material(model.gltf, function(material, id) {
             // Allocated now so ModelMaterial can keep a reference to it.
             uniformMaps[id] = {
                 uniformMap : undefined,
-                values : undefined,
-                jointMatrixUniformName : undefined,
-                morphWeightsUniformName : undefined
+                values : undefined
             };
-
-            var modelMaterial = new ModelMaterial(model, material, id);
-            runtimeMaterialsByName[material.name] = modelMaterial;
-            runtimeMaterialsById[id] = modelMaterial;
         });
-
-        model._runtime.materialsByName = runtimeMaterialsByName;
-        model._runtime.materialsById = runtimeMaterialsById;
     }
 
     function parseMeshes(model) {
-        var runtimeMeshesByName = {};
-        var runtimeMaterialsById = model._runtime.materialsById;
-
+        if (!defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
+            return;
+        }
         ForEach.mesh(model.gltf, function(mesh, id) {
-            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
-            if (defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
-                // Cache primitives according to their program
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    var primitive = primitives[i];
-                    var programId = getProgramForPrimitive(model, primitive);
-                    var programPrimitives = model._programPrimitives[programId];
-                    if (!defined(programPrimitives)) {
-                        programPrimitives = [];
-                        model._programPrimitives[programId] = programPrimitives;
-                    }
-                    programPrimitives.push(primitive);
+            // Cache primitives according to their program
+            var primitives = mesh.primitives;
+            var primitivesLength = primitives.length;
+            for (var i = 0; i < primitivesLength; i++) {
+                var primitive = primitives[i];
+                var programId = getProgramForPrimitive(model, primitive);
+                var programPrimitives = model._programPrimitives[programId];
+                if (!defined(programPrimitives)) {
+                    programPrimitives = [];
+                    model._programPrimitives[programId] = programPrimitives;
                 }
+                programPrimitives.push(primitive);
             }
         });
-
-        model._runtime.meshesByName = runtimeMeshesByName;
     }
 
     function getUsedExtensions(model) {
@@ -1295,23 +1000,28 @@ define([
             uniformDecl =
                 'uniform mat4 ' + modelViewName + ';\n' +
                 'uniform mat4 ' + projectionName + ';\n';
-            computePosition = '    gl_Position = ' + projectionName + ' * ' + modelViewName + ' * ' + positionName + ';\n';
+            computePosition = '    vec4 positionInClipCoords = ' + projectionName + ' * ' + modelViewName + ' * vec4(' + positionName + ', 1.0);\n';
         } else {
             uniformDecl = 'uniform mat4 ' + modelViewProjectionName + ';\n';
-            computePosition = '    gl_Position = ' + modelViewProjectionName + ' * ' + positionName + ';\n';
+            computePosition = '    vec4 positionInClipCoords = ' + modelViewProjectionName + ' * vec4(' + positionName + ', 1.0);\n';
         }
 
         var vs =
-            'attribute vec4 ' + positionName + ';\n' +
+            'attribute vec3 ' + positionName + ';\n' +
             'attribute float ' + batchIdName + ';\n' +
             uniformDecl +
             'void main() {\n' +
             computePosition +
+            '    gl_Position = czm_depthClampFarPlane(positionInClipCoords);\n' +
             '}\n';
         var fs =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '#extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
             'void main() \n' +
             '{ \n' +
             '    gl_FragColor = vec4(1.0); \n' +
+            '    czm_writeDepthClampedToFarPlane();\n' +
             '}\n';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
@@ -1513,40 +1223,6 @@ define([
         return that;
     }
 
-    var gltfUniformsFromNode = {
-        PROJECTION : function(uniformState, model, runtimeNode) {
-            return function() {
-                return uniformState.projection;
-            };
-        },
-        MODELVIEW : function(uniformState, model, runtimeNode) {
-            var mv = new Matrix4();
-            return function() {
-                return Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
-            };
-        },
-        CESIUM_RTC_MODELVIEW : function(uniformState, model, runtimeNode) {
-            // CESIUM_RTC extension
-            var mvRtc = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvRtc);
-                return Matrix4.setTranslation(mvRtc, model._rtcCenterEye, mvRtc);
-            };
-        },
-        MODELVIEWPROJECTION : function(uniformState, model, runtimeNode) {
-            var mvp = new Matrix4();
-            return function() {
-                Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mvp);
-                return Matrix4.multiply(uniformState._projection, mvp, mvp);
-            };
-        }
-    };
-
-    function getUniformFunctionFromSource(source, model, semantic, uniformState) {
-        var runtimeNode = model._runtime.nodes[source];
-        return gltfUniformsFromNode[semantic](uniformState, model, runtimeNode);
-    }
-
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
@@ -1580,15 +1256,10 @@ define([
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
 
-                        if (!defined(parameter.semantic) || !defined(gltfUniformsFromNode[parameter.semantic])) {
+                        if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
                             continue;
                         }
-
-                        if (defined(parameter.node)) {
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic)) {
-                            uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                        }
+                        uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
                     }
                 }
 
@@ -1687,12 +1358,6 @@ define([
         return uniformMap;
     }
 
-    function createPickColorFunction(color) {
-        return function() {
-            return color;
-        };
-    }
-
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -1709,8 +1374,6 @@ define([
         var batchTable = model._batchTable;
 
         var nodeCommands = model._nodeCommands;
-        var pickIds = model._pickIds;
-        var runtimeMeshesByName = model._runtime.meshesByName;
 
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
@@ -1777,23 +1440,21 @@ define([
                 uniformMap = combine(uniformMap, quantizedUniformMap);
             }
 
-            var owner = model._pickObject;
-            if (!defined(owner)) {
-                owner = {
-                    primitive : model,
-                    id : model.id,
-                    node : runtimeNode.publicNode,
-                    mesh : runtimeMeshesByName[mesh.name]
-                };
-            }
+            var attribute = vertexArray.attributes.POSITION;
+            var componentDatatype = attribute.componentDatatype;
+            var typedArray = attribute.vertexBuffer;
+            var byteOffset = typedArray.byteOffset;
+            var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
 
-            var buffer = vertexArray.attributes.POSITION.vertexBuffer;
-            var positionsBuffer = new Float32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Float32Array.BYTES_PER_ELEMENT);
+            attribute = vertexArray.attributes._BATCHID;
+            componentDatatype = attribute.componentDatatype;
+            typedArray = attribute.vertexBuffer;
+            byteOffset = typedArray.byteOffset;
+            bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
 
-            buffer = vertexArray.attributes._BATCHID.vertexBuffer;
-            var vertexBatchIds = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
-
-            buffer = vertexArray.indexBuffer.typedArray;
+            var buffer = vertexArray.indexBuffer.typedArray;
             var indices;
             if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
                 indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
@@ -1861,23 +1522,13 @@ define([
             var pickVertexShaderSource = pickShader.vertexShaderSource;
             var pickFragmentShaderSource = pickShader.fragmentShaderSource;
 
-            // Callback to override default model picking
-            if (defined(model._pickFragmentShaderLoaded)) {
-                if (defined(model._pickUniformMapLoaded)) {
-                    pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                } else {
-                    // This is unlikely, but could happen if the override shader does not
-                    // need new uniforms since, for example, its pick ids are coming from
-                    // a vertex attribute or are baked into the shader source.
-                    pickUniformMap = combine(uniformMap);
-                }
+            if (defined(model._pickUniformMapLoaded)) {
+                pickUniformMap = model._pickUniformMapLoaded(uniformMap);
             } else {
-                var pickId = context.createPickId(owner);
-                pickIds.push(pickId);
-                var pickUniforms = {
-                    czm_pickColor : createPickColorFunction(pickId.color)
-                };
-                pickUniformMap = combine(uniformMap, pickUniforms);
+                // This is unlikely, but could happen if the override shader does not
+                // need new uniforms since, for example, its pick ids are coming from
+                // a vertex attribute or are baked into the shader source.
+                pickUniformMap = combine(uniformMap);
             }
 
             var nodeCommand = new Vector3DTilePrimitive({
@@ -1904,7 +1555,6 @@ define([
             runtimeNode.commands.push(nodeCommand);
             nodeCommands.push(nodeCommand);
         }
-
     }
 
     function createRuntimeNodes(model, context) {
@@ -1919,74 +1569,29 @@ define([
         }
         loadResources.createRuntimeNodes = false;
 
-        var rootNodes = [];
-        var runtimeNodes = model._runtime.nodes;
-
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-
-        var scene = gltf.scenes[gltf.scene];
-        var sceneNodes = scene.nodes;
-        var length = sceneNodes.length;
-
-        var stack = [];
-        var seen = {};
-
-        for (var i = 0; i < length; ++i) {
-            stack.push({
-                parentRuntimeNode : undefined,
-                gltfNode : nodes[sceneNodes[i]],
-                id : sceneNodes[i]
-            });
-
-            while (stack.length > 0) {
-                var n = stack.pop();
-                seen[n.id] = true;
-                var parentRuntimeNode = n.parentRuntimeNode;
-                var gltfNode = n.gltfNode;
-
-                // Node hierarchy is a DAG so a node can have more than one parent so it may already exist
-                var runtimeNode = runtimeNodes[n.id];
-                if (runtimeNode.parents.length === 0) {
-                    if (defined(gltfNode.matrix)) {
-                        runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
-                    } else {
-                        // TRS converted to Cesium types
-                        var rotation = gltfNode.rotation;
-                        runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-                        runtimeNode.rotation = Quaternion.unpack(rotation);
-                        runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
-                    }
-                }
-
-                if (defined(parentRuntimeNode)) {
-                    parentRuntimeNode.children.push(runtimeNode);
-                    runtimeNode.parents.push(parentRuntimeNode);
-                } else {
-                    rootNodes.push(runtimeNode);
-                }
-
-                if (defined(gltfNode.mesh)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
-                }
-
-                var children = gltfNode.children;
-                var childrenLength = children.length;
-                for (var j = 0; j < childrenLength; j++) {
-                    var childId = children[j];
-                    if (!seen[childId]) {
-                        stack.push({
-                            parentRuntimeNode : runtimeNode,
-                            gltfNode : nodes[childId],
-                            id : children[j]
-                        });
-                    }
-                }
-            }
+        if (nodes.length > 1) {
+            throw new RuntimeError('Only one node is supported when using a batched 3D tileset for classification.');
         }
 
-        model._runtime.rootNodes = rootNodes;
-        model._runtime.nodes = runtimeNodes;
+        var gltfNode = nodes[0];
+        var runtimeNode = model._runtimeNode;
+        if (defined(gltfNode.matrix)) {
+            runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
+        } else {
+            // TRS converted to Cesium types
+            var rotation = gltfNode.rotation;
+            runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
+            runtimeNode.rotation = Quaternion.unpack(rotation);
+            runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
+        }
+
+        if (!defined(gltfNode.mesh)) {
+            throw new RuntimeError('The only node in the glTF does not have a mesh.');
+        }
+
+        createCommand(model, gltfNode, runtimeNode, context);
     }
 
     function createResources(model, frameState) {
@@ -2002,33 +1607,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getNodeMatrix(node, result) {
-        var publicNode = node.publicNode;
-        var publicMatrix = publicNode.matrix;
-
-        if (publicNode.useMatrix && defined(publicMatrix)) {
-            // Public matrix overrides orginial glTF matrix and glTF animations
-            Matrix4.clone(publicMatrix, result);
-        } else if (defined(node.matrix)) {
-            Matrix4.clone(node.matrix, result);
-        } else {
-            Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
-            // Keep matrix returned by the node in-sync if the node is targeted by an animation.  Only TRS nodes can be targeted.
-            publicNode.setMatrix(result);
-        }
-    }
-
-    var scratchNodeStack = [];
     var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
 
-        var rootNodes = model._runtime.rootNodes;
-        var length = rootNodes.length;
-
-        var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
 
         if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
@@ -2048,121 +1632,36 @@ define([
             }
         }
 
-        for (var i = 0; i < length; ++i) {
-            var n = rootNodes[i];
+        var n = model._runtimeNode;
+        var transformToRoot = n.transformToRoot;
+        var commands = n.commands;
 
-            getNodeMatrix(n, n.transformToRoot);
-            nodeStack.push(n);
+        if (defined(n.matrix)) {
+            Matrix4.clone(n.matrix, transformToRoot);
+        } else {
+            Matrix4.fromTranslationQuaternionRotationScale(n.translation, n.rotation, n.scale, transformToRoot);
+        }
 
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var transformToRoot = n.transformToRoot;
-                var commands = n.commands;
+        if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
+            var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
+            var commandsLength = commands.length;
+            if (commandsLength > 0) {
+                // Node has meshes, which has primitives.  Update their commands.
+                for (var j = 0; j < commandsLength; ++j) {
+                    var primitiveCommand = commands[j];
+                    Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
 
-                if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
-                    var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
-                    var commandsLength = commands.length;
-                    if (commandsLength > 0) {
-                        // Node has meshes, which has primitives.  Update their commands.
-                        for (var j = 0; j < commandsLength; ++j) {
-                            var primitiveCommand = commands[j];
-                            Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
+                    // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
+                    BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
 
-                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
-                            BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
-
-                            if (defined(model._rtcCenter)) {
-                                Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
-                            }
-                        }
+                    if (defined(model._rtcCenter)) {
+                        Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
                     }
-                }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
-
-                    // A node's transform needs to be updated if
-                    // - It was targeted for animation this frame, or
-                    // - Any of its ancestors were targeted for animation this frame
-
-                    // PERFORMANCE_IDEA: if a child has multiple parents and only one of the parents
-                    // is dirty, all the subtrees for each child instance will be dirty; we probably
-                    // won't see this in the wild often.
-                    child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
-
-                    if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
-                        // Don't check for modelTransformChanged since if only the model's model matrix changed,
-                        // we do not need to rebuild the local transform-to-root, only the final
-                        // [model's-model-matrix][transform-to-root] above.
-                        getNodeMatrix(child, child.transformToRoot);
-                        Matrix4.multiplyTransformation(transformToRoot, child.transformToRoot, child.transformToRoot);
-                    }
-
-                    nodeStack.push(child);
                 }
             }
         }
 
         ++model._maxDirtyNumber;
-    }
-
-    var scratchBoundingSphere = new BoundingSphere();
-
-    function scaleInPixels(positionWC, radius, frameState) {
-        scratchBoundingSphere.center = positionWC;
-        scratchBoundingSphere.radius = radius;
-        return frameState.camera.getPixelSize(scratchBoundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
-    }
-
-    var scratchPosition = new Cartesian3();
-    var scratchCartographic = new Cartographic();
-
-    function getScale(model, frameState) {
-        var scale = model.scale;
-
-        if (model.minimumPixelSize !== 0.0) {
-            // Compute size of bounding sphere in pixels
-            var context = frameState.context;
-            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var m = defined(model._clampedModelMatrix) ? model._clampedModelMatrix : model.modelMatrix;
-            scratchPosition.x = m[12];
-            scratchPosition.y = m[13];
-            scratchPosition.z = m[14];
-
-            if (defined(model._rtcCenter)) {
-                Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
-            }
-
-            if (model._mode !== SceneMode.SCENE3D) {
-                var projection = frameState.mapProjection;
-                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
-                projection.project(cartographic, scratchPosition);
-                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-            }
-
-            var radius = model.boundingSphere.radius;
-            var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
-
-            // metersPerPixel is always > 0.0
-            var pixelsPerMeter = 1.0 / metersPerPixel;
-            var diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
-
-            // Maintain model's minimum pixel size
-            if (diameterInPixels < model.minimumPixelSize) {
-                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
-            }
-        }
-
-        return defined(model.maximumScale) ? Math.min(model.maximumScale, scale) : scale;
-    }
-
-    function releaseCachedGltf(model) {
-        if (defined(model._cacheKey) && defined(model._cachedGltf) && (--model._cachedGltf.count === 0)) {
-            delete gltfCache[model._cacheKey];
-        }
-        model._cachedGltf = undefined;
     }
 
     function checkSupportedExtensions(model) {
@@ -2196,75 +1695,6 @@ define([
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
-    function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
-        return function(clampedPosition) {
-            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
-                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
-                clampedCart.height += cartoPosition.height;
-                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
-            }
-
-            var clampedModelMatrix = model._clampedModelMatrix;
-
-            // Modify clamped model matrix to use new height
-            Matrix4.clone(model.modelMatrix, clampedModelMatrix);
-            clampedModelMatrix[12] = clampedPosition.x;
-            clampedModelMatrix[13] = clampedPosition.y;
-            clampedModelMatrix[14] = clampedPosition.z;
-
-            model._heightChanged = true;
-        };
-    }
-
-    function updateClamping(model) {
-        if (defined(model._removeUpdateHeightCallback)) {
-            model._removeUpdateHeightCallback();
-            model._removeUpdateHeightCallback = undefined;
-        }
-
-        var scene = model._scene;
-        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (model.heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
-            }
-            //>>includeEnd('debug');
-            model._clampedModelMatrix = undefined;
-            return;
-        }
-
-        var globe = scene.globe;
-        var ellipsoid = globe.ellipsoid;
-
-        // Compute cartographic position so we don't recompute every update
-        var modelMatrix = model.modelMatrix;
-        scratchPosition.x = modelMatrix[12];
-        scratchPosition.y = modelMatrix[13];
-        scratchPosition.z = modelMatrix[14];
-        var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
-
-        if (!defined(model._clampedModelMatrix)) {
-            model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
-        }
-
-        // Install callback to handle updating of terrain tiles
-        var surface = globe._surface;
-        model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
-
-        // Set the correct height now
-        var height = globe.getHeight(cartoPosition);
-        if (defined(height)) {
-            // Get callback with cartoPosition being the non-clamped position
-            var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
-
-            // Compute the clamped cartesian and call updateHeight callback
-            Cartographic.clone(cartoPosition, scratchCartographic);
-            scratchCartographic.height = height;
-            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-            cb(scratchPosition);
-        }
-    }
 
     var scratchDisplayConditionCartesian = new Cartesian3();
     var scratchDistanceDisplayConditionCartographic = new Cartographic();
@@ -2350,7 +1780,6 @@ define([
                     parsePrograms(this);
                     parseMaterials(this);
                     parseMeshes(this);
-                    parseNodes(this);
 
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
@@ -2366,7 +1795,6 @@ define([
             }
         }
 
-        // Incrementally stream textures.
         if (defined(loadResources) && (this._state === ModelState.LOADED)) {
             if (!justLoaded) {
                 createResources(this, frameState);
@@ -2374,15 +1802,11 @@ define([
 
             if (loadResources.finished()) {
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
-
-                // The normal attribute name is required for silhouettes, so get it before the gltf JSON is released
-                this._normalAttributeName = getAttributeOrUniformBySemantic(this.gltf, 'NORMAL');
-                releaseCachedGltf(this);
             }
         }
 
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
+        var show = this.show && displayConditionPassed;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             this._dirty = false;
@@ -2392,31 +1816,13 @@ define([
             this._mode = frameState.mode;
 
             // ClassificationModel's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
-                                        (this._scale !== this.scale) ||
-                                        (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                                        (this._maximumScale !== this.maximumScale) ||
-                                        (this._heightReference !== this.heightReference) || this._heightChanged ||
-                                        modeChanged;
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) || modeChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
-                updateClamping(this);
-
-                if (defined(this._clampedModelMatrix)) {
-                    modelMatrix = this._clampedModelMatrix;
-                }
-
-                this._scale = this.scale;
-                this._minimumPixelSize = this.minimumPixelSize;
-                this._maximumScale = this.maximumScale;
-                this._heightReference = this.heightReference;
-                this._heightChanged = false;
-
-                var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
+                Matrix4.clone(modelMatrix, computedModelMatrix);
                 if (this._upAxis === Axis.Y) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.Y_UP_TO_Z_UP, computedModelMatrix);
                 } else if (this._upAxis === Axis.X) {
@@ -2455,26 +1861,7 @@ define([
     };
 
     ClassificationModel.prototype.destroy = function() {
-        if (defined(this._removeUpdateHeightCallback)) {
-            this._removeUpdateHeightCallback();
-            this._removeUpdateHeightCallback = undefined;
-        }
-
-        if (defined(this._terrainProviderChangedCallback)) {
-            this._terrainProviderChangedCallback();
-            this._terrainProviderChangedCallback = undefined;
-        }
-
         this._rendererResources = undefined;
-
-        var pickIds = this._pickIds;
-        var length = pickIds.length;
-        for (var i = 0; i < length; ++i) {
-            pickIds[i].destroy();
-        }
-
-        releaseCachedGltf(this);
-
         return destroyObject(this);
     };
 

@@ -99,6 +99,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Joshua Bernstein](https://github.com/jbernstein/)
    * [Natanael Rivera](https://github.com/nrivera-Novetta/)
    * [Justin Burr](https://github.com/jburr-nc/)
+   * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)

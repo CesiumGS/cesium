@@ -16,24 +16,14 @@ attribute vec3 extrudeDirection;
 uniform float u_globeMinimumAltitude;
 #endif
 
-// emulated noperspective
-varying float v_WindowZ;
-
 #ifndef VECTOR_TILE
 varying vec4 v_color;
 #endif
 
-vec4 depthClampFarPlane(vec4 vertexInClipCoordinates)
-{
-    v_WindowZ = (0.5 * (vertexInClipCoordinates.z / vertexInClipCoordinates.w) + 0.5) * vertexInClipCoordinates.w;
-    vertexInClipCoordinates.z = min(vertexInClipCoordinates.z, vertexInClipCoordinates.w);
-    return vertexInClipCoordinates;
-}
-
 void main()
 {
 #ifdef VECTOR_TILE
-    gl_Position = depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
+    gl_Position = czm_depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
 #else
     v_color = color;
 
@@ -47,6 +37,6 @@ void main()
     position = position + vec4(extrudeDirection * delta, 0.0);
 #endif
 
-    gl_Position = depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
+    gl_Position = czm_depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
 #endif
 }
