@@ -205,9 +205,6 @@ void main()
 
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
     }
-    else {
-        discard;
-    }
 #endif
 
 #ifdef APPLY_MATERIAL

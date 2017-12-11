@@ -372,7 +372,7 @@ define([
         }
 
         var mode = this._mode;
-        var globe = scene.globe;
+        var globe = scene.intersectionGlobe;
 
         if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
             return;
@@ -953,7 +953,7 @@ define([
             clampMove2D(this, this.position);
         }
 
-        var globe = this._scene.globe;
+        var globe = this._scene.intersectionGlobe;//this._scene.globe;
         var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0);
         if (this._suspendTerrainAdjustment) {
             this._suspendTerrainAdjustment = !globeFinishedUpdating;

@@ -50,38 +50,26 @@ var fullBathyProvider = new Cesium.CesiumTerrainProvider({
 var terrainProvider = new Cesium.CesiumTerrainProvider({
     url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
     requestWaterMask : true,
-    skirtRatio: 0.0
+    skirtRatio: 1.0
 });
 
-viewer.scene.globe.terrainProvider = fullBathyProvider;
-var sandLayer = viewer.scene.globe.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-                url: '../../SampleData/sand.jpg',
-                rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
-                hasAlphaChannel: false,
-                alpha: 0.0
-}));
+viewer.scene.globe.terrainProvider = terrainProvider;
 viewer.scene.globe._surface._tileProvider._cullingEnabled = false;
 
 // Create a secondary globe to render the ocean only.
 var secondaryGlobe = new Cesium.Globe();
-secondaryGlobe.terrainProvider = terrainProvider;
+secondaryGlobe.terrainProvider = bathyProvider;
 secondaryGlobe._surface._tileProvider._cullingEnabled = false;
-secondaryGlobe.baseColor = new Cesium.Color(0.0, 119.0/255.0, 190.0/255.0, 0.5);
+var sandLayer = secondaryGlobe.imageryLayers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+                url: '../../SampleData/sand.jpg',
+                rectangle: Cesium.Rectangle.fromDegrees(-180, -90, 180, 90),
+                hasAlphaChannel: false
+}));
+
 //secondaryGlobe.depthTestAgainstTerrain = false;
 viewer.scene._globes.push(secondaryGlobe);
 
-var material = new Cesium.Material({
-    fabric: {
-        source : 'czm_material czm_getMaterial(czm_materialInput materialInput) { czm_material mat = czm_getDefaultMaterial(materialInput);' +
-                 '  mat.alpha = 0.0;' +
-                 '  if (materialInput.height >= 30.0) discard;' +
-                 '  return mat;' +
-                 '}'
-    }
-});
-
-secondaryGlobe.material = material;
-
+viewer.scene.intersectionGlobe = viewer.scene.globe;
 
 var horizonCullingEnabled = false;
 var model = undefined;
@@ -137,29 +125,14 @@ function addPlane() {
     });
 }
 
-
-
-Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisibleOld = Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible;
-Cesium.EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-    if (!horizonCullingEnabled) {
-        return true;
-    }
-    return this.isScaledSpacePointVisibleOld(occludeeScaledSpacePosition);
-};
-
-
-function horizonCullingClick() {
-    horizonCullingEnabled = document.getElementById('horizonculling-enabled').checked;
-}
-
-
 viewer.scene._postRender.addEventListener(function(scene, time) {
     var underwater = viewer.camera.positionCartographic.height < 0;
     //viewer.scene.globe.show = !underwater;
-    //secondaryGlobe.show = underwater;
+    secondaryGlobe.show = underwater;
     //model.show = underwater;
-    sandLayer.alpha = underwater ? 1.0 : 0.0;
+    //sandLayer.alpha = underwater ? 1.0 : 0.0;
     viewer.scene.fog.enabled = underwater;
+    viewer.scene.intersectionGlobe = viewer.camera.positionCartographic.height < 50 ? secondaryGlobe : viewer.scene.globe;
 });
 
 

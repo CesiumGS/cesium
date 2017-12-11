@@ -1947,7 +1947,7 @@ define([
             this._globe = undefined;
             this._ellipsoid = Ellipsoid.UNIT_SPHERE;
         } else {
-            this._globe = this._scene.globe;
+            this._globe = this._scene.intersectionGlobe;
             this._ellipsoid = defined(this._globe) ? this._globe.ellipsoid : this._scene.mapProjection.ellipsoid;
         }
 
