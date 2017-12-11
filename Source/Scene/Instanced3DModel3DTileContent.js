@@ -1,6 +1,7 @@
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -26,11 +27,11 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './ClippingPlaneCollection',
         './ModelInstanceCollection'
     ], function(
         AttributeCompression,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -56,7 +57,6 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        ClippingPlaneCollection,
         ModelInstanceCollection) {
     'use strict';
 

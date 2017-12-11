@@ -1,5 +1,6 @@
 defineSuite([
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/defined',
@@ -11,13 +12,13 @@ defineSuite([
         'Core/Plane',
         'Core/Transforms',
         'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlaneCollection',
         'Scene/Expression',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defined,
@@ -29,7 +30,6 @@ defineSuite([
         Plane,
         Transforms,
         Cesium3DTileStyle,
-        ClippingPlaneCollection,
         Expression,
         Cesium3DTilesTester,
         createScene,
@@ -691,22 +691,22 @@ defineSuite([
 
     xit('Updates clipping planes when clipping planes are enabled', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
-            //var content = tileset._root.content;
+            var content = tileset._root.content;
 
-            //expect(content._packedClippingPlanes).toBeDefined();
-            //expect(content._packedClippingPlanes.length).toBe(0);
-            //expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
-            //
-            //tileset.clippingPlanes = new ClippingPlaneCollection({
-            //    planes : [
-            //        new Plane(Cartesian3.UNIT_X, 0.0)
-            //    ]
-            //});
-            //
-            //content.update(tileset, scene.frameState);
-            //
-            //expect(content._packedClippingPlanes.length).toBe(1);
-            //expect(content._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
+            expect(content._packedClippingPlanes).toBeDefined();
+            expect(content._packedClippingPlanes.length).toBe(0);
+            expect(content._modelViewMatrix).toEqual(Matrix4.IDENTITY);
+
+            tileset.clippingPlanes = new ClippingPlaneCollection({
+                planes : [
+                    new Plane(Cartesian3.UNIT_X, 0.0)
+                ]
+            });
+
+            content.update(tileset, scene.frameState);
+
+            expect(content._packedClippingPlanes.length).toBe(1);
+            expect(content._modelViewMatrix).not.toEqual(Matrix4.IDENTITY);
         });
     });
 

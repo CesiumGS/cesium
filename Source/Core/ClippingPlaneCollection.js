@@ -1,15 +1,15 @@
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Intersect',
-        '../Core/Matrix4',
-        '../Core/Plane'
+        './Cartesian3',
+        './Cartesian4',
+        './Check',
+        './Color',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Intersect',
+        './Matrix4',
+        './Plane'
     ], function(
         Cartesian3,
         Cartesian4,

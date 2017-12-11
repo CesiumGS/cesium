@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/ClippingPlaneCollection',
+        'Core/ClippingPlaneCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',

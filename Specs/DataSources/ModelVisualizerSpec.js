@@ -2,6 +2,7 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
@@ -15,7 +16,6 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
-        'Scene/ClippingPlaneCollection',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -23,6 +23,7 @@ defineSuite([
         ModelVisualizer,
         BoundingSphere,
         Cartesian3,
+        ClippingPlaneCollection,
         defined,
         DistanceDisplayCondition,
         JulianDate,
@@ -36,7 +37,6 @@ defineSuite([
         EntityCollection,
         ModelGraphics,
         NodeTransformationProperty,
-        ClippingPlaneCollection,
         Globe,
         createScene,
         pollToPromise) {

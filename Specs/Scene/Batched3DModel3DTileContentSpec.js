@@ -1,23 +1,23 @@
 defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Plane',
         'Core/Transforms',
-        'Scene/ClippingPlaneCollection',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Plane,
         Transforms,
-        ClippingPlaneCollection,
         Cesium3DTilesTester,
         createScene) {
     'use strict';

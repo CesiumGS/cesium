@@ -1,22 +1,22 @@
 defineSuite([
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Plane',
         'Core/Transforms',
-        'Scene/ClippingPlaneCollection',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Plane,
         Transforms,
-        ClippingPlaneCollection,
         TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {

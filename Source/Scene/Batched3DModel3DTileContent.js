@@ -1,4 +1,5 @@
 define([
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -16,10 +17,10 @@ define([
         './Cesium3DTileBatchTable',
         './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
-        './ClippingPlaneCollection',
         './getAttributeOrUniformBySemantic',
         './Model'
     ], function(
+        ClippingPlaneCollection,
         Color,
         defaultValue,
         defined,
@@ -37,7 +38,6 @@ define([
         Cesium3DTileBatchTable,
         Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
-        ClippingPlaneCollection,
         getAttributeOrUniformBySemantic,
         Model) {
     'use strict';
