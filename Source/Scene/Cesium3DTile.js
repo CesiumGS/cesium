@@ -758,7 +758,7 @@ define([
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset._root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
-            this._isClipped = (intersection !== Intersect.INSIDE);
+            this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return CullingVolume.MASK_OUTSIDE;
             }
@@ -793,7 +793,7 @@ define([
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var tileTransform = tileset._root.computedTransform;
             var intersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, tileTransform);
-            this._isClipped = (intersection !== Intersect.INSIDE);
+            this._isClipped = intersection !== Intersect.INSIDE;
             if (intersection === Intersect.OUTSIDE) {
                 return Intersect.OUTSIDE;
             }

@@ -70,6 +70,7 @@ define([
         this.distance = distance;
     }
 
+
     /**
      * Creates a plane from a normal and a point on the plane.
      *
@@ -179,6 +180,45 @@ define([
         Matrix4.multiplyByPoint(transform, scratchPosition, scratchPosition);
 
         return Plane.fromPointNormal(scratchPosition, scratchNormal, result);
+    };
+
+    /**
+     * Duplicates a Plane instance.
+     *
+     * @param {Plane} plane The plane to duplicate.
+     * @param {Plane} [result] The object onto which to store the result.
+     * @returns {Plane} The modified result parameter or a new Plane instance if one was not provided.
+     */
+    Plane.clone = function (plane, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('plane', plane);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+           result = new Plane(Cartesian3.UNIT_X, 0.0);
+        }
+
+        Cartesian3.clone(plane.normal, result.normal);
+        result.distance = plane.distance;
+
+        return result;
+    };
+
+    /**
+     * Compares the provided Planes by normal and distance and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {Plane} left The first plane.
+     * @param {Plane} right The second plane.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Plane.equals = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        //>>includeEnd('debug');
+
+        return (left.distance === right.distance) && Cartesian3.equals(left.normal, right.normal);
     };
 
     /**

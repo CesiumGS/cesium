@@ -457,10 +457,12 @@ define([
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
+        var modelClippingPlanes = this._model.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
-            var modelClippingPlanes = this._model.clippingPlanes;
             tilesetClippingPlanes.clone(modelClippingPlanes);
             modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
+            modelClippingPlanes.enabled = false;
         }
 
         this._model.update(frameState);

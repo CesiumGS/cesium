@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/Plane'
@@ -17,6 +18,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Intersect,
         Matrix4,
         Plane) {
@@ -32,20 +34,19 @@ define([
      * @param {Plane[]} [options.planes=[]] An array of up to 6 {@link Plane} objects used to selectively disable rendering on the outside of each plane.
      * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
-     * @param {Boolean} [options.combineClippingRegions=true] If true, the region to be clipped must be included in all planes in this collection. Otherwise, a region will be clipped if included in any plane in the collection.
+     * @param {Boolean} [options.unionClippingRegions=true] If true, the region to be clipped must be included in all planes in this collection. Otherwise, a region will be clipped if included in any plane in the collection.
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      */
     function ClippingPlaneCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        /**
-         * An array of up to 6 {@link Plane} objects used to selectively disable rendering on the outside of each plane.
-         *
-         * @type {Plane[]}
-         * @default []
-         */
-        this.planes = defaultValue(options.planes, []);
+        var planes = options.planes;
+        if (defined(planes)) {
+            this._planes = planes.slice(0);
+        } else {
+            this._planes = [];
+        }
 
         /**
          * Determines whether the clipping planes are active.
@@ -61,7 +62,7 @@ define([
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
          */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.clone(Matrix4.IDENTITY));
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
          * The color applied to highlight the edge along which an object is clipped.
@@ -69,7 +70,7 @@ define([
          * @type {Color}
          * @default Color.WHITE
          */
-        this.edgeColor = defaultValue(options.edgeColor, Color.clone(Color.WHITE));
+        this.edgeColor = Color.clone(defaultValue(options.edgeColor, Color.WHITE));
 
         /**
          * The width, in pixels, of the highlight applied to the edge along which an object is clipped.
@@ -80,11 +81,32 @@ define([
         this.edgeWidth = defaultValue(options.edgeWidth, 0.0);
 
         this._testIntersection = undefined;
-        this._combineClippingRegions = undefined;
-        this.combineClippingRegions = defaultValue(options.combineClippingRegions, true);
+        this._unionClippingRegions = undefined;
+        this.unionClippingRegions = defaultValue(options.unionClippingRegions, true);
+    }
+
+    function unionIntersectFunction (value) {
+        return (value === Intersect.INSIDE);
+    }
+
+    function defaultIntersectFunction (value) {
+        return (value === Intersect.OUTSIDE);
     }
 
     defineProperties(ClippingPlaneCollection.prototype, {
+        /**
+         * Returns the number of planes in this collection.  This is commonly used with
+         * {@link ClippingPlaneCollection#get} to iterate over all the planes
+         * in the collection.
+         * @memberof ClippingPlaneCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._planes.length;
+            }
+        },
+
         /**
          * If true, the region to be clipped must be included in all planes in this collection.
          * Otherwise, a region will be clipped if included in any plane in the collection.
@@ -93,30 +115,116 @@ define([
          * @type {Boolean}
          * @default true
          */
-        combineClippingRegions : {
+        unionClippingRegions : {
             get : function() {
-                return this._combineClippingRegions;
+                return this._unionClippingRegions;
             },
             set : function(value) {
-                if (this._combineClippingRegions !== value) {
-                    this._combineClippingRegions = value;
-                    this._testIntersection = getTestIntersectionFunction(value);
+                if (this._unionClippingRegions !== value) {
+                    this._unionClippingRegions = value;
+                    this._testIntersection = value ? unionIntersectFunction : defaultIntersectFunction;
                 }
             }
         }
     });
 
-    function getTestIntersectionFunction(combineClippingRegions) {
-        if (combineClippingRegions) {
-            return function(value) {
-                return (value === Intersect.INSIDE);
-            };
+    /**
+     *
+     * @param plane
+     *
+     * @exception {DeveloperError} The plane added exceeds the maximum number of supported clipping planes.
+     *
+     * @see ClippingPlaneCollection#remove
+     * @see ClippingPlaneCollection#removeAll
+     */
+    ClippingPlaneCollection.prototype.add = function(plane) {
+        this._planes.push(plane);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (this.length > ClippingPlaneCollection.MAX_CLIPPING_PLANES) {
+            throw new DeveloperError('The maximum number of clipping planes supported is ' + ClippingPlaneCollection.MAX_CLIPPING_PLANES);
+        }
+        //>>includeEnd('debug');
+    };
+
+    /**
+     * Returns the plane in the collection at the specified index.  Indices are zero-based
+     * and increase as planes are added.  Removing a plane shifts all planes after
+     * it to the left, changing their indices.  This function is commonly used with
+     * {@link ClippingPlaneCollection#length} to iterate over all the planes
+     * in the collection.
+     *
+     * @param {Number} index The zero-based index of the plane.
+     * @returns {Plane} The plane at the specified index.
+     *
+     * @see ClippingPlaneCollection#length
+     */
+    ClippingPlaneCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('index', index);
+        //>>includeEnd('debug');
+
+        return this._planes[index];
+    };
+
+    function indexOf(planes, plane) {
+        for (var i = 0; i < planes.length; ++i) {
+            if (Plane.equals(planes[i], plane)) {
+                return i;
+            }
         }
 
-        return function(value) {
-            return (value === Intersect.OUTSIDE);
-        };
+        return -1;
     }
+
+    /**
+     * Checks whether this collection contains the given plane.
+     *
+     * @param {Plane} [plane] The plane to check for.
+     * @returns {Boolean} true if this collection contains the plane, false otherwise.
+     *
+     * @see ClippingPlaneCollection#get
+     */
+    ClippingPlaneCollection.prototype.contains = function(plane) {
+        return indexOf(this._planes, plane) > -1;
+    };
+
+    /**
+     * Removes the first occurrence of the given plane from the collection.
+     *
+     * @param {Plane} plane
+     * @returns {Boolean} <code>true</code> if the plane was removed; <code>false</code> if the plane was not found in the collection.
+     *
+     * @see ClippingPlaneCollection#add
+     * @see ClippingPlaneCollection#contains
+     * @see ClippingPlaneCollection#removeAll
+     */
+    ClippingPlaneCollection.prototype.remove = function(plane) {
+        var planes = this._planes;
+        var index = indexOf(planes, plane);
+
+        if (index < 0) {
+            return false;
+        }
+
+        var length = planes.length - 1;
+        for (var i = index; i < length; ++i) {
+            planes[i] = planes[i + 1];
+        }
+        planes.length = length;
+
+        return true;
+    };
+
+    /**
+     * Removes all planes from the collection.
+     *
+     * @see ClippingPlaneCollection#add
+     * @see ClippingPlaneCollection#remove
+     */
+    ClippingPlaneCollection.prototype.removeAll = function() {
+        this._planes = [];
+    };
 
     var scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
     var scratchMatrix = new Matrix4();
@@ -124,8 +232,8 @@ define([
      * Applies the transformations to each plane and packs it into an array.
      * @private
      *
-     * @param viewMatrix The 4x4 matrix to transform the plane into eyespace.
-     * @param [array] The array into which the planes will be packed.
+     * @param {Matrix4} viewMatrix The 4x4 matrix to transform the plane into eyespace.
+     * @param {Cartesian4[]} [array] The array into which the planes will be packed.
      * @returns {Cartesian4[]} The array of packed planes.
      */
     ClippingPlaneCollection.prototype.transformAndPackPlanes = function(viewMatrix, array) {
@@ -133,16 +241,20 @@ define([
         Check.typeOf.object('viewMatrix', viewMatrix);
         //>>includeEnd('debug');
 
-        var planes = this.planes;
+        var planes = this._planes;
         var length = planes.length;
 
-        var i;
-        if (!defined(array) || array.length !== length) {
+        var index = 0;
+        if (!defined(array)) {
             array = new Array(length);
+        } else {
+            index = array.length;
+            array.length = length;
+        }
 
-            for (i = 0; i < length; ++i) {
-                array[i] = new Cartesian4();
-            }
+        var i;
+        for (i = index; i < length; ++i) {
+            array[i] = new Cartesian4();
         }
 
         var transform = Matrix4.multiply(viewMatrix, this.modelMatrix, scratchMatrix);
@@ -171,26 +283,25 @@ define([
             result = new ClippingPlaneCollection();
         }
 
-        var length = this.planes.length;
+        var length = this.length;
         var i;
-        if (result.planes.length !== length) {
-            result.planes = new Array(length);
+        if (result.length !== length) {
+            var planes = result._planes;
+            var index = planes.length;
 
-            for (i = 0; i < length; ++i) {
-                result.planes[i] = new Plane(Cartesian3.UNIT_X, 0.0);
+            planes.length = length;
+            for (i = index; i < length; ++i) {
+                result._planes[i] = new Plane(Cartesian3.UNIT_X, 0.0);
             }
         }
 
         for (i = 0; i < length; ++i) {
-            var plane = this.planes[i];
-            var resultPlane = result.planes[i];
-            resultPlane.normal = plane.normal;
-            resultPlane.distance = plane.distance;
+            Plane.clone(this._planes[i], result._planes[i]);
         }
 
         result.enabled = this.enabled;
         Matrix4.clone(this.modelMatrix, result.modelMatrix);
-        result.combineClippingRegions = this.combineClippingRegions;
+        result.unionClippingRegions = this.unionClippingRegions;
         Color.clone(this.edgeColor, result.edgeColor);
         result.edgeWidth = this.edgeWidth;
 
@@ -209,7 +320,7 @@ define([
      *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
      */
     ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume = function(boundingVolume, transform) {
-        var planes = this.planes;
+        var planes = this._planes;
         var length = planes.length;
 
         var modelMatrix = this.modelMatrix;
@@ -221,7 +332,7 @@ define([
         // completely clipped. Otherwise, if the volume can be outside any the planes, it is considered completely clipped.
         // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
         var intersection = Intersect.INSIDE;
-        if (this.combineClippingRegions && length > 0) {
+        if (this.unionClippingRegions && length > 0) {
             intersection = Intersect.OUTSIDE;
         }
 
@@ -240,6 +351,14 @@ define([
 
         return intersection;
     };
+
+    /**
+     * The maximum number of supported clipping planes.
+     *
+     * @type {number}
+     * @constant
+     */
+    ClippingPlaneCollection.MAX_CLIPPING_PLANES = 6;
 
     return ClippingPlaneCollection;
 });

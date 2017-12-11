@@ -518,14 +518,18 @@ define([
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
+        var model = this._modelInstanceCollection._model;
+        var modelClippingPlanes = model.clippingPlanes;
         if (defined(tilesetClippingPlanes)) {
-            var model = this._modelInstanceCollection._model;
-            if (!defined(model.clippingPlanes)) {
+            if (!defined(modelClippingPlanes)) {
                 model.clippingPlanes = new ClippingPlaneCollection();
+                modelClippingPlanes = model.clippingPlanes;
             }
 
-            tilesetClippingPlanes.clone(model.clippingPlanes);
-            model.clippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+            tilesetClippingPlanes.clone(modelClippingPlanes);
+            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
+            modelClippingPlanes.enabled = false;
         }
 
         // If any commands were pushed, add derived commands

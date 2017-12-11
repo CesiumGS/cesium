@@ -783,12 +783,12 @@ defineSuite([
                     new Plane(Cartesian3.UNIT_Z, 10000.0),
                     new Plane(Cartesian3.UNIT_X, 1000.0)
                 ],
-                combineClippingRegions: false
+                unionClippingRegions: false
             });
 
             expect(scene).notToRender(result);
 
-            scene.globe.clippingPlanes.combineClippingRegions = true;
+            scene.globe.clippingPlanes.unionClippingRegions = true;
 
             expect(scene).toRender(result);
 

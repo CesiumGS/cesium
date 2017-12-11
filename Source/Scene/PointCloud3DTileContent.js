@@ -118,7 +118,7 @@ define([
         this._hasBatchIds = false;
 
         // Used to regenerate shader when clipping on this tile changes
-        this._isClipped = true;
+        this._isClipped = false;
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
@@ -1070,7 +1070,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            var clippingFunction = clippingPlanes.combineClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
+            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
             fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
@@ -1221,15 +1221,17 @@ define([
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
         var length = 0;
         if (clippingEnabled) {
-            length = clippingPlanes.planes.length;
+            length = clippingPlanes.length;
             Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
         }
 
-        if (this._packedClippingPlanes.length !== length) {
-            this._packedClippingPlanes = new Array(length);
+        var packedPlanes = this._packedClippingPlanes;
+        var packedLength = packedPlanes.length;
+        if (packedLength !== length) {
+            packedPlanes.length = length;
 
             for (var i = 0; i < length; ++i) {
-                this._packedClippingPlanes[i] = new Cartesian4();
+                packedPlanes[i] = new Cartesian4();
             }
         }
 
@@ -1243,12 +1245,11 @@ define([
         }
 
         if (clippingEnabled) {
-            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, this._packedClippingPlanes);
+            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
-        var isClipped = this._tile._isClipped;
-        if (this._isClipped !== isClipped) {
-            this._isClipped = isClipped;
+        if (this._isClipped !== clippingEnabled) {
+            this._isClipped = clippingEnabled;
             createShaders(this, frameState, tileset.style);
         }
 

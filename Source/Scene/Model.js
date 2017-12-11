@@ -3328,7 +3328,7 @@ define([
                 return true;
             }
 
-            return clippingPlanes.combineClippingRegions;
+            return clippingPlanes.unionClippingRegions;
         };
     }
 
@@ -4311,14 +4311,16 @@ define([
         var clippingPlanes = model.clippingPlanes;
         var length = 0;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            length = clippingPlanes.planes.length;
+            length = clippingPlanes.length;
         }
 
-        if (model._packedClippingPlanes.length !== length) {
-            model._packedClippingPlanes = new Array(length);
+        var packedPlanes = model._packedClippingPlanes;
+        var packedLength = packedPlanes.length;
+        if (packedLength !== length) {
+            packedPlanes.length = length;
 
-            for (var i = 0; i < length; ++i) {
-                model._packedClippingPlanes[i] = new Cartesian4();
+            for (var i = packedLength; i < length; ++i) {
+                packedPlanes[i] = new Cartesian4();
             }
         }
     }
