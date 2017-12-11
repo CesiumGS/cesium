@@ -22,6 +22,7 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -42,8 +43,7 @@ tileset.readyPromise.then(function() {
 
 var classification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
     url: 'https://beta.cesium.com/api/assets/3486?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
-    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE,
-    skipLevelOfDetail : false
+    classificationType : Cesium.ClassificationType.CESIUM_3D_TILE
 }));
 
 classification.readyPromise.then(function() {
@@ -52,6 +52,25 @@ classification.readyPromise.then(function() {
     });
 }).otherwise(function(error) {
     throw(error);
+});
+
+var nonClassification = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+    url: 'https://beta.cesium.com/api/assets/3486?access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzZjM4MjljZi0xNTAzLTQ0MzctODhlZi0zOTU3Njg5ODA1Y2QiLCJpZCI6OCwiaWF0IjoxNDgxODI5ODMyfQ.dYlV8_PoXcFNlPHGook5kMzuJMS-Bb9DCMzI1mFVvgE',
+    show : false
+}));
+nonClassification.readyPromise.then(function() {
+    nonClassification.style = new Cesium.Cesium3DTileStyle({
+        color : 'rgba(255, 0, 0, 0.5)'
+    });
+}).otherwise(function(error) {
+    throw(error);
+});
+
+Cesium.when.join(classification.readyPromise, nonClassification.readyPromise).then(function() {
+    Sandcastle.addToggleButton('Show classification', true, function(checked) {
+        classification.show = checked;
+        nonClassification.show = !checked;
+    });
 });
 //Sandcastle_End
 Sandcastle.finishedLoading();

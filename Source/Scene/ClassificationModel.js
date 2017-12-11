@@ -12,7 +12,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getBaseUri',
         '../Core/IndexDatatype',
@@ -37,10 +36,6 @@ define([
         './Axis',
         './ClassificationType',
         './getAttributeOrUniformBySemantic',
-        './HeightReference',
-        './ModelMaterial',
-        './ModelMesh',
-        './ModelNode',
         './SceneMode',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
@@ -58,7 +53,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        DistanceDisplayCondition,
         FeatureDetection,
         getBaseUri,
         IndexDatatype,
@@ -83,10 +77,6 @@ define([
         Axis,
         ClassificationType,
         getAttributeOrUniformBySemantic,
-        HeightReference,
-        ModelMaterial,
-        ModelMesh,
-        ModelNode,
         SceneMode,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
@@ -103,7 +93,7 @@ define([
     var ModelState = {
         NEEDS_LOAD : 0,
         LOADING : 1,
-        LOADED : 2,  // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
+        LOADED : 2,
         FAILED : 3
     };
 
@@ -168,7 +158,6 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {ClassificationType} [options.classificationType] What this model will classify.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -251,7 +240,6 @@ define([
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
 
-        this._distanceDisplayCondition = options.distanceDisplayCondition;
         this._classificationType = options.classificationType;
 
         // Undocumented options
@@ -468,26 +456,6 @@ define([
             }
         },
 
-        /**
-         * Gets or sets the condition specifying at what distance from the camera that this model will be displayed.
-         * @memberof ClassificationModel.prototype
-         * @type {DistanceDisplayCondition}
-         * @default undefined
-         */
-        distanceDisplayCondition : {
-            get : function() {
-                return this._distanceDisplayCondition;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (defined(value) && value.far <= value.near) {
-                    throw new DeveloperError('far must be greater than near');
-                }
-                //>>includeEnd('debug');
-                this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
-            }
-        },
-
         extensionsUsed : {
             get : function() {
                 if (!defined(this._extensionsUsed)) {
@@ -553,7 +521,7 @@ define([
          */
         texturesByteLength : {
             get : function() {
-                return this._texturesByteLength;
+                return 0;
             }
         },
 
@@ -1696,35 +1664,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var scratchDisplayConditionCartesian = new Cartesian3();
-    var scratchDistanceDisplayConditionCartographic = new Cartographic();
-
-    function distanceDisplayConditionVisible(model, frameState) {
-        var distance2;
-        var ddc = model.distanceDisplayCondition;
-        var nearSquared = ddc.near * ddc.near;
-        var farSquared = ddc.far * ddc.far;
-
-        if (frameState.mode === SceneMode.SCENE2D) {
-            var frustum2DWidth = frameState.camera.frustum.right - frameState.camera.frustum.left;
-            distance2 = frustum2DWidth * 0.5;
-            distance2 = distance2 * distance2;
-        } else {
-            // Distance to center of primitive's reference frame
-            var position = Matrix4.getTranslation(model.modelMatrix, scratchDisplayConditionCartesian);
-            if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-                var projection = frameState.mapProjection;
-                var ellipsoid = projection.ellipsoid;
-                var cartographic = ellipsoid.cartesianToCartographic(position, scratchDistanceDisplayConditionCartographic);
-                position = projection.project(cartographic, position);
-                Cartesian3.fromElements(position.z, position.x, position.y, position);
-            }
-            distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
-        }
-
-        return (distance2 >= nearSquared) && (distance2 <= farSquared);
-    }
-
     ClassificationModel.prototype.updateCommands = function(batchId, color) {
         var nodeCommands = this._nodeCommands;
         var length = nodeCommands.length;
@@ -1805,8 +1744,7 @@ define([
             }
         }
 
-        var displayConditionPassed = defined(this.distanceDisplayCondition) ? distanceDisplayConditionVisible(this, frameState) : true;
-        var show = this.show && displayConditionPassed;
+        var show = this.show;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             this._dirty = false;
