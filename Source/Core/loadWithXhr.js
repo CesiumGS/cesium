@@ -187,13 +187,13 @@ define([
             var response = xhr.response;
             var browserResponseType = xhr.responseType;
 
-            //All modern browsers will go into either the first if block or last else block.
-            //Other code paths support older browsers that either do not support the supplied responseType
-            //or do not support the xhr.response property.
-            if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
-                deferred.resolve(response);
-            } else if (xhr.status === 204) { // accept no content
+            if (xhr.status === 204) { // accept no content
                 deferred.resolve();
+            } else if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                //All modern browsers will go into either the first if block or last else block.
+                //Other code paths support older browsers that either do not support the supplied responseType
+                //or do not support the xhr.response property.
+                deferred.resolve(response);
             } else if ((responseType === 'json') && typeof response === 'string') {
                 try {
                     deferred.resolve(JSON.parse(response));
