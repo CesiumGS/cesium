@@ -157,8 +157,8 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 void main()
 {
 #ifdef ENABLE_CLIPPING_PLANES
-    #ifdef COMBINE_CLIPPING_REGIONS
-    float clipDistance = czm_discardIfClippedCombineRegions(u_clippingPlanes, u_clippingPlanesLength);
+    #ifdef UNION_CLIPPING_REGIONS
+    float clipDistance = czm_discardIfClippedUnionRegions(u_clippingPlanes, u_clippingPlanesLength);
     #else
     float clipDistance = czm_discardIfClipped(u_clippingPlanes, u_clippingPlanesLength);
     #endif

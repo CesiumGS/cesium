@@ -3321,7 +3321,7 @@ define([
         };
     }
 
-    function createClippingPlanesCombineRegionsFunction(model) {
+    function createClippingPlanesUnionRegionsFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
             if (!defined(clippingPlanes)) {
@@ -3454,7 +3454,7 @@ define([
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clippingPlanesCombineRegions: createClippingPlanesCombineRegionsFunction(model),
+                gltf_clippingPlanesUnionRegions: createClippingPlanesUnionRegionsFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context),
                 gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model)
             });
@@ -4254,7 +4254,7 @@ define([
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             'uniform int gltf_clippingPlanesLength; \n' +
-            'uniform bool gltf_clippingPlanesCombineRegions; \n' +
+            'uniform bool gltf_clippingPlanesUnionRegions; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
@@ -4263,9 +4263,9 @@ define([
             '    if (gltf_clippingPlanesLength > 0) \n' +
             '    { \n' +
             '        float clipDistance; \n' +
-            '        if (gltf_clippingPlanesCombineRegions) \n' +
+            '        if (gltf_clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedCombineRegions(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedUnionRegions(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +

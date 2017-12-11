@@ -80,7 +80,7 @@ defineSuite([
 
         expect(updater.isDestroyed()).toBe(false);
         expect(updater.entity).toBe(entity);
-        expect(updater.isClosed).toBe(true);
+        expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
@@ -122,7 +122,7 @@ defineSuite([
         var entity = createBasicPlane();
         var updater = new PlaneGeometryUpdater(entity, scene);
 
-        expect(updater.isClosed).toBe(true);
+        expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);

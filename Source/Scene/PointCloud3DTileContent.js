@@ -1070,7 +1070,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
+            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedUnionRegions' : 'czm_discardIfClipped';
             fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +

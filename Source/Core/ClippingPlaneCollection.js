@@ -328,7 +328,7 @@ define([
             modelMatrix = Matrix4.multiply(modelMatrix, transform, scratchMatrix);
         }
 
-        // If the clipping planes are using combineClippingRegions, the volume must be outside of all planes to be considered
+        // If the clipping planes are using unionClippingRegions, the volume must be outside of all planes to be considered
         // completely clipped. Otherwise, if the volume can be outside any the planes, it is considered completely clipped.
         // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
         var intersection = Intersect.INSIDE;
