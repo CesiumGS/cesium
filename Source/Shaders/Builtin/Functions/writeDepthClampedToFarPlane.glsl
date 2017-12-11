@@ -14,7 +14,7 @@ varying float v_WindowZ;
  * gl_FragColor = color;
  * czm_writeDepthClampedToFarPlane();
  *
- * @see czm_writeDepthClampedToFarPlane
+ * @see czm_depthClampFarPlane
  */
 void czm_writeDepthClampedToFarPlane()
 {
