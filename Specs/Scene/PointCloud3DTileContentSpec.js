@@ -689,7 +689,7 @@ defineSuite([
         });
     });
 
-    xit('Updates clipping planes when clipping planes are enabled', function () {
+    it('Updates clipping planes when clipping planes are enabled', function () {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
 
