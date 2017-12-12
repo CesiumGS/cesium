@@ -119,7 +119,7 @@ define([
 
         // Used to regenerate shader when clipping on this tile changes
         this._isClipped = false;
-        this._unionClippingRegions = true;
+        this._unionClippingRegions = false;
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
@@ -1071,7 +1071,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedUnionRegions' : 'czm_discardIfClipped';
+            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
             fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
@@ -1220,7 +1220,7 @@ define([
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
-        var unionClippingRegions = true;
+        var unionClippingRegions = false;
         var length = 0;
         if (clippingEnabled) {
             unionClippingRegions = clippingPlanes.unionClippingRegions;

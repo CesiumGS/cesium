@@ -34,7 +34,7 @@ defineSuite([
         expect(clippingPlanes.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(clippingPlanes.edgeColor).toEqual(Color.WHITE);
         expect(clippingPlanes.edgeWidth).toEqual(0.0);
-        expect(clippingPlanes.unionClippingRegions).toEqual(true);
+        expect(clippingPlanes.unionClippingRegions).toEqual(false);
         expect(clippingPlanes._testIntersection).not.toBeUndefined();
     });
 
@@ -156,7 +156,7 @@ defineSuite([
         expect(result.modelMatrix).toEqual(transform);
         expect(result.edgeColor).toEqual(Color.RED);
         expect(result.edgeWidth).toEqual(0.0);
-        expect(result.unionClippingRegions).toEqual(true);
+        expect(result.unionClippingRegions).toEqual(false);
         expect(result._testIntersection).not.toBeUndefined();
     });
 
@@ -177,7 +177,7 @@ defineSuite([
         expect(result.modelMatrix).toEqual(transform);
         expect(result.edgeColor).toEqual(Color.RED);
         expect(result.edgeWidth).toEqual(0.0);
-        expect(result.unionClippingRegions).toEqual(true);
+        expect(result.unionClippingRegions).toEqual(false);
         expect(result._testIntersection).not.toBeUndefined();
 
         // Only allocate a new array if needed
@@ -186,19 +186,18 @@ defineSuite([
         expect(result._planes).toBe(previousPlanes);
     });
 
-
-    it('setting combineClippingRegions updates testIntersection function', function() {
+    it('setting unionClippingRegions updates testIntersection function', function() {
         clippingPlanes = new ClippingPlaneCollection();
         var originalIntersectFunction = clippingPlanes._testIntersection;
 
         expect(clippingPlanes._testIntersection).not.toBeUndefined();
 
-        clippingPlanes.unionClippingRegions = false;
+        clippingPlanes.unionClippingRegions = true;
 
         expect(clippingPlanes._testIntersection).not.toBe(originalIntersectFunction);
     });
 
-    it('computes intersections with bounding volumes when combining clipping regions', function() {
+    it('computes intersections with bounding volumes when clipping regions are combined with an intersect operation', function() {
         clippingPlanes = new ClippingPlaneCollection();
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
@@ -221,9 +220,9 @@ defineSuite([
         expect(intersect).toEqual(Intersect.INSIDE);
     });
 
-    it('computes intersections with bounding volumes when not combining clipping regions', function() {
+    it('computes intersections with bounding volumes when clipping planes are combined with a union operation', function() {
         clippingPlanes = new ClippingPlaneCollection({
-            unionClippingRegions : false
+            unionClippingRegions : true
         });
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);

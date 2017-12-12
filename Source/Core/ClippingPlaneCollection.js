@@ -25,7 +25,8 @@ define([
     'use strict';
 
     /**
-     * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the outside of the specified list of {@link Plane} objects.
+     * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
+     * outside of the specified list of {@link Plane} objects.
      *
      * @alias ClippingPlaneCollection
      * @constructor
@@ -34,7 +35,7 @@ define([
      * @param {Plane[]} [options.planes=[]] An array of up to 6 {@link Plane} objects used to selectively disable rendering on the outside of each plane.
      * @param {Boolean} [options.enabled=true] Determines whether the clipping planes are active.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
-     * @param {Boolean} [options.unionClippingRegions=true] If true, the region to be clipped must be included in all planes in this collection. Otherwise, a region will be clipped if included in any plane in the collection.
+     * @param {Boolean} [options.unionClippingRegions=false] If true, a region will be clipped if included in any plane in the collection. Otherwise, the region to be clipped must intersect the regions defined by all planes in this collection.
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      */
@@ -57,7 +58,8 @@ define([
         this.enabled = defaultValue(options.enabled, true);
 
         /**
-         * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes original coordinate system.
+         * The 4x4 transformation matrix specifying an additional transform relative to the clipping planes
+         * original coordinate system.
          *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
@@ -82,15 +84,15 @@ define([
 
         this._testIntersection = undefined;
         this._unionClippingRegions = undefined;
-        this.unionClippingRegions = defaultValue(options.unionClippingRegions, true);
+        this.unionClippingRegions = defaultValue(options.unionClippingRegions, false);
     }
 
     function unionIntersectFunction(value) {
-        return (value === Intersect.INSIDE);
+        return (value === Intersect.OUTSIDE);
     }
 
     function defaultIntersectFunction(value) {
-        return (value === Intersect.OUTSIDE);
+        return (value === Intersect.INSIDE);
     }
 
     defineProperties(ClippingPlaneCollection.prototype, {
@@ -109,8 +111,8 @@ define([
         },
 
         /**
-         * If true, the region to be clipped must be included in all planes in this collection.
-         * Otherwise, a region will be clipped if included in any plane in the collection.
+         * If true, a region will be clipped if included in any plane in the collection. Otherwise, the region
+         * to be clipped must intersect the regions defined by all planes in this collection.
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Boolean}
@@ -334,11 +336,12 @@ define([
             modelMatrix = Matrix4.multiply(modelMatrix, transform, scratchMatrix);
         }
 
-        // If the clipping planes are using unionClippingRegions, the volume must be outside of all planes to be considered
-        // completely clipped. Otherwise, if the volume can be outside any the planes, it is considered completely clipped.
+        // If the collection is not set to union the clipping regions, the volume must be outside of all planes to be
+        // considered completely clipped. If the collection is set to union the clipping regions, if the volume can be
+        // outside any the planes, it is considered completely clipped.
         // Lastly, if not completely clipped, if any plane is intersecting, more calculations must be performed.
         var intersection = Intersect.INSIDE;
-        if (this.unionClippingRegions && length > 0) {
+        if (!this.unionClippingRegions && length > 0) {
             intersection = Intersect.OUTSIDE;
         }
 

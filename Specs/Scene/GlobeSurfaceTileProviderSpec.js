@@ -764,7 +764,7 @@ defineSuite([
         });
     });
 
-    it('renders with multiple clipping planes and combined regions', function() {
+    it('renders with multiple clipping planes clipping regions according to the value of unionClippingPlane', function() {
         expect(scene).toRender([0, 0, 0, 255]);
 
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
@@ -783,12 +783,12 @@ defineSuite([
                     new Plane(Cartesian3.UNIT_Z, 10000.0),
                     new Plane(Cartesian3.UNIT_X, 1000.0)
                 ],
-                unionClippingRegions: false
+                unionClippingRegions: true
             });
 
             expect(scene).notToRender(result);
 
-            scene.globe.clippingPlanes.unionClippingRegions = true;
+            scene.globe.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(result);
 

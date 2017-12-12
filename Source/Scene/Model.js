@@ -3325,7 +3325,7 @@ define([
         return function() {
             var clippingPlanes = model.clippingPlanes;
             if (!defined(clippingPlanes)) {
-                return true;
+                return false;
             }
 
             return clippingPlanes.unionClippingRegions;
@@ -4265,11 +4265,11 @@ define([
             '        float clipDistance; \n' +
             '        if (gltf_clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedUnionRegions(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +

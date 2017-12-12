@@ -777,7 +777,7 @@ defineSuite([
         });
     });
 
-    it('clipping planes combine regions', function() {
+    it('clipping planes union regions', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -790,12 +790,12 @@ defineSuite([
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
                 modelMatrix : Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center),
-                unionClippingRegions: false
+                unionClippingRegions: true
             });
 
             expect(scene).notToRender(color);
 
-            tileset.clippingPlanes.unionClippingRegions = true;
+            tileset.clippingPlanes.unionClippingRegions = false;
 
             expect(scene).toRender(color);
         });

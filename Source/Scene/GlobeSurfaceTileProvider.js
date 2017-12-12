@@ -1321,7 +1321,7 @@ define([
             }
 
             var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && (uniformMapProperties.clippingPlanes.length > 0);
-            var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : true;
+            var unionClippingRegions = clippingPlanesEnabled ? clippingPlanes.unionClippingRegions : false;
 
             if (defined(tileProvider.uniformMap)) {
                 uniformMap = combine(uniformMap, tileProvider.uniformMap);

@@ -2633,7 +2633,7 @@ defineSuite([
         });
     });
 
-    it('Clipping planes combien regions', function () {
+    it('Clipping planes union regions', function () {
         return loadModel(boxUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
@@ -2649,7 +2649,7 @@ defineSuite([
                     new Plane(Cartesian3.UNIT_Z, -5.0),
                     new Plane(Cartesian3.UNIT_X, 0.0)
                 ],
-                unionClippingRegions: false
+                unionClippingRegions: true
             });
 
             model.update(scene.frameState);
@@ -2657,7 +2657,7 @@ defineSuite([
                 expect(rgba).not.toEqual(modelColor);
             });
 
-            model.clippingPlanes._unionClippingRegions = true;
+            model.clippingPlanes.unionClippingRegions = false;
             model.update(scene.frameState);
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).toEqual(modelColor);
