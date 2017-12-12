@@ -62,10 +62,18 @@ define([
         this._ellipsoidBatchIds = options.ellipsoidBatchIds;
         this._spheres = options.spheres;
         this._sphereBatchIds = options.sphereBatchIds;
-        this._center = options.center;
         this._modelMatrix = options.modelMatrix;
         this._batchTable = options.batchTable;
         this._boundingVolume = options.boundingVolume;
+
+        this._center = options.center;
+        if (!defined(this._center)) {
+            if (defined(this._boundingVolume)) {
+                this._center = Cartesian3.clone(this._boundingVolume.center);
+            } else {
+                this._center = Cartesian3.clone(Cartesian3.ZERO);
+            }
+        }
 
         this._boundingVolumes = undefined;
         this._batchedIndices = undefined;

@@ -51,42 +51,6 @@ defineSuite([
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
     var combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
 
-    var vectorGeometryAll = './Data/Cesium3DTiles/Vector/VectorTileGeometryAll';
-    var vectorGeometryAllBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllBatchedChildren';
-    var vectorGeometryAllBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllBatchedChildrenWithBatchTable';
-    var vectorGeometryAllWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllWithBatchTable';
-    var vectorGeometryAllWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryAllWithBatchIds';
-
-    var vectorGeometryBoxes = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxes';
-    var vectorGeometryBoxesBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesBatchedChildren';
-    var vectorGeometryBoxesBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesBatchedChildrenWithBatchTable';
-    var vectorGeometryBoxesWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesWithBatchTable';
-    var vectorGeometryBoxesWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryBoxesWithBatchIds';
-
-    var vectorGeometryCylinders = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylinders';
-    var vectorGeometryCylindersBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersBatchedChildren';
-    var vectorGeometryCylindersBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersBatchedChildrenWithBatchTable';
-    var vectorGeometryCylindersWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersWithBatchTable';
-    var vectorGeometryCylindersWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryCylindersWithBatchIds';
-
-    var vectorGeometryEllipsoids = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoids';
-    var vectorGeometryEllipsoidsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsBatchedChildren';
-    var vectorGeometryEllipsoidsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsBatchedChildrenWithBatchTable';
-    var vectorGeometryEllipsoidsWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsWithBatchTable';
-    var vectorGeometryEllipsoidsWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometryEllipsoidsWithBatchIds';
-
-    var vectorGeometrySpheres = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheres';
-    var vectorGeometrySpheresBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresBatchedChildren';
-    var vectorGeometrySpheresBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresBatchedChildrenWithBatchTable';
-    var vectorGeometrySpheresWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresWithBatchTable';
-    var vectorGeometrySpheresWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileGeometrySpheresWithBatchIds';
-
-    var vectorMesh = './Data/Cesium3DTiles/Vector/VectorTileMesh';
-    var vectorMeshBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTileMeshBatchedChildren';
-    var vectorMeshBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileMeshBatchedChildrenWithBatchTable';
-    var vectorMeshWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTileMeshWithBatchTable';
-    var vectorMeshWithBatchIds = './Data/Cesium3DTiles/Vector/VectorTileMeshWithBatchIds';
-
     var vectorPoints = './Data/Cesium3DTiles/Vector/VectorTilePoints';
     var vectorPointsBatchedChildren = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildren';
     var vectorPointsBatchedChildrenWithBatchTable = './Data/Cesium3DTiles/Vector/VectorTilePointsBatchedChildrenWithBatchTable';
@@ -395,35 +359,18 @@ defineSuite([
     }
 
     function verifyPickCombined(scene) {
-        var center = Rectangle.center(combinedRectangle);
         var width = combinedRectangle.width;
-        var step = width / 5;
-        var halfStep = step * 0.5;
+        var step = width / 3;
 
         var west = combinedRectangle.west;
         var north = combinedRectangle.north;
         var south = combinedRectangle.south;
 
-        var meshRect = new Rectangle(west, south, west + step, north);
-        var polygonRect = new Rectangle(west + step, south, west + 2 * step, north);
-        var boxRect = new Rectangle(west + step * 2, center.latitude, west + step * 2 + halfStep, north);
-        var cylinderRect = new Rectangle(west + step * 2 + halfStep, center.latitude, west + step * 3, north);
-        var ellipsoidRect = new Rectangle(west + step * 2, south, west + step * 2 + halfStep, center.latitude);
-        var sphereRect = new Rectangle(west + step * 2 + halfStep, south, west + step * 3, center.latitude);
-        var polylineRect = new Rectangle(west + step * 3, south, west + step * 4, north);
-        var pointRect = new Rectangle(west + step * 4, south, west + step * 5, north);
+        var polygonRect = new Rectangle(west, south, west + step, north);
+        var polylineRect = new Rectangle(west + step, south, west + step * 2, north);
+        var pointRect = new Rectangle(west + step * 2, south, west + step * 3, north);
 
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(meshRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(boxRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(cylinderRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ellipsoidRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expectPick(scene);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(sphereRect)), new Cartesian3(0.0, 0.0, 5.0));
         expectPick(scene);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
         expectPick(scene);
@@ -454,35 +401,18 @@ defineSuite([
     }
 
     function expectRenderCombined(scene, color) {
-        var center = Rectangle.center(combinedRectangle);
         var width = combinedRectangle.width;
-        var step = width / 5;
-        var halfStep = step * 0.5;
+        var step = width / 3;
 
         var west = combinedRectangle.west;
         var north = combinedRectangle.north;
         var south = combinedRectangle.south;
 
-        var meshRect = new Rectangle(west, south, west + step, north);
-        var polygonRect = new Rectangle(west + step, south, west + 2 * step, north);
-        var boxRect = new Rectangle(west + step * 2, center.latitude, west + step * 2 + halfStep, north);
-        var cylinderRect = new Rectangle(west + step * 2 + halfStep, center.latitude, west + step * 3, north);
-        var ellipsoidRect = new Rectangle(west + step * 2, south, west + step * 2 + halfStep, center.latitude);
-        var sphereRect = new Rectangle(west + step * 2 + halfStep, south, west + step * 3, center.latitude);
-        var polylineRect = new Rectangle(west + step * 3, south, west + step * 4, north);
-        var pointRect = new Rectangle(west + step * 4, south, west + step * 5, north);
+        var polygonRect = new Rectangle(west, south, west + step, north);
+        var polylineRect = new Rectangle(west + step, south, west + step * 2, north);
+        var pointRect = new Rectangle(west + step * 2, south, west + step * 3, north);
 
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(meshRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(polygonRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(boxRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(cylinderRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(ellipsoidRect)), new Cartesian3(0.0, 0.0, 5.0));
-        expect(scene).toRender(color);
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(sphereRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRender(color);
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.northeast(polylineRect)), new Cartesian3(0.0, 0.0, 5.0));
         expect(scene).toRender(color);
@@ -662,336 +592,6 @@ defineSuite([
         }));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
-        });
-    });
-
-    it('renders meshes', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorMesh
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched meshes', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorMeshBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders meshes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorMeshWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched meshes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorMeshBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders meshes with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorMeshWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders boxes', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryBoxes
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched boxes', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryBoxesBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders boxes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryBoxesWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched boxes with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryBoxesBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders boxes with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryBoxesWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders cylinders', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryCylinders
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched cylinders', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryCylindersBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders cylinders with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryCylindersWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched cylinders with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryCylindersBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders cylinders with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryCylindersWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders ellipsoids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryEllipsoids
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched ellipsoids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryEllipsoidsBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders ellipsoids with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryEllipsoidsWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched ellipsoids with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryEllipsoidsBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders ellipsoids with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryEllipsoidsWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders spheres', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometrySpheres
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched spheres', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometrySpheresBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders spheres with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometrySpheresWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched spheres with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometrySpheresBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders spheres with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometrySpheresWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders all geometries', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryAll
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched all geometries', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryAllBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders all geometries with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryAllWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders batched all geometries with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryAllBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
-        });
-    });
-
-    it('renders all geometries with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorGeometryAllWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
-            verifyRender(tileset, scene);
-            verifyPick(scene);
         });
     });
 
