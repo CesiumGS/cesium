@@ -119,6 +119,7 @@ define([
 
         // Used to regenerate shader when clipping on this tile changes
         this._isClipped = false;
+        this._unionClippingRegions = true;
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
@@ -1219,8 +1220,11 @@ define([
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
+        var unionClippingRegions = true;
         var length = 0;
         if (clippingEnabled) {
+            unionClippingRegions = clippingPlanes.unionClippingRegions;
+
             length = clippingPlanes.length;
             Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
         }
@@ -1248,8 +1252,10 @@ define([
             clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
-        if (this._isClipped !== clippingEnabled) {
+        if (this._isClipped !== clippingEnabled || this._unionClippingRegions !== unionClippingRegions) {
             this._isClipped = clippingEnabled;
+            this._unionClippingRegions = unionClippingRegions;
+
             createShaders(this, frameState, tileset.style);
         }
 

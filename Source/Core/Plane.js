@@ -13,8 +13,7 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath,
-        Matrix4
-) {
+        Matrix4) {
     'use strict';
 
     /**
@@ -69,7 +68,6 @@ define([
          */
         this.distance = distance;
     }
-
 
     /**
      * Creates a plane from a normal and a point on the plane.
@@ -189,13 +187,13 @@ define([
      * @param {Plane} [result] The object onto which to store the result.
      * @returns {Plane} The modified result parameter or a new Plane instance if one was not provided.
      */
-    Plane.clone = function (plane, result) {
+    Plane.clone = function(plane, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('plane', plane);
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-           result = new Plane(Cartesian3.UNIT_X, 0.0);
+            return new Plane(plane.normal, plane.distance);
         }
 
         Cartesian3.clone(plane.normal, result.normal);

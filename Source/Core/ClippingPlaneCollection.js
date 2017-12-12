@@ -85,11 +85,11 @@ define([
         this.unionClippingRegions = defaultValue(options.unionClippingRegions, true);
     }
 
-    function unionIntersectFunction (value) {
+    function unionIntersectFunction(value) {
         return (value === Intersect.INSIDE);
     }
 
-    function defaultIntersectFunction (value) {
+    function defaultIntersectFunction(value) {
         return (value === Intersect.OUTSIDE);
     }
 
@@ -98,6 +98,7 @@ define([
          * Returns the number of planes in this collection.  This is commonly used with
          * {@link ClippingPlaneCollection#get} to iterate over all the planes
          * in the collection.
+         *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Number}
          */
@@ -129,22 +130,26 @@ define([
     });
 
     /**
+     * Adds the specified {@link Plane} to the collection to be used to selectively disable rendering
+     * on the outside of each plane. Use {@link ClippingPlaneCollection#unionClippingRegions} to modify
+     * how modify the clipping behavior of multiple planes.
      *
-     * @param plane
+     * @param {Plane} plane The plane to add to the collection.
      *
      * @exception {DeveloperError} The plane added exceeds the maximum number of supported clipping planes.
      *
+     * @see ClippingPlaneCollection#unionClippingRegions
      * @see ClippingPlaneCollection#remove
      * @see ClippingPlaneCollection#removeAll
      */
     ClippingPlaneCollection.prototype.add = function(plane) {
-        this._planes.push(plane);
-
         //>>includeStart('debug', pragmas.debug);
-        if (this.length > ClippingPlaneCollection.MAX_CLIPPING_PLANES) {
+        if (this.length >= ClippingPlaneCollection.MAX_CLIPPING_PLANES) {
             throw new DeveloperError('The maximum number of clipping planes supported is ' + ClippingPlaneCollection.MAX_CLIPPING_PLANES);
         }
         //>>includeEnd('debug');
+
+        this._planes.push(plane);
     };
 
     /**
@@ -168,7 +173,8 @@ define([
     };
 
     function indexOf(planes, plane) {
-        for (var i = 0; i < planes.length; ++i) {
+        var length = planes.length;
+        for (var i = 0; i < length; ++i) {
             if (Plane.equals(planes[i], plane)) {
                 return i;
             }
