@@ -178,6 +178,29 @@ define([
              gltf = parseBinaryGltf(gltf);
         } // else Normal glTF (JSON)
 
+        var gltfNodes = gltf.nodes;
+        var gltfMeshes = gltf.meshes;
+
+        var gltfNode = gltfNodes[0];
+        var meshId = gltfNode.mesh;
+        if (gltfNodes.length > 1 || !defined(meshId)) {
+            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
+        }
+
+        if (gltfMeshes.length !== 1) {
+            throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
+        }
+
+        var gltfPrimitives = gltfMeshes[0].primitives;
+        if (gltfPrimitives.length !== 1) {
+            throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
+        }
+
+        var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
+        if (!defined(gltfPositionAttribute)) {
+            throw new RuntimeError('The mesh must have a position attribute.');
+        }
+
         this._gltf = gltf;
 
         this._basePath = defaultValue(options.basePath, '');
@@ -297,11 +320,12 @@ define([
         this._programPrimitives = {};
         this._rendererResources = {       // Cached between models with the same url/cache-key
             buffers : {},
-            vertexArrays : {},
             programs : {},
             pickPrograms : {}
         };
         this._updatedGltfVersion = false;
+
+        this._vertexArray = undefined;
 
         this._geometryByteLength = 0;
         this._trianglesLength = 0;
@@ -577,27 +601,19 @@ define([
 
         var n = gltfNodes[0];
         var meshId = n.mesh;
-        if (gltfNodes.length > 1 || !defined(meshId)) {
-            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
-        }
 
         var transformToRoot = getTransform(n);
         var mesh = gltfMeshes[meshId];
-        var primitives = mesh.primitives;
-        var primitivesLength = primitives.length;
-        for (var m = 0; m < primitivesLength; ++m) {
-            var positionAccessor = primitives[m].attributes.POSITION;
-            if (defined(positionAccessor)) {
-                var minMax = getAccessorMinMax(gltf, positionAccessor);
-                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-                if (defined(min) && defined(max)) {
-                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                    Cartesian3.minimumByComponent(min, aMin, min);
-                    Cartesian3.maximumByComponent(max, aMax, max);
-                }
-            }
+        var primitive = mesh.primitives[0];
+        var positionAccessor = primitive.attributes.POSITION;
+        var minMax = getAccessorMinMax(gltf, positionAccessor);
+        var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+        var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
+        if (defined(min) && defined(max)) {
+            Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+            Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+            Cartesian3.minimumByComponent(min, aMin, min);
+            Cartesian3.maximumByComponent(max, aMax, max);
         }
 
         var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
@@ -1056,61 +1072,43 @@ define([
         loadResources.createVertexArrays = false;
 
         var rendererBuffers = model._rendererResources.buffers;
-        var rendererVertexArrays = model._rendererResources.vertexArrays;
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var meshes = gltf.meshes;
+        var primitives = meshes[0].primitives;
 
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var primitives = meshes[meshId].primitives;
-                var primitivesLength = primitives.length;
-
-                for (var i = 0; i < primitivesLength; ++i) {
-                    var primitive = primitives[i];
-
-                    // GLTF_SPEC: This does not take into account attribute arrays,
-                    // indicated by when an attribute points to a parameter with a
-                    // count property.
-                    //
-                    // https://github.com/KhronosGroup/glTF/issues/258
-
-                    var attributeLocations = getAttributeLocations();
-                    var attributeName;
-                    var attributeLocation;
-                    var attributes = {};
-                    var primitiveAttributes = primitive.attributes;
-                    for (attributeName in primitiveAttributes) {
-                        if (primitiveAttributes.hasOwnProperty(attributeName)) {
-                            attributeLocation = attributeLocations[attributeName];
-                            // Skip if the attribute is not used by the material, e.g., because the asset was exported
-                            // with an attribute that wasn't used and the asset wasn't optimized.
-                            if (defined(attributeLocation)) {
-                                var a = accessors[primitiveAttributes[attributeName]];
-                                attributes[attributeName] = {
-                                    index : attributeLocation,
-                                    vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : numberOfComponentsForType(a.type),
-                                    componentDatatype : a.componentType,
-                                    offsetInBytes : a.byteOffset,
-                                    strideInBytes : getAccessorByteStride(gltf, a)
-                                };
-                            }
-                        }
-                    }
-
-                    var indexBuffer;
-                    if (defined(primitive.indices)) {
-                        var accessor = accessors[primitive.indices];
-                        indexBuffer = rendererBuffers[accessor.bufferView];
-                    }
-                    rendererVertexArrays[meshId + '.primitive.' + i] = {
-                        attributes : attributes,
-                        indexBuffer : indexBuffer
+        var primitive = primitives[0];
+        var attributeLocations = getAttributeLocations();
+        var attributes = {};
+        var primitiveAttributes = primitive.attributes;
+        for (var attributeName in primitiveAttributes) {
+            if (primitiveAttributes.hasOwnProperty(attributeName)) {
+                var attributeLocation = attributeLocations[attributeName];
+                // Skip if the attribute is not used by the material, e.g., because the asset was exported
+                // with an attribute that wasn't used and the asset wasn't optimized.
+                if (defined(attributeLocation)) {
+                    var a = accessors[primitiveAttributes[attributeName]];
+                    attributes[attributeName] = {
+                        index : attributeLocation,
+                        vertexBuffer : rendererBuffers[a.bufferView],
+                        componentsPerAttribute : numberOfComponentsForType(a.type),
+                        componentDatatype : a.componentType,
+                        offsetInBytes : a.byteOffset,
+                        strideInBytes : getAccessorByteStride(gltf, a)
                     };
                 }
             }
         }
+
+        var indexBuffer;
+        if (defined(primitive.indices)) {
+            var accessor = accessors[primitive.indices];
+            indexBuffer = rendererBuffers[accessor.bufferView];
+        }
+        model._vertexArray = {
+            attributes : attributes,
+            indexBuffer : indexBuffer
+        };
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
@@ -1344,10 +1342,11 @@ define([
         var nodeCommands = model._nodeCommands;
 
         var resources = model._rendererResources;
-        var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var uniformMaps = model._uniformMaps;
+
+        var vertexArray = model._vertexArray;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
@@ -1358,171 +1357,161 @@ define([
         var id = gltfNode.mesh;
         var mesh = gltfMeshes[id];
 
-        var primitives = mesh.primitives;
-        var length = primitives.length;
+        var primitive = mesh.primitives[0];
 
-        // The glTF node hierarchy is a DAG so a node can have more than one
-        // parent, so a node may already have commands.  If so, append more
-        // since they will have a different model matrix.
+        var ix = accessors[primitive.indices];
+        var material = materials[primitive.material];
+        var technique = techniques[material.technique];
+        var programId = technique.program;
 
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives[i];
-            var ix = accessors[primitive.indices];
-            var material = materials[primitive.material];
-            var technique = techniques[material.technique];
-            var programId = technique.program;
-
-            var boundingSphere;
-            var positionAccessor = primitive.attributes.POSITION;
-            if (defined(positionAccessor)) {
-                var minMax = getAccessorMinMax(gltf, positionAccessor);
-                boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
-            }
-
-            var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
-            var offset;
-            var count;
-            if (defined(ix)) {
-                count = ix.count;
-                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
-            }
-            else {
-                var positions = accessors[primitive.attributes.POSITION];
-                count = positions.count;
-                offset = 0;
-            }
-
-            // Update model triangle count using number of indices
-            model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
-
-            var uniformMap = uniformMaps[primitive.material].uniformMap;
-
-            // Allow callback to modify the uniformMap
-            if (defined(model._uniformMapLoaded)) {
-                uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
-            }
-
-            // Add uniforms for decoding quantized attributes if used
-            if (model.extensionsUsed.WEB3D_quantized_attributes) {
-                var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
-                uniformMap = combine(uniformMap, quantizedUniformMap);
-            }
-
-            var attribute = vertexArray.attributes.POSITION;
-            var componentDatatype = attribute.componentDatatype;
-            var typedArray = attribute.vertexBuffer;
-            var byteOffset = typedArray.byteOffset;
-            var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-            var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
-
-            attribute = vertexArray.attributes._BATCHID;
-            componentDatatype = attribute.componentDatatype;
-            typedArray = attribute.vertexBuffer;
-            byteOffset = typedArray.byteOffset;
-            bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-            var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
-
-            var buffer = vertexArray.indexBuffer.typedArray;
-            var indices;
-            if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-                indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
-            } else {
-                indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
-            }
-
-            positionsBuffer = arraySlice(positionsBuffer);
-            vertexBatchIds = arraySlice(vertexBatchIds);
-            indices = arraySlice(indices, offset, offset + count);
-
-            var batchIds = [];
-            var indexCounts = [];
-            var indexOffsets = [];
-            var batchedIndices = [];
-
-            var currentId = vertexBatchIds[indices[0]];
-            batchIds.push(currentId);
-            indexOffsets.push(0);
-
-            var batchId;
-            var indexOffset;
-            var indexCount;
-            var indicesLength = indices.length;
-            for (var j = 1; j < indicesLength; ++j) {
-                batchId = vertexBatchIds[indices[j]];
-                if (batchId !== currentId) {
-                    indexOffset = indexOffsets[indexOffsets.length - 1];
-                    indexCount = j - indexOffset;
-
-                    batchIds.push(batchId);
-                    indexCounts.push(indexCount);
-                    indexOffsets.push(j);
-
-                    batchedIndices.push(new Vector3DTileBatch({
-                        offset : indexOffset,
-                        count : indexCount,
-                        batchIds : [currentId],
-                        color : Color.WHITE
-                    }));
-
-                    currentId = batchId;
-                }
-            }
-
-            batchId = vertexBatchIds[indices[indicesLength - 1]];
-            indexOffset = indexOffsets[indexOffsets.length - 1];
-            indexCount = indicesLength - indexOffset;
-
-            indexCounts.push(indexCount);
-            batchedIndices.push(new Vector3DTileBatch({
-                offset : indexOffset,
-                count : indexCount,
-                batchIds : [currentId],
-                color : Color.WHITE
-            }));
-
-            var shader = rendererPrograms[technique.program];
-            var vertexShaderSource = shader.vertexShaderSource;
-            var fragmentShaderSource = shader.fragmentShaderSource;
-            var attributeLocations = shader.attributeLocations;
-
-            var pickUniformMap;
-            var pickShader = rendererPickPrograms[technique.program];
-            var pickVertexShaderSource = pickShader.vertexShaderSource;
-            var pickFragmentShaderSource = pickShader.fragmentShaderSource;
-
-            if (defined(model._pickUniformMapLoaded)) {
-                pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-            } else {
-                // This is unlikely, but could happen if the override shader does not
-                // need new uniforms since, for example, its pick ids are coming from
-                // a vertex attribute or are baked into the shader source.
-                pickUniformMap = combine(uniformMap);
-            }
-
-            var nodeCommand = new Vector3DTilePrimitive({
-                classificationType : model._classificationType,
-                positions : positionsBuffer,
-                indices : indices,
-                indexOffsets : indexOffsets,
-                indexCounts : indexCounts,
-                batchIds : batchIds,
-                vertexBatchIds : vertexBatchIds,
-                batchedIndices : batchedIndices,
-                batchTable : batchTable,
-                boundingVolume : new BoundingSphere(), // updated in update()
-                _vertexShaderSource : vertexShaderSource,
-                _fragmentShaderSource : fragmentShaderSource,
-                _attributeLocations : attributeLocations,
-                _pickVertexShaderSource : pickVertexShaderSource,
-                _pickFragmentShaderSource : pickFragmentShaderSource,
-                _uniformMap : uniformMap,
-                _pickUniformMap : pickUniformMap,
-                _modelMatrix : new Matrix4(), // updated in update()
-                _boundingSphere : boundingSphere // used to update boundingVolume
-            });
-            runtimeNode.commands.push(nodeCommand);
-            nodeCommands.push(nodeCommand);
+        var boundingSphere;
+        var positionAccessor = primitive.attributes.POSITION;
+        if (defined(positionAccessor)) {
+            var minMax = getAccessorMinMax(gltf, positionAccessor);
+            boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
         }
+
+        var offset;
+        var count;
+        if (defined(ix)) {
+            count = ix.count;
+            offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+        }
+        else {
+            var positions = accessors[primitive.attributes.POSITION];
+            count = positions.count;
+            offset = 0;
+        }
+
+        // Update model triangle count using number of indices
+        model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
+
+        var uniformMap = uniformMaps[primitive.material].uniformMap;
+
+        // Allow callback to modify the uniformMap
+        if (defined(model._uniformMapLoaded)) {
+            uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
+        }
+
+        // Add uniforms for decoding quantized attributes if used
+        if (model.extensionsUsed.WEB3D_quantized_attributes) {
+            var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
+            uniformMap = combine(uniformMap, quantizedUniformMap);
+        }
+
+        var attribute = vertexArray.attributes.POSITION;
+        var componentDatatype = attribute.componentDatatype;
+        var typedArray = attribute.vertexBuffer;
+        var byteOffset = typedArray.byteOffset;
+        var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+        var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
+
+        attribute = vertexArray.attributes._BATCHID;
+        componentDatatype = attribute.componentDatatype;
+        typedArray = attribute.vertexBuffer;
+        byteOffset = typedArray.byteOffset;
+        bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+        var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
+
+        var buffer = vertexArray.indexBuffer.typedArray;
+        var indices;
+        if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+            indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+        } else {
+            indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+        }
+
+        positionsBuffer = arraySlice(positionsBuffer);
+        vertexBatchIds = arraySlice(vertexBatchIds);
+        indices = arraySlice(indices, offset, offset + count);
+
+        var batchIds = [];
+        var indexCounts = [];
+        var indexOffsets = [];
+        var batchedIndices = [];
+
+        var currentId = vertexBatchIds[indices[0]];
+        batchIds.push(currentId);
+        indexOffsets.push(0);
+
+        var batchId;
+        var indexOffset;
+        var indexCount;
+        var indicesLength = indices.length;
+        for (var j = 1; j < indicesLength; ++j) {
+            batchId = vertexBatchIds[indices[j]];
+            if (batchId !== currentId) {
+                indexOffset = indexOffsets[indexOffsets.length - 1];
+                indexCount = j - indexOffset;
+
+                batchIds.push(batchId);
+                indexCounts.push(indexCount);
+                indexOffsets.push(j);
+
+                batchedIndices.push(new Vector3DTileBatch({
+                    offset : indexOffset,
+                    count : indexCount,
+                    batchIds : [currentId],
+                    color : Color.WHITE
+                }));
+
+                currentId = batchId;
+            }
+        }
+
+        indexOffset = indexOffsets[indexOffsets.length - 1];
+        indexCount = indicesLength - indexOffset;
+
+        indexCounts.push(indexCount);
+        batchedIndices.push(new Vector3DTileBatch({
+            offset : indexOffset,
+            count : indexCount,
+            batchIds : [currentId],
+            color : Color.WHITE
+        }));
+
+        var shader = rendererPrograms[technique.program];
+        var vertexShaderSource = shader.vertexShaderSource;
+        var fragmentShaderSource = shader.fragmentShaderSource;
+        var attributeLocations = shader.attributeLocations;
+
+        var pickUniformMap;
+        var pickShader = rendererPickPrograms[technique.program];
+        var pickVertexShaderSource = pickShader.vertexShaderSource;
+        var pickFragmentShaderSource = pickShader.fragmentShaderSource;
+
+        if (defined(model._pickUniformMapLoaded)) {
+            pickUniformMap = model._pickUniformMapLoaded(uniformMap);
+        } else {
+            // This is unlikely, but could happen if the override shader does not
+            // need new uniforms since, for example, its pick ids are coming from
+            // a vertex attribute or are baked into the shader source.
+            pickUniformMap = combine(uniformMap);
+        }
+
+        var nodeCommand = new Vector3DTilePrimitive({
+            classificationType : model._classificationType,
+            positions : positionsBuffer,
+            indices : indices,
+            indexOffsets : indexOffsets,
+            indexCounts : indexCounts,
+            batchIds : batchIds,
+            vertexBatchIds : vertexBatchIds,
+            batchedIndices : batchedIndices,
+            batchTable : batchTable,
+            boundingVolume : new BoundingSphere(), // updated in update()
+            _vertexShaderSource : vertexShaderSource,
+            _fragmentShaderSource : fragmentShaderSource,
+            _attributeLocations : attributeLocations,
+            _pickVertexShaderSource : pickVertexShaderSource,
+            _pickFragmentShaderSource : pickFragmentShaderSource,
+            _uniformMap : uniformMap,
+            _pickUniformMap : pickUniformMap,
+            _modelMatrix : new Matrix4(), // updated in update()
+            _boundingSphere : boundingSphere // used to update boundingVolume
+        });
+        runtimeNode.commands.push(nodeCommand);
+        nodeCommands.push(nodeCommand);
     }
 
     function createRuntimeNodes(model, context) {
