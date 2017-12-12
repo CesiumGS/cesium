@@ -309,8 +309,7 @@ define([
             computedMatrix : new Matrix4(),
             dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
 
-            // Rendering
-            commands : []                      // empty for transform, light, and camera nodes
+            primitive : undefined
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -329,8 +328,6 @@ define([
 
         this._geometryByteLength = 0;
         this._trianglesLength = 0;
-
-        this._nodeCommands = [];
 
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // reference to either 3D or 2D
@@ -881,69 +878,67 @@ define([
         var quantizedUniforms = {};
         model._quantizedUniforms[programName] = quantizedUniforms;
 
-        var primitives = model._programPrimitives[programName];
-        for (var i = 0; i < primitives.length; i++) {
-            var primitive = primitives[i];
-            if (getProgramForPrimitive(model, primitive) === programName) {
-                for (var attributeSemantic in primitive.attributes) {
-                    if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                        var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
-                        var accessorId = primitive.attributes[attributeSemantic];
+        var primitive = model.gltf.meshes[0].primitives[0];
 
-                        if (attributeSemantic.charAt(0) === '_') {
-                            attributeSemantic = attributeSemantic.substring(1);
-                        }
-                        var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
+        if (getProgramForPrimitive(model, primitive) === programName) {
+            for (var attributeSemantic in primitive.attributes) {
+                if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                    var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                    var accessorId = primitive.attributes[attributeSemantic];
 
-                        var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
-                        var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
-                        if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
-                            var quantizedAttributes = getQuantizedAttributes(model, accessorId);
-                            if (defined(quantizedAttributes)) {
-                                var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                var newMain = 'gltf_decoded_' + attributeSemantic;
-                                var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
-                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
+                    if (attributeSemantic.charAt(0) === '_') {
+                        attributeSemantic = attributeSemantic.substring(1);
+                    }
+                    var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
 
-                                // replace usages of the original attribute with the decoded version, but not the declaration
-                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
-                                // declare decoded attribute
-                                var variableType;
-                                if (size > 2) {
-                                    variableType = 'vec' + (size - 1);
-                                } else {
-                                    variableType = 'float';
-                                }
-                                shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
-                                // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
-                                // uniform in the shader (32-bit floating point)
-                                var decode = '';
-                                if (size === 5) {
-                                    // separate scale and translate since glsl doesn't have mat5
-                                    shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
-                                    shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
-                                    decode = '\n' +
-                                             'void main() {\n' +
-                                             '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
-                                             '    ' + newMain + '();\n' +
-                                             '}\n';
+                    var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                    var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                    if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
+                        var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                        if (defined(quantizedAttributes)) {
+                            var decodeMatrix = quantizedAttributes.decodeMatrix;
+                            var newMain = 'gltf_decoded_' + attributeSemantic;
+                            var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
+                            var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
-                                    quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
-                                    quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
-                                }
-                                else {
-                                    shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
-                                    decode = '\n' +
-                                             'void main() {\n' +
-                                             '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                             '    ' + newMain + '();\n' +
-                                             '}\n';
-
-                                    quantizedUniforms[decodeUniformVarName] = {mat : size};
-                                }
-                                shader = ShaderSource.replaceMain(shader, newMain);
-                                shader += decode;
+                            // replace usages of the original attribute with the decoded version, but not the declaration
+                            shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                            // declare decoded attribute
+                            var variableType;
+                            if (size > 2) {
+                                variableType = 'vec' + (size - 1);
+                            } else {
+                                variableType = 'float';
                             }
+                            shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+                            // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
+                            // uniform in the shader (32-bit floating point)
+                            var decode = '';
+                            if (size === 5) {
+                                // separate scale and translate since glsl doesn't have mat5
+                                shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
+                                shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
+                                decode = '\n' +
+                                         'void main() {\n' +
+                                         '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
+                                         '    ' + newMain + '();\n' +
+                                         '}\n';
+
+                                quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
+                                quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
+                            }
+                            else {
+                                shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
+                                decode = '\n' +
+                                         'void main() {\n' +
+                                         '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                         '    ' + newMain + '();\n' +
+                                         '}\n';
+
+                                quantizedUniforms[decodeUniformVarName] = {mat : size};
+                            }
+                            shader = ShaderSource.replaceMain(shader, newMain);
+                            shader += decode;
                         }
                     }
                 }
@@ -1339,8 +1334,6 @@ define([
     function createCommand(model, gltfNode, runtimeNode, context) {
         var batchTable = model._batchTable;
 
-        var nodeCommands = model._nodeCommands;
-
         var resources = model._rendererResources;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
@@ -1489,7 +1482,7 @@ define([
             pickUniformMap = combine(uniformMap);
         }
 
-        var nodeCommand = new Vector3DTilePrimitive({
+        runtimeNode.primitive = new Vector3DTilePrimitive({
             classificationType : model._classificationType,
             positions : positionsBuffer,
             indices : indices,
@@ -1510,8 +1503,6 @@ define([
             _modelMatrix : new Matrix4(), // updated in update()
             _boundingSphere : boundingSphere // used to update boundingVolume
         });
-        runtimeNode.commands.push(nodeCommand);
-        nodeCommands.push(nodeCommand);
     }
 
     function createRuntimeNodes(model, context) {
@@ -1528,10 +1519,6 @@ define([
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
-        if (nodes.length > 1) {
-            throw new RuntimeError('Only one node is supported when using a batched 3D tileset for classification.');
-        }
-
         var gltfNode = nodes[0];
         var runtimeNode = model._runtimeNode;
         if (defined(gltfNode.matrix)) {
@@ -1542,10 +1529,6 @@ define([
             runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
             runtimeNode.rotation = Quaternion.unpack(rotation);
             runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
-        }
-
-        if (!defined(gltfNode.mesh)) {
-            throw new RuntimeError('The only node in the glTF does not have a mesh.');
         }
 
         createCommand(model, gltfNode, runtimeNode, context);
@@ -1591,7 +1574,7 @@ define([
 
         var n = model._runtimeNode;
         var transformToRoot = n.transformToRoot;
-        var commands = n.commands;
+        var primitive = n.primitive;
 
         if (defined(n.matrix)) {
             Matrix4.clone(n.matrix, transformToRoot);
@@ -1601,20 +1584,13 @@ define([
 
         if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
             var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
-            var commandsLength = commands.length;
-            if (commandsLength > 0) {
-                // Node has meshes, which has primitives.  Update their commands.
-                for (var j = 0; j < commandsLength; ++j) {
-                    var primitiveCommand = commands[j];
-                    Matrix4.clone(nodeMatrix, primitiveCommand._modelMatrix);
+            Matrix4.clone(nodeMatrix, primitive._modelMatrix);
 
-                    // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
-                    BoundingSphere.transform(primitiveCommand._boundingSphere, primitiveCommand._modelMatrix, primitiveCommand._boundingVolume);
+            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
+            BoundingSphere.transform(primitive._boundingSphere, primitive._modelMatrix, primitive._boundingVolume);
 
-                    if (defined(model._rtcCenter)) {
-                        Cartesian3.add(model._rtcCenter, primitiveCommand._boundingVolume.center, primitiveCommand._boundingVolume.center);
-                    }
-                }
+            if (defined(model._rtcCenter)) {
+                Cartesian3.add(model._rtcCenter, primitive._boundingVolume.center, primitive._boundingVolume.center);
             }
         }
 
@@ -1654,11 +1630,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     ClassificationModel.prototype.updateCommands = function(batchId, color) {
-        var nodeCommands = this._nodeCommands;
-        var length = nodeCommands.length;
-        for (var i = 0; i < length; ++i) {
-            nodeCommands[i].updateCommands(batchId, color);
-        }
+        this._runtimeNode.primitive.updateCommands(batchId, color);
     };
 
     ClassificationModel.prototype.update = function(frameState) {
@@ -1775,11 +1747,7 @@ define([
         }
 
         if (show && !this._ignoreCommands) {
-            var nodeCommands = this._nodeCommands;
-            var length = nodeCommands.length;
-            for (var i = 0; i < length; ++i) {
-                nodeCommands[i].update(frameState);
-            }
+            this._runtimeNode.primitive.update(frameState);
         }
     };
 
@@ -1789,6 +1757,7 @@ define([
 
     ClassificationModel.prototype.destroy = function() {
         this._rendererResources = undefined;
+        this._runtimeNode.primitive = this._runtimeNode.primitive && this._runtimeNode.primitive.destroy();
         return destroyObject(this);
     };
 
