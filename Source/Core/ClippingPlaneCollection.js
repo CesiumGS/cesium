@@ -194,7 +194,7 @@ define([
      * @see ClippingPlaneCollection#get
      */
     ClippingPlaneCollection.prototype.contains = function(plane) {
-        return indexOf(this._planes, plane) > -1;
+        return indexOf(this._planes, plane) !== -1;
     };
 
     /**
@@ -211,7 +211,7 @@ define([
         var planes = this._planes;
         var index = indexOf(planes, plane);
 
-        if (index < 0) {
+        if (index === -1) {
             return false;
         }
 
@@ -366,6 +366,7 @@ define([
      *
      * @type {number}
      * @constant
+     * @readonly
      */
     ClippingPlaneCollection.MAX_CLIPPING_PLANES = 6;
 
