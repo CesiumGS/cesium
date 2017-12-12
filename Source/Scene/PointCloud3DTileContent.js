@@ -521,7 +521,6 @@ define([
             }
         }
 
-        var clippingPlanes = content._tileset.clippingPlanes;
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -541,6 +540,8 @@ define([
                 return content._packedClippingPlanes;
             },
             u_clippingPlanesEdgeStyle : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
+
                 if (!defined(clippingPlanes)) {
                     return Color.WHITE.withAlpha(0.0);
                 }
@@ -1220,13 +1221,12 @@ define([
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
+
         var unionClippingRegions = false;
         var length = 0;
         if (clippingEnabled) {
             unionClippingRegions = clippingPlanes.unionClippingRegions;
-
             length = clippingPlanes.length;
-            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
         }
 
         var packedPlanes = this._packedClippingPlanes;
@@ -1246,10 +1246,6 @@ define([
 
             this._readyPromise.resolve(this);
             this._parsedContent = undefined; // Unload
-        }
-
-        if (clippingEnabled) {
-            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
         if (this._isClipped !== clippingEnabled || this._unionClippingRegions !== unionClippingRegions) {
@@ -1293,6 +1289,11 @@ define([
 
             this._drawCommand.boundingVolume = boundingVolume;
             this._pickCommand.boundingVolume = boundingVolume;
+        }
+
+        if (clippingEnabled) {
+            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
         this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);
