@@ -103,10 +103,6 @@ define([
         this.buffers = {};
         this.pendingBufferLoads = 0;
 
-        this.programsToCreate = new Queue();
-        this.pendingShaderLoads = 0;
-
-        this.createVertexArrays = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
     }
@@ -121,24 +117,13 @@ define([
                 (this.indexBuffersToCreate.length === 0));
     };
 
-    LoadResources.prototype.finishedProgramCreation = function() {
-        return ((this.pendingShaderLoads === 0) && (this.programsToCreate.length === 0));
-    };
-
-    LoadResources.prototype.finishedEverythingButTextureCreation = function() {
-        var finishedPendingLoads =
-            (this.pendingBufferLoads === 0) &&
-            (this.pendingShaderLoads === 0);
+    LoadResources.prototype.finished = function() {
+        var finishedPendingLoads = this.pendingBufferLoads === 0;
         var finishedResourceCreation =
             (this.vertexBuffersToCreate.length === 0) &&
-            (this.indexBuffersToCreate.length === 0) &&
-            (this.programsToCreate.length === 0);
+            (this.indexBuffersToCreate.length === 0);
 
         return finishedPendingLoads && finishedResourceCreation;
-    };
-
-    LoadResources.prototype.finished = function() {
-        return this.finishedEverythingButTextureCreation();
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -315,16 +300,15 @@ define([
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
         this._extensionsUsed = undefined;     // Cached used glTF extensions
         this._extensionsRequired = undefined; // Cached required glTF extensions
-        this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
-        this._programPrimitives = {};
+        this._quantizedUniforms = undefined;  // Quantized uniforms for WEB3D_quantized_attributes
         this._rendererResources = {       // Cached between models with the same url/cache-key
-            buffers : {},
-            programs : {},
-            pickPrograms : {}
+            buffers : {}
         };
         this._updatedGltfVersion = false;
 
         this._vertexArray = undefined;
+        this._shaderProgram = undefined;
+        this._pickShaderProgram = undefined;
 
         this._geometryByteLength = 0;
         this._trianglesLength = 0;
@@ -700,12 +684,6 @@ define([
         });
     }
 
-    function parsePrograms(model) {
-        ForEach.program(model.gltf, function(program, id) {
-            model._loadResources.programsToCreate.enqueue(id);
-        });
-    }
-
     var nodeTranslationScratch = new Cartesian3();
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
@@ -729,27 +707,6 @@ define([
                 uniformMap : undefined,
                 values : undefined
             };
-        });
-    }
-
-    function parseMeshes(model) {
-        if (!defined(model.extensionsUsed.WEB3D_quantized_attributes)) {
-            return;
-        }
-        ForEach.mesh(model.gltf, function(mesh, id) {
-            // Cache primitives according to their program
-            var primitives = mesh.primitives;
-            var primitivesLength = primitives.length;
-            for (var i = 0; i < primitivesLength; i++) {
-                var primitive = primitives[i];
-                var programId = getProgramForPrimitive(model, primitive);
-                var programPrimitives = model._programPrimitives[programId];
-                if (!defined(programPrimitives)) {
-                    programPrimitives = [];
-                    model._programPrimitives[programId] = programPrimitives;
-                }
-                programPrimitives.push(primitive);
-            }
         });
     }
 
@@ -874,78 +831,73 @@ define([
         return undefined;
     }
 
-    function modifyShaderForQuantizedAttributes(shader, programName, model) {
+    function modifyShaderForQuantizedAttributes(shader, model) {
         var quantizedUniforms = {};
-        model._quantizedUniforms[programName] = quantizedUniforms;
+        model._quantizedUniforms = quantizedUniforms;
 
         var primitive = model.gltf.meshes[0].primitives[0];
+        for (var attributeSemantic in primitive.attributes) {
+            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                var accessorId = primitive.attributes[attributeSemantic];
 
-        if (getProgramForPrimitive(model, primitive) === programName) {
-            for (var attributeSemantic in primitive.attributes) {
-                if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                    var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
-                    var accessorId = primitive.attributes[attributeSemantic];
+                if (attributeSemantic.charAt(0) === '_') {
+                    attributeSemantic = attributeSemantic.substring(1);
+                }
+                var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
 
-                    if (attributeSemantic.charAt(0) === '_') {
-                        attributeSemantic = attributeSemantic.substring(1);
-                    }
-                    var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
+                var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
+                    var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                    if (defined(quantizedAttributes)) {
+                        var decodeMatrix = quantizedAttributes.decodeMatrix;
+                        var newMain = 'gltf_decoded_' + attributeSemantic;
+                        var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
+                        var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
-                    var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
-                    var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
-                    if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
-                        var quantizedAttributes = getQuantizedAttributes(model, accessorId);
-                        if (defined(quantizedAttributes)) {
-                            var decodeMatrix = quantizedAttributes.decodeMatrix;
-                            var newMain = 'gltf_decoded_' + attributeSemantic;
-                            var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
-                            var size = Math.floor(Math.sqrt(decodeMatrix.length));
-
-                            // replace usages of the original attribute with the decoded version, but not the declaration
-                            shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
-                            // declare decoded attribute
-                            var variableType;
-                            if (size > 2) {
-                                variableType = 'vec' + (size - 1);
-                            } else {
-                                variableType = 'float';
-                            }
-                            shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
-                            // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
-                            // uniform in the shader (32-bit floating point)
-                            var decode = '';
-                            if (size === 5) {
-                                // separate scale and translate since glsl doesn't have mat5
-                                shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
-                                shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
-                                decode = '\n' +
-                                         'void main() {\n' +
-                                         '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
-                                         '    ' + newMain + '();\n' +
-                                         '}\n';
-
-                                quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
-                                quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
-                            }
-                            else {
-                                shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
-                                decode = '\n' +
-                                         'void main() {\n' +
-                                         '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                         '    ' + newMain + '();\n' +
-                                         '}\n';
-
-                                quantizedUniforms[decodeUniformVarName] = {mat : size};
-                            }
-                            shader = ShaderSource.replaceMain(shader, newMain);
-                            shader += decode;
+                        // replace usages of the original attribute with the decoded version, but not the declaration
+                        shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                        // declare decoded attribute
+                        var variableType;
+                        if (size > 2) {
+                            variableType = 'vec' + (size - 1);
+                        } else {
+                            variableType = 'float';
                         }
+                        shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+                        // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
+                        // uniform in the shader (32-bit floating point)
+                        var decode = '';
+                        if (size === 5) {
+                            // separate scale and translate since glsl doesn't have mat5
+                            shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
+                            shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
+                            decode = '\n' +
+                                     'void main() {\n' +
+                                     '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
+                                     '    ' + newMain + '();\n' +
+                                     '}\n';
+
+                            quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
+                            quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
+                        }
+                        else {
+                            shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
+                            decode = '\n' +
+                                     'void main() {\n' +
+                                     '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                     '    ' + newMain + '();\n' +
+                                     '}\n';
+
+                            quantizedUniforms[decodeUniformVarName] = {mat : size};
+                        }
+                        shader = ShaderSource.replaceMain(shader, newMain);
+                        shader += decode;
                     }
                 }
             }
         }
-        // This is not needed after the program is processed, free the memory
-        model._programPrimitives[programName] = undefined;
         return shader;
     }
 
@@ -956,7 +908,7 @@ define([
         return shader;
     }
 
-    function createProgram(id, model) {
+    function createProgram(model) {
         var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
         var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
 
@@ -1004,13 +956,13 @@ define([
             '}\n';
 
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            vs = modifyShaderForQuantizedAttributes(vs, id, model);
+            vs = modifyShaderForQuantizedAttributes(vs, model);
         }
 
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
-        model._rendererResources.programs[id] = {
+        model._shaderProgram = {
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
@@ -1020,31 +972,11 @@ define([
         var pickVS = modifyShader(vs, model._pickVertexShaderLoaded);
         var pickFS = modifyShader(fs, model._pickFragmentShaderLoaded);
 
-        model._rendererResources.pickPrograms[id] = {
+        model._pickShaderProgram = {
             vertexShaderSource : pickVS,
             fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         };
-    }
-
-    function createPrograms(model) {
-        var loadResources = model._loadResources;
-        var programsToCreate = loadResources.programsToCreate;
-
-        if (loadResources.pendingShaderLoads !== 0) {
-            return;
-        }
-
-        // PERFORMANCE_IDEA: this could be more fine-grained by looking
-        // at the shader's bufferView's to determine the buffer dependencies.
-        if (loadResources.pendingBufferLoads !== 0) {
-            return;
-        }
-
-        // Create all loaded programs this frame
-        while (programsToCreate.length > 0) {
-            createProgram(programsToCreate.dequeue(), model);
-        }
     }
 
     function getAttributeLocations() {
@@ -1056,15 +988,13 @@ define([
 
     function createVertexArrays(model) {
         var loadResources = model._loadResources;
-
-        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
+        if (!loadResources.finishedBuffersCreation()) {
             return;
         }
 
-        if (!loadResources.createVertexArrays) {
+        if (defined(model._vertexArray)) {
             return;
         }
-        loadResources.createVertexArrays = false;
 
         var rendererBuffers = model._rendererResources.buffers;
         var gltf = model.gltf;
@@ -1187,10 +1117,6 @@ define([
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedProgramCreation()) {
-            return;
-        }
-
         if (!loadResources.createUniformMaps) {
             return;
         }
@@ -1245,8 +1171,7 @@ define([
     function createUniformsForQuantizedAttributes(model, primitive, context) {
         var gltf = model.gltf;
         var accessors = gltf.accessors;
-        var programId = getProgramForPrimitive(model, primitive);
-        var quantizedUniforms = model._quantizedUniforms[programId];
+        var quantizedUniforms = model._quantizedUniforms;
         var setUniforms = {};
         var uniformMap = {};
 
@@ -1334,11 +1259,7 @@ define([
     function createCommand(model, gltfNode, runtimeNode, context) {
         var batchTable = model._batchTable;
 
-        var resources = model._rendererResources;
-        var rendererPrograms = resources.programs;
-        var rendererPickPrograms = resources.pickPrograms;
         var uniformMaps = model._uniformMaps;
-
         var vertexArray = model._vertexArray;
 
         var gltf = model.gltf;
@@ -1463,13 +1384,13 @@ define([
             color : Color.WHITE
         }));
 
-        var shader = rendererPrograms[technique.program];
+        var shader = model._shaderProgram;
         var vertexShaderSource = shader.vertexShaderSource;
         var fragmentShaderSource = shader.fragmentShaderSource;
         var attributeLocations = shader.attributeLocations;
 
         var pickUniformMap;
-        var pickShader = rendererPickPrograms[technique.program];
+        var pickShader = model._pickShaderProgram;
         var pickVertexShaderSource = pickShader.vertexShaderSource;
         var pickFragmentShaderSource = pickShader.fragmentShaderSource;
 
@@ -1508,7 +1429,7 @@ define([
     function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedEverythingButTextureCreation()) {
+        if (!loadResources.finished()) {
             return;
         }
 
@@ -1539,7 +1460,7 @@ define([
 
         checkSupportedGlExtensions(model, context);
         createBuffers(model); // using glTF bufferViews
-        createPrograms(model);
+        createProgram(model);
         createVertexArrays(model); // using glTF meshes
         createUniformMaps(model, context);  // using glTF materials/techniques
         createRuntimeNodes(model, context); // using glTF scene
@@ -1677,15 +1598,13 @@ define([
                     addBuffersToLoadResources(this);
 
                     parseBufferViews(this);
-                    parsePrograms(this);
                     parseMaterials(this);
-                    parseMeshes(this);
 
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
                     this._updatedGltfVersion = true;
                 }
-                if (this._updatedGltfVersion && loadResources.pendingShaderLoads === 0) {
+                if (this._updatedGltfVersion) {
                     createResources(this, frameState);
                 }
             }
