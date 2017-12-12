@@ -104,7 +104,6 @@ define([
         this.pendingBufferLoads = 0;
 
         this.createUniformMaps = true;
-        this.createRuntimeNodes = true;
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
@@ -278,24 +277,9 @@ define([
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._dirty = false;                       // true when the model was transformed this frame
-        this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
-        this._runtimeNode = {
-            matrix : undefined,
-            translation : undefined,
-            rotation : undefined,
-            scale : undefined,
-
-            // Per-node show inherited from parent
-            computedShow : true,
-
-            // Computed transforms
-            transformToRoot : new Matrix4(),
-            computedMatrix : new Matrix4(),
-            dirtyNumber : 0,                    // The frame this node was made dirty by an animation; for graph traversal
-
-            primitive : undefined
-        };
+        this._nodeMatrix = new Matrix4();
+        this._primitive = undefined;
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
         this._extensionsUsed = undefined;     // Cached used glTF extensions
@@ -1256,7 +1240,7 @@ define([
         }
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, context) {
         var batchTable = model._batchTable;
 
         var uniformMaps = model._uniformMaps;
@@ -1265,18 +1249,8 @@ define([
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-        var techniques = gltf.techniques;
-        var materials = gltf.materials;
-
-        var id = gltfNode.mesh;
-        var mesh = gltfMeshes[id];
-
-        var primitive = mesh.primitives[0];
-
+        var primitive = gltfMeshes[0].primitives[0];
         var ix = accessors[primitive.indices];
-        var material = materials[primitive.material];
-        var technique = techniques[material.technique];
-        var programId = technique.program;
 
         var boundingSphere;
         var positionAccessor = primitive.attributes.POSITION;
@@ -1304,7 +1278,7 @@ define([
 
         // Allow callback to modify the uniformMap
         if (defined(model._uniformMapLoaded)) {
-            uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
+            uniformMap = model._uniformMapLoaded(uniformMap);
         }
 
         // Add uniforms for decoding quantized attributes if used
@@ -1403,7 +1377,7 @@ define([
             pickUniformMap = combine(uniformMap);
         }
 
-        runtimeNode.primitive = new Vector3DTilePrimitive({
+        model._primitive = new Vector3DTilePrimitive({
             classificationType : model._classificationType,
             positions : positionsBuffer,
             indices : indices,
@@ -1428,31 +1402,28 @@ define([
 
     function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
-
         if (!loadResources.finished()) {
             return;
         }
 
-        if (!loadResources.createRuntimeNodes) {
+        if (defined(model._primitive)) {
             return;
         }
-        loadResources.createRuntimeNodes = false;
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
         var gltfNode = nodes[0];
-        var runtimeNode = model._runtimeNode;
         if (defined(gltfNode.matrix)) {
-            runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
+            model._nodeMatrix = Matrix4.fromColumnMajorArray(gltfNode.matrix, model._nodeMatrix);
         } else {
             // TRS converted to Cesium types
-            var rotation = gltfNode.rotation;
-            runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
-            runtimeNode.rotation = Quaternion.unpack(rotation);
-            runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
+            var translation = Cartesian3.fromArray(gltfNode.translation);
+            var rotation = Quaternion.unpack(gltfNode.rotation);
+            var scale = Cartesian3.fromArray(gltfNode.scale);
+            model._nodeMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, model._nodeMatrix);
         }
 
-        createCommand(model, gltfNode, runtimeNode, context);
+        createCommand(model, context);
     }
 
     function createResources(model, frameState) {
@@ -1472,8 +1443,6 @@ define([
     var scratchComputedMatrixIn2D = new Matrix4();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
-        var maxDirtyNumber = model._maxDirtyNumber;
-
         var computedModelMatrix = model._computedModelMatrix;
 
         if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
@@ -1493,29 +1462,16 @@ define([
             }
         }
 
-        var n = model._runtimeNode;
-        var transformToRoot = n.transformToRoot;
-        var primitive = n.primitive;
+        var primitive = model._primitive;
 
-        if (defined(n.matrix)) {
-            Matrix4.clone(n.matrix, transformToRoot);
-        } else {
-            Matrix4.fromTranslationQuaternionRotationScale(n.translation, n.rotation, n.scale, transformToRoot);
-        }
-
-        if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
-            var nodeMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
-            Matrix4.clone(nodeMatrix, primitive._modelMatrix);
-
-            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (including animation)
+        if (modelTransformChanged || justLoaded) {
+            Matrix4.multiplyTransformation(computedModelMatrix, model._nodeMatrix, primitive._modelMatrix);
             BoundingSphere.transform(primitive._boundingSphere, primitive._modelMatrix, primitive._boundingVolume);
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, primitive._boundingVolume.center, primitive._boundingVolume.center);
             }
         }
-
-        ++model._maxDirtyNumber;
     }
 
     function checkSupportedExtensions(model) {
@@ -1551,7 +1507,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     ClassificationModel.prototype.updateCommands = function(batchId, color) {
-        this._runtimeNode.primitive.updateCommands(batchId, color);
+        this._primitive.updateCommands(batchId, color);
     };
 
     ClassificationModel.prototype.update = function(frameState) {
@@ -1666,7 +1622,7 @@ define([
         }
 
         if (show && !this._ignoreCommands) {
-            this._runtimeNode.primitive.update(frameState);
+            this._primitive.update(frameState);
         }
     };
 
@@ -1676,7 +1632,7 @@ define([
 
     ClassificationModel.prototype.destroy = function() {
         this._rendererResources = undefined;
-        this._runtimeNode.primitive = this._runtimeNode.primitive && this._runtimeNode.primitive.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 
