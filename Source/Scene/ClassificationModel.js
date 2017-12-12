@@ -102,8 +102,6 @@ define([
         this.indexBuffersToCreate = new Queue();
         this.buffers = {};
         this.pendingBufferLoads = 0;
-
-        this.createUniformMaps = true;
     }
 
     LoadResources.prototype.getBuffer = function(bufferView) {
@@ -293,6 +291,7 @@ define([
         this._vertexArray = undefined;
         this._shaderProgram = undefined;
         this._pickShaderProgram = undefined;
+        this._uniformMap = undefined;
 
         this._geometryByteLength = 0;
         this._trianglesLength = 0;
@@ -681,17 +680,6 @@ define([
             Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
             Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
             Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
-    }
-
-    function parseMaterials(model) {
-        var uniformMaps = model._uniformMaps;
-        ForEach.material(model.gltf, function(material, id) {
-            // Allocated now so ModelMaterial can keep a reference to it.
-            uniformMaps[id] = {
-                uniformMap : undefined,
-                values : undefined
-            };
-        });
     }
 
     function getUsedExtensions(model) {
@@ -1099,46 +1087,29 @@ define([
     }
 
     function createUniformMaps(model, context) {
-        var loadResources = model._loadResources;
-
-        if (!loadResources.createUniformMaps) {
+        if (defined(model._uniformMap)) {
             return;
         }
-        loadResources.createUniformMaps = false;
 
-        var gltf = model.gltf;
-        var materials = gltf.materials;
-        var techniques = gltf.techniques;
-        var uniformMaps = model._uniformMaps;
+        var techniques = model.gltf.techniques;
+        var technique = techniques[0];
+        var parameters = technique.parameters;
+        var uniforms = technique.uniforms;
 
-        for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
-                var material = materials[materialId];
-                var technique = techniques[material.technique];
-                var parameters = technique.parameters;
-                var uniforms = technique.uniforms;
+        var uniformMap = {};
+        for (var name in uniforms) {
+            if (uniforms.hasOwnProperty(name) && name !== 'extras') {
+                var parameterName = uniforms[name];
+                var parameter = parameters[parameterName];
 
-                var uniformMap = {};
-                var uniformValues = {};
-
-                // Uniform parameters
-                for (var name in uniforms) {
-                    if (uniforms.hasOwnProperty(name) && name !== 'extras') {
-                        var parameterName = uniforms[name];
-                        var parameter = parameters[parameterName];
-
-                        if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
-                            continue;
-                        }
-                        uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
-                    }
+                if (!defined(parameter.semantic) || !defined(gltfSemanticUniforms[parameter.semantic])) {
+                    continue;
                 }
-
-                var u = uniformMaps[materialId];
-                u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
-                u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
+                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState, model);
             }
         }
+
+        model._uniformMap = uniformMap;
     }
 
     function scaleFromMatrix5Array(matrix) {
@@ -1152,7 +1123,7 @@ define([
         return [matrix[20], matrix[21], matrix[22], matrix[23]];
     }
 
-    function createUniformsForQuantizedAttributes(model, primitive, context) {
+    function createUniformsForQuantizedAttributes(model, primitive) {
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var quantizedUniforms = model._quantizedUniforms;
@@ -1240,10 +1211,10 @@ define([
         }
     }
 
-    function createCommand(model, context) {
+    function createCommand(model) {
         var batchTable = model._batchTable;
 
-        var uniformMaps = model._uniformMaps;
+        var uniformMap = model._uniformMap;
         var vertexArray = model._vertexArray;
 
         var gltf = model.gltf;
@@ -1274,8 +1245,6 @@ define([
         // Update model triangle count using number of indices
         model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
-        var uniformMap = uniformMaps[primitive.material].uniformMap;
-
         // Allow callback to modify the uniformMap
         if (defined(model._uniformMapLoaded)) {
             uniformMap = model._uniformMapLoaded(uniformMap);
@@ -1283,7 +1252,7 @@ define([
 
         // Add uniforms for decoding quantized attributes if used
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
+            var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
             uniformMap = combine(uniformMap, quantizedUniformMap);
         }
 
@@ -1423,7 +1392,7 @@ define([
             model._nodeMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, model._nodeMatrix);
         }
 
-        createCommand(model, context);
+        createCommand(model);
     }
 
     function createResources(model, frameState) {
@@ -1554,7 +1523,6 @@ define([
                     addBuffersToLoadResources(this);
 
                     parseBufferViews(this);
-                    parseMaterials(this);
 
                     this._boundingSphere = computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
