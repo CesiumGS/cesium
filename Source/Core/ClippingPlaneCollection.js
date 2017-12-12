@@ -103,6 +103,7 @@ define([
          *
          * @memberof ClippingPlaneCollection.prototype
          * @type {Number}
+         * @readonly
          */
         length : {
             get : function() {
@@ -366,7 +367,6 @@ define([
      *
      * @type {number}
      * @constant
-     * @readonly
      */
     ClippingPlaneCollection.MAX_CLIPPING_PLANES = 6;
 
