@@ -501,5 +501,93 @@ define([
         return uniformMap;
     };
 
+    // This doesn't support LOCAL, which we could add if it is ever used.
+    var scratchTranslationRtc = new Cartesian3();
+    var gltfSemanticUniforms = {
+        MODEL : function(uniformState, model) {
+            return function() {
+                return uniformState.model;
+            };
+        },
+        VIEW : function(uniformState, model) {
+            return function() {
+                return uniformState.view;
+            };
+        },
+        PROJECTION : function(uniformState, model) {
+            return function() {
+                return uniformState.projection;
+            };
+        },
+        MODELVIEW : function(uniformState, model) {
+            return function() {
+                return uniformState.modelView;
+            };
+        },
+        CESIUM_RTC_MODELVIEW : function(uniformState, model) {
+            // CESIUM_RTC extension
+            var mvRtc = new Matrix4();
+            return function() {
+                if (defined(model._rtcCenter)) {
+                    Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
+                    Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
+                    Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
+                    return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
+                }
+                return uniformState.modelView;
+            };
+        },
+        MODELVIEWPROJECTION : function(uniformState, model) {
+            return function() {
+                return uniformState.modelViewProjection;
+            };
+        },
+        MODELINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseModel;
+            };
+        },
+        VIEWINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseView;
+            };
+        },
+        PROJECTIONINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseProjection;
+            };
+        },
+        MODELVIEWINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseModelView;
+            };
+        },
+        MODELVIEWPROJECTIONINVERSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseModelViewProjection;
+            };
+        },
+        MODELINVERSETRANSPOSE : function(uniformState, model) {
+            return function() {
+                return uniformState.inverseTransposeModel;
+            };
+        },
+        MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
+            return function() {
+                return uniformState.normal;
+            };
+        },
+        VIEWPORT : function(uniformState, model) {
+            return function() {
+                return uniformState.viewportCartesian4;
+            };
+        }
+        // JOINTMATRIX created in createCommand()
+    };
+
+    ModelUtility.getGltfSemanticUniforms = function() {
+        return gltfSemanticUniforms;
+    };
+
     return ModelUtility;
 });

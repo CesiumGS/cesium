@@ -788,36 +788,18 @@ define([
         };
     }
 
-    // This doesn't support LOCAL, which we could add if it is ever used.
-    var scratchTranslationRtc = new Cartesian3();
     var gltfSemanticUniforms = {
         PROJECTION : function(uniformState, model) {
-            return function() {
-                return uniformState.projection;
-            };
+            return ModelUtility.getGltfSemanticUniforms().PROJECTION(uniformState, model);
         },
         MODELVIEW : function(uniformState, model) {
-            return function() {
-                return uniformState.modelView;
-            };
+            return ModelUtility.getGltfSemanticUniforms().MODELVIEW(uniformState, model);
         },
         CESIUM_RTC_MODELVIEW : function(uniformState, model) {
-            // CESIUM_RTC extension
-            var mvRtc = new Matrix4();
-            return function() {
-                if (defined(model._rtcCenter)) {
-                    Matrix4.getTranslation(uniformState.model, scratchTranslationRtc);
-                    Cartesian3.add(scratchTranslationRtc, model._rtcCenter, scratchTranslationRtc);
-                    Matrix4.multiplyByPoint(uniformState.view, scratchTranslationRtc, scratchTranslationRtc);
-                    return Matrix4.setTranslation(uniformState.modelView, scratchTranslationRtc, mvRtc);
-                }
-                return uniformState.modelView;
-            };
+            return ModelUtility.getGltfSemanticUniforms().CESIUM_RTC_MODELVIEW(uniformState, model);
         },
         MODELVIEWPROJECTION : function(uniformState, model) {
-            return function() {
-                return uniformState.modelViewProjection;
-            };
+            return ModelUtility.getGltfSemanticUniforms().MODELVIEWPROJECTION(uniformState, model);
         }
     };
 
