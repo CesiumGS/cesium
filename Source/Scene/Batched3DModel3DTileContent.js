@@ -18,8 +18,8 @@ define([
         './Cesium3DTileFeatureTable',
         './ClassificationModel',
         './ClippingPlaneCollection',
-        './getAttributeOrUniformBySemantic',
-        './Model'
+        './Model',
+        './ModelUtility'
     ], function(
         Color,
         defaultValue,
@@ -40,8 +40,8 @@ define([
         Cesium3DTileFeatureTable,
         ClassificationModel,
         ClippingPlaneCollection,
-        getAttributeOrUniformBySemantic,
-        Model) {
+        Model,
+        ModelUtility) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -195,9 +195,9 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     function getBatchIdAttributeName(gltf) {
-        var batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, '_BATCHID');
+        var batchIdAttributeName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_BATCHID');
         if (!defined(batchIdAttributeName)) {
-            batchIdAttributeName = getAttributeOrUniformBySemantic(gltf, 'BATCHID');
+            batchIdAttributeName = ModelUtility.getAttributeOrUniformBySemantic(gltf, 'BATCHID');
             if (defined(batchIdAttributeName)) {
                 Batched3DModel3DTileContent._deprecationWarning('b3dm-legacy-batchid', 'The glTF in this b3dm uses the semantic `BATCHID`. Application-specific semantics should be prefixed with an underscore: `_BATCHID`.');
             }
@@ -231,7 +231,7 @@ define([
             var batchTable = content._batchTable;
             var gltf = content._model.gltf;
             var handleTranslucent = !defined(content._tileset.classificationType);
-            var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+            var diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
             var callback = batchTable.getFragmentShaderCallback(handleTranslucent, diffuseUniformName);
             return defined(callback) ? callback(fs) : fs;
         };

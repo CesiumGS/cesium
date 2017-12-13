@@ -35,7 +35,8 @@ define([
         './AttributeType',
         './Axis',
         './ClassificationType',
-        './getAttributeOrUniformBySemantic',
+        './ModelLoadResources',
+        './ModelUtility',
         './SceneMode',
         './Vector3DTileBatch',
         './Vector3DTilePrimitive'
@@ -76,7 +77,8 @@ define([
         AttributeType,
         Axis,
         ClassificationType,
-        getAttributeOrUniformBySemantic,
+        ModelLoadResources,
+        ModelUtility,
         SceneMode,
         Vector3DTileBatch,
         Vector3DTilePrimitive) {
@@ -95,32 +97,6 @@ define([
         LOADING : 1,
         LOADED : 2,
         FAILED : 3
-    };
-
-    function LoadResources() {
-        this.vertexBuffersToCreate = new Queue();
-        this.indexBuffersToCreate = new Queue();
-        this.buffers = {};
-        this.pendingBufferLoads = 0;
-    }
-
-    LoadResources.prototype.getBuffer = function(bufferView) {
-        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    };
-
-    LoadResources.prototype.finishedBuffersCreation = function() {
-        return ((this.pendingBufferLoads === 0) &&
-                (this.vertexBuffersToCreate.length === 0) &&
-                (this.indexBuffersToCreate.length === 0));
-    };
-
-    LoadResources.prototype.finished = function() {
-        var finishedPendingLoads = this.pendingBufferLoads === 0;
-        var finishedResourceCreation =
-            (this.vertexBuffersToCreate.length === 0) &&
-            (this.indexBuffersToCreate.length === 0);
-
-        return finishedPendingLoads && finishedResourceCreation;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -258,12 +234,6 @@ define([
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
         this._batchTable = options.batchTable;
 
-        /**
-         * @private
-         * @readonly
-         */
-        this.cull = defaultValue(options.cull, true);
-
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and axis
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
@@ -272,22 +242,17 @@ define([
         this._loadResources = undefined;
 
         this._mode = undefined;
-
-        this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._dirty = false;                       // true when the model was transformed this frame
 
         this._nodeMatrix = new Matrix4();
         this._primitive = undefined;
 
-        this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
         this._extensionsUsed = undefined;     // Cached used glTF extensions
         this._extensionsRequired = undefined; // Cached required glTF extensions
         this._quantizedUniforms = undefined;  // Quantized uniforms for WEB3D_quantized_attributes
-        this._rendererResources = {       // Cached between models with the same url/cache-key
-            buffers : {}
-        };
         this._updatedGltfVersion = false;
 
+        this._buffers = {};
         this._vertexArray = undefined;
         this._shaderProgram = undefined;
         this._pickShaderProgram = undefined;
@@ -447,7 +412,7 @@ define([
         extensionsUsed : {
             get : function() {
                 if (!defined(this._extensionsUsed)) {
-                    this._extensionsUsed = getUsedExtensions(this);
+                    this._extensionsUsed = ModelUtility.getUsedExtensions(this.gltf);
                 }
                 return this._extensionsUsed;
             }
@@ -456,7 +421,7 @@ define([
         extensionsRequired : {
             get : function() {
                 if (!defined(this._extensionsRequired)) {
-                    this._extensionsRequired = getRequiredExtensions(this);
+                    this._extensionsRequired = ModelUtility.getRequiredExtensions(this.gltf);
                 }
                 return this._extensionsRequired;
             }
@@ -525,35 +490,8 @@ define([
         }
     });
 
-    /**
-     * This function differs from the normal subarray function
-     * because it takes offset and length, rather than begin and end.
-     */
-    function getSubarray(array, offset, length) {
-        return array.subarray(offset, offset + length);
-    }
-
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
-
-    function getAccessorMinMax(gltf, accessorId) {
-        var accessor = gltf.accessors[accessorId];
-        var extensions = accessor.extensions;
-        var accessorMin = accessor.min;
-        var accessorMax = accessor.max;
-        // If this accessor is quantized, we should use the decoded min and max
-        if (defined(extensions)) {
-            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-            if (defined(quantizedAttributes)) {
-                accessorMin = quantizedAttributes.decodedMin;
-                accessorMax = quantizedAttributes.decodedMax;
-            }
-        }
-        return {
-            min : accessorMin,
-            max : accessorMax
-        };
-    }
 
     function computeBoundingSphere(model) {
         var gltf = model.gltf;
@@ -566,11 +504,11 @@ define([
         var n = gltfNodes[0];
         var meshId = n.mesh;
 
-        var transformToRoot = getTransform(n);
+        var transformToRoot = ModelUtility.getTransform(n);
         var mesh = gltfMeshes[meshId];
         var primitive = mesh.primitives[0];
         var positionAccessor = primitive.attributes.POSITION;
-        var minMax = getAccessorMinMax(gltf, positionAccessor);
+        var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
         var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
         var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
         if (defined(min) && defined(max)) {
@@ -667,56 +605,12 @@ define([
         });
     }
 
-    var nodeTranslationScratch = new Cartesian3();
-    var nodeQuaternionScratch = new Quaternion();
-    var nodeScaleScratch = new Cartesian3();
-
-    function getTransform(node) {
-        if (defined(node.matrix)) {
-            return Matrix4.fromArray(node.matrix);
-        }
-
-        return Matrix4.fromTranslationQuaternionRotationScale(
-            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
-            Quaternion.unpack(node.rotation, 0, nodeQuaternionScratch),
-            Cartesian3.fromArray(node.scale, 0, nodeScaleScratch));
-    }
-
-    function getUsedExtensions(model) {
-        var extensionsUsed = model.gltf.extensionsUsed;
-        var cachedExtensionsUsed = {};
-
-        if (defined(extensionsUsed)) {
-            var extensionsUsedLength = extensionsUsed.length;
-            for (var i = 0; i < extensionsUsedLength; i++) {
-                var extension = extensionsUsed[i];
-                cachedExtensionsUsed[extension] = true;
-            }
-        }
-        return cachedExtensionsUsed;
-    }
-
-    function getRequiredExtensions(model) {
-        var extensionsRequired = model.gltf.extensionsRequired;
-        var cachedExtensionsRequired = {};
-
-        if (defined(extensionsRequired)) {
-            var extensionsRequiredLength = extensionsRequired.length;
-            for (var i = 0; i < extensionsRequiredLength; i++) {
-                var extension = extensionsRequired[i];
-                cachedExtensionsRequired[extension] = true;
-            }
-        }
-
-        return cachedExtensionsRequired;
-    }
-
     function createVertexBuffer(bufferViewId, model) {
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
         var vertexBuffer = loadResources.getBuffer(bufferView);
-        model._rendererResources.buffers[bufferViewId] = vertexBuffer;
+        model._buffers[bufferViewId] = vertexBuffer;
         model._geometryByteLength += vertexBuffer.byteLength;
     }
 
@@ -728,7 +622,7 @@ define([
             typedArray : loadResources.getBuffer(bufferView),
             indexDatatype : componentType
         };
-        model._rendererResources.buffers[bufferViewId] = indexBuffer;
+        model._buffers[bufferViewId] = indexBuffer;
         model._geometryByteLength += indexBuffer.typedArray.byteLength;
     }
 
@@ -752,125 +646,11 @@ define([
         }
     }
 
-    function replaceAllButFirstInString(string, find, replace) {
-        var index = string.indexOf(find);
-        return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
-            return index === offset ? match : replace;
-        });
-    }
-
-    function getProgramForPrimitive(model, primitive) {
-        var gltf = model.gltf;
-        var materialId = primitive.material;
-        var material = gltf.materials[materialId];
-        var techniqueId = material.technique;
-        var technique = gltf.techniques[techniqueId];
-        return technique.program;
-    }
-
-    function getQuantizedAttributes(model, accessorId) {
-        var gltf = model.gltf;
-        var accessor = gltf.accessors[accessorId];
-        var extensions = accessor.extensions;
-        if (defined(extensions)) {
-            return extensions.WEB3D_quantized_attributes;
-        }
-        return undefined;
-    }
-
-    function getAttributeVariableName(model, primitive, attributeSemantic) {
-        var gltf = model.gltf;
-        var materialId = primitive.material;
-        var material = gltf.materials[materialId];
-        var techniqueId = material.technique;
-        var technique = gltf.techniques[techniqueId];
-        for (var parameter in technique.parameters) {
-            if (technique.parameters.hasOwnProperty(parameter)) {
-                var semantic = technique.parameters[parameter].semantic;
-                if (semantic === attributeSemantic) {
-                    var attributes = technique.attributes;
-                    for (var attributeVarName in attributes) {
-                        if (attributes.hasOwnProperty(attributeVarName)) {
-                            var name = attributes[attributeVarName];
-                            if (name === parameter) {
-                                return attributeVarName;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return undefined;
-    }
-
     function modifyShaderForQuantizedAttributes(shader, model) {
-        var quantizedUniforms = {};
-        model._quantizedUniforms = quantizedUniforms;
-
         var primitive = model.gltf.meshes[0].primitives[0];
-        for (var attributeSemantic in primitive.attributes) {
-            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
-                var accessorId = primitive.attributes[attributeSemantic];
-
-                if (attributeSemantic.charAt(0) === '_') {
-                    attributeSemantic = attributeSemantic.substring(1);
-                }
-                var decodeUniformVarName = 'gltf_u_dec_' + attributeSemantic.toLowerCase();
-
-                var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
-                var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
-                if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
-                    var quantizedAttributes = getQuantizedAttributes(model, accessorId);
-                    if (defined(quantizedAttributes)) {
-                        var decodeMatrix = quantizedAttributes.decodeMatrix;
-                        var newMain = 'gltf_decoded_' + attributeSemantic;
-                        var decodedAttributeVarName = attributeVarName.replace('a_', 'gltf_a_dec_');
-                        var size = Math.floor(Math.sqrt(decodeMatrix.length));
-
-                        // replace usages of the original attribute with the decoded version, but not the declaration
-                        shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
-                        // declare decoded attribute
-                        var variableType;
-                        if (size > 2) {
-                            variableType = 'vec' + (size - 1);
-                        } else {
-                            variableType = 'float';
-                        }
-                        shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
-                        // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
-                        // uniform in the shader (32-bit floating point)
-                        var decode = '';
-                        if (size === 5) {
-                            // separate scale and translate since glsl doesn't have mat5
-                            shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
-                            shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
-                            decode = '\n' +
-                                     'void main() {\n' +
-                                     '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
-                                     '    ' + newMain + '();\n' +
-                                     '}\n';
-
-                            quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
-                            quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
-                        }
-                        else {
-                            shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
-                            decode = '\n' +
-                                     'void main() {\n' +
-                                     '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                     '    ' + newMain + '();\n' +
-                                     '}\n';
-
-                            quantizedUniforms[decodeUniformVarName] = {mat : size};
-                        }
-                        shader = ShaderSource.replaceMain(shader, newMain);
-                        shader += decode;
-                    }
-                }
-            }
-        }
-        return shader;
+        var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
+        model._quantizedUniforms = result.uniforms;
+        return result.shader;
     }
 
     function modifyShader(shader, callback) {
@@ -881,23 +661,23 @@ define([
     }
 
     function createProgram(model) {
-        var positionName = getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
-        var batchIdName = getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
+        var positionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'POSITION');
+        var batchIdName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, '_BATCHID');
 
         var attributeLocations = {};
         attributeLocations[positionName] = 0;
         attributeLocations[batchIdName] = 1;
 
-        var modelViewProjectionName = getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
+        var modelViewProjectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEWPROJECTION');
 
         var uniformDecl;
         var computePosition;
 
         if (!defined(modelViewProjectionName)) {
-            var projectionName = getAttributeOrUniformBySemantic(model.gltf, 'PROJECTION');
-            var modelViewName = getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEW');
+            var projectionName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'PROJECTION');
+            var modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'MODELVIEW');
             if (!defined(modelViewName)) {
-                modelViewName = getAttributeOrUniformBySemantic(model.gltf, 'CESIUM_RTC_MODELVIEW');
+                modelViewName = ModelUtility.getAttributeOrUniformBySemantic(model.gltf, 'CESIUM_RTC_MODELVIEW');
             }
 
             uniformDecl =
@@ -958,7 +738,7 @@ define([
         };
     }
 
-    function createVertexArrays(model) {
+    function createVertexArray(model) {
         var loadResources = model._loadResources;
         if (!loadResources.finishedBuffersCreation()) {
             return;
@@ -968,7 +748,7 @@ define([
             return;
         }
 
-        var rendererBuffers = model._rendererResources.buffers;
+        var rendererBuffers = model._buffers;
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var meshes = gltf.meshes;
@@ -1041,52 +821,7 @@ define([
         }
     };
 
-
-    function getVec4UniformFunction(value, model) {
-        var that = {
-            value : Cartesian4.fromArray(value),
-            clone : Cartesian4.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function getMat2UniformFunction(value, model) {
-        var that = {
-            value : Matrix2.fromColumnMajorArray(value),
-            clone : Matrix2.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function getMat3UniformFunction(value, model) {
-        var that = {
-            value : Matrix3.fromColumnMajorArray(value),
-            clone : Matrix3.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function getMat4UniformFunction(value, model) {
-        var that = {
-            value : Matrix4.fromColumnMajorArray(value),
-            clone : Matrix4.clone,
-            func : function() {
-                return that.value;
-            }
-        };
-        return that;
-    }
-
-    function createUniformMaps(model, context) {
+    function createUniformMap(model, context) {
         if (defined(model._uniformMap)) {
             return;
         }
@@ -1112,91 +847,8 @@ define([
         model._uniformMap = uniformMap;
     }
 
-    function scaleFromMatrix5Array(matrix) {
-        return [matrix[0], matrix[1], matrix[2], matrix[3],
-                matrix[5], matrix[6], matrix[7], matrix[8],
-                matrix[10], matrix[11], matrix[12], matrix[13],
-                matrix[15], matrix[16], matrix[17], matrix[18]];
-    }
-
-    function translateFromMatrix5Array(matrix) {
-        return [matrix[20], matrix[21], matrix[22], matrix[23]];
-    }
-
     function createUniformsForQuantizedAttributes(model, primitive) {
-        var gltf = model.gltf;
-        var accessors = gltf.accessors;
-        var quantizedUniforms = model._quantizedUniforms;
-        var setUniforms = {};
-        var uniformMap = {};
-
-        for (var attribute in primitive.attributes) {
-            if (primitive.attributes.hasOwnProperty(attribute)) {
-                var accessorId = primitive.attributes[attribute];
-                var a = accessors[accessorId];
-                var extensions = a.extensions;
-
-                if (attribute.charAt(0) === '_') {
-                    attribute = attribute.substring(1);
-                }
-
-                if (defined(extensions)) {
-                    var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                    if (defined(quantizedAttributes)) {
-                        var decodeMatrix = quantizedAttributes.decodeMatrix;
-                        var uniformVariable = 'gltf_u_dec_' + attribute.toLowerCase();
-
-                        switch (a.type) {
-                            case AttributeType.SCALAR:
-                                uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
-                                setUniforms[uniformVariable] = true;
-                                break;
-                            case AttributeType.VEC2:
-                                uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
-                                setUniforms[uniformVariable] = true;
-                                break;
-                            case AttributeType.VEC3:
-                                uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
-                                setUniforms[uniformVariable] = true;
-                                break;
-                            case AttributeType.VEC4:
-                                // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
-                                var uniformVariableScale = uniformVariable + '_scale';
-                                var uniformVariableTranslate = uniformVariable + '_translate';
-                                uniformMap[uniformVariableScale] = getMat4UniformFunction(scaleFromMatrix5Array(decodeMatrix), model).func;
-                                uniformMap[uniformVariableTranslate] = getVec4UniformFunction(translateFromMatrix5Array(decodeMatrix), model).func;
-                                setUniforms[uniformVariableScale] = true;
-                                setUniforms[uniformVariableTranslate] = true;
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-
-        // If there are any unset quantized uniforms in this program, they should be set to the identity
-        for (var quantizedUniform in quantizedUniforms) {
-            if (quantizedUniforms.hasOwnProperty(quantizedUniform)) {
-                if (!setUniforms[quantizedUniform]) {
-                    var properties = quantizedUniforms[quantizedUniform];
-                    if (defined(properties.mat)) {
-                        if (properties.mat === 2) {
-                            uniformMap[quantizedUniform] = getMat2UniformFunction(Matrix2.IDENTITY, model).func;
-                        } else if (properties.mat === 3) {
-                            uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
-                        } else if (properties.mat === 4) {
-                            uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
-                        }
-                    }
-                    if (defined(properties.vec)) {
-                        if (properties.vec === 4) {
-                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 0], model).func;
-                        }
-                    }
-                }
-            }
-        }
-        return uniformMap;
+        return ModelUtility.createUniformsForQuantizedAttributes(model.gltf, primitive, model._quantizedUniforms);
     }
 
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
@@ -1226,7 +878,7 @@ define([
         var boundingSphere;
         var positionAccessor = primitive.attributes.POSITION;
         if (defined(positionAccessor)) {
-            var minMax = getAccessorMinMax(gltf, positionAccessor);
+            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
             boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
         }
 
@@ -1367,9 +1019,16 @@ define([
             _modelMatrix : new Matrix4(), // updated in update()
             _boundingSphere : boundingSphere // used to update boundingVolume
         });
+
+        // Release CPU resources
+        model._buffers = undefined;
+        model._vertexArray = undefined;
+        model._shaderProgram = undefined;
+        model._pickShaderProgram = undefined;
+        model._uniformMap = undefined;
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model) {
         var loadResources = model._loadResources;
         if (!loadResources.finished()) {
             return;
@@ -1398,12 +1057,12 @@ define([
     function createResources(model, frameState) {
         var context = frameState.context;
 
-        checkSupportedGlExtensions(model, context);
+        ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         createBuffers(model); // using glTF bufferViews
         createProgram(model);
-        createVertexArrays(model); // using glTF meshes
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createVertexArray(model); // using glTF meshes
+        createUniformMap(model, context);  // using glTF materials/techniques
+        createRuntimeNodes(model); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1411,7 +1070,7 @@ define([
     var scratchComputedTranslation = new Cartesian4();
     var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
+    function updateNodeModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var computedModelMatrix = model._computedModelMatrix;
 
         if ((model._mode !== SceneMode.SCENE3D) && !model._ignoreCommands) {
@@ -1439,36 +1098,6 @@ define([
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, primitive._boundingVolume.center, primitive._boundingVolume.center);
-            }
-        }
-    }
-
-    function checkSupportedExtensions(model) {
-        var extensionsRequired = model.extensionsRequired;
-        for (var extension in extensionsRequired) {
-            if (extensionsRequired.hasOwnProperty(extension)) {
-                if (extension !== 'CESIUM_RTC' &&
-                    extension !== 'KHR_technique_webgl' &&
-                    extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common' &&
-                    extension !== 'WEB3D_quantized_attributes') {
-                    throw new RuntimeError('Unsupported glTF Extension: ' + extension);
-                }
-            }
-        }
-    }
-
-    function checkSupportedGlExtensions(model, context) {
-        var glExtensionsUsed = model.gltf.glExtensionsUsed;
-        if (defined(glExtensionsUsed)) {
-            var glExtensionsUsedLength = glExtensionsUsed.length;
-            for (var i = 0; i < glExtensionsUsedLength; i++) {
-                var extension = glExtensionsUsed[i];
-                if (extension !== 'OES_element_index_uint') {
-                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension);
-                } else if (!context.elementIndexUint) {
-                    throw new RuntimeError('OES_element_index_uint WebGL extension is not enabled.');
-                }
             }
         }
     }
@@ -1505,7 +1134,7 @@ define([
                     }
                 }
 
-                this._loadResources = new LoadResources();
+                this._loadResources = new ModelLoadResources();
                 parseBuffers(this);
             }
         }
@@ -1517,20 +1146,14 @@ define([
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
-                if (!this._updatedGltfVersion) {
-                    checkSupportedExtensions(this);
-                    // We do this after to make sure that the ids don't change
-                    addBuffersToLoadResources(this);
+                ModelUtility.checkSupportedExtensions(this.extensionsRequired);
 
-                    parseBufferViews(this);
+                addBuffersToLoadResources(this);
+                parseBufferViews(this);
 
-                    this._boundingSphere = computeBoundingSphere(this);
-                    this._initialRadius = this._boundingSphere.radius;
-                    this._updatedGltfVersion = true;
-                }
-                if (this._updatedGltfVersion) {
-                    createResources(this, frameState);
-                }
+                this._boundingSphere = computeBoundingSphere(this);
+                this._initialRadius = this._boundingSphere.radius;
+                createResources(this, frameState);
             }
             if (loadResources.finished()) {
                 this._state = ModelState.LOADED;
@@ -1574,7 +1197,7 @@ define([
 
             // Update modelMatrix throughout the graph as needed
             if (modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
+                updateNodeModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
             }
         }
@@ -1599,7 +1222,6 @@ define([
     };
 
     ClassificationModel.prototype.destroy = function() {
-        this._rendererResources = undefined;
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
