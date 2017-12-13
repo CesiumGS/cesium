@@ -1185,6 +1185,8 @@ define([
         }
 
         if (show && !this._ignoreCommands) {
+            this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+            this._primitive.debugWireframe = this.debugWireframe;
             this._primitive.update(frameState);
         }
     };
