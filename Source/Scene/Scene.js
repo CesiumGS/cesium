@@ -35,6 +35,7 @@ define([
         '../Core/PixelFormat',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
@@ -113,6 +114,7 @@ define([
         PixelFormat,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
+        TaskProcessor,
         Transforms,
         ClearCommand,
         ComputeEngine,
@@ -210,6 +212,8 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application.
+     * @param {Number} [options.maximumRenderTimeChange=0.5] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -709,6 +713,37 @@ define([
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
+        /**
+         * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
+         * Enabling improves performance of the application.
+         * To render a new frame explicitly in this mode, use {@link requestRender}.
+         *
+         * @see Scene#maximumRenderTimeChange
+         * @see Scene#requestRender
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.requestRenderMode = defaultValue(options.requestRenderMode, false);
+        this._isRendering = true;
+
+        /**
+         * If {@link requestRenderMode} is <code>true</code>, this value defines the maximum change in
+         * simulation time allowed before a render is requested. Lower values decrease the number of frames rendered
+         * and higher values increase the number of frames rendered. If <code>undefined</code>, changes to
+         * the simulation time will never request a render.
+         *
+         * @see Scene#requestRenderMode
+         *
+         * @type {Number}
+         * @default 0.5
+         */
+        this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.5);
+        this._lastRenderTime = undefined;
+
+        this._removeRequestListenerCallback = RequestScheduler.requestLoadedEvent.addEventListener(requestRender(this));
+        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRender(this));
+
         // initial guess at frustums.
         var near = camera.frustum.near;
         var far = camera.frustum.far;
@@ -718,6 +753,12 @@ define([
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
+    }
+
+    var requestRender = function (scene) {
+        return function () {
+            scene.requestRender();
+        }
     }
 
     var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
@@ -2760,13 +2801,7 @@ define([
         this._camera._updateCameraChanged();
     };
 
-    function render(scene, time) {
-        scene._pickPositionCacheDirty = true;
-
-        if (!defined(time)) {
-            time = JulianDate.now();
-        }
-
+    function checkForCameraUpdates(scene) {
         var camera = scene._camera;
         if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
             if (!scene._cameraStartFired) {
@@ -2775,13 +2810,30 @@ define([
             }
             scene._cameraMovedTime = getTimestamp();
             Camera.clone(camera, scene._cameraClone);
-        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+
+            return true;
+        }
+
+        if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
             camera.moveEnd.raiseEvent();
             scene._cameraStartFired = false;
         }
 
-        scene._preRender.raiseEvent(scene, time);
-        scene._jobScheduler.resetBudgets();
+        return false;
+    }
+
+    function update(scene, time) {
+        var context = scene.context;
+        var us = context.uniformState;
+        var frameState = scene._frameState;
+
+        if (defined(scene.globe)) {
+            scene.globe.update(frameState);
+        }
+    }
+
+    function render(scene, time) {
+        scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
         var us = context.uniformState;
@@ -2848,18 +2900,37 @@ define([
         }
 
         context.endFrame();
-        RequestScheduler.update();
         callAfterRenderFunctions(frameState);
-
-        scene._postRender.raiseEvent(scene, time);
     }
 
     /**
      * @private
      */
-    Scene.prototype.render = function(time) {
+    Scene.prototype.render = function (time) {
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
+
+        this._preRender.raiseEvent(this, time);
+        this._jobScheduler.resetBudgets();
+
+        var shouldRender = !this.requestRenderMode;
+
+        var now = JulianDate.clone(time);
+        if (this.requestRenderMode && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, now));
+            shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
+        }
+
+        shouldRender = shouldRender || checkForCameraUpdates(this) || this._isRendering;
+
         try {
-            render(this, time);
+            if (shouldRender) {
+                this._lastRenderTime = now;
+                render(this, time);
+            } else {
+                update(this, time);
+            }
         } catch (error) {
             this._renderError.raiseEvent(this, error);
 
@@ -2867,6 +2938,11 @@ define([
                 throw error;
             }
         }
+
+        RequestScheduler.update();
+
+        this._postRender.raiseEvent(this, time);
+        this._isRendering = false;
     };
 
     /**
@@ -3538,6 +3614,13 @@ define([
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
 
+        if (defined(this._removeRequestListenerCallback)) {
+            this._removeRequestListenerCallback();
+        }
+        if (defined(this._removeTaskProcessorListenerCallback)) {
+            this._removeTaskProcessorListenerCallback();
+        }
+
         return destroyObject(this);
     };
 
@@ -3561,6 +3644,18 @@ define([
      */
     Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
         return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
+    };
+
+    /**
+     * Requests a new rendered frame when {@link requestRenderMode} is set to <code>true</code>.
+     * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
+     *
+     * @see Scene#requestRenderMode
+     */
+    Scene.prototype.requestRender = function() {
+        if (!this._isRendering) {
+            this._isRendering = true;
+        }
     };
 
     return Scene;

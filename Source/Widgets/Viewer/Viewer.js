@@ -288,6 +288,8 @@ define([
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application.
+     * @param {Number} [options.maximumRenderTimeChange=0.5] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -436,7 +438,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
             terrainShadows : options.terrainShadows,
-            mapMode2D : options.mapMode2D
+            mapMode2D : options.mapMode2D,
+            requestRenderMode : options.requestRenderMode,
+            maximumRenderTimeChange : options.maximumRenderTimeChange
         });
 
         var dataSourceCollection = options.dataSources;
