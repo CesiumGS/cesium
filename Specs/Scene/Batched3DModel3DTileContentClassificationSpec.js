@@ -8,7 +8,6 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix4',
         'Core/Rectangle',
@@ -30,7 +29,6 @@ defineSuite([
         Ellipsoid,
         GeometryInstance,
         HeadingPitchRange,
-        HeadingPitchRoll,
         CesiumMath,
         Matrix4,
         Rectangle,
@@ -50,7 +48,7 @@ defineSuite([
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
     var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
-    var withquantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/';
+    var withQuantizationUrl = './Data/Cesium3DTiles/Batched/BatchedWithQuantization/';
 
     function setCamera(longitude, latitude) {
         // One feature is located at the center, point the camera there
@@ -152,12 +150,11 @@ defineSuite([
         var translation = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(new Cartographic(centerLongitude, centerLatitude));
         Cartesian3.multiplyByScalar(translation, -5.0, translation);
 
-        return Cesium3DTilesTester.loadTileset(scene, withquantizationUrl, {
+        return Cesium3DTilesTester.loadTileset(scene, withQuantizationUrl, {
             classificationType : ClassificationType.CESIUM_3D_TILE,
             modelMatrix : Matrix4.fromTranslation(translation)
         }).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
-
 }, 'WebGL');

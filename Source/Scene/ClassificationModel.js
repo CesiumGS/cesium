@@ -131,7 +131,7 @@ define([
 
         var gltfNode = gltfNodes[0];
         var meshId = gltfNode.mesh;
-        if (gltfNodes.length > 1 || !defined(meshId)) {
+        if (gltfNodes.length !== 1 || !defined(meshId)) {
             throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
         }
 
@@ -147,6 +147,11 @@ define([
         var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
         if (!defined(gltfPositionAttribute)) {
             throw new RuntimeError('The mesh must have a position attribute.');
+        }
+
+        var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
+        if (!defined(gltfBatchIdAttribute)) {
+            throw new RuntimeError('The mesh must have a batch id attribute.');
         }
 
         this._gltf = gltf;
