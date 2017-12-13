@@ -2,6 +2,7 @@ defineSuite([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
@@ -15,7 +16,6 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
-        'Scene/ClippingPlaneCollection',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -23,6 +23,7 @@ defineSuite([
         ModelVisualizer,
         BoundingSphere,
         Cartesian3,
+        ClippingPlaneCollection,
         defined,
         DistanceDisplayCondition,
         JulianDate,
@@ -36,7 +37,6 @@ defineSuite([
         EntityCollection,
         ModelGraphics,
         NodeTransformationProperty,
-        ClippingPlaneCollection,
         Globe,
         createScene,
         pollToPromise) {
@@ -162,7 +162,7 @@ defineSuite([
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
         expect(primitive.distanceDisplayCondition).toEqual(new DistanceDisplayCondition(10.0, 100.0));
-        expect(primitive.clippingPlanes.planes).toEqual(clippingPlanes.planes);
+        expect(primitive.clippingPlanes._planes).toEqual(clippingPlanes._planes);
 
         // wait till the model is loaded before we can check node transformations
         return pollToPromise(function() {

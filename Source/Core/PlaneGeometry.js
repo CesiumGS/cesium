@@ -106,6 +106,9 @@ define([
         return result;
     };
 
+    var min = new Cartesian3(-0.5, -0.5, 0.0);
+    var max = new Cartesian3( 0.5,  0.5, 0.0);
+
     /**
      * Computes the geometric representation of a plane, including its vertices, indices, and a bounding sphere.
      *
@@ -115,56 +118,36 @@ define([
     PlaneGeometry.createGeometry = function(planeGeometry) {
         var vertexFormat = planeGeometry._vertexFormat;
 
-        var min = new Cartesian3(-0.5, -0.5, 0.0);
-        var max = new Cartesian3( 0.5,  0.5, 0.0);
-
         var attributes = new GeometryAttributes();
         var indices;
         var positions;
 
-        if (vertexFormat.position &&
-            (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent)) {
-            if (vertexFormat.position) {
-                // 4 corner points.  Duplicated 3 times each for each incident edge/face.
-                positions = new Float64Array(2 * 4 * 3);
+        if (vertexFormat.position) {
+            // 4 corner points.  Duplicated 3 times each for each incident edge/face.
+            positions = new Float64Array(4 * 3);
 
-                // +z face
-                positions[0]  = min.x;
-                positions[1]  = min.y;
-                positions[2]  = 0.0;
-                positions[3]  = max.x;
-                positions[4]  = min.y;
-                positions[5]  = 0.0;
-                positions[6]  = max.x;
-                positions[7]  = max.y;
-                positions[8]  = 0.0;
-                positions[9]  = min.x;
-                positions[10] = max.y;
-                positions[11] = 0.0;
+            // +z face
+            positions[0]  = min.x;
+            positions[1]  = min.y;
+            positions[2]  = 0.0;
+            positions[3]  = max.x;
+            positions[4]  = min.y;
+            positions[5]  = 0.0;
+            positions[6]  = max.x;
+            positions[7]  = max.y;
+            positions[8]  = 0.0;
+            positions[9]  = min.x;
+            positions[10] = max.y;
+            positions[11] = 0.0;
 
-                // -z face
-                positions[12] = min.x;
-                positions[13] = min.y;
-                positions[14] = 0.0;
-                positions[15] = max.x;
-                positions[16] = min.y;
-                positions[17] = 0.0;
-                positions[18] = max.x;
-                positions[19] = max.y;
-                positions[20] = 0.0;
-                positions[21] = min.x;
-                positions[22] = max.y;
-                positions[23] = 0.0;
-
-                attributes.position = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : positions
-                });
-            }
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : positions
+            });
 
             if (vertexFormat.normal) {
-                var normals = new Float32Array(2 * 4 * 3);
+                var normals = new Float32Array(4 * 3);
 
                 // +z face
                 normals[0]  = 0.0;
@@ -180,20 +163,6 @@ define([
                 normals[10] = 0.0;
                 normals[11] = 1.0;
 
-                // -z face
-                normals[12] = 0.0;
-                normals[13] = 0.0;
-                normals[14] = -1.0;
-                normals[15] = 0.0;
-                normals[16] = 0.0;
-                normals[17] = -1.0;
-                normals[18] = 0.0;
-                normals[19] = 0.0;
-                normals[20] = -1.0;
-                normals[21] = 0.0;
-                normals[22] = 0.0;
-                normals[23] = -1.0;
-
                 attributes.normal = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
@@ -202,7 +171,7 @@ define([
             }
 
             if (vertexFormat.st) {
-                var texCoords = new Float32Array(2 * 4 * 2);
+                var texCoords = new Float32Array(4 * 2);
 
                 // +z face
                 texCoords[0]  = 0.0;
@@ -214,16 +183,6 @@ define([
                 texCoords[6]  = 0.0;
                 texCoords[7]  = 1.0;
 
-                // -z face
-                texCoords[8]  = 1.0;
-                texCoords[9]  = 0.0;
-                texCoords[10] = 0.0;
-                texCoords[11] = 0.0;
-                texCoords[12] = 0.0;
-                texCoords[13] = 1.0;
-                texCoords[14] = 1.0;
-                texCoords[15] = 1.0;
-
                 attributes.st = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
@@ -232,7 +191,7 @@ define([
             }
 
             if (vertexFormat.tangent) {
-                var tangents = new Float32Array(2 * 4 * 3);
+                var tangents = new Float32Array(4 * 3);
 
                 // +z face
                 tangents[0]  = 1.0;
@@ -248,20 +207,6 @@ define([
                 tangents[10] = 0.0;
                 tangents[11] = 0.0;
 
-                // -z face
-                tangents[12] = -1.0;
-                tangents[13] = 0.0;
-                tangents[14] = 0.0;
-                tangents[15] = -1.0;
-                tangents[16] = 0.0;
-                tangents[17] = 0.0;
-                tangents[18] = -1.0;
-                tangents[19] = 0.0;
-                tangents[20] = 0.0;
-                tangents[21] = -1.0;
-                tangents[22] = 0.0;
-                tangents[23] = 0.0;
-
                 attributes.tangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
@@ -270,7 +215,7 @@ define([
             }
 
             if (vertexFormat.bitangent) {
-                var bitangents = new Float32Array(2 * 4 * 3);
+                var bitangents = new Float32Array(4 * 3);
 
                 // +z face
                 bitangents[0] = 0.0;
@@ -286,20 +231,6 @@ define([
                 bitangents[10] = 1.0;
                 bitangents[11] = 0.0;
 
-                // -z face
-                bitangents[12] = 0.0;
-                bitangents[13] = 1.0;
-                bitangents[14] = 0.0;
-                bitangents[15] = 0.0;
-                bitangents[16] = 1.0;
-                bitangents[17] = 0.0;
-                bitangents[18] = 0.0;
-                bitangents[19] = 1.0;
-                bitangents[20] = 0.0;
-                bitangents[21] = 0.0;
-                bitangents[22] = 1.0;
-                bitangents[23] = 0.0;
-
                 attributes.bitangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
@@ -307,8 +238,8 @@ define([
                 });
             }
 
-            // 4 triangles:  2 faces, 2 triangles each.
-            indices = new Uint16Array(2 * 2 * 3);
+            // 2 triangles
+            indices = new Uint16Array(2 * 3);
 
             // +z face
             indices[0] = 0;
@@ -317,62 +248,13 @@ define([
             indices[3] = 0;
             indices[4] = 2;
             indices[5] = 3;
-
-            // -z face
-            indices[6] = 4 + 2;
-            indices[7] = 4 + 1;
-            indices[8] = 4 + 0;
-            indices[9] = 4 + 3;
-            indices[10] = 4 + 2;
-            indices[11] = 4 + 0;
-        } else {
-            // Positions only - no need to duplicate corner points
-            positions = new Float64Array(4 * 3);
-
-            positions[0] = min.x;
-            positions[1] = min.y;
-            positions[2] = min.z;
-            positions[3] = max.x;
-            positions[4] = min.y;
-            positions[5] = min.z;
-            positions[6] = max.x;
-            positions[7] = max.y;
-            positions[8] = min.z;
-            positions[9] = min.x;
-            positions[10] = max.y;
-            positions[11] = min.z;
-
-            attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : positions
-            });
-
-            // 12 triangles:  2 faces, 2 triangles each.
-            indices = new Uint16Array(2 * 2 * 3);
-
-            // plane z = corner.Z
-            indices[0] = 4;
-            indices[1] = 5;
-            indices[2] = 6;
-            indices[3] = 4;
-            indices[4] = 6;
-            indices[5] = 7;
-
-            // plane z = -corner.Z
-            indices[6] = 1;
-            indices[7] = 0;
-            indices[8] = 3;
-            indices[9] = 1;
-            indices[10] = 3;
-            indices[11] = 2;
         }
 
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0)/2.0)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, Math.sqrt(2.0))
         });
     };
 
