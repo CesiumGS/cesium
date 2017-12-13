@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/ClippingPlaneCollection',
+        'Core/ClippingPlaneCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -29,16 +29,96 @@ defineSuite([
 
     it('default constructor', function() {
         clippingPlanes = new ClippingPlaneCollection();
-        expect(clippingPlanes.planes).toEqual([]);
+        expect(clippingPlanes._planes).toEqual([]);
         expect(clippingPlanes.enabled).toEqual(true);
         expect(clippingPlanes.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(clippingPlanes.edgeColor).toEqual(Color.WHITE);
         expect(clippingPlanes.edgeWidth).toEqual(0.0);
-        expect(clippingPlanes.combineClippingRegions).toEqual(true);
+        expect(clippingPlanes.unionClippingRegions).toEqual(false);
         expect(clippingPlanes._testIntersection).not.toBeUndefined();
     });
 
-    it('transforms and packs planes into result paramter', function() {
+    it('gets the length of the list of planes in the collection', function() {
+        clippingPlanes = new ClippingPlaneCollection();
+
+        expect(clippingPlanes.length).toBe(0);
+
+        clippingPlanes._planes = planes.slice();
+
+        expect(clippingPlanes.length).toBe(2);
+
+        clippingPlanes._planes.push(new Plane(Cartesian3.UNIT_Z, -1.0));
+
+        expect(clippingPlanes.length).toBe(3);
+
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes
+        });
+
+        expect(clippingPlanes.length).toBe(2);
+    });
+
+    it('add adds a plane to the collection', function() {
+        clippingPlanes = new ClippingPlaneCollection();
+        clippingPlanes.add(planes[0]);
+
+        expect(clippingPlanes.length).toBe(1);
+        expect(clippingPlanes._planes[0]).toBe(planes[0]);
+    });
+
+    it('add throws developer error if the added plane exceeds the maximum number of planes', function() {
+        clippingPlanes = new ClippingPlaneCollection();
+        clippingPlanes._planes = new Array(ClippingPlaneCollection.MAX_CLIPPING_PLANES);
+
+        expect(function() {
+            clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, -1.0));
+        }).toThrowDeveloperError();
+    });
+
+    it('gets the plane at an index', function() {
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes
+        });
+
+        var plane = clippingPlanes.get(0);
+        expect(plane).toBe(planes[0]);
+
+        plane = clippingPlanes.get(1);
+        expect(plane).toBe(planes[1]);
+
+        plane = clippingPlanes.get(2);
+        expect(plane).toBeUndefined();
+    });
+
+    it('contain checks if the collection contains a plane', function() {
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes
+        });
+
+        expect(clippingPlanes.contains(planes[0])).toBe(true);
+        expect(clippingPlanes.contains(new Plane(Cartesian3.UNIT_Y, 2.0))).toBe(true);
+        expect(clippingPlanes.contains(new Plane(Cartesian3.UNIT_Z, 3.0))).toBe(false);
+    });
+
+    it('remove removes and the first occurrence of a plane', function() {
+        clippingPlanes = new ClippingPlaneCollection({
+            planes : planes
+        });
+
+        expect(clippingPlanes.contains(planes[0])).toBe(true);
+
+        var result = clippingPlanes.remove(planes[0]);
+
+        expect(clippingPlanes.contains(planes[0])).toBe(false);
+        expect(clippingPlanes.length).toBe(1);
+        expect(clippingPlanes.get(0)).toEqual(planes[1]);
+        expect(result).toBe(true);
+
+        result = clippingPlanes.remove(planes[0]);
+        expect(result).toBe(false);
+    });
+
+    it('transforms and packs planes into result parameter', function() {
         clippingPlanes = new ClippingPlaneCollection({
             planes : planes
         });
@@ -70,13 +150,13 @@ defineSuite([
 
         var result = clippingPlanes.clone();
         expect(result).not.toBe(clippingPlanes);
-        expect(result.planes[0]).toEqual(planes[0]);
-        expect(result.planes[1]).toEqual(planes[1]);
+        expect(result._planes[0]).toEqual(planes[0]);
+        expect(result._planes[1]).toEqual(planes[1]);
         expect(result.enabled).toEqual(false);
         expect(result.modelMatrix).toEqual(transform);
         expect(result.edgeColor).toEqual(Color.RED);
         expect(result.edgeWidth).toEqual(0.0);
-        expect(result.combineClippingRegions).toEqual(true);
+        expect(result.unionClippingRegions).toEqual(false);
         expect(result._testIntersection).not.toBeUndefined();
     });
 
@@ -90,81 +170,78 @@ defineSuite([
         var result = new ClippingPlaneCollection();
         var copy = clippingPlanes.clone(result);
         expect(copy).toBe(result);
-        expect(result.planes).not.toBe(planes);
-        expect(result.planes[0]).toEqual(planes[0]);
-        expect(result.planes[1]).toEqual(planes[1]);
+        expect(result._planes).not.toBe(planes);
+        expect(result._planes[0]).toEqual(planes[0]);
+        expect(result._planes[1]).toEqual(planes[1]);
         expect(result.enabled).toEqual(false);
         expect(result.modelMatrix).toEqual(transform);
         expect(result.edgeColor).toEqual(Color.RED);
         expect(result.edgeWidth).toEqual(0.0);
-        expect(result.combineClippingRegions).toEqual(true);
+        expect(result.unionClippingRegions).toEqual(false);
         expect(result._testIntersection).not.toBeUndefined();
 
         // Only allocate a new array if needed
-        var previousPlanes = result.planes;
+        var previousPlanes = result._planes;
         clippingPlanes.clone(result);
-        expect(result.planes).toBe(previousPlanes);
+        expect(result._planes).toBe(previousPlanes);
     });
 
-
-    it('setting combineClippingRegions updates testIntersection function', function() {
+    it('setting unionClippingRegions updates testIntersection function', function() {
         clippingPlanes = new ClippingPlaneCollection();
         var originalIntersectFunction = clippingPlanes._testIntersection;
 
         expect(clippingPlanes._testIntersection).not.toBeUndefined();
 
-        clippingPlanes.combineClippingRegions = false;
+        clippingPlanes.unionClippingRegions = true;
 
         expect(clippingPlanes._testIntersection).not.toBe(originalIntersectFunction);
     });
 
-    it('computes intersections with bounding volumes when combining clipping regions', function() {
+    it('computes intersections with bounding volumes when clipping regions are combined with an intersect operation', function() {
         clippingPlanes = new ClippingPlaneCollection();
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_X, 2.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_X, 2.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.OUTSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_Y, 0.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Y, 0.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INTERSECTING);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_Z, -1.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, -1.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_Z, 0.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, 0.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
     });
 
-    it('computes intersections with bounding volumes when not combining clipping regions', function() {
+    it('computes intersections with bounding volumes when clipping planes are combined with a union operation', function() {
         clippingPlanes = new ClippingPlaneCollection({
-            combineClippingRegions : false
+            unionClippingRegions : true
         });
 
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_Z, -1.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_Z, -1.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_Y, 2.0));
+        var temp = new Plane(Cartesian3.UNIT_Y, 2.0);
+        clippingPlanes.add(temp);
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.OUTSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_X, 0.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_X, 0.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.OUTSIDE);
 
-        var plane = clippingPlanes.planes.pop();
-        clippingPlanes.planes.pop();
-
-        clippingPlanes.planes.push(plane);
+        clippingPlanes.remove(temp);
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
         expect(intersect).toEqual(Intersect.INTERSECTING);
     });
@@ -175,7 +252,7 @@ defineSuite([
         var intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, transform);
         expect(intersect).toEqual(Intersect.INSIDE);
 
-        clippingPlanes.planes.push(new Plane(Cartesian3.UNIT_X, -1.0));
+        clippingPlanes.add(new Plane(Cartesian3.UNIT_X, -1.0));
         intersect = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume, transform);
         expect(intersect).not.toEqual(Intersect.INSIDE);
     });

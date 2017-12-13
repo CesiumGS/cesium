@@ -3321,14 +3321,14 @@ define([
         };
     }
 
-    function createClippingPlanesCombineRegionsFunction(model) {
+    function createClippingPlanesUnionRegionsFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
             if (!defined(clippingPlanes)) {
-                return true;
+                return false;
             }
 
-            return clippingPlanes.combineClippingRegions;
+            return clippingPlanes.unionClippingRegions;
         };
     }
 
@@ -3454,7 +3454,7 @@ define([
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
                 gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
-                gltf_clippingPlanesCombineRegions: createClippingPlanesCombineRegionsFunction(model),
+                gltf_clippingPlanesUnionRegions: createClippingPlanesUnionRegionsFunction(model),
                 gltf_clippingPlanes: createClippingPlanesFunction(model, context),
                 gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model)
             });
@@ -4254,7 +4254,7 @@ define([
         shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
         shader +=
             'uniform int gltf_clippingPlanesLength; \n' +
-            'uniform bool gltf_clippingPlanesCombineRegions; \n' +
+            'uniform bool gltf_clippingPlanesUnionRegions; \n' +
             'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
             'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
             'void main() \n' +
@@ -4263,13 +4263,13 @@ define([
             '    if (gltf_clippingPlanesLength > 0) \n' +
             '    { \n' +
             '        float clipDistance; \n' +
-            '        if (gltf_clippingPlanesCombineRegions) \n' +
+            '        if (gltf_clippingPlanesUnionRegions) \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClippedCombineRegions(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '        } \n' +
             '        else \n' +
             '        { \n' +
-            '            clipDistance = czm_discardIfClipped(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
             '        } \n' +
             '        \n' +
             '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
@@ -4311,14 +4311,16 @@ define([
         var clippingPlanes = model.clippingPlanes;
         var length = 0;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            length = clippingPlanes.planes.length;
+            length = clippingPlanes.length;
         }
 
-        if (model._packedClippingPlanes.length !== length) {
-            model._packedClippingPlanes = new Array(length);
+        var packedPlanes = model._packedClippingPlanes;
+        var packedLength = packedPlanes.length;
+        if (packedLength !== length) {
+            packedPlanes.length = length;
 
-            for (var i = 0; i < length; ++i) {
-                model._packedClippingPlanes[i] = new Cartesian4();
+            for (var i = packedLength; i < length; ++i) {
+                packedPlanes[i] = new Cartesian4();
             }
         }
     }
