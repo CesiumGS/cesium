@@ -1,15 +1,15 @@
 /**
- * Clip a fragment by an array of clipping planes. Clipping plane regions are combined, so a fragment must be clipped
- * by all of the planes to be discarded.
+ * Clip a fragment by an array of clipping planes. Clipping plane regions are joined by the intersect operation, so
+ * a fragment must be clipped by all of the planes to be discarded.
  *
- * @name czm_discardIfClipped
+ * @name czm_discardIfClippedWithIntersect
  * @glslFunction
  *
  * @param {vec4[]} clippingPlanes The array of planes used to clip, defined in eyespace.
  * @param {int} clippingPlanesLength The number of planes in the array of clipping planes.
  * @returns {float} The distance away from a clipped fragment, in eyespace
  */
-float czm_discardIfClippedCombineRegions(vec4[czm_maxClippingPlanes] clippingPlanes, int clippingPlanesLength)
+float czm_discardIfClippedWithIntersect(vec4 clippingPlanes[czm_maxClippingPlanes], int clippingPlanesLength)
 {
     if (clippingPlanesLength > 0)
     {

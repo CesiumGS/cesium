@@ -16,7 +16,7 @@ defineSuite([
         }));
 
         expect(m.attributes.position.values.length).toEqual(4 * 3); // 4 corners
-        expect(m.indices.length).toEqual(4 * 3); // 2 sides x 2 triangles per side
+        expect(m.indices.length).toEqual(2 * 3); // 2 triangles
     });
 
     it('constructor computes all vertex attributes', function() {
@@ -24,8 +24,8 @@ defineSuite([
             vertexFormat : VertexFormat.ALL
         }));
 
-        var numVertices = 8; //2 sides x 4 corners
-        var numTriangles = 4; //2 sides x 2 triangles per side
+        var numVertices = 4;
+        var numTriangles = 2;
         expect(m.attributes.position.values.length).toEqual(numVertices * 3);
         expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
         expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
@@ -35,7 +35,7 @@ defineSuite([
         expect(m.indices.length).toEqual(numTriangles * 3);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
-        expect(m.boundingSphere.radius).toEqual(Math.sqrt(2.0)/2.0);
+        expect(m.boundingSphere.radius).toEqual(Math.sqrt(2.0));
     });
 
     createPackableSpecs(PlaneGeometry, new PlaneGeometry({
