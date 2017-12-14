@@ -16,7 +16,7 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
         'ThirdParty/when'
-    ], function(
+    ], 'Scene/PointCloud3DTileContent', function(
         Cartesian3,
         ClippingPlaneCollection,
         Color,

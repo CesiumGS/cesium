@@ -9,6 +9,7 @@ Change Log
     * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
     * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
     * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Fixed point cloud crash in IE [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
 
 ### 1.40 - 2017-12-01
 
