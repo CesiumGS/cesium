@@ -80,6 +80,7 @@ define([
         this.pickTerrain = undefined;
 
         this.surfaceShader = undefined;
+        this.isClipped = true;
     }
 
     defineProperties(GlobeSurfaceTile.prototype, {

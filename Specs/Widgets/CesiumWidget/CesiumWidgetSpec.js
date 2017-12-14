@@ -68,6 +68,7 @@ defineSuite([
         expect(widget.container).toBeInstanceOf(HTMLElement);
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
+        expect(widget.creditViewport).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
         expect(widget.imageryLayers).toBeInstanceOf(ImageryLayerCollection);
         expect(widget.terrainProvider).toBeInstanceOf(EllipsoidTerrainProvider);

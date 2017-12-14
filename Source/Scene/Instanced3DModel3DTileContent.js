@@ -1,6 +1,7 @@
 define([
         '../Core/AttributeCompression',
         '../Core/Cartesian3',
+        '../Core/ClippingPlaneCollection',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -30,6 +31,7 @@ define([
     ], function(
         AttributeCompression,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -513,6 +515,22 @@ define([
         this._modelInstanceCollection.shadows = this._tileset.shadows;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
         this._modelInstanceCollection.update(frameState);
+
+        // Update clipping planes
+        var tilesetClippingPlanes = this._tileset.clippingPlanes;
+        var model = this._modelInstanceCollection._model;
+        var modelClippingPlanes = model.clippingPlanes;
+        if (defined(tilesetClippingPlanes)) {
+            if (!defined(modelClippingPlanes)) {
+                model.clippingPlanes = new ClippingPlaneCollection();
+                modelClippingPlanes = model.clippingPlanes;
+            }
+
+            tilesetClippingPlanes.clone(modelClippingPlanes);
+            modelClippingPlanes.enabled = tilesetClippingPlanes.enabled && this._tile._isClipped;
+        } else if (defined(modelClippingPlanes) && modelClippingPlanes.enabled) {
+            modelClippingPlanes.enabled = false;
+        }
 
         // If any commands were pushed, add derived commands
         var commandEnd = frameState.commandList.length;

@@ -31,6 +31,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/PixelFormat',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
@@ -57,7 +58,6 @@ define([
         '../ThirdParty/GltfPipeline/parseBinaryGltf',
         '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
         '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
-        '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -108,6 +108,7 @@ define([
         Matrix3,
         Matrix4,
         PixelFormat,
+        Plane,
         PrimitiveType,
         Quaternion,
         Queue,
@@ -134,7 +135,6 @@ define([
         parseBinaryGltf,
         processModelMaterialsCommon,
         processPbrMetallicRoughness,
-        removePipelineExtras,
         updateVersion,
         Uri,
         when,
@@ -328,6 +328,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -339,6 +340,7 @@ define([
      * @param {Number} [options.colorBlendAmount=0.5] Value used to determine the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
      * @param {Color} [options.silhouetteColor=Color.RED] The silhouette color. If more than 256 models have silhouettes enabled, there is a small chance that overlapping models will have minor artifacts.
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
+     * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -531,6 +533,13 @@ define([
          */
         this.activeAnimations = new ModelAnimationCollection(this);
 
+        /**
+         * Determines if the model's animations should hold a pose over frames where no keyframes are specified.
+         *
+         * @type {Boolean}
+         */
+        this.clampAnimations = defaultValue(options.clampAnimations, true);
+
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
@@ -575,6 +584,13 @@ define([
          * @default 0.5
          */
         this.colorBlendAmount = defaultValue(options.colorBlendAmount, 0.5);
+
+        /**
+         * The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
+         *
+         * @type {ClippingPlaneCollection}
+         */
+        this.clippingPlanes = options.clippingPlanes;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -631,6 +647,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -688,6 +705,8 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._packedClippingPlanes = [];
     }
 
     defineProperties(Model.prototype, {
@@ -1112,6 +1131,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
@@ -2095,10 +2115,11 @@ define([
         }
 
         var premultipliedAlpha = hasPremultipliedAlpha(model);
-        var blendFS = modifyShaderForColor(fs, premultipliedAlpha);
+        var finalFS = modifyShaderForColor(fs, premultipliedAlpha);
+        finalFS = modifyShaderForClippingPlanes(finalFS);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(blendFS, id, model._fragmentShaderLoaded);
+        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -2490,6 +2511,7 @@ define([
             //    return;
             //}
             if (defined(spline)) {
+                localAnimationTime = model.clampAnimations ? spline.clampTime(localAnimationTime) : spline.wrapTime(localAnimationTime);
                 runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
                 runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
@@ -3293,6 +3315,49 @@ define([
         };
     }
 
+    function createClippingPlanesLengthFunction(model) {
+        return function() {
+            return model._packedClippingPlanes.length;
+        };
+    }
+
+    function createClippingPlanesUnionRegionsFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return false;
+            }
+
+            return clippingPlanes.unionClippingRegions;
+        };
+    }
+
+    function createClippingPlanesFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            var packedPlanes = model._packedClippingPlanes;
+
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                clippingPlanes.transformAndPackPlanes(model._modelViewMatrix, packedPlanes);
+            }
+
+            return packedPlanes;
+        };
+    }
+
+    function createClippingPlanesEdgeStyleFunction(model) {
+        return function() {
+            var clippingPlanes = model.clippingPlanes;
+            if (!defined(clippingPlanes)) {
+                return Color.WHITE.withAlpha(0.0);
+            }
+
+            var style = Color.clone(clippingPlanes.edgeColor);
+            style.alpha = clippingPlanes.edgeWidth;
+            return style;
+        };
+    }
+
     function createColorBlendFunction(model) {
         return function() {
             return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
@@ -3387,7 +3452,11 @@ define([
 
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
-                gltf_colorBlend : createColorBlendFunction(model)
+                gltf_colorBlend : createColorBlendFunction(model),
+                gltf_clippingPlanesLength: createClippingPlanesLengthFunction(model),
+                gltf_clippingPlanesUnionRegions: createClippingPlanesUnionRegionsFunction(model),
+                gltf_clippingPlanes: createClippingPlanesFunction(model, context),
+                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -4181,6 +4250,41 @@ define([
         }
     }
 
+    function modifyShaderForClippingPlanes(shader) {
+        shader = ShaderSource.replaceMain(shader, 'gltf_clip_main');
+        shader +=
+            'uniform int gltf_clippingPlanesLength; \n' +
+            'uniform bool gltf_clippingPlanesUnionRegions; \n' +
+            'uniform vec4 gltf_clippingPlanes[czm_maxClippingPlanes]; \n' +
+            'uniform vec4 gltf_clippingPlanesEdgeStyle; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    gltf_clip_main(); \n' +
+            '    if (gltf_clippingPlanesLength > 0) \n' +
+            '    { \n' +
+            '        float clipDistance; \n' +
+            '        if (gltf_clippingPlanesUnionRegions) \n' +
+            '        { \n' +
+            '            clipDistance = czm_discardIfClippedWithUnion(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        } \n' +
+            '        else \n' +
+            '        { \n' +
+            '            clipDistance = czm_discardIfClippedWithIntersect(gltf_clippingPlanes, gltf_clippingPlanesLength); \n' +
+            '        } \n' +
+            '        \n' +
+            '        vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
+            '        clippingPlanesEdgeColor.rgb = gltf_clippingPlanesEdgeStyle.rgb; \n' +
+            '        float clippingPlanesEdgeWidth = gltf_clippingPlanesEdgeStyle.a; \n' +
+            '        if (clipDistance > 0.0 && clipDistance < clippingPlanesEdgeWidth) \n' +
+            '        { \n' +
+            '            gl_FragColor = clippingPlanesEdgeColor; \n' +
+            '        } \n' +
+            '    } \n' +
+            '} \n';
+
+        return shader;
+    }
+
     function updateSilhouette(model, frameState) {
         // Generate silhouette commands when the silhouette size is greater than 0.0 and the alpha is greater than 0.0
         // There are two silhouette commands:
@@ -4200,6 +4304,24 @@ define([
 
         if (dirty) {
             createSilhouetteCommands(model, frameState);
+        }
+    }
+
+    function updateClippingPlanes(model) {
+        var clippingPlanes = model.clippingPlanes;
+        var length = 0;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            length = clippingPlanes.length;
+        }
+
+        var packedPlanes = model._packedClippingPlanes;
+        var packedLength = packedPlanes.length;
+        if (packedLength !== length) {
+            packedPlanes.length = length;
+
+            for (var i = packedLength; i < length; ++i) {
+                packedPlanes[i] = new Cartesian4();
+            }
         }
     }
 
@@ -4646,6 +4768,11 @@ define([
                 }
             }
 
+            var clippingPlanes = this.clippingPlanes;
+            if (defined(clippingPlanes) && clippingPlanes.enabled) {
+                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            }
+
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
@@ -4667,6 +4794,7 @@ define([
             updateShadows(this);
             updateColor(this, frameState);
             updateSilhouette(this, frameState);
+            updateClippingPlanes(this, frameState);
         }
 
         if (justLoaded) {

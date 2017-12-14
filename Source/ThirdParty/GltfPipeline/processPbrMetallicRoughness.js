@@ -49,23 +49,16 @@ define([
             // Pre-processing to assign skinning info and address incompatibilities
             splitIncompatibleSkins(gltf);
 
-            if (!defined(gltf.techniques)) {
-                gltf.techniques = [];
-            }
-            var materials = [];
             ForEach.material(gltf, function(material) {
-                if (defined(material.pbrMetallicRoughness)) {
-                    var pbrMetallicRoughness = material.pbrMetallicRoughness;
+                var pbrMetallicRoughness = material.pbrMetallicRoughness;
+                if (defined(pbrMetallicRoughness)) {
                     var technique = generateTechnique(gltf, material, options);
 
-                    var newMaterial = {
-                        values : pbrMetallicRoughness,
-                        technique : technique
-                    };
-                    materials.push(newMaterial);
+                    material.values = pbrMetallicRoughness;
+                    material.technique = technique;
+                    delete material.pbrMetallicRoughness;
                 }
             });
-            gltf.materials = materials;
 
             // If any primitives have semantics that aren't declared in the generated
             // shaders, we want to preserve them.
@@ -736,15 +729,16 @@ define([
                 if (!defined(techniqueParameterForSemantic(technique, semantic))) {
                     var accessorId = attributes[semantic];
                     var accessor = accessors[accessorId];
-                    if (semantic.charAt(0) === '_') {
-                        semantic = semantic.slice(1);
+                    var lowerCase = semantic.toLowerCase();
+                    if (lowerCase.charAt(0) === '_') {
+                        lowerCase = lowerCase.slice(1);
                     }
-                    var attributeName = 'a_' + semantic;
-                    technique.parameters[semantic] = {
-                        semantic : semantic,
-                        type : accessor.componentType
+                    var attributeName = 'a_' + lowerCase;
+                    technique.parameters[lowerCase] = {
+                        semantic: semantic,
+                        type: accessor.componentType
                     };
-                    technique.attributes[attributeName] = semantic;
+                    technique.attributes[attributeName] = lowerCase;
                     program.attributes.push(attributeName);
                     var pipelineExtras = vertexShader.extras._pipeline;
                     var shaderText = pipelineExtras.source;

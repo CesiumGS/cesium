@@ -11,7 +11,6 @@ defineSuite([
         'DataSources/Entity',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
-        'Specs/createGlobe',
         'Specs/createScene'
     ], function(
         EntityCluster,
@@ -26,7 +25,6 @@ defineSuite([
         Entity,
         SceneTransforms,
         createCanvas,
-        createGlobe,
         createScene) {
     'use strict';
 
