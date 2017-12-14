@@ -1008,7 +1008,6 @@ define([
                     '    tile_color(tile_featureColor); \n' +
                     '}';
             } else {
-                source += '';
                 if (handleTranslucent) {
                     source += 'uniform bool tile_translucentCommand; \n';
                 }
