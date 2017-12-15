@@ -1121,8 +1121,10 @@ define([
                     '   for (int i = 0; i < length; ++i) \n' +
                     '   { \n' +
                     '      transform = u_clipVolumeTransforms[i]; \n' +
-                    '      position = transform * czm_inverseProjection * czm_windowToEyeCoordinates(gl_FragCoord); \n' + // position inside 1x1 cube
-                    '      clipped = clipped ' + operator + '(boxMin.x < position.x && boxMax.x > position.x && boxMin.y < position.y && boxMax.y > position.y && boxMin.z < position.z && boxMax.z > position.z); \n' + // check inside
+                    '      vec4 min = boxMin; \n' +
+                    '      vec4 max = boxMax; \n' +
+                    '      position = transform * czm_windowToEyeCoordinates(gl_FragCoord); \n' + // position inside 1x1 cube
+                    '      clipped = clipped ' + operator + '(min.x < position.x && max.x > position.x && min.y < position.y && max.y > position.y && min.z < position.z && max.z > position.z); \n' + // check inside
                     '   } \n' +
                     '   if (clipped) discard; \n'
         }
@@ -1313,7 +1315,9 @@ define([
                     this._clippingVolumeTransforms[i] = new Matrix4();
                 }
 
-                Matrix4.inverse(clippingVolumes.transforms[i], this._clippingVolumeTransforms[i]);
+                var result = this._clippingVolumeTransforms[i];
+                Matrix4.multiply(context.uniformState.view, clippingVolumes.transforms[i], result);
+                Matrix4.inverse(result, result);
             }
         }
 
