@@ -10,6 +10,7 @@ Change Log
     * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
     * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
 * Fixed point cloud crash in IE [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
+* Fixed crash when `invertClassification` was enabled, the invert color had an alpha less than `1.0`, and the window was resized. [#6046](https://github.com/AnalyticalGraphicsInc/cesium/issues/6046)
 
 ### 1.40 - 2017-12-01
 
