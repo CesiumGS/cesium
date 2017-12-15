@@ -1116,11 +1116,13 @@ define([
             fs +=   '   mat4 transform; \n' +
                     '   vec4 position; \n' +
                     '   bool clipped = ' + inside + '; \n' +
+                    '   vec4 boxMin = vec4(-0.5, -0.5, -0.5, 1.0); \n' +
+                    '   vec4 boxMax = vec4(0.5, 0.5, 0.5, 1.0); \n' +
                     '   for (int i = 0; i < length; ++i) \n' +
                     '   { \n' +
                     '      transform = u_clipVolumeTransforms[i]; \n' +
-                    '      position = transform * czm_inverseView * czm_windowToEyeCoordinates(gl_FragCoord); \n' + // position inside 1x1 cube
-                    '      clipped = clipped ' + operator + '(-1.0 < position.x && 1.0 > position.x && -1.0 < position.y && 1.0 > position.y && -1.0 < position.z && 1.0 > position.z); \n' + // check inside
+                    '      position = transform * czm_inverseProjection * czm_windowToEyeCoordinates(gl_FragCoord); \n' + // position inside 1x1 cube
+                    '      clipped = clipped ' + operator + '(boxMin.x < position.x && boxMax.x > position.x && boxMin.y < position.y && boxMax.y > position.y && boxMin.z < position.z && boxMax.z > position.z); \n' + // check inside
                     '   } \n' +
                     '   if (clipped) discard; \n'
         }
