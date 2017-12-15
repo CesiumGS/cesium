@@ -9,6 +9,13 @@ Change Log
     * Added `Plane.transformPlane` function to apply a transformation to a plane. [#5966](https://github.com/AnalyticalGraphicsInc/cesium/pull/5966)
     * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
     * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
+* Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
+* Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
+* Added experimental support for [3D Tiles Vector Data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
+   * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
+   * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, and geometry features.
+   * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
+* Added `Cesium3DTileset.classificationType` to specify if a tileset classifies terrain, another 3D Tiles tileset, or both. This only applies to vector, geometry and batched 3D model tilesets. See [#6033](https://github.com/AnalyticalGraphicsInc/cesium/pull/6033) for limitations on the glTF contained in the b3dm tile.
 
 ### 1.40 - 2017-12-01
 
@@ -29,13 +36,6 @@ Change Log
 * Added ability to support touch event in Imagery Layers Split Sandcastle example. [#5948](https://github.com/AnalyticalGraphicsInc/cesium/pull/5948)
 * Added a new `@experimental` tag to the documentation. A small subset of the Cesium API tagged as such are subject to breaking changes without deprecation. See the [Coding Guide](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Documentation/Contributors/CodingGuide#deprecation-and-breaking-changes) for further explanation. [#6010](https://github.com/AnalyticalGraphicsInc/cesium/pull/6010)
 * Moved terrain and imagery credits to a lightbox that pops up when you click a link in the onscreen credits [#3013](https://github.com/AnalyticalGraphicsInc/cesium/issues/3013)
-* Added `AttributeCompression.zigZagDeltaDecode` which will decode delta and ZigZag encoded buffers in place.
-* Added `pack` and `unpack` functions to `OrientedBoundingBox` for packing to and unpacking from a flat buffer.
-* Added experimental support for [3D Tiles Vector Data](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/TileFormats/VectorData) ([#4665](https://github.com/AnalyticalGraphicsInc/cesium/pull/4665)). The new and modified Cesium APIs are:
-   * `Cesium3DTileset.classificationType` to specify if a vector tileset classifies terrain, another 3D Tiles tileset, or both.
-   * `Cesium3DTileStyle` has expanded for styling point features. See the [styling specification](https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/vector-tiles/Styling#vector-data) for details.
-   * `Cesium3DTileFeature` can modify `color` and `show` properties for polygon, polyline, geometry, and mesh features.
-   * `Cesium3DTilePointFeature` can modify the styling options for a point feature.
 
 ### 1.39 - 2017-11-01
 

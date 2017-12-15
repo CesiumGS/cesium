@@ -72,6 +72,8 @@ define([
         this._pointOutlineColor = undefined;
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
+
+        setBillboardImage(this);
     }
 
     var scratchCartographic = new Cartographic();

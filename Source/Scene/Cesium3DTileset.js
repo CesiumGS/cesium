@@ -104,7 +104,7 @@ define([
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
-     * @param {ClassificationType} [options.classificationType=ClassificationType.CESIUM_3D_TILE] Determines whether terrain, 3D Tiles or both will be classified by vector tiles.
+     * @param {ClassificationType} [options.classificationType=ClassificationType.CESIUM_3D_TILE] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -222,6 +222,8 @@ define([
         this._tileDebugLabels = undefined;
 
         this._readyPromise = when.defer();
+
+        this._classificationType = options.classificationType;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -528,15 +530,6 @@ define([
          * @type {ClippingPlaneCollection}
          */
         this.clippingPlanes = options.clippingPlanes;
-
-        /**
-         * Determines whether terrain, 3D Tiles or both will be classified by vector tiles.
-         * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
-         *
-         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
-         */
-        this.classificationType = defaultValue(options.classificationType, ClassificationType.CESIUM_3D_TILE);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1060,6 +1053,36 @@ define([
         statistics : {
             get : function() {
                 return this._statistics;
+            }
+        },
+
+        /**
+         * Determines whether terrain, 3D Tiles or both will be classified by this tileset.
+         * <p>
+         * This option is only applied to tilesets containing batched 3D models, geometry data, or vector data. Even when undefined, vector data and geometry data
+         * must render as classifications and will default to rendering on both terrain and other 3D Tiles tilesets.
+         * </p>
+         * <p>
+         * When enabled for batched 3D model tilesets, there are a few requirements/limitations on the glTF:
+         * <ul>
+         *     <li>POSITION and _BATCHID semantics are required.</li>
+         *     <li>All indices with the same batch id must occupy contiguous sections of the index buffer.</li>
+         *     <li>All shaders and techniques are ignored. The generated shader simply multiplies the position by the model-view-projection matrix.</li>
+         *     <li>The only supported extensions are CESIUM_RTC and WEB3D_quantized_attributes.</li>
+         *     <li>Only one node is supported.</li>
+         *     <li>Only one mesh per node is supported.</li>
+         *     <li>Only one primitive per mesh is supported.</li>
+         * </ul>
+         * </p>
+         * @type {ClassificationType}
+         * @default undefined
+         *
+         * @experimental This feature is using part of the 3D Tiles spec that is not final and is subject to change without Cesium's standard deprecation policy.
+         * @readonly
+         */
+        classificationType : {
+            get : function() {
+                return this._classificationType;
             }
         }
     });

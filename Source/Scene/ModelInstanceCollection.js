@@ -19,9 +19,9 @@ define([
         '../Renderer/Pass',
         '../Renderer/ShaderSource',
         '../ThirdParty/when',
-        './getAttributeOrUniformBySemantic',
         './Model',
         './ModelInstance',
+        './ModelUtility',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -45,9 +45,9 @@ define([
         Pass,
         ShaderSource,
         when,
-        getAttributeOrUniformBySemantic,
         Model,
         ModelInstance,
+        ModelUtility,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -351,7 +351,7 @@ define([
             var batchTable = collection._batchTable;
             if (defined(batchTable)) {
                 var gltf = collection._model.gltf;
-                var diffuseUniformName = getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
+                var diffuseUniformName = ModelUtility.getAttributeOrUniformBySemantic(gltf, '_3DTILESDIFFUSE');
                 fs = batchTable.getFragmentShaderCallback(true, diffuseUniformName)(fs);
             }
             return fs;
