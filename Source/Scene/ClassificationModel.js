@@ -840,7 +840,7 @@ define([
         }
     }
 
-    function createCommand(model) {
+    function createPrimitive(model) {
         var batchTable = model._batchTable;
 
         var uniformMap = model._uniformMap;
@@ -1028,7 +1028,7 @@ define([
             model._nodeMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, model._nodeMatrix);
         }
 
-        createCommand(model);
+        createPrimitive(model);
     }
 
     function createResources(model, frameState) {
