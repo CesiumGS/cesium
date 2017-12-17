@@ -10,6 +10,8 @@ Change Log
     * Added `PlaneGeometry`, `PlaneOutlineGeometry`, `PlaneGeometryUpdater`, and `PlaneOutlineGeometryUpdater` classes to render plane primitives. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
     * Added `PlaneGraphics` class and `plane` property to `Entity`. [#5996](https://github.com/AnalyticalGraphicsInc/cesium/pull/5996)
 * Fixed point cloud crash in IE [#6051](https://github.com/AnalyticalGraphicsInc/cesium/pull/6051)
+* Fixed globe materials when `Globe.enableLighting` was `false`. [#6042](https://github.com/AnalyticalGraphicsInc/cesium/issues/6042)
+* Fixed shader compilation failure on pick when globe materials were enabled. [#6039](https://github.com/AnalyticalGraphicsInc/cesium/issues/6039)
 
 ### 1.40 - 2017-12-01
 
