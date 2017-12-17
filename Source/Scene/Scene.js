@@ -2667,7 +2667,7 @@ define([
             clear.execute(context, passState);
         }
 
-        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
+        var useInvertClassification = environmentState.useInvertClassification = !picking && defined(passState.framebuffer) && scene.invertClassification;
         if (useInvertClassification) {
             var depthFramebuffer;
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {

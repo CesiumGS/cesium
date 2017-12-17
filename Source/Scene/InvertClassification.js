@@ -220,7 +220,7 @@ define([
                 })
             });
 
-            if (previousFramebufferChanged && !defined(this._previousFramebuffer)) {
+            if (!defined(this._previousFramebuffer)) {
                 this._classifiedTexture = new Texture({
                     context : context,
                     width : width,
