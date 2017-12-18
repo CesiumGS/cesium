@@ -118,7 +118,8 @@ define([
         this._hasBatchIds = false;
 
         // Used to regenerate shader when clipping on this tile changes
-        this._isClipped = true;
+        this._isClipped = false;
+        this._unionClippingRegions = false;
 
         // Use per-point normals to hide back-facing points.
         this.backFaceCulling = false;
@@ -520,7 +521,6 @@ define([
             }
         }
 
-        var clippingPlanes = content._tileset.clippingPlanes;
         var uniformMap = {
             u_pointSizeAndTilesetTime : function() {
                 scratchPointSizeAndTilesetTime.x = content._pointSize;
@@ -540,6 +540,8 @@ define([
                 return content._packedClippingPlanes;
             },
             u_clippingPlanesEdgeStyle : function() {
+                var clippingPlanes = content._tileset.clippingPlanes;
+
                 if (!defined(clippingPlanes)) {
                     return Color.WHITE.withAlpha(0.0);
                 }
@@ -1070,7 +1072,7 @@ define([
                '    gl_FragColor = v_color; \n';
 
         if (hasClippedContent) {
-            var clippingFunction = clippingPlanes.combineClippingRegions ? 'czm_discardIfClippedCombineRegions' : 'czm_discardIfClipped';
+            var clippingFunction = clippingPlanes.unionClippingRegions ? 'czm_discardIfClippedWithUnion' : 'czm_discardIfClippedWithIntersect';
             fs += '    float clipDistance = ' + clippingFunction + '(u_clippingPlanes, u_clippingPlanesLength); \n' +
                   '    vec4 clippingPlanesEdgeColor = vec4(1.0); \n' +
                   '    clippingPlanesEdgeColor.rgb = u_clippingPlanesEdgeStyle.rgb; \n' +
@@ -1219,17 +1221,21 @@ define([
         // update clipping planes
         var clippingPlanes = this._tileset.clippingPlanes;
         var clippingEnabled = defined(clippingPlanes) && clippingPlanes.enabled && this._tile._isClipped;
+
+        var unionClippingRegions = false;
         var length = 0;
         if (clippingEnabled) {
-            length = clippingPlanes.planes.length;
-            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            unionClippingRegions = clippingPlanes.unionClippingRegions;
+            length = clippingPlanes.length;
         }
 
-        if (this._packedClippingPlanes.length !== length) {
-            this._packedClippingPlanes = new Array(length);
+        var packedPlanes = this._packedClippingPlanes;
+        var packedLength = packedPlanes.length;
+        if (packedLength !== length) {
+            packedPlanes.length = length;
 
             for (var i = 0; i < length; ++i) {
-                this._packedClippingPlanes[i] = new Cartesian4();
+                packedPlanes[i] = new Cartesian4();
             }
         }
 
@@ -1242,13 +1248,10 @@ define([
             this._parsedContent = undefined; // Unload
         }
 
-        if (clippingEnabled) {
-            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, this._packedClippingPlanes);
-        }
+        if (this._isClipped !== clippingEnabled || this._unionClippingRegions !== unionClippingRegions) {
+            this._isClipped = clippingEnabled;
+            this._unionClippingRegions = unionClippingRegions;
 
-        var isClipped = this._tile._isClipped;
-        if (this._isClipped !== isClipped) {
-            this._isClipped = isClipped;
             createShaders(this, frameState, tileset.style);
         }
 
@@ -1286,6 +1289,11 @@ define([
 
             this._drawCommand.boundingVolume = boundingVolume;
             this._pickCommand.boundingVolume = boundingVolume;
+        }
+
+        if (clippingEnabled) {
+            Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            clippingPlanes.transformAndPackPlanes(this._modelViewMatrix, packedPlanes);
         }
 
         this._drawCommand.castShadows = ShadowMode.castShadows(tileset.shadows);

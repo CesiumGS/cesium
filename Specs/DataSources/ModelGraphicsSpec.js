@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/ModelGraphics',
         'Core/Cartesian3',
+        'Core/ClippingPlaneCollection',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
@@ -9,12 +10,12 @@ defineSuite([
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
         'Scene/ColorBlendMode',
-        'Scene/ClippingPlaneCollection',
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
         ModelGraphics,
         Cartesian3,
+        ClippingPlaneCollection,
         Color,
         DistanceDisplayCondition,
         JulianDate,
@@ -23,7 +24,6 @@ defineSuite([
         NodeTransformationProperty,
         PropertyBag,
         ColorBlendMode,
-        ClippingPlaneCollection,
         HeightReference,
         ShadowMode) {
     'use strict';
