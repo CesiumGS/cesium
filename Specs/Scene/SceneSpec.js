@@ -8,12 +8,15 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/GeometryInstance',
+        'Core/JulianDate',
         'Core/Math',
         'Core/PerspectiveFrustum',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/RequestScheduler',
         'Core/RuntimeError',
+        'Core/TaskProcessor',
         'Core/WebGLConstants',
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
@@ -49,12 +52,15 @@ defineSuite([
         Ellipsoid,
         GeographicProjection,
         GeometryInstance,
+        JulianDate,
         CesiumMath,
         PerspectiveFrustum,
         PixelFormat,
         Rectangle,
         RectangleGeometry,
+        RequestScheduler,
         RuntimeError,
+        TaskProcessor,
         WebGLConstants,
         WebMercatorProjection,
         DrawCommand,
@@ -1253,4 +1259,143 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('doesn\'t render scene if requestRenderMode is enabled', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+
+        scene.requestRenderMode = true;
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('requestRender causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        scene.requestRender();
+        expect(scene._isRendering).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('moving the camera causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        scene.camera.moveLeft();
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('successful completed requests causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        RequestScheduler.requestLoadedEvent.raiseEvent();
+
+        expect(scene._isRendering).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('data returning from a web worker causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        TaskProcessor.taskCompletedEvent.raiseEvent();
+
+        expect(scene._isRendering).toBe(true);
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('time change exceeding maximumRenderTimeChange causes a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+
+        scene.maximumRenderTimeChange = 0.0;
+
+        scene.renderForSpecs();
+        expect(scene._lastRenderTime).not.toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
+
+    it('undefined maximumRenderTimeChange will not cause a new frame to be rendered in requestRenderMode', function() {
+        var scene = createScene();
+
+        scene.renderForSpecs();
+
+        var lastRenderTime = scene._lastRenderTime;
+        expect(lastRenderTime).toBeDefined();
+        expect(scene._isRendering).toBe(false);
+
+        scene.requestRenderMode = true;
+        scene.maximumRenderTimeChange = undefined;
+
+        var farFuture = JulianDate.addDays(lastRenderTime, 10000, new JulianDate())
+
+        scene.renderForSpecs();
+        scene.renderForSpecs(farFuture);
+
+        expect(scene._lastRenderTime).toEqual(lastRenderTime);
+
+        scene.destroyForSpecs();
+    });
 }, 'WebGL');

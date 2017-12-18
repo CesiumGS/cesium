@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="TODO.">
+    <meta name="description" content="Enable request render mode to reduce frames rendered.">
     <meta name="cesium-sandcastle-labels" content="TODO">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -19,23 +19,59 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+
+    #toolbar table {
+        margin: 2px 3px;
+    }
+
+    #toolbar td {
+        padding: 3px 0;
+    }
+
+    #toolbar input {
+        vertical-align: middle;
+    }
+
+    #toolbar input:disabled{
+        color: darkgray;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-    <div>
-        Request render mode
-        <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
-    </div>
-    <div>
-        Simulation time change updates render
-        <input type="checkbox" value="true" data-bind="checked: unlimitedTimeChangeEnabled, valueUpdate: 'input'">
-    </div>
-    <div>
-        Maximum Simulation Time Change
-        <input type="range" min="0" max="60" step="0.1" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', disable: unlimitedTimeChangeEnabled">
-        <input type="text" size="2" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', disable: unlimitedTimeChangeEnabled">
-    </div>
+    <table>
+        <tr>
+            <td>
+                Request render mode
+            </td>
+            <td>
+                <input type="checkbox" value="true" data-bind="checked: requestRenderMode, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Render requested with simulation time changes
+            </td>
+            <td>
+                <input type="checkbox" value="true" data-bind="checked: timeChangeEnabled, valueUpdate: 'input'">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Maximum simulation time change
+            </td>
+            <td>
+                <input type="range" min="0" max="60" step="0.1" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
+                <input type="text" size="2" data-bind="value: maximumRenderTimeChange, valueUpdate: 'input', enable: timeChangeEnabled">
+            </td>
+        </tr>
+    </table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -50,7 +86,7 @@ scene.debugShowFramesPerSecond = true;
 
 var viewModel = {
     requestRenderMode : true,
-    unlimitedTimeChangeEnabled : false,
+    timeChangeEnabled : true,
     maximumRenderTimeChange : 0.5
 };
 
@@ -62,17 +98,18 @@ Cesium.knockout.getObservable(viewModel, 'requestRenderMode').subscribe(function
     scene.requestRenderMode = value;
 });
 
-Cesium.knockout.getObservable(viewModel, 'unlimitedTimeChangeEnabled').subscribe(function(value) {
-    scene.maximumRenderTimeChange = value ? undefined : viewModel.maximumRenderTimeChange;
+Cesium.knockout.getObservable(viewModel, 'timeChangeEnabled').subscribe(function(value) {
+    scene.maximumRenderTimeChange = value ? viewModel.maximumRenderTimeChange : undefined;
 });
 
 Cesium.knockout.getObservable(viewModel, 'maximumRenderTimeChange').subscribe(function(value) {
     scene.maximumRenderTimeChange = value;
 });
 
-Sandcastle.addToolbarButton('Request render', function() {
+Sandcastle.addToolbarButton('Request a new render frame', function() {
     scene.requestRender();
 });
+
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

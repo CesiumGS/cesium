@@ -2827,9 +2827,15 @@ define([
         var us = context.uniformState;
         var frameState = scene._frameState;
 
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
+
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
+
+        RequestScheduler.update();
+        callAfterRenderFunctions(frameState);
     }
 
     function render(scene, time) {
@@ -2900,6 +2906,7 @@ define([
         }
 
         context.endFrame();
+        RequestScheduler.update();
         callAfterRenderFunctions(frameState);
     }
 
@@ -2914,15 +2921,15 @@ define([
         this._preRender.raiseEvent(this, time);
         this._jobScheduler.resetBudgets();
 
-        var shouldRender = !this.requestRenderMode;
+        var cameraChanged = checkForCameraUpdates(this);
+
+        var shouldRender = !this.requestRenderMode || this._isRendering || cameraChanged;
 
         var now = JulianDate.clone(time);
-        if (this.requestRenderMode && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
+        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, now));
             shouldRender = shouldRender || difference >= this.maximumRenderTimeChange;
         }
-
-        shouldRender = shouldRender || checkForCameraUpdates(this) || this._isRendering;
 
         try {
             if (shouldRender) {

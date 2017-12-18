@@ -90,8 +90,8 @@ define([
             }
             deferred.reject(error);
         } else {
-            deferred.resolve(data.result);
             taskCompletedEvent.raiseEvent();
+            deferred.resolve(data.result);
         }
 
         delete deferreds[id];
