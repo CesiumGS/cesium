@@ -11,8 +11,6 @@ define([
         '../Core/objectToQuery',
         '../Core/queryToObject',
         '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestType',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -31,8 +29,6 @@ define([
         objectToQuery,
         queryToObject,
         Rectangle,
-        Request,
-        RequestType,
         WebMercatorTilingScheme,
         Uri,
         when,
@@ -205,7 +201,7 @@ define([
         this._errorEvent = new Event();
 
         var credit = options.credit;
-        this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
+        this._credit = typeof credit === 'string' ? new Credit({text: credit}) : credit;
 
         this._subdomains = options.subdomains;
         if (isArray(this._subdomains)) {

@@ -1,15 +1,11 @@
 defineSuite([
-        'Scene/Tileset3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
-        'Scene/Cesium3DTileContentState',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
-        Tileset3DTileContent,
+    ], 'Scene/Tileset3DTileContent', function(
         Cartesian3,
         HeadingPitchRange,
-        Cesium3DTileContentState,
         Cesium3DTilesTester,
         createScene) {
     'use strict';

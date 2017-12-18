@@ -1264,7 +1264,7 @@ define([
      * the default view for the 3D scene.  The home view for 2D and columbus view shows the
      * entire map.
      *
-     * @param {Number} [duration] The number of seconds to complete the camera flight to home. See {@link Camera#flyTo}
+     * @param {Number} [duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight. See {@link Camera#flyTo}
      */
     Camera.prototype.flyHome = function(duration) {
         var mode = this._mode;
